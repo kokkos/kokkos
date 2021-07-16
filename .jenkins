@@ -5,9 +5,12 @@ pipeline {
         CCACHE_DIR = '/tmp/ccache'
         CCACHE_MAXSIZE = '10G'
         CCACHE_CPP2 = 'true'
-        BUILD_JOBS = 8
-        SITE = 'Jenkins'
     }
+
+    options {
+        timeout(time: 6, unit: 'HOURS')
+    }
+
     stages {
         stage('Clang-Format') {
             agent {
@@ -36,7 +39,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -45,13 +48,14 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                              -P cmake/KokkosCI.cmake'''
+                              .. && \
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -73,12 +77,11 @@ pipeline {
                         OMP_NUM_THREADS = 8
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
-                        LC_ALL = 'C'
                     }
                     steps {
                         sh 'ccache --zero-stats'
                         sh 'echo "/opt/rocm/llvm/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig'
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -89,8 +92,8 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                              -P cmake/KokkosCI.cmake'''
+                              .. && \
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -108,12 +111,9 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
-                    environment {
-                        LC_ALL = 'C'
-                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -121,10 +121,11 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                              -P cmake/KokkosCI.cmake'''
+                              .. && \
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -185,20 +186,21 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror -Wno-undefined-internal -Wno-pass-failed" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                              -P cmake/KokkosCI.cmake'''
+                              .. && \
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -217,7 +219,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
@@ -227,13 +229,14 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=14 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                              -P cmake/KokkosCI.cmake'''
+                              .. && \
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -289,7 +292,7 @@ pipeline {
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf install && mkdir -p install && \
-                              rm -rf build && \
+                              rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
@@ -302,10 +305,11 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
-                                -DCMAKE_INSTALL_PREFIX=${PWD}/install \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                                -DTARGET=install \
-                              -P cmake/KokkosCI.cmake && \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
+                              .. && \
+                              make -j8 install && \
+                              cd .. && \
                               rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
                               cmake \
@@ -348,7 +352,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -363,10 +367,9 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                                -DTARGET=install \
-                              -P cmake/KokkosCI.cmake && \
-                              cd example/build_cmake_in_tree && \
+                              .. && \
+                              make -j8 && ctest --verbose && \
+                              cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --verbose'''
                     }
@@ -389,19 +392,21 @@ pipeline {
                         OMP_PROC_BIND = 'true'
                     }
                     steps {
-                        sh '''rm -rf build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_STANDARD=14 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                                -DBUILD_NAME=${STAGE_NAME} \
-                              -P cmake/KokkosCI.cmake && \
-                              gcc -I$PWD/core/src core/unit_test/tools/TestCInterface.c'''
+                                -DKokkos_ENABLE_LIBQUADMATH=ON \
+                                -DCMAKE_PREFIX_PATH=/usr/local/lib/gcc/x86_64-unknown-linux-gnu/5.3.0 \
+                              .. && \
+                              make -j8 && ctest --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                 }
             }

@@ -115,7 +115,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
       all_queues.push_back(&m_queue);
     }
     const sycl::device& d = m_queue->get_device();
-    std::cout << SYCL::SYCLDevice(d) << '\n';
 
     m_maxWorkgroupSize =
         d.template get_info<sycl::info::device::max_work_group_size>();
@@ -294,14 +293,15 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
 
 template <sycl::usm::alloc Kind>
 void SYCLInternal::USMObjectMem<Kind>::reset() {
-  assert(m_size == 0);
-
   if (m_data) {
+    // This implies a fence since this class is not copyable
+    // and deallocating implies a fence across all registered queues.
     using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
     Record::decrement(Record::get_record(m_data));
 
     m_capacity = 0;
     m_data     = nullptr;
+    m_size     = 0;
   }
   m_q.reset();
 }

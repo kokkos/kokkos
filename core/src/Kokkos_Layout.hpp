@@ -228,18 +228,6 @@ struct LayoutTiled {
   static_assert(IsPowerOfTwo,
                 "LayoutTiled must be given power-of-two tile dimensions");
 
-#if 0
-  static_assert( (Impl::is_integral_power_of_two(ArgN0) ) &&
-                 (Impl::is_integral_power_of_two(ArgN1) ) &&
-                 (Impl::is_integral_power_of_two(ArgN2) || (ArgN2 == 0) ) &&
-                 (Impl::is_integral_power_of_two(ArgN3) || (ArgN3 == 0) ) &&
-                 (Impl::is_integral_power_of_two(ArgN4) || (ArgN4 == 0) ) &&
-                 (Impl::is_integral_power_of_two(ArgN5) || (ArgN5 == 0) ) &&
-                 (Impl::is_integral_power_of_two(ArgN6) || (ArgN6 == 0) ) &&
-                 (Impl::is_integral_power_of_two(ArgN7) || (ArgN7 == 0) )
-               , "LayoutTiled must be given power-of-two tile dimensions" );
-#endif
-
   using array_layout = LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3,
                                    ArgN4, ArgN5, ArgN6, ArgN7, IsPowerOfTwo>;
   static constexpr Iterate outer_pattern = OuterP;

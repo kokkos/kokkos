@@ -161,7 +161,9 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   inline void impl_set_vector_length(size_t size) { m_vector_length = size; }
   inline void impl_set_team_size(size_t size) { m_team_size = size; }
   int impl_vector_length() const { return m_vector_length; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED int vector_length() const { return impl_vector_length(); }
+#endif
 
   int team_size() const { return m_team_size; }
 
@@ -377,14 +379,15 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_scratch_size[2];
 
   template <typename Functor>
-  void sycl_direct_launch(const Policy& policy, const Functor& functor) const {
+  sycl::event sycl_direct_launch(const Policy& policy,
+                                 const Functor& functor) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    q.submit([&](sycl::handler& cgh) {
+    auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
       sycl::accessor<char, 1, sycl::access::mode::read_write,
@@ -415,7 +418,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               functor(work_tag(), team_member);
           });
     });
+// FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+#else
     space.fence();
+#endif
+    return parallel_for_event;
   }
 
  public:
@@ -430,7 +439,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+    sycl::event event =
+        sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
@@ -516,8 +527,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const size_type m_vector_size;
 
   template <typename PolicyType, typename Functor, typename Reducer>
-  void sycl_direct_launch(const PolicyType& policy, const Functor& functor,
-                          const Reducer& reducer) const {
+  sycl::event sycl_direct_launch(const PolicyType& policy,
+                                 const Functor& functor,
+                                 const Reducer& reducer) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -552,11 +564,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     value_type* device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
 
+    sycl::event last_reduction_event;
+
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
-      q.submit([&](sycl::handler& cgh) {
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
         sycl::accessor<char, 1, sycl::access::mode::read_write,
@@ -596,7 +610,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                &results_ptr[0]);
             });
       });
+      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
+#else
       space.fence();
+#endif
+      last_reduction_event = parallel_reduce_event;
     }
 
     // Otherwise, we perform a reduction on the values in all workgroups
@@ -605,8 +625,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // value.
     bool first_run = true;
     while (size > 1) {
-      auto n_wgroups = (size + wgroup_size - 1) / wgroup_size;
-      q.submit([&](sycl::handler& cgh) {
+      auto n_wgroups             = (size + wgroup_size - 1) / wgroup_size;
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
             local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
@@ -671,7 +691,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   n_wgroups <= 1 && item.get_group_linear_id() == 0);
             });
       });
+      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
+#else
       space.fence();
+#endif
+      last_reduction_event = parallel_reduce_event;
 
       first_run = false;
       size      = n_wgroups;
@@ -687,6 +713,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           sizeof(*m_result_ptr) * value_count);
       space.fence();
     }
+
+    return last_reduction_event;
   }
 
  public:
@@ -703,8 +731,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
-                       reducer_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(
+        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
+    reducer_wrapper.register_event(indirectReducerMem, event);
   }
 
  private:

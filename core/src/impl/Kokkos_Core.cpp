@@ -512,11 +512,6 @@ void pre_initialize_internal(const InitArguments& args) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBRT", "no");
 #endif
-#ifdef KOKKOS_ENABLE_MPI
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_MPI", "yes");
-#else
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_MPI", "no");
-#endif
   declare_configuration_metadata("architecture", "Default Device",
                                  typeid(Kokkos::DefaultExecutionSpace).name());
 }

@@ -60,6 +60,7 @@
 
 #include <Kokkos_Cuda.hpp>
 #include <cuda_runtime_api.h>
+#include <Cuda/Kokkos_Cuda_Error.hpp>
 
 namespace Kokkos {
 namespace Impl {

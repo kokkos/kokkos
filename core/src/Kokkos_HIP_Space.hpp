@@ -116,10 +116,12 @@ class HIPSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return "HIP"; }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access HIPSpace */
   KOKKOS_DEPRECATED static void access_error();
   KOKKOS_DEPRECATED static void access_error(const void* const);
+#endif
 
  private:
   int m_device;  ///< Which HIP device

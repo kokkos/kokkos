@@ -178,8 +178,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
-  void sycl_direct_launch(const PolicyType& policy, const Functor& functor,
-                          const Reducer& reducer) const {
+  sycl::event sycl_direct_launch(const PolicyType& policy,
+                                 const Functor& functor,
+                                 const Reducer& reducer) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -217,11 +218,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     value_type* device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
 
+    sycl::event last_reduction_event;
+
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
-      q.submit([&](sycl::handler& cgh) {
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
         cgh.single_task([=]() {
           const auto& selected_reducer = ReducerConditional::select(
@@ -243,7 +246,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                            &results_ptr[0]);
         });
       });
+      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
+#else
       space.fence();
+#endif
+      last_reduction_event = parallel_reduce_event;
     }
 
     // Otherwise, we perform a reduction on the values in all workgroups
@@ -255,7 +264,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       auto n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
                         wgroup_size - 1) /
                        wgroup_size;
-      q.submit([&](sycl::handler& cgh) {
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
             local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
@@ -315,7 +324,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   static_cast<const FunctorType&>(functor), n_wgroups <= 1);
             });
       });
+// FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
+#else
       space.fence();
+#endif
+
+      last_reduction_event = parallel_reduce_event;
 
       first_run = false;
       size      = n_wgroups;
@@ -331,6 +347,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           sizeof(*m_result_ptr) * value_count);
       space.fence();
     }
+
+    return last_reduction_event;
   }
 
  public:
@@ -347,8 +365,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
-                       reducer_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(
+        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
+    reducer_wrapper.register_event(indirectReducerMem, event);
   }
 
  private:
@@ -426,8 +446,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
-  void sycl_direct_launch(const PolicyType& policy, const Functor& functor,
-                          const Reducer& reducer) const {
+  sycl::event sycl_direct_launch(const PolicyType& policy,
+                                 const Functor& functor,
+                                 const Reducer& reducer) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -472,11 +493,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     value_type* device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
 
+    sycl::event last_reduction_event;
+
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
-      q.submit([&](sycl::handler& cgh) {
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         cgh.single_task([=]() {
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
@@ -498,7 +521,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                            &results_ptr[0]);
         });
       });
+      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
+#else
       m_space.fence();
+#endif
+      last_reduction_event = parallel_reduce_event;
     }
 
     // Otherwise, we perform a reduction on the values in all workgroups
@@ -507,8 +536,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // value.
     bool first_run = true;
     while (size > 1) {
-      auto n_wgroups = (size + wgroup_size - 1) / wgroup_size;
-      q.submit([&](sycl::handler& cgh) {
+      auto n_wgroups             = (size + wgroup_size - 1) / wgroup_size;
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
             local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
@@ -577,14 +606,24 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
         });
       });
+// FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
+#else
       m_space.fence();
+#endif
 
       // FIXME_SYCL this is likely not necessary, see above
-      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
-          m_space, results_ptr, results_ptr2,
-          sizeof(*m_result_ptr) * value_count * n_wgroups);
+      auto deep_copy_event =
+          q.memcpy(results_ptr, results_ptr2,
+                   sizeof(*m_result_ptr) * value_count * n_wgroups);
+      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+      q.submit_barrier(sycl::vector_class<sycl::event>{deep_copy_event});
+#else
       m_space.fence();
+#endif
+      last_reduction_event = deep_copy_event;
 
       first_run = false;
       size      = n_wgroups;
@@ -600,6 +639,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           sizeof(*m_result_ptr) * value_count);
       m_space.fence();
     }
+
+    return last_reduction_event;
   }
 
  public:
@@ -621,8 +662,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
-                       reducer_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(
+        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
+    reducer_wrapper.register_event(indirectReducerMem, event);
   }
 
  private:

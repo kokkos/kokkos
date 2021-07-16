@@ -58,8 +58,7 @@
 #include <impl/Kokkos_TaskBase.hpp>
 #include <impl/Kokkos_TaskResult.hpp>
 
-#include <impl/Kokkos_Memory_Fence.hpp>
-#include <impl/Kokkos_Atomic_Increment.hpp>
+#include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_OptionalRef.hpp>
 #include <impl/Kokkos_LIFO.hpp>
 
@@ -188,22 +187,6 @@ class TaskQueue : public TaskQueueBase {
   // Assign task pointer with reference counting of assigned tasks
   KOKKOS_FUNCTION static void assign(task_root_type** const lhs,
                                      task_root_type* const rhs) {
-#if 0
-  {
-    printf( "assign( 0x%lx { 0x%lx %d %d } , 0x%lx { 0x%lx %d %d } )\n"
-          , uintptr_t( lhs ? *lhs : 0 )
-          , uintptr_t( lhs && *lhs ? (*lhs)->m_next : 0 )
-          , int( lhs && *lhs ? (*lhs)->m_task_type : 0 )
-          , int( lhs && *lhs ? (*lhs)->m_ref_count : 0 )
-          , uintptr_t(rhs)
-          , uintptr_t( rhs ? rhs->m_next : 0 )
-          , int( rhs ? rhs->m_task_type : 0 )
-          , int( rhs ? rhs->m_ref_count : 0 )
-          );
-    fflush( stdout );
-  }
-#endif
-
     if (*lhs) decrement(*lhs);
     if (rhs) {
       Kokkos::atomic_increment(&(rhs->m_ref_count));

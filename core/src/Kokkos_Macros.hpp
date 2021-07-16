@@ -53,11 +53,12 @@
  *  KOKKOS_ENABLE_HPX                 Kokkos::Experimental::HPX execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget
- * execution space KOKKOS_ENABLE_HWLOC               HWLOC library is available.
+ *                                    execution space
+ *  KOKKOS_ENABLE_HIP                 Kokkos::Experimental::HIP execution space
+ *  KOKKOS_ENABLE_SYCL                Kokkos::Experimental::SYCL execution space
+ *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
- *  KOKKOS_ENABLE_MPI                 Negotiate MPI/execution space
- * interactions. KOKKOS_ENABLE_CUDA_UVM            Use CUDA UVM for Cuda memory
- * space.
+ *  KOKKOS_ENABLE_CUDA_UVM            Use CUDA UVM for Cuda memory space.
  */
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
@@ -220,10 +221,18 @@
 #define KOKKOS_MEMORY_ALIGNMENT 64
 #endif
 
+#if defined(_WIN32)
+#define KOKKOS_RESTRICT __restrict
+#else
 #define KOKKOS_RESTRICT __restrict__
+#endif
 
 #ifndef KOKKOS_IMPL_ALIGN_PTR
+#if defined(_WIN32)
+#define KOKKOS_IMPL_ALIGN_PTR(size) __declspec(align_value(size))
+#else
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
+#endif
 #endif
 
 #if (1700 > KOKKOS_COMPILER_INTEL)
@@ -522,13 +531,18 @@
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
-#define KOKKOS_DEPRECATED
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 #define KOKKOS_CONSTEXPR_14 constexpr
-#else
-#define KOKKOS_DEPRECATED [[deprecated]]
-#endif
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
+#endif
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+#define KOKKOS_DEPRECATED [[deprecated]]
+#define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
+#else
+#define KOKKOS_DEPRECATED
+#define KOKKOS_DEPRECATED_WITH_COMMENT(comment)
+#endif
 
 #define KOKKOS_IMPL_STRINGIFY(x) #x
 #define KOKKOS_IMPL_TOSTRING(x) KOKKOS_IMPL_STRINGIFY(x)
@@ -558,7 +572,7 @@
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
-    !defined(KOKKOS_COMPILER_MSVC)
+    !defined(_WIN32)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
@@ -570,7 +584,8 @@
 #undef __CUDA_ARCH__
 #endif
 
-#if defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)
+#if (defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)) || \
+    (defined(KOKKOS_COMPILER_INTEL) && defined(_WIN32))
 #define KOKKOS_THREAD_LOCAL __declspec(thread)
 #else
 #define KOKKOS_THREAD_LOCAL __thread

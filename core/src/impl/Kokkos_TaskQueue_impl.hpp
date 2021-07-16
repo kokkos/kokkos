@@ -105,6 +105,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::decrement(
   task_root_type volatile &t = *task;
 
   const int count = Kokkos::atomic_fetch_add(&(t.m_ref_count), -1);
+  Kokkos::memory_fence();
 
 #if KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING
   if (1 == count) {
