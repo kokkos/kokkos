@@ -296,7 +296,9 @@ struct TestReducers {
     Scalar reference_sum = 0;
 
     for (int i = 0; i < N; i++) {
-      h_values(i) = (Scalar)(rand() % 100);
+      int denom =
+          std::is_same<Scalar, Kokkos::Experimental::half_t>::value ? 10 : 100;
+      h_values(i) = (Scalar)(rand() % denom);
       reference_sum += h_values(i);
     }
     Kokkos::deep_copy(values, h_values);
