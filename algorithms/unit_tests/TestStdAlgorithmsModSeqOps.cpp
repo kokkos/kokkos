@@ -45,31 +45,37 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
 
+namespace KE = Kokkos::Experimental;
+
 namespace Test {
+
+template <class ViewType>
+struct AssignIndexFunctor {
+  ViewType m_view;
+
+  AssignIndexFunctor(ViewType view) : m_view(view) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { m_view(i) = i; }
+};
 
 struct std_algorithms_mod_seq_ops : public ::testing::Test {
  public:
-  virtual void SetUp() {}
+  using dyn_view_t    = Kokkos::View<int*>;
+  using static_view_t = Kokkos::View<int[10]>;
+
+  virtual void SetUp() {
+    Kokkos::parallel_for(m_static_view.extent(0),
+                         AssignIndexFunctor<static_view_t>(m_static_view));
+  }
   virtual void TearDown() {}
 
-  using static_view_t = Kokkos::View<int[10]>;
   static_view_t m_static_view{"std-algo-test-1D-contiguous-view-static"};
-
-  using dyn_view_t = Kokkos::View<int*>;
   dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic", 10};
-
-  using strided_view_t = Kokkos::View<int*, Kokkos::LayoutStride>;
-  Kokkos::LayoutStride layout{10, 2};
-  strided_view_t m_strided_view{"std-algo-test-1D-strided-view", layout};
 };
 // ------------------------------------------------------------
 
 TEST_F(std_algorithms_mod_seq_ops, copy) {
-  namespace KE = Kokkos::Experimental;
-  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
-    m_static_view(i) = i;
-  }
-
   auto first = KE::begin(m_static_view);
   auto last  = KE::end(m_static_view);
   auto dest  = KE::begin(m_dynamic_view);
@@ -82,12 +88,8 @@ TEST_F(std_algorithms_mod_seq_ops, copy) {
 }
 
 TEST_F(std_algorithms_mod_seq_ops, copy_view) {
-  namespace KE = Kokkos::Experimental;
-  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
-    m_static_view(i) = i;
-  }
-
   EXPECT_EQ(KE::end(m_dynamic_view), KE::copy(m_static_view, m_dynamic_view));
+
   for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     EXPECT_EQ(i, m_static_view(i));
     EXPECT_EQ(i, m_dynamic_view(i));
@@ -95,19 +97,15 @@ TEST_F(std_algorithms_mod_seq_ops, copy_view) {
 }
 
 TEST_F(std_algorithms_mod_seq_ops, copy_n) {
-  namespace KE = Kokkos::Experimental;
-  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
-    m_static_view(i) = i;
-  }
+  constexpr std::size_t n = 5;
+  auto first              = KE::begin(m_static_view);
+  auto dest               = KE::begin(m_dynamic_view);
 
-  constexpr std::size_t range = 5;
-  auto first                  = KE::begin(m_static_view);
-  auto dest                   = KE::begin(m_dynamic_view);
-  EXPECT_EQ(dest + range, KE::copy_n(first, range, dest));
+  EXPECT_EQ(dest + n, KE::copy_n(first, n, dest));
 
   for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     EXPECT_EQ(i, m_static_view(i));
-    if (i < range)
+    if (i < n)
       EXPECT_EQ(i, m_dynamic_view(i));
     else
       EXPECT_EQ(0, m_dynamic_view(i));
@@ -115,14 +113,10 @@ TEST_F(std_algorithms_mod_seq_ops, copy_n) {
 }
 
 TEST_F(std_algorithms_mod_seq_ops, copy_backward) {
-  namespace KE = Kokkos::Experimental;
-  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
-    m_static_view(i) = i;
-  }
-
   auto first = KE::begin(m_static_view);
   auto last  = KE::end(m_static_view);
   auto dest  = KE::end(m_dynamic_view);
+
   EXPECT_EQ(KE::begin(m_dynamic_view), KE::copy_backward(first, last, dest));
 
   for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
@@ -133,37 +127,32 @@ TEST_F(std_algorithms_mod_seq_ops, copy_backward) {
 
 TEST_F(std_algorithms_mod_seq_ops, copy_if_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-  namespace KE      = Kokkos::Experimental;
   const auto is_odd = KOKKOS_LAMBDA(const int i) { return (i % 2); };
-
-  constexpr std::size_t range = 5;
-  for (std::size_t i = 0; i < range; i++) {
-    m_static_view(i) = i;
-  }
-
-  auto first = KE::begin(m_static_view);
-  auto last  = KE::begin(m_static_view) + range;
-  auto dest  = KE::begin(m_static_view) + range;
-
-  // should only copy two elements (1 and 3)
-  EXPECT_EQ(dest + 2, KE::copy_if(first, last, dest, is_odd));
-  EXPECT_EQ(1, *dest);
-  EXPECT_EQ(3, *(dest + 1));
-#endif
-}
-
-TEST_F(std_algorithms_mod_seq_ops, reverse_copy) {
-  namespace KE    = Kokkos::Experimental;
-  const auto size = m_static_view.extent(0);
-  for (std::size_t i = 0; i < size; i++) {
-    m_static_view(i) = i;
-  }
 
   auto first = KE::begin(m_static_view);
   auto last  = KE::end(m_static_view);
   auto dest  = KE::begin(m_dynamic_view);
+
+  // should only copy five values (1, 3, 5, 7, 9)
+  EXPECT_EQ(dest + 5, KE::copy_if(first, last, dest, is_odd));
+
+  EXPECT_EQ(1, m_dynamic_view(0));
+  EXPECT_EQ(3, m_dynamic_view(1));
+  EXPECT_EQ(5, m_dynamic_view(2));
+  EXPECT_EQ(7, m_dynamic_view(3));
+  EXPECT_EQ(9, m_dynamic_view(4));
+  EXPECT_EQ(0, m_dynamic_view(5));
+#endif
+}
+
+TEST_F(std_algorithms_mod_seq_ops, reverse_copy) {
+  auto first = KE::begin(m_static_view);
+  auto last  = KE::end(m_static_view);
+  auto dest  = KE::begin(m_dynamic_view);
+
   EXPECT_EQ(KE::end(m_dynamic_view), KE::reverse_copy(first, last, dest));
 
+  const auto size = m_static_view.extent(0);
   for (std::size_t i = 0; i < size; i++) {
     EXPECT_EQ(i, m_static_view(i));
     EXPECT_EQ(size - 1 - i, m_dynamic_view(i));
