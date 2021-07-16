@@ -31,6 +31,7 @@ TARGETS =
 
 OBJ_PERF = PerfTestMain.o gtest-all.o
 OBJ_PERF += PerfTest_ExecSpacePartitioning.o
+OBJ_PERF += PerfTest_ParallelFor.o
 OBJ_PERF += PerfTestGramSchmidt.o
 OBJ_PERF += PerfTestHexGrad.o
 OBJ_PERF += PerfTest_CustomReduction.o
