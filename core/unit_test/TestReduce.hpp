@@ -559,11 +559,24 @@ TEST(TEST_CATEGORY, double_reduce_dynamic) {
   TestReduceDynamic<double, TEST_EXECSPACE>(1000000);
 }
 
+// FIXME_OPENMPTARGET : The feature works with LLVM/13 on NVIDIA
+// architectures. The jenkins currently tests with LLVM/12.
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300)
 TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(0);
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(1000000);
 }
+#endif
+#else
+TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
+  TestReduceDynamicView<int64_t, TEST_EXECSPACE>(0);
+  TestReduceDynamicView<int64_t, TEST_EXECSPACE>(1000000);
+}
+#endif
 
+// FIXME_OPENMPTARGET: Not yet implemented.
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, int_combined_reduce) {
   using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
   constexpr uint64_t nw = 1000;
@@ -626,4 +639,5 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
   ASSERT_EQ(nsum, result2);
   ASSERT_EQ(nsum, result3_v());
 }
+#endif
 }  // namespace Test
