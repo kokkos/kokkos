@@ -152,4 +152,22 @@ TEST_F(std_algorithms_mod_seq_ops, copy_if_lambda) {
 #endif
 }
 
+TEST_F(std_algorithms_mod_seq_ops, reverse_copy) {
+  namespace KE    = Kokkos::Experimental;
+  const auto size = m_static_view.extent(0);
+  for (std::size_t i = 0; i < size; i++) {
+    m_static_view(i) = i;
+  }
+
+  auto first = KE::begin(m_static_view);
+  auto last  = KE::end(m_static_view);
+  auto dest  = KE::begin(m_dynamic_view);
+  EXPECT_EQ(KE::end(m_dynamic_view), KE::reverse_copy(first, last, dest));
+
+  for (std::size_t i = 0; i < size; i++) {
+    EXPECT_EQ(i, m_static_view(i));
+    EXPECT_EQ(size - 1 - i, m_dynamic_view(i));
+  }
+}
+
 }  // namespace Test

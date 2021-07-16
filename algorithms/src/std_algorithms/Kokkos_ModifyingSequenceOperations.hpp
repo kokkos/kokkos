@@ -161,6 +161,30 @@ OutputIterator copy_if(InputIterator first, InputIterator last,
   return d_first;
 }
 
+// -------------------
+// reverse_copy
+// -------------------
+template <class InputIterator, class OutputIterator>
+struct ReverseCopy {
+  InputIterator m_last;
+  OutputIterator m_dest_first;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { *(m_dest_first + i) = *(m_last - 1 - i); }
+
+  ReverseCopy(InputIterator _last, OutputIterator _dest_first)
+      : m_last(_last), m_dest_first(_dest_first) {}
+};
+
+template <class InputIterator, class OutputIterator>
+OutputIterator reverse_copy(InputIterator first, InputIterator last,
+                            OutputIterator d_first) {
+  const auto numOfElements = last - first;
+  Kokkos::parallel_for(
+      numOfElements, ReverseCopy<InputIterator, OutputIterator>(last, d_first));
+  return d_first + numOfElements;
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
