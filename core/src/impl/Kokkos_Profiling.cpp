@@ -71,7 +71,9 @@ void tool_invoked_fence(const uint32_t /* devID */) {
    * Eventually we want to support fencing only
    * a given stream/resource
    */
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::Tools::Experimental::Impl::tool_invoked_fence: Tool Requested "
+      "Fence");
 }
 }  // namespace Impl
 #ifdef KOKKOS_ENABLE_TUNING
@@ -132,7 +134,8 @@ inline void invoke_kokkosp_callback(
     if (may_require_global_fencing == MayRequireGlobalFencing::Yes &&
         (Kokkos::Tools::Experimental::tool_requirements
              .requires_global_fencing)) {
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::Tools::invoke_kokkosp_callback: Kokkos Profile Tool Fence");
     }
     (*callback)(std::forward<Args>(args)...);
   }

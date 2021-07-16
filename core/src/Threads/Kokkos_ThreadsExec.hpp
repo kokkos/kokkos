@@ -63,7 +63,6 @@
 
 namespace Kokkos {
 namespace Impl {
-
 class ThreadsExec {
  public:
   // Fan array has log_2(NT) reduction threads plus 2 scan threads
@@ -473,7 +472,10 @@ class ThreadsExec {
   static void start(void (*)(ThreadsExec &, const void *), const void *);
 
   static int in_parallel();
-  static void fence();
+  static void fence(
+      Impl::fence_is_static is_static = Impl::fence_is_static::yes);
+  static void fence(const std::string &, Impl::fence_is_static is_static =
+                                             Impl::fence_is_static::yes);
   static bool sleep();
   static bool wake();
 
@@ -636,6 +638,9 @@ inline void Threads::print_configuration(std::ostream &s, const bool detail) {
 }
 
 inline void Threads::impl_static_fence() { Impl::ThreadsExec::fence(); }
+inline void Threads::impl_static_fence(const std::string &name) {
+  Impl::ThreadsExec::fence(name);
+}
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

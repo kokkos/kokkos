@@ -130,6 +130,11 @@ void ExecSpaceManager::static_fence() {
     to_fence.second->fence();
   }
 }
+void ExecSpaceManager::static_fence(const std::string& name) {
+  for (auto& to_fence : exec_space_factory_list) {
+    to_fence.second->fence(name);
+  }
+}
 void ExecSpaceManager::print_configuration(std::ostream& msg,
                                            const bool detail) {
   for (auto& to_print : exec_space_factory_list) {
@@ -559,7 +564,9 @@ void finalize_internal(const bool all_spaces = false) {
   g_tune_internals = false;
 }
 
-void fence_internal() { Impl::ExecSpaceManager::get_instance().static_fence(); }
+void fence_internal(const std::string& name) {
+  Impl::ExecSpaceManager::get_instance().static_fence(name);
+}
 
 bool check_arg(char const* arg, char const* expected) {
   std::size_t arg_len = std::strlen(arg);
@@ -1087,7 +1094,8 @@ void finalize_all() {
   Impl::finalize_internal(all_spaces);
 }
 
-void fence() { Impl::fence_internal(); }
+void fence() { Impl::fence_internal("Kokkos::fence: Unnamed Global Fence"); }
+void fence(const std::string& name) { Impl::fence_internal(name); }
 
 void print_helper(std::ostringstream& out,
                   const std::map<std::string, std::string>& print_me) {

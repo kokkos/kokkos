@@ -578,8 +578,11 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
 
   reduce_adaptor_t::execute(label, policy, combined_functor, combined_reducer);
   Impl::ParallelReduceFence<typename PolicyType::execution_space,
-                            combined_reducer_type>::fence(policy.space(),
-                                                          combined_reducer);
+                            combined_reducer_type>::
+      fence(
+          policy.space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          combined_reducer);
   combined_reducer.write_value_back_to_original_references(
       value, Impl::_make_reducer_from_arg<space_type>(returnType1),
       Impl::_make_reducer_from_arg<space_type>(returnType2),

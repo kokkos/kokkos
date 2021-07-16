@@ -83,7 +83,9 @@ class SYCL {
   SYCL();
   explicit SYCL(const sycl::queue&);
 
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept {
+    return m_space_instance->impl_get_instance_id();
+  }
 
   sycl::context sycl_context() const noexcept {
     return m_space_instance->m_queue->get_context();
@@ -110,7 +112,9 @@ class SYCL {
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
   void fence() const;
+  void fence(const std::string&) const;
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream&, const bool detail = false);
@@ -165,6 +169,7 @@ class SYCLSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
   void initialize(const InitArguments& args) final;
   void finalize(const bool) final;
   void fence() final;
+  void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 

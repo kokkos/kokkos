@@ -178,6 +178,8 @@ void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
   return m_team_scratch_ptr;
 }
 
+uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
+
 void SYCLInternal::finalize() {
   SYCL().fence();
   was_finalized = true;

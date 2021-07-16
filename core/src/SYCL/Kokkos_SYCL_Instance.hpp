@@ -49,7 +49,7 @@
 #include <CL/sycl.hpp>
 
 #include <impl/Kokkos_Error.hpp>
-
+#include <impl/Kokkos_Profiling.hpp>
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -71,6 +71,7 @@ class SYCLInternal {
   void* resize_team_scratch_space(std::int64_t bytes,
                                   bool force_shrink = false);
 
+  uint32_t impl_get_instance_id() const;
   int m_syclDev = -1;
 
   size_t m_maxWorkgroupSize   = 0;
@@ -86,6 +87,8 @@ class SYCLInternal {
   int64_t m_team_scratch_current_size = 0;
   void* m_team_scratch_ptr            = nullptr;
 
+  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
   std::optional<sycl::queue> m_queue;
 
   // Using std::vector<std::optional<sycl::queue>> reveals a compiler bug when
@@ -105,7 +108,6 @@ class SYCLInternal {
       reset();
       m_q.emplace(std::move(q));
     }
-
     USMObjectMem() = default;
     explicit USMObjectMem(sycl::queue q) noexcept : m_q(std::move(q)) {}
 

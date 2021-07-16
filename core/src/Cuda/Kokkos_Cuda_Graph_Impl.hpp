@@ -108,7 +108,7 @@ struct GraphImpl<Kokkos::Cuda> {
     // TODO @graphs we need to somehow indicate the need for a fence in the
     //              destructor of the GraphImpl object (so that we don't have to
     //              just always do it)
-    m_execution_space.fence();
+    m_execution_space.fence("Kokkos::GraphImpl::~GraphImpl: Graph Destruction");
     KOKKOS_EXPECTS(bool(m_graph))
     if (bool(m_graph_exec)) {
       CUDA_SAFE_CALL(cudaGraphExecDestroy(m_graph_exec));

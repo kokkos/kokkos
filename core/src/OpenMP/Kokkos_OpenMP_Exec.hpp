@@ -151,7 +151,14 @@ int OpenMP::impl_thread_pool_rank() noexcept {
 #endif
 }
 
-inline void OpenMP::impl_static_fence(OpenMP const& /*instance*/) noexcept {}
+inline void OpenMP::impl_static_fence(OpenMP const& /**instance*/,
+                                      const std::string& name) noexcept {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      []() {});
+}
 
 inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;

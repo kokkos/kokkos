@@ -2887,7 +2887,7 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, policy);
       closure.execute();
-      space.fence();
+      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Tools::Impl::end_parallel_for(policy, *this, functor_name,
                                               kpID);
@@ -2938,7 +2938,8 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, PolicyType(0, n));
       closure.execute();
-      space.fence();
+      space.fence(
+          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in view");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
