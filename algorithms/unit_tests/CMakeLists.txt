@@ -37,6 +37,7 @@ ENDIF()
 SET(ALGORITHM UnitTestMain.cpp)
 
 LIST(APPEND ALGORITHM_SOURCES
+  TestStdAlgorithmsModSeqOps.cpp
   TestStdAlgorithmsNonModSeqOps.cpp
   TestStdAlgorithmsMinMaxOps.cpp
 )

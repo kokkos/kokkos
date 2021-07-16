@@ -45,8 +45,12 @@
 #ifndef KOKKOS_MODIFYING_SEQUENCE_OPERATIONS_HPP
 #define KOKKOS_MODIFYING_SEQUENCE_OPERATIONS_HPP
 
-/// \file Kokkos_NonModifyingSequenceOperations.hpp
-/// \brief Kokkos non-modifying sequence operations
+#include <Kokkos_Core.hpp>
+#include "Kokkos_BeginEnd.hpp"
+#include "Kokkos_StdAlgorithmsConstraints.hpp"
+
+/// \file Kokkos_ModifyingSequenceOperations.hpp
+/// \brief Kokkos modifying sequence operations
 
 namespace Kokkos {
 namespace Experimental {
@@ -68,6 +72,94 @@ namespace Experimental {
 // swap_ranges
 // iter_swap
 // reverse_copy
+
+// -------------------
+// copy
+// -------------------
+template <class InputIterator, class OutputIterator>
+struct Copy {
+  InputIterator m_first;
+  OutputIterator m_dest_first;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { *(m_dest_first + i) = *(m_first + i); }
+
+  Copy(InputIterator _first, OutputIterator _dest_first)
+      : m_first(_first), m_dest_first(_dest_first) {}
+};
+
+template <class InputIterator, class OutputIterator>
+OutputIterator copy(InputIterator first, InputIterator last,
+                    OutputIterator d_first) {
+  const auto numOfElements = last - first;
+  Kokkos::parallel_for(numOfElements,
+                       Copy<InputIterator, OutputIterator>(first, d_first));
+  return d_first + numOfElements;
+}
+
+template <class DataType1, class... Properties1, class DataType2,
+          class... Properties2>
+auto copy(const Kokkos::View<DataType1, Properties1...>& source,
+          Kokkos::View<DataType2, Properties2...>& dest) {
+  using ViewInType1 = Kokkos::View<DataType1, Properties1...>;
+  using ViewInType2 = Kokkos::View<DataType2, Properties2...>;
+  static_assert(is_admissible_to_kokkos_std_non_modifying_sequence_op<
+                    ViewInType1>::value and
+                    is_admissible_to_kokkos_std_non_modifying_sequence_op<
+                        ViewInType2>::value,
+                "Currently, Kokkos::Experimental::copy only accepts 1D Views.");
+  return Kokkos::Experimental::copy(cbegin(source), cend(source), begin(dest));
+}
+
+// -------------------
+// copy_n
+// -------------------
+template <class InputIterator, class Size, class OutputIterator>
+OutputIterator copy_n(InputIterator first, Size count, OutputIterator result) {
+  if (count < 0) {
+    return result;
+  }
+
+  return Kokkos::Experimental::copy(first, first + count, result);
+}
+
+// -------------------
+// copy_backward
+// -------------------
+template <class IteratorType1, class IteratorType2>
+struct CopyBackward {
+  IteratorType1 m_last;
+  IteratorType2 m_dest_last;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { *(m_dest_last - i) = *(m_last - i); }
+
+  CopyBackward(IteratorType1 _last, IteratorType2 _dest_last)
+      : m_last(_last), m_dest_last(_dest_last) {}
+};
+
+template <class IteratorType1, class IteratorType2>
+IteratorType2 copy_backward(IteratorType1 first, IteratorType1 last,
+                            IteratorType2 d_last) {
+  const auto num_elements = last - first;
+  Kokkos::parallel_for(
+      num_elements, CopyBackward<IteratorType1, IteratorType2>(last, d_last));
+  return d_last - num_elements;
+}
+
+// -------------------
+// copy_if
+// -------------------
+template <class InputIterator, class OutputIterator, class Predicate>
+OutputIterator copy_if(InputIterator first, InputIterator last,
+                       OutputIterator d_first, Predicate pred) {
+  for (; first != last; ++first)
+    if (pred(*first)) {
+      *d_first = *first;
+      ++d_first;
+    }
+  return d_first;
+}
 
 }  // namespace Experimental
 }  // namespace Kokkos
