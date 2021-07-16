@@ -1334,9 +1334,9 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   using functor_type = FunctorType;
 
   static_assert(
-      IS_VOID || IS_REJECT || 0 == (sizeof(ValueType) % sizeof(int)),
+      IS_VOID || IS_REJECT || sizeof(ValueType) != 3,
       "Reduction functor's value_type deduced from functor::operator() "
-      "requires: 0 == sizeof(value_type) % sizeof(int)");
+      "requires: sizeof(value_type) != 3");
 
   enum { StaticValueSize = IS_VOID || IS_REJECT ? 0 : sizeof(ValueType) };
 
