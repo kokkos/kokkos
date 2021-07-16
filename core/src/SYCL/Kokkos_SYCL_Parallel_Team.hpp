@@ -418,12 +418,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               functor(work_tag(), team_member);
           });
     });
-// FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
     q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
-#else
-    space.fence();
-#endif
     return parallel_for_event;
   }
 
@@ -610,12 +605,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                &results_ptr[0]);
             });
       });
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      space.fence();
-#endif
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -691,12 +681,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   n_wgroups <= 1 && item.get_group_linear_id() == 0);
             });
       });
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      space.fence();
-#endif
       last_reduction_event = parallel_reduce_event;
 
       first_run = false;
