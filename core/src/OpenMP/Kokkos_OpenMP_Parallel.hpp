@@ -54,6 +54,8 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
+#include <mutex>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -113,7 +115,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     if (OpenMP::in_parallel()) {
       exec_range<WorkTag>(m_functor, m_policy.begin(), m_policy.end());
     } else {
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+      std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
 
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
       {
@@ -143,7 +145,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy) {}
 };
@@ -193,7 +195,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       ParallelFor::exec_range(m_mdr_policy, m_functor, m_policy.begin(),
                               m_policy.end());
     } else {
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+      std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
 
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
       {
@@ -224,7 +226,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
@@ -320,8 +322,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
-
+    std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
 
@@ -394,7 +395,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -407,7 +408,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
@@ -476,11 +477,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
-
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
 
+    std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
                                    0  // team_shared_bytes
@@ -551,7 +551,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
@@ -565,7 +565,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   inline ParallelReduce(const FunctorType& arg_functor,
                         MDRangePolicy arg_policy, const ReducerType& reducer)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
@@ -643,11 +643,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
-
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
 
+    std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
                                    0  // team_shared_bytes
@@ -703,7 +702,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   inline ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy) {}
 
@@ -758,11 +757,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
-
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
 
+    std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
                                    0  // team_shared_bytes
@@ -823,7 +821,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   inline ParallelScanWithTotal(const FunctorType& arg_functor,
                                const Policy& arg_policy,
                                ReturnType& arg_returnvalue)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_returnvalue(arg_returnvalue) {}
@@ -901,13 +899,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
-
     const size_t pool_reduce_size  = 0;  // Never shrinks
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE * m_policy.team_size();
     const size_t team_shared_size  = m_shmem_size + m_policy.scratch_size(1);
     const size_t thread_local_size = 0;  // Never shrinks
 
+    std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
@@ -949,7 +946,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
@@ -1050,7 +1047,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
       return;
     }
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -1059,6 +1055,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const size_t team_shared_size  = m_shmem_size + m_policy.scratch_size(1);
     const size_t thread_local_size = 0;  // Never shrinks
 
+    std::lock_guard<std::mutex> lock(m_instance->m_pool_mutex);
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
@@ -1148,7 +1145,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -1159,7 +1156,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),

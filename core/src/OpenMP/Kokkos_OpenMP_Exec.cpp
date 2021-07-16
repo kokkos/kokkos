@@ -62,78 +62,12 @@ namespace Kokkos {
 namespace Impl {
 
 int g_openmp_hardware_max_threads = 1;
+OpenMPExec *g_openmp_instance     = nullptr;
 
-__thread int t_openmp_hardware_id            = 0;
-__thread Impl::OpenMPExec *t_openmp_instance = nullptr;
-
-void OpenMPExec::validate_partition(const int nthreads, int &num_partitions,
-                                    int &partition_size) {
-  if (nthreads == 1) {
-    num_partitions = 1;
-    partition_size = 1;
-  } else if (num_partitions < 1 && partition_size < 1) {
-    int idle = nthreads;
-    for (int np = 2; np <= nthreads; ++np) {
-      for (int ps = 1; ps <= nthreads / np; ++ps) {
-        if (nthreads - np * ps < idle) {
-          idle           = nthreads - np * ps;
-          num_partitions = np;
-          partition_size = ps;
-        }
-        if (idle == 0) {
-          break;
-        }
-      }
-    }
-  } else if (num_partitions < 1 && partition_size > 0) {
-    if (partition_size <= nthreads) {
-      num_partitions = nthreads / partition_size;
-    } else {
-      num_partitions = 1;
-      partition_size = nthreads;
-    }
-  } else if (num_partitions > 0 && partition_size < 1) {
-    if (num_partitions <= nthreads) {
-      partition_size = nthreads / num_partitions;
-    } else {
-      num_partitions = nthreads;
-      partition_size = 1;
-    }
-  } else if (num_partitions * partition_size > nthreads) {
-    int idle     = nthreads;
-    const int NP = num_partitions;
-    const int PS = partition_size;
-    for (int np = NP; np > 0; --np) {
-      for (int ps = PS; ps > 0; --ps) {
-        if ((np * ps <= nthreads) && (nthreads - np * ps < idle)) {
-          idle           = nthreads - np * ps;
-          num_partitions = np;
-          partition_size = ps;
-        }
-        if (idle == 0) {
-          break;
-        }
-      }
-    }
-  }
-}
-
-void OpenMPExec::verify_is_master(const char *const label) {
-  if (!t_openmp_instance) {
-    std::string msg(label);
-    msg.append(" ERROR: in parallel or not initialized");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
+thread_local int t_openmp_hardware_id = 0;
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
 
 void OpenMPExec::clear_thread_data() {
   const size_t member_bytes =
@@ -275,7 +209,7 @@ void OpenMP::impl_initialize(int thread_count) {
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  if (Impl::t_openmp_instance) {
+  if (Impl::g_openmp_instance) {
     finalize();
   }
 
@@ -331,7 +265,6 @@ void OpenMP::impl_initialize(int thread_count) {
 // setup thread local
 #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads)
     {
-      Impl::t_openmp_instance    = nullptr;
       Impl::t_openmp_hardware_id = omp_get_thread_num();
       Impl::SharedAllocationRecord<void, void>::tracking_enable();
     }
@@ -344,7 +277,7 @@ void OpenMP::impl_initialize(int thread_count) {
       Kokkos::Impl::throw_runtime_exception(f.get_error_message());
     }
 
-    Impl::t_openmp_instance =
+    Impl::g_openmp_instance =
         new (ptr) Impl::OpenMPExec(Impl::g_openmp_hardware_max_threads);
 
     // New, unified host thread team data:
@@ -354,7 +287,7 @@ void OpenMP::impl_initialize(int thread_count) {
       size_t team_shared_bytes  = 1024 * thread_count;
       size_t thread_local_bytes = 1024;
 
-      Impl::t_openmp_instance->resize_thread_data(
+      Impl::g_openmp_instance->resize_thread_data(
           pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
           thread_local_bytes);
     }
@@ -384,21 +317,21 @@ void OpenMP::impl_initialize(int thread_count) {
 void OpenMP::impl_finalize() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
-    if (!Impl::t_openmp_instance) msg.append(": not initialized");
+    if (!Impl::g_openmp_instance) msg.append(": not initialized");
     if (omp_in_parallel()) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  if (Impl::t_openmp_instance) {
+  if (Impl::g_openmp_instance) {
     // Silence Cuda Warning
-    const int nthreads = Impl::t_openmp_instance->m_pool_size <=
+    const int nthreads = Impl::g_openmp_instance->m_pool_size <=
                                  Impl::g_openmp_hardware_max_threads
                              ? Impl::g_openmp_hardware_max_threads
-                             : Impl::t_openmp_instance->m_pool_size;
+                             : Impl::g_openmp_instance->m_pool_size;
     (void)nthreads;
 
     using Exec     = Impl::OpenMPExec;
-    Exec *instance = Impl::t_openmp_instance;
+    Exec *instance = Impl::g_openmp_instance;
     instance->~Exec();
 
     OpenMP::memory_space space;
@@ -407,9 +340,9 @@ void OpenMP::impl_finalize() {
 #pragma omp parallel num_threads(nthreads)
     {
       Impl::t_openmp_hardware_id = 0;
-      Impl::t_openmp_instance    = nullptr;
       Impl::SharedAllocationRecord<void, void>::tracking_disable();
     }
+    Impl::g_openmp_instance = nullptr;
 
     // allow main thread to track
     Impl::SharedAllocationRecord<void, void>::tracking_enable();
@@ -425,11 +358,9 @@ void OpenMP::impl_finalize() {
 void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   s << "Kokkos::OpenMP";
 
-  const bool is_initialized = Impl::t_openmp_instance != nullptr;
+  const bool is_initialized = Impl::g_openmp_instance != nullptr;
 
   if (is_initialized) {
-    Impl::OpenMPExec::verify_is_master("OpenMP::print_configuration");
-
     const int numa_count      = 1;
     const int core_per_numa   = Impl::g_openmp_hardware_max_threads;
     const int thread_per_core = 1;

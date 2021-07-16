@@ -65,6 +65,7 @@
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 
 #include <omp.h>
+#include <mutex>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -75,9 +76,9 @@ namespace Impl {
 class OpenMPExec;
 
 extern int g_openmp_hardware_max_threads;
+extern OpenMPExec* g_openmp_instance;
 
-extern __thread int t_openmp_hardware_id;
-extern __thread OpenMPExec* t_openmp_instance;
+extern thread_local int t_openmp_hardware_id;
 
 //----------------------------------------------------------------------------
 /** \brief  Data for OpenMP thread execution */
@@ -89,9 +90,6 @@ class OpenMPExec {
   enum { MAX_THREAD_COUNT = 512 };
 
   void clear_thread_data();
-
-  static void validate_partition(const int nthreads, int& num_partitions,
-                                 int& partition_size);
 
  private:
   OpenMPExec(int arg_pool_size)
@@ -105,8 +103,6 @@ class OpenMPExec {
   HostThreadTeamData* m_pool[MAX_THREAD_COUNT];
 
  public:
-  static void verify_is_master(const char* const);
-
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
 
@@ -117,6 +113,8 @@ class OpenMPExec {
   inline HostThreadTeamData* get_thread_data(int i) const noexcept {
     return m_pool[i];
   }
+
+  std::mutex m_pool_mutex;
 };
 
 }  // namespace Impl
@@ -128,24 +126,23 @@ class OpenMPExec {
 namespace Kokkos {
 
 inline bool OpenMP::impl_is_initialized() noexcept {
-  return Impl::t_openmp_instance != nullptr;
+  return Impl::g_openmp_instance != nullptr;
 }
 
 inline bool OpenMP::in_parallel(OpenMP const&) noexcept {
-  // t_openmp_instance is only non-null on a master thread
-  return !Impl::t_openmp_instance ||
-         Impl::t_openmp_instance->m_level < omp_get_level();
+  return !Impl::g_openmp_instance ||
+         Impl::g_openmp_instance->m_level < omp_get_level();
 }
 
 inline int OpenMP::impl_thread_pool_size() noexcept {
   return OpenMP::in_parallel() ? omp_get_num_threads()
-                               : Impl::t_openmp_instance->m_pool_size;
+                               : Impl::g_openmp_instance->m_pool_size;
 }
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::impl_thread_pool_rank() noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  return Impl::t_openmp_instance ? 0 : omp_get_thread_num();
+  return omp_get_thread_num();
 #else
   return -1;
 #endif
@@ -155,60 +152,6 @@ inline void OpenMP::impl_static_fence(OpenMP const& /*instance*/) noexcept {}
 
 inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;
-}
-
-template <typename F>
-void OpenMP::partition_master(F const& f, int num_partitions,
-                              int partition_size) {
-#if _OPENMP >= 201811
-  if (omp_get_max_active_levels() > 1) {
-#else
-  if (omp_get_nested()) {
-#endif
-    using Exec = Impl::OpenMPExec;
-
-    Exec* prev_instance = Impl::t_openmp_instance;
-
-    Exec::validate_partition(prev_instance->m_pool_size, num_partitions,
-                             partition_size);
-
-    OpenMP::memory_space space;
-
-#pragma omp parallel num_threads(num_partitions)
-    {
-      void* ptr = nullptr;
-      try {
-        ptr = space.allocate(sizeof(Exec));
-      } catch (
-          Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-        // For now, just rethrow the error message the existing way
-        Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
-      }
-
-      Impl::t_openmp_instance = new (ptr) Exec(partition_size);
-
-      size_t pool_reduce_bytes  = 32 * partition_size;
-      size_t team_reduce_bytes  = 32 * partition_size;
-      size_t team_shared_bytes  = 1024 * partition_size;
-      size_t thread_local_bytes = 1024;
-
-      Impl::t_openmp_instance->resize_thread_data(
-          pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
-          thread_local_bytes);
-
-      omp_set_num_threads(partition_size);
-      f(omp_get_thread_num(), omp_get_num_threads());
-
-      Impl::t_openmp_instance->~Exec();
-      space.deallocate(Impl::t_openmp_instance, sizeof(Exec));
-      Impl::t_openmp_instance = nullptr;
-    }
-
-    Impl::t_openmp_instance = prev_instance;
-  } else {
-    // nested openmp not enabled
-    f(0, 1);
-  }
 }
 
 namespace Experimental {
