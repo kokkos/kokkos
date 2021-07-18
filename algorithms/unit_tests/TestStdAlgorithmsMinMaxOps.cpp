@@ -50,18 +50,22 @@ namespace Test {
 struct std_algorithms_min_max : public ::testing::Test {
   using value_type = int;
 
+  const int m_numberOfFillingCases = 4;
+
+  // views that we need to test
   using static_view_t = Kokkos::View<value_type[10]>;
-  static_view_t m_static_view{"std-algo-test-1D-contiguous-view-static"};
+  static_view_t m_static_view{"std-algo-min-max-ops-test-1D-contiguous-view-static"};
 
   using dyn_view_t = Kokkos::View<value_type*>;
-  dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic", 10};
+  dyn_view_t m_dynamic_view{"std-algo-min-max-ops-test-1D-contiguous-view-dynamic", 10};
 
   using strided_view_t = Kokkos::View<value_type*, Kokkos::LayoutStride>;
   Kokkos::LayoutStride layout{10, 2};
-  strided_view_t m_strided_view{"std-algo-test-1D-strided-view", layout};
+  strided_view_t m_strided_view{"std-algo-min-max-ops-test-1D-strided-view", layout};
 
+  // utility methods
   template <class ViewFromType>
-  void copyViewToFixturesViews(ViewFromType viewFrom) {
+  void copyInputViewToFixtureViews(ViewFromType viewFrom) {
     stdalgos::CopyFunctor<ViewFromType, static_view_t> F1(viewFrom,
                                                           m_static_view);
     Kokkos::parallel_for("_std_algo_copy1", viewFrom.extent(0), F1);
@@ -72,7 +76,7 @@ struct std_algorithms_min_max : public ::testing::Test {
 
     stdalgos::CopyFunctor<ViewFromType, strided_view_t> F3(viewFrom,
                                                            m_strided_view);
-    Kokkos::parallel_for("_std_algo_copy2", viewFrom.extent(0), F3);
+    Kokkos::parallel_for("_std_algo_copy3", viewFrom.extent(0), F3);
   }
 
   void fillFixtureViews(int caseNumber) {
@@ -135,7 +139,7 @@ struct std_algorithms_min_max : public ::testing::Test {
     }
 
     Kokkos::deep_copy(tmpView, tmp_view_h);
-    copyViewToFixturesViews(tmpView);
+    copyInputViewToFixtureViews(tmpView);
   }
 
   std::pair<int, value_type> goldIndexValuePair(int caseNumber) {
@@ -153,10 +157,26 @@ struct std_algorithms_min_max : public ::testing::Test {
   }
 };
 
-template <class goldPairType, class ItType, class TestedViewType>
-void std_algo_min_max_verify(const goldPairType& goldPair, ItType result,
-                             TestedViewType testedView) {
+template<class ValueType>
+struct StdAlgoMinMaxOpsTestCustomLessThanComparator
+{
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(const ValueType & a, const ValueType & b) const
+  {
+    return a < b;
+  }
+
+  StdAlgoMinMaxOpsTestCustomLessThanComparator(){}
+};
+
+template <class GoldItindexValuePairType, class ItType, class TestedViewType>
+void std_algo_min_max_test_verify(const GoldItindexValuePairType & goldPair,
+			     const ItType result,
+                             TestedViewType testedView)
+{
   namespace KE = Kokkos::Experimental;
+
+  // check that iterator is correct
   EXPECT_EQ(result - KE::cbegin(testedView), std::get<0>(goldPair));
 
   using gold_view_t = Kokkos::View<int>;
@@ -169,118 +189,135 @@ void std_algo_min_max_verify(const goldPairType& goldPair, ItType result,
   EXPECT_EQ(gold_v_h(), std::get<1>(goldPair));
 }
 
+
+/// --------------------------
+/// MACROS to simplify things
+/// --------------------------
+#define MAX_ELEMENT_TRIVIAL_DATA_TEST(VIEWTOTEST)			\
+  namespace KE = Kokkos::Experimental;					\
+  const auto myTestedView = VIEWTOTEST;					\
+   									\
+  /* if we pass empty range, should return last */			\
+  auto result = KE::max_element(KE::cbegin(myTestedView), KE::cbegin(myTestedView)); \
+  EXPECT_TRUE(result == KE::cbegin(myTestedView));			\
+									\
+  /* if we pass empty range, should return last */			\
+  auto it0 = KE::cbegin(myTestedView) + 3;				\
+  auto it1 = it0;							\
+  auto result2 = KE::max_element(it0, it1);				\
+  EXPECT_TRUE(result2 == it1);						\
+
+#define MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(VIEWTOTEST, USEVIEW)	\
+  namespace KE = Kokkos::Experimental;				\
+  const auto myTestedView = VIEWTOTEST;				\
+  for (int id = 1; id <= m_numberOfFillingCases; ++id) {		\
+    fillFixtureViews(id);						\
+    const auto goldPair = goldIndexValuePair(id);			\
+    if (USEVIEW){							\
+      const auto result = KE::max_element(myTestedView);		\
+      std_algo_min_max_test_verify(goldPair, result, myTestedView);	\
+      const auto result2 = KE::max_element("MYCUSTOMLABEL1", myTestedView); \
+      std_algo_min_max_test_verify(goldPair, result2, myTestedView);	\
+    }									\
+    else{								\
+      const auto result = KE::max_element(KE::cbegin(myTestedView), KE::cend(myTestedView)); \
+      std_algo_min_max_test_verify(goldPair, result, myTestedView);	\
+      const auto result2 = KE::max_element("MYCUSTOMLABEL2", KE::cbegin(myTestedView), KE::cend(myTestedView)); \
+      std_algo_min_max_test_verify(goldPair, result2, myTestedView);	\
+    }									\
+  }									\
+
+#define MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(VIEWTOTEST, USEVIEW) \
+  namespace KE = Kokkos::Experimental;				\
+  const auto myTestedView = VIEWTOTEST;				\
+  for (int id = 1; id <= m_numberOfFillingCases; ++id) {		\
+    fillFixtureViews(id);						\
+    const auto goldPair = goldIndexValuePair(id);			\
+    StdAlgoMinMaxOpsTestCustomLessThanComparator<value_type> comp;	\
+    if (USEVIEW){							\
+      const auto result = KE::max_element(myTestedView, comp);		\
+      std_algo_min_max_test_verify(goldPair, result, myTestedView);	\
+      const auto result2 = KE::max_element("MYCUSTOMLABEL3", myTestedView, comp); \
+      std_algo_min_max_test_verify(goldPair, result2, myTestedView);	\
+    }									\
+    else{								\
+      const auto result = KE::max_element(KE::cbegin(myTestedView), KE::cend(myTestedView), comp); \
+      std_algo_min_max_test_verify(goldPair, result, myTestedView);	\
+      const auto result2 = KE::max_element("MYCUSTOMLABEL4", KE::cbegin(myTestedView), KE::cend(myTestedView), comp); \
+      std_algo_min_max_test_verify(goldPair, result2, myTestedView);	\
+    }									\
+  }									\
+
 ///
-/// TRIVIAL DATA
+/// TRIVIAL case
 ///
 TEST_F(std_algorithms_min_max, max_element_static_view_empty) {
-  namespace KE = Kokkos::Experimental;
-
-  const auto testedView = m_static_view;
-  for (int id = 1; id <= 4; ++id) {
-    // if we pass empty range, should return last
-    auto result =
-        KE::max_element(KE::cbegin(testedView), KE::cbegin(testedView));
-    EXPECT_TRUE(result == KE::cbegin(testedView));
-  }
+  MAX_ELEMENT_TRIVIAL_DATA_TEST(m_static_view);
 }
 
 TEST_F(std_algorithms_min_max, max_element_dynamic_view_empty) {
-  namespace KE = Kokkos::Experimental;
-
-  const auto testedView = m_dynamic_view;
-  for (int id = 1; id <= 4; ++id) {
-    // if we pass empty range, should return last
-    auto result =
-        KE::max_element(KE::cbegin(testedView), KE::cbegin(testedView));
-    EXPECT_TRUE(result == KE::cbegin(testedView));
-  }
+  MAX_ELEMENT_TRIVIAL_DATA_TEST(m_dynamic_view);
 }
 
 TEST_F(std_algorithms_min_max, max_element_strided_view_empty) {
-  namespace KE = Kokkos::Experimental;
-
-  const auto testedView = m_strided_view;
-  for (int id = 1; id <= 4; ++id) {
-    // if we pass empty range, should return last
-    auto result =
-        KE::max_element(KE::cbegin(testedView), KE::cbegin(testedView));
-    EXPECT_TRUE(result == KE::cbegin(testedView));
-  }
+  MAX_ELEMENT_TRIVIAL_DATA_TEST(m_strided_view);
 }
 
 ///
-/// NON-TRIVIAL DATA
+/// NON-TRIVIAL DATA for STATIC VIEW
 ///
 TEST_F(std_algorithms_min_max, max_element_static_view_api_accept_iterators) {
-  namespace KE = Kokkos::Experimental;
+  MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(m_static_view, false);
+}
 
-  const auto testedView = m_static_view;
-  for (int id = 1; id <= 4; ++id) {
-    fillFixtureViews(id);
-    const auto goldPair = goldIndexValuePair(id);
-    auto result = KE::max_element(KE::cbegin(testedView), KE::cend(testedView));
-    std_algo_min_max_verify(goldPair, result, testedView);
-  }
+TEST_F(std_algorithms_min_max, max_element_static_view_api_accept_iterators_custom_comp) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(m_static_view, false);
 }
 
 TEST_F(std_algorithms_min_max, max_element_static_view_api_accept_view) {
-  namespace KE = Kokkos::Experimental;
-
-  const auto testedView = m_static_view;
-  for (int id = 1; id <= 4; ++id) {
-    fillFixtureViews(id);
-    const auto goldPair = goldIndexValuePair(id);
-    auto result         = KE::max_element(m_static_view);
-    std_algo_min_max_verify(goldPair, result, testedView);
-  }
+  MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(m_static_view, true);
 }
 
-TEST_F(std_algorithms_min_max, max_element_dynamic_view_api_accept_iterators) {
-  namespace KE = Kokkos::Experimental;
+TEST_F(std_algorithms_min_max, max_element_static_view_api_accept_view_custom_comp) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(m_static_view, true);
+}
 
-  const auto testedView = m_dynamic_view;
-  for (int id = 1; id <= 4; ++id) {
-    fillFixtureViews(id);
-    const auto goldPair = goldIndexValuePair(id);
-    auto result = KE::max_element(KE::cbegin(testedView), KE::cend(testedView));
-    std_algo_min_max_verify(goldPair, result, testedView);
-  }
+///
+/// NON-TRIVIAL DATA for DYNAMIC VIEW
+///
+TEST_F(std_algorithms_min_max, max_element_dynamic_view_api_accept_iterators) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(m_dynamic_view, false);
+}
+
+TEST_F(std_algorithms_min_max, max_element_dynamic_view_api_accept_iterators_custom_comp) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(m_dynamic_view, false);
 }
 
 TEST_F(std_algorithms_min_max, max_element_dynamic_view_api_accept_view) {
-  namespace KE = Kokkos::Experimental;
-
-  const auto testedView = m_dynamic_view;
-  for (int id = 1; id <= 4; ++id) {
-    fillFixtureViews(id);
-    const auto goldPair = goldIndexValuePair(id);
-    auto result         = KE::max_element(testedView);
-    std_algo_min_max_verify(goldPair, result, testedView);
-  }
+  MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(m_dynamic_view, true);
 }
 
-TEST_F(std_algorithms_min_max, max_element_strided_view_api_accept_itertors) {
-  namespace KE = Kokkos::Experimental;
+TEST_F(std_algorithms_min_max, max_element_dynamic_view_api_accept_view_custom_comp) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(m_dynamic_view, true);
+}
 
-  const auto testedView = m_strided_view;
-  for (int id = 1; id <= 4; ++id) {
-    fillFixtureViews(id);
-    const auto goldPair = goldIndexValuePair(id);
-    auto result = KE::max_element(KE::cbegin(testedView), KE::cend(testedView));
-    std_algo_min_max_verify(goldPair, result, testedView);
-  }
+///
+/// NON-TRIVIAL DATA for STRIDED VIEW
+///
+TEST_F(std_algorithms_min_max, max_element_strided_view_api_accept_iterators) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(m_strided_view, false);
+}
+
+TEST_F(std_algorithms_min_max, max_element_strided_view_api_accept_iterators_custom_comp) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(m_strided_view, false);
 }
 
 TEST_F(std_algorithms_min_max, max_element_strided_view_api_accept_view) {
-  namespace KE = Kokkos::Experimental;
+  MAX_ELEMENT_NON_TRIVIAL_DATA_TEST(m_strided_view, true);
+}
 
-  const auto testedView = m_strided_view;
-  for (int id = 1; id <= 4; ++id) {
-    fillFixtureViews(id);
-    const auto goldPair = goldIndexValuePair(id);
-    auto result         = KE::max_element(testedView);
-    std_algo_min_max_verify(goldPair, result, testedView);
-  }
+TEST_F(std_algorithms_min_max, max_element_strided_view_api_accept_view_custom_comp) {
+  MAX_ELEMENT_NON_TRIVIAL_DATA_CUSTOM_COMP_TEST(m_strided_view, true);
 }
 
 }  // namespace Test
