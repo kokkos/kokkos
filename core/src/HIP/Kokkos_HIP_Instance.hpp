@@ -110,6 +110,8 @@ class HIPInternal {
   mutable int m_cycleId = 0;
   // mutex to access d_driverWorkArray
   mutable std::mutex m_mutexWorkArray;
+  // mutex to access shared memory
+  mutable std::mutex m_mutexSharedMemory;
 
   // Scratch Spaces for Reductions
   size_type m_scratchSpaceCount = 0;
