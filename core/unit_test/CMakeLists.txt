@@ -124,6 +124,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         QuadPrecisionMath
+        ExecSpacePartitioning
         MathematicalSpecialFunctions
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
