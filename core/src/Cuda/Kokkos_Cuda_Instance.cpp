@@ -348,7 +348,8 @@ void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");
 }
 
-void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
+void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
+                              bool manage_stream) {
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = true;
@@ -577,7 +578,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
   }
 
-  m_stream = stream;
+  m_stream        = stream;
+  m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -745,6 +747,9 @@ void CudaInternal::finalize() {
         Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
     }
 
+    if (m_manage_stream && m_stream != nullptr)
+      CUDA_SAFE_CALL(cudaStreamDestroy(m_stream));
+
     m_cudaDev                 = -1;
     m_multiProcCount          = 0;
     m_maxWarpCount            = 0;
@@ -767,13 +772,13 @@ void CudaInternal::finalize() {
 
   // only destroy these if we're finalizing the singleton
   if (this == &singleton()) {
-    cudaFreeHost(constantMemHostStaging);
-    cudaEventDestroy(constantMemReusable);
+    CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
+    CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
     auto &deep_copy_space =
         Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
     if (deep_copy_space)
       deep_copy_space->impl_internal_space_instance()->finalize();
-    cudaStreamDestroy(cuda_get_deep_copy_stream());
+    CUDA_SAFE_CALL(cudaStreamDestroy(cuda_get_deep_copy_stream()));
   }
 }
 
@@ -882,7 +887,7 @@ Cuda::Cuda()
       "Cuda instance constructor");
 }
 
-Cuda::Cuda(cudaStream_t stream)
+Cuda::Cuda(cudaStream_t stream, bool manage_stream)
     : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
         ptr->finalize();
         delete ptr;
@@ -890,7 +895,7 @@ Cuda::Cuda(cudaStream_t stream)
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
   m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,
-                               stream);
+                               stream, manage_stream);
 }
 
 void Cuda::print_configuration(std::ostream &s, const bool) {
