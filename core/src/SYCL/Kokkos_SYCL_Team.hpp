@@ -93,7 +93,7 @@ class SYCLTeamMember {
   }
   KOKKOS_INLINE_FUNCTION int league_size() const {
     // FIXME_SYCL needs to be revised for vector_length>1.
-    return m_item.get_group_range(0);
+    return m_item.get_group_range(1);
   }
   KOKKOS_INLINE_FUNCTION int team_rank() const {
     return m_item.get_local_linear_id();
