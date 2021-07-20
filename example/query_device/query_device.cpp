@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
   msg << "MPI rank(" << mpi_rank << ") ";
 
 #endif
-
+  Kokkos::initialize(argc, argv);
   msg << "{" << std::endl;
 
   if (Kokkos::hwloc::available()) {
@@ -83,14 +83,12 @@ int main(int argc, char** argv) {
         << std::endl;
   }
 
-#if defined(KOKKOS_ENABLE_CUDA)
-  Kokkos::Cuda::print_configuration(msg);
-#endif
+  Kokkos::print_configuration(msg);
 
   msg << "}" << std::endl;
 
   std::cout << msg.str();
-
+  Kokkos::finalize();
 #if defined(USE_MPI)
 
   MPI_Finalize();
