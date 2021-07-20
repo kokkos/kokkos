@@ -84,7 +84,6 @@ int main(int argc, char** argv) {
   }
 
   Kokkos::print_configuration(msg);
-  ;
 
   msg << "}" << std::endl;
 
