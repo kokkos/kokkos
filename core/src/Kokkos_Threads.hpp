@@ -110,9 +110,6 @@ class Threads {
   static void impl_static_fence();
   static void impl_static_fence(const std::string& name);
 
-  void fence(Impl::fence_is_static is_static) const;
-  void fence(const std::string&, Impl::fence_is_static is_static) const;
-
   void fence() const;
   void fence(const std::string&) const;
 

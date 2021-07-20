@@ -121,7 +121,7 @@ class HIPInternal {
 
   hipDeviceProp_t m_deviceProp;
 
-  hipStream_t m_stream = nullptr;
+  hipStream_t m_stream   = nullptr;
   uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
       Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this));
   bool m_manage_stream = false;

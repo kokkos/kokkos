@@ -288,17 +288,21 @@ int ThreadsExec::in_parallel() {
   return s_current_function && (&s_threads_process != s_current_function_arg) &&
          (s_threads_process.m_pool_base || !is_process());
 }
+void ThreadsExec::fence() { internal_fence(Impl::fence_is_static::yes); }
+void ThreadsExec::fence(const std::string &name) {
+  internal_fence(name, Impl::fence_is_static::yes);
+}
 
-void ThreadsExec::fence(Impl::fence_is_static is_static) {
-  fence((is_static == Impl::fence_is_static::no)
-            ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
-            : "Kokkos::ThreadsExec::fence: Unnamed Global Fence",
-        is_static);
+void ThreadsExec::internal_fence(Impl::fence_is_static is_static) {
+  internal_fence((is_static == Impl::fence_is_static::no)
+                     ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
+                     : "Kokkos::ThreadsExec::fence: Unnamed Global Fence",
+                 is_static);
 }
 
 // Wait for root thread to become inactive
-void ThreadsExec::fence(const std::string &name,
-                        Impl::fence_is_static is_static) {
+void ThreadsExec::internal_fence(const std::string &name,
+                                 Impl::fence_is_static is_static) {
   const auto &fence_lam = [&]() {
     if (s_thread_pool_size[0]) {
       // Wait for the root thread to complete:
@@ -791,10 +795,10 @@ namespace Kokkos {
 
 int Threads::concurrency() { return impl_thread_pool_size(0); }
 void Threads::fence() const {
-  Impl::ThreadsExec::fence(Impl::fence_is_static::no);
+  Impl::ThreadsExec::internal_fence(Impl::fence_is_static::no);
 }
 void Threads::fence(const std::string &name) const {
-  Impl::ThreadsExec::fence(name, Impl::fence_is_static::no);
+  Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::no);
 }
 
 Threads &Threads::impl_instance(int) {
