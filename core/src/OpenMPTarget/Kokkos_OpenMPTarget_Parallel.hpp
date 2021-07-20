@@ -125,10 +125,10 @@ struct ParallelReduceCommon {
 template <class FunctorType, class PolicyType, class ReducerType,
           class PointerType, class ValueType>
 struct ParallelReduceSpecialize {
-  static void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
-                      PointerType /*result_ptr*/) {
-    enum { FunctorHasJoin = ReduceFunctorHasJoin<FunctorType>::value };
-    enum { UseReducerType = is_reducer_type<ReducerType>::value };
+  inline static void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
+                             PointerType /*result_ptr*/) {
+    constexpr int FunctorHasJoin = ReduceFunctorHasJoin<FunctorType>::value;
+    constexpr int UseReducerType = is_reducer_type<ReducerType>::value;
 
     std::stringstream error_message;
     error_message << "Error: Invalid Specialization " << FunctorHasJoin << ' '
@@ -144,10 +144,9 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
-  using ReducerConditional =
+  using ReducerTypeFwd =
       typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
+                                FunctorType, ReducerType>::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, TagType,
                          void>;
@@ -177,7 +176,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // teams (league_size) should be chosen by the compiler for optimal
     // performance based on the architecture.
     // However currently we have hardcoded it to 512 as it has shown the best
-    // performance for some micro-benchmarks with LLVM compiler.
+    // performance for some micro-benchmarks with LLVM compiler on NVIDIA V100.
 
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -406,10 +405,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
 
-  using ReducerConditional =
+  using ReducerTypeFwd =
       typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
+                                FunctorType, ReducerType>::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
@@ -420,9 +418,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename ValueTraits::pointer_type;
   using reference_type = typename ValueTraits::reference_type;
 
-  enum { HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
-  enum { UseReducer = is_reducer_type<ReducerType>::value };
-  enum { IsArray = std::is_pointer<reference_type>::value };
+  static constexpr int HasJoin    = ReduceFunctorHasJoin<FunctorType>::value;
+  static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+  static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
@@ -814,10 +812,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
-  using ReducerConditional =
+  using ReducerTypeFwd =
       typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
+                                FunctorType, ReducerType>::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, TagType,
                          void>;
@@ -1150,11 +1147,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
-
-  using ReducerConditional =
+  using ReducerTypeFwd =
       typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
+                                FunctorType, ReducerType>::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
@@ -1171,9 +1166,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   bool m_result_ptr_on_device;
   const int m_result_ptr_num_elems;
 
-  enum { HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
-  enum { UseReducer = is_reducer_type<ReducerType>::value };
-  enum { IsArray = std::is_pointer<reference_type>::value };
+  static constexpr int HasJoin    = ReduceFunctorHasJoin<FunctorType>::value;
+  static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+  static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
