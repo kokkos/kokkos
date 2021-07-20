@@ -95,6 +95,9 @@ const HIPInternalDevices &HIPInternalDevices::singleton() {
 }
 }  // namespace
 
+unsigned long *Impl::HIPInternal::constantMemHostStaging = nullptr;
+hipEvent_t Impl::HIPInternal::constantMemReusable        = nullptr;
+
 namespace Impl {
 
 //----------------------------------------------------------------------------
@@ -289,6 +292,15 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
   // Init the array for used for arbitrarily sized atomics
   if (m_stream == nullptr) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (m_stream == nullptr) {
+    HIP_SAFE_CALL(hipHostMalloc((void **)&constantMemHostStaging,
+                                HIPTraits::ConstantMemoryUsage));
+
+    HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -402,6 +414,12 @@ void HIPInternal::finalize() {
   if (nullptr != d_driverWorkArray) {
     HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
     d_driverWorkArray = nullptr;
+  }
+
+  // only destroy these if we're finalizing the singleton
+  if (this == &singleton()) {
+    HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
+    HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
   }
 }
 

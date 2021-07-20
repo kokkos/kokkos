@@ -65,6 +65,7 @@ struct HIPTraits {
   static int constexpr MaxThreadsPerBlock =
       1024;  // the maximum we can fit in a block
   static int constexpr ConstantMemoryUsage        = 0x008000; /* 32k bytes */
+  static int constexpr KernelArgumentLimit        = 0x001000; /*  4k bytes */
   static int constexpr ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
 };
 
@@ -132,6 +133,11 @@ class HIPInternal {
   mutable std::mutex m_team_scratch_mutex;
 
   bool was_finalized = false;
+
+  // FIXME_HIP: these want to be per-device, not per-stream...  use of 'static'
+  // here will break once there are multiple devices though
+  static unsigned long *constantMemHostStaging;
+  static hipEvent_t constantMemReusable;
 
   static HIPInternal &singleton();
 
