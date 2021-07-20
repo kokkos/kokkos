@@ -159,6 +159,7 @@ KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "CC-"))
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell echo "$(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version 2>&1 | grep -c nvcc)>0" | bc))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),clang)
+KOKKOS_INTERNAL_COMPILER_CRAY_CLANG  := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "clang++"))
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Apple clang)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 KOKKOS_INTERNAL_COMPILER_GCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),GCC)
@@ -238,7 +239,11 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_OPENMP_FLAG := -mp
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 1)
+    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+    else
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
+    endif
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
       KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
