@@ -138,13 +138,13 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
       // Broadcast task pointer:
 
       // Sync before the broadcast
-      KOKKOS_IMPL_CUDA_SYNCWARP;
+      __syncwarp(0xffffffff);
 
       // pretend it's an int* for shuffle purposes
       ((int*)&current_task)[0] =
-          KOKKOS_IMPL_CUDA_SHFL(((int*)&current_task)[0], 0, 32);
+          __shfl_sync(0xffffffff, ((int*)&current_task)[0], 0, 32);
       ((int*)&current_task)[1] =
-          KOKKOS_IMPL_CUDA_SHFL(((int*)&current_task)[1], 0, 32);
+          __shfl_sync(0xffffffff, ((int*)&current_task)[1], 0, 32);
 
       if (current_task) {
         KOKKOS_ASSERT(!current_task->as_runnable_task().get_respawn_flag());
@@ -168,7 +168,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
         // Synchronize threads of the warp and insure memory
         // writes are visible to all threads in the warp.
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        __syncwarp(0xffffffff);
 
         if (shared_memory_task_copy->is_team_runnable()) {
           // Thread Team Task
@@ -182,7 +182,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
         // Synchronize threads of the warp and insure memory
         // writes are visible to all threads in the warp.
 
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        __syncwarp(0xffffffff);
 
         // if(warp_lane < b % CudaTraits::WarpSize) b += CudaTraits::WarpSize;
         // b -= b % CudaTraits::WarpSize;
@@ -196,7 +196,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
         // writes are visible to root thread of the warp for
         // respawn or completion.
 
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        __syncwarp(0xffffffff);
 
         if (warp_lane == 0) {
           // If respawn requested copy respawn data back to main memory
@@ -378,12 +378,14 @@ class TaskQueueSpecializationConstrained<
       // Synchronize warp with memory fence before broadcasting task pointer:
 
       // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "A" );
-      KOKKOS_IMPL_CUDA_SYNCWARP;
+      __syncwarp(0xffffffff);
 
       // Broadcast task pointer:
 
-      ((int*)&task_ptr)[0] = KOKKOS_IMPL_CUDA_SHFL(((int*)&task_ptr)[0], 0, 32);
-      ((int*)&task_ptr)[1] = KOKKOS_IMPL_CUDA_SHFL(((int*)&task_ptr)[1], 0, 32);
+      ((int*)&task_ptr)[0] =
+          __shfl_sync(0xffffffff, ((int*)&task_ptr)[0], 0, 32);
+      ((int*)&task_ptr)[1] =
+          __shfl_sync(0xffffffff, ((int*)&task_ptr)[1], 0, 32);
 
 #if defined(KOKKOS_ENABLE_DEBUG)
       KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN("TaskQueue CUDA task_ptr");
@@ -413,7 +415,7 @@ class TaskQueueSpecializationConstrained<
         // writes are visible to all threads in the warp.
 
         // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "B" );
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        __syncwarp(0xffffffff);
 
         if (task_root_type::TaskTeam == task_shmem->m_task_type) {
           // Thread Team Task
@@ -427,7 +429,7 @@ class TaskQueueSpecializationConstrained<
         // writes are visible to all threads in the warp.
 
         // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "C" );
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        __syncwarp(0xffffffff);
 
         // copy task closure from shared to global memory:
 
@@ -440,7 +442,7 @@ class TaskQueueSpecializationConstrained<
         // respawn or completion.
 
         // KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN( "D" );
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        __syncwarp(0xffffffff);
 
         // If respawn requested copy respawn data back to main memory
 
@@ -604,7 +606,7 @@ class TaskExec<Kokkos::Cuda, Scheduler> {
 
   __device__ void team_barrier() const {
     if (1 < m_team_size) {
-      KOKKOS_IMPL_CUDA_SYNCWARP;
+      __syncwarp(0xffffffff);
     }
   }
 
