@@ -100,7 +100,7 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
 # FIXME: We need a proper solution to figure out whether to enable
 #        libatomic
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND
-    KOKKOS_ENABLE_OPENMPTARGET)
+    (KOKKOS_ENABLE_OPENMPTARGET OR (CMAKE_CXX_COMPILER_ID STREQUAL XLClang)))
   target_link_libraries(kokkoscore PUBLIC atomic)
 ENDIF()
 
