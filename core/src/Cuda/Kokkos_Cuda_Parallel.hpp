@@ -52,6 +52,7 @@
 #include <string>
 #include <cstdio>
 #include <cstdint>
+#include <type_traits>
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
@@ -1111,20 +1112,55 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     return n;
   }
-
   template <class TagType>
   struct ThrustFunctorWrapper {
     const FunctorType& f;
 
-    KOKKOS_FUNCTION
+    //KOKKOS_FUNCTION
+    __device__
     ThrustFunctorWrapper(const FunctorType& op) : f(op){};
+
+    template <class TagType_                      = TagType,
+              typename std::enable_if<std::is_same<TagType_, void>::value,
+                                      bool>::type = true>
+    //KOKKOS_FUNCTION value_type operator()(index_type i) const {
+    __device__ value_type operator()(index_type i) const {
+        printf("something here? %d\n", i);
+      // value_type val = InitValueType();
+      value_type val = (value_type)0;  // for now, assuming no init value
+      __threadfence();
+      f(i, val);
+      __threadfence();
+      printf("i: %d\n", i);
+      printf("value: %d\n", val);
+      return val;
+    }
+
+    template <class TagType_                      = TagType,
+              typename std::enable_if<!std::is_same<TagType_, void>::value,
+                                      bool>::type = true>
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+      // value_type val = InitValueType();
+      value_type val = (value_type)0;  // for now, assuming no init value
+      f(TagType(), i, val);
+      return val;
+    }
+  };
+/*
+  template <class TagType>
+  struct ThrustFunctorWrapper {
+    const FunctorType& f;
+    value_type _init;
+
+    KOKKOS_FUNCTION
+    ThrustFunctorWrapper(const FunctorType& op, value_type& init) : f(op), _init(init) {};
 
     template <class TagType_                      = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value,
                                       bool>::type = true>
     KOKKOS_FUNCTION value_type operator()(index_type i) const {
       // value_type val = InitValueType();
-      value_type val = (value_type)0;  // for now, assuming no init value
+      value_type val = _init;
       f(i, val);
       return val;
     }
@@ -1139,22 +1175,62 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       return val;
     }
   };
-
+*/
   inline void thrust_execute() {
     printf("using CUDA Thrust\n");
+    
+    thrust::counting_iterator<index_type> temp_iter_d(m_policy.begin());
 
-    thrust::counting_iterator<value_type> temp_iter_d(m_policy.begin());
+//    thrust::counting_iterator<index_type> temp_iter_end_d =
+//        m_policy.end();
+//        temp_iter_d + m_policy.end();
+   
+    thrust::counting_iterator<index_type> temp_iter_end_d(m_policy.end());
 
-    thrust::counting_iterator<value_type> temp_iter_end_d =
-        temp_iter_d + m_policy.end();
+    printf("m_policy.begin(): %d\n", m_policy.begin());
+    printf("m_policy.end(): %d\n", m_policy.end());
 
     value_type sum;
 
+    //m_functor(0, 0);
+
+    /*
+    if (!std::is_fundamental<value_type>::value && 
+        std::is_default_constructible<value_type>::value){
+        value_type init;
+    }
+    else {
+    value_type init;
+    }
+    */
+
+    //value_type init;
+
     ThrustFunctorWrapper<WorkTag> t_op(m_functor);
+//    ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
+
+    printf("t");
+    m_functor;
+    printf("his\n");
+
+    Kokkos::fence();
 
     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
                                    t_op, (value_type)0,
+    //    //                           t_op, t_op._init,
                                    thrust::plus<value_type>());
+
+    //sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+    //                               //t_op, (value_type)0,
+    //                               t_op, init,
+    //                               [](const value_type& myType1, const value_type& myType2){
+    //                                   value_type myType_return;
+    //                                   myType_return(myType1 + myType2);
+    //                                   return myType_return;
+    //                               });
+                                   //thrust::plus<value_type>());
+
+    Kokkos::fence();
 
     *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
@@ -1176,6 +1252,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         !ReduceFunctorHasFinal<FunctorType>::value &&
         !Policy::is_graph_kernel::value &&
         std::is_same<ReducerType, InvalidType>::value &&
+        (nwork > 0) &&
         m_result_ptr_host_accessible) {
       thrust_execute();
     } else {
