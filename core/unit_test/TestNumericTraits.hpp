@@ -198,7 +198,9 @@ struct TestNumericTraits<
 TEST(TEST_CATEGORY, numeric_traits_infinity) {
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, double, Infinity>();
+#ifndef KOKKOS_COMPILER_IBM  // fails with XL 16.1.1 see issue #4100
   TestNumericTraits<TEST_EXECSPACE, long double, Infinity>();
+#endif
 }
 
 TEST(TEST_CATEGORY, numeric_traits_epsilon) {
