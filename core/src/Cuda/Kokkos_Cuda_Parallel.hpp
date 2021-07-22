@@ -1155,7 +1155,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     KOKKOS_FUNCTION
     ThrustFunctorWrapper(const FunctorType op, value_type init)
-        : f(op), _init(init) {};
+        : f(op), _init(init){};
 
     template <class TagType_                      = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value,
@@ -1205,7 +1205,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     Kokkos::fence();
 
-    sum = 
+    sum =
         thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
                                  t_op, t_op._init, thrust::plus<value_type>());
 
