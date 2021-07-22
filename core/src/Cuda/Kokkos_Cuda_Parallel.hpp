@@ -1154,14 +1154,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     value_type _init;
 
     KOKKOS_FUNCTION
-    ThrustFunctorWrapper(const FunctorType op, value_type init) : f(op), _init(init) {};
+    ThrustFunctorWrapper(const FunctorType op, value_type init)
+        : f(op), _init(init) {};
 
     template <class TagType_                      = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value,
                                       bool>::type = true>
     KOKKOS_FUNCTION value_type operator()(index_type i) const {
       value_type val = _init;
-    //  value_type val = (value_type)0;
       f(i, val);
       return val;
     }
@@ -1170,8 +1170,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               typename std::enable_if<!std::is_same<TagType_, void>::value,
                                       bool>::type = true>
     KOKKOS_FUNCTION value_type operator()(index_type i) const {
-      // value_type val = InitValueType();
-      value_type val = (value_type)0;  // for now, assuming no init value
+      value_type val = _init;
       f(TagType(), i, val);
       return val;
     }
@@ -1179,7 +1178,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline void thrust_execute() {
     printf("using CUDA Thrust\n");
-    
+
     thrust::counting_iterator<index_type> temp_iter_d(m_policy.begin());
 
     thrust::counting_iterator<index_type> temp_iter_end_d(m_policy.end());
@@ -1193,7 +1192,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // if want to check for default constructible for complex types
     // also needs an overloaded operator+ outside the struct scope
     /*
-    if (!std::is_fundamental<value_type>::value && 
+    if (!std::is_fundamental<value_type>::value &&
         !std::is_default_constructible<value_type>::value){
         printf("must be default constructible\n");
     } else {
@@ -1206,9 +1205,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     Kokkos::fence();
 
-    sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                   t_op, t_op._init,
-                                   thrust::plus<value_type>());
+    sum = 
+        thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                 t_op, t_op._init, thrust::plus<value_type>());
 
     Kokkos::fence();
 
@@ -1231,8 +1230,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         !ReduceFunctorHasJoin<FunctorType>::value &&
         !ReduceFunctorHasFinal<FunctorType>::value &&
         !Policy::is_graph_kernel::value &&
-        std::is_same<ReducerType, InvalidType>::value &&
-        (nwork > 0) &&
+        std::is_same<ReducerType, InvalidType>::value && (nwork > 0) &&
         m_result_ptr_host_accessible) {
       thrust_execute();
     } else {
