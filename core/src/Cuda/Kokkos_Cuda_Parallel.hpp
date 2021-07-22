@@ -73,6 +73,7 @@
 
 #define CUB_USE_COOPERATIVE_GROUPS
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/generate.h>
