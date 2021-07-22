@@ -72,14 +72,14 @@
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
 #define CUB_USE_COOPERATIVE_GROUPS
-
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/generate.h>
 #include <thrust/sort.h>
 #include <thrust/copy.h>
 #include <thrust/iterator/counting_iterator.h>
-
+#pragma GCC diagnostic pop
 #define KOKKOS_ENABLE_THRUST
 
 //----------------------------------------------------------------------------
