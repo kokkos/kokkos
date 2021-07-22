@@ -224,10 +224,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << device.get_info<device::global_mem_cache_size>()
             << "\nGlobal Mem Size: "
             << device.get_info<device::global_mem_size>()
-            << "\nMax Constant Buffer Size: "
-            << device.get_info<device::max_constant_buffer_size>()
-            << "\nMax Constant Args: "
-            << device.get_info<device::max_constant_args>()
             << "\nLocal Mem Size: " << device.get_info<device::local_mem_size>()
             << "\nError Correction Support: "
             << device.get_info<device::error_correction_support>()
