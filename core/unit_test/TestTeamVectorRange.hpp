@@ -493,7 +493,12 @@ template <class ExecutionSpace>
 bool Test(int test) {
   bool passed = true;
 
+// With SYCL 33*8 exceeds the maximum work group size
+#ifdef KOKKOS_ENABLE_SYCL
+  int team_size = 31;
+#else
   int team_size = 33;
+#endif
   if (team_size > int(ExecutionSpace::concurrency()))
     team_size = int(ExecutionSpace::concurrency());
   passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
