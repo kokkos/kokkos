@@ -102,7 +102,9 @@ class SYCLTeamMember {
     // FIXME_SYCL needs to be revised for vector_length>1.
     return m_item.get_local_range(0);
   }
-  KOKKOS_INLINE_FUNCTION void team_barrier() const { m_item.barrier(); }
+  KOKKOS_INLINE_FUNCTION void team_barrier() const {
+    sycl::group_barrier(m_item.get_group());
+  }
 
   KOKKOS_INLINE_FUNCTION const sycl::nd_item<2>& item() const { return m_item; }
 
@@ -156,23 +158,23 @@ class SYCLTeamMember {
     // corresponding chunk load values and the reduction is always done by the
     // first smaller_power_of_two threads.
     if (idx < maximum_work_range) reduction_array[idx] = value;
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     for (int start = maximum_work_range; start < team_size();
          start += maximum_work_range) {
       if (idx >= start &&
           idx < std::min(start + maximum_work_range, team_size()))
         reducer.join(reduction_array[idx - start], value);
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
     }
 
     for (int stride = smaller_power_of_two; stride > 0; stride >>= 1) {
       if (idx < stride && idx + stride < maximum_work_range)
         reducer.join(reduction_array[idx], reduction_array[idx + stride]);
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
     }
     reducer.reference() = reduction_array[0];
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
   }
 
   // FIXME_SYCL move somewhere else and combine with other places that do
@@ -189,15 +191,15 @@ class SYCLTeamMember {
     for (int stride = 1; stride < n; stride <<= 1) {
       auto idx = 2 * stride * (thid + 1) - 1;
       if (idx < n) temp[idx] += temp[idx - stride];
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
     }
 
     Type total_sum = temp[n - 1];
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     // clear the last element so we get an exclusive scan
     if (thid == 0) temp[n - 1] = Type{};
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     // Now add the intermediate results to the remaining items again
     for (int stride = n / 2; stride > 0; stride >>= 1) {
@@ -207,7 +209,7 @@ class SYCLTeamMember {
         temp[idx - stride] = temp[idx];
         temp[idx] += dummy;
       }
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
     }
 
     return total_sum;
@@ -247,11 +249,11 @@ class SYCLTeamMember {
     // first not_greater_power_of_two threads.
     for (int start = 0; start < team_size();
          start += not_greater_power_of_two) {
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
       if (idx >= start && idx < start + not_greater_power_of_two) {
         base_data[idx - start] = value;
       }
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
 
       const Type partial_total =
           prescan(m_item, base_data, not_greater_power_of_two);
@@ -267,7 +269,7 @@ class SYCLTeamMember {
       if (team_size() == idx + 1) {
         base_data[team_size()] = atomic_fetch_add(global_accum, total);
       }
-      m_item.barrier();  // Wait for atomic
+      sycl::group_barrier(m_item.get_group());  // Wait for atomic
       intermediate += base_data[team_size()];
     }
 
