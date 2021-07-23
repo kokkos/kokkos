@@ -499,9 +499,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
+    const auto max_team_size =
+        m_policy.team_size_max(arg_functor, ParallelForTag{});
     if (m_team_size > m_policy.team_size_max(arg_functor, ParallelForTag{}))
       Kokkos::Impl::throw_runtime_exception(
-          "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
+          "Kokkos::Impl::ParallelFor<SYCL> requested too large team size. The "
+          "maximal team_size is " +
+          std::to_string(max_team_size) + '!');
   }
 };
 
