@@ -1200,7 +1200,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         value_type init;
     }
     */
-    value_type init {};
+    value_type init{};
 
     ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
 
