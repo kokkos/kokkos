@@ -107,7 +107,7 @@ class ParallelScanSYCLBase {
               local_mem[local_id] = global_mem[global_id];
             else
               ValueInit::init(functor, &local_mem[local_id]);
-            sycl::group_barrier(item.get_group());
+            item.barrier(sycl::access::fence_space::local_space);
 
             // subgroup scans
             auto sg                = item.get_sub_group();

@@ -85,14 +85,14 @@ void workgroup_reduction(sycl::nd_item<dim>& item,
     if (id_in_sg + stride < local_range)
       ValueJoin::join(selected_reducer, result, tmp);
   }
-  sycl::group_barrier(item.get_group());
+  item.barrier(sycl::access::fence_space::local_space);
 
   // Copy the subgroup results into the first positions of the
   // reduction array.
   if (id_in_sg == 0)
     ValueOps::copy(functor, &local_mem[sg.get_group_id()[0] * value_count],
                    result);
-  sycl::group_barrier(item.get_group());
+  item.barrier(sycl::access::fence_space::local_space);
 
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
@@ -316,7 +316,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   }
                 }
               }
-              sycl::group_barrier(item.get_group());
+              item.barrier(sycl::access::fence_space::local_space);
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
@@ -597,7 +597,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               }
             }
           }
-          sycl::group_barrier(item.get_group());
+          item.barrier(sycl::access::fence_space::local_space);
 
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr2,

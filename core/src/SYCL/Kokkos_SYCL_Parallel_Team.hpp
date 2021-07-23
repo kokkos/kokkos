@@ -711,7 +711,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                  &results_ptr[global_id * value_count]);
                 }
               }
-              sycl::group_barrier(item.get_group());
+              item.barrier(sycl::access::fence_space::local_space);
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
