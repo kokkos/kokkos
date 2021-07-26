@@ -473,7 +473,7 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
      */
     SpaceDescription space_description;
 
-    auto max_vector_length = PolicyType::vector_length_max();
+    auto max_vector_length = policy.vector_size_max();
     std::vector<int64_t> allowed_vector_lengths;
 
     if (policy.impl_auto_vector_length()) {  // case 1 or 2

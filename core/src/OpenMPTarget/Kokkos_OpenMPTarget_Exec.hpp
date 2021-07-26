@@ -1016,10 +1016,16 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
-  inline static size_t vector_length_max() {
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
+  static int vector_length_max() {
     return 32; /* TODO: this is bad. Need logic that is compiler and backend
                   aware */
   }
+  int vector_size_max() const {
+    return 32; /* TODO: this is bad. Need logic that is compiler and backend
+                  aware */
+  }
+
   inline int team_alloc() const { return m_team_alloc; }
   inline int team_iter() const { return m_team_iter; }
 

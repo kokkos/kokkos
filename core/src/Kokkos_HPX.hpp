@@ -780,7 +780,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     return 1;
   }
 
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
   static int vector_length_max() { return 1; }
+  int vector_size_max() const { return 1; }
 
   inline int impl_vector_length() noexcept { return 1; }
   inline bool impl_auto_team_size() noexcept { return false; }

@@ -164,13 +164,16 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
-  static int vector_length_max() {
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
+  inline static int vector_length_max() {
     return ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
   }
+  inline int vector_size_max() const { return Impl::CudaTraits::WarpSize; }
 
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use verify_requested_vector_size() instead!")
   static int verify_requested_vector_length(int requested_vector_length) {
     int test_vector_length =
-        std::min(requested_vector_length, vector_length_max());
+        std::min(requested_vector_length, vector_size_max());
 
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {
@@ -186,6 +189,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     }
 
     return test_vector_length;
+  }
+  int verify_requested_vector_size(int requested_vector_size) {
+    return verify_requested_vector_length(requested_vector_size);
   }
 
   static int scratch_size_max(int level) {
@@ -238,8 +244,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_team_size(team_size_request),
         m_vector_length(
             (vector_length_request > 0)
-                ? verify_requested_vector_length(vector_length_request)
-                : (verify_requested_vector_length(1))),
+                ? verify_requested_vector_size(vector_length_request)
+                : (verify_requested_vector_size(1))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),

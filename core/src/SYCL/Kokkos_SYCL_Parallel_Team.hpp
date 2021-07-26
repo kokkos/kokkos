@@ -129,11 +129,14 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
-  static int vector_length_max() {
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
+  static int vector_length_max() { return 1; }
+  int vector_size_max() const {
     // FIXME_SYCL provide a reasonable value
     return 1;
   }
 
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use verify_request_vector_size() instead!")
   static int verify_requested_vector_length(int requested_vector_length) {
     int test_vector_length =
         std::min(requested_vector_length, vector_length_max());
@@ -151,6 +154,10 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     }
 
     return test_vector_length;
+  }
+
+  int verify_requested_vector_size(int requested_vector_size) const {
+    return verify_requested_vector_length(requested_vector_size);
   }
 
   static int scratch_size_max(int level) {
@@ -202,8 +209,8 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
         m_team_size(team_size_request),
         m_vector_length(
             (vector_length_request > 0)
-                ? verify_requested_vector_length(vector_length_request)
-                : (verify_requested_vector_length(1))),
+                ? verify_requested_vector_size(vector_length_request)
+                : (verify_requested_vector_size(1))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0),
