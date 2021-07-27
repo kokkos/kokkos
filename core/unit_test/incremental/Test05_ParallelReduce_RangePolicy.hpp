@@ -73,6 +73,7 @@ struct NonTrivialReduceFunctor {
   NonTrivialReduceFunctor(NonTrivialReduceFunctor &&)      = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor &&) = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor const &) = default;
+  KOKKOS_INLINE_FUNCTION
   ~NonTrivialReduceFunctor() {}
 };
 

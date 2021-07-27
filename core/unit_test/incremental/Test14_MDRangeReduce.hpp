@@ -79,6 +79,14 @@ struct MyComplex {
   }
 };
 
+  KOKKOS_INLINE_FUNCTION
+  MyComplex operator+(const MyComplex& src, const MyComplex& t2) {
+      MyComplex temp;
+      temp._re = src._re + t2._re;
+      temp._im = src._im + t2._im;
+    return temp;
+  }
+
 template <class ExecSpace>
 struct TestMDRangeReduce {
   // 1D  View of double

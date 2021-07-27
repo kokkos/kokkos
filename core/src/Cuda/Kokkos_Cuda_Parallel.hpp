@@ -1233,6 +1233,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         !Policy::is_graph_kernel::value &&
         std::is_same<ReducerType, InvalidType>::value && (nwork > 0) &&
         m_result_ptr_host_accessible) {
+        //!IsNonTrivialReduceFunctor<FunctorType>::value) {
       thrust_execute();
     } else {
 #endif
