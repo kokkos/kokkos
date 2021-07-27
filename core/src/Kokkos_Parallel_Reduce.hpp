@@ -92,11 +92,6 @@ struct Sum {
   void join(value_type& dest, const value_type& src) const { dest += src; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest += src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val = reduction_identity<value_type>::sum();
   }
@@ -135,11 +130,6 @@ struct Prod {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const { dest *= src; }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest *= src;
-  }
 
   KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
@@ -184,11 +174,6 @@ struct Min {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    if (src < dest) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val = reduction_identity<value_type>::min();
   }
@@ -227,11 +212,6 @@ struct Max {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    if (src > dest) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     if (src > dest) dest = src;
   }
 
@@ -278,11 +258,6 @@ struct LAnd {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest = dest && src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val = reduction_identity<value_type>::land();
   }
@@ -321,11 +296,6 @@ struct LOr {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    dest = dest || src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     dest = dest || src;
   }
 
@@ -372,11 +342,6 @@ struct BAnd {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest = dest & src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val = reduction_identity<value_type>::band();
   }
@@ -415,11 +380,6 @@ struct BOr {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    dest = dest | src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     dest = dest | src;
   }
 
@@ -488,11 +448,6 @@ struct MinLoc {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    if (src.val < dest.val) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val.val = reduction_identity<scalar_type>::min();
     val.loc = reduction_identity<index_type>::min();
@@ -536,11 +491,6 @@ struct MaxLoc {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    if (src.val > dest.val) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     if (src.val > dest.val) dest = src;
   }
 
@@ -604,16 +554,6 @@ struct MinMax {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    if (src.min_val < dest.min_val) {
-      dest.min_val = src.min_val;
-    }
-    if (src.max_val > dest.max_val) {
-      dest.max_val = src.max_val;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     if (src.min_val < dest.min_val) {
       dest.min_val = src.min_val;
     }
@@ -688,18 +628,6 @@ struct MinMaxLoc {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    if (src.min_val < dest.min_val) {
-      dest.min_val = src.min_val;
-      dest.min_loc = src.min_loc;
-    }
-    if (src.max_val > dest.max_val) {
-      dest.max_val = src.max_val;
-      dest.max_loc = src.max_loc;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     if (src.min_val < dest.min_val) {
       dest.min_val = src.min_val;
       dest.min_loc = src.min_loc;
@@ -972,8 +900,8 @@ struct ParallelReduceFence {
  *    using value_type = <podType>;
  *    void operator()( <intType> iwork , <podType> & update ) const ;
  *    void init( <podType> & update ) const ;
- *    void join( volatile       <podType> & update ,
- *               volatile const <podType> & input ) const ;
+ *    void join(       <podType> & update ,
+ *               const <podType> & input   ) const ;
  *
  *    void final( <podType> & update ) const ;
  *  };
@@ -988,8 +916,8 @@ struct ParallelReduceFence {
  *    using value_type = <podType>[];
  *    void operator()( <intType> , <podType> update[] ) const ;
  *    void init( <podType> update[] ) const ;
- *    void join( volatile       <podType> update[] ,
- *               volatile const <podType> input[] ) const ;
+ *    void join(       <podType> update[] ,
+ *               const <podType> input[]   ) const ;
  *
  *    void final( <podType> update[] ) const ;
  *  };
