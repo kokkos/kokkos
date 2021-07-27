@@ -78,8 +78,8 @@ struct TestMDRange_ReduceArray_2D {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile scalar_type dst[],
-            const volatile scalar_type src[]) const {
+  void join(scalar_type dst[],
+            const scalar_type src[]) const {
     for (unsigned i = 0; i < value_count; ++i) {
       dst[i] += src[i];
     }
@@ -160,8 +160,8 @@ struct TestMDRange_ReduceArray_3D {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile scalar_type dst[],
-            const volatile scalar_type src[]) const {
+  void join(scalar_type dst[],
+            const scalar_type src[]) const {
     for (unsigned i = 0; i < value_count; ++i) {
       dst[i] += src[i];
     }
