@@ -237,8 +237,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 #endif
   inline int verify_requested_vector_size(int requested_vector_size) const {
-    int test_vector_length =
-        std::min(requested_vector_size, vector_length_max());
+    int test_vector_length = std::min(requested_vector_size, vector_size_max());
 
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {

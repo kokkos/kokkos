@@ -170,7 +170,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     return ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
   }
 #endif
-  inline int vector_size_max() const { return Impl::CudaTraits::WarpSize; }
+  inline int vector_size_max() const {
+    return ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+  }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED_WITH_COMMENT("Use verify_requested_vector_size() instead!")
@@ -195,8 +197,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   }
 #endif
   int verify_requested_vector_size(int requested_vector_size) {
-    int test_vector_length =
-        std::min(requested_vector_size, vector_length_max());
+    int test_vector_length = std::min(requested_vector_size, vector_size_max());
 
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {
