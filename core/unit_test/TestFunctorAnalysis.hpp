@@ -61,7 +61,7 @@ struct TestFunctorAnalysis_03 {
   void operator()(int, value_type&) const {}
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type volatile&, value_type const volatile&) const {}
+  void join(value_type&, value_type const&) const {}
 
   KOKKOS_INLINE_FUNCTION static void init(value_type&) {}
 };
