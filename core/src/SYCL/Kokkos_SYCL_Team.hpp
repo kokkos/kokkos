@@ -302,22 +302,6 @@ class SYCLTeamMember {
     Kokkos::abort("Not implemented!");
   }
 
-  //--------------------------------------------------------------------------
-  /**\brief  Global reduction across all blocks
-   *
-   *  Return !0 if reducer contains the final value
-   */
-  template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION static
-      typename std::enable_if<is_reducer<ReducerType>::value, int>::type
-      global_reduce(ReducerType const& /*reducer*/,
-                    int* const /*global_scratch_flags*/,
-                    void* const /*global_scratch_space*/, void* const /*shmem*/,
-                    int const /*shmem_size*/) {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
-  }
-
   //----------------------------------------
   // Private for the driver
 
