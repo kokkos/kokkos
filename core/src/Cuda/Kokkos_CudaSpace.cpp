@@ -398,7 +398,7 @@ void CudaUVMSpace::impl_deallocate(
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   Cuda::impl_static_fence(
-      "Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Deallocation");
+      "Kokkos::CudaUVMSpace::impl_deallocate: Pre UVM Deallocation");
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -413,7 +413,7 @@ void CudaUVMSpace::impl_deallocate(
   } catch (...) {
   }
   Cuda::impl_static_fence(
-      "Kokkos::CudaUVMSpace::impl_allocate: Post UVM Deallocation");
+      "Kokkos::CudaUVMSpace::impl_deallocate: Post UVM Deallocation");
 }
 
 void CudaHostPinnedSpace::deallocate(void *const arg_alloc_ptr,
