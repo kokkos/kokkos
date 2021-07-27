@@ -51,10 +51,6 @@
     !defined(KOKKOS_ATOMIC_COMPARE_EXCHANGE_STRONG_HPP)
 #define KOKKOS_ATOMIC_COMPARE_EXCHANGE_STRONG_HPP
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
-#endif
-
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>
 #include <impl/Kokkos_Memory_Fence.hpp>
 

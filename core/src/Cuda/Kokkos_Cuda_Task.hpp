@@ -59,6 +59,22 @@
 
 //----------------------------------------------------------------------------
 
+#if defined(__CUDA_ARCH__)
+#define KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN(MSG)                           \
+  {                                                                        \
+    __syncwarp();                                                          \
+    const unsigned b = __activemask();                                     \
+    if (b != 0xffffffff) {                                                 \
+      printf(" SYNCWARP AT %s (%d,%d,%d) (%d,%d,%d) failed %x\n", MSG,     \
+             blockIdx.x, blockIdx.y, blockIdx.z, threadIdx.x, threadIdx.y, \
+             threadIdx.z, b);                                              \
+      return;                                                              \
+    }                                                                      \
+  }
+#else
+#define KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN(MSG)
+#endif
+
 namespace Kokkos {
 namespace Impl {
 namespace {
@@ -1201,6 +1217,8 @@ KOKKOS_INLINE_FUNCTION void single(
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#undef KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_CUDA_TASK_HPP */
