@@ -1901,17 +1901,6 @@ struct FunctorFinalFunction {
   KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&,
                                                         value_type&));
 
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // , value_type volatile & ) const ); KOKKOS_INLINE_FUNCTION static void
-  // enable_if( void (FunctorType::*)( ArgTag const & , value_type volatile & )
-  // const ); KOKKOS_INLINE_FUNCTION static void enable_if( void
-  // (FunctorType::*)( ArgTag         , value_type volatile & ) );
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // const & , value_type volatile & ) ); KOKKOS_INLINE_FUNCTION static void
-  // enable_if( void (             *)( ArgTag         , value_type volatile & )
-  // ); KOKKOS_INLINE_FUNCTION static void enable_if( void (             *)(
-  // ArgTag const & , value_type volatile & ) );
-
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, value_type const&) const);
   KOKKOS_INLINE_FUNCTION static void enable_if(
@@ -1924,17 +1913,6 @@ struct FunctorFinalFunction {
                                                         value_type const&));
   KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&,
                                                         value_type const&));
-
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // , value_type const volatile & ) const ); KOKKOS_INLINE_FUNCTION static void
-  // enable_if( void (FunctorType::*)( ArgTag const & , value_type const
-  // volatile & ) const ); KOKKOS_INLINE_FUNCTION static void enable_if( void
-  // (FunctorType::*)( ArgTag         , value_type const volatile & ) );
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // const & , value_type const volatile & ) ); KOKKOS_INLINE_FUNCTION static
-  // void enable_if( void (             *)( ArgTag         , value_type const
-  // volatile & ) ); KOKKOS_INLINE_FUNCTION static void enable_if( void ( *)(
-  // ArgTag const & , value_type const volatile & ) );
 };
 
 // Compatible functions for 'final' function and value_type is an array
@@ -1955,17 +1933,6 @@ struct FunctorFinalFunction<FunctorType, ArgTag, true> {
   KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&,
                                                         value_type*));
 
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // , value_type volatile * ) const ); KOKKOS_INLINE_FUNCTION static void
-  // enable_if( void (FunctorType::*)( ArgTag const & , value_type volatile * )
-  // const ); KOKKOS_INLINE_FUNCTION static void enable_if( void
-  // (FunctorType::*)( ArgTag         , value_type volatile * ) );
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // const & , value_type volatile * ) ); KOKKOS_INLINE_FUNCTION static void
-  // enable_if( void (             *)( ArgTag         , value_type volatile * )
-  // ); KOKKOS_INLINE_FUNCTION static void enable_if( void (             *)(
-  // ArgTag const & , value_type volatile * ) );
-
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, value_type const*) const);
   KOKKOS_INLINE_FUNCTION static void enable_if(
@@ -1978,17 +1945,6 @@ struct FunctorFinalFunction<FunctorType, ArgTag, true> {
                                                         value_type const*));
   KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&,
                                                         value_type const*));
-
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // , value_type const volatile * ) const ); KOKKOS_INLINE_FUNCTION static void
-  // enable_if( void (FunctorType::*)( ArgTag const & , value_type const
-  // volatile * ) const ); KOKKOS_INLINE_FUNCTION static void enable_if( void
-  // (FunctorType::*)( ArgTag         , value_type const volatile * ) );
-  // KOKKOS_INLINE_FUNCTION static void enable_if( void (FunctorType::*)( ArgTag
-  // const & , value_type const volatile * ) ); KOKKOS_INLINE_FUNCTION static
-  // void enable_if( void (             *)( ArgTag         , value_type const
-  // volatile * ) ); KOKKOS_INLINE_FUNCTION static void enable_if( void ( *)(
-  // ArgTag const & , value_type const volatile * ) );
 };
 
 template <class FunctorType>
