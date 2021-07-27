@@ -674,10 +674,12 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     return team_size_recommended(f, t);
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
   static int vector_length_max() {
     return 1024;
   }  // Use arbitrary large number, is meant as a vectorizable length
+#endif
   int vector_size_max() const {
     return 1024;
   }  // Use arbitrary large number, is meant as a vectorizable length

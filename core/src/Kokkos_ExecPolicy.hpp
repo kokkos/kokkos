@@ -370,8 +370,10 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
    */
   inline bool impl_auto_vector_length() const;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
   static int vector_length_max();
+#endif
   int vector_size_max() const;
 
   KOKKOS_INLINE_FUNCTION int impl_vector_length() const;

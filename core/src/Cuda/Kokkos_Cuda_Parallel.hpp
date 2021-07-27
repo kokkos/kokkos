@@ -207,11 +207,14 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     return internal_team_size_recommended<closure_type>(f);
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED_WITH_COMMENT("Use vector_size_max() instead!")
   inline static int vector_length_max() { return Impl::CudaTraits::WarpSize; }
+#endif
 
   inline int vector_size_max() const { return Impl::CudaTraits::WarpSize; }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED_WITH_COMMENT("Use verify_requested_vector_size() instead!")
   inline static int verify_requested_vector_length(
       int requested_vector_length) {
@@ -232,8 +235,24 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
     return test_vector_length;
   }
+#endif
   inline int verify_requested_vector_size(int requested_vector_size) const {
-    return verify_requested_vector_length(int requested_vector_size);
+    int test_vector_length =
+        std::min(requested_vector_size, vector_length_max());
+
+    // Allow only power-of-two vector_length
+    if (!(is_integral_power_of_two(test_vector_length))) {
+      int test_pow2 = 1;
+      for (int i = 0; i < 5; i++) {
+        test_pow2 = test_pow2 << 1;
+        if (test_pow2 > test_vector_length) {
+          break;
+        }
+      }
+      test_vector_length = test_pow2 >> 1;
+    }
+
+    return test_vector_length;
   }
 
   inline static int scratch_size_max(int level) {
