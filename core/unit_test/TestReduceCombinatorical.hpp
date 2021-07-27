@@ -190,9 +190,7 @@ struct FunctorScalarJoin<0> {
   void operator()(const int& i, double& update) const { update += i; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 };
 
 template <>
@@ -209,9 +207,7 @@ struct FunctorScalarJoin<1> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 };
 
 template <int ISTEAM>
@@ -227,9 +223,7 @@ struct FunctorScalarJoinFinal<0> {
   void operator()(const int& i, double& update) const { update += i; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 
   KOKKOS_INLINE_FUNCTION
   void final(double& update) const { result() = update; }
@@ -249,9 +243,7 @@ struct FunctorScalarJoinFinal<1> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 
   KOKKOS_INLINE_FUNCTION
   void final(double& update) const { result() = update; }
@@ -270,9 +262,7 @@ struct FunctorScalarJoinInit<0> {
   void operator()(const int& i, double& update) const { update += i; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 
   KOKKOS_INLINE_FUNCTION
   void init(double& update) const { update = 0.0; }
@@ -292,9 +282,7 @@ struct FunctorScalarJoinInit<1> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 
   KOKKOS_INLINE_FUNCTION
   void init(double& update) const { update = 0.0; }
@@ -313,9 +301,7 @@ struct FunctorScalarJoinFinalInit<0> {
   void operator()(const int& i, double& update) const { update += i; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 
   KOKKOS_INLINE_FUNCTION
   void final(double& update) const { result() = update; }
@@ -338,9 +324,7 @@ struct FunctorScalarJoinFinalInit<1> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(double& dst, const double& update) const {
-    dst += update;
-  }
+  void join(double& dst, const double& update) const { dst += update; }
 
   KOKKOS_INLINE_FUNCTION
   void final(double& update) const { result() = update; }

@@ -396,11 +396,9 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
                                                              cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type,
-                                                          cref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType* dst,
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       f->join(*dst, *src);
     }
@@ -414,11 +412,9 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
                                                              cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type,
-                                                          cref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType* dst,
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       f->join(dst, src);
     }
@@ -439,12 +435,10 @@ struct FunctorAnalysis {
                                                              ref_type,
                                                              cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          ref_type,
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
                                                           cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType* dst,
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       f->join(WTag(), *dst, *src);
     }
@@ -465,12 +459,10 @@ struct FunctorAnalysis {
                                                              ref_type,
                                                              cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          ref_type,
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
                                                           cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType* dst,
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       f->join(WTag(), dst, src);
     }
@@ -480,8 +472,7 @@ struct FunctorAnalysis {
   struct DeduceJoin {
     enum : bool { value = false };
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType* dst,
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       const int n = FunctorAnalysis::value_count(*f);
       for (int i = 0; i < n; ++i) dst[i] += src[i];
@@ -774,8 +765,7 @@ struct FunctorAnalysis {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(ValueType* dst, ValueType const* src) const
-        noexcept {
+    void join(ValueType* dst, ValueType const* src) const noexcept {
       DeduceJoin<>::join(m_functor, dst, src);
     }
 

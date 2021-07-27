@@ -367,8 +367,7 @@ class ScanTeamFunctor {
   void init(value_type &error) const { error = 0; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type &error,
-            value_type const &input) const {
+  void join(value_type &error, value_type const &input) const {
     if (input) error = 1;
   }
 
@@ -376,8 +375,7 @@ class ScanTeamFunctor {
     using value_type = int64_t;
 
     KOKKOS_INLINE_FUNCTION
-    void join(value_type &dst,
-              value_type const &input) const {
+    void join(value_type &dst, value_type const &input) const {
       if (dst < input) dst = input;
     }
   };

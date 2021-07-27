@@ -1514,8 +1514,8 @@ struct FunctorValueJoinFunction {
       void (FunctorType::*)(ArgTag const&, ref_type, cref_type) const);
   KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag, ref_type,
                                                         cref_type));
-  KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&,
-                                                        ref_type, cref_type));
+  KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&, ref_type,
+                                                        cref_type));
 };
 
 // Signatures for compatible FunctorType::join with tag and is an array
@@ -1533,8 +1533,8 @@ struct FunctorValueJoinFunction<FunctorType, ArgTag, true> {
       void (FunctorType::*)(ArgTag const&, ptr_type, cptr_type) const);
   KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag, ptr_type,
                                                         cptr_type));
-  KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&,
-                                                        ptr_type, cptr_type));
+  KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ArgTag const&, ptr_type,
+                                                        cptr_type));
 };
 
 // Signatures for compatible FunctorType::join without tag and not an array
@@ -1768,9 +1768,7 @@ struct JoinAdd {
   JoinAdd() = default;
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& dst, const value_type& src) const {
-    dst += src;
-  }
+  void join(value_type& dst, const value_type& src) const { dst += src; }
   KOKKOS_INLINE_FUNCTION
   void operator()(value_type& dst, const value_type& src) const { dst += src; }
 };

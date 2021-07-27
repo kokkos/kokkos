@@ -75,9 +75,7 @@ struct SumInitJoinFinalValueType {
   void init(value_type& val) const { val = value_type(); }
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& val, value_type& src) const {
-    val += src;
-  }
+  void join(value_type& val, value_type& src) const { val += src; }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int /*i*/, value_type& val) const { val += value_type(); }
@@ -97,9 +95,7 @@ struct SumInitJoinFinalValueType2 {
   void init(value_type& val) const { val = value_type(); }
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& val, const value_type& src) const {
-    val += src;
-  }
+  void join(value_type& val, const value_type& src) const { val += src; }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int /*i*/, value_type& val) const { val += value_type(); }
@@ -152,9 +148,7 @@ struct SumWrongInitJoinFinalValueType {
   void init(double& val) const { val = double(); }
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& val, const value_type& src) const {
-    val += src;
-  }
+  void join(value_type& val, const value_type& src) const { val += src; }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int /*i*/, value_type& val) const { val += value_type(); }
