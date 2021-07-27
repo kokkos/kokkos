@@ -472,10 +472,13 @@ class ThreadsExec {
   static void start(void (*)(ThreadsExec &, const void *), const void *);
 
   static int in_parallel();
-  static void fence(
+  static void fence();
+  static void fence(const std::string &);
+  static void internal_fence(
       Impl::fence_is_static is_static = Impl::fence_is_static::yes);
-  static void fence(const std::string &, Impl::fence_is_static is_static =
-                                             Impl::fence_is_static::yes);
+  static void internal_fence(
+      const std::string &,
+      Impl::fence_is_static is_static = Impl::fence_is_static::yes);
   static bool sleep();
   static bool wake();
 
@@ -637,9 +640,11 @@ inline void Threads::print_configuration(std::ostream &s, const bool detail) {
   Impl::ThreadsExec::print_configuration(s, detail);
 }
 
-inline void Threads::impl_static_fence() { Impl::ThreadsExec::fence(); }
+inline void Threads::impl_static_fence() {
+  Impl::ThreadsExec::internal_fence(Impl::fence_is_static::yes);
+}
 inline void Threads::impl_static_fence(const std::string &name) {
-  Impl::ThreadsExec::fence(name);
+  Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::yes);
 }
 } /* namespace Kokkos */
 

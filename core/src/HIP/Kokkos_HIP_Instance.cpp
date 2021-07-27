@@ -181,7 +181,8 @@ void HIPInternal::fence(const std::string &name) const {
       });
 }
 
-void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
+void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
+                             bool manage_stream) {
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
@@ -213,6 +214,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
     m_stream                    = stream;
+    m_manage_stream             = manage_stream;
     m_team_scratch_current_size = 0;
     m_team_scratch_ptr          = nullptr;
 
@@ -390,6 +392,9 @@ void HIPInternal::finalize() {
 
     if (m_team_scratch_current_size > 0)
       Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
+
+    if (m_manage_stream && m_stream != nullptr)
+      HIP_SAFE_CALL(hipStreamDestroy(m_stream));
 
     m_hipDev                    = -1;
     m_hipArch                   = -1;
