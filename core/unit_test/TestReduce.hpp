@@ -61,6 +61,16 @@ class ReduceFunctor {
 
   struct value_type {
     ScalarType value[3];
+    KOKKOS_INLINE_FUNCTION
+    value_type() = default;
+    KOKKOS_INLINE_FUNCTION
+    value_type(const value_type&) = default;
+    KOKKOS_INLINE_FUNCTION
+    value_type(const volatile value_type& rhs) {
+      value[0] = rhs.value[0];
+      value[1] = rhs.value[1];
+      value[2] = rhs.value[2];
+    }
   };
 
   const size_type nwork;
@@ -121,6 +131,16 @@ class ReduceFunctorFinalTag {
 
   struct value_type {
     ScalarType value[3];
+    KOKKOS_INLINE_FUNCTION
+    value_type() = default;
+    KOKKOS_INLINE_FUNCTION
+    value_type(const value_type&) = default;
+    KOKKOS_INLINE_FUNCTION
+    value_type(const volatile value_type& rhs) {
+      value[0] = rhs.value[0];
+      value[1] = rhs.value[1];
+      value[2] = rhs.value[2];
+    }
   };
 
   const size_type nwork;

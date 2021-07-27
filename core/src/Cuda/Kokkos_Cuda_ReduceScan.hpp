@@ -175,13 +175,13 @@ __device__ bool cuda_inter_block_reduction(
       last_block = true;
       value      = neutral;
 
-      pointer_type const volatile global = (pointer_type)m_scratch_space;
+      pointer_type const volatile global = (pointer_type)m_scratch_space; // volatile pointer, not pointer to volatile object
 
       // Reduce all global values with splitting work over threads in one warp
       const int step_size =
           blockDim.x * blockDim.y < 32 ? blockDim.x * blockDim.y : 32;
       for (int i = id; i < (int)gridDim.x; i += step_size) {
-        value_type tmp = global[i];
+        value_type tmp = global[i]; // May need to be a proper volatile cast here
         join(value, tmp);
       }
 
@@ -467,8 +467,10 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     if (warp_id == 0) {
       ValueInit::init(functor, &value);
       for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
-           i < blockDim.y * blockDim.x / 32; i += 32)
-        ValueJoin::join(functor, &value, &shared_team_buffer_element[i]);
+           i < blockDim.y * blockDim.x / 32; i += 32) {
+        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)shared_team_buffer_element + i));
+        ValueJoin::join(functor, &value, &tmp);
+      }
       scalar_intra_warp_reduction(functor, value, false, 32,
                                   *my_global_team_buffer_element);
     }
@@ -507,7 +509,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
       ValueInit::init(functor, &value);
       for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
            i += blockDim.x * blockDim.y) {
-        ValueJoin::join(functor, &value, &global_team_buffer_element[i]);
+        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)global_team_buffer_element + i));
+        ValueJoin::join(functor, &value, &tmp);
       }
       scalar_intra_block_reduction(
           functor, value, false, shared_team_buffer_elements + (blockDim.y - 1),
@@ -541,7 +544,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     const int lane_id = (threadIdx.y * blockDim.x + threadIdx.x) % 32;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
       if (lane_id + delta < 32) {
-        ValueJoin::join(functor, value, value + delta);
+        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)value + delta));
+        ValueJoin::join(functor, value, &tmp);
       }
       __syncwarp(mask);
     }
@@ -607,7 +611,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
       ValueInit::init(functor, &value);
       for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
            i += blockDim.x * blockDim.y) {
-        ValueJoin::join(functor, &value, &global_team_buffer_element[i]);
+        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)global_team_buffer_element + i));
+        ValueJoin::join(functor, &value, &tmp);
       }
       scalar_intra_block_reduction(
           functor, value, false, shared_team_buffer_elements + (blockDim.y - 1),
@@ -841,8 +846,8 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       /* reference_type shared_value = */ ValueInit::init(functor, shared_ptr);
 
       for (size_type i = b; i < e; ++i) {
-        ValueJoin::join(functor, shared_ptr,
-                        global_data + word_count.value * i);
+        size_type tmp = *((volatile size_type*)global_data + word_count.value*i);
+        ValueJoin::join(functor, shared_ptr, &tmp);
       }
     }
 
@@ -860,9 +865,9 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
 
       // Join previous inclusive scan value to each member
       for (size_type i = b; i < e; ++i) {
-        size_type* const global_value = global_data + word_count.value * i;
-        ValueJoin::join(functor, shared_value, global_value);
-        ValueOps ::copy(functor, global_value, shared_value);
+        size_type global_value = *((volatile size_type*)global_data + word_count.value * i);
+        ValueJoin::join(functor, shared_value, &global_value);
+        ValueOps ::copy(functor, &global_value, shared_value);
       }
     }
   }

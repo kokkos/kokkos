@@ -74,6 +74,10 @@ struct CombinedReducerValueItemImpl {
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerValueItemImpl() = default;
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerValueItemImpl(
       CombinedReducerValueItemImpl const&) = default;
+  KOKKOS_INLINE_FUNCTION CombinedReducerValueItemImpl(
+      CombinedReducerValueItemImpl const volatile &rhs)
+    : m_value(rhs.m_value)
+  { }
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerValueItemImpl(
       CombinedReducerValueItemImpl&&) = default;
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerValueItemImpl& operator=(
@@ -109,6 +113,10 @@ struct CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
   constexpr CombinedReducerValueImpl() = default;
   KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReducerValueImpl(CombinedReducerValueImpl const&) = default;
+  KOKKOS_INLINE_FUNCTION
+  CombinedReducerValueImpl(CombinedReducerValueImpl const volatile &rhs)
+    : CombinedReducerValueItemImpl<Idxs, ValueTypes>(rhs)...
+  { }
   KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReducerValueImpl(CombinedReducerValueImpl&&) = default;
   KOKKOS_DEFAULTED_FUNCTION
