@@ -441,7 +441,6 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
                 Kokkos::TeamPolicy<Properties...>& policy,
                 const Functor& functor, const TagType& tag,
                 ViableConfigurationCalculator calc) {
-    using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.impl_vector_length();
     if (initial_vector_length < 1) {
       policy.impl_set_vector_length(1);
