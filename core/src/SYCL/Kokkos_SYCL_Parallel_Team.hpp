@@ -127,14 +127,18 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
-  int vector_length_max() const {
+  // FIXME_SYCL This is correct in most cases, but not necessarily in case a
+  // custom sycl::queue is used to initialize the execution space.
+  static int vector_length_max() {
     std::vector<size_t> sub_group_sizes =
-        m_space.impl_internal_space_instance()
+        execution_space{}
+            .impl_internal_space_instance()
             ->m_queue->get_device()
             .template get_info<sycl::info::device::sub_group_sizes>();
     return *std::max_element(sub_group_sizes.begin(), sub_group_sizes.end());
   }
 
+ private:
   int verify_requested_vector_length(int requested_vector_length) const {
     const int max_vector_length = vector_length_max();
     int test_vector_length =
@@ -150,6 +154,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return test_vector_length;
   }
 
+ public:
   static int scratch_size_max(int level) {
     return level == 0 ? 1024 * 32
                       :           // FIXME_SYCL arbitrarily setting this to 32kB
