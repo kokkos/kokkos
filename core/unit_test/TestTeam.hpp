@@ -137,8 +137,10 @@ struct TestTeamPolicy {
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> none_auto(
         smallest_work, smallest_work, smallest_work);
 #endif
+    (void)none_auto;
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> both_auto(
         smallest_work, Kokkos::AUTO(), Kokkos::AUTO());
+    (void)both_auto;
     // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(smallest_work, 32,
@@ -147,8 +149,10 @@ struct TestTeamPolicy {
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(
         smallest_work, smallest_work, Kokkos::AUTO());
 #endif
+    (void)auto_vector;
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_team(
         smallest_work, Kokkos::AUTO(), smallest_work);
+    (void)auto_team;
   }
 
   static void test_for(const size_t league_size) {
