@@ -139,10 +139,9 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   }
 
  private:
-  int verify_requested_vector_length(int requested_vector_length) const {
-    const int max_vector_length = vector_length_max();
+  static int verify_requested_vector_length(int requested_vector_length) {
     int test_vector_length =
-        std::min(requested_vector_length, max_vector_length);
+        std::min(requested_vector_length, vector_length_max());
 
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {
