@@ -322,29 +322,26 @@ struct Functor_TestHalfVolatileOperators {
     actual_lhs(EQ)   = h_lhs == h_rhs;
     expected_lhs(EQ) = d_lhs == d_rhs;
 
-    // cast away volatile on lhs to supress:
-    // warning: implicit dereference will not access object of type ‘volatile
-    // Kokkos::Experimental::half_t’ in statement
     tmp_lhs = h_lhs;
-    const_cast<half_t&>(tmp_lhs) += h_rhs;
+    tmp_lhs += h_rhs;
     actual_lhs(CADD_H_H)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CADD_H_H) = d_lhs;
     expected_lhs(CADD_H_H) += d_rhs;
 
     tmp_lhs = h_lhs;
-    const_cast<half_t&>(tmp_lhs) -= h_rhs;
+    tmp_lhs -= h_rhs;
     actual_lhs(CSUB_H_H)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CSUB_H_H) = d_lhs;
     expected_lhs(CSUB_H_H) -= d_rhs;
 
     tmp_lhs = h_lhs;
-    const_cast<half_t&>(tmp_lhs) *= h_rhs;
+    tmp_lhs *= h_rhs;
     actual_lhs(CMUL_H_H)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CMUL_H_H) = d_lhs;
     expected_lhs(CMUL_H_H) *= d_rhs;
 
     tmp_lhs = h_lhs;
-    const_cast<half_t&>(tmp_lhs) /= h_rhs;
+    tmp_lhs /= h_rhs;
     actual_lhs(CDIV_H_H)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CDIV_H_H) = d_lhs;
     expected_lhs(CDIV_H_H) /= d_rhs;

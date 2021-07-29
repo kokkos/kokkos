@@ -92,21 +92,8 @@ struct Sum {
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const { dest += src; }
 
-#if !KOKKOS_HALF_T_IS_FLOAT
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile Experimental::half_t& dest,
-            const volatile Experimental::half_t& src) const {
-    dest.atomic_add(src);
-  }
-#endif
-
-  template <
-      class T                = value_type,
-      std::enable_if_t<!std::is_same<T, Experimental::half_t>::value ||
-                           std::is_same<Experimental::half_t, float>::value,
-                       bool> = true>
-  KOKKOS_INLINE_FUNCTION void join(volatile T& dest,
-                                   const volatile T& src) const {
+  KOKKOS_INLINE_FUNCTION void join(volatile value_type& dest,
+                                   const volatile value_type& src) const {
     dest += src;
   }
 
@@ -150,21 +137,8 @@ struct Prod {
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const { dest *= src; }
 
-#if !KOKKOS_HALF_T_IS_FLOAT
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile Experimental::half_t& dest,
-            const volatile Experimental::half_t& src) const {
-    dest.atomic_mul(src);
-  }
-#endif
-
-  template <
-      class T                = value_type,
-      std::enable_if_t<!std::is_same<T, Experimental::half_t>::value ||
-                           std::is_same<Experimental::half_t, float>::value,
-                       bool> = true>
-  KOKKOS_INLINE_FUNCTION void join(volatile T& dest,
-                                   const volatile T& src) const {
+  KOKKOS_INLINE_FUNCTION void join(volatile value_type& dest,
+                                   const volatile value_type& src) const {
     dest *= src;
   }
 
