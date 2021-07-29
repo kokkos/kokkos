@@ -214,8 +214,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ZEN)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
-    NVIDIA  -tp=zen
     PGI     -tp=zen
+    NVHPC   -tp=zen
     DEFAULT -march=znver1 -mtune=znver1
   )
   SET(KOKKOS_ARCH_AMD_ZEN  ON)
@@ -225,7 +225,7 @@ ENDIF()
 IF (KOKKOS_ARCH_ZEN2)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
-    NVIDIA  -tp=zen2
+    NVHPC   -tp=zen2
     PGI     -tp=zen2
     DEFAULT -march=znver2 -mtune=znver2
   )
@@ -237,7 +237,7 @@ IF (KOKKOS_ARCH_ZEN3)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
     PGI     -tp=zen2
-    NVIDIA  -tp=zen2
+    NVHPC   -tp=zen2
     DEFAULT -march=znver3 -mtune=znver3
   )
   SET(KOKKOS_ARCH_AMD_ZEN3 ON)
