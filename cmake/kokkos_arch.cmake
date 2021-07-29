@@ -164,16 +164,18 @@ ENDIF()
 
 IF (KOKKOS_ARCH_ARMV80)
   COMPILER_SPECIFIC_FLAGS(
-    Cray NO-VALUE-SPECIFIED
-    PGI  NO-VALUE-SPECIFIED
+    Cray   NO-VALUE-SPECIFIED
+    PGI    NO-VALUE-SPECIFIED
+    NVIDIA NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a
   )
 ENDIF()
 
 IF (KOKKOS_ARCH_ARMV81)
   COMPILER_SPECIFIC_FLAGS(
-    Cray NO-VALUE-SPECIFIED
-    PGI  NO-VALUE-SPECIFIED
+    Cray   NO-VALUE-SPECIFIED
+    PGI    NO-VALUE-SPECIFIED
+    NVIDIA NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.1-a
   )
 ENDIF()
@@ -181,8 +183,9 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX)
   SET(KOKKOS_ARCH_ARMV80 ON) #Not a cache variable
   COMPILER_SPECIFIC_FLAGS(
-    Cray NO-VALUE-SPECIFIED
-    PGI  NO-VALUE-SPECIFIED
+    Cray   NO-VALUE-SPECIFIED
+    PGI    NO-VALUE-SPECIFIED
+    NVIDIA NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a -mtune=thunderx
   )
 ENDIF()
@@ -190,8 +193,9 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   SET(KOKKOS_ARCH_ARMV81 ON) #Not a cache variable
   COMPILER_SPECIFIC_FLAGS(
-    Cray NO-VALUE-SPECIFIED
-    PGI  NO-VALUE-SPECIFIED
+    Cray   NO-VALUE-SPECIFIED
+    PGI    NO-VALUE-SPECIFIED
+    NVIDIA NO-VALUE-SPECIFIED
     DEFAULT -mcpu=thunderx2t99 -mtune=thunderx2t99
   )
 ENDIF()
@@ -202,12 +206,15 @@ IF (KOKKOS_ARCH_A64FX)
     DEFAULT -march=armv8.2-a+sve
     Clang -march=armv8.2-a+sve -msve-vector-bits=512
     GCC -march=armv8.2-a+sve -msve-vector-bits=512
+    NVIDIA NO-VALUE-SPECIFIED
+    PGI    NO-VALUE-SPECIFIED
   )
 ENDIF()
 
 IF (KOKKOS_ARCH_ZEN)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
+    NVIDIA  -tp=zen
     PGI     -tp=zen
     DEFAULT -march=znver1 -mtune=znver1
   )
@@ -218,6 +225,7 @@ ENDIF()
 IF (KOKKOS_ARCH_ZEN2)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
+    NVIDIA  -tp=zen2
     PGI     -tp=zen2
     DEFAULT -march=znver2 -mtune=znver2
   )
@@ -229,6 +237,7 @@ IF (KOKKOS_ARCH_ZEN3)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
     PGI     -tp=zen2
+    NVIDIA  -tp=zen2
     DEFAULT -march=znver3 -mtune=znver3
   )
   SET(KOKKOS_ARCH_AMD_ZEN3 ON)
