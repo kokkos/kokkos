@@ -157,6 +157,9 @@ int HIPInternal::verify_is_initialized(const char *const label) const {
   return 0 <= m_hipDev;
 }
 
+uint32_t HIPInternal::impl_get_instance_id() const noexcept {
+  return m_instance_id;
+}
 HIPInternal &HIPInternal::singleton() {
   static HIPInternal *self = nullptr;
   if (!self) {
@@ -166,9 +169,19 @@ HIPInternal &HIPInternal::singleton() {
 }
 
 void HIPInternal::fence() const {
-  HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
-  // can reset our cycle id now as well
-  m_cycleId = 0;
+  fence("Kokkos::HIPInternal::fence: Unnamed Internal Fence");
+}
+void HIPInternal::fence(const std::string &name) const {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HIP>(
+      name,
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          impl_get_instance_id()},
+      [&]() {
+        HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+        // can reset our cycle id now as well
+        m_cycleId = 0;
+      });
 }
 
 void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
@@ -485,7 +498,14 @@ Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
 
 namespace Kokkos {
 namespace Impl {
-void hip_device_synchronize() { HIP_SAFE_CALL(hipDeviceSynchronize()); }
+void hip_device_synchronize(const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HIP>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      [&]() { HIP_SAFE_CALL(hipDeviceSynchronize()); });
+}
 
 void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
                               const int line) {

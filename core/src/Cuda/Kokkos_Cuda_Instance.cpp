@@ -141,7 +141,36 @@ bool cuda_launch_blocking() {
 
 }  // namespace
 
-void cuda_device_synchronize() { CUDA_SAFE_CALL(cudaDeviceSynchronize()); }
+void cuda_device_synchronize(const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      []() {  // TODO: correct device ID
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      });
+}
+
+void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
+                             const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name,
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          ptr->impl_get_instance_id()},
+      [&]() {  // TODO: correct device ID
+        CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+      });
+}
+
+void cuda_stream_synchronize(
+    const cudaStream_t stream,
+    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
+    const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name, reason, [&]() {  // TODO: correct device ID
+        CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+      });
+}
 
 void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
                                const int line) {
@@ -307,13 +336,16 @@ int CudaInternal::verify_is_initialized(const char *const label) const {
   }
   return 0 <= m_cudaDev;
 }
-
+uint32_t CudaInternal::impl_get_instance_id() const { return m_instance_id; }
 CudaInternal &CudaInternal::singleton() {
   static CudaInternal self;
   return self;
 }
+void CudaInternal::fence(const std::string &name) const {
+  Impl::cuda_stream_synchronize(m_stream, this, name);
+}
 void CudaInternal::fence() const {
-  CUDA_SAFE_CALL(cudaStreamSynchronize(m_stream));
+  fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");
 }
 
 void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
@@ -354,7 +386,8 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
     m_deviceProp = cudaProp;
 
     CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
-    Kokkos::Impl::cuda_device_synchronize();
+    Kokkos::Impl::cuda_device_synchronize(
+        "Kokkos::CudaInternal::initialize: Fence on space initialization");
 
     // Query what compute capability architecture a kernel executes:
     m_cudaArch = cuda_kernel_arch();
@@ -869,11 +902,24 @@ void Cuda::print_configuration(std::ostream &s, const bool) {
   Impl::CudaInternal::singleton().print_configuration(s);
 }
 
-void Cuda::impl_static_fence() { Kokkos::Impl::cuda_device_synchronize(); }
+void Cuda::impl_static_fence(const std::string &name) {
+  Kokkos::Impl::cuda_device_synchronize(name);
+}
+void Cuda::impl_static_fence() {
+  impl_static_fence("Kokkos::Cuda::impl_static_fence(): Unnamed Static Fence");
+}
 
-void Cuda::fence() const { m_space_instance->fence(); }
+void Cuda::fence() const {
+  fence("Kokkos::Cuda::fence(): Unnamed Instance Fence");
+}
+void Cuda::fence(const std::string &name) const {
+  m_space_instance->fence(name);
+}
 
 const char *Cuda::name() { return "Cuda"; }
+uint32_t Cuda::impl_instance_id() const noexcept {
+  return m_space_instance->impl_get_instance_id();
+}
 
 cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
@@ -908,7 +954,15 @@ void CudaSpaceInitializer::finalize(bool all_spaces) {
   }
 }
 
-void CudaSpaceInitializer::fence() { Kokkos::Cuda::impl_static_fence(); }
+void CudaSpaceInitializer::fence() {
+  Kokkos::Cuda::impl_static_fence(
+      "Kokkos::CudaSpaceInitializer::fence: Initializer Fence");
+}
+void CudaSpaceInitializer::fence(const std::string &name) {
+  // Kokkos::Cuda::impl_static_fence("Kokkos::CudaSpaceInitializer::fence:
+  // "+name); //TODO: or this
+  Kokkos::Cuda::impl_static_fence(name);
+}
 
 void CudaSpaceInitializer::print_configuration(std::ostream &msg,
                                                const bool detail) {

@@ -1154,7 +1154,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence();
+        m_policy.space().fence(
+            "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: Result "
+            "Not Device Accessible");
 
         if (m_result_ptr) {
           if (m_unified_space) {
@@ -1474,7 +1476,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence();
+        m_policy.space().fence(
+            "Kokkos::Impl::ParallelReduce<Cuda, MDRangePolicy>::execute: "
+            "Result Not Device Accessible");
 
         if (m_result_ptr) {
           if (m_unified_space) {
@@ -1837,7 +1841,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           true);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence();
+        m_policy.space().fence(
+            "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy>::execute: Result "
+            "Not Device Accessible");
 
         if (m_result_ptr) {
           if (m_unified_space) {

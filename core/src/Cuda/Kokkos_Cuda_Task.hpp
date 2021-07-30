@@ -249,7 +249,9 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
     auto& queue = scheduler.queue();
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
+        "Cuda>::execute: Pre Task Execution");
 
     // Query the stack size, in bytes:
 
@@ -270,7 +272,9 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
     CUDA_SAFE_CALL(cudaGetLastError());
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
+        "Cuda>::execute: Post Task Execution");
 
     if (previous_stack_size < larger_stack_size) {
       CUDA_SAFE_CALL(
@@ -295,13 +299,17 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     destroy_type* dtor_ptr =
         (destroy_type*)((char*)storage + sizeof(function_type));
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
+        "Cuda>::execute: Pre Get Function Pointer for Tasks");
 
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
     CUDA_SAFE_CALL(cudaGetLastError());
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
+        "Cuda>::execute: Post Get Function Pointer for Tasks");
 
     ptr  = *ptr_ptr;
     dtor = *dtor_ptr;
@@ -472,7 +480,9 @@ class TaskQueueSpecializationConstrained<
     auto& queue = scheduler.queue();
     queue.initialize_team_queues(warps_per_block * grid.x);
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
+        "Kokkos::Cuda>::execute: Pre Execute Task");
 
     // Query the stack size, in bytes:
 
@@ -493,7 +503,9 @@ class TaskQueueSpecializationConstrained<
 
     CUDA_SAFE_CALL(cudaGetLastError());
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
+        "Kokkos::Cuda>::execute: Post Execute Task");
 
     if (previous_stack_size < larger_stack_size) {
       CUDA_SAFE_CALL(
@@ -513,13 +525,17 @@ class TaskQueueSpecializationConstrained<
     destroy_type* dtor_ptr =
         (destroy_type*)((char*)storage + sizeof(function_type));
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
+        "Kokkos::Cuda>::get_function_pointer: Pre Get Function Pointer");
 
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
     CUDA_SAFE_CALL(cudaGetLastError());
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
+        "Kokkos::Cuda>::get_function_pointer: Post Get Function Pointer");
 
     ptr  = *ptr_ptr;
     dtor = *dtor_ptr;

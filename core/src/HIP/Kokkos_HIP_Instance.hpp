@@ -124,7 +124,9 @@ class HIPInternal {
 
   hipDeviceProp_t m_deviceProp;
 
-  hipStream_t m_stream = nullptr;
+  hipStream_t m_stream   = nullptr;
+  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this));
   bool m_manage_stream = false;
 
   // Team Scratch Level 1 Space
@@ -152,6 +154,7 @@ class HIPInternal {
   void print_configuration(std::ostream &) const;
 
   void fence() const;
+  void fence(const std::string &) const;
 
   // returns the next driver type pointer in our work array
   char *get_next_driver(size_t driverTypeSize) const;
@@ -163,7 +166,7 @@ class HIPInternal {
   // Resizing of reduction related scratch spaces
   size_type *scratch_space(const size_type size);
   size_type *scratch_flags(const size_type size);
-
+  uint32_t impl_get_instance_id() const noexcept;
   // Resizing of team level 1 scratch
   void *resize_team_scratch_space(std::int64_t bytes,
                                   bool force_shrink = false);

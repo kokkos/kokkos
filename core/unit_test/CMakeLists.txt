@@ -733,6 +733,11 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       tools/TestLogicalSpaces.cpp
   )
   endif()
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_EventCorrectness
+    SOURCES
+    tools/TestEventCorrectness.cpp
+  )
   if(KOKKOS_ENABLE_LIBDL)
 
     KOKKOS_ADD_TEST_LIBRARY(

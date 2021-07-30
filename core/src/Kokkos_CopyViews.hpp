@@ -1382,14 +1382,15 @@ inline void deep_copy(
   }
 
   if (dst.data() == nullptr) {
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: scalar copy, fence because destination is null");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
     return;
   }
 
-  Kokkos::fence();
+  Kokkos::fence("Kokkos::deep_copy: scalar copy, pre copy fence");
   static_assert(std::is_same<typename ViewType::non_const_value_type,
                              typename ViewType::value_type>::value,
                 "deep_copy requires non-const type");
@@ -1397,7 +1398,7 @@ inline void deep_copy(
   // If contiguous we can simply do a 1D flat loop or use memset
   if (dst.span_is_contiguous()) {
     Impl::contiguous_fill_or_memset(dst, value);
-    Kokkos::fence();
+    Kokkos::fence("Kokkos::deep_copy: scalar copy, post copy fence");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
@@ -1452,7 +1453,7 @@ inline void deep_copy(
                              exec_space_type, ViewType::Rank, int>(
           dst, value, exec_space_type());
   }
-  Kokkos::fence();
+  Kokkos::fence("Kokkos::deep_copy: scalar copy, post copy fence");
 
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();
@@ -1483,7 +1484,7 @@ inline void deep_copy(
   }
 
   if (src.data() == nullptr) {
-    Kokkos::fence();
+    Kokkos::fence("Kokkos::deep_copy: copy into scalar, src is null");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
@@ -1529,18 +1530,19 @@ inline void deep_copy(
   }
 
   if (dst.data() == nullptr && src.data() == nullptr) {
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: scalar to scalar copy, both pointers null");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
     return;
   }
 
-  Kokkos::fence();
+  Kokkos::fence("Kokkos::deep_copy: scalar to scalar copy, pre copy fence");
   if (dst.data() != src.data()) {
     Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
         dst.data(), src.data(), sizeof(value_type));
-    Kokkos::fence();
+    Kokkos::fence("Kokkos::deep_copy: scalar to scalar copy, post copy fence");
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();
@@ -1612,7 +1614,9 @@ inline void deep_copy(
 
       Kokkos::Impl::throw_runtime_exception(message);
     }
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: copy between contiguous views, fence due to null "
+        "argument");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
@@ -1639,7 +1643,9 @@ inline void deep_copy(
   if (((std::ptrdiff_t)dst_start == (std::ptrdiff_t)src_start) &&
       ((std::ptrdiff_t)dst_end == (std::ptrdiff_t)src_end) &&
       (dst.span_is_contiguous() && src.span_is_contiguous())) {
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: copy between contiguous views, fence due to same "
+        "spans");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
@@ -1710,16 +1716,22 @@ inline void deep_copy(
       ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
       ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: copy between contiguous views, pre view equality "
+        "check");
     if ((void*)dst.data() != (void*)src.data()) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::deep_copy: copy between contiguous views, post deep copy "
+          "fence");
     }
   } else {
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: copy between contiguous views, pre copy fence");
     Impl::view_copy(dst, src);
-    Kokkos::fence();
+    Kokkos::fence(
+        "Kokkos::deep_copy: copy between contiguous views, post copy fence");
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();
@@ -2527,7 +2539,7 @@ inline void deep_copy(
         "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
   }
   if (dst.data() == nullptr) {
-    space.fence();
+    space.fence("Kokkos::deep_copy: scalar copy on space, dst data is null");
   } else if (dst.span_is_contiguous()) {
     Impl::contiguous_fill_or_memset(space, dst, value);
   } else {
@@ -2569,9 +2581,10 @@ inline void deep_copy(
         "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
   }
   if (dst.data() == nullptr) {
-    space.fence();
+    space.fence(
+        "Kokkos::deep_copy: scalar-to-view copy on space, dst data is null");
   } else {
-    space.fence();
+    space.fence("Kokkos::deep_copy: scalar-to-view copy on space, pre copy");
     using fill_exec_space = typename dst_traits::memory_space::execution_space;
     if (dst.span_is_contiguous()) {
       Impl::contiguous_fill_or_memset(fill_exec_space(), dst, value);
@@ -2583,7 +2596,8 @@ inline void deep_copy(
       Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                              fill_exec_space>(dst, value, fill_exec_space());
     }
-    fill_exec_space().fence();
+    fill_exec_space().fence(
+        "Kokkos::deep_copy: scalar-to-view copy on space, fence after fill");
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();
@@ -2613,7 +2627,8 @@ inline void deep_copy(
   }
 
   if (src.data() == nullptr) {
-    exec_space.fence();
+    exec_space.fence(
+        "Kokkos::deep_copy: view-to-scalar copy on space, src data is null");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
@@ -2658,7 +2673,8 @@ inline void deep_copy(
   }
 
   if (dst.data() == nullptr && src.data() == nullptr) {
-    exec_space.fence();
+    exec_space.fence(
+        "Kokkos::deep_copy: view-to-view copy on space, data is null");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
     }
@@ -2851,9 +2867,13 @@ inline void deep_copy(
       using cpy_exec_space =
           typename std::conditional<DstExecCanAccessSrc, dst_execution_space,
                                     src_execution_space>::type;
-      exec_space.fence();
+      exec_space.fence(
+          "Kokkos::deep_copy: view-to-view noncontiguous copy on space, pre "
+          "copy");
       Impl::view_copy(cpy_exec_space(), dst, src);
-      cpy_exec_space().fence();
+      cpy_exec_space().fence(
+          "Kokkos::deep_copy: view-to-view noncontiguous copy on space, post "
+          "copy");
     } else {
       Kokkos::Impl::throw_runtime_exception(
           "deep_copy given views that would require a temporary allocation");
@@ -3303,7 +3323,8 @@ create_mirror_view_and_copy(
         Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   (void)name;
-  fence();  // same behavior as deep_copy(src, src)
+  fence(
+      "Kokkos::create_mirror_view_and_copy: fence before returning src view");  // same behavior as deep_copy(src, src)
   return src;
 }
 

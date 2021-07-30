@@ -123,6 +123,7 @@ class ExecSpaceManager {
   void initialize_spaces(const Kokkos::InitArguments& args);
   void finalize_spaces(const bool all_spaces);
   void static_fence();
+  void static_fence(const std::string&);
   void print_configuration(std::ostream& msg, const bool detail);
   static ExecSpaceManager& get_instance();
 };
@@ -186,6 +187,7 @@ void push_finalize_hook(std::function<void()> f);
 void finalize_all();
 
 void fence();
+void fence(const std::string&);
 
 /** \brief Print "Bill of Materials" */
 void print_configuration(std::ostream&, const bool detail = false);

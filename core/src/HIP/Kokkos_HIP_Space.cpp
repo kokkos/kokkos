@@ -162,7 +162,13 @@ DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
   hipStream_t s = get_deep_copy_stream();
   HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
-  HIP_SAFE_CALL(hipStreamSynchronize(s));
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HIP>(
+      "Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy "
+      "stream",
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          DeepCopyResourceSynchronization,
+      [&]() { HIP_SAFE_CALL(hipStreamSynchronize(s)); });
 }
 
 }  // namespace Impl
@@ -444,9 +450,27 @@ void HIP::print_configuration(std::ostream& s, const bool) {
   Impl::HIPInternal::singleton().print_configuration(s);
 }
 
-void HIP::impl_static_fence() { HIP_SAFE_CALL(hipDeviceSynchronize()); }
+uint32_t HIP::impl_instance_id() const noexcept {
+  return m_space_instance->impl_get_instance_id();
+}
+void HIP::impl_static_fence(const std::string& name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HIP>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      [&]() { HIP_SAFE_CALL(hipDeviceSynchronize()); });
+}
+void HIP::impl_static_fence() {
+  impl_static_fence("Kokkos::HIP::impl_static_fence: Unnamed Static Fence");
+}
 
-void HIP::fence() const { m_space_instance->fence(); }
+void HIP::fence(const std::string& name) const {
+  m_space_instance->fence(name);
+}
+void HIP::fence() const {
+  fence("Kokkos::HIP::fence(): Unnamed Instance Fence");
+}
 
 hipStream_t HIP::hip_stream() const { return m_space_instance->m_stream; }
 
@@ -491,6 +515,9 @@ void HIPSpaceInitializer::finalize(const bool all_spaces) {
 
 void HIPSpaceInitializer::fence() {
   Kokkos::Experimental::HIP::impl_static_fence();
+}
+void HIPSpaceInitializer::fence(const std::string& name) {
+  Kokkos::Experimental::HIP::impl_static_fence(name);
 }
 
 void HIPSpaceInitializer::print_configuration(std::ostream& msg,
