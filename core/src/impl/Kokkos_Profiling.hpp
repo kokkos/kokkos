@@ -61,8 +61,26 @@ namespace Kokkos {
 // forward declaration
 bool tune_internals() noexcept;
 
+#ifdef KOKKOS_ENABLE_CUDA
+namespace Impl {
+class CudaInternal;
+template <class FunctorType, class LaunchBounds>
+int cuda_get_max_block_size(const CudaInternal*, const cudaFuncAttributes& attr,
+                            const FunctorType& functor, const size_t,
+                            const size_t, const size_t);
+template <class FunctorType, class LaunchBounds>
+int cuda_get_opt_block_size(const CudaInternal*, const cudaFuncAttributes& attr,
+                            const FunctorType& functor, const size_t,
+                            const size_t, const size_t);
+}  // namespace Impl
 namespace Tools {
-
+namespace Impl {
+template <class Tag, class LaunchBounds>
+cudaFuncAttributes get_cuda_func_attributes();
+}  // namespace Impl
+}  // namespace Tools
+#endif
+namespace Tools {
 bool profileLibraryLoaded();
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
@@ -264,6 +282,14 @@ using MDRangeTuningMap =
 template <int Rank>
 static MDRangeTuningMap<Rank> mdrange_tuners;
 
+using BlockSizeTuner = Kokkos::Tools::Experimental::BlockSizeTuner;
+
+template <class>
+using BlockSizeTunerMap = std::map<std::string, BlockSizeTuner>;
+
+template <class Space>
+static BlockSizeTunerMap<Space> block_size_tuners;
+
 // For any policies without a tuning implementation, with a reducer
 template <class ReducerType, class ExecPolicy, class Functor, typename TagType>
 void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
@@ -294,7 +320,23 @@ void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
  */
 
 namespace Impl {
-
+template <class Tag>
+struct DriverFor;
+template <>
+struct DriverFor<Kokkos::ParallelForTag> {
+  template <class A, class B, class C>
+  using type = Kokkos::Impl::ParallelFor<A, B, C>;
+};
+template <>
+struct DriverFor<Kokkos::ParallelScanTag> {
+  template <class A, class B, class C>
+  using type = Kokkos::Impl::ParallelScan<A, B, C>;
+};
+template <>
+struct DriverFor<Kokkos::ParallelReduceTag> {
+  template <class A, class B, class C, class D = Kokkos::InvalidType>
+  using type = Kokkos::Impl::ParallelReduce<A, B, D, C>;
+};
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
@@ -325,6 +367,46 @@ struct SimpleTeamSizeCalculator {
         Kokkos::Impl::ParallelReduce<Functor, Policy, Kokkos::InvalidType,
                                      exec_space>;
     return driver::max_tile_size_product(policy, functor);
+  }
+  template <template <typename...> class Policy, typename Space,
+            typename... Properties, typename Functor, typename Tag>
+  int64_t range_max_block_size(const Policy<Space, Properties...>& policy,
+                               const Functor& functor, Tag) const {
+#ifdef KOKKOS_ENABLE_CUDA
+    using traits            = Kokkos::Impl::PolicyTraits<Properties...>;
+    using PolicyType        = Kokkos::RangePolicy<Space, Properties...>;
+    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+        typename DriverFor<Tag>::type<Functor, PolicyType, Kokkos::Cuda>,
+        typename PolicyType::launch_bounds>();
+    // Kokkos::Tools::Impl::get_cuda_func_attributes<ParallelFor<Functor,
+    // PolicyType, Kokkos::Cuda>,typename PolicyType::launch_bounds>();
+    const int block_size = Kokkos::Impl::cuda_get_max_block_size<
+        Functor, typename PolicyType::launch_bounds>(
+        policy.space().impl_internal_space_instance(), attr, functor, 1, 0, 0);
+    return block_size;
+#else
+    return 1;
+#endif
+  }
+  template <template <typename...> class Policy, typename Space,
+            typename... Properties, typename Functor, typename Tag>
+  int64_t range_opt_block_size(const Policy<Space, Properties...>& policy,
+                               const Functor& functor, Tag) const {
+#ifdef KOKKOS_ENABLE_CUDA
+    using traits            = Kokkos::Impl::PolicyTraits<Properties...>;
+    using PolicyType        = Kokkos::RangePolicy<Space, Properties...>;
+    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+        typename DriverFor<Tag>::type<Functor, PolicyType, Kokkos::Cuda>,
+        typename traits::launch_bounds>();
+    const int block_size =
+        Kokkos::Impl::cuda_get_opt_block_size<Functor,
+                                              typename traits::launch_bounds>(
+            policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
+            0);
+    return block_size;
+#else
+    return 1;
+#endif
   }
 };
 
@@ -360,6 +442,48 @@ struct ComplexReducerSizeCalculator {
     using driver =
         Kokkos::Impl::ParallelReduce<Functor, Policy, ReducerType, exec_space>;
     return driver::max_tile_size_product(policy, functor);
+  }
+  template <template <typename...> class Policy, typename Space,
+            typename... Properties, typename Functor, typename Tag>
+  int64_t range_max_block_size(const Policy<Space, Properties...>& policy,
+                               const Functor& functor, Tag) const {
+#ifdef KOKKOS_ENABLE_CUDA
+    using traits            = Kokkos::Impl::PolicyTraits<Properties...>;
+    using PolicyType        = Kokkos::RangePolicy<Space, Properties...>;
+    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+        typename DriverFor<Tag>::type<Functor, PolicyType, Kokkos::Cuda,
+                                      ReducerType>,
+        typename PolicyType::launch_bounds>();
+    // Kokkos::Tools::Impl::get_cuda_func_attributes<ParallelFor<Functor,
+    // PolicyType, Kokkos::Cuda>,typename PolicyType::launch_bounds>();
+    const int block_size = Kokkos::Impl::cuda_get_max_block_size<
+        Functor, typename PolicyType::launch_bounds>(
+        policy.space().impl_internal_space_instance(), attr, functor, 1, 0, 0);
+    return block_size;
+#else
+    return 1;
+#endif
+  }
+  template <template <typename...> class Policy, typename Space,
+            typename... Properties, typename Functor, typename Tag>
+  int64_t range_opt_block_size(const Policy<Space, Properties...>& policy,
+                               const Functor& functor, Tag) const {
+#ifdef KOKKOS_ENABLE_CUDA
+    using traits            = Kokkos::Impl::PolicyTraits<Properties...>;
+    using PolicyType        = Kokkos::RangePolicy<Space, Properties...>;
+    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+        typename DriverFor<Tag>::type<Functor, PolicyType, Kokkos::Cuda,
+                                      ReducerType>,
+        typename traits::launch_bounds>();
+    const int block_size =
+        Kokkos::Impl::cuda_get_opt_block_size<Functor,
+                                              typename traits::launch_bounds>(
+            policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
+            0);
+    return block_size;
+#else
+    return 1;
+#endif
   }
 };
 
@@ -433,17 +557,25 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       });
 }
 
-// tune a TeamPolicy, with reducer
+// tune a RangePolicy, with reducer
 template <class ReducerType, class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
-                 Kokkos::TeamPolicy<Properties...>& policy,
+                 Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
-  generic_tune_policy<Experimental::TeamSizeTuner, ReducerType>(
-      label_in, team_tuners, policy, functor, tag,
-      [](const Kokkos::TeamPolicy<Properties...>& candidate_policy) {
-        return (candidate_policy.impl_auto_team_size() ||
-                candidate_policy.impl_auto_vector_length());
-      });
+  generic_tune_policy<Experimental::BlockSizeTuner, ReducerType>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
+             candidate_policy) { return true; });
+}
+// RangePolicy, without reducer
+template <class Functor, class TagType, class... Properties>
+void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
+                 const Functor& functor, const TagType& tag) {
+  generic_tune_policy<Experimental::BlockSizeTuner>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
+             candidate_policy) { return true; });
 }
 
 // tune a MDRangePolicy, without reducer
@@ -534,6 +666,28 @@ void report_policy_results(const size_t /**tuning_context*/,
         return (candidate_policy.impl_auto_team_size() ||
                 candidate_policy.impl_auto_vector_length());
       });
+}
+// tune a RangePolicy, with reducer
+template <class ReducerType, class Functor, class TagType, class... Properties>
+void report_results(const size_t /**tuning_context*/,
+                    const std::string& label_in,
+                    Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
+                    const Functor& functor, const TagType& tag) {
+  generic_report_results<Experimental::BlockSizeTuner, ReducerType>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
+             candidate_policy) { return true; });
+}
+// RangePolicy, without reducer
+template <class Functor, class TagType, class... Properties>
+void report_results(const size_t /**tuning_context*/,
+                    const std::string& label_in,
+                    Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
+                    const Functor& functor, const TagType& tag) {
+  generic_report_results<Experimental::BlockSizeTuner>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
+             candidate_policy) { return true; });
 }
 
 // report results for an MDRangePolicy

@@ -708,8 +708,18 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
 
 // </editor-fold> end CudaParallelLaunch }}}1
 //==============================================================================
-
 }  // namespace Impl
+namespace Tools {
+namespace Impl {
+// free function needed to avoid needing definition of Cuda classes inside of
+// Tools
+template <class Tag, class LaunchBounds>
+cudaFuncAttributes get_cuda_func_attributes() {
+  return Kokkos::Impl::CudaParallelLaunch<
+      Tag, LaunchBounds>::get_cuda_func_attributes();
+}
+}  // namespace Impl
+}  // namespace Tools
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

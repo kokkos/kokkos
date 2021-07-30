@@ -1,4 +1,4 @@
-/*
+/*_
 //@HEADER
 // ************************************************************************
 //
@@ -490,7 +490,6 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       this->template exec_range<WorkTag>(iwork);
     }
   }
-
   inline void execute() const {
     const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
 
@@ -498,9 +497,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
     const int block_size =
-        Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
-            m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
-            0, 0);
+        m_policy.impl_const_additional_data().block_size > 0
+            ? m_policy.impl_const_additional_data().block_size
+            : Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
+                  m_policy.space().impl_internal_space_instance(), attr,
+                  m_functor, 1, 0, 0);
     KOKKOS_ASSERT(block_size > 0);
     dim3 block(1, block_size, 1);
     dim3 grid(
@@ -1076,7 +1077,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
      }*/
 
   // Determine block size constrained by shared memory:
-  inline unsigned local_block_size(const FunctorType& f) {
+  template <class Operator>
+  static inline unsigned impl_block_size_helper(const FunctorType& f,
+                                                const Policy& pol,
+                                                const Operator& oper) {
     unsigned n = CudaTraits::WarpSize * 8;
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
@@ -1086,19 +1090,22 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
     while (
-        (n &&
-         (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-          shmem_size)) ||
+        (n && (pol.space().impl_internal_space_instance()->m_maxShmemPerBlock <
+               shmem_size)) ||
         (n >
-         static_cast<unsigned>(
-             Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
-                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
-                 shmem_size, 0)))) {
+         static_cast<unsigned>(oper(pol.space().impl_internal_space_instance(),
+                                    attr, f, 1, shmem_size, 0)))) {
       n >>= 1;
       shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
                                                              WorkTag>(f, n);
     }
     return n;
+  }
+  inline unsigned local_block_size(const FunctorType& f) {
+    // Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>
+    return impl_block_size_helper(
+        f, m_policy,
+        Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>);
   }
 
   inline void execute() {
