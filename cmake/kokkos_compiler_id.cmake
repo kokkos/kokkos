@@ -165,6 +165,9 @@ ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   IF(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 17.4)
     MESSAGE(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
   ENDIF()
+  # Treat PGI internally as NVHPC to simplify handling both compilers.
+  # Before CMake 3.20 NVHPC was identified as PGI, nvc++ is
+  # backward-compatible to pgc++.
   SET(KOKKOS_CXX_COMPILER_ID NVHPC CACHE STRING INTERNAL FORCE)
 ENDIF()
 
