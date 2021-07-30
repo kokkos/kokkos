@@ -48,7 +48,7 @@
 #include <limits>
 
 #include <Kokkos_Core.hpp>
-#include <impl/Kokkos_Timer.hpp>
+#include <Kokkos_Timer.hpp>
 
 using ExecSpace   = Kokkos::DefaultExecutionSpace;
 using MemorySpace = Kokkos::DefaultExecutionSpace::memory_space;
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
     TestFunctor functor(total_alloc_size, min_superblock_size, number_alloc,
                         fill_stride, chunk_span, repeat_inner);
 
-    Kokkos::Impl::Timer timer;
+    Kokkos::Timer timer;
 
     if (!functor.test_fill()) {
       Kokkos::abort("fill ");
