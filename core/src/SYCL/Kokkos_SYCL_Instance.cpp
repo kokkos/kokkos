@@ -115,7 +115,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
       all_queues.push_back(&m_queue);
     }
     const sycl::device& d = m_queue->get_device();
-    std::cout << SYCL::SYCLDevice(d) << '\n';
 
     m_maxWorkgroupSize =
         d.template get_info<sycl::info::device::max_work_group_size>();
@@ -178,6 +177,8 @@ void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
   }
   return m_team_scratch_ptr;
 }
+
+uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
 
 void SYCLInternal::finalize() {
   SYCL().fence();

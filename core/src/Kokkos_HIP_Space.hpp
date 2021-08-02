@@ -307,7 +307,10 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, "
+        "Kokkos::Experimental::HIPSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -321,7 +324,9 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, ExecutionSpace> {
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -335,7 +340,9 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, ExecutionSpace> {
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -375,7 +382,10 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, "
+        "Kokkos::Experimental::HIPHostPinnedSpace, ExecutionSpace>::DeepCopy: "
+        "fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -390,7 +400,10 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, "
+        "Kokkos::Experimental::HIPSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -406,7 +419,10 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, "
+        "Kokkos::Experimental::HIPHostPinnedSpace, ExecutionSpace>::DeepCopy: "
+        "fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -421,7 +437,9 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, "
+        "HostSpace, ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -436,7 +454,11 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, "
+        "Kokkos::Experimental::HIPHostPinnedSpace, "
+        "ExecutionSpace>::Experimental::HIPHostPinnedSpace, HostSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -538,7 +560,7 @@ class HIP {
   using scratch_memory_space = ScratchMemorySpace<HIP>;
 
   HIP();
-  HIP(hipStream_t stream);
+  HIP(hipStream_t stream, bool manage_stream = false);
 
   //@}
   //------------------------------------
@@ -560,8 +582,10 @@ class HIP {
    * until all dispatched functors on this device have completed.
    */
   static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
 
   void fence() const;
+  void fence(const std::string&) const;
 
   hipStream_t hip_stream() const;
 
@@ -598,7 +622,7 @@ class HIP {
     return m_space_instance.get();
   }
 
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept;
 
  private:
   Kokkos::Impl::HostSharedPtr<Impl::HIPInternal> m_space_instance;
@@ -622,6 +646,7 @@ class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
   void initialize(const InitArguments& args) final;
   void finalize(const bool) final;
   void fence() final;
+  void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 

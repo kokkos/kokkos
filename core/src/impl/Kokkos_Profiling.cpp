@@ -53,6 +53,7 @@
 #include <array>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -70,7 +71,9 @@ void tool_invoked_fence(const uint32_t /* devID */) {
    * Eventually we want to support fencing only
    * a given stream/resource
    */
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::Tools::Experimental::Impl::tool_invoked_fence: Tool Requested "
+      "Fence");
 }
 }  // namespace Impl
 #ifdef KOKKOS_ENABLE_TUNING
@@ -131,7 +134,8 @@ inline void invoke_kokkosp_callback(
     if (may_require_global_fencing == MayRequireGlobalFencing::Yes &&
         (Kokkos::Tools::Experimental::tool_requirements
              .requires_global_fencing)) {
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::Tools::invoke_kokkosp_callback: Kokkos Profile Tool Fence");
     }
     (*callback)(std::forward<Args>(args)...);
   }
@@ -464,11 +468,11 @@ void initialize(const std::string& profileLibrary) {
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
-  char* envProfileCopy =
-      (char*)malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
-  sprintf(envProfileCopy, "%s", envProfileLibrary);
+  const auto envProfileCopy =
+      std::make_unique<char[]>(strlen(envProfileLibrary) + 1);
+  sprintf(envProfileCopy.get(), "%s", envProfileLibrary);
 
-  char* profileLibraryName = strtok(envProfileCopy, ";");
+  char* profileLibraryName = strtok(envProfileCopy.get(), ";");
 
   if ((profileLibraryName != nullptr) &&
       (strcmp(profileLibraryName, "") != 0)) {
@@ -664,9 +668,6 @@ void initialize(const std::string& profileLibrary) {
   Experimental::no_profiling.declare_output_type   = nullptr;
   Experimental::no_profiling.request_output_values = nullptr;
   Experimental::no_profiling.end_tuning_context    = nullptr;
-#ifdef KOKKOS_ENABLE_LIBDL
-  free(envProfileCopy);
-#endif
 }
 
 void finalize() {

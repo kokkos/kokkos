@@ -54,7 +54,7 @@
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget
  *                                    execution space
- *  KOKKOS_ENABLE_HIP Kokkos::Experimental::HIP execution space
+ *  KOKKOS_ENABLE_HIP                 Kokkos::Experimental::HIP execution space
  *  KOKKOS_ENABLE_SYCL                Kokkos::Experimental::SYCL execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
@@ -520,13 +520,6 @@
 #define KOKKOS_ENABLE_TASKDAG
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
-#if (__CUDA_ARCH__)
-#define KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-#endif
-#endif
-
 #define KOKKOS_INVALID_INDEX (~std::size_t(0))
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
@@ -538,8 +531,10 @@
 
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 #define KOKKOS_DEPRECATED [[deprecated]]
+#define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
 #define KOKKOS_DEPRECATED
+#define KOKKOS_DEPRECATED_WITH_COMMENT(comment)
 #endif
 
 #define KOKKOS_IMPL_STRINGIFY(x) #x

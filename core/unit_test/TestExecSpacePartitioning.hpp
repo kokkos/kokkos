@@ -42,58 +42,76 @@
 //@HEADER
 */
 
-#include <iostream>
+#include <cstdio>
+#include <stdexcept>
 #include <sstream>
-
-#include <Kokkos_Macros.hpp>
-
-//#define USE_MPI
-#if defined(USE_MPI)
-#include <mpi.h>
-#endif
+#include <iostream>
 
 #include <Kokkos_Core.hpp>
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+namespace Test {
+namespace {
+struct SumFunctor {
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i, int& lsum) const { lsum += i; }
+};
 
-int main(int argc, char** argv) {
-  std::ostringstream msg;
+template <class ExecSpace>
+void check_distinctive(ExecSpace, ExecSpace) {}
 
-  (void)argc;
-  (void)argv;
-#if defined(USE_MPI)
-
-  MPI_Init(&argc, &argv);
-
-  int mpi_rank = 0;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-
-  msg << "MPI rank(" << mpi_rank << ") ";
-
-#endif
-  Kokkos::initialize(argc, argv);
-  msg << "{" << std::endl;
-
-  if (Kokkos::hwloc::available()) {
-    msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-        << "] x CORE[" << Kokkos::hwloc::get_available_cores_per_numa()
-        << "] x HT[" << Kokkos::hwloc::get_available_threads_per_core() << "] )"
-        << std::endl;
-  }
-
-  Kokkos::print_configuration(msg);
-
-  msg << "}" << std::endl;
-
-  std::cout << msg.str();
-  Kokkos::finalize();
-#if defined(USE_MPI)
-
-  MPI_Finalize();
-
-#endif
-
-  return 0;
+#ifdef KOKKOS_ENABLE_CUDA
+void check_distinctive(Kokkos::Cuda exec1, Kokkos::Cuda exec2) {
+  ASSERT_NE(exec1.cuda_stream(), exec2.cuda_stream());
 }
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+void check_distinctive(Kokkos::Experimental::HIP exec1,
+                       Kokkos::Experimental::HIP exec2) {
+  ASSERT_NE(exec1.hip_stream(), exec2.hip_stream());
+}
+#endif
+}  // namespace
+
+void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
+  check_distinctive(instances[0], instances[1]);
+  int sum1, sum2;
+  int N = 3910;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(instances[0], 0, N), SumFunctor(),
+      sum1);
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(instances[1], 0, N), SumFunctor(),
+      sum2);
+  ASSERT_EQ(sum1, sum2);
+  ASSERT_EQ(sum1, N * (N - 1) / 2);
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  // Eliminate unused function warning
+  // (i.e. when compiling for Serial and CUDA, during Serial compilation the
+  // Cuda overload is unused ...)
+  if (sum1 != sum2) {
+#ifdef KOKKOS_ENABLE_CUDA
+    check_distinctive(Kokkos::Cuda(), Kokkos::Cuda());
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+    check_distinctive(Kokkos::Experimental::HIP(), Kokkos::Experimental::HIP());
+#endif
+  }
+#endif
+}
+
+TEST(TEST_CATEGORY, partitioning_by_args) {
+  auto instances =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1.);
+  ASSERT_EQ(int(instances.size()), 2);
+  test_partitioning(instances);
+}
+
+TEST(TEST_CATEGORY, partitioning_by_vector) {
+  std::vector<int> weights{1, 1};
+  auto instances =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), weights);
+  ASSERT_EQ(int(instances.size()), 2);
+  test_partitioning(instances);
+}
+}  // namespace Test

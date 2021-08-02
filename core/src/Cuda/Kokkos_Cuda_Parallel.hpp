@@ -63,7 +63,6 @@
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Kokkos_Vectorization.hpp>
-#include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
@@ -1283,7 +1282,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             false);  // copy to device and execute
 
         if (!m_result_ptr_device_accessible) {
-          m_policy.space().fence();
+          m_policy.space().fence(
+              "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: Result "
+              "Not Device Accessible");
 
           if (m_result_ptr) {
             if (m_unified_space) {
@@ -1607,7 +1608,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence();
+        m_policy.space().fence(
+            "Kokkos::Impl::ParallelReduce<Cuda, MDRangePolicy>::execute: "
+            "Result Not Device Accessible");
 
         if (m_result_ptr) {
           if (m_unified_space) {
@@ -1970,7 +1973,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           true);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence();
+        m_policy.space().fence(
+            "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy>::execute: Result "
+            "Not Device Accessible");
 
         if (m_result_ptr) {
           if (m_unified_space) {
@@ -2331,9 +2336,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
     for (typename Policy::member_type iwork_base = range.begin();
          iwork_base < range.end(); iwork_base += blockDim.y) {
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      unsigned MASK = KOKKOS_IMPL_CUDA_ACTIVEMASK;
-#endif
+      unsigned MASK                            = __activemask();
       const typename Policy::member_type iwork = iwork_base + threadIdx.y;
 
       __syncthreads();  // Don't overwrite previous iteration values until they
@@ -2346,11 +2349,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i];
       }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
-#else
-      KOKKOS_IMPL_CUDA_SYNCWARP;
-#endif
+      __syncwarp(MASK);
       if (CudaTraits::WarpSize < word_count.value) {
         __syncthreads();
       }  // Protect against large scan values.
@@ -2621,9 +2620,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     for (typename Policy::member_type iwork_base = range.begin();
          iwork_base < range.end(); iwork_base += blockDim.y) {
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      unsigned MASK = KOKKOS_IMPL_CUDA_ACTIVEMASK;
-#endif
+      unsigned MASK = __activemask();
 
       const typename Policy::member_type iwork = iwork_base + threadIdx.y;
 
@@ -2638,11 +2635,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i];
       }
 
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      KOKKOS_IMPL_CUDA_SYNCWARP_MASK(MASK);
-#else
-      KOKKOS_IMPL_CUDA_SYNCWARP;
-#endif
+      __syncwarp(MASK);
       if (CudaTraits::WarpSize < word_count.value) {
         __syncthreads();
       }  // Protect against large scan values.

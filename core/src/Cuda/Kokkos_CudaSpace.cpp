@@ -126,7 +126,11 @@ DeepCopy<CudaSpace, HostSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   cudaStream_t s = cuda_get_deep_copy_stream();
   CUDA_SAFE_CALL(cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
-  cudaStreamSynchronize(s);
+  Impl::cuda_stream_synchronize(
+      s,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          DeepCopyResourceSynchronization,
+      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync");
 }
 
 }  // namespace Impl
@@ -271,7 +275,8 @@ void *CudaUVMSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
-  Cuda::impl_static_fence();
+  Cuda::impl_static_fence(
+      "Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Allocation");
   if (arg_alloc_size > 0) {
     Kokkos::Impl::num_uvm_allocations++;
 
@@ -294,7 +299,8 @@ void *CudaUVMSpace::impl_allocate(
               CudaMallocManaged);
     }
   }
-  Cuda::impl_static_fence();
+  Cuda::impl_static_fence(
+      "Kokkos::CudaUVMSpace::impl_allocate: Post UVM Allocation");
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -391,7 +397,8 @@ void CudaUVMSpace::impl_deallocate(
     ,
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
-  Cuda::impl_static_fence();
+  Cuda::impl_static_fence(
+      "Kokkos::CudaUVMSpace::impl_deallocate: Pre UVM Deallocation");
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -405,7 +412,8 @@ void CudaUVMSpace::impl_deallocate(
     }
   } catch (...) {
   }
-  Cuda::impl_static_fence();
+  Cuda::impl_static_fence(
+      "Kokkos::CudaUVMSpace::impl_deallocate: Post UVM Deallocation");
 }
 
 void CudaHostPinnedSpace::deallocate(void *const arg_alloc_ptr,

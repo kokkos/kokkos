@@ -120,13 +120,13 @@ class HostThreadTeamData {
   int mutable m_team_rendezvous_step;
 
   HostThreadTeamData* team_member(int r) const noexcept {
-    return ((HostThreadTeamData**)(m_pool_scratch +
-                                   m_pool_members))[m_team_base + r];
+    return (reinterpret_cast<HostThreadTeamData**>(
+        m_pool_scratch + m_pool_members))[m_team_base + r];
   }
 
  public:
   inline bool team_rendezvous() const noexcept {
-    int* ptr = (int*)(m_team_scratch + m_team_rendezvous);
+    int* ptr = reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous);
     HostBarrier::split_arrive(ptr, m_team_size, m_team_rendezvous_step);
     if (m_team_rank != 0) {
       HostBarrier::wait(ptr, m_team_size, m_team_rendezvous_step);
@@ -138,7 +138,7 @@ class HostThreadTeamData {
   }
 
   inline bool team_rendezvous(const int source_team_rank) const noexcept {
-    int* ptr = (int*)(m_team_scratch + m_team_rendezvous);
+    int* ptr = reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous);
     HostBarrier::split_arrive(ptr, m_team_size, m_team_rendezvous_step);
     if (m_team_rank != source_team_rank) {
       HostBarrier::wait(ptr, m_team_size, m_team_rendezvous_step);
@@ -150,12 +150,13 @@ class HostThreadTeamData {
   }
 
   inline void team_rendezvous_release() const noexcept {
-    HostBarrier::split_release((int*)(m_team_scratch + m_team_rendezvous),
-                               m_team_size, m_team_rendezvous_step);
+    HostBarrier::split_release(
+        reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous), m_team_size,
+        m_team_rendezvous_step);
   }
 
   inline int pool_rendezvous() const noexcept {
-    int* ptr = (int*)(m_pool_scratch + m_pool_rendezvous);
+    int* ptr = reinterpret_cast<int*>(m_pool_scratch + m_pool_rendezvous);
     HostBarrier::split_arrive(ptr, m_pool_size, m_pool_rendezvous_step);
     if (m_pool_rank != 0) {
       HostBarrier::wait(ptr, m_pool_size, m_pool_rendezvous_step);
@@ -167,8 +168,9 @@ class HostThreadTeamData {
   }
 
   inline void pool_rendezvous_release() const noexcept {
-    HostBarrier::split_release((int*)(m_pool_scratch + m_pool_rendezvous),
-                               m_pool_size, m_pool_rendezvous_step);
+    HostBarrier::split_release(
+        reinterpret_cast<int*>(m_pool_scratch + m_pool_rendezvous), m_pool_size,
+        m_pool_rendezvous_step);
   }
 
   //----------------------------------------
@@ -230,7 +232,8 @@ class HostThreadTeamData {
   constexpr int pool_size() const { return m_pool_size; }
 
   HostThreadTeamData* pool_member(int r) const noexcept {
-    return ((HostThreadTeamData**)(m_pool_scratch + m_pool_members))[r];
+    return (reinterpret_cast<HostThreadTeamData**>(m_pool_scratch +
+                                                   m_pool_members))[r];
   }
 
   //----------------------------------------
@@ -330,7 +333,7 @@ class HostThreadTeamData {
     team_shared_size = align_to_int64(team_shared_size);
     // thread_local_size = align_to_int64( thread_local_size );
 
-    m_scratch      = (int64_t*)alloc_ptr;
+    m_scratch      = static_cast<int64_t*>(alloc_ptr);
     m_team_reduce  = m_pool_reduce + pool_reduce_size;
     m_team_shared  = m_team_reduce + team_reduce_size;
     m_thread_local = m_team_shared + team_shared_size;

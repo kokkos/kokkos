@@ -183,8 +183,10 @@ class Cuda {
   /// method does not return until all dispatched functors on this
   /// device have completed.
   static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
 
   void fence() const;
+  void fence(const std::string&) const;
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
@@ -198,7 +200,7 @@ class Cuda {
 
   Cuda();
 
-  Cuda(cudaStream_t stream);
+  Cuda(cudaStream_t stream, bool manage_stream = false);
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions
@@ -245,7 +247,7 @@ class Cuda {
   inline Impl::CudaInternal* impl_internal_space_instance() const {
     return m_space_instance.get();
   }
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept;
 
  private:
   Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;
@@ -270,6 +272,7 @@ class CudaSpaceInitializer : public ExecSpaceInitializerBase {
   void initialize(const InitArguments& args) final;
   void finalize(const bool all_spaces) final;
   void fence() final;
+  void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
