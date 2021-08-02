@@ -2125,15 +2125,25 @@ inline void resize(DynRankView<T, P...>& v,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
 
-  drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
+  const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
+  bool sizeMismatch           = false;
+  for (unsigned int dim = 0; dim < v.rank(); ++dim)
+    if (new_extents[dim] != v.extent(dim)) {
+      sizeMismatch = true;
+      break;
+    }
 
-  Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
+  if (sizeMismatch) {
+    drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
 
-  v = v_resized;
+    Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
+
+    v = v_resized;
+  }
 }
 
-/** \brief  Resize a view with copying old data to new data at the corresponding
- * indices. */
+/** \brief  Resize a view without copying old data to new data at the
+ * corresponding indices. */
 template <class T, class... P>
 inline void realloc(DynRankView<T, P...>& v,
                     const size_t n0 = KOKKOS_INVALID_INDEX,
@@ -2149,10 +2159,21 @@ inline void realloc(DynRankView<T, P...>& v,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
 
-  const std::string label = v.label();
+  const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
+  bool sizeMismatch           = false;
+  for (unsigned int dim = 0; dim < v.rank(); ++dim)
+    if (new_extents[dim] != v.extent(dim)) {
+      sizeMismatch = true;
+      break;
+    }
 
-  v = drview_type();  // Deallocate first, if the only view to allocation
-  v = drview_type(label, n0, n1, n2, n3, n4, n5, n6, n7);
+  if (sizeMismatch) {
+    const std::string label = v.label();
+
+    v = drview_type();  // Deallocate first, if the only view to allocation
+    v = drview_type(label, n0, n1, n2, n3, n4, n5, n6, n7);
+  } else
+    Kokkos::deep_copy(v, typename drview_type::value_type{});
 }
 
 }  // namespace Kokkos
