@@ -48,7 +48,12 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <type_traits>
-#include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
+
+#if !defined(KOKKOS_COMPILER_CLANG)
+#define KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF sizeof(long long)
+#else
+#define KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF sizeof(int)
+#endif
 
 namespace Kokkos {
 
@@ -227,6 +232,8 @@ __device__ inline T shfl_up(const T& val, int delta, int width,
 }
 
 }  // end namespace Kokkos
+
+#undef KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF
 
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 #endif  // !defined( KOKKOS_CUDA_VECTORIZATION_HPP )

@@ -47,10 +47,6 @@
 #define KOKKOS_ATOMIC_GENERIC_HPP
 #include <Kokkos_Macros.hpp>
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
-#endif
-
 // Combination operands to be used in an Compare and Exchange based atomic
 // operation
 namespace Kokkos {

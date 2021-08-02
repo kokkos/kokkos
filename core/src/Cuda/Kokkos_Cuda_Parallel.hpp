@@ -62,7 +62,6 @@
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Kokkos_Vectorization.hpp>
-#include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
