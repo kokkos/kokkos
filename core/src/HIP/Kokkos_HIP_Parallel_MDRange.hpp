@@ -247,6 +247,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const bool m_result_ptr_device_accessible;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
+  // Only let one Parallel/Scan modify the shared memory. The
+  // constructor acquires the mutex which is released in the destructor.
+  std::unique_lock<std::mutex> m_shared_memory_lock;
 
   using DeviceIteratePattern = typename Kokkos::Impl::Reduce::DeviceIterateTile<
       Policy::rank, Policy, FunctorType, WorkTag, reference_type>;
@@ -406,7 +409,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
-        m_scratch_flags(nullptr) {}
+        m_scratch_flags(nullptr),
+        m_shared_memory_lock(m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->m_mutexSharedMemory) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -419,7 +425,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
-        m_scratch_flags(nullptr) {}
+        m_scratch_flags(nullptr),
+        m_shared_memory_lock(m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->m_mutexSharedMemory) {}
+
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor& f) {
     using closure_type =

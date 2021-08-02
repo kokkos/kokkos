@@ -345,7 +345,8 @@ class UnorderedMap {
       const impl_value_type tmp = impl_value_type();
       Kokkos::deep_copy(m_values, tmp);
     }
-    { Kokkos::deep_copy(m_scalars, 0); }
+    Kokkos::deep_copy(m_scalars, 0);
+    m_size = 0;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
@@ -393,9 +394,9 @@ class UnorderedMap {
   ///
   /// This method has undefined behavior when erasable() is true.
   ///
-  /// Note that this is not a device function; it cannot be called in
+  /// Note that this is <i>not</i> a device function; it cannot be called in
   /// a parallel kernel.  The value is not stored as a variable; it
-  /// must be computed.
+  /// must be computed. m_size is a mutable cache of that value.
   size_type size() const {
     if (capacity() == 0u) return 0u;
     if (modified()) {

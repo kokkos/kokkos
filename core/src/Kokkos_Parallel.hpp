@@ -62,10 +62,6 @@
 #include <type_traits>
 #include <typeinfo>
 
-#ifdef KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-#include <iostream>
-#endif
-
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -174,18 +170,7 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
 template <class ExecPolicy, class FunctorType>
 inline void parallel_for(const std::string& str, const ExecPolicy& policy,
                          const FunctorType& functor) {
-#if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG Start parallel_for kernel: " << str << std::endl;
-#endif
-
   ::Kokkos::parallel_for(policy, functor, str);
-
-#if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG End   parallel_for kernel: " << str << std::endl;
-#endif
-  (void)str;
 }
 
 }  // namespace Kokkos
@@ -229,9 +214,12 @@ namespace Kokkos {
 ///   // operator() or join().
 ///   using value_type = PodType;
 ///
-///   void operator () (const ExecPolicy::member_type & i, value_type& update,
-///   const bool final_pass) const; void init (value_type& update) const; void
-///   join (volatile value_type& update, volatile const value_type& input) const
+///   void operator () (const ExecPolicy::member_type & i,
+///                     value_type& update,
+///                     const bool final_pass) const;
+///   void init (value_type& update) const;
+///   void join (volatile value_type& update,
+//               volatile const value_type& input) const
 /// };
 /// \endcode
 ///
@@ -403,18 +391,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 template <class ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
-#if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
-#endif
-
   ::Kokkos::parallel_scan(policy, functor, str);
-
-#if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG End parallel_scan kernel: " << str << std::endl;
-#endif
-  (void)str;
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>
@@ -436,7 +413,8 @@ inline void parallel_scan(
 
   Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 
-  policy.space().fence();
+  policy.space().fence(
+      "Kokkos::parallel_scan: fence due to result being a value, not a view");
 }
 
 template <class FunctorType, class ReturnType>
@@ -470,18 +448,7 @@ template <class ExecutionPolicy, class FunctorType, class ReturnType>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-#if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
-#endif
-
   ::Kokkos::parallel_scan(policy, functor, return_value, str);
-
-#if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
-  std::cout << "KOKKOS_DEBUG End parallel_scan kernel: " << str << std::endl;
-#endif
-  (void)str;
 }
 
 }  // namespace Kokkos

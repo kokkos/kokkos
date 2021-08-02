@@ -270,7 +270,6 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
 namespace Kokkos {
 
-/* For backward compatibility */
 namespace Impl {
 struct ViewAllocateWithoutInitializingBackwardCompat {};
 
@@ -291,7 +290,6 @@ struct ViewCtorProp<WithoutInitializing_t, std::string,
 };
 } /* namespace Impl */
 
-/*[[deprecated(Use Kokkos::alloc(Kokkos::WithoutInitializing, label) instead]]*/
 using ViewAllocateWithoutInitializing =
     Impl::ViewCtorProp<Impl::WithoutInitializing_t, std::string,
                        Impl::ViewAllocateWithoutInitializingBackwardCompat>;

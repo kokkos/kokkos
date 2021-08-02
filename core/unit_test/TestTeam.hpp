@@ -970,7 +970,11 @@ struct ClassNoShmemSizeFunction {
                 double *, ExecSpace,
                 Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
 
-    int team_size = 8;
+#ifdef KOKKOS_ENABLE_SYCL
+    int team_size = 4;
+#else
+    int team_size      = 8;
+#endif
     if (team_size > ExecSpace::concurrency())
       team_size = ExecSpace::concurrency();
     {
@@ -1115,7 +1119,11 @@ void test_team_mulit_level_scratch_test_lambda() {
       Kokkos::View<double *, ExecSpace,
                    Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
 
+#ifdef KOKKOS_ENABLE_SYCL
+  int team_size = 4;
+#else
   int team_size = 8;
+#endif
   if (team_size > ExecSpace::concurrency())
     team_size = ExecSpace::concurrency();
 

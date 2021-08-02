@@ -948,9 +948,10 @@ parallel_reduce_needs_fence(ExecutionSpace const&, ViewLike const&) {
 template <class ExecutionSpace, class... Args>
 struct ParallelReduceFence {
   template <class... ArgsDeduced>
-  static void fence(const ExecutionSpace& ex, ArgsDeduced&&... args) {
+  static void fence(const ExecutionSpace& ex, const std::string& name,
+                    ArgsDeduced&&... args) {
     if (Impl::parallel_reduce_needs_fence(ex, (ArgsDeduced &&) args...)) {
-      ex.fence();
+      ex.fence(name);
     }
   }
 };
@@ -1004,8 +1005,11 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, ReturnType& return_value) {
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       label, policy, functor, return_value);
-  Impl::ParallelReduceFence<typename PolicyType::execution_space,
-                            ReturnType>::fence(policy.space(), return_value);
+  Impl::ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::
+      fence(
+          policy.space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 template <class PolicyType, class FunctorType, class ReturnType>
@@ -1015,8 +1019,11 @@ parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       "", policy, functor, return_value);
-  Impl::ParallelReduceFence<typename PolicyType::execution_space,
-                            ReturnType>::fence(policy.space(), return_value);
+  Impl::ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::
+      fence(
+          policy.space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 template <class FunctorType, class ReturnType>
@@ -1028,7 +1035,10 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor,
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       "", policy_type(0, policy), functor, return_value);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
-      fence(typename policy_type::execution_space(), return_value);
+      fence(
+          typename policy_type::execution_space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 template <class FunctorType, class ReturnType>
@@ -1041,7 +1051,10 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       label, policy_type(0, policy), functor, return_value);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
-      fence(typename policy_type::execution_space(), return_value);
+      fence(
+          typename policy_type::execution_space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 // ReturnValue as View or Reducer: take by copy to allow for inline construction
@@ -1054,8 +1067,11 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       label, policy, functor, return_value_impl);
-  Impl::ParallelReduceFence<typename PolicyType::execution_space,
-                            ReturnType>::fence(policy.space(), return_value);
+  Impl::ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::
+      fence(
+          policy.space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 template <class PolicyType, class FunctorType, class ReturnType>
@@ -1066,8 +1082,11 @@ parallel_reduce(const PolicyType& policy, const FunctorType& functor,
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       "", policy, functor, return_value_impl);
-  Impl::ParallelReduceFence<typename PolicyType::execution_space,
-                            ReturnType>::fence(policy.space(), return_value);
+  Impl::ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::
+      fence(
+          policy.space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 template <class FunctorType, class ReturnType>
@@ -1080,7 +1099,10 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor,
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       "", policy_type(0, policy), functor, return_value_impl);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
-      fence(typename policy_type::execution_space(), return_value);
+      fence(
+          typename policy_type::execution_space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 template <class FunctorType, class ReturnType>
@@ -1094,7 +1116,10 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       label, policy_type(0, policy), functor, return_value_impl);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
-      fence(typename policy_type::execution_space(), return_value);
+      fence(
+          typename policy_type::execution_space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
 }
 
 // No Return Argument

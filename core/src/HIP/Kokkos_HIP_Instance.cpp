@@ -95,6 +95,9 @@ const HIPInternalDevices &HIPInternalDevices::singleton() {
 }
 }  // namespace
 
+unsigned long *Impl::HIPInternal::constantMemHostStaging = nullptr;
+hipEvent_t Impl::HIPInternal::constantMemReusable        = nullptr;
+
 namespace Impl {
 
 //----------------------------------------------------------------------------
@@ -154,6 +157,9 @@ int HIPInternal::verify_is_initialized(const char *const label) const {
   return 0 <= m_hipDev;
 }
 
+uint32_t HIPInternal::impl_get_instance_id() const noexcept {
+  return m_instance_id;
+}
 HIPInternal &HIPInternal::singleton() {
   static HIPInternal *self = nullptr;
   if (!self) {
@@ -163,12 +169,23 @@ HIPInternal &HIPInternal::singleton() {
 }
 
 void HIPInternal::fence() const {
-  HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
-  // can reset our cycle id now as well
-  m_cycleId = 0;
+  fence("Kokkos::HIPInternal::fence: Unnamed Internal Fence");
+}
+void HIPInternal::fence(const std::string &name) const {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HIP>(
+      name,
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          impl_get_instance_id()},
+      [&]() {
+        HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+        // can reset our cycle id now as well
+        m_cycleId = 0;
+      });
 }
 
-void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
+void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
+                             bool manage_stream) {
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
@@ -200,6 +217,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
     m_stream                    = stream;
+    m_manage_stream             = manage_stream;
     m_team_scratch_current_size = 0;
     m_team_scratch_ptr          = nullptr;
 
@@ -287,6 +305,15 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
 
   // Init the array for used for arbitrarily sized atomics
   if (m_stream == nullptr) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (m_stream == nullptr) {
+    HIP_SAFE_CALL(hipHostMalloc((void **)&constantMemHostStaging,
+                                HIPTraits::ConstantMemoryUsage));
+
+    HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -378,6 +405,9 @@ void HIPInternal::finalize() {
     if (m_team_scratch_current_size > 0)
       Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
 
+    if (m_manage_stream && m_stream != nullptr)
+      HIP_SAFE_CALL(hipStreamDestroy(m_stream));
+
     m_hipDev                    = -1;
     m_hipArch                   = -1;
     m_multiProcCount            = 0;
@@ -397,6 +427,12 @@ void HIPInternal::finalize() {
   if (nullptr != d_driverWorkArray) {
     HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
     d_driverWorkArray = nullptr;
+  }
+
+  // only destroy these if we're finalizing the singleton
+  if (this == &singleton()) {
+    HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
+    HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
   }
 }
 
@@ -462,7 +498,14 @@ Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
 
 namespace Kokkos {
 namespace Impl {
-void hip_device_synchronize() { HIP_SAFE_CALL(hipDeviceSynchronize()); }
+void hip_device_synchronize(const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HIP>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      [&]() { HIP_SAFE_CALL(hipDeviceSynchronize()); });
+}
 
 void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
                               const int line) {

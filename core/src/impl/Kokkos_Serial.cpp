@@ -156,7 +156,7 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
       Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
     }
 
-    m_thread_team_data.scratch_assign(((char*)ptr), alloc_bytes,
+    m_thread_team_data.scratch_assign(static_cast<char*>(ptr), alloc_bytes,
                                       pool_reduce_bytes, team_reduce_bytes,
                                       team_shared_bytes, thread_local_bytes);
 
@@ -204,6 +204,9 @@ void SerialSpaceInitializer::finalize(const bool) {
 }
 
 void SerialSpaceInitializer::fence() { Kokkos::Serial::impl_static_fence(); }
+void SerialSpaceInitializer::fence(const std::string& name) {
+  Kokkos::Serial::impl_static_fence(name);
+}
 
 void SerialSpaceInitializer::print_configuration(std::ostream& msg,
                                                  const bool detail) {
