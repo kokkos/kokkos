@@ -1205,9 +1205,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     m_policy.space().fence();
 
-    sum =
-        thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                 t_op, t_op.init, thrust::plus<value_type>());
+    sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                   t_op, t_op.init, thrust::plus<value_type>());
 
     m_policy.space().fence();
 
@@ -1283,7 +1282,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         if (!m_result_ptr_device_accessible) {
           m_policy.space().fence(
-              "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: Result "
+              "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: "
+              "Result "
               "Not Device Accessible");
 
           if (m_result_ptr) {
