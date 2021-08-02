@@ -1152,17 +1152,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   template <class TagType>
   struct ThrustFunctorWrapper {
     const FunctorType f;
-    value_type _init;
+    value_type init;
 
     KOKKOS_FUNCTION
     ThrustFunctorWrapper(const FunctorType op, value_type init)
-        : f(op), _init(init){};
+        : f(std::move(op)), init(std::move(init)){};
 
     template <class TagType_                      = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value,
                                       bool>::type = true>
     KOKKOS_FUNCTION value_type operator()(index_type i) const {
-      value_type val = _init;
+      value_type val = init;
       f(i, val);
       return val;
     }
@@ -1171,7 +1171,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               typename std::enable_if<!std::is_same<TagType_, void>::value,
                                       bool>::type = true>
     KOKKOS_FUNCTION value_type operator()(index_type i) const {
-      value_type val = _init;
+      value_type val = init;
       f(TagType(), i, val);
       return val;
     }
@@ -1204,13 +1204,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
 
-    Kokkos::fence();
+    m_policy.space().fence();
 
     sum =
         thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                 t_op, t_op._init, thrust::plus<value_type>());
+                                 t_op, t_op.init, thrust::plus<value_type>());
 
-    Kokkos::fence();
+    m_policy.space().fence();
 
     *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
