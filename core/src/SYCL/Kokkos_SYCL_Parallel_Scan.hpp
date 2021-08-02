@@ -64,7 +64,7 @@ struct FunctorWrapperRangePolicyParallelScanInitializeGlobal {
       m_functor(id, update, false);
     else
       m_functor(WorkTag(), id, update, false);
-    ValueOps::copy(m_functor, &m_global_mem[id], &update);
+    m_global_mem[id] = update;
   }
 
 #ifdef SYCL_DEVICE_COPYABLE
@@ -89,7 +89,7 @@ struct FunctorWrapperRangePolicyParallelScanUpdateGlobalResults {
       m_functor(global_id, update, true);
     else
       m_functor(WorkTag(), global_id, update, true);
-    ValueOps::copy(m_functor, &m_global_mem[global_id], &update);
+    m_global_mem[global_id] = update;
   }
 
 #ifdef SYCL_DEVICE_COPYABLE
