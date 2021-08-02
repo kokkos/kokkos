@@ -47,6 +47,8 @@
 
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
+#include <vector>
+
 template <class FunctorType, class... Traits>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::SYCL> {
@@ -82,7 +84,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
           functor(WorkTag(), id);
       });
     });
-    q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+    q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
   }
@@ -242,7 +244,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                 .exec_range();
           });
         });
-    q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+    q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
   }
