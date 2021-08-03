@@ -394,7 +394,7 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_FLAGS(
-    DEFAULT -fsycl
+    DEFAULT -fsycl -fno-sycl-id-queries-fit-in-int
   )
   COMPILER_SPECIFIC_OPTIONS(
     DEFAULT -fsycl-unnamed-lambda
