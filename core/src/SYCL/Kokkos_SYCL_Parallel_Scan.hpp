@@ -190,7 +190,7 @@ class ParallelScanSYCLBase {
               global_mem[sg_group_id + global_offset] = local_mem[local_id];
             local_mem[local_id] = sg.shuffle_up(local_mem[local_id], 1);
             if (id_in_sg == 0) ValueInit::init(functor, &local_mem[local_id]);
-            item.barrier(sycl::access::fence_space::local_space);
+            sycl::group_barrier(item.get_group());
 
             // scan subgroup results using the first subgroup
             if (sg_group_id == 0) {
@@ -209,17 +209,17 @@ class ParallelScanSYCLBase {
                 }
               }
             }
-            item.barrier(sycl::access::fence_space::local_space);
+            sycl::group_barrier(item.get_group());
 
             // add results to all subgroups
             if (sg_group_id > 0)
               ValueJoin::join(functor, &local_mem[local_id],
                               &global_mem[sg_group_id - 1 + global_offset]);
-            item.barrier(sycl::access::fence_space::local_space);
+            sycl::group_barrier(item.get_group());
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
               group_results[item.get_group_linear_id()] =
                   global_mem[sg_group_id + global_offset];
-            item.barrier(sycl::access::fence_space::local_space);
+            sycl::group_barrier(item.get_group());
 
             // Write results to global memory
             if (global_id < size) global_mem[global_id] = local_mem[local_id];
