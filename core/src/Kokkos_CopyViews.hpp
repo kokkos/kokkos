@@ -2981,12 +2981,14 @@ inline void resize(Kokkos::View<T, P...>& v,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
 
-  view_type v_resized(v.label(), layout);
+  if (v.layout() != layout) {
+    view_type v_resized(v.label(), layout);
 
-  Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
-  Kokkos::fence("Kokkos::resize(View)");
+    Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
+    Kokkos::fence("Kokkos::resize(View)");
 
-  v = v_resized;
+    v = v_resized;
+  }
 }
 
 /** \brief  Resize a view with discarding old data. */
