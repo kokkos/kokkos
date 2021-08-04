@@ -61,6 +61,18 @@
 namespace Kokkos {
 namespace Impl {
 
+// Make a byte-wise copy of an instance of T with enforced coherent
+// memory reads
+template <typename T>
+__device__ inline
+void volatile_copy(T* dst, const T *src) {
+  auto ps = reinterpret_cast<volatile const char *>(src);
+  char *d = reinterpret_cast<char *>(dst);
+  for (int i = 0; i < sizeof(T); ++i) {
+    d[i] = ps[i];
+  }
+}
+
 //----------------------------------------------------------------------------
 /*
  *  Algorithmic constraints:
@@ -175,13 +187,14 @@ __device__ bool cuda_inter_block_reduction(
       last_block = true;
       value      = neutral;
 
-      pointer_type const volatile global = (pointer_type)m_scratch_space; // volatile pointer, not pointer to volatile object
+      pointer_type const volatile global = (pointer_type)m_scratch_space;
 
       // Reduce all global values with splitting work over threads in one warp
       const int step_size =
           blockDim.x * blockDim.y < 32 ? blockDim.x * blockDim.y : 32;
       for (int i = id; i < (int)gridDim.x; i += step_size) {
-        value_type tmp = global[i]; // May need to be a proper volatile cast here
+        value_type tmp;
+        volatile_copy(&tmp, &global[i]);
         join(value, tmp);
       }
 
@@ -358,7 +371,8 @@ __device__ inline
       const int step_size =
           blockDim.x * blockDim.y < 32 ? blockDim.x * blockDim.y : 32;
       for (int i = id; i < (int)gridDim.x; i += step_size) {
-        value_type tmp = global[i];
+        value_type tmp;
+        volatile_copy(&tmp, &global[i]);
         reducer.join(value, tmp);
       }
 
@@ -468,7 +482,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
       ValueInit::init(functor, &value);
       for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
            i < blockDim.y * blockDim.x / 32; i += 32) {
-        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)shared_team_buffer_element + i));
+        Scalar tmp;
+        volatile_copy(&tmp, shared_team_buffer_element + i);
         ValueJoin::join(functor, &value, &tmp);
       }
       scalar_intra_warp_reduction(functor, value, false, 32,
@@ -509,7 +524,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
       ValueInit::init(functor, &value);
       for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
            i += blockDim.x * blockDim.y) {
-        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)global_team_buffer_element + i));
+        Scalar tmp;
+        volatile_copy(&tmp, global_team_buffer_element + i);
         ValueJoin::join(functor, &value, &tmp);
       }
       scalar_intra_block_reduction(
@@ -544,7 +560,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     const int lane_id = (threadIdx.y * blockDim.x + threadIdx.x) % 32;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
       if (lane_id + delta < 32) {
-        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)value + delta));
+        Scalar tmp;
+        volatile_copy(&tmp, value + delta);
         ValueJoin::join(functor, value, &tmp);
       }
       __syncwarp(mask);
@@ -611,7 +628,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
       ValueInit::init(functor, &value);
       for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
            i += blockDim.x * blockDim.y) {
-        Scalar tmp = const_cast<volatile Scalar&>(*((volatile Scalar*)global_team_buffer_element + i));
+        Scalar tmp;
+        volatile_copy(&tmp, global_team_buffer_element + i);
         ValueJoin::join(functor, &value, &tmp);
       }
       scalar_intra_block_reduction(
@@ -648,6 +666,7 @@ __device__ void cuda_intra_block_reduce_scan(
   using ValueJoin   = FunctorValueJoin<FunctorType, ArgTag>;
 
   using pointer_type = typename ValueTraits::pointer_type;
+  using value_type = typename ValueTraits::value_type;
 
   const unsigned value_count   = ValueTraits::value_count(functor);
   const unsigned BlockSizeMask = blockDim.y - 1;
@@ -660,12 +679,16 @@ __device__ void cuda_intra_block_reduce_scan(
 
 #define BLOCK_REDUCE_STEP(R, TD, S)                          \
   if (!(R & ((1 << (S + 1)) - 1))) {                         \
-    ValueJoin::join(functor, TD, (TD - (value_count << S))); \
+    value_type tmp;                                          \
+    volatile_copy(&tmp, (TD - (value_count << S)));          \
+    ValueJoin::join(functor, TD, &tmp);                      \
   }
 
 #define BLOCK_SCAN_STEP(TD, N, S)                            \
   if (N == (1 << S)) {                                       \
-    ValueJoin::join(functor, TD, (TD - (value_count << S))); \
+    value_type tmp;                                          \
+    volatile_copy(&tmp, (TD - (value_count << S)));          \
+    ValueJoin::join(functor, TD, &tmp);                      \
   }
 
   const unsigned rtid_intra      = threadIdx.y ^ BlockSizeMask;
