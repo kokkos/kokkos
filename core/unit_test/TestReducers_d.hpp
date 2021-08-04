@@ -93,4 +93,13 @@ TEST(TEST_CATEGORY, reducers_int8_t) {
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(4);
 }
 
+TEST(TEST_CATEGORY, reducers_point_t) {
+  using ThisTestType = point_t;
+
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(1);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(3);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(4);
+}
+
 }  // namespace Test

@@ -1333,11 +1333,6 @@ struct FunctorValueTraits<FunctorType, ArgTag,
       std::conditional_t<IS_VOID || IS_REJECT, void, ValueType&>;
   using functor_type = FunctorType;
 
-  static_assert(
-      IS_VOID || IS_REJECT || sizeof(ValueType) != 3,
-      "Reduction functor's value_type deduced from functor::operator() "
-      "requires: sizeof(value_type) != 3");
-
   enum { StaticValueSize = IS_VOID || IS_REJECT ? 0 : sizeof(ValueType) };
 
   KOKKOS_FORCEINLINE_FUNCTION static unsigned value_size(const FunctorType&) {
