@@ -229,13 +229,11 @@ class alignas(2) half_t {
   void atomic_add(const volatile half_t src) const volatile {
     // Kokkos::atomic_store and atomicAdd not available on cuda < 10
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&val));
-    volatile float* rhs =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&src.val));
-    *lhs                        = __half2float(const_cast<impl_type&>(val));
-    *rhs                        = __half2float(const_cast<impl_type&>(src.val));
-    const_cast<impl_type&>(val) = __float2half(lhs[0] + rhs[0]);
+    alignas(4) volatile float lhs;
+    alignas(4) volatile float rhs;
+    lhs                         = __half2float(const_cast<impl_type&>(val));
+    rhs                         = __half2float(const_cast<impl_type&>(src.val));
+    const_cast<impl_type&>(val) = __float2half(lhs + rhs);
 #else
 #ifdef __CUDA_ARCH__
     // Cuda 10 supports __half volatile stores but not volatile arithmetic
@@ -258,13 +256,11 @@ class alignas(2) half_t {
   void atomic_mul(const volatile half_t src) const volatile {
     // Kokkos::atomic_store not available on cuda  < 10
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&val));
-    volatile float* rhs =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&src.val));
-    *lhs                        = __half2float(const_cast<impl_type&>(val));
-    *rhs                        = __half2float(const_cast<impl_type&>(src.val));
-    const_cast<impl_type&>(val) = __float2half(lhs[0] * rhs[0]);
+    alignas(4) volatile float lhs;
+    alignas(4) volatile float rhs;
+    lhs                         = __half2float(const_cast<impl_type&>(val));
+    rhs                         = __half2float(const_cast<impl_type&>(src.val));
+    const_cast<impl_type&>(val) = __float2half(lhs * rhs);
 #else
 #ifdef __CUDA_ARCH__
     // 16 bit arithmetic on device followed by 16bit atomic store.
@@ -289,13 +285,11 @@ class alignas(2) half_t {
   void atomic_div(const volatile half_t src) const volatile {
     // Kokkos::atomic_store not available on cuda < 10
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&val));
-    volatile float* rhs =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&src.val));
-    *lhs                        = __half2float(const_cast<impl_type&>(val));
-    *rhs                        = __half2float(const_cast<impl_type&>(src.val));
-    const_cast<impl_type&>(val) = __float2half(lhs[0] / rhs[0]);
+    alignas(4) volatile float lhs;
+    alignas(4) volatile float rhs;
+    lhs                         = __half2float(const_cast<impl_type&>(val));
+    rhs                         = __half2float(const_cast<impl_type&>(src.val));
+    const_cast<impl_type&>(val) = __float2half(lhs / rhs);
 #else
 #ifdef __CUDA_ARCH__
     // 16 bit arithmetic on device followed by 16bit atomic store.
@@ -396,10 +390,9 @@ class alignas(2) half_t {
   KOKKOS_FUNCTION void operator=(T rhs) volatile {
     impl_type new_val = cast_to_half(rhs).val;
 #if (CUDA_VERSION < 10000)  // Kokkos::atomic_store not available on cuda < 10
-    volatile float* rhs_float =
-        reinterpret_cast<float*>(const_cast<impl_type*>(&rhs.val));
-    *rhs_float                  = __half2float(new_val);
-    const_cast<impl_type&>(val) = __float2half(rhs_float[0]);
+    alignas(4) volatile float rhs_float;
+    rhs_float                   = __half2float(new_val);
+    const_cast<impl_type&>(val) = __float2half(rhs_float);
 #else
     uint16_t* val_ptr =
         reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
