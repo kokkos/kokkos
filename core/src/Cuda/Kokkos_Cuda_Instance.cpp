@@ -965,7 +965,7 @@ void CudaSpaceInitializer::fence(const std::string &name) {
 }
 
 void CudaSpaceInitializer::print_exec_space_name(std::ostream &strm) {
-  msg << "Cuda";
+  strm << "Cuda";
 }
 
 void CudaSpaceInitializer::print_configuration(std::ostream &msg,
