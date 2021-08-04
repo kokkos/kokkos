@@ -1132,9 +1132,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       // atomics in Kokkos_Cuda_ReduceScan.hpp
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = (size_type*)cuda_internal_scratch_unified(
-          m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
-                                m_functor, m_reducer)));
+      m_unified_space =
+          reinterpret_cast<size_type*>(cuda_internal_scratch_unified(
+              m_policy.space(),
+              ValueTraits::value_size(
+                  ReducerConditional::select(m_functor, m_reducer))));
 
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
