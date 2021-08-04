@@ -489,7 +489,7 @@ class HPXSpaceInitializer : public ExecSpaceInitializerBase {
   void do_finalize(const bool) final;
   void fence() final;
   void fence(const std::string &) final;
-  void print_exec_space_name(std::ostream& msg) final;
+  void print_exec_space_name(std::ostream &msg) final;
   void print_configuration(std::ostream &msg, const bool detail) final;
 };
 

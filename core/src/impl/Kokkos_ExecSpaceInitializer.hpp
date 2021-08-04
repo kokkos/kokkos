@@ -62,11 +62,10 @@ class ExecSpaceInitializerBase {
   virtual ~ExecSpaceInitializerBase() = default;
 
  private:
-
-  virtual void do_initialize(const InitArguments &args)                     = 0;
-  virtual void do_finalize(const bool all_spaces)                           = 0;
-  bool m_is_initialized = false;
-  bool m_is_finalized = false;
+  virtual void do_initialize(const InitArguments &args) = 0;
+  virtual void do_finalize(const bool all_spaces)       = 0;
+  bool m_is_initialized                                 = false;
+  bool m_is_finalized                                   = false;
 };
 
 }  // namespace Impl

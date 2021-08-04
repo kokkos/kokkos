@@ -195,7 +195,7 @@ void HPXSpaceInitializer::fence(const std::string &name) {
   Kokkos::Experimental::HPX().fence(name);
 }
 
-void HPXSpaceInitializer::print_exec_space_name(std::ostream& strm) {
+void HPXSpaceInitializer::print_exec_space_name(std::ostream &strm) {
   strm << "HPX";
 }
 
