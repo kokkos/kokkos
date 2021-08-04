@@ -261,7 +261,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    const int HasInit = ReduceFunctorHasInit<FunctorType>::value;
+    constexpr int HasInit = ReduceFunctorHasInit<FunctorType>::value;
 
     // Initialize the result pointer.
 
@@ -474,7 +474,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   template <class ViewType>
   ParallelReduce(
-      const FunctorType& arg_functor, Policy arg_policy,
+      const FunctorType& arg_functor, Policy& arg_policy,
       const ViewType& arg_result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
@@ -488,7 +488,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result_view.size()) {}
 
-  ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
                  const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
@@ -1002,9 +1002,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   // RangePolicy. Need a new implementation.
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
-    const auto begin  = p.begin();
-    const auto end    = p.end();
-    const int HasInit = ReduceFunctorHasInit<FunctorType>::value;
+    const auto begin      = p.begin();
+    const auto end        = p.end();
+    constexpr int HasInit = ReduceFunctorHasInit<FunctorType>::value;
 
     const auto size = end - begin;
 
@@ -1232,7 +1232,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {}
 
-  ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
                  const ReducerType& reducer)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,

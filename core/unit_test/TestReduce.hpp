@@ -567,10 +567,6 @@ TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(0);
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(1000000);
 }
-TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
-  TestReduceDynamicView<int64_t, TEST_EXECSPACE>(0);
-  TestReduceDynamicView<int64_t, TEST_EXECSPACE>(1000000);
-}
 #endif
 
 // FIXME_OPENMPTARGET: Not yet implemented.
