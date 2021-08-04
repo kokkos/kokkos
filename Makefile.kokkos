@@ -528,6 +528,7 @@ endif
 
 #only add the c++ standard flags if this is not CMake
 tmp := $(call kokkos_append_header,"/* General Settings */")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATED_CODE_3")
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX14), 1)
 ifneq ($(KOKKOS_STANDALONE_CMAKE), yes)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX14_FLAG)
