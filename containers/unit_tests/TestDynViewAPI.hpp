@@ -717,6 +717,7 @@ class TestDynViewAPI {
     run_test_subview();
     run_test_subview_strided();
     run_test_vector();
+    run_test_as_view();
   }
 
   static void run_operator_test_rank12345() {
@@ -954,6 +955,38 @@ class TestDynViewAPI {
       ASSERT_EQ(a_h.rank(), a_d.rank());
       ASSERT_EQ(a_org(5), a_h3(5));
     }
+  }
+
+  static void run_test_as_view() {
+    dView0 d("d", 5);
+
+    View1 v1 = d.as_view_1();
+    ASSERT_EQ(v1.extent(0), d.extent(0));
+
+    Kokkos::resize(d);  // 0-rank
+
+    View0 v0 = d.as_view_0();
+    ASSERT_EQ(v0.size(), d.size());
+
+    Kokkos::resize(d, 1, 2, 3, 4, 5, 6, 7);
+    View7 v7a = d.as_view();
+    View7 v7b = d.as_view_7();
+
+    ASSERT_EQ(v7a.extent(0), d.extent(0));
+    ASSERT_EQ(v7a.extent(1), d.extent(1));
+    ASSERT_EQ(v7a.extent(2), d.extent(2));
+    ASSERT_EQ(v7a.extent(3), d.extent(3));
+    ASSERT_EQ(v7a.extent(4), d.extent(4));
+    ASSERT_EQ(v7a.extent(5), d.extent(5));
+    ASSERT_EQ(v7a.extent(6), d.extent(6));
+
+    ASSERT_EQ(v7b.extent(0), d.extent(0));
+    ASSERT_EQ(v7b.extent(1), d.extent(1));
+    ASSERT_EQ(v7b.extent(2), d.extent(2));
+    ASSERT_EQ(v7b.extent(3), d.extent(3));
+    ASSERT_EQ(v7b.extent(4), d.extent(4));
+    ASSERT_EQ(v7b.extent(5), d.extent(5));
+    ASSERT_EQ(v7b.extent(6), d.extent(6));
   }
 
   static void run_test_scalar() {

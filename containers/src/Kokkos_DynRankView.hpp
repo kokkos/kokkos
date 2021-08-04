@@ -436,6 +436,47 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION
   const view_type& ConstDownCast() const { return (const view_type&)(*this); }
 
+  KOKKOS_INLINE_FUNCTION
+  view_type as_view() const { return view_type(data(), layout()); }
+
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType> as_view_0() const {
+    return Kokkos::View<DataType>(data());
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType*> as_view_1() const {
+    return Kokkos::View<DataType*>(data(), extent(0));
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType**> as_view_2() const {
+    return Kokkos::View<DataType**>(data(), extent(0), extent(1));
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType***> as_view_3() const {
+    return Kokkos::View<DataType***>(data(), extent(0), extent(1), extent(2));
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType****> as_view_4() const {
+    return Kokkos::View<DataType****>(data(), extent(0), extent(1), extent(2),
+                                      extent(3));
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType*****> as_view_5() const {
+    return Kokkos::View<DataType*****>(data(), extent(0), extent(1), extent(2),
+                                       extent(3), extent(4));
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType******> as_view_6() const {
+    return Kokkos::View<DataType******>(data(), extent(0), extent(1), extent(2),
+                                        extent(3), extent(4), extent(5));
+  }
+  KOKKOS_INLINE_FUNCTION
+  Kokkos::View<DataType*******> as_view_7() const {
+    return Kokkos::View<DataType*******>(data(), extent(0), extent(1),
+                                         extent(2), extent(3), extent(4),
+                                         extent(5), extent(6));
+  }
+
   // Types below - at least the HostMirror requires the value_type, NOT the rank
   // 7 data_type of the traits
 
