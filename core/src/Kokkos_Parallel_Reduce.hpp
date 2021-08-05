@@ -45,7 +45,6 @@
 #ifndef KOKKOS_PARALLEL_REDUCE_HPP
 #define KOKKOS_PARALLEL_REDUCE_HPP
 
-#include <Kokkos_Half.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
