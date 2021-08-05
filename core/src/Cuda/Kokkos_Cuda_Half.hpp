@@ -767,32 +767,32 @@ class alignas(2) half_t {
   friend bool operator<(const volatile half_t& lhs,
                         const volatile half_t& rhs) {
     return static_cast<bool>(
-        reinterpret_cast<const volatile uint16_t&>(lhs.val) <
-        reinterpret_cast<const volatile uint16_t&>(rhs.val));
+        reinterpret_cast<const volatile float&>(__half2float(lhs.val)) <
+        reinterpret_cast<const volatile float&>(__half2float(rhs.val)));
   }
 
   KOKKOS_FUNCTION
   friend bool operator>(const volatile half_t& lhs,
                         const volatile half_t& rhs) {
     return static_cast<bool>(
-        reinterpret_cast<const volatile uint16_t&>(lhs.val) >
-        reinterpret_cast<const volatile uint16_t&>(rhs.val));
+        reinterpret_cast<const volatile float&>(__half2float(lhs.val)) >
+        reinterpret_cast<const volatile float&>(__half2float(rhs.val)));
   }
 
   KOKKOS_FUNCTION
   friend bool operator<=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
     return static_cast<bool>(
-        reinterpret_cast<const volatile uint16_t&>(lhs.val) <=
-        reinterpret_cast<const volatile uint16_t&>(rhs.val));
+        reinterpret_cast<const volatile float&>(__half2float(lhs.val)) <=
+        reinterpret_cast<const volatile float&>(__half2float(rhs.val)));
   }
 
   KOKKOS_FUNCTION
   friend bool operator>=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
     return static_cast<bool>(
-        reinterpret_cast<const volatile uint16_t&>(lhs.val) >=
-        reinterpret_cast<const volatile uint16_t&>(rhs.val));
+        reinterpret_cast<const volatile float&>(__half2float(lhs.val)) >=
+        reinterpret_cast<const volatile float&>(__half2float(rhs.val)));
   }
 
   // Insertion and extraction operators
