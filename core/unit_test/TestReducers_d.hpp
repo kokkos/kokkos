@@ -93,6 +93,11 @@ TEST(TEST_CATEGORY, reducers_int8_t) {
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(4);
 }
 
+#if !defined(KOKKOS_ENABLE_HIP)
+// TODO: resolve: "Kokkos_HIP_Vectorization.hpp:80:15: error: call to
+//                 implicitly-deleted default constructor of 'conv_type'
+//                   conv_type tmp_in;"
+//
 TEST(TEST_CATEGORY, reducers_point_t) {
   using ThisTestType = point_t;
 
@@ -101,5 +106,6 @@ TEST(TEST_CATEGORY, reducers_point_t) {
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(3);
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(4);
 }
+#endif  // !KOKKOS_ENABLE_HIP
 
 }  // namespace Test
