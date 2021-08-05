@@ -311,24 +311,20 @@ struct array_reduce {
   }
 };
 
-struct point_t;
-
 struct point_t {
   uint8_t x, y, z;
 
-  // Copy constructors
-  KOKKOS_DEFAULTED_FUNCTION
-  point_t(const point_t &) noexcept = default;
-
   KOKKOS_FUNCTION
   point_t() : x(1), y(1), z(1){};
+
   KOKKOS_FUNCTION
-  point_t(uint8_t _x, uint8_t _y, uint8_t _z) : x(_x), y(_y), z(_z){};
+  point_t(const point_t &val) : x(val.x), y(val.y), z(val.z){};
+
   KOKKOS_FUNCTION
   point_t(const volatile point_t &val) : x(val.x), y(val.y), z(val.z){};
 
   KOKKOS_FUNCTION
-  point_t(int rhs) { x = y = z = static_cast<uint8_t>(rhs); }
+  point_t(const int rhs) { x = y = z = static_cast<uint8_t>(rhs); }
 
   KOKKOS_FUNCTION
   explicit operator int() const { return static_cast<int>(x + y + z); }
