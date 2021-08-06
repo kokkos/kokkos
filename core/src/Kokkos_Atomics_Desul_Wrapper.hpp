@@ -162,6 +162,14 @@ void atomic_min(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_max(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_max (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
+// FIXME: Desul doesn't have atomic_and yet so call fetch_and
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_and(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { (void) desul::atomic_fetch_and (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
+
+// FIXME: Desul doesn't have atomic_or yet so call fetch_or
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_or(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val)  { (void) desul::atomic_fetch_or (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
+
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_inc(T* const dest) { return desul::atomic_inc(dest, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
