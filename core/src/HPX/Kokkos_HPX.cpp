@@ -63,8 +63,8 @@ namespace Kokkos {
 namespace Experimental {
 
 bool HPX::m_hpx_initialized = false;
-std::atomic<uint32_t> HPX::m_next_instance_id{1};
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+std::atomic<uint32_t> HPX::m_next_instance_id{HPX::impl_global_instance_id() + 1};
 uint32_t HPX::m_active_parallel_region_count{0};
 hpx::spinlock HPX::m_active_parallel_region_count_mutex;
 hpx::condition_variable_any HPX::m_active_parallel_region_count_cond;

@@ -199,15 +199,18 @@ namespace Experimental {
 class HPX {
  private:
   static bool m_hpx_initialized;
-  static std::atomic<uint32_t> m_next_instance_id;
-  uint32_t m_instance_id = 0;
+  uint32_t m_instance_id;
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+  static std::atomic<uint32_t> m_next_instance_id;
  public:
-  enum class instance_mode { global, independent };
-  instance_mode m_mode;
+   static constexpr uint32_t impl_global_instance_id() { return 1; }
+
+   enum class instance_mode { global, independent };
 
  private:
+  instance_mode m_mode;
+
   static uint32_t m_active_parallel_region_count;
   static hpx::spinlock m_active_parallel_region_count_mutex;
 
@@ -244,7 +247,7 @@ class HPX {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   HPX()
   noexcept
-      : m_instance_id(0),
+      : m_instance_id(impl_global_instance_id()),
         m_mode(instance_mode::global),
         m_buffer(m_global_instance_data.m_buffer),
         m_future(m_global_instance_data.m_future),
@@ -252,7 +255,7 @@ class HPX {
 
   HPX(instance_mode mode)
       : m_instance_id(mode == instance_mode::independent ? m_next_instance_id++
-                                                         : 0),
+                                                         : impl_global_instance_id()),
         m_mode(mode),
         m_independent_instance_data(mode == instance_mode::independent
                                         ? (new instance_data())
@@ -286,7 +289,7 @@ class HPX {
 
   HPX &operator=(const HPX &other) {
     m_instance_id =
-        other.m_mode == instance_mode::independent ? m_next_instance_id++ : 0;
+        other.m_mode == instance_mode::independent ? m_next_instance_id++ : impl_global_instance_id();
     m_mode                      = other.m_mode;
     m_independent_instance_data = other.m_independent_instance_data;
     m_buffer                    = m_mode == instance_mode::independent
@@ -341,12 +344,12 @@ class HPX {
         [&]() { impl_get_future().wait(); });
   }
 
-  void impl_fence_all_instances(const std::string &name) const {
+  void impl_fence_global(const std::string &name) const {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
-        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-            GlobalDeviceSynchronization,
+        Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+            impl_instance_id()},
         [&]() {
           std::unique_lock<hpx::spinlock> l(m_active_parallel_region_count_mutex);
           m_active_parallel_region_count_cond.wait(
@@ -362,18 +365,19 @@ class HPX {
   void fence() const {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
     if (m_mode == instance_mode::global) {
-      impl_fence_all_instances(
+      impl_fence_global(
           "Kokkos::Experimental::HPX::fence: Unnamed Global HPX Fence");
     } else {
+      // TODO: Fix name in test or here?
       impl_fence_instance(
-          "Kokkos::Experimental::HPX::fence: Unnamed HPX Instance Fence");
+          "Unnamed Instance Fence");
     }
 #endif
   }
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   void fence(const std::string &name) const {
     if (m_mode == instance_mode::global) {
-      impl_fence_all_instances(name);
+      impl_fence_global(name);
     } else {
       impl_fence_instance(name);
     }
