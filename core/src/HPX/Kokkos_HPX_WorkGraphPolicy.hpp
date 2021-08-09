@@ -99,7 +99,7 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
     auto exec = Kokkos::Experimental::HPX::impl_get_executor();
 
     for_loop(par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-             [this](int thread) {
+             [this](int) {
                std::int32_t w = m_policy.pop_work();
                while (w != Policy::COMPLETED_TOKEN) {
                  if (w != Policy::END_TOKEN) {

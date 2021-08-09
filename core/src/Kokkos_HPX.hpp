@@ -353,8 +353,6 @@ class HPX {
               l, [&]() { return m_active_parallel_region_count == 0; });
         });
   }
-
-  void impl_fence_instance() const { impl_get_future().wait(); }
 #endif
 
   static hpx::execution::parallel_executor impl_get_executor() {
@@ -372,15 +370,17 @@ class HPX {
     }
 #endif
   }
-  void fence(const std::string &name) const {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+  void fence(const std::string &name) const {
     if (m_mode == instance_mode::global) {
       impl_fence_all_instances(name);
     } else {
       impl_fence_instance(name);
     }
-#endif
   }
+#else
+  void fence(const std::string &) const {}
+#endif
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -935,7 +935,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     init(league_size_request, 1);
   }
 
-  TeamPolicyInternal(const typename traits::execution_space &space,
+  TeamPolicyInternal(const typename traits::execution_space &,
                      int league_size_request,
                      const Kokkos::AUTO_t &, /* team_size_request */
                      const Kokkos::AUTO_t & /* vector_length_request */)
@@ -945,7 +945,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     init(league_size_request, 1);
   }
 
-  TeamPolicyInternal(const typename traits::execution_space &space,
+  TeamPolicyInternal(const typename traits::execution_space &,
                      int league_size_request, int team_size_request,
                      const Kokkos::AUTO_t & /* vector_length_request */
                      )
