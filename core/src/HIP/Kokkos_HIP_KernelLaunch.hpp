@@ -56,9 +56,13 @@
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__
+#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+__device__ __constant__ extern unsigned long kokkos_impl_hip_constant_memory_buffer[];
+#else
 __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
     [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
      sizeof(unsigned long)];
+#endif
 #endif
 
 namespace Kokkos {

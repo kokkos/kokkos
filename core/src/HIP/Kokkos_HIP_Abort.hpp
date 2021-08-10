@@ -53,7 +53,13 @@
 namespace Kokkos {
 namespace Impl {
 
-[[noreturn]] __device__ __attribute__((noinline)) void hip_abort(
+[[noreturn]] __device__
+#ifndef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+__attribute__((noinline))
+#else
+inline
+#endif
+void hip_abort(
     char const *msg) {
 #ifdef NDEBUG
   (void)msg;
