@@ -1252,22 +1252,6 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
   }
 };
 
-template <typename T>
-bool is_zero_byte(const T& t) {
-  using comparison_type = std::conditional_t<
-      sizeof(T) % sizeof(long long int) == 0, long long int,
-      std::conditional_t<
-          sizeof(T) % sizeof(long int) == 0, long int,
-          std::conditional_t<
-              sizeof(T) % sizeof(int) == 0, int,
-              std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
-                                 char>>>>;
-  const auto* const ptr = reinterpret_cast<const comparison_type*>(&t);
-  for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
-    if (ptr[i] != 0) return false;
-  return true;
-}
-
 template <typename ExecutionSpace, class DT, class... DP>
 inline void contiguous_fill(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
