@@ -1002,21 +1002,19 @@ TEST(TEST_CATEGORY, team_vector) {
 
 #if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
-// With KOKKOS_ENABLE_DEBUG enabled, the functor uses too many registers to run
-// with a team size of 32 on GPUs, 16 is the max possible (at least on a K80
-// GPU) See https://github.com/kokkos/kokkos/issues/1513
-// For Intel GPUs, the requested workgroup size is just too large here.
-if(
+  // With KOKKOS_ENABLE_DEBUG enabled, the functor uses too many registers to
+  // run with a team size of 32 on GPUs, 16 is the max possible (at least on a
+  // K80 GPU) See https://github.com/kokkos/kokkos/issues/1513 For Intel GPUs,
+  // the requested workgroup size is just too large here.
+  if (
 #if defined(KOKKOS_ENABLE_DEBUG)
-  !std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value ||
+      !std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value ||
 #endif
-  !std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
-  {
+      !std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value) {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
   }
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
-  {
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value) {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
   }
