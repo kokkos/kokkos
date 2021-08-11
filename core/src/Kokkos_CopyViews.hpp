@@ -47,6 +47,7 @@
 #include <string>
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <Kokkos_Layout.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -2974,8 +2975,16 @@ resize(const I& arg_prop, Kokkos::View<T, P...>& v,
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
 template <class T, class... P>
-inline void resize(Kokkos::View<T, P...>& v,
-                   const typename Kokkos::View<T, P...>::array_layout& layout) {
+inline std::enable_if_t<
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutLeft>::value ||
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutRight>::value ||
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutStride>::value ||
+    is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value>
+resize(Kokkos::View<T, P...>& v,
+       const typename Kokkos::View<T, P...>::array_layout& layout) {
   using view_type = Kokkos::View<T, P...>;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
@@ -2989,6 +2998,32 @@ inline void resize(Kokkos::View<T, P...>& v,
 
     v = v_resized;
   }
+}
+
+// FIXME User-provided (custom) layouts are not required to have a comparison
+// operator. Hence, there is no way to check if the requested layout is actually
+// the same as the existing one.
+template <class T, class... P>
+inline std::enable_if_t<
+    !(std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                   Kokkos::LayoutLeft>::value ||
+      std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                   Kokkos::LayoutRight>::value ||
+      std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                   Kokkos::LayoutStride>::value ||
+      is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value)>
+resize(Kokkos::View<T, P...>& v,
+       const typename Kokkos::View<T, P...>::array_layout& layout) {
+  using view_type = Kokkos::View<T, P...>;
+
+  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
+                "Can only resize managed views");
+
+  view_type v_resized(v.label(), layout);
+
+  Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
+
+  v = v_resized;
 }
 
 /** \brief  Resize a view with discarding old data. */
