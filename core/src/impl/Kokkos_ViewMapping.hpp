@@ -2883,9 +2883,25 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   void execute(bool arg) {
     destroy = arg;
+
+    // Shortcut for zero initialization
+    ValueType value{};
+    if (std::is_trivial<ValueType>::value &&
+        std::is_trivially_copy_assignable<ValueType>::value &&
+        Impl::is_zero_byte(value) && !destroy) {
+      (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+          space,
+          Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
+          value);
+      return;
+    }
+
     PolicyType policy(0, n);
     std::string functor_name;
     uint64_t kpID = 0;
+
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       functor_name = (destroy ? "Kokkos::View::destruction [" + name + "]"
                               : "Kokkos::View::initialization [" + name + "]");
@@ -2898,25 +2914,12 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
                                           true);
     }
 #endif
-    ValueType value{};
-    if (std::is_trivial<ValueType>::value &&
-        std::is_trivially_copy_assignable<ValueType>::value &&
-        Impl::is_zero_byte(value)) {
-      (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
-                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
-          space,
-          Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
-          value);
-    } else {
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, policy);
-      closure.execute();
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Tools::Impl::end_parallel_for(policy, *this, functor_name,
-                                              kpID);
-      }
+    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
+        *this, policy);
+    closure.execute();
+    space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Tools::Impl::end_parallel_for(policy, *this, functor_name, kpID);
     }
   }
 
@@ -2947,6 +2950,20 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
 
   void construct_shared_allocation() {
+    // Shortcut for zero initialization
+    ValueType value{};
+    if (std::is_trivial<ValueType>::value &&
+        std::is_trivially_copy_assignable<ValueType>::value &&
+        Impl::is_zero_byte(value)) {
+      (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+          space,
+          Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
+          value);
+      return;
+    }
+
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::beginParallelFor(
@@ -2958,25 +2975,13 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
                                           true);
     }
 #endif
-    ValueType value{};
-    if (std::is_trivial<ValueType>::value &&
-        std::is_trivially_copy_assignable<ValueType>::value &&
-        Impl::is_zero_byte(value)) {
-      (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
-                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
-          space,
-          Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
-          value);
-    } else {
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, PolicyType(0, n));
-      closure.execute();
-      space.fence(
-          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in view");
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
+    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
+        *this, PolicyType(0, n));
+    closure.execute();
+    space.fence(
+        "Kokkos::Impl::ViewValueFunctor: Fence after setting values in view");
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
     }
   }
 
