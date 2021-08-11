@@ -102,7 +102,7 @@ void test_shared_alloc() {
 
       for (size_t j = 0; j < (i / 10) + 1; ++j) RecordBase::increment(r[i]);
 
-      ASSERT_EQ(r[i]->use_count(), (i / 10) + 1);
+      ASSERT_EQ(r[i]->use_count(), int((i / 10) + 1));
       ASSERT_EQ(r[i], RecordMemS::get_record(r[i]->data()));
     });
 
@@ -146,7 +146,7 @@ void test_shared_alloc() {
 
       for (size_t j = 0; j < (i / 10) + 1; ++j) RecordBase::increment(r[i]);
 
-      ASSERT_EQ(r[i]->use_count(), (i / 10) + 1);
+      ASSERT_EQ(r[i]->use_count(), int((i / 10) + 1));
       ASSERT_EQ(r[i], RecordMemS::get_record(r[i]->data()));
     });
 

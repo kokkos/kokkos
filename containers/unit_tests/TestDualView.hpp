@@ -303,7 +303,7 @@ struct test_dualview_resize {
 
     // Check
     ASSERT_EQ(a_h_sum, a_d_sum);
-    ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
+    ASSERT_EQ(a_h_sum, scalar_type(a.extent(0) * a.extent(1)));
 
     /* Covers case "Resize on Host" */
     a.modify_host();
@@ -336,7 +336,7 @@ struct test_dualview_resize {
       }
 
     // Check
-    ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
+    ASSERT_EQ(a_h_sum, scalar_type(a.extent(0) * a.extent(1)));
     ASSERT_EQ(a_h_sum, a_d_sum);
 
   }  // end run_me
@@ -384,7 +384,7 @@ struct test_dualview_realloc {
       }
 
     // Check
-    ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
+    ASSERT_EQ(a_h_sum, scalar_type(a.extent(0) * a.extent(1)));
     ASSERT_EQ(a_h_sum, a_d_sum);
   }  // end run_me
 
