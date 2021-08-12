@@ -1191,7 +1191,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   inline std::enable_if_t<try_thrust, bool> thrust_execute(
       bool thrust_runtime_possible) {
     if (!thrust_runtime_possible) {
-      return;
+      return false;
     }
     printf("using CUDA Thrust\n");
 
