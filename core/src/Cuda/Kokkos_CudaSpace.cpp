@@ -90,35 +90,12 @@ static std::atomic<int> num_uvm_allocations(0);
 
 }  // namespace
 
-DeepCopy<CudaSpace, CudaSpace, Cuda>::DeepCopy(void *dst, const void *src,
-                                               size_t n) {
+void DeepCopyCuda(void *dst, const void *src, size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
 }
 
-DeepCopy<HostSpace, CudaSpace, Cuda>::DeepCopy(void *dst, const void *src,
-                                               size_t n) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
-}
-
-DeepCopy<CudaSpace, HostSpace, Cuda>::DeepCopy(void *dst, const void *src,
-                                               size_t n) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
-}
-
-DeepCopy<CudaSpace, CudaSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
-                                               const void *src, size_t n) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
-}
-
-DeepCopy<HostSpace, CudaSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
-                                               const void *src, size_t n) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
-}
-
-DeepCopy<CudaSpace, HostSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
-                                               const void *src, size_t n) {
+void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
+                       size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
 }
