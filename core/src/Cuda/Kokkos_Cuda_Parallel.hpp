@@ -1228,6 +1228,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
+    return true;
   }
 
   inline void execute() {
