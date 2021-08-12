@@ -56,65 +56,23 @@
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
 namespace Impl {
-namespace {
-auto USM_memcpy(sycl::queue& q, void* dst, const void* src, size_t n) {
-  return q.memcpy(dst, src, n);
+
+void DeepCopySYCL(void* dst, const void* src, size_t n) {
+  Experimental::SYCL().fence("Kokkos::Impl::DeepCopySYCL: fence before memcpy");
+  auto event = Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(
+      dst, src, n);
+  Experimental::Impl::SYCLInternal::fence(event, "Kokkos::Impl::DeepCopySYCL: fence after memcpy");
 }
 
-void USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal& space, void* dst,
-                const void* src, size_t n) {
-  (void)USM_memcpy(*space.m_queue, dst, src, n);
+void DeepCopyAsyncSYCL(const Kokkos::Experimental::SYCL& instance, void* dst,
+                       const void* src, size_t n) {
+  instance.impl_internal_space_instance()->m_queue->memcpy(dst, src, n);
 }
 
-void USM_memcpy(void* dst, const void* src, size_t n) {
-  Experimental::SYCL().fence(
-      "Kokkos::Impl::USM_memcpy: fence before UVM memcpy");
-  auto event = USM_memcpy(
-      *Experimental::Impl::SYCLInternal::singleton().m_queue, dst, src, n);
-  Experimental::Impl::SYCLInternal::fence(event);
-}
-}  // namespace
-
-DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-         Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::Experimental::SYCL>::
-    DeepCopy(const Kokkos::Experimental::SYCL& instance, void* dst,
-             const void* src, size_t n) {
-  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
-}
-
-DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-         Kokkos::Experimental::SYCLDeviceUSMSpace,
-         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
-                                               size_t n) {
-  USM_memcpy(dst, src, n);
-}
-
-DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
-         Kokkos::Experimental::SYCL>::DeepCopy(const Kokkos::Experimental::SYCL&
-                                                   instance,
-                                               void* dst, const void* src,
-                                               size_t n) {
-  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
-}
-
-DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
-         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
-                                               size_t n) {
-  USM_memcpy(dst, src, n);
-}
-
-DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
-         Kokkos::Experimental::SYCL>::DeepCopy(const Kokkos::Experimental::SYCL&
-                                                   instance,
-                                               void* dst, const void* src,
-                                               size_t n) {
-  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
-}
-
-DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
-         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
-                                               size_t n) {
-  USM_memcpy(dst, src, n);
+void DeepCopyAsyncSYCL(void* dst, const void* src, size_t n) {
+  auto event = Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(
+      dst, src, n);
+  Experimental::Impl::SYCLInternal::fence(event, "Kokkos::Impl::DeepCopyAsyncSYCL: fence after memcpy");
 }
 
 }  // namespace Impl

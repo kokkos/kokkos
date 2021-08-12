@@ -57,7 +57,9 @@
 namespace Kokkos {
 namespace Experimental {
 
-class SYCLDeviceUSMSpace {
+class SYCLSpaceBase {};
+
+class SYCLDeviceUSMSpace : public SYCLSpaceBase {
  public:
   using execution_space = SYCL;
   using memory_space    = SYCLDeviceUSMSpace;
@@ -88,7 +90,7 @@ class SYCLDeviceUSMSpace {
   sycl::queue m_queue;
 };
 
-class SYCLSharedUSMSpace {
+class SYCLSharedUSMSpace : public SYCLSpaceBase {
  public:
   using execution_space = SYCL;
   using memory_space    = SYCLSharedUSMSpace;
