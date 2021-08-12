@@ -2817,6 +2817,22 @@ struct ViewDataHandle<
 namespace Kokkos {
 namespace Impl {
 
+template <typename T>
+inline bool is_zero_byte(const T& t) {
+  using comparison_type = std::conditional_t<
+      sizeof(T) % sizeof(long long int) == 0, long long int,
+      std::conditional_t<
+          sizeof(T) % sizeof(long int) == 0, long int,
+          std::conditional_t<
+              sizeof(T) % sizeof(int) == 0, int,
+              std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
+                                 char>>>>;
+  const auto* const ptr = reinterpret_cast<const comparison_type*>(&t);
+  for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
+    if (ptr[i] != 0) return false;
+  return true;
+}
+
 //----------------------------------------------------------------------------
 
 /*
@@ -2827,16 +2843,16 @@ namespace Impl {
  *  called from the shared memory tracking destruction.
  *  Secondarily to have two fewer partial specializations.
  */
-template <class ExecSpace, class ValueType,
+template <class DeviceType, class ValueType,
           bool IsScalar = std::is_scalar<ValueType>::value>
 struct ViewValueFunctor;
 
-template <class ExecSpace, class ValueType>
-struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
+template <class DeviceType, class ValueType>
+struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
+  using ExecSpace  = typename DeviceType::execution_space;
   using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
-  using Exec       = typename ExecSpace::execution_space;
 
-  Exec space;
+  ExecSpace space;
   ValueType* ptr;
   size_t n;
   bool destroy;
@@ -2867,6 +2883,21 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
 
   void execute(bool arg) {
     destroy = arg;
+
+    // Shortcut for zero initialization
+    ValueType value{};
+    if (std::is_trivial<ValueType>::value &&
+        std::is_trivially_copy_assignable<ValueType>::value &&
+        Impl::is_zero_byte(value) && !destroy) {
+      (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+          space,
+          Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
+          value);
+      return;
+    }
+
     PolicyType policy(0, n);
     std::string functor_name;
     if (!space.in_parallel()) {
@@ -2902,8 +2933,9 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
   void destroy_shared_allocation() { execute(true); }
 };
 
-template <class ExecSpace, class ValueType>
-struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
+template <class DeviceType, class ValueType>
+struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
+  using ExecSpace  = typename DeviceType::execution_space;
   using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
 
   ExecSpace space;
@@ -2923,6 +2955,20 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
       : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
 
   void construct_shared_allocation() {
+    // Shortcut for zero initialization
+    ValueType value{};
+    if (std::is_trivial<ValueType>::value &&
+        std::is_trivially_copy_assignable<ValueType>::value &&
+        Impl::is_zero_byte(value)) {
+      (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+          space,
+          Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
+          value);
+      return;
+    }
+
     if (!space.in_parallel()) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3234,7 +3280,9 @@ class ViewMapping<
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
     using value_type      = typename Traits::value_type;
-    using functor_type    = ViewValueFunctor<execution_space, value_type>;
+    using functor_type =
+        ViewValueFunctor<Kokkos::Device<execution_space, memory_space>,
+                         value_type>;
     using record_type =
         Kokkos::Impl::SharedAllocationRecord<memory_space, functor_type>;
 
