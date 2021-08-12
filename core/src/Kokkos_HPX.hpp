@@ -516,7 +516,7 @@ inline void dispatch_execute_task(Closure *closure,
   }
 
   if (force_synchronous) {
-    instance.fence();
+    instance.fence("Kokkos::Experimental::Impl::HPX::dispatch_execute_task: fence due to forced syncronizations");
   }
 }
 #else

@@ -337,7 +337,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      space.fence();
+      space.fence("Kokkos::Impl::ParallelReduce::sycl_direct_launch: fence due to inaccessible reducer result location");
     }
 
     return last_reduction_event;
@@ -614,7 +614,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           m_space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      m_space.fence();
+      m_space.fence("Kokkos::Impl::ParallelReduce::sycl_direct_launch: fence after deep copying results back");
     }
 
     return last_reduction_event;

@@ -67,7 +67,7 @@ void USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal& space, void* dst,
 }
 
 void USM_memcpy(void* dst, const void* src, size_t n) {
-  Experimental::SYCL().fence();
+  Experimental::SYCL().fence("Kokkos::Impl::USM_memcpy: fence before UVM memcpy");
   auto event = USM_memcpy(
       *Experimental::Impl::SYCLInternal::singleton().m_queue, dst, src, n);
   Experimental::Impl::SYCLInternal::fence(event);
@@ -195,7 +195,7 @@ void sycl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                                       reported_size);
   }
 
-  SYCL::impl_static_fence();
+  SYCL::impl_static_fence("Kokkos::Impl::sycl_deallocate: fence before deallocate");
   sycl::free(arg_alloc_ptr, queue);
 }
 

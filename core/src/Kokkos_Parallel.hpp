@@ -441,7 +441,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 
   Kokkos::Tools::Impl::end_parallel_scan(execution_policy, functor, str, kpID);
 
-  execution_space().fence();
+  execution_space().fence("Kokkos::parallel_scan: fence after scan with return value");
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>

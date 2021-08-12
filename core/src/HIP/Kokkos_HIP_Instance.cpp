@@ -392,7 +392,7 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
-  this->fence();
+  this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordHIP =
@@ -446,7 +446,7 @@ char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
   }
   if (driverTypeSize > m_maxDriverTypeSize) {
     // fence handles the cycle id reset for us
-    fence();
+    fence("Kokkos::HIPInternal::get_next_driver: fence before reallocating resources");
     HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
     m_maxDriverTypeSize = driverTypeSize;
     if (m_maxDriverTypeSize % 128 != 0)
@@ -460,7 +460,7 @@ char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
     m_cycleId = (m_cycleId + 1) % m_maxDriverCycles;
     if (m_cycleId == 0) {
       // ensure any outstanding kernels are completed before we wrap around
-      fence();
+      fence("Kokkos::HIPInternal::get_next_driver: fence before reusing first driver");
     }
   }
   return &d_driverWorkArray[m_maxDriverTypeSize * m_cycleId];
