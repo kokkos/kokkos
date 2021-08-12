@@ -446,7 +446,9 @@ char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
   }
   if (driverTypeSize > m_maxDriverTypeSize) {
     // fence handles the cycle id reset for us
-    fence("Kokkos::HIPInternal::get_next_driver: fence before reallocating resources");
+    fence(
+        "Kokkos::HIPInternal::get_next_driver: fence before reallocating "
+        "resources");
     HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
     m_maxDriverTypeSize = driverTypeSize;
     if (m_maxDriverTypeSize % 128 != 0)
@@ -460,7 +462,9 @@ char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
     m_cycleId = (m_cycleId + 1) % m_maxDriverCycles;
     if (m_cycleId == 0) {
       // ensure any outstanding kernels are completed before we wrap around
-      fence("Kokkos::HIPInternal::get_next_driver: fence before reusing first driver");
+      fence(
+          "Kokkos::HIPInternal::get_next_driver: fence before reusing first "
+          "driver");
     }
   }
   return &d_driverWorkArray[m_maxDriverTypeSize * m_cycleId];

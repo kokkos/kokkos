@@ -248,7 +248,9 @@ struct DeepCopy<Kokkos::Experimental::OpenMPTargetSpace,
                                        omp_get_default_device()));
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence("Kokkos::Impl::DeepCopy<OpenMPTarget, OpenMPTarget>: fence before copy");
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<OpenMPTarget, OpenMPTarget>: fence before "
+        "copy");
     if (n > 0)
       OMPT_SAFE_CALL(omp_target_memcpy(dst, const_cast<void*>(src), n, 0, 0,
                                        omp_get_default_device(),
@@ -266,7 +268,8 @@ struct DeepCopy<Kokkos::Experimental::OpenMPTargetSpace, HostSpace,
                                        omp_get_initial_device()));
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence("Kokkos::Impl::DeepCopy<OpenMPTarget, HostSpace>: fence before copy");
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<OpenMPTarget, HostSpace>: fence before copy");
     if (n > 0)
       OMPT_SAFE_CALL(omp_target_memcpy(dst, const_cast<void*>(src), n, 0, 0,
                                        omp_get_default_device(),
@@ -284,7 +287,8 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace,
                                        omp_get_default_device()));
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence("Kokkos::Impl::DeepCopy<HostSpace, OpenMPTarget>: fence before copy");
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, OpenMPTarget>: fence before copy");
     if (n > 0)
       OMPT_SAFE_CALL(omp_target_memcpy(dst, const_cast<void*>(src), n, 0, 0,
                                        omp_get_initial_device(),

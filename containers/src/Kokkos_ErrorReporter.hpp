@@ -187,7 +187,8 @@ template <typename ReportType, typename DeviceType>
 void ErrorReporter<ReportType, DeviceType>::resize(const size_t new_size) {
   m_reports.resize(new_size);
   m_reporters.resize(new_size);
-  typename DeviceType::execution_space().fence("Kokkos::Experimental::ErrorReporter::resize: fence after resizing");
+  typename DeviceType::execution_space().fence(
+      "Kokkos::Experimental::ErrorReporter::resize: fence after resizing");
 }
 
 }  // namespace Experimental
