@@ -229,7 +229,7 @@ void *CudaSpace::impl_allocate(
 
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif (CUDAMALLOCASYNC && CUDART_VERSION >= 11020)
+#elif (KOKKOS_ENABLE_CUDA_MALLOC_ASYNC && CUDART_VERSION >= 11020)
   cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
