@@ -98,9 +98,8 @@
 //
 // - 0: The HPX way. Unfortunately, this comes with unnecessary
 //      overheads at the moment, so there is
-// - 1: The manual way. This way is more verbose and does not take advantage of
-//      e.g. for_loop in HPX but it is significantly faster in many benchmarks.
-// - 2: Like 1, but spawn tasks using for_loop and a custom executor.
+// - 1: The manual way. This uses for_loop, but only spawns one task per worker
+//      thread. This is significantly faster in most cases.
 //
 // In the long run 0 should be the preferred implementation, but until HPX is
 // improved 1 will be the default.
@@ -108,7 +107,7 @@
 #define KOKKOS_HPX_IMPLEMENTATION 1
 #endif
 
-#if (KOKKOS_HPX_IMPLEMENTATION < 0) || (KOKKOS_HPX_IMPLEMENTATION > 2)
+#if (KOKKOS_HPX_IMPLEMENTATION < 0) || (KOKKOS_HPX_IMPLEMENTATION > 1)
 #error "You have chosen an invalid value for KOKKOS_HPX_IMPLEMENTATION"
 #endif
 
@@ -213,9 +212,6 @@ class HPX {
 
   static uint32_t m_active_parallel_region_count;
   static hpx::spinlock m_active_parallel_region_count_mutex;
-
-  // NOTE: We use the detail version to be able to use any mutex while waiting.
-  // However, depending on detail of course means this may break at any time.
   static hpx::condition_variable_any m_active_parallel_region_count_cond;
 
   struct instance_data {
@@ -1107,7 +1103,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                execute_functor<WorkTag>(m_functor, i);
              });
 
-#elif KOKKOS_HPX_IMPLEMENTATION >= 1
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::for_loop_strided;
 
     const Member chunk_size = get_hpx_adjusted_chunk_size(m_policy);
@@ -1166,7 +1162,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                iterate_type(m_mdr_policy, m_functor)(i);
              });
 
-#elif KOKKOS_HPX_IMPLEMENTATION >= 1
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::for_loop_strided;
 
     const Member chunk_size = get_hpx_adjusted_chunk_size(m_policy);
@@ -1401,7 +1397,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     pointer_type final_value_ptr = final_value.pointer();
 
-#elif KOKKOS_HPX_IMPLEMENTATION >= 1
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::for_loop_strided;
 
     const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
@@ -1549,7 +1545,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                iterate_type(m_mdr_policy, m_functor, update)(i);
              });
 
-#elif KOKKOS_HPX_IMPLEMENTATION >= 1
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::for_loop_strided;
 
     for_loop(par.on(exec).with(static_chunk_size(1)), std::size_t(0),
@@ -1966,7 +1962,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               m_shared);
         });
 
-#elif KOKKOS_HPX_IMPLEMENTATION >= 1
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::for_loop_strided;
 
     for_loop_strided(
@@ -2133,7 +2129,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                         update);
              });
 
-#elif KOKKOS_HPX_IMPLEMENTATION >= 1
+#elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::for_loop_strided;
 
     for_loop(par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
