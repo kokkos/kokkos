@@ -1148,11 +1148,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   };
   */
 
-  static constexpr bool is_thrust_possible = !ReduceFunctorHasInit<FunctorType>::value &&
-        !ReduceFunctorHasJoin<FunctorType>::value &&
-        !ReduceFunctorHasFinal<FunctorType>::value &&
-        !Policy::is_graph_kernel::value &&
-        std::is_same<ReducerType, InvalidType>::value;
+  static constexpr bool is_thrust_possible =
+      !ReduceFunctorHasInit<FunctorType>::value &&
+      !ReduceFunctorHasJoin<FunctorType>::value &&
+      !ReduceFunctorHasFinal<FunctorType>::value &&
+      !Policy::is_graph_kernel::value &&
+      std::is_same<ReducerType, InvalidType>::value;
 
   template <class TagType>
   struct ThrustFunctorWrapper {
@@ -1184,12 +1185,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   template <bool try_thrust>
   inline std::enable_if_t<!try_thrust, bool> thrust_execute(bool) {
-      return false;
+    return false;
   }
   template <bool try_thrust>
-  inline std::enable_if_t<try_thrust, bool> thrust_execute(bool thrust_runtime_possible) {
-      if (! thrust_runtime_possible)
-      { return; }
+  inline std::enable_if_t<try_thrust, bool> thrust_execute(
+      bool thrust_runtime_possible) {
+    if (! thrust_runtime_possible) {
+        return;
+    }
     printf("using CUDA Thrust\n");
 
     thrust::counting_iterator<index_type> temp_iter_d(m_policy.begin());
@@ -1238,9 +1241,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  !std::is_same<ReducerType, InvalidType>::value;
 
 #ifdef KOKKOS_ENABLE_THRUST
-      //! IsNonTrivialReduceFunctor<FunctorType>::value) {
-      if (!thrust_execute<is_thrust_possible>((nwork > 0) && m_result_ptr_host_accessible))
-      {
+    //! IsNonTrivialReduceFunctor<FunctorType>::value) {
+    if (!thrust_execute<is_thrust_possible>((nwork > 0) &&
+                                            m_result_ptr_host_accessible)) {
 #endif
       if ((nwork > 0) || need_device_set) {
         const int block_size = local_block_size(m_functor);
