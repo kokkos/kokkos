@@ -62,10 +62,14 @@ TEST(hpx, instance_ids) {
     Kokkos::Experimental::HPX hpx_global4(
         Kokkos::Experimental::HPX::instance_mode::global);
 
-    ASSERT_EQ(0, hpx_global1.impl_instance_id());
-    ASSERT_EQ(0, hpx_global2.impl_instance_id());
-    ASSERT_EQ(0, hpx_global3.impl_instance_id());
-    ASSERT_EQ(0, hpx_global4.impl_instance_id());
+    ASSERT_EQ(Kokkos::Experimental::HPX::impl_global_instance_id(),
+              hpx_global1.impl_instance_id());
+    ASSERT_EQ(Kokkos::Experimental::HPX::impl_global_instance_id(),
+              hpx_global2.impl_instance_id());
+    ASSERT_EQ(Kokkos::Experimental::HPX::impl_global_instance_id(),
+              hpx_global3.impl_instance_id());
+    ASSERT_EQ(Kokkos::Experimental::HPX::impl_global_instance_id(),
+              hpx_global4.impl_instance_id());
 
     Kokkos::Experimental::HPX hpx_independent1(
         Kokkos::Experimental::HPX::instance_mode::independent);
