@@ -2849,22 +2849,24 @@ struct ViewValueFunctor;
 
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
-  using ExecSpace = typename DeviceType::execution_space;
+  using ExecSpace  = typename DeviceType::execution_space;
+  using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
 
   ExecSpace space;
   ValueType* ptr;
   size_t n;
+  bool destroy;
   std::string name;
 
-  struct ConstructTag {};
-  struct DestroyTag {};
-
   KOKKOS_INLINE_FUNCTION
-  void operator()(DestroyTag, const size_t i) const { (ptr + i)->~ValueType(); }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(ConstructTag, const size_t i) const {
-    new (ptr + i) ValueType();
+  void operator()(const size_t i) const {
+    if (destroy) {
+      (ptr + i)->~ValueType();
+    }  // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line causes ptax error
+       // __cxa_begin_catch in nested_view unit-test
+    else {
+      new (ptr + i) ValueType();
+    }
   }
 
   ViewValueFunctor()                        = default;
@@ -2873,7 +2875,11 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
                    size_t const arg_n, std::string arg_name)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
+      : space(arg_space),
+        ptr(arg_ptr),
+        n(arg_n),
+        destroy(false),
+        name(std::move(arg_name)) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
@@ -2888,7 +2894,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
           value);
     } else {
-      parallel_for_implementation</*destroy*/ false>();
+      parallel_for_implementation(false);
     }
   }
 
@@ -2896,14 +2902,11 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   std::enable_if_t<!(std::is_trivial<Dummy>::value &&
                      std::is_trivially_copy_assignable<ValueType>::value)>
   construct_dispatch() {
-    parallel_for_implementation</*destroy*/ false>();
+    parallel_for_implementation(false);
   }
 
-  template <bool destroy>
-  void parallel_for_implementation() {
-    using TagType = std::conditional_t<destroy, DestroyTag, ConstructTag>;
-    using PolicyType =
-        Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, TagType>;
+  void parallel_for_implementation(bool arg) {
+    destroy = arg;
     PolicyType policy(0, n);
     std::string functor_name;
     if (!space.in_parallel()) {
@@ -2930,16 +2933,13 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
                                               kpID);
       }
     } else {
-      TagType tag;
-      for (size_t i = 0; i < n; ++i) operator()(tag, i);
+      for (size_t i = 0; i < n; ++i) operator()(i);
     }
   }
 
   void construct_shared_allocation() { construct_dispatch(); }
 
-  void destroy_shared_allocation() {
-    parallel_for_implementation</*destroy*/ true>();
-  }
+  void destroy_shared_allocation() { parallel_for_implementation(true); }
 };
 
 template <class DeviceType, class ValueType>
