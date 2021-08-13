@@ -600,7 +600,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       typename t_dev::execution_space().fence(
           "Kokkos::DualView<>::sync: fence after syncing DualView");
       typename t_host::execution_space().fence(
-          "Kokkos::DualView<>::sync:fence after syncing DualView");
+          "Kokkos::DualView<>::sync: fence after syncing DualView");
     }
   }
 
