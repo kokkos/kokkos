@@ -1717,11 +1717,11 @@ inline void deep_copy(
   using src_memory_space = typename src_traits::memory_space;
   Kokkos::fence(
       "Kokkos::deep_copy(value_type, DynRankView): fence before copying "
-      "values");
+      "value");
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
                                                       sizeof(ST));
   Kokkos::fence(
-      "Kokkos::deep_copy(value_type, DynRankView): fence after copying values");
+      "Kokkos::deep_copy(value_type, DynRankView): fence after copying value");
 }
 
 //----------------------------------------------------------------------------
@@ -1868,7 +1868,7 @@ inline void deep_copy(
   } else {
     Kokkos::fence(
         "Kokkos::Impl::DeepCopy(DynRankView, DynRankView): fence due to same "
-        "src and dest");
+        "src and dst");
   }
 }
 
