@@ -70,12 +70,16 @@ extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+namespace Impl {
+
+template <typename T>
+struct is_cuda_type_space : public std::false_type {};
+
+}  // namespace Impl
 
 /** \brief  Cuda on-device memory management */
 
-class CudaSpaceBase {};
-
-class CudaSpace : public CudaSpaceBase {
+class CudaSpace {
  public:
   //! Tag this class as a kokkos memory space
   using memory_space    = CudaSpace;
@@ -134,6 +138,10 @@ class CudaSpace : public CudaSpaceBase {
   static constexpr const char* m_name = "Cuda";
   friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 };
+
+template <>
+struct Impl::is_cuda_type_space<CudaSpace> : public std::true_type {};
+
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -144,7 +152,7 @@ namespace Kokkos {
 /** \brief  Cuda memory that is accessible to Host execution space
  *          through Cuda's unified virtual memory (UVM) runtime.
  */
-class CudaUVMSpace : public CudaSpaceBase {
+class CudaUVMSpace {
  public:
   //! Tag this class as a kokkos memory space
   using memory_space    = CudaUVMSpace;
@@ -215,6 +223,9 @@ class CudaUVMSpace : public CudaSpaceBase {
   static constexpr const char* m_name = "CudaUVM";
 };
 
+template <>
+struct Impl::is_cuda_type_space<CudaUVMSpace> : public std::true_type {};
+
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -225,7 +236,7 @@ namespace Kokkos {
 /** \brief  Host memory that is accessible to Cuda execution space
  *          through Cuda's host-pinned memory allocation.
  */
-class CudaHostPinnedSpace : public CudaSpaceBase {
+class CudaHostPinnedSpace {
  public:
   //! Tag this class as a kokkos memory space
   /** \brief  Memory is in HostSpace so use the HostSpace::execution_space */
@@ -276,6 +287,9 @@ class CudaHostPinnedSpace : public CudaSpaceBase {
 
   /*--------------------------------*/
 };
+
+template <>
+struct Impl::is_cuda_type_space<CudaHostPinnedSpace> : public std::true_type {};
 
 }  // namespace Kokkos
 
@@ -423,9 +437,8 @@ void DeepCopyAsyncCuda(const Cuda& instance, void* dst, const void* src,
 void DeepCopyAsyncCuda(void* dst, const void* src, size_t n);
 
 template <class MemSpace>
-struct DeepCopy<
-    MemSpace, HostSpace, Cuda,
-    std::enable_if_t<std::is_base_of<CudaSpaceBase, MemSpace>::value>> {
+struct DeepCopy<MemSpace, HostSpace, Cuda,
+                std::enable_if_t<is_cuda_type_space<MemSpace>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) { DeepCopyCuda(dst, src, n); }
   DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
     DeepCopyAsyncCuda(instance, dst, src, n);
@@ -433,9 +446,8 @@ struct DeepCopy<
 };
 
 template <class MemSpace>
-struct DeepCopy<
-    HostSpace, MemSpace, Cuda,
-    std::enable_if_t<std::is_base_of<CudaSpaceBase, MemSpace>::value>> {
+struct DeepCopy<HostSpace, MemSpace, Cuda,
+                std::enable_if_t<is_cuda_type_space<MemSpace>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) { DeepCopyCuda(dst, src, n); }
   DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
     DeepCopyAsyncCuda(instance, dst, src, n);
@@ -443,10 +455,9 @@ struct DeepCopy<
 };
 
 template <class MemSpace1, class MemSpace2>
-struct DeepCopy<
-    MemSpace1, MemSpace2, Cuda,
-    std::enable_if_t<std::is_base_of<CudaSpaceBase, MemSpace1>::value &&
-                     std::is_base_of<CudaSpaceBase, MemSpace2>::value>> {
+struct DeepCopy<MemSpace1, MemSpace2, Cuda,
+                std::enable_if_t<is_cuda_type_space<MemSpace1>::value &&
+                                 is_cuda_type_space<MemSpace2>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) { DeepCopyCuda(dst, src, n); }
   DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
     DeepCopyAsyncCuda(instance, dst, src, n);
@@ -454,11 +465,10 @@ struct DeepCopy<
 };
 
 template <class MemSpace1, class MemSpace2, class ExecutionSpace>
-struct DeepCopy<
-    MemSpace1, MemSpace2, ExecutionSpace,
-    std::enable_if_t<std::is_base_of<CudaSpaceBase, MemSpace1>::value &&
-                     std::is_base_of<CudaSpaceBase, MemSpace2>::value &&
-                     !std::is_same<ExecutionSpace, Cuda>::value>> {
+struct DeepCopy<MemSpace1, MemSpace2, ExecutionSpace,
+                std::enable_if_t<is_cuda_type_space<MemSpace1>::value &&
+                                 is_cuda_type_space<MemSpace2>::value &&
+                                 !std::is_same<ExecutionSpace, Cuda>::value>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
@@ -480,10 +490,9 @@ struct DeepCopy<
 };
 
 template <class MemSpace, class ExecutionSpace>
-struct DeepCopy<
-    MemSpace, HostSpace, ExecutionSpace,
-    std::enable_if_t<std::is_base_of<CudaSpaceBase, MemSpace>::value &&
-                     !std::is_same<ExecutionSpace, Cuda>::value>> {
+struct DeepCopy<MemSpace, HostSpace, ExecutionSpace,
+                std::enable_if_t<is_cuda_type_space<MemSpace>::value &&
+                                 !std::is_same<ExecutionSpace, Cuda>::value>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
@@ -504,10 +513,9 @@ struct DeepCopy<
 };
 
 template <class MemSpace, class ExecutionSpace>
-struct DeepCopy<
-    HostSpace, MemSpace, ExecutionSpace,
-    std::enable_if_t<std::is_base_of<CudaSpaceBase, MemSpace>::value &&
-                     !std::is_same<ExecutionSpace, Cuda>::value>> {
+struct DeepCopy<HostSpace, MemSpace, ExecutionSpace,
+                std::enable_if_t<is_cuda_type_space<MemSpace>::value &&
+                                 !std::is_same<ExecutionSpace, Cuda>::value>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }

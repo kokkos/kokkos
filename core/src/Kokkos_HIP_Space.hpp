@@ -68,12 +68,17 @@
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+namespace Impl {
+
+template <typename T>
+struct is_hip_type_space : public std::false_type {};
+
+}  // namespace Impl
+
 namespace Experimental {
 /** \brief  HIP on-device memory management */
 
-class HIPSpaceBase {};
-
-class HIPSpace : public HIPSpaceBase {
+class HIPSpace {
  public:
   //! Tag this class as a kokkos memory space
   using memory_space    = HIPSpace;
@@ -134,6 +139,11 @@ class HIPSpace : public HIPSpaceBase {
 };
 
 }  // namespace Experimental
+
+template <>
+struct Impl::is_hip_type_space<Experimental::HIPSpace> : public std::true_type {
+};
+
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -144,7 +154,7 @@ namespace Experimental {
 /** \brief  Host memory that is accessible to HIP execution space
  *          through HIP's host-pinned memory allocation.
  */
-class HIPHostPinnedSpace : public HIPSpaceBase {
+class HIPHostPinnedSpace {
  public:
   //! Tag this class as a kokkos memory space
   /** \brief  Memory is in HostSpace so use the HostSpace::execution_space */
@@ -193,6 +203,11 @@ class HIPHostPinnedSpace : public HIPSpaceBase {
   /*--------------------------------*/
 };
 }  // namespace Experimental
+
+template <>
+struct Impl::is_hip_type_space<Experimental::HIPHostPinnedSpace>
+    : public std::true_type {};
+
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -280,8 +295,7 @@ void DeepCopyAsyncHIP(void* dst, const void* src, size_t n);
 
 template <class MemSpace>
 struct DeepCopy<MemSpace, HostSpace, Kokkos::Experimental::HIP,
-                std::enable_if_t<std::is_base_of<
-                    Kokkos::Experimental::HIPSpaceBase, MemSpace>::value>> {
+                std::enable_if_t<is_hip_type_space<MemSpace>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) { DeepCopyHIP(dst, src, n); }
   DeepCopy(const Kokkos::Experimental::HIP& instance, void* dst,
            const void* src, size_t n) {
@@ -291,8 +305,7 @@ struct DeepCopy<MemSpace, HostSpace, Kokkos::Experimental::HIP,
 
 template <class MemSpace>
 struct DeepCopy<HostSpace, MemSpace, Kokkos::Experimental::HIP,
-                std::enable_if_t<std::is_base_of<
-                    Kokkos::Experimental::HIPSpaceBase, MemSpace>::value>> {
+                std::enable_if_t<is_hip_type_space<MemSpace>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) { DeepCopyHIP(dst, src, n); }
   DeepCopy(const Kokkos::Experimental::HIP& instance, void* dst,
            const void* src, size_t n) {
@@ -301,12 +314,9 @@ struct DeepCopy<HostSpace, MemSpace, Kokkos::Experimental::HIP,
 };
 
 template <class MemSpace1, class MemSpace2>
-struct DeepCopy<
-    MemSpace1, MemSpace2, Kokkos::Experimental::HIP,
-    std::enable_if_t<
-        std::is_base_of<Kokkos::Experimental::HIPSpaceBase, MemSpace1>::value &&
-        std::is_base_of<Kokkos::Experimental::HIPSpaceBase,
-                        MemSpace2>::value>> {
+struct DeepCopy<MemSpace1, MemSpace2, Kokkos::Experimental::HIP,
+                std::enable_if_t<is_hip_type_space<MemSpace1>::value &&
+                                 is_hip_type_space<MemSpace2>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) { DeepCopyHIP(dst, src, n); }
   DeepCopy(const Kokkos::Experimental::HIP& instance, void* dst,
            const void* src, size_t n) {
@@ -318,8 +328,8 @@ template <class MemSpace1, class MemSpace2, class ExecutionSpace>
 struct DeepCopy<
     MemSpace1, MemSpace2, ExecutionSpace,
     std::enable_if_t<
-        std::is_base_of<Kokkos::Experimental::HIPSpaceBase, MemSpace1>::value &&
-        std::is_base_of<Kokkos::Experimental::HIPSpaceBase, MemSpace2>::value &&
+        is_hip_type_space<MemSpace1>::value &&
+        is_hip_type_space<MemSpace2>::value &&
         !std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyHIP(dst, src, n);
@@ -345,7 +355,7 @@ template <class MemSpace, class ExecutionSpace>
 struct DeepCopy<
     MemSpace, HostSpace, ExecutionSpace,
     std::enable_if_t<
-        std::is_base_of<Kokkos::Experimental::HIPSpaceBase, MemSpace>::value &&
+        is_hip_type_space<MemSpace>::value &&
         !std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyHIP(dst, src, n);
@@ -370,7 +380,7 @@ template <class MemSpace, class ExecutionSpace>
 struct DeepCopy<
     HostSpace, MemSpace, ExecutionSpace,
     std::enable_if_t<
-        std::is_base_of<Kokkos::Experimental::HIPSpaceBase, MemSpace>::value &&
+        is_hip_type_space<MemSpace>::value &&
         !std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyHIP(dst, src, n);

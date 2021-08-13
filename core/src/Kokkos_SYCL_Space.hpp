@@ -55,11 +55,15 @@
 #include <impl/Kokkos_Tools.hpp>
 
 namespace Kokkos {
+
+namespace Impl {
+template <typename T>
+struct is_sycl_type_space : public std::false_type {};
+}  // namespace Impl
+
 namespace Experimental {
 
-class SYCLSpaceBase {};
-
-class SYCLDeviceUSMSpace : public SYCLSpaceBase {
+class SYCLDeviceUSMSpace {
  public:
   using execution_space = SYCL;
   using memory_space    = SYCLDeviceUSMSpace;
@@ -90,7 +94,7 @@ class SYCLDeviceUSMSpace : public SYCLSpaceBase {
   sycl::queue m_queue;
 };
 
-class SYCLSharedUSMSpace : public SYCLSpaceBase {
+class SYCLSharedUSMSpace {
  public:
   using execution_space = SYCL;
   using memory_space    = SYCLSharedUSMSpace;
@@ -123,6 +127,15 @@ class SYCLSharedUSMSpace : public SYCLSpaceBase {
 }  // namespace Experimental
 
 namespace Impl {
+
+template <>
+struct is_sycl_type_space<Kokkos::Experimental::SYCLDeviceUSMSpace>
+    : public std::true_type {};
+
+template <>
+struct is_sycl_type_space<Kokkos::Experimental::SYCLSharedUSMSpace>
+    : public std::true_type {};
+
 static_assert(Kokkos::Impl::MemorySpaceAccess<
                   Kokkos::Experimental::SYCLDeviceUSMSpace,
                   Kokkos::Experimental::SYCLDeviceUSMSpace>::assignable,
