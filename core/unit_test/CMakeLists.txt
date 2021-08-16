@@ -564,6 +564,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
       hip/TestHIP_AsyncLauncher.cpp
+      hip/TestHIP_BlocksizeDeduction.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIPInterOpInit
