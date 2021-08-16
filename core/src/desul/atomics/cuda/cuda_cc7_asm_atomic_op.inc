@@ -5,13 +5,13 @@
 // Non Returning Atomic Operations 
 #define __DESUL_IMPL_CUDA_ASM_ATOMIC_ADD(type,asm_type,reg_type) \
 inline __device__ void atomic_add(type* dest, type value, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
-  asm volatile("red.add" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM asm_type " [%0],%1;" :: "l"(dest),reg_type(value) : "memory"); \
+  asm volatile("red.add.global" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM asm_type " [%0],%1;" :: "l"(dest),reg_type(value) : "memory"); \
 }
 
 #define __DESUL_IMPL_CUDA_ASM_ATOMIC_SUB(type,asm_type,reg_type) \
 inline __device__ void atomic_sub(type* dest, type value, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
   type neg_value = -value; \
-  asm volatile("red.add" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM asm_type " [%0],%1;" :: "l"(dest),reg_type(neg_value) : "memory"); \
+  asm volatile("red.add.global" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM asm_type " [%0],%1;" :: "l"(dest),reg_type(neg_value) : "memory"); \
 }
 
 #define __DESUL_IMPL_CUDA_ASM_ATOMIC_MIN(type,asm_type,reg_type) \
