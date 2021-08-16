@@ -254,7 +254,7 @@ namespace Impl {
 
 template <class DstSpace, class SrcSpace,
           class ExecutionSpace = typename DstSpace::execution_space,
-          typename Enable      = void>
+          class Enable         = void>
 struct DeepCopy;
 
 template <typename ExecutionSpace, class DT, class... DP>
