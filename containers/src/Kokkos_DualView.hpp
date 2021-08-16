@@ -597,8 +597,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     }
     if (std::is_same<typename t_host::memory_space,
                      typename t_dev::memory_space>::value) {
-      typename t_dev::execution_space().fence();
-      typename t_host::execution_space().fence();
+      typename t_dev::execution_space().fence(
+          "Kokkos::DualView<>::sync: fence after syncing DualView");
+      typename t_host::execution_space().fence(
+          "Kokkos::DualView<>::sync: fence after syncing DualView");
     }
   }
 

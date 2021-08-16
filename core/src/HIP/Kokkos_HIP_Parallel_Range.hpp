@@ -390,7 +390,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().impl_internal_space_instance()->fence();
+        m_policy.space().impl_internal_space_instance()->fence(
+            "Kokkos::Impl::ParallelReduce<RangePolicy,HIP>: fence because "
+            "reduction can't access result storage location");
 
         if (m_result_ptr) {
           const int size = ValueTraits::value_size(

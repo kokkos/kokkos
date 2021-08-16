@@ -110,12 +110,16 @@ struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<SYCLDeviceUSMSpace, "
+        "SYCLDeviceUSMSpace>: fence before deep_copy");
     DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
              Kokkos::Experimental::SYCLDeviceUSMSpace,
              Kokkos::Experimental::SYCL>(Kokkos::Experimental::SYCL(), dst, src,
                                          n);
-    Kokkos::Experimental::SYCL().fence();
+    Kokkos::Experimental::SYCL().fence(
+        "Kokkos::Impl::DeepCopy<SYCLDeviceUSMSpace, "
+        "SYCLDeviceUSMSpace>: fence after deep_copy");
   }
 };
 
@@ -128,11 +132,15 @@ struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, SYCLDeviceUSMSpace>: "
+        "fence before deep_copy");
     DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
              Kokkos::Experimental::SYCL>(Kokkos::Experimental::SYCL(), dst, src,
                                          n);
-    Kokkos::Experimental::SYCL().fence();
+    Kokkos::Experimental::SYCL().fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, SYCLDeviceUSMSpace>: "
+        "fence after deep_copy");
   }
 };
 
@@ -145,11 +153,15 @@ struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<SYCLDeviceUSMSpace, HostSpace>: "
+        "fence before deep_copy");
     DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
              Kokkos::Experimental::SYCL>(Kokkos::Experimental::SYCL(), dst, src,
                                          n);
-    Kokkos::Experimental::SYCL().fence();
+    Kokkos::Experimental::SYCL().fence(
+        "Kokkos::Impl::DeepCopy<SYCLDeviceUSMSpace, "
+        "SYCLDeviceUSMSpace>: fence after deep_copy");
   }
 };
 

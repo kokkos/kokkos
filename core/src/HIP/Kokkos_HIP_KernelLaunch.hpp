@@ -477,7 +477,9 @@ struct HIPParallelLaunch<
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      hip_instance->fence();
+      hip_instance->fence(
+          "Kokkos::Experimental::Impl::HIParallelLaunch: Debug Only Check for "
+          "Execution Error");
 #endif
     }
   }
