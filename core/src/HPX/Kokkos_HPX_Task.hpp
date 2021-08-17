@@ -209,7 +209,9 @@ class TaskQueueSpecializationConstrained<
     task_queue.scheduler = &scheduler;
     Kokkos::Impl::dispatch_execute_task(&task_queue,
                                         Kokkos::Experimental::HPX());
-    Kokkos::Experimental::HPX().fence()"Kokkos::Impl::TaskQueueSpecializationConstrained::execute: fence after task execution";
+    Kokkos::Experimental::HPX().fence(
+        "Kokkos::Impl::TaskQueueSpecialization<SimpleTask>::execute: fence "
+        "after task execution");
   }
 
   // Must provide task queue execution function
