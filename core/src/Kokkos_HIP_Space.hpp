@@ -656,7 +656,7 @@ struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
   ZeroMemset(const Kokkos::Experimental::HIP& exec_space,
              const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    HIP_SAFE_CALL(hipMemsetAsync(
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemsetAsync(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.hip_stream()));
@@ -664,7 +664,7 @@ struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
 
   ZeroMemset(const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    HIP_SAFE_CALL(
+    KOKKOS_IMPL_HIP_SAFE_CALL(
         hipMemset(dst.data(), 0,
                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
   }

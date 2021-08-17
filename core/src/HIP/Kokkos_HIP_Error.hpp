@@ -84,7 +84,7 @@ inline void hip_internal_safe_call_deprecated(hipError e, const char* name,
   Kokkos::Impl::hip_internal_safe_call(call, #call, __FILE__, __LINE__)
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define HIP_SAFE_CALL(call)                                              \
+#define HIP_SAFE_CALL(call)                                  \
   Kokkos::Impl::hip_internal_safe_call_deprecated(call, #call, __FILE__, \
                                                   __LINE__)
 

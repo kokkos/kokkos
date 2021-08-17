@@ -91,10 +91,10 @@ void initialize_host_hip_lock_arrays() {
 #endif
 
   if (g_host_hip_lock_arrays.atomic != nullptr) return;
-  HIP_SAFE_CALL(hipMalloc(
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMalloc(
       &g_host_hip_lock_arrays.atomic,
       sizeof(std::int32_t) * (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1)));
-  HIP_SAFE_CALL(hipMalloc(
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMalloc(
       &g_host_hip_lock_arrays.scratch,
       sizeof(std::int32_t) * (::Kokkos::Experimental::HIP::concurrency())));
 
@@ -114,9 +114,9 @@ void finalize_host_hip_lock_arrays() {
 #endif
 
   if (g_host_hip_lock_arrays.atomic == nullptr) return;
-  HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.atomic));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.atomic));
   g_host_hip_lock_arrays.atomic = nullptr;
-  HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.scratch));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.scratch));
   g_host_hip_lock_arrays.scratch = nullptr;
   g_host_hip_lock_arrays.n       = 0;
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE

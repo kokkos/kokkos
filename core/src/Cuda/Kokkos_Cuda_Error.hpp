@@ -86,7 +86,7 @@ inline void cuda_internal_safe_call_deprecated(cudaError e, const char* name,
   cuda_internal_safe_call(e, name, file, line);
 }
 
-#define CUDA_SAFE_CALL(call)                                              \
+#define CUDA_SAFE_CALL(call)                                  \
   Kokkos::Impl::cuda_internal_safe_call_deprecated(call, #call, __FILE__, \
                                                    __LINE__)
 

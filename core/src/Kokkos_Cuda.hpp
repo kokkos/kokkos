@@ -281,7 +281,7 @@ template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
   ZeroMemset(const Kokkos::Cuda& exec_space, const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    CUDA_SAFE_CALL(cudaMemsetAsync(
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemsetAsync(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.cuda_stream()));
@@ -289,7 +289,7 @@ struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
 
   ZeroMemset(const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    CUDA_SAFE_CALL(
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMemset(dst.data(), 0,
                    dst.size() * sizeof(typename View<DT, DP...>::value_type)));
   }

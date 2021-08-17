@@ -211,7 +211,7 @@ struct HIPParallelLaunchKernelFuncData {
   static hipFuncAttributes get_hip_func_attributes(void const *kernel_func) {
     static hipFuncAttributes attr = [=]() {
       hipFuncAttributes attr;
-      HIP_SAFE_CALL(hipFuncGetAttributes(&attr, kernel_func));
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipFuncGetAttributes(&attr, kernel_func));
       return attr;
     }();
     return attr;
@@ -430,14 +430,15 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
-    HIP_SAFE_CALL(hipEventSynchronize(hip_instance->constantMemReusable));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipEventSynchronize(hip_instance->constantMemReusable));
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging;
     memcpy(staging, driver, sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
-    HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
         HIP_SYMBOL(kokkos_impl_hip_constant_memory_buffer), staging,
         sizeof(DriverType), 0, hipMemcpyHostToDevice, hip_instance->m_stream));
 
@@ -446,8 +447,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
          get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
 
     // Record an event that says when the constant buffer can be reused
-    HIP_SAFE_CALL(hipEventRecord(hip_instance->constantMemReusable,
-                                 hip_instance->m_stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(hip_instance->constantMemReusable,
+                                             hip_instance->m_stream));
   }
 };
 
@@ -490,7 +491,7 @@ struct HIPParallelLaunch<
       base_t::invoke_kernel(d_driver, grid, block, shmem, hip_instance);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-      HIP_SAFE_CALL(hipGetLastError());
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());
       hip_instance->fence(
           "Kokkos::Experimental::Impl::HIParallelLaunch: Debug Only Check for "
           "Execution Error");
