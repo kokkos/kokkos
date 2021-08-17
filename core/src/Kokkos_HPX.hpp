@@ -202,10 +202,11 @@ class HPX {
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   static std::atomic<uint32_t> m_next_instance_id;
- public:
-   static constexpr uint32_t impl_global_instance_id() { return 1; }
 
-   enum class instance_mode { global, independent };
+ public:
+  static constexpr uint32_t impl_global_instance_id() { return 1; }
+
+  enum class instance_mode { global, independent };
 
  private:
   instance_mode m_mode;
@@ -250,8 +251,9 @@ class HPX {
         m_future_mutex(m_global_instance_data.m_future_mutex) {}
 
   HPX(instance_mode mode)
-      : m_instance_id(mode == instance_mode::independent ? m_next_instance_id++
-                                                         : impl_global_instance_id()),
+      : m_instance_id(mode == instance_mode::independent
+                          ? m_next_instance_id++
+                          : impl_global_instance_id()),
         m_mode(mode),
         m_independent_instance_data(mode == instance_mode::independent
                                         ? (new instance_data())
@@ -284,8 +286,9 @@ class HPX {
         m_future_mutex(other.m_future_mutex) {}
 
   HPX &operator=(const HPX &other) {
-    m_instance_id =
-        other.m_mode == instance_mode::independent ? m_next_instance_id++ : impl_global_instance_id();
+    m_instance_id               = other.m_mode == instance_mode::independent
+                                      ? m_next_instance_id++
+                                      : impl_global_instance_id();
     m_mode                      = other.m_mode;
     m_independent_instance_data = other.m_independent_instance_data;
     m_buffer                    = m_mode == instance_mode::independent
@@ -294,9 +297,9 @@ class HPX {
     m_future = m_mode == instance_mode::independent
                    ? m_independent_instance_data->m_future
                    : m_global_instance_data.m_future;
-    m_future_mutex = m_mode == instance_mode::independent
-                         ? m_independent_instance_data->m_future_mutex
-                         : m_global_instance_data.m_future_mutex;
+    m_future_mutex              = m_mode == instance_mode::independent
+                                      ? m_independent_instance_data->m_future_mutex
+                                      : m_global_instance_data.m_future_mutex;
     return *this;
   }
 #else
@@ -347,7 +350,8 @@ class HPX {
         Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
             impl_instance_id()},
         [&]() {
-          std::unique_lock<hpx::spinlock> l(m_active_parallel_region_count_mutex);
+          std::unique_lock<hpx::spinlock> l(
+              m_active_parallel_region_count_mutex);
           m_active_parallel_region_count_cond.wait(
               l, [&]() { return m_active_parallel_region_count == 0; });
         });
@@ -365,8 +369,7 @@ class HPX {
           "Kokkos::Experimental::HPX::fence: Unnamed Global HPX Fence");
     } else {
       // TODO: Fix name in test or here?
-      impl_fence_instance(
-          "Unnamed Instance Fence");
+      impl_fence_instance("Unnamed Instance Fence");
     }
 #endif
   }
@@ -742,7 +745,8 @@ struct HPXTeamMember {
   }
 
   template <class Closure, class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure &closure, ValueType &value,
+  KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure &closure,
+                                             ValueType &value,
                                              const int &) const {
     static_assert(std::is_trivially_default_constructible<ValueType>(),
                   "Only trivial constructible types can be broadcasted");
@@ -1139,9 +1143,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   const Policy m_policy;
 
  public:
-  void execute() const {
-    dispatch_execute_task(this, m_mdr_policy.space());
-  }
+  void execute() const { dispatch_execute_task(this, m_mdr_policy.space()); }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
@@ -1672,9 +1674,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
  public:
-  void execute() const {
-    dispatch_execute_task(this, m_policy.space());
-  }
+  void execute() const { dispatch_execute_task(this, m_policy.space()); }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
@@ -1787,9 +1787,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
  public:
-  void execute() const {
-    dispatch_execute_task(this, m_policy.space());
-  }
+  void execute() const { dispatch_execute_task(this, m_policy.space()); }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
@@ -1931,9 +1929,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
-  void execute() const {
-    dispatch_execute_task(this, m_policy.space());
-  }
+  void execute() const { dispatch_execute_task(this, m_policy.space()); }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
