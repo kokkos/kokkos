@@ -74,8 +74,23 @@ inline void cuda_internal_safe_call(cudaError e, const char* name,
   }
 }
 
-#define CUDA_SAFE_CALL(call) \
+#define KOKKOS_IMPL_CUDA_SAFE_CALL(call) \
   Kokkos::Impl::cuda_internal_safe_call(call, #call, __FILE__, __LINE__)
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+
+KOKKOS_DEPRECATED_WITH_COMMENT("Use KOKKOS_IMPL_CUDA_SAFE_CALL instead!")
+inline void cuda_internal_safe_call_deprecated(cudaError e, const char* name,
+                                               const char* file = nullptr,
+                                               const int line   = 0) {
+  cuda_internal_safe_call(e, name, file, line);
+}
+
+#define CUDA_SAFE_CALL(call)                                              \
+  Kokkos::Impl::cuda_internal_safe_call_deprecated(call, #call, __FILE__, \
+                                                   __LINE__)
+
+#endif
 
 }  // namespace Impl
 
