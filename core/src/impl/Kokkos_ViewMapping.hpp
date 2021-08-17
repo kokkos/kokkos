@@ -2887,12 +2887,22 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   construct_dispatch() {
     ValueType value{};
     if (Impl::is_zero_byte(value)) {
+      uint64_t kpID = 0;
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::beginParallelFor(
+            "Kokkos::View::initialization [" + name + "]", 0, &kpID);
+      }
+
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
           Kokkos::View<ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
           value);
+
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::endParallelFor(kpID);
+      }
     } else {
       parallel_for_implementation(false);
     }
@@ -2918,6 +2928,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         Kokkos::Tools::Impl::begin_parallel_for(policy, *this, functor_name,
                                                 kpID);
       }
+
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
         Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
@@ -2970,12 +2981,22 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
     // Shortcut for zero initialization
     ValueType value{};
     if (Impl::is_zero_byte(value)) {
+      uint64_t kpID = 0;
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::beginParallelFor(
+            "Kokkos::View::initialization [" + name + "]", 0, &kpID);
+      }
+
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
           Kokkos::View<ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
           value);
+
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::endParallelFor(kpID);
+      }
     } else {
       parallel_for_implementation();
     }
