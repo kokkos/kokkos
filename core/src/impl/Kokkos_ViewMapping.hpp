@@ -2881,23 +2881,32 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         destroy(false),
         name(std::move(arg_name)) {}
 
-  void execute(bool arg) {
-    destroy = arg;
-
-    // Shortcut for zero initialization
+  template <typename Dummy = ValueType>
+  std::enable_if_t<std::is_trivial<Dummy>::value &&
+                   std::is_trivially_copy_assignable<ValueType>::value>
+  construct_dispatch() {
     ValueType value{};
-    if (std::is_trivial<ValueType>::value &&
-        std::is_trivially_copy_assignable<ValueType>::value &&
-        Impl::is_zero_byte(value) && !destroy) {
+    if (Impl::is_zero_byte(value)) {
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
           Kokkos::View<ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
           value);
-      return;
+    } else {
+      parallel_for_implementation(false);
     }
+  }
 
+  template <typename Dummy = ValueType>
+  std::enable_if_t<!(std::is_trivial<Dummy>::value &&
+                     std::is_trivially_copy_assignable<ValueType>::value)>
+  construct_dispatch() {
+    parallel_for_implementation(false);
+  }
+
+  void parallel_for_implementation(bool arg) {
+    destroy = arg;
     PolicyType policy(0, n);
     std::string functor_name;
     if (!space.in_parallel()) {
@@ -2928,9 +2937,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     }
   }
 
-  void construct_shared_allocation() { execute(false); }
+  void construct_shared_allocation() { construct_dispatch(); }
 
-  void destroy_shared_allocation() { execute(true); }
+  void destroy_shared_allocation() { parallel_for_implementation(true); }
 };
 
 template <class DeviceType, class ValueType>
@@ -2954,21 +2963,32 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
                    size_t const arg_n, std::string arg_name)
       : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
 
-  void construct_shared_allocation() {
+  template <typename Dummy = ValueType>
+  std::enable_if_t<std::is_trivial<Dummy>::value &&
+                   std::is_trivially_copy_assignable<Dummy>::value>
+  construct_shared_allocation() {
     // Shortcut for zero initialization
     ValueType value{};
-    if (std::is_trivial<ValueType>::value &&
-        std::is_trivially_copy_assignable<ValueType>::value &&
-        Impl::is_zero_byte(value)) {
+    if (Impl::is_zero_byte(value)) {
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
           Kokkos::View<ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n),
           value);
-      return;
+    } else {
+      parallel_for_implementation();
     }
+  }
 
+  template <typename Dummy = ValueType>
+  std::enable_if_t<!(std::is_trivial<Dummy>::value &&
+                     std::is_trivially_copy_assignable<Dummy>::value)>
+  construct_shared_allocation() {
+    parallel_for_implementation();
+  }
+
+  void parallel_for_implementation() {
     if (!space.in_parallel()) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
