@@ -196,17 +196,18 @@ class thread_buffer {
 
 namespace Experimental {
 class HPX {
+ public:
+  static constexpr uint32_t impl_default_instance_id() { return 1; }
+
  private:
   static bool m_hpx_initialized;
-  uint32_t m_instance_id;
+  uint32_t m_instance_id = impl_default_instance_id();
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   static std::atomic<uint32_t> m_next_instance_id;
 
  public:
-  static constexpr uint32_t impl_global_instance_id() { return 1; }
-
-  enum class instance_mode { global, independent };
+  enum class instance_mode { default_, independent };
 
  private:
   instance_mode m_mode;
@@ -224,13 +225,13 @@ class HPX {
   };
 
   mutable std::shared_ptr<instance_data> m_independent_instance_data;
-  static instance_data m_global_instance_data;
+  static instance_data m_default_instance_data;
 
   std::reference_wrapper<Kokkos::Impl::thread_buffer> m_buffer;
   std::reference_wrapper<hpx::shared_future<void>> m_future;
   std::reference_wrapper<hpx::spinlock> m_future_mutex;
 #else
-  static Kokkos::Impl::thread_buffer m_global_buffer;
+  static Kokkos::Impl::thread_buffer m_default_buffer;
 #endif
 
  public:
@@ -244,29 +245,29 @@ class HPX {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   HPX()
   noexcept
-      : m_instance_id(impl_global_instance_id()),
-        m_mode(instance_mode::global),
-        m_buffer(m_global_instance_data.m_buffer),
-        m_future(m_global_instance_data.m_future),
-        m_future_mutex(m_global_instance_data.m_future_mutex) {}
+      : m_instance_id(impl_default_instance_id()),
+        m_mode(instance_mode::default_),
+        m_buffer(m_default_instance_data.m_buffer),
+        m_future(m_default_instance_data.m_future),
+        m_future_mutex(m_default_instance_data.m_future_mutex) {}
 
   HPX(instance_mode mode)
       : m_instance_id(mode == instance_mode::independent
                           ? m_next_instance_id++
-                          : impl_global_instance_id()),
+                          : impl_default_instance_id()),
         m_mode(mode),
         m_independent_instance_data(mode == instance_mode::independent
                                         ? (new instance_data())
                                         : nullptr),
         m_buffer(mode == instance_mode::independent
                      ? m_independent_instance_data->m_buffer
-                     : m_global_instance_data.m_buffer),
+                     : m_default_instance_data.m_buffer),
         m_future(mode == instance_mode::independent
                      ? m_independent_instance_data->m_future
-                     : m_global_instance_data.m_future),
+                     : m_default_instance_data.m_future),
         m_future_mutex(mode == instance_mode::independent
                            ? m_independent_instance_data->m_future_mutex
-                           : m_global_instance_data.m_future_mutex) {}
+                           : m_default_instance_data.m_future_mutex) {}
 
   HPX(hpx::shared_future<void> future)
       : m_instance_id(m_next_instance_id++),
@@ -286,20 +287,20 @@ class HPX {
         m_future_mutex(other.m_future_mutex) {}
 
   HPX &operator=(const HPX &other) {
-    m_instance_id               = other.m_mode == instance_mode::independent
-                                      ? m_next_instance_id++
-                                      : impl_global_instance_id();
+    m_instance_id = other.m_mode == instance_mode::independent
+                        ? m_next_instance_id++
+                        : impl_default_instance_id();
     m_mode                      = other.m_mode;
     m_independent_instance_data = other.m_independent_instance_data;
     m_buffer                    = m_mode == instance_mode::independent
                    ? m_independent_instance_data->m_buffer
-                   : m_global_instance_data.m_buffer;
+                   : m_default_instance_data.m_buffer;
     m_future = m_mode == instance_mode::independent
                    ? m_independent_instance_data->m_future
-                   : m_global_instance_data.m_future;
-    m_future_mutex              = m_mode == instance_mode::independent
-                                      ? m_independent_instance_data->m_future_mutex
-                                      : m_global_instance_data.m_future_mutex;
+                   : m_default_instance_data.m_future;
+    m_future_mutex = m_mode == instance_mode::independent
+                         ? m_independent_instance_data->m_future_mutex
+                         : m_default_instance_data.m_future_mutex;
     return *this;
   }
 #else
@@ -333,57 +334,47 @@ class HPX {
     std::unique_lock<hpx::spinlock> l(m_active_parallel_region_count_mutex);
     ++m_active_parallel_region_count;
   }
+#endif
 
-  void impl_fence_instance(const std::string &name) const {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event<
-        Kokkos::Experimental::HPX>(
-        name,
-        Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
-            impl_instance_id()},
-        [&]() { impl_get_future().wait(); });
-  }
-
-  void impl_fence_global(const std::string &name) const {
+  void impl_fence_instance(const std::string &name =
+                               "Kokkos::Experimental::HPX::impl_fence_instance:"
+                               " Unnamed Instance Fence") const {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
         Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
             impl_instance_id()},
         [&]() {
+#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+          impl_get_future().wait();
+#endif
+        });
+  }
+
+  static void impl_fence_global(const std::string &name =
+                                    "Kokkos::Experimental::HPX::impl_fence_"
+                                    "global: Unnamed Global Fence") {
+    Kokkos::Tools::Experimental::Impl::profile_fence_event<
+        Kokkos::Experimental::HPX>(
+        name,
+        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+            GlobalDeviceSynchronization,
+        [&]() {
+#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
           std::unique_lock<hpx::spinlock> l(
               m_active_parallel_region_count_mutex);
           m_active_parallel_region_count_cond.wait(
               l, [&]() { return m_active_parallel_region_count == 0; });
+#endif
         });
   }
-#endif
 
   static hpx::execution::parallel_executor impl_get_executor() {
     return hpx::execution::parallel_executor();
   }
 
-  void fence() const {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-    if (m_mode == instance_mode::global) {
-      impl_fence_global(
-          "Kokkos::Experimental::HPX::fence: Unnamed Global HPX Fence");
-    } else {
-      // TODO: Fix name in test or here?
-      impl_fence_instance("Unnamed Instance Fence");
-    }
-#endif
-  }
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  void fence(const std::string &name) const {
-    if (m_mode == instance_mode::global) {
-      impl_fence_global(name);
-    } else {
-      impl_fence_instance(name);
-    }
-  }
-#else
-  void fence(const std::string &) const {}
-#endif
+  void fence() const { impl_fence_instance(); }
+  void fence(const std::string &name) const { impl_fence_instance(name); }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -462,7 +453,7 @@ class HPX {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
     return m_buffer.get();
 #else
-    return m_global_buffer;
+    return m_default_buffer;
 #endif
   }
 
@@ -1407,11 +1398,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     thread_buffer &buffer = m_policy.space().impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
-    for_loop(par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-             [this, &buffer](const int t) noexcept {
-               ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                               reinterpret_cast<pointer_type>(buffer.get(t)));
-             });
+    for_loop(
+        par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
+        [ this, &buffer ](const int t) noexcept {
+          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                          reinterpret_cast<pointer_type>(buffer.get(t)));
+        });
 
     const Member chunk_size = get_hpx_adjusted_chunk_size(m_policy);
 

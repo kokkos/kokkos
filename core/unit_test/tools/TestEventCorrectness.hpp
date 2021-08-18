@@ -171,7 +171,6 @@ TEST(kokkosp, test_unnamed_instance_fence) {
         {"Unnamed Instance Fence", FencePayload::distinguishable_devices::no,
          root + num_instances}};
     expect_fence_events(expected, [=]() {
-      // TODO: This is the global instance for HPX. Should it not be?
       Kokkos::DefaultExecutionSpace ex;
       ex.fence();
     });

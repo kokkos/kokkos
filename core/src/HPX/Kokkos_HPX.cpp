@@ -64,14 +64,14 @@ namespace Experimental {
 
 bool HPX::m_hpx_initialized = false;
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-std::atomic<uint32_t> HPX::m_next_instance_id{HPX::impl_global_instance_id() +
+std::atomic<uint32_t> HPX::m_next_instance_id{HPX::impl_default_instance_id() +
                                               1};
 uint32_t HPX::m_active_parallel_region_count{0};
 hpx::spinlock HPX::m_active_parallel_region_count_mutex;
 hpx::condition_variable_any HPX::m_active_parallel_region_count_cond;
-HPX::instance_data HPX::m_global_instance_data;
+HPX::instance_data HPX::m_default_instance_data;
 #else
-Kokkos::Impl::thread_buffer HPX::m_global_buffer;
+Kokkos::Impl::thread_buffer HPX::m_default_buffer;
 #endif
 
 int HPX::concurrency() {
@@ -181,9 +181,11 @@ void HPXSpaceInitializer::finalize(const bool all_spaces) {
   }
 }
 
-void HPXSpaceInitializer::fence() { Kokkos::Experimental::HPX().fence(); }
 void HPXSpaceInitializer::fence(const std::string &name) {
-  Kokkos::Experimental::HPX().fence(name);
+  Kokkos::Experimental::HPX::impl_fence_global(name);
+}
+void HPXSpaceInitializer::fence() {
+  Kokkos::Experimental::HPX::impl_fence_global();
 }
 
 void HPXSpaceInitializer::print_configuration(std::ostream &msg,
