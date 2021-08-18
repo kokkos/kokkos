@@ -89,7 +89,6 @@ inline void hip_internal_safe_call_deprecated(hipError e, const char* name,
                                                   __LINE__)
 
 #endif
-#endif
 
 namespace Kokkos {
 namespace Experimental {
