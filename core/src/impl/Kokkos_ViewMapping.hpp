@@ -2890,7 +2890,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "]", 0, &kpID);
+            "Kokkos::View::initialization [" + name + "]",
+            space.impl_instance_id(), &kpID);
       }
 
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
@@ -2984,7 +2985,8 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "]", 0, &kpID);
+            "Kokkos::View::initialization [" + name + "]",
+            space.impl_instance_id(), &kpID);
       }
 
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
