@@ -69,7 +69,7 @@ inline void hip_internal_safe_call(hipError_t e, const char* name,
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 
 KOKKOS_DEPRECATED
-inline void hip_internal_safe_call_deprecated(hipError e, const char* name,
+inline void hip_internal_safe_call_deprecated(hipError_t e, const char* name,
                                               const char* file = nullptr,
                                               const int line   = 0) {
   hip_internal_safe_call(e, name, file, line);
