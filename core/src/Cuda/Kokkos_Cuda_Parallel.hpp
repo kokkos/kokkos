@@ -81,6 +81,7 @@
 #include <thrust/iterator/counting_iterator.h>
 #pragma GCC diagnostic pop
 #define KOKKOS_ENABLE_THRUST
+#undef CUB_USE_COOPERATIVE_GROUPS
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -862,7 +863,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+//-:/---------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
@@ -1149,11 +1150,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   */
 
   static constexpr bool is_thrust_possible =
-      !ReduceFunctorHasInit<FunctorType>::value &&
-      !ReduceFunctorHasJoin<FunctorType>::value &&
+//      !ReduceFunctorHasInit<FunctorType>::value &&
+//      !ReduceFunctorHasJoin<FunctorType>::value &&
       !ReduceFunctorHasFinal<FunctorType>::value &&
-      !Policy::is_graph_kernel::value &&
-      std::is_same<ReducerType, InvalidType>::value;
+      !Policy::is_graph_kernel::value; // &&
+//      std::is_same<ReducerType, InvalidType>::value;
 
   template <class TagType>
   struct ThrustFunctorWrapper {
@@ -1182,7 +1183,20 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       return val;
     }
   };
+/*
+  struct ThrustReducerWrapper {
+    const ReducerType r;
 
+    KOKKOS_FUNCTION
+    ThrustReducerWrapper(const ReducerType op)
+        : f(std::move(op));
+
+    KOKKOS_FUNCTION value_type operator()(value_type lhs, value_type rhs) const {
+      value_type val = 0;
+      return val;   
+    }
+  };
+*/
   template <bool try_thrust>
   inline std::enable_if_t<!try_thrust, bool> thrust_execute(bool) {
     return false;
@@ -1215,16 +1229,64 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         value_type init;
     }
     */
-    value_type init{};
+    //value_type init{1};
+    value_type init_2;
+    //value_type init{ValueInit::init(ReducerConditional::select(m_functor, m_reducer)};
+    //void* init_holder{};
+    const pointer_type init_holder{};
+    ValueInit::init(m_reducer, &init_2);
+    //ValueInit::init(ReducerConditional::select(m_functor, m_reducer), init_holder);
 
-    ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
+    //value_type* init{ static_cast<value_type*>(init_holder) };
+
+    ThrustFunctorWrapper<WorkTag> t_op(m_functor, init_2);
+    //ThrustFunctorWrapper<WorkTag> t_op(m_functor, static_cast<value_type>(*init_holder));
 
     m_policy.space().fence();
 
+    //ReducerType rt = ValueJoin(m_reducer);
+    //ReducerType rt = ValueJoin(ReducerConditional::select(m_functor, m_reducer));
+
+     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                   //t_op, t_op.init, thrust::plus<value_type>());
+                                   //t_op, t_op.init, ReducerConditional::select(m_functor, m_reducer));
+                                   //t_op, t_op.init, m_reducer.join());
+                                   //t_op, t_op.init, ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
+                                   t_op, t_op.init, KOKKOS_LAMBDA (value_type& lhs, const value_type& rhs){
+                                       //volatile value_type lhs_temp = lhs;
+                                       //const volatile value_type rhs_temp = rhs;
+                                       //value_type lhs_temp = lhs;
+                                       //const value_type rhs_temp = rhs;
+                                       //(ValueJoin(m_reducer))(lhs_temp, rhs_temp);
+                                       (ValueJoin(m_reducer))(lhs, rhs);
+                                       //return lhs_temp;
+                                       return lhs;
+                                   });
+
+
+    /*
     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                   t_op, t_op.init, thrust::plus<value_type>());
-
+                                   t_op, t_op.init, KOKKOS_LAMBDA 
+                                   (const value_type& lhs, const value_type& rhs){
+                                     value_type tmp {};
+                                     //tmp += lhs;
+                                     //tmp += rhs;
+                                     if (rhs < lhs){
+                                        tmp = lhs;   
+                                     }
+                                     else {
+                                        tmp = rhs;
+                                     }
+                                     return tmp;
+                                   });
+    */
+                                   
     m_policy.space().fence();
+
+    //const int count = ValueTraits::value_count(
+    //   ReducerConditional::select(m_functor, m_reducer));
+
+    //printf("ValueInit: %f\n", ValueInit);
 
     *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
@@ -1242,9 +1304,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  !std::is_same<ReducerType, InvalidType>::value;
 
 #ifdef KOKKOS_ENABLE_THRUST
-    //! IsNonTrivialReduceFunctor<FunctorType>::value) {
-    if (!thrust_execute<is_thrust_possible>((nwork > 0) &&
+    // if (!thrust_execute<is_thrust_possible>((nwork > 0) &&
+    //                                        m_result_ptr_host_accessible)) {
+    if (thrust_execute<is_thrust_possible>((nwork > 0) &&
                                             m_result_ptr_host_accessible)) {
+        return;
+    }
 #endif
       if ((nwork > 0) || need_device_set) {
         const int block_size = local_block_size(m_functor);
@@ -1321,7 +1386,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
 #ifdef KOKKOS_ENABLE_THRUST
-  }
+//  }
 #endif
 
   template <class ViewType>
