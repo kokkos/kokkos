@@ -2889,6 +2889,10 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
+        // We are not really using parallel_for here but using beginParallelFor
+        // instead of begin_parallel_for (and adding "via memset") is the best
+        // we can do to indicate that this is not supposed to be tunable (and
+        // doesn't really execute a parallel_for).
         Kokkos::Profiling::beginParallelFor(
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
@@ -2984,6 +2988,10 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
+        // We are not really using parallel_for here but using beginParallelFor
+        // instead of begin_parallel_for (and adding "via memset") is the best
+        // we can do to indicate that this is not supposed to be tunable (and
+        // doesn't really execute a parallel_for).
         Kokkos::Profiling::beginParallelFor(
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
