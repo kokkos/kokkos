@@ -887,7 +887,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using functor_type   = FunctorType;
   // Conditionally set size_type to int16_t or int8_t if value_type is less than
   // int32_t (Kokkos::Cuda::size_type)
-  using size_type = typename std::conditional<
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the reduction is performed.
+  // Within the reduction, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the reduction, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  using word_size_type = typename std::conditional<
       sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
       typename std::conditional<sizeof(value_type) == 2, int16_t, int8_t>::type,
       Kokkos::Cuda::size_type>::type;
@@ -903,11 +913,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
-  size_type* m_scratch_space;
-  // m_scratch_flags must be of type Cuda::size_type due to use of atomics in
-  // Kokkos_Cuda_ReduceScan.hpp
+  word_size_type* m_scratch_space;
+  // m_scratch_flags must be of type Cuda::size_type due to use of atomics
+  // for tracking metadata in Kokkos_Cuda_ReduceScan.hpp
   Cuda::size_type* m_scratch_flags;
-  size_type* m_unified_space;
+  word_size_type* m_unified_space;
 
   // Shall we use the shfl based reduction or not (only use it for static sized
   // types of more than 128bit)
@@ -946,16 +956,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       __device__ inline
       void run(const DummySHMEMReductionType& ) const
       {*/
-    const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
-                                                   sizeof(size_type)>
+    const integral_nonzero_constant<
+        word_size_type, ValueTraits::StaticValueSize / sizeof(word_size_type)>
         word_count(ValueTraits::value_size(
                        ReducerConditional::select(m_functor, m_reducer)) /
-                   sizeof(size_type));
+                   sizeof(word_size_type));
 
     {
       reference_type value =
           ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                          kokkos_impl_cuda_shared_memory<size_type>() +
+                          kokkos_impl_cuda_shared_memory<word_size_type>() +
                               threadIdx.y * word_count.value);
 
       // Number of blocks is bounded so that the reduction can be limited to two
@@ -980,11 +990,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       // This is the final block with the final result at the final threads'
       // location
 
-      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
-                                (blockDim.y - 1) * word_count.value;
-      size_type* const global =
+      word_size_type* const shared =
+          kokkos_impl_cuda_shared_memory<word_size_type>() +
+          (blockDim.y - 1) * word_count.value;
+      word_size_type* const global =
           m_result_ptr_device_accessible
-              ? reinterpret_cast<size_type*>(m_result_ptr)
+              ? reinterpret_cast<word_size_type*>(m_result_ptr)
               : (m_unified_space ? m_unified_space : m_scratch_space);
 
       if (threadIdx.y == 0) {
@@ -1007,17 +1018,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         if (cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
                                                 WorkTagFwd>(
                 ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-                gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+                gridDim.x, kokkos_impl_cuda_shared_memory<word_size_type>(),
                 m_scratch_space, m_scratch_flags)) {
           // This is the final block with the final result at the final threads'
           // location
 
-          size_type* const shared =
-              kokkos_impl_cuda_shared_memory<size_type>() +
+          word_size_type* const shared =
+              kokkos_impl_cuda_shared_memory<word_size_type>() +
               (blockDim.y - 1) * word_count.value;
-          size_type* const global =
+          word_size_type* const global =
               m_result_ptr_device_accessible
-                  ? reinterpret_cast<size_type*>(m_result_ptr)
+                  ? reinterpret_cast<word_size_type*>(m_result_ptr)
                   : (m_unified_space ? m_unified_space : m_scratch_space);
 
           if (threadIdx.y == 0) {
@@ -1123,17 +1134,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       KOKKOS_ASSERT(block_size > 0);
 
       // TODO: down casting these uses more space than required?
-      m_scratch_space = (size_type*)cuda_internal_scratch_space(
+      m_scratch_space = (word_size_type*)cuda_internal_scratch_space(
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
                                 m_functor, m_reducer)) *
                                 block_size /* block_size == max block_count */);
 
-      // Intentionally do not downcast to m_scratch_flags since we use Cuda
+      // Intentionally do not downcast to word_size_type since we use Cuda
       // atomics in Kokkos_Cuda_ReduceScan.hpp
       m_scratch_flags =
-          cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
+          cuda_internal_scratch_flags(m_policy.space(), sizeof(word_size_type));
       m_unified_space =
-          reinterpret_cast<size_type*>(cuda_internal_scratch_unified(
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_unified(
               m_policy.space(),
               ValueTraits::value_size(
                   ReducerConditional::select(m_functor, m_reducer))));

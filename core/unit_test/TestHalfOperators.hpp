@@ -946,7 +946,6 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
   // copy constructors that are required for supporting reductions
   // ASSERT_TRUE(std::is_trivially_copyable<half_t>::value);
 
-  // Check whether half_t is trivially copyable
   constexpr size_t n       = 2;
   constexpr size_t n_bytes = sizeof(half_t) * n;
   const half_t h_arr0 = half_t(0x89ab), h_arr1 = half_t(0xcdef);

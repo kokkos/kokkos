@@ -139,90 +139,92 @@ class alignas(2) half_t {
   impl_type val;
 
   // Atomics
-  KOKKOS_FUNCTION
-  void impl_volatile_add(const volatile half_t src) const volatile {
-    // Kokkos::atomic_store and atomicAdd not available on cuda < 10
-#if (CUDA_VERSION < 10000)
-    alignas(4) volatile float lhs;
-    alignas(4) volatile float rhs;
-    lhs                         = __half2float(const_cast<impl_type&>(val));
-    rhs                         = __half2float(const_cast<impl_type&>(src.val));
-    const_cast<impl_type&>(val) = __float2half(lhs + rhs);
-#else
-#ifdef __CUDA_ARCH__
-    // Cuda 10 supports __half volatile stores but not volatile arithmetic
-    // operands so we use atomicAdd for cuda 10.0 instead.
-    atomicAdd(const_cast<impl_type*>(&val),
-              const_cast<const impl_type&>(src.val));
-#else
-    // 32bit arithmetic on host followed by 16bit atomic store.
-    uint16_t* val_ptr =
-        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
-    impl_type new_val =
-        __float2half(__half2float(const_cast<impl_type&>(val)) +
-                     __half2float(const_cast<const impl_type&>(src.val)));
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#endif  // __CUDA_ARCH__
-#endif  // CUDA_VERSION
-  }
-
-  KOKKOS_FUNCTION
-  void impl_volatile_mul(const volatile half_t src) const volatile {
-    // Kokkos::atomic_store not available on cuda  < 10
-#if (CUDA_VERSION < 10000)
-    alignas(4) volatile float lhs;
-    alignas(4) volatile float rhs;
-    lhs                         = __half2float(const_cast<impl_type&>(val));
-    rhs                         = __half2float(const_cast<impl_type&>(src.val));
-    const_cast<impl_type&>(val) = __float2half(lhs * rhs);
-#else
-#ifdef __CUDA_ARCH__
-    // 16 bit arithmetic on device followed by 16bit atomic store.
-    uint16_t* val_ptr =
-        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
-    impl_type new_val =
-        const_cast<impl_type&>(val) * const_cast<const impl_type&>(src.val);
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#else
-    // 32bit arithmetic on host followed by 16bit atomic store.
-    uint16_t* val_ptr =
-        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
-    impl_type new_val =
-        __float2half(__half2float(const_cast<impl_type&>(val)) *
-                     __half2float(const_cast<const impl_type&>(src.val)));
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#endif  // __CUDA_ARCH__
-#endif  // CUDA_VERSION
-  }
-
-  KOKKOS_FUNCTION
-  void impl_volatile_div(const volatile half_t src) const volatile {
-    // Kokkos::atomic_store not available on cuda < 10
-#if (CUDA_VERSION < 10000)
-    alignas(4) volatile float lhs;
-    alignas(4) volatile float rhs;
-    lhs                         = __half2float(const_cast<impl_type&>(val));
-    rhs                         = __half2float(const_cast<impl_type&>(src.val));
-    const_cast<impl_type&>(val) = __float2half(lhs / rhs);
-#else
-#ifdef __CUDA_ARCH__
-    // 16 bit arithmetic on device followed by 16bit atomic store.
-    uint16_t* val_ptr =
-        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
-    impl_type new_val =
-        const_cast<impl_type&>(val) * const_cast<const impl_type&>(src.val);
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#else
-    // 32bit arithmetic on host followed by 16bit atomic store.
-    uint16_t* val_ptr =
-        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
-    impl_type new_val =
-        __float2half(__half2float(const_cast<impl_type&>(val)) /
-                     __half2float(const_cast<const impl_type&>(src.val)));
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#endif  // __CUDA_ARCH__
-#endif  // CUDA_VERSION
-  }
+  // clang-format off
+//  KOKKOS_FUNCTION
+//  void impl_volatile_add(const volatile half_t src) const volatile {
+//    // Kokkos::atomic_store and atomicAdd not available on cuda < 10
+//#if (CUDA_VERSION < 10000)
+//    alignas(4) volatile float lhs;
+//    alignas(4) volatile float rhs;
+//    lhs                         = __half2float(const_cast<impl_type&>(val));
+//    rhs                         = __half2float(const_cast<impl_type&>(src.val));
+//    const_cast<impl_type&>(val) = __float2half(lhs + rhs);
+//#else
+//#ifdef __CUDA_ARCH__
+//    // Cuda 10 supports __half volatile stores but not volatile arithmetic
+//    // operands so we use atomicAdd for cuda 10.0 instead.
+//    atomicAdd(const_cast<impl_type*>(&val),
+//              const_cast<const impl_type&>(src.val));
+//#else
+//    // 32bit arithmetic on host followed by 16bit atomic store.
+//    uint16_t* val_ptr =
+//        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
+//    impl_type new_val =
+//        __float2half(__half2float(const_cast<impl_type&>(val)) +
+//                     __half2float(const_cast<const impl_type&>(src.val)));
+//    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
+//#endif  // __CUDA_ARCH__
+//#endif  // CUDA_VERSION
+//  }
+//
+//  KOKKOS_FUNCTION
+//  void impl_volatile_mul(const volatile half_t src) const volatile {
+//    // Kokkos::atomic_store not available on cuda  < 10
+//#if (CUDA_VERSION < 10000)
+//    alignas(4) volatile float lhs;
+//    alignas(4) volatile float rhs;
+//    lhs                         = __half2float(const_cast<impl_type&>(val));
+//    rhs                         = __half2float(const_cast<impl_type&>(src.val));
+//    const_cast<impl_type&>(val) = __float2half(lhs * rhs);
+//#else
+//#ifdef __CUDA_ARCH__
+//    // 16 bit arithmetic on device followed by 16bit atomic store.
+//    uint16_t* val_ptr =
+//        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
+//    impl_type new_val =
+//        const_cast<impl_type&>(val) * const_cast<const impl_type&>(src.val);
+//    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
+//#else
+//    // 32bit arithmetic on host followed by 16bit atomic store.
+//    uint16_t* val_ptr =
+//        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
+//    impl_type new_val =
+//        __float2half(__half2float(const_cast<impl_type&>(val)) *
+//                     __half2float(const_cast<const impl_type&>(src.val)));
+//    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
+//#endif  // __CUDA_ARCH__
+//#endif  // CUDA_VERSION
+//  }
+//
+//  KOKKOS_FUNCTION
+//  void impl_volatile_div(const volatile half_t src) const volatile {
+//    // Kokkos::atomic_store not available on cuda < 10
+//#if (CUDA_VERSION < 10000)
+//    alignas(4) volatile float lhs;
+//    alignas(4) volatile float rhs;
+//    lhs                         = __half2float(const_cast<impl_type&>(val));
+//    rhs                         = __half2float(const_cast<impl_type&>(src.val));
+//    const_cast<impl_type&>(val) = __float2half(lhs / rhs);
+//#else
+//#ifdef __CUDA_ARCH__
+//    // 16 bit arithmetic on device followed by 16bit atomic store.
+//    uint16_t* val_ptr =
+//        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
+//    impl_type new_val =
+//        const_cast<impl_type&>(val) * const_cast<const impl_type&>(src.val);
+//    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
+//#else
+//    // 32bit arithmetic on host followed by 16bit atomic store.
+//    uint16_t* val_ptr =
+//        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
+//    impl_type new_val =
+//        __float2half(__half2float(const_cast<impl_type&>(val)) /
+//                     __half2float(const_cast<const impl_type&>(src.val)));
+//    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
+//#endif  // __CUDA_ARCH__
+//#endif  // CUDA_VERSION
+//  }
+  // clang-format on
 
  public:
   KOKKOS_FUNCTION
@@ -233,8 +235,14 @@ class alignas(2) half_t {
   half_t(const half_t&) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
-  half_t(const volatile half_t& rhs)
-      : val(const_cast<const impl_type&>(rhs.val)) {}
+  half_t(const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    val = rhs.val;
+#else
+    uint16_t rv = reinterpret_cast<const volatile uint16_t&>(rhs.val);
+    val         = reinterpret_cast<const impl_type&>(rv);
+#endif  // __CUDA_ARCH__
+  }
 
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
@@ -317,7 +325,7 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     tmp.val = +tmp.val;
 #else
-    tmp.val   = __float2half(+__half2float(tmp.val));
+    tmp.val     = __float2half(+__half2float(tmp.val));
 #endif
     return tmp;
   }
@@ -328,7 +336,7 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     tmp.val = -tmp.val;
 #else
-    tmp.val   = __float2half(-__half2float(tmp.val));
+    tmp.val     = __float2half(-__half2float(tmp.val));
 #endif
     return tmp;
   }
@@ -339,7 +347,7 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     ++val;
 #else
-    float tmp = __half2float(val);
+    float tmp   = __half2float(val);
     ++tmp;
     val       = __float2half(tmp);
 #endif
@@ -416,8 +424,14 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator+=(const volatile half_t rhs) volatile {
-    impl_volatile_add(rhs);
+  volatile half_t operator+=(const volatile half_t& rhs) volatile {
+    // impl_volatile_add(rhs);
+    half_t tmp_rhs = rhs;
+    half_t tmp_lhs = *this;
+
+    tmp_lhs += tmp_rhs;
+    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
+    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
     return *this;
   }
 
@@ -455,8 +469,14 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator-=(const volatile half_t rhs) volatile {
-    impl_volatile_add(-rhs);
+  volatile half_t operator-=(const volatile half_t& rhs) volatile {
+    // impl_volatile_add(-rhs);
+    half_t tmp_rhs = rhs;
+    half_t tmp_lhs = *this;
+
+    tmp_lhs -= tmp_rhs;
+    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
+    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
     return *this;
   }
 
@@ -494,8 +514,14 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator*=(const volatile half_t rhs) volatile {
-    impl_volatile_mul(rhs);
+  volatile half_t operator*=(const volatile half_t& rhs) volatile {
+    // impl_volatile_mul(rhs);
+    half_t tmp_rhs = rhs;
+    half_t tmp_lhs = *this;
+
+    tmp_lhs *= tmp_rhs;
+    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
+    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
     return *this;
   }
 
@@ -533,8 +559,14 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator/=(const volatile half_t rhs) volatile {
-    impl_volatile_div(rhs);
+  volatile half_t operator/=(const volatile half_t& rhs) volatile {
+    // impl_volatile_div(rhs);
+    half_t tmp_rhs = rhs;
+    half_t tmp_lhs = *this;
+
+    tmp_lhs /= tmp_rhs;
+    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
+    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
     return *this;
   }
 
@@ -750,73 +782,43 @@ class alignas(2) half_t {
   KOKKOS_FUNCTION
   friend bool operator==(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
-#ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) ==
-                             const_cast<const impl_type&>(rhs.val));
-#else
-    return __half2float(const_cast<const impl_type&>(lhs.val)) ==
-           __half2float(const_cast<const impl_type&>(rhs.val));
-#endif
+    half_t tmp_lhs = lhs, tmp_rhs = rhs;
+    return tmp_lhs == tmp_rhs;
   }
 
   KOKKOS_FUNCTION
   friend bool operator!=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
-#ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) !=
-                             const_cast<const impl_type&>(rhs.val));
-#else
-    return __half2float(const_cast<const impl_type&>(lhs.val)) !=
-           __half2float(const_cast<const impl_type&>(rhs.val));
-#endif
+    half_t tmp_lhs = lhs, tmp_rhs = rhs;
+    return tmp_lhs != tmp_rhs;
   }
 
   KOKKOS_FUNCTION
   friend bool operator<(const volatile half_t& lhs,
                         const volatile half_t& rhs) {
-#ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) <
-                             const_cast<const impl_type&>(rhs.val));
-#else
-    return __half2float(const_cast<const impl_type&>(lhs.val)) <
-           __half2float(const_cast<const impl_type&>(rhs.val));
-#endif
+    half_t tmp_lhs = lhs, tmp_rhs = rhs;
+    return tmp_lhs < tmp_rhs;
   }
 
   KOKKOS_FUNCTION
   friend bool operator>(const volatile half_t& lhs,
                         const volatile half_t& rhs) {
-#ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) >
-                             const_cast<const impl_type&>(rhs.val));
-#else
-    return __half2float(const_cast<const impl_type&>(lhs.val)) >
-           __half2float(const_cast<const impl_type&>(rhs.val));
-#endif
+    half_t tmp_lhs = lhs, tmp_rhs = rhs;
+    return tmp_lhs > tmp_rhs;
   }
 
   KOKKOS_FUNCTION
   friend bool operator<=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
-#ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) <=
-                             const_cast<const impl_type&>(rhs.val));
-#else
-    return __half2float(const_cast<const impl_type&>(lhs.val)) <=
-           __half2float(const_cast<const impl_type&>(rhs.val));
-#endif
+    half_t tmp_lhs = lhs, tmp_rhs = rhs;
+    return tmp_lhs <= tmp_rhs;
   }
 
   KOKKOS_FUNCTION
   friend bool operator>=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
-#ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) >=
-                             const_cast<const impl_type&>(rhs.val));
-#else
-    return __half2float(const_cast<const impl_type&>(lhs.val)) >=
-           __half2float(const_cast<const impl_type&>(rhs.val));
-#endif
+    half_t tmp_lhs = lhs, tmp_rhs = rhs;
+    return tmp_lhs >= tmp_rhs;
   }
 
   // Insertion and extraction operators
