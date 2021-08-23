@@ -1183,20 +1183,25 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       return val;
     }
   };
-/*
+
   struct ThrustReducerWrapper {
-    const ReducerType r;
+    //const FunctorType r;
+    const ValueJoin r;
 
     KOKKOS_FUNCTION
-    ThrustReducerWrapper(const ReducerType op)
-        : f(std::move(op));
+    //ThrustReducerWrapper(const FunctorType& op)
+    ThrustReducerWrapper(const ValueJoin& op)
+        : r(std::move(op)){};
 
-    KOKKOS_FUNCTION value_type operator()(value_type lhs, value_type rhs) const {
-      value_type val = 0;
-      return val;   
+    KOKKOS_FUNCTION value_type operator()(volatile value_type& lhs, volatile const value_type& rhs) const {
+      value_type lhs_1{ lhs };
+      value_type rhs_1{ rhs };
+      r(lhs_1, rhs_1);
+      //r.join(lhs_1, rhs_1);
+      return lhs_1;   
     }
   };
-*/
+
   template <bool try_thrust>
   inline std::enable_if_t<!try_thrust, bool> thrust_execute(bool) {
     return false;
@@ -1229,64 +1234,40 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         value_type init;
     }
     */
-    //value_type init{1};
-    value_type init_2;
-    //value_type init{ValueInit::init(ReducerConditional::select(m_functor, m_reducer)};
-    //void* init_holder{};
-    const pointer_type init_holder{};
-    ValueInit::init(m_reducer, &init_2);
-    //ValueInit::init(ReducerConditional::select(m_functor, m_reducer), init_holder);
-
-    //value_type* init{ static_cast<value_type*>(init_holder) };
-
-    ThrustFunctorWrapper<WorkTag> t_op(m_functor, init_2);
-    //ThrustFunctorWrapper<WorkTag> t_op(m_functor, static_cast<value_type>(*init_holder));
+    value_type init{};
+    if (  ReduceFunctorHasInit<FunctorType>::value ) {
+      ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
+    }
+    
+    ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
+    ThrustReducerWrapper r_op(ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
+    // or
+    //ThrustReducerWrapper r_op(ReducerConditional::select(m_functor, m_reducer));
 
     m_policy.space().fence();
 
-    //ReducerType rt = ValueJoin(m_reducer);
-    //ReducerType rt = ValueJoin(ReducerConditional::select(m_functor, m_reducer));
+    if (  !ReduceFunctorHasInit<FunctorType>::value &&
+          !ReduceFunctorHasJoin<FunctorType>::value &&
+           std::is_same<ReducerType, InvalidType>::value ) {
 
-     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                   //t_op, t_op.init, thrust::plus<value_type>());
-                                   //t_op, t_op.init, ReducerConditional::select(m_functor, m_reducer));
-                                   //t_op, t_op.init, m_reducer.join());
-                                   //t_op, t_op.init, ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
-                                   t_op, t_op.init, KOKKOS_LAMBDA (value_type& lhs, const value_type& rhs){
-                                       //volatile value_type lhs_temp = lhs;
-                                       //const volatile value_type rhs_temp = rhs;
-                                       //value_type lhs_temp = lhs;
-                                       //const value_type rhs_temp = rhs;
-                                       //(ValueJoin(m_reducer))(lhs_temp, rhs_temp);
-                                       (ValueJoin(m_reducer))(lhs, rhs);
-                                       //return lhs_temp;
-                                       return lhs;
-                                   });
+      printf("using if\n");
+      sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                     t_op, t_op.init, KOKKOS_LAMBDA 
+                                     (const value_type& lhs, const value_type& rhs){
+                                       value_type tmp {};
+                                       tmp += lhs;
+                                       tmp += rhs;
+                                       return tmp;
+                                     });
 
+    } else {
+      printf("using else\n");
+      ThrustReducerWrapper r_op(ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
+      sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                     t_op, t_op.init, r_op);
+    }
 
-    /*
-    sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                   t_op, t_op.init, KOKKOS_LAMBDA 
-                                   (const value_type& lhs, const value_type& rhs){
-                                     value_type tmp {};
-                                     //tmp += lhs;
-                                     //tmp += rhs;
-                                     if (rhs < lhs){
-                                        tmp = lhs;   
-                                     }
-                                     else {
-                                        tmp = rhs;
-                                     }
-                                     return tmp;
-                                   });
-    */
-                                   
     m_policy.space().fence();
-
-    //const int count = ValueTraits::value_count(
-    //   ReducerConditional::select(m_functor, m_reducer));
-
-    //printf("ValueInit: %f\n", ValueInit);
 
     *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
@@ -1304,90 +1285,85 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  !std::is_same<ReducerType, InvalidType>::value;
 
 #ifdef KOKKOS_ENABLE_THRUST
-    // if (!thrust_execute<is_thrust_possible>((nwork > 0) &&
-    //                                        m_result_ptr_host_accessible)) {
     if (thrust_execute<is_thrust_possible>((nwork > 0) &&
                                             m_result_ptr_host_accessible)) {
         return;
     }
 #endif
-      if ((nwork > 0) || need_device_set) {
-        const int block_size = local_block_size(m_functor);
+    if ((nwork > 0) || need_device_set) {
+      const int block_size = local_block_size(m_functor);
 
-        KOKKOS_ASSERT(block_size > 0);
+      KOKKOS_ASSERT(block_size > 0);
 
-        m_scratch_space = cuda_internal_scratch_space(
-            m_policy.space(),
-            ValueTraits::value_size(
-                ReducerConditional::select(m_functor, m_reducer)) *
-                block_size /* block_size == max block_count */);
-        m_scratch_flags =
-            cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-        m_unified_space = cuda_internal_scratch_unified(
-            m_policy.space(),
-            ValueTraits::value_size(
-                ReducerConditional::select(m_functor, m_reducer)));
+      m_scratch_space = cuda_internal_scratch_space(
+          m_policy.space(),
+          ValueTraits::value_size(
+              ReducerConditional::select(m_functor, m_reducer)) *
+              block_size /* block_size == max block_count */);
+      m_scratch_flags =
+          cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
+      m_unified_space = cuda_internal_scratch_unified(
+          m_policy.space(),
+          ValueTraits::value_size(
+              ReducerConditional::select(m_functor, m_reducer)));
 
-        // REQUIRED ( 1 , N , 1 )
-        dim3 block(1, block_size, 1);
-        // Required grid.x <= block.y
-        dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)),
-                  1, 1);
+      // REQUIRED ( 1 , N , 1 )
+      dim3 block(1, block_size, 1);
+      // Required grid.x <= block.y
+      dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)),
+                1, 1);
 
-        // TODO @graph We need to effectively insert this in to the graph
-        const int shmem =
-            UseShflReduction
-                ? 0
-                : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                            WorkTag>(m_functor,
-                                                                     block.y);
+      // TODO @graph We need to effectively insert this in to the graph
+      const int shmem =
+          UseShflReduction
+              ? 0
+              : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
+                                                          WorkTag>(m_functor,
+                                                                   block.y);
 
-        if ((nwork == 0)
+      if ((nwork == 0)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-            || Kokkos::Impl::CudaInternal::cuda_use_serial_execution()
+          || Kokkos::Impl::CudaInternal::cuda_use_serial_execution()
 #endif
-        ) {
-          block = dim3(1, 1, 1);
-          grid  = dim3(1, 1, 1);
-        }
+      ) {
+        block = dim3(1, 1, 1);
+        grid  = dim3(1, 1, 1);
+      }
 
-        CudaParallelLaunch<ParallelReduce, LaunchBounds>(
-            *this, grid, block, shmem,
-            m_policy.space().impl_internal_space_instance(),
-            false);  // copy to device and execute
+      CudaParallelLaunch<ParallelReduce, LaunchBounds>(
+          *this, grid, block, shmem,
+          m_policy.space().impl_internal_space_instance(),
+          false);  // copy to device and execute
 
-        if (!m_result_ptr_device_accessible) {
-          m_policy.space().fence(
-              "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: "
-              "Result "
-              "Not Device Accessible");
+      if (!m_result_ptr_device_accessible) {
+        m_policy.space().fence(
+            "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: "
+            "Result "
+            "Not Device Accessible");
 
-          if (m_result_ptr) {
-            if (m_unified_space) {
-              const int count = ValueTraits::value_count(
-                  ReducerConditional::select(m_functor, m_reducer));
-              for (int i = 0; i < count; ++i) {
-                m_result_ptr[i] = pointer_type(m_unified_space)[i];
-              }
-            } else {
-              const int size = ValueTraits::value_size(
-                  ReducerConditional::select(m_functor, m_reducer));
-              DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space,
-                                             size);
+        if (m_result_ptr) {
+          if (m_unified_space) {
+            const int count = ValueTraits::value_count(
+                ReducerConditional::select(m_functor, m_reducer));
+            for (int i = 0; i < count; ++i) {
+              m_result_ptr[i] = pointer_type(m_unified_space)[i];
             }
+          } else {
+            const int size = ValueTraits::value_size(
+                ReducerConditional::select(m_functor, m_reducer));
+            DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space,
+                                           size);
           }
         }
-      } else {
-        if (m_result_ptr) {
-          // TODO @graph We need to effectively insert this in to the graph
-          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                          m_result_ptr);
-        }
+      }
+    } else {
+      if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
+        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                        m_result_ptr);
       }
     }
-#ifdef KOKKOS_ENABLE_THRUST
-//  }
-#endif
+  }
 
   template <class ViewType>
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
