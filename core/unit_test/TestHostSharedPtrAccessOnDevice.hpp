@@ -271,8 +271,9 @@ TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
                                             Kokkos::CudaUVMSpace>();
 #endif
 #ifdef KOKKOS_ENABLE_HIP
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
-    host_shared_ptr_test_reference_counting<Kokkos::HIPHostPinnedSpace,
-                                            Kokkos::HIPHostPinnedSpace>();
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
+    host_shared_ptr_test_reference_counting<
+        Kokkos::Experimental::HIPHostPinnedSpace,
+        Kokkos::Experimental::HIPHostPinnedSpace>();
 #endif
 }
