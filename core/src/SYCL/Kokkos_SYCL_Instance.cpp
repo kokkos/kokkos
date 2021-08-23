@@ -138,13 +138,16 @@ void SYCLInternal::initialize(const sycl::queue& q) {
       m_scratchConcurrentBitset = reinterpret_cast<uint32_t*>(r->data());
       auto event                = m_queue->memset(m_scratchConcurrentBitset, 0,
                                    sizeof(uint32_t) * buffer_bound);
-      fence(event);
+      fence(event,
+            "SYCLInternal::initialize: fence after initializing "
+            "m_scratchConcurrentBitset",
+            m_instance_id);
     }
 
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
-    m_indirectKernelMem.reset(*m_queue);
-    m_indirectReducerMem.reset(*m_queue);
+    m_indirectKernelMem.reset(*m_queue, m_instance_id);
+    m_indirectReducerMem.reset(*m_queue, m_instance_id);
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -265,7 +268,9 @@ void* SYCLInternal::scratch_flags(
     m_scratchFlags = reinterpret_cast<size_type*>(r->data());
   }
   m_queue->memset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
-  fence(*m_queue);
+  fence(*m_queue,
+        "SYCLInternal::scratch_flags fence after initializing m_scratchFlags",
+        m_instance_id);
 
   return m_scratchFlags;
 }

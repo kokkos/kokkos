@@ -59,10 +59,8 @@ namespace Impl {
 
 void DeepCopySYCL(void* dst, const void* src, size_t n) {
   Experimental::SYCL().fence("Kokkos::Impl::DeepCopySYCL: fence before memcpy");
-  auto event = Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(
-      dst, src, n);
-  // FIXME_SYCL This fence is unnamed
-  Experimental::Impl::SYCLInternal::fence(event);
+  Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(dst, src, n);
+  Experimental::SYCL().fence("Kokkos::Impl::DeepCopySYCL: fence after memcpy");
 }
 
 void DeepCopyAsyncSYCL(const Kokkos::Experimental::SYCL& instance, void* dst,
@@ -71,10 +69,9 @@ void DeepCopyAsyncSYCL(const Kokkos::Experimental::SYCL& instance, void* dst,
 }
 
 void DeepCopyAsyncSYCL(void* dst, const void* src, size_t n) {
-  auto event = Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(
-      dst, src, n);
-  // FIXME_SYCL This fence is unnamed
-  Experimental::Impl::SYCLInternal::fence(event);
+  Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(dst, src, n);
+  Experimental::SYCL().fence(
+      "Kokkos::Impl::DeepCopyAsyncSYCL: fence after memcpy");
 }
 
 }  // namespace Impl
