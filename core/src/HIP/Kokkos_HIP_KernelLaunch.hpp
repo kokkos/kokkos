@@ -435,7 +435,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging;
-    memcpy(staging, driver, sizeof(DriverType));
+    std::memcpy((void *)staging, (void *)driver, sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
