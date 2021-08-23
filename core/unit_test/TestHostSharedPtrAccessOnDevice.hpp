@@ -170,25 +170,27 @@ struct Bar {
 struct Foo {
   Foo(bool allocate = false) : ptr(allocate ? new Bar : nullptr) {}
   Kokkos::Impl::HostSharedPtr<Bar> ptr;
-  int use_count() { return (int)ptr.use_count(); }
+  int use_count() { return ptr.use_count(); }
 };
 
 template <class DevMemSpace, class HostMemSpace>
 void host_shared_ptr_test_reference_counting() {
   using ExecSpace = typename DevMemSpace::execution_space;
-  bool is_gpu     = ExecSpace().concurrency() > 10000;
+  bool is_gpu =
+      !Kokkos::SpaceAccessibility<ExecSpace, Kokkos::HostSpace>::accessible;
 
   // Create two tracked instances
   Foo f1(true), f2(true);
   // Scope Views
   {
-    Foo* fp_d_ptr = (Foo*)Kokkos::kokkos_malloc<DevMemSpace>(sizeof(Foo));
+    Foo* fp_d_ptr =
+        static_cast<Foo*>(Kokkos::kokkos_malloc<DevMemSpace>(sizeof(Foo)));
     Kokkos::View<Foo, DevMemSpace> fp_d(fp_d_ptr);
     // If using UVM or on the CPU don't make an extra HostCopy
-    Foo* fp_h_ptr =
-        std::is_same<DevMemSpace, HostMemSpace>::value
-            ? fp_d_ptr
-            : (Foo*)Kokkos::kokkos_malloc<HostMemSpace>(sizeof(Foo));
+    Foo* fp_h_ptr = std::is_same<DevMemSpace, HostMemSpace>::value
+                        ? fp_d_ptr
+                        : static_cast<Foo*>(
+                              Kokkos::kokkos_malloc<HostMemSpace>(sizeof(Foo)));
     Kokkos::View<Foo, HostMemSpace> fp_h(fp_h_ptr);
     ASSERT_EQ(1, f1.use_count());
     ASSERT_EQ(1, f2.use_count());
@@ -218,7 +220,6 @@ void host_shared_ptr_test_reference_counting() {
     ASSERT_EQ(1, f1.use_count());
     ASSERT_EQ(2, f2.use_count());
 
-    Kokkos::fence();
     Kokkos::deep_copy(fp_d, fp_h);
     ASSERT_EQ(1, f1.use_count());
     ASSERT_EQ(2, f2.use_count());
@@ -272,6 +273,12 @@ TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
   if (std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
     host_shared_ptr_test_reference_counting<Kokkos::CudaUVMSpace,
                                             Kokkos::CudaUVMSpace>();
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
+    host_shared_ptr_test_reference_counting<
+        Kokkos::Experimental::SYCLSharedUSMSpace,
+        Kokkos::Experimental::SYCLSharedUSMSpace>();
 #endif
 #ifdef KOKKOS_ENABLE_HIP
   if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
