@@ -55,6 +55,12 @@
 #include <impl/Kokkos_Tools.hpp>
 
 namespace Kokkos {
+
+namespace Impl {
+template <typename T>
+struct is_sycl_type_space : public std::false_type {};
+}  // namespace Impl
+
 namespace Experimental {
 
 class SYCLDeviceUSMSpace {
@@ -121,6 +127,15 @@ class SYCLSharedUSMSpace {
 }  // namespace Experimental
 
 namespace Impl {
+
+template <>
+struct is_sycl_type_space<Kokkos::Experimental::SYCLDeviceUSMSpace>
+    : public std::true_type {};
+
+template <>
+struct is_sycl_type_space<Kokkos::Experimental::SYCLSharedUSMSpace>
+    : public std::true_type {};
+
 static_assert(Kokkos::Impl::MemorySpaceAccess<
                   Kokkos::Experimental::SYCLDeviceUSMSpace,
                   Kokkos::Experimental::SYCLDeviceUSMSpace>::assignable,

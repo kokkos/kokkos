@@ -863,7 +863,7 @@ struct ViewDataAnalysis {
 namespace Kokkos {
 namespace Impl {
 
-template <class Dimension, class Layout, typename Enable = void>
+template <class Dimension, class Layout, class Enable = void>
 struct ViewOffset {
   using is_mapping_plugin = std::false_type;
 };

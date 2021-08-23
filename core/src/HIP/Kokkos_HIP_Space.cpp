@@ -73,88 +73,12 @@ hipStream_t get_deep_copy_stream() {
 }
 }  // namespace
 
-DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
-                                              size_t n) {
+void DeepCopyHIP(void* dst, void const* src, size_t n) {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
-DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
-}
-
-DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
-}
-
-DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(const Kokkos::Experimental::HIP&
-                                                  instance,
-                                              void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-}
-
-DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIP>::
-    DeepCopy(const Kokkos::Experimental::HIP& instance, void* dst,
-             const void* src, size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-}
-
-DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, Kokkos::Experimental::HIP>::
-    DeepCopy(const Kokkos::Experimental::HIP& instance, void* dst,
-             const void* src, size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-}
-
-DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
-         Kokkos::Experimental::HIPHostPinnedSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
-}
-
-DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
-}
-
-DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
-}
-
-DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
-         Kokkos::Experimental::HIPHostPinnedSpace, Kokkos::Experimental::HIP>::
-    DeepCopy(const Kokkos::Experimental::HIP& instance, void* dst,
-             const void* src, size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-}
-
-DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(const Kokkos::Experimental::HIP&
-                                                  instance,
-                                              void* dst, const void* src,
-                                              size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-}
-
-DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
-         Kokkos::Experimental::HIP>::DeepCopy(const Kokkos::Experimental::HIP&
-                                                  instance,
-                                              void* dst, const void* src,
-                                              size_t n) {
+void DeepCopyAsyncHIP(const Kokkos::Experimental::HIP& instance, void* dst,
+                      void const* src, size_t n) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
 }

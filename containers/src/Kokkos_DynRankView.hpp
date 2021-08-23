@@ -1576,7 +1576,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const DynRankView<LT, LP...>& lhs,
 namespace Kokkos {
 namespace Impl {
 
-template <class OutputView, typename Enable = void>
+template <class OutputView, class Enable = void>
 struct DynRankViewFill {
   using const_value_type = typename OutputView::traits::const_value_type;
 
