@@ -336,6 +336,7 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
 
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
+template class SYCLInternal::USMObjectMem<sycl::usm::alloc::host>;
 
 }  // namespace Impl
 }  // namespace Experimental
