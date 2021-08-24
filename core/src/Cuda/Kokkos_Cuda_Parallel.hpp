@@ -814,8 +814,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               .impl_internal_space_instance()
               ->resize_team_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (static_cast<std::int64_t>(Cuda::concurrency() /
-                                             (m_team_size * m_vector_size))));
+                  (std::min(
+                      static_cast<std::int64_t>(Cuda::concurrency() /
+                                                (m_team_size * m_vector_size)),
+                      static_cast<std::int64_t>(m_league_size))));
       m_scratch_ptr[1]  = scratch_ptr_id.first;
       m_scratch_pool_id = scratch_ptr_id.second;
     }
@@ -1955,8 +1957,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               .impl_internal_space_instance()
               ->resize_team_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (static_cast<std::int64_t>(Cuda::concurrency() /
-                                             (m_team_size * m_vector_size))));
+                  (std::min(
+                      static_cast<std::int64_t>(Cuda::concurrency() /
+                                                (m_team_size * m_vector_size)),
+                      static_cast<std::int64_t>(m_league_size))));
       m_scratch_ptr[1]  = scratch_ptr_id.first;
       m_scratch_pool_id = scratch_ptr_id.second;
     }
@@ -2059,8 +2063,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               .impl_internal_space_instance()
               ->resize_team_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (static_cast<std::int64_t>(Cuda::concurrency() /
-                                             (m_team_size * m_vector_size))));
+                  (std::min(
+                      static_cast<std::int64_t>(Cuda::concurrency() /
+                                                (m_team_size * m_vector_size)),
+                      static_cast<std::int64_t>(m_league_size))));
       m_scratch_ptr[1]  = scratch_ptr_id.first;
       m_scratch_pool_id = scratch_ptr_id.second;
     }
