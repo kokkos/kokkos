@@ -382,7 +382,11 @@ KOKKOS_INTERNAL_USE_ARCH_IBM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_
 KOKKOS_INTERNAL_USE_ARCH_AMDAVX := $(call kokkos_has_string,$(KOKKOS_ARCH),AMDAVX)
 KOKKOS_INTERNAL_USE_ARCH_ZEN3 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen3)
 KOKKOS_INTERNAL_USE_ARCH_ZEN2 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen2)
-KOKKOS_INTERNAL_USE_ARCH_ZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN3), 0)
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN2), 0)
+    KOKKOS_INTERNAL_USE_ARCH_ZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen)
+  endif
+endif
 KOKKOS_INTERNAL_USE_ARCH_VEGA900 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega900)
 KOKKOS_INTERNAL_USE_ARCH_VEGA906 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega906)
 KOKKOS_INTERNAL_USE_ARCH_VEGA908 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega908)
