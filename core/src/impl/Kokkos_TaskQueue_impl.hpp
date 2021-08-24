@@ -275,6 +275,8 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
       // This thread has exclusive access to
       // the queue and the popped task's m_next.
 
+      Kokkos::memory_fence();
+
       task_root_type *volatile &next = task->m_next;
 
       // This algorithm is not lockfree because a adversarial scheduler could
