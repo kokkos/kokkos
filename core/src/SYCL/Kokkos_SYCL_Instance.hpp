@@ -146,7 +146,8 @@ class SYCLInternal {
     T* memcpy_from(const T& t) {
       reserve(sizeof(T));
       sycl::event memcopied = m_q->memcpy(m_data, std::addressof(t), sizeof(T));
-      fence(memcopied, "SYCLInternal::USMObject fence after copy",
+      fence(memcopied,
+            "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
             m_instance_id);
 
       m_size = sizeof(T);
@@ -181,7 +182,8 @@ class SYCLInternal {
     template <typename T>
     T& copy_from(const T& t) {
       fence(m_last_event,
-            "SYCLInternal::USMObject fence to wait for last event to finish",
+            "Kokkos::Experimental::SYCLInternal::USMObject fence to wait for "
+            "last event to finish",
             m_instance_id);
       m_size = 0;
       if constexpr (sycl::usm::alloc::device == Kind)
@@ -197,7 +199,8 @@ class SYCLInternal {
       assert(sizeof(T) == m_size);
 
       sycl::event memcopied = m_q->memcpy(std::addressof(t), m_data, sizeof(T));
-      fence(memcopied, "SYCLInternal::USMObject fence after copy",
+      fence(memcopied,
+            "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
             m_instance_id);
 
       return t;
