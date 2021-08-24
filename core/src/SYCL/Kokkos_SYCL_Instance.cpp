@@ -276,6 +276,28 @@ void* SYCLInternal::scratch_flags(
   return m_scratchFlags;
 }
 
+template <typename WAT>
+void SYCLInternal::fence_helper(WAT& wat, const std::string& name,
+                                uint32_t instance_id) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::SYCL>(
+      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id},
+      [&]() {
+        try {
+          wat.wait_and_throw();
+        } catch (sycl::exception const& e) {
+          Kokkos::Impl::throw_runtime_exception(
+              std::string("There was a synchronous SYCL error:\n") += e.what());
+        }
+      });
+}
+template void SYCLInternal::fence_helper<sycl::queue>(sycl::queue&,
+                                                      const std::string&,
+                                                      uint32_t);
+template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
+                                                      const std::string&,
+                                                      uint32_t);
+
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
   assert(m_size == 0);

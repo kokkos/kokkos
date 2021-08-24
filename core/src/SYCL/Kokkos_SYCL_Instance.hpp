@@ -291,21 +291,7 @@ class SYCLInternal {
   // (sycl::event and sycl::queue)
   template <typename WAT>
   static void fence_helper(WAT& wat, const std::string& name,
-                           uint32_t instance_id) {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event<
-        Kokkos::Experimental::SYCL>(
-        name,
-        Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id},
-        [&]() {
-          try {
-            wat.wait_and_throw();
-          } catch (sycl::exception const& e) {
-            Kokkos::Impl::throw_runtime_exception(
-                std::string("There was a synchronous SYCL error:\n") +=
-                e.what());
-          }
-        });
-  }
+                           uint32_t instance_id);
 
  public:
   static void fence(sycl::queue& q, const std::string& name,
