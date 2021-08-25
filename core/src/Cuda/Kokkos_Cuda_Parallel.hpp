@@ -885,8 +885,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using value_type     = typename ValueTraits::value_type;
   using reference_type = typename ValueTraits::reference_type;
   using functor_type   = FunctorType;
-  // Conditionally set size_type to int16_t or int8_t if value_type is less than
-  // int32_t (Kokkos::Cuda::size_type)
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
