@@ -1440,19 +1440,37 @@ class View : public ViewTraits<DataType, Properties...> {
 
   KOKKOS_DEFAULTED_FUNCTION
   View(const View &other)
-   : m_map( other.m_map ),
-     m_track( other.m_track ) {
+   : m_map(other.m_map),
+     m_track(other.m_track) {
     hooks_policy::copy_construct(*this, other);
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  View(View&&) = default;
+  View(View &&other) {
+    using namespace std;
+    swap(m_map, other.m_map);
+    swap(m_track, other.m_track);
+    hooks_policy::move_construct(*this, other);
+  }
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(const View&) = default;
+  View& operator=(const View &other) {
+    m_map = other.m_map;
+    m_track = other.m_track;
+    hooks_policy::copy_assign(*this, other);
+
+    return *this;
+  }
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(View&&) = default;
+  View& operator=(View &&other) {
+    using namespace std;
+    swap(m_map, other.m_map);
+    swap(m_track, other.m_track);
+    hooks_policy::move_assign(*this, other);
+
+    return *this;
+  }
 
   //----------------------------------------
   // Compatible view copy constructor and assignment

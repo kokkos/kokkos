@@ -44,6 +44,36 @@ struct copy_constructor_invoker
     Subscriber::copy_constructed( self, other );
   }
 };
+
+template< typename Subscriber >
+struct move_constructor_invoker
+{
+  template< typename View >
+  static void call( View &self, const View &other )
+  {
+    Subscriber::move_constructed( self, other );
+  }
+};
+
+template< typename Subscriber >
+struct copy_assign_invoker
+{
+  template< typename View >
+  static void call( View &self, const View &other )
+  {
+    Subscriber::copy_assigned( self, other );
+  }
+};
+
+template< typename Subscriber >
+struct move_assign_invoker
+{
+  template< typename View >
+  static void call( View &self, const View &other )
+  {
+    Subscriber::move_assigned( self, other );
+  }
+};
 }
 
 struct DefaultViewHooks
@@ -55,11 +85,11 @@ struct DefaultViewHooks
   template< typename View >
   static void copy_construct( View &self, const View &other ) {}
   template< typename View >
-  static void copy_assign( View &view ) {}
+  static void copy_assign( View &self, const View &other ) {}
   template< typename View >
-  static void move_construct( View &view ) {}
+  static void move_construct( View &self, const View &other ) {}
   template< typename View >
-  static void move_assign( View &view ) {}
+  static void move_assign( View &self, const View &other ) {}
 };
 
 /* Will be some sort of mixin, not with a flag but with a type */
@@ -76,11 +106,17 @@ struct SubscribableViewHooks
     Detail::invoke_subscriber_impl< Detail::copy_constructor_invoker, Subscribers... >::invoke( self, other );
   }
   template< typename View >
-  static void copy_assign( View &view ) {}
+  static void copy_assign( View &self, const View &other ) {
+    Detail::invoke_subscriber_impl< Detail::copy_assign_invoker, Subscribers... >::invoke( self, other );
+  }
   template< typename View >
-  static void move_construct( View &view ) {}
+  static void move_construct( View &self, const View &other ) {
+    Detail::invoke_subscriber_impl< Detail::move_constructor_invoker, Subscribers... >::invoke( self, other );
+  }
   template< typename View >
-  static void move_assign( View &view ) {}
+  static void move_assign( View &self, const View &other ) {
+    Detail::invoke_subscriber_impl< Detail::move_assign_invoker, Subscribers... >::invoke( self, other );
+  }
 };
 
 
