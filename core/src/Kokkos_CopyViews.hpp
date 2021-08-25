@@ -2876,6 +2876,19 @@ inline void deep_copy(
 
 namespace Kokkos {
 
+namespace Impl {
+template <typename ViewType>
+bool size_mismatch(const ViewType& view, unsigned int max_extent,
+                   const size_t new_extents[8]) {
+  for (unsigned int dim = 0; dim < max_extent; ++dim)
+    if (new_extents[dim] != view.extent(dim)) {
+      return true;
+    }
+  return false;
+}
+
+}  // namespace Impl
+
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
 template <class T, class... P>
@@ -2905,12 +2918,7 @@ resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
   // has enough space.
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  bool sizeMismatch           = false;
-  for (unsigned int dim = 0; dim < v.rank_dynamic; ++dim)
-    if (new_extents[dim] != v.extent(dim)) {
-      sizeMismatch = true;
-      break;
-    }
+  const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
     view_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
@@ -2952,12 +2960,7 @@ resize(const I& arg_prop, Kokkos::View<T, P...>& v,
   // has enough space.
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  bool sizeMismatch           = false;
-  for (unsigned int dim = 0; dim < v.rank_dynamic; ++dim)
-    if (new_extents[dim] != v.extent(dim)) {
-      sizeMismatch = true;
-      break;
-    }
+  const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
     view_type v_resized(view_alloc(v.label(), std::forward<const I>(arg_prop)),
@@ -3048,12 +3051,7 @@ realloc(Kokkos::View<T, P...>& v,
                 "Can only realloc managed views");
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  bool sizeMismatch           = false;
-  for (unsigned int dim = 0; dim < v.rank_dynamic; ++dim)
-    if (new_extents[dim] != v.extent(dim)) {
-      sizeMismatch = true;
-      break;
-    }
+  const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
     const std::string label = v.label();

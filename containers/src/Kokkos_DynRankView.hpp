@@ -2126,12 +2126,7 @@ inline void resize(DynRankView<T, P...>& v,
                 "Can only resize managed views");
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  bool sizeMismatch           = false;
-  for (unsigned int dim = 0; dim < v.rank(); ++dim)
-    if (new_extents[dim] != v.extent(dim)) {
-      sizeMismatch = true;
-      break;
-    }
+  const bool sizeMismatch     = Impl::size_mismatch(v, v.rank(), new_extents);
 
   if (sizeMismatch) {
     drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
@@ -2160,12 +2155,7 @@ inline void realloc(DynRankView<T, P...>& v,
                 "Can only realloc managed views");
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  bool sizeMismatch           = false;
-  for (unsigned int dim = 0; dim < v.rank(); ++dim)
-    if (new_extents[dim] != v.extent(dim)) {
-      sizeMismatch = true;
-      break;
-    }
+  const bool sizeMismatch     = Impl::size_mismatch(v, v.rank(), new_extents);
 
   if (sizeMismatch) {
     const std::string label = v.label();
