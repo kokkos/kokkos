@@ -481,7 +481,7 @@ struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
 
 namespace Impl {
 
-class HPXSpaceInitializer : public ExecSpaceInitializerBase {
+class HPXSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   HPXSpaceInitializer()  = default;
   ~HPXSpaceInitializer() = default;

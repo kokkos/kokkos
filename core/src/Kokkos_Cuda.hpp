@@ -266,7 +266,7 @@ struct DeviceTypeTraits<Cuda> {
 
 namespace Impl {
 
-class CudaSpaceInitializer : public ExecSpaceInitializerBase {
+class CudaSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   CudaSpaceInitializer()  = default;
   ~CudaSpaceInitializer() = default;

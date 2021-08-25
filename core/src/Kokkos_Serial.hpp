@@ -222,7 +222,7 @@ struct DeviceTypeTraits<Serial> {
 
 namespace Impl {
 
-class SerialSpaceInitializer : public ExecSpaceInitializerBase {
+class SerialSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   SerialSpaceInitializer()  = default;
   ~SerialSpaceInitializer() = default;

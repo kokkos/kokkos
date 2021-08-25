@@ -187,7 +187,7 @@ struct DeviceTypeTraits<Threads> {
 
 namespace Impl {
 
-class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
+class ThreadsSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   ThreadsSpaceInitializer()  = default;
   ~ThreadsSpaceInitializer() = default;

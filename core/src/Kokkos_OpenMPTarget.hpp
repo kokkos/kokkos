@@ -136,7 +136,7 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 
 namespace Impl {
 
-class OpenMPTargetSpaceInitializer : public ExecSpaceInitializerBase {
+class OpenMPTargetSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   OpenMPTargetSpaceInitializer()  = default;
   ~OpenMPTargetSpaceInitializer() = default;

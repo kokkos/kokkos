@@ -182,7 +182,7 @@ struct DeviceTypeTraits<OpenMP> {
 
 namespace Impl {
 
-class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
+class OpenMPSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   OpenMPSpaceInitializer()  = default;
   ~OpenMPSpaceInitializer() = default;
