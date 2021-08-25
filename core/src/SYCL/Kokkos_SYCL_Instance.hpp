@@ -104,12 +104,14 @@ class SYCLInternal {
    public:
     void reset();
 
-    void reset(sycl::queue q) {
+    void reset(sycl::queue q, uint32_t instance_id) {
+      m_instance_id = instance_id;
       reset();
       m_q.emplace(std::move(q));
     }
     USMObjectMem() = default;
-    explicit USMObjectMem(sycl::queue q) noexcept : m_q(std::move(q)) {}
+    explicit USMObjectMem(sycl::queue q, uint32_t instance_id) noexcept
+        : m_q(std::move(q)), m_instance_id(instance_id) {}
 
     USMObjectMem(USMObjectMem const&) = delete;
     USMObjectMem(USMObjectMem&&)      = delete;
@@ -144,7 +146,9 @@ class SYCLInternal {
     T* memcpy_from(const T& t) {
       reserve(sizeof(T));
       sycl::event memcopied = m_q->memcpy(m_data, std::addressof(t), sizeof(T));
-      fence(memcopied);
+      fence(memcopied,
+            "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
+            m_instance_id);
 
       m_size = sizeof(T);
       return reinterpret_cast<T*>(m_data);
@@ -177,7 +181,10 @@ class SYCLInternal {
     // reference to the copied object.
     template <typename T>
     T& copy_from(const T& t) {
-      fence(m_last_event);
+      fence(m_last_event,
+            "Kokkos::Experimental::SYCLInternal::USMObject fence to wait for "
+            "last event to finish",
+            m_instance_id);
       m_size = 0;
       if constexpr (sycl::usm::alloc::device == Kind)
         return *memcpy_from(t);
@@ -192,7 +199,9 @@ class SYCLInternal {
       assert(sizeof(T) == m_size);
 
       sycl::event memcopied = m_q->memcpy(std::addressof(t), m_data, sizeof(T));
-      fence(memcopied);
+      fence(memcopied,
+            "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
+            m_instance_id);
 
       return t;
     }
@@ -250,6 +259,8 @@ class SYCLInternal {
     size_t m_size     = 0;  // sizeof(T) iff m_data points to live T
     size_t m_capacity = 0;
     sycl::event m_last_event;
+
+    uint32_t m_instance_id;
   };
 
   // An indirect kernel is one where the functor to be executed is explicitly
@@ -279,18 +290,18 @@ class SYCLInternal {
   // fence(...) takes any type with a .wait_and_throw() method
   // (sycl::event and sycl::queue)
   template <typename WAT>
-  static void fence_helper(WAT& wat) {
-    try {
-      wat.wait_and_throw();
-    } catch (sycl::exception const& e) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("There was a synchronous SYCL error:\n") += e.what());
-    }
-  }
+  static void fence_helper(WAT& wat, const std::string& name,
+                           uint32_t instance_id);
 
  public:
-  static void fence(sycl::queue& q) { fence_helper(q); }
-  static void fence(sycl::event& e) { fence_helper(e); }
+  static void fence(sycl::queue& q, const std::string& name,
+                    uint32_t instance_id) {
+    fence_helper(q, name, instance_id);
+  }
+  static void fence(sycl::event& e, const std::string& name,
+                    uint32_t instance_id) {
+    fence_helper(e, name, instance_id);
+  }
 };
 
 template <typename Functor, typename Storage,

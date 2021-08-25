@@ -132,19 +132,22 @@ void SYCLInternal::initialize(const sycl::queue& q) {
           Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
       Record* const r =
           Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                           "Kokkos::SYCL::InternalScratchBitset",
+                           "Kokkos::Experimental::SYCL::InternalScratchBitset",
                            sizeof(uint32_t) * buffer_bound);
       Record::increment(r);
       m_scratchConcurrentBitset = reinterpret_cast<uint32_t*>(r->data());
       auto event                = m_queue->memset(m_scratchConcurrentBitset, 0,
                                    sizeof(uint32_t) * buffer_bound);
-      fence(event);
+      fence(event,
+            "Kokkos::Experimental::SYCLInternal::initialize: fence after "
+            "initializing m_scratchConcurrentBitset",
+            m_instance_id);
     }
 
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
-    m_indirectKernelMem.reset(*m_queue);
-    m_indirectReducerMem.reset(*m_queue);
+    m_indirectKernelMem.reset(*m_queue, m_instance_id);
+    m_indirectReducerMem.reset(*m_queue, m_instance_id);
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -165,7 +168,7 @@ void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
     m_team_scratch_current_size = bytes;
     m_team_scratch_ptr =
         Kokkos::kokkos_malloc<Experimental::SYCLDeviceUSMSpace>(
-            "Kokkos::SYCLDeviceUSMSpace::TeamScratchMemory",
+            "Kokkos::Experimental::SYCLDeviceUSMSpace::TeamScratchMemory",
             m_team_scratch_current_size);
   }
   if ((bytes > m_team_scratch_current_size) ||
@@ -230,7 +233,7 @@ void* SYCLInternal::scratch_space(
 
     Record* const r =
         Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::SYCL::InternalScratchSpace",
+                         "Kokkos::Experimental::SYCL::InternalScratchSpace",
                          (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
@@ -257,7 +260,7 @@ void* SYCLInternal::scratch_flags(
 
     Record* const r =
         Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::SYCL::InternalScratchFlags",
+                         "Kokkos::Experimental::SYCL::InternalScratchFlags",
                          (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
@@ -265,10 +268,35 @@ void* SYCLInternal::scratch_flags(
     m_scratchFlags = reinterpret_cast<size_type*>(r->data());
   }
   m_queue->memset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
-  fence(*m_queue);
+  fence(*m_queue,
+        "Kokkos::Experimental::SYCLInternal::scratch_flags fence after "
+        "initializing m_scratchFlags",
+        m_instance_id);
 
   return m_scratchFlags;
 }
+
+template <typename WAT>
+void SYCLInternal::fence_helper(WAT& wat, const std::string& name,
+                                uint32_t instance_id) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::SYCL>(
+      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id},
+      [&]() {
+        try {
+          wat.wait_and_throw();
+        } catch (sycl::exception const& e) {
+          Kokkos::Impl::throw_runtime_exception(
+              std::string("There was a synchronous SYCL error:\n") += e.what());
+        }
+      });
+}
+template void SYCLInternal::fence_helper<sycl::queue>(sycl::queue&,
+                                                      const std::string&,
+                                                      uint32_t);
+template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
+                                                      const std::string&,
+                                                      uint32_t);
 
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
@@ -280,8 +308,8 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
     // First free what we have (in case malloc can reuse it)
     if (m_data) Record::decrement(Record::get_record(m_data));
 
-    Record* const r = Record::allocate(AllocationSpace(*m_q),
-                                       "Kokkos::SYCL::USMObjectMem", n);
+    Record* const r = Record::allocate(
+        AllocationSpace(*m_q), "Kokkos::Experimental::SYCL::USMObjectMem", n);
     Record::increment(r);
 
     m_data     = r->data();
