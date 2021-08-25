@@ -54,7 +54,6 @@
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
 #include <string>
 #include <Kokkos_NumericTraits.hpp>  // reduction_identity
-#include <Kokkos_Atomic.hpp>         // Kokkos::atomic_store
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
@@ -151,8 +150,10 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     val = rhs.val;
 #else
-    uint16_t rv = reinterpret_cast<const volatile uint16_t&>(rhs.val);
-    val         = reinterpret_cast<const impl_type&>(rv);
+    const volatile uint16_t* rv_ptr =
+        reinterpret_cast<const volatile uint16_t*>(&rhs.val);
+    const uint16_t rv_val = *rv_ptr;
+    val                   = reinterpret_cast<const impl_type&>(rv_val);
 #endif  // __CUDA_ARCH__
   }
 
@@ -237,7 +238,7 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     tmp.val = +tmp.val;
 #else
-    tmp.val     = __float2half(+__half2float(tmp.val));
+    tmp.val               = __float2half(+__half2float(tmp.val));
 #endif
     return tmp;
   }
@@ -248,7 +249,7 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     tmp.val = -tmp.val;
 #else
-    tmp.val     = __float2half(-__half2float(tmp.val));
+    tmp.val               = __float2half(-__half2float(tmp.val));
 #endif
     return tmp;
   }
@@ -259,7 +260,7 @@ class alignas(2) half_t {
 #ifdef __CUDA_ARCH__
     ++val;
 #else
-    float tmp   = __half2float(val);
+    float tmp             = __half2float(val);
     ++tmp;
     val       = __float2half(tmp);
 #endif
@@ -273,7 +274,7 @@ class alignas(2) half_t {
 #else
     float tmp = __half2float(val);
     --tmp;
-    val = __float2half(tmp);
+    val     = __float2half(tmp);
 #endif
     return *this;
   }
@@ -309,19 +310,9 @@ class alignas(2) half_t {
   template <class T>
   KOKKOS_FUNCTION void operator=(T rhs) volatile {
     impl_type new_val = cast_to_half(rhs).val;
-#if (CUDA_VERSION < 10000)  // Kokkos::atomic_store not available on cuda < 10
-    alignas(4) volatile float rhs_float;
-    rhs_float                   = __half2float(new_val);
-    const_cast<impl_type&>(val) = __float2half(rhs_float);
-#else
-    uint16_t* val_ptr =
-        reinterpret_cast<uint16_t*>(const_cast<impl_type*>(&val));
-#ifdef __CUDA_ARCH__
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#else
-    Kokkos::atomic_store(val_ptr, *(reinterpret_cast<uint16_t*>(&new_val)));
-#endif  // __CUDA_ARCH__
-#endif  // CUDA_VERSION
+    volatile uint16_t* val_ptr =
+        reinterpret_cast<volatile uint16_t*>(const_cast<impl_type*>(&val));
+    *val_ptr = reinterpret_cast<uint16_t&>(new_val);
   }
 
   // Compound operators
@@ -337,13 +328,12 @@ class alignas(2) half_t {
 
   KOKKOS_FUNCTION
   volatile half_t operator+=(const volatile half_t& rhs) volatile {
-    // impl_volatile_add(rhs);
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs += tmp_rhs;
-    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
-    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
+    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
+    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
     return *this;
   }
 
@@ -382,13 +372,12 @@ class alignas(2) half_t {
 
   KOKKOS_FUNCTION
   volatile half_t operator-=(const volatile half_t& rhs) volatile {
-    // impl_volatile_add(-rhs);
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs -= tmp_rhs;
-    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
-    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
+    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
+    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
     return *this;
   }
 
@@ -427,13 +416,12 @@ class alignas(2) half_t {
 
   KOKKOS_FUNCTION
   volatile half_t operator*=(const volatile half_t& rhs) volatile {
-    // impl_volatile_mul(rhs);
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs *= tmp_rhs;
-    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
-    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
+    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
+    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
     return *this;
   }
 
@@ -472,13 +460,12 @@ class alignas(2) half_t {
 
   KOKKOS_FUNCTION
   volatile half_t operator/=(const volatile half_t& rhs) volatile {
-    // impl_volatile_div(rhs);
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs /= tmp_rhs;
-    volatile uint16_t& val_ref = reinterpret_cast<volatile uint16_t&>(val);
-    val_ref = reinterpret_cast<volatile uint16_t&>(tmp_lhs.val);
+    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
+    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
     return *this;
   }
 
