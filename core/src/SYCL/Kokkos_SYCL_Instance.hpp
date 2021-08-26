@@ -91,10 +91,8 @@ class SYCLInternal {
       Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
   std::optional<sycl::queue> m_queue;
 
-  // Using std::vector<std::optional<sycl::queue>> reveals a compiler bug when
-  // compiling for the CUDA backend. Storing pointers instead works around this.
-  static std::vector<std::optional<sycl::queue>*> all_queues;
-  // We need a mutex for thread safety when modifying all_queues.
+  static std::vector<SYCLInternal*> all_instances;
+  // We need a mutex for thread safety when modifying all_instances.
   static std::mutex mutex;
 
   // USMObjectMem is a reusable buffer for a single object
@@ -300,13 +298,19 @@ class SYCLInternal {
                            uint32_t instance_id);
 
  public:
-  static void fence(sycl::queue& q, const std::string& name,
-                    uint32_t instance_id) {
+  static void fence_generic(sycl::queue& q, const std::string& name,
+                            uint32_t instance_id) {
     fence_helper(q, name, instance_id);
   }
-  static void fence(sycl::event& e, const std::string& name,
-                    uint32_t instance_id) {
+  static void fence_generic(sycl::event& e, const std::string& name,
+                            uint32_t instance_id) {
     fence_helper(e, name, instance_id);
+  }
+
+  void fence(const std::string& name = "") {
+    fence_generic(*m_queue, name, m_instance_id);
+    m_indirectKernelMem.fence();
+    m_indirectReducerMem.fence();
   }
 };
 

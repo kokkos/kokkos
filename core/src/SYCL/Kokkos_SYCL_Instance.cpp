@@ -48,7 +48,7 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
+std::vector<SYCLInternal*> SYCLInternal::all_instances;
 std::mutex SYCLInternal::mutex;
 
 SYCLInternal::~SYCLInternal() {
@@ -109,10 +109,10 @@ void SYCLInternal::initialize(const sycl::queue& q) {
   const bool ok_dev  = true;
   if (ok_init && ok_dev) {
     m_queue = q;
-    // guard pushing to all_queues
+    // guard pushing to all_instances
     {
       std::lock_guard<std::mutex> lock(mutex);
-      all_queues.push_back(&m_queue);
+      all_instances.push_back(this);
     }
     const sycl::device& d = m_queue->get_device();
 
@@ -138,10 +138,11 @@ void SYCLInternal::initialize(const sycl::queue& q) {
       m_scratchConcurrentBitset = reinterpret_cast<uint32_t*>(r->data());
       auto event                = m_queue->memset(m_scratchConcurrentBitset, 0,
                                    sizeof(uint32_t) * buffer_bound);
-      fence(event,
-            "Kokkos::Experimental::SYCLInternal::initialize: fence after "
-            "initializing m_scratchConcurrentBitset",
-            m_instance_id);
+      fence_generic(
+          event,
+          "Kokkos::Experimental::SYCLInternal::initialize: fence after "
+          "initializing m_scratchConcurrentBitset",
+          m_instance_id);
     }
 
     m_maxShmemPerBlock =
@@ -209,10 +210,11 @@ void SYCLInternal::finalize() {
 
   m_indirectKernelMem.reset();
   m_indirectReducerMem.reset();
-  // guard erasing from all_queues
+  // guard erasing from all_instances
   {
     std::lock_guard<std::mutex> lock(mutex);
-    all_queues.erase(std::find(all_queues.begin(), all_queues.end(), &m_queue));
+    all_instances.erase(
+        std::find(all_instances.begin(), all_instances.end(), this));
   }
   m_queue.reset();
 }
@@ -268,10 +270,10 @@ void* SYCLInternal::scratch_flags(
     m_scratchFlags = reinterpret_cast<size_type*>(r->data());
   }
   m_queue->memset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
-  fence(*m_queue,
-        "Kokkos::Experimental::SYCLInternal::scratch_flags fence after "
-        "initializing m_scratchFlags",
-        m_instance_id);
+  fence_generic(*m_queue,
+                "Kokkos::Experimental::SYCLInternal::scratch_flags fence after "
+                "initializing m_scratchFlags",
+                m_instance_id);
 
   return m_scratchFlags;
 }
@@ -279,17 +281,22 @@ void* SYCLInternal::scratch_flags(
 template <typename WAT>
 void SYCLInternal::fence_helper(WAT& wat, const std::string& name,
                                 uint32_t instance_id) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::SYCL>(
-      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id},
-      [&]() {
-        try {
-          wat.wait_and_throw();
-        } catch (sycl::exception const& e) {
-          Kokkos::Impl::throw_runtime_exception(
-              std::string("There was a synchronous SYCL error:\n") += e.what());
-        }
-      });
+  const auto fence_lambda = [&]() {
+    try {
+      wat.wait_and_throw();
+    } catch (sycl::exception const& e) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("There was a synchronous SYCL error:\n") += e.what());
+    }
+  };
+  if (name != "")
+    Kokkos::Tools::Experimental::Impl::profile_fence_event<
+        Kokkos::Experimental::SYCL>(
+        name,
+        Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id},
+        fence_lambda);
+  else
+    fence_lambda();
 }
 template void SYCLInternal::fence_helper<sycl::queue>(sycl::queue&,
                                                       const std::string&,

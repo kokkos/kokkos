@@ -115,8 +115,7 @@ void SYCL::fence() const {
   fence("Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
 }
 void SYCL::fence(const std::string& name) const {
-  Impl::SYCLInternal::fence(*m_space_instance->m_queue, name,
-                            impl_instance_id());
+  m_space_instance->fence(name);
 }
 
 void SYCL::impl_static_fence() {
@@ -130,16 +129,10 @@ void SYCL::impl_static_fence(const std::string& name) {
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       [&]() {
-        // guard accessing all_queues
+        // guard accessing all_instances
         std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
-        for (auto& queue : Impl::SYCLInternal::all_queues) {
-          try {
-            (*queue)->wait_and_throw();
-          } catch (sycl::exception const& e) {
-            Kokkos::Impl::throw_runtime_exception(
-                std::string("There was a synchronous SYCL error:\n") +=
-                e.what());
-          }
+        for (auto& instance : Impl::SYCLInternal::all_instances) {
+          instance->fence();
         }
       });
 }
