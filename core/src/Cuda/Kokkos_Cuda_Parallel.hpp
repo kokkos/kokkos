@@ -1150,11 +1150,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   */
 
   static constexpr bool is_thrust_possible =
-//      !ReduceFunctorHasInit<FunctorType>::value &&
-//      !ReduceFunctorHasJoin<FunctorType>::value &&
+      !ReduceFunctorHasInit<FunctorType>::value &&
+      !ReduceFunctorHasJoin<FunctorType>::value &&
       !ReduceFunctorHasFinal<FunctorType>::value &&
-      !Policy::is_graph_kernel::value; // &&
-//      std::is_same<ReducerType, InvalidType>::value;
+      !std::is_same<pointer_type,reference_type>::value &&
+      !std::is_array<reference_type>::value &&
+      !std::is_array<pointer_type>::value &&
+      !Policy::is_graph_kernel::value && // &&
+      std::is_same<ReducerType, InvalidType>::value;
 
   template <class TagType>
   struct ThrustFunctorWrapper {
