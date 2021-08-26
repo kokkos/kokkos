@@ -971,10 +971,10 @@ class TestDynViewAPI {
     // Rank 0
     View0 v0 = d.as_view_0();
     // Assign values after calling as_view_0() function under test to ensure aliasing
-    Kokkos::parallel_for(1, KOKKOS_LAMBDA (int i) { d() = 13; });
+    Kokkos::parallel_for(1, KOKKOS_LAMBDA (int) { d() = 13; });
     ASSERT_EQ(v0.size(), d.size());
     ASSERT_EQ(v0.data(), d.data());
-    Kokkos::parallel_for(1, KOKKOS_LAMBDA (int i) {
+    Kokkos::parallel_for(1, KOKKOS_LAMBDA (int) {
 	if (d() != v0()) error_flag() = 1;
       });
     ASSERT_EQ(error_flag(), 0);
@@ -985,7 +985,7 @@ class TestDynViewAPI {
     View1 v1 = d.as_view_1();
     Kokkos::parallel_for(d.extent(0),
 			 KOKKOS_LAMBDA (int i0) { d(i0) = i0; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v1.extent(rank), d.extent(rank));
     ASSERT_EQ(v1.data(), d.data());
     Kokkos::parallel_for(1, KOKKOS_LAMBDA (int i0) {
@@ -1001,7 +1001,7 @@ class TestDynViewAPI {
     View2 v2 = d.as_view_2();
     Kokkos::parallel_for(policy2,
 			 KOKKOS_LAMBDA (int i0, int i1) { d(i0, i1) = i0 + 10*i1; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v2.extent(rank), d.extent(rank));
     ASSERT_EQ(v2.data(), d.data());
     Kokkos::parallel_for(policy2, KOKKOS_LAMBDA (int i0, int i1) {
@@ -1017,7 +1017,7 @@ class TestDynViewAPI {
     View3 v3 = d.as_view_3();
     Kokkos::parallel_for(policy3,
 			 KOKKOS_LAMBDA (int i0, int i1, int i2) { d(i0, i1, i2) = i0 + 10*i1 + 100*i2; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v3.extent(rank), d.extent(rank));
     ASSERT_EQ(v3.data(), d.data());
     Kokkos::parallel_for(policy3, KOKKOS_LAMBDA (int i0, int i1, int i2) {
@@ -1033,7 +1033,7 @@ class TestDynViewAPI {
     View4 v4 = d.as_view_4();
     Kokkos::parallel_for(policy4,
 			 KOKKOS_LAMBDA (int i0, int i1, int i2, int i3) { d(i0, i1, i2, i3) = i0 + 10*i1 + 100*i2 + 1000*i3; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v4.extent(rank), d.extent(rank));
     ASSERT_EQ(v4.data(), d.data());
     Kokkos::parallel_for(policy4, KOKKOS_LAMBDA (int i0, int i1, int i2, int i3) {
@@ -1049,7 +1049,7 @@ class TestDynViewAPI {
     View5 v5 = d.as_view_5();
     Kokkos::parallel_for(policy5,
 			 KOKKOS_LAMBDA (int i0, int i1, int i2, int i3, int i4) { d(i0, i1, i2, i3, i4) = i0 + 10*i1 + 100*i2 + 1000*i3 + 10000*i4; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v5.extent(rank), d.extent(rank));
     ASSERT_EQ(v5.data(), d.data());
     Kokkos::parallel_for(policy5, KOKKOS_LAMBDA (int i0, int i1, int i2, int i3, int i4) {
@@ -1065,7 +1065,7 @@ class TestDynViewAPI {
     View6 v6 = d.as_view_6();
     Kokkos::parallel_for(policy6,
 			 KOKKOS_LAMBDA (int i0, int i1, int i2, int i3, int i4, int i5) { d(i0, i1, i2, i3, i4, i5) = i0 + 10*i1 + 100*i2 + 1000*i3 + 10000*i4 + 100000*i5; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v6.extent(rank), d.extent(rank));
     ASSERT_EQ(v6.data(), d.data());
     Kokkos::parallel_for(policy6, KOKKOS_LAMBDA (int i0, int i1, int i2, int i3, int i4, int i5) {
@@ -1083,7 +1083,7 @@ class TestDynViewAPI {
     View7 v7 = d.as_view_7();
     Kokkos::parallel_for(policy7,
 			 KOKKOS_LAMBDA (int i0, int i1, int i2, int i3, int i4, int i5, int i6) { d(i0, i1, i2, i3, i4, i5, i6) = i0 + 10*i1 + 100*i2 + 1000*i3 + 10000*i4 + 100000*i5 + 1000000*i6; });
-    for (int rank = 0; rank < d.rank(); ++rank)
+    for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v7.extent(rank), d.extent(rank));
     ASSERT_EQ(v7.data(), d.data());
     Kokkos::parallel_for(policy7, KOKKOS_LAMBDA (int i0, int i1, int i2, int i3, int i4, int i5, int i6) {
