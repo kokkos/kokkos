@@ -440,41 +440,68 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   view_type as_view() const { return view_type(data(), layout()); }
 
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType> as_view_0() const {
-    return Kokkos::View<DataType>(data());
+  Kokkos::View<DataType, Properties...> as_view_0() const {
+    if (rank() != 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType*> as_view_1() const {
-    return Kokkos::View<DataType*>(data(), extent(0));
+  Kokkos::View<DataType*, Properties...> as_view_1() const {
+    if (rank() != 1) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType*, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType**> as_view_2() const {
-    return Kokkos::View<DataType**>(data(), extent(0), extent(1));
+  Kokkos::View<DataType**, Properties...> as_view_2() const {
+    if (rank() != 2) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType**, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType***> as_view_3() const {
-    return Kokkos::View<DataType***>(data(), extent(0), extent(1), extent(2));
+  Kokkos::View<DataType***, Properties...> as_view_3() const {
+    if (rank() != 3) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType***, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType****> as_view_4() const {
-    return Kokkos::View<DataType****>(data(), extent(0), extent(1), extent(2),
-                                      extent(3));
+  Kokkos::View<DataType****, Properties...> as_view_4() const {
+    if (rank() != 4) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType****, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType*****> as_view_5() const {
-    return Kokkos::View<DataType*****>(data(), extent(0), extent(1), extent(2),
-                                       extent(3), extent(4));
+  Kokkos::View<DataType*****, Properties...> as_view_5() const {
+    if (rank() != 5) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType*****, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType******> as_view_6() const {
-    return Kokkos::View<DataType******>(data(), extent(0), extent(1), extent(2),
-                                        extent(3), extent(4), extent(5));
+  Kokkos::View<DataType******, Properties...> as_view_6() const {
+    if (rank() != 6) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType******, Properties...>(data(), layout());
   }
   KOKKOS_INLINE_FUNCTION
-  Kokkos::View<DataType*******> as_view_7() const {
-    return Kokkos::View<DataType*******>(data(), extent(0), extent(1),
-                                         extent(2), extent(3), extent(4),
-                                         extent(5), extent(6));
+  Kokkos::View<DataType*******, Properties...> as_view_7() const {
+    if (rank() != 7) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Converting DynRankView to a View of mis-matched rank");
+    }
+    return Kokkos::View<DataType*******, Properties...>(data(), layout());
   }
 
   // Types below - at least the HostMirror requires the value_type, NOT the rank

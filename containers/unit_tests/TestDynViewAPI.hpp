@@ -972,6 +972,14 @@ class TestDynViewAPI {
     View7 v7a = d.as_view();
     View7 v7b = d.as_view_7();
 
+    bool mismatch_throws = false;
+    try {
+      v0 = d.as_view_0();
+    } catch(...) {
+      mismatch_throws = true;
+    }
+    ASSERT_TRUE(mismatch_throws);
+
     ASSERT_EQ(v7a.extent(0), d.extent(0));
     ASSERT_EQ(v7a.extent(1), d.extent(1));
     ASSERT_EQ(v7a.extent(2), d.extent(2));
