@@ -120,8 +120,8 @@ class SYCLInternal {
 
     ~USMObjectMem() { reset(); };
 
-    void* data() noexcept { return m_data; }
-    const void* data() const noexcept { return m_data; }
+    void* data() noexcept { return m_data.get(); }
+    const void* data() const noexcept { return m_data.get(); }
 
     size_t size() const noexcept { return m_size; }
     size_t capacity() const noexcept { return m_capacity; }
@@ -144,14 +144,14 @@ class SYCLInternal {
     // faster because we can use USM device memory
     template <typename T>
     T* memcpy_from(const T& t) {
-      reserve(sizeof(T));
-      sycl::event memcopied = m_q->memcpy(m_data, std::addressof(t), sizeof(T));
-      fence(memcopied,
-            "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
-            m_instance_id);
-
-      m_size = sizeof(T);
-      return reinterpret_cast<T*>(m_data);
+      sycl::event memcopied =
+          m_q->memcpy(m_data.get(), std::addressof(t), sizeof(T));
+      SYCLInternal::fence_generic(
+          memcopied,
+          "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
+          m_instance_id);
+      m_data.get_deleter() = [](void*) {};
+      return reinterpret_cast<T*>(m_data.get());
     }
 
     // This will copy-constuct an object T into memory held by this object
@@ -164,10 +164,9 @@ class SYCLInternal {
       static_assert(Kind != sycl::usm::alloc::device,
                     "Cannot copy construct into USM device memory");
 
-      reserve(sizeof(T));
-
-      m_size = sizeof(T);
-      return new (m_data) T(t);
+      new (m_data.get()) T(t);
+      m_data.get_deleter() = [](void* ptr) { static_cast<T*>(ptr)->~T(); };
+      return static_cast<T*>(m_data.get());
     }
 
    public:
@@ -181,23 +180,30 @@ class SYCLInternal {
     // reference to the copied object.
     template <typename T>
     T& copy_from(const T& t) {
-      fence(m_last_event,
-            "Kokkos::Experimental::SYCLInternal::USMObject fence to wait for "
-            "last event to finish",
-            m_instance_id);
-      m_size = 0;
+      fence();
+      reserve(sizeof(T));
+      m_size = sizeof(T);
       if constexpr (sycl::usm::alloc::device == Kind)
         return *memcpy_from(t);
       else
         return *copy_construct_from(t);
     }
 
+    void fence() {
+      SYCLInternal::fence_generic(
+          m_last_event,
+          "Kokkos::Experimental::SYCLInternal::USMObject fence to wait for "
+          "last event to finish",
+          m_instance_id);
+      m_data.get_deleter()(m_data.get());
+      m_data.get_deleter() = [](void*) {};
+      m_size               = 0;
+    }
+
    private:
     // Returns a reference to t (helpful when debugging)
     template <typename T>
     T& memcpy_to(T& t) {
-      assert(sizeof(T) == m_size);
-
       sycl::event memcopied = m_q->memcpy(std::addressof(t), m_data, sizeof(T));
       fence(memcopied,
             "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
@@ -212,8 +218,6 @@ class SYCLInternal {
       static_assert(Kind != sycl::usm::alloc::device,
                     "Cannot move_assign_to from USM device memory");
 
-      assert(sizeof(T) == m_size);
-
       t = std::move(*static_cast<T*>(m_data));
 
       return t;
@@ -223,6 +227,8 @@ class SYCLInternal {
     // Returns a reference to t (helpful when debugging)
     template <typename T>
     T& transfer_to(T& t) {
+      assert(sizeof(T) == m_size);
+
       if constexpr (sycl::usm::alloc::device == Kind)
         return memcpy_to(t);
       else
@@ -255,7 +261,7 @@ class SYCLInternal {
     //  m_size == 0 then m_last_event is completed
 
     std::optional<sycl::queue> m_q;
-    void* m_data      = nullptr;
+    std::unique_ptr<void, void (*)(void*)> m_data = {nullptr, [](void*) {}};
     size_t m_size     = 0;  // sizeof(T) iff m_data points to live T
     size_t m_capacity = 0;
     sycl::event m_last_event;
