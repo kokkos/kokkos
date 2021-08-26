@@ -1,0 +1,67 @@
+ARG BASE=nvidia/cuda:11.1-devel-ubuntu20.04
+FROM $BASE
+
+RUN apt-get update && apt-get install -y \
+        bc \
+        git \
+        wget \
+        ccache \
+        python3 \
+        libelf-dev \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG NPROC=8
+
+ARG CMAKE_VERSION=3.18.5
+ENV CMAKE_DIR=/opt/cmake
+RUN CMAKE_KEY=2D2CEF1034921684 && \
+    CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
+    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
+    CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
+    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} && \
+    gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
+    grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
+    mkdir -p ${CMAKE_DIR} && \
+    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
+    rm ${CMAKE_SCRIPT}
+ENV PATH=${CMAKE_DIR}/bin:$PATH
+
+ENV LLVM_DIR=/opt/llvm
+RUN LLVM_VERSION=887c7660bdf3f300bd1997dcfd7ace91787c0584 && \
+    LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
+    LLVM_ARCHIVE=${LLVM_VERSION}.tar.gz &&\
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE} && \
+    mkdir llvm-project && \
+    tar -xf ${LLVM_ARCHIVE} -C llvm-project --strip-components=1 && \
+    cd llvm-project && \
+    mkdir build && cd build && \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
+      -DCMAKE_C_COMPILER=gcc \
+      -DCMAKE_CXX_COMPILER=g++ \
+      -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
+      -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 \
+      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
+    ../llvm && \
+    make -j${NPROC} && \
+    make install && \
+    rm -rf ../build/* && \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
+      -DCMAKE_C_COMPILER=$LLVM_DIR/bin/clang \
+      -DCMAKE_CXX_COMPILER=$LLVM_DIR/bin/clang++ \
+      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
+    ../openmp && \
+    make -j${NPROC} && \
+    make install && \
+    echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
+    rm -rf ${SCRATCH_DIR}
+ENV PATH=${LLVM_DIR}/bin:$PATH

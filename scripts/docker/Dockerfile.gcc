@@ -1,6 +1,6 @@
-FROM gcc:4.8.4
+FROM gcc:5.3.0
 
-ARG CMAKE_VERSION=3.10.3
+ARG CMAKE_VERSION=3.16.8
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_KEY=2D2CEF1034921684 && \
     CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
@@ -9,10 +9,10 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
-    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} && \
+    gpg --keyserver pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} && \
     gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
     grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
     mkdir -p ${CMAKE_DIR} && \
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
-    rm ${CMAKE_SCRIPT}
+    rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH

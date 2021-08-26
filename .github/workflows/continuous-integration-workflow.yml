@@ -1,0 +1,72 @@
+name: github-Linux
+on: [push, pull_request]
+
+jobs:
+  CI:
+    continue-on-error: true
+    strategy:
+      matrix:
+        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
+        cxx: ['g++', 'clang++']
+        cmake_build_type: ['Release', 'Debug']
+        openmp: ['ON']
+        include:
+          - distro: 'fedora:intel'
+            cxx: 'icpc'
+            cmake_build_type: 'Release'
+            openmp: 'ON'
+          - distro: 'fedora:intel'
+            cxx: 'icpc'
+            cmake_build_type: 'Debug'
+            openmp: 'ON'
+          - distro: 'fedora:intel'
+            cxx: 'icpx'
+            cmake_build_type: 'Release'
+            openmp: 'ON'
+          - distro: 'fedora:intel'
+            cxx: 'icpx'
+            cmake_build_type: 'Debug'
+            openmp: 'ON'
+    runs-on: ubuntu-latest
+    container: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2.2.0
+      - uses: actions/cache@v2
+        with:
+          path: ~/.ccache
+          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${github.ref}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{github.ref}}
+      - name: Get trial license
+        if: ${{ matrix.cxx == 'icpc' }}
+        run: |
+          mkdir ~/Licenses
+          curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
+      - name: maybe_disable_death_tests
+        if: ${{ matrix.distro == 'fedora:rawhide' }}
+        run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
+      - name: build-and-test
+        run: |
+          ccache -z
+          cmake \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DKokkos_ENABLE_HWLOC=ON \
+            -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+            -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }} \
+            -DBUILD_JOBS=2 -DBINARY_DIR=builddir -DSITE=GitHub-Linux \
+            -P cmake/KokkosCI.cmake
+          ccache -s
+      - name: Test DESTDIR Install
+        run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
+      - name: Install
+        run: sudo cmake --build builddir --target install
+      - name: Test install
+        working-directory: example/build_cmake_installed
+        run: |
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake --build builddir
+          cmake --build builddir --target test

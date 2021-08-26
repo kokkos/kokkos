@@ -10,8 +10,6 @@ added:
       * Interface for cmake system
   + Makefile.kokkos
       * Main logic for build (make and cmake) and defines (KokkosCore_config.h)
-  + core/unit_test/UnitTestConfig.make
-      * Unit test for Makefile.kokkos
 
 In general, an architecture is going to be from on of these platforms:
   + AMD
@@ -56,21 +54,3 @@ the sources (generated makefile and cmake snippets by `core/src/Makefile`), for
 setting the defines in KokkosCore_config.h, and defining various internal
 variables.  To understand how to add to this file, you should work closely with
 the Kokkos development team.
-
-
-### core/unit_test/UnitTestConfig.make
-
-This file is used to check the build system in a platform-independent way.  It
-works by looping over available architectures and devices; thus, you should add
-your new architecure to KOKKOS_ARCH_OPTIONS and your new device to
-KOKKOS_DEVICE_OPTIONS to be tested.  The build system tests work by grepping the
-generated build files (automatically).  The header file tests work by diffing
-the generated file with results that are stored in
-`core/unit_tests/config/results` (namespaced by ARCH_DEVICE_).  Thus, you will
-need to add accepted results to this directory for diffing.
-
-The CMake build system is also tested in `core/unit_tests/config/cmaketest`.
-Because it uses cmake/kokkos_options.cmake, it already has the tests to loop
-over.  It is diffed with the same files that the build system is tested with.
-Thus, if you are consistent in all of the files listed, the unit tests should
-pass automatically.

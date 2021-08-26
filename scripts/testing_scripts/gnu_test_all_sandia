@@ -95,7 +95,7 @@ CXX_FLAGS_EXTRA=""
 LD_FLAGS_EXTRA=""
 KOKKOS_OPTIONS=""
 
-CXX_STANDARD="c++11"
+CXX_STANDARD="c++14"
 
 #
 # Handle arguments.
@@ -518,7 +518,7 @@ if [ "$PRINT_HELP" = "True" ]; then
   echo "--build-only: Just do builds, don't run anything"
   echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
   echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
-  echo "--cxxstandard=OPT: c++11 (default), c++14, c++17, c++1y, c++1z, c++2a"
+  echo "--cxxstandard=OPT: c++14 (default), c++17, c++1y, c++1z, c++2a"
   echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
   echo "--arch=ARCHITECTURE: overwrite architecture flags"
   echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"

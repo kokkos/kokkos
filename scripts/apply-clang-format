@@ -19,11 +19,24 @@ if [ "${CLANG_FORMAT_MAJOR_VERSION}" -ne 8 ] || [ "${CLANG_FORMAT_MINOR_VERSION}
   exit 1
 fi
 
-find . -name '*.cpp' -o -name '*.hpp' | xargs ${CLANG_FORMAT_EXECUTABLE} -i
+BASE_DIR="$(git rev-parse --show-toplevel)"
+cd $BASE_DIR
+if [ ! -f "scripts/apply-clang-format" ]; then
+  echo "***   The indenting script must be executed from within the Kokkos clone!"
+  exit 1
+fi
+
+TRACKED_FILES="$(git ls-files)"
+
+find ${TRACKED_FILES} \
+  -type f -name '*.cpp' -o -name '*.hpp' -o -name '*.cc' -o -name '*.h' |
+  xargs -n 1 -P 10 ${CLANG_FORMAT_EXECUTABLE} -i
 
 # Now also check for trailing whitspace. Mac OSX creates backup files
 # that we need to delete manually.
-find . -type f \( -name "*.md" -o -name "*.cc" -o -name "*.h" -o -name "*.txt" -o -name "*.cmake" \) |
+TRACKED_FILES="$(git ls-tree HEAD --name-only)"
+find ${TRACKED_FILES} \
+  -type f \( -name "*.md" -o -name "*.cc" -o -name "*.h" -o -name "*.txt" -o -name "*.cmake" \) |
   xargs -n 1 -P 10 -I {} bash -c "sed -i -e 's/\s\+$//g' {} && rm -f '{}-e'"
 
 # Check that we do not introduce any file with the old copyright

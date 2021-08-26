@@ -16,7 +16,6 @@ cmake \
  -DTrilinos_CONFIGURE_OPTIONS_FILE:STRING=cmake/std/atdm/ATDMDevEnv.cmake \
  -DTrilinos_ENABLE_TESTS=ON \
  -DTrilinos_ENABLE_ALL_PACKAGES=ON \
-  -DKOKKOS_ENABLE_DEPRECATED_CODE=OFF \
   -DKokkos_SOURCE_DIR_OVERRIDE:STRING=kokkos \
   -DKokkosKernels_SOURCE_DIR_OVERRIDE:STRING=kokkos-kernels \
 $TRILINOS_DIR
