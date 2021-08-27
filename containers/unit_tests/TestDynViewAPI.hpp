@@ -1154,7 +1154,7 @@ class TestDynViewAPI {
     // Error checking test
     bool mismatch_throws = false;
     try {
-      auto v_copy = d.as_view_0();
+      auto v_copy = d.as_view_2();
     } catch (...) {
       mismatch_throws = true;
     }
