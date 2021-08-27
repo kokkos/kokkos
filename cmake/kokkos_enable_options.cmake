@@ -35,6 +35,8 @@ endif()
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
+# As of 08/12/2021 CudaMallocAsync causes issues if UCX is used as MPI communication layer.
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC      OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_3    ON "Whether code deprecated in major release 3 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")

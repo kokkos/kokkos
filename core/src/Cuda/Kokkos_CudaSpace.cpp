@@ -211,7 +211,7 @@ void *CudaSpace::impl_allocate(
 
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif (CUDART_VERSION >= 11020)
+#elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
@@ -342,7 +342,7 @@ void CudaSpace::impl_deallocate(
   try {
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif (CUDART_VERSION >= 11020)
+#elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
     if (arg_alloc_size >= memory_threshold_g) {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
