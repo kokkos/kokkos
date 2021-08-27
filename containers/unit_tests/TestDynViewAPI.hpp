@@ -963,44 +963,55 @@ class TestDynViewAPI {
   }
 
   static void run_test_as_view() {
-    Kokkos::View<int> error_flag("error_flag");
-    error_flag() = 0;
+    Kokkos::View<int, Kokkos::HostSpace> error_flag_host("error_flag");
+    error_flag_host() = 0;
+    auto error_flag = Kokkos::create_mirror_view_and_copy(DeviceType(), error_flag_host);
 
     dView0 d("d");
 
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+
     // Rank 0
+    Kokkos::resize(d);
+
+    auto policy0 = Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, 1);
+
     View0 v0 = d.as_view_0();
     // Assign values after calling as_view_0() function under test to ensure
     // aliasing
     Kokkos::parallel_for(
-        1, KOKKOS_LAMBDA(int) { d() = 13; });
+        policy0, KOKKOS_LAMBDA(int) { d() = 13; });
     ASSERT_EQ(v0.size(), d.size());
     ASSERT_EQ(v0.data(), d.data());
     Kokkos::parallel_for(
-        1, KOKKOS_LAMBDA(int) {
+        policy0, KOKKOS_LAMBDA(int) {
           if (d() != v0()) error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 1
     Kokkos::resize(d, 1);
 
+    auto policy1 = Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, d.extent(0));
+
     View1 v1 = d.as_view_1();
     Kokkos::parallel_for(
-        d.extent(0), KOKKOS_LAMBDA(int i0) { d(i0) = i0; });
+        policy1, KOKKOS_LAMBDA(int i0) { d(i0) = i0; });
     for (unsigned int rank = 0; rank < d.rank(); ++rank)
       ASSERT_EQ(v1.extent(rank), d.extent(rank));
     ASSERT_EQ(v1.data(), d.data());
     Kokkos::parallel_for(
-        1, KOKKOS_LAMBDA(int i0) {
+        policy1, KOKKOS_LAMBDA(int i0) {
           if (d(i0) != v1(i0)) error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 2
     Kokkos::resize(d, 1, 2);
 
-    auto policy2 = Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+    auto policy2 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<2>>(
         {0, 0}, {d.extent(0), d.extent(1)});
 
     View2 v2 = d.as_view_2();
@@ -1013,12 +1024,13 @@ class TestDynViewAPI {
         policy2, KOKKOS_LAMBDA(int i0, int i1) {
           if (d(i0, i1) != v2(i0, i1)) error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 3
     Kokkos::resize(d, 1, 2, 3);
 
-    auto policy3 = Kokkos::MDRangePolicy<Kokkos::Rank<3>>(
+    auto policy3 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<3>>(
         {0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2)});
 
     View3 v3 = d.as_view_3();
@@ -1033,12 +1045,13 @@ class TestDynViewAPI {
         policy3, KOKKOS_LAMBDA(int i0, int i1, int i2) {
           if (d(i0, i1, i2) != v3(i0, i1, i2)) error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 4
     Kokkos::resize(d, 1, 2, 3, 4);
 
-    auto policy4 = Kokkos::MDRangePolicy<Kokkos::Rank<4>>(
+    auto policy4 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<4>>(
         {0, 0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2), d.extent(3)});
 
     View4 v4 = d.as_view_4();
@@ -1053,12 +1066,13 @@ class TestDynViewAPI {
         policy4, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3) {
           if (d(i0, i1, i2, i3) != v4(i0, i1, i2, i3)) error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 5
     Kokkos::resize(d, 1, 2, 3, 4, 5);
 
-    auto policy5 = Kokkos::MDRangePolicy<Kokkos::Rank<5>>(
+    auto policy5 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<5>>(
         {0, 0, 0, 0, 0},
         {d.extent(0), d.extent(1), d.extent(2), d.extent(3), d.extent(4)});
 
@@ -1075,12 +1089,13 @@ class TestDynViewAPI {
         policy5, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4) {
           if (d(i0, i1, i2, i3, i4) != v5(i0, i1, i2, i3, i4)) error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 6
     Kokkos::resize(d, 1, 2, 3, 4, 5, 6);
 
-    auto policy6 = Kokkos::MDRangePolicy<Kokkos::Rank<6>>(
+    auto policy6 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<6>>(
         {0, 0, 0, 0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2), d.extent(3),
                              d.extent(4), d.extent(5)});
 
@@ -1098,14 +1113,15 @@ class TestDynViewAPI {
           if (d(i0, i1, i2, i3, i4, i5) != v6(i0, i1, i2, i3, i4, i5))
             error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
 
     // Rank 7
     Kokkos::resize(d, 1, 2, 3, 4, 5, 6, 7);
 
     // MDRangePolicy only accepts Rank < 7
 #if 0
-    auto policy7 = Kokkos::MDRangePolicy<Kokkos::Rank<7>>(
+    auto policy7 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<7>>(
         {0, 0, 0, 0, 0, 0, 0},
         {d.extent(0), d.extent(1), d.extent(2), d.extent(3), d.extent(4),
          d.extent(5), d.extent(6)});
@@ -1127,13 +1143,16 @@ class TestDynViewAPI {
           if (d(i0, i1, i2, i3, i4, i5, i6) != v7(i0, i1, i2, i3, i4, i5, i6))
             error_flag() = 1;
         });
-    ASSERT_EQ(error_flag(), 0);
-#endif
+    Kokkos::deep_copy(error_flag_host, error_flag);
+    ASSERT_EQ(error_flag_host(), 0);
+#endif // MDRangePolict Rank < 7
+
+#endif // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 
     // Error checking test
     bool mismatch_throws = false;
     try {
-      v0 = d.as_view_0();
+      auto v_copy = d.as_view_0();
     } catch (...) {
       mismatch_throws = true;
     }

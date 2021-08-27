@@ -436,10 +436,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION
   const view_type& ConstDownCast() const { return (const view_type&)(*this); }
 
-  KOKKOS_INLINE_FUNCTION
   view_type as_view() const { return view_type(data(), layout()); }
 
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType, Properties...> as_view_0() const {
     if (rank() != 0) {
       Kokkos::Impl::throw_runtime_exception(
@@ -447,7 +445,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType*, Properties...> as_view_1() const {
     if (rank() != 1) {
       Kokkos::Impl::throw_runtime_exception(
@@ -455,7 +452,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType*, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType**, Properties...> as_view_2() const {
     if (rank() != 2) {
       Kokkos::Impl::throw_runtime_exception(
@@ -463,7 +459,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType**, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType***, Properties...> as_view_3() const {
     if (rank() != 3) {
       Kokkos::Impl::throw_runtime_exception(
@@ -471,7 +466,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType***, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType****, Properties...> as_view_4() const {
     if (rank() != 4) {
       Kokkos::Impl::throw_runtime_exception(
@@ -479,7 +473,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType****, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType*****, Properties...> as_view_5() const {
     if (rank() != 5) {
       Kokkos::Impl::throw_runtime_exception(
@@ -487,7 +480,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType*****, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType******, Properties...> as_view_6() const {
     if (rank() != 6) {
       Kokkos::Impl::throw_runtime_exception(
@@ -495,7 +487,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     }
     return Kokkos::View<DataType******, Properties...>(data(), layout());
   }
-  KOKKOS_INLINE_FUNCTION
   Kokkos::View<DataType*******, Properties...> as_view_7() const {
     if (rank() != 7) {
       Kokkos::Impl::throw_runtime_exception(
