@@ -57,11 +57,11 @@ using StreamDeviceArray =
 using StreamHostArray = typename StreamDeviceArray::HostMirror;
 
 using StreamIndex = int;
-using policy_t    = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
+using Policy      = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
 void perform_set(StreamDeviceArray& a, const double scalar) {
   Kokkos::parallel_for(
-      "set", policy_t(0, a.extent(0)),
+      "set", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar; });
 
   Kokkos::fence();
@@ -69,7 +69,7 @@ void perform_set(StreamDeviceArray& a, const double scalar) {
 
 void perform_copy(StreamDeviceArray& a, StreamDeviceArray& b) {
   Kokkos::parallel_for(
-      "copy", policy_t(0, a.extent(0)),
+      "copy", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = a[i]; });
 
   Kokkos::fence();
@@ -78,7 +78,7 @@ void perform_copy(StreamDeviceArray& a, StreamDeviceArray& b) {
 void perform_scale(StreamDeviceArray& b, StreamDeviceArray& c,
                    const double scalar) {
   Kokkos::parallel_for(
-      "scale", policy_t(0, b.extent(0)),
+      "scale", Policy(0, b.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar * c[i]; });
 
   Kokkos::fence();
@@ -87,7 +87,7 @@ void perform_scale(StreamDeviceArray& b, StreamDeviceArray& c,
 void perform_add(StreamDeviceArray& a, StreamDeviceArray& b,
                  StreamDeviceArray& c) {
   Kokkos::parallel_for(
-      "add", policy_t(0, a.extent(0)),
+      "add", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { c[i] = a[i] + b[i]; });
 
   Kokkos::fence();
@@ -96,7 +96,7 @@ void perform_add(StreamDeviceArray& a, StreamDeviceArray& b,
 void perform_triad(StreamDeviceArray& a, StreamDeviceArray& b,
                    StreamDeviceArray& c, const double scalar) {
   Kokkos::parallel_for(
-      "triad", policy_t(0, a.extent(0)),
+      "triad", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar * c[i]; });
 
   Kokkos::fence();
