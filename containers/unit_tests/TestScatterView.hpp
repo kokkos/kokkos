@@ -118,17 +118,6 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       scatter_access(k, 3)++;
       scatter_access(k, 4)--;
       scatter_access(k, 5) -= 5;
-// Workaround Intel 17 compiler bug if you have more than 8 atomic adds
-// on unsigned int in direct sequence. It results in illegal instruction.
-// Only affects pre Haswell archs. Looking at the assembly the compiler
-// appears to insert cache line alignment for the instruction
-// Inserting an assembly nop instruction changes the alignment and
-// works round this.
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       scatter_access_atomic(k, 6) += 2;
       scatter_access_atomic(k, 7)++;
       scatter_access_atomic(k, 8)--;
