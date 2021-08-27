@@ -83,8 +83,8 @@
 // versions are below
 namespace Kokkos {
 namespace Impl {
-using MemoryOrderSeqCst = desul::MemoryOrderSeqCst;
-using MemoryScopeDevice = desul::MemoryScopeDevice;
+using desul::MemoryOrderSeqCst;
+using desul::MemoryScopeDevice;
 
 template <class T>
 KOKKOS_INLINE_FUNCTION T
