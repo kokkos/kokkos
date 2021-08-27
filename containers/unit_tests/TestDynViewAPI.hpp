@@ -965,7 +965,8 @@ class TestDynViewAPI {
   static void run_test_as_view() {
     Kokkos::View<int, Kokkos::HostSpace> error_flag_host("error_flag");
     error_flag_host() = 0;
-    auto error_flag = Kokkos::create_mirror_view_and_copy(DeviceType(), error_flag_host);
+    auto error_flag =
+        Kokkos::create_mirror_view_and_copy(DeviceType(), error_flag_host);
 
     dView0 d("d");
 
@@ -993,7 +994,8 @@ class TestDynViewAPI {
     // Rank 1
     Kokkos::resize(d, 1);
 
-    auto policy1 = Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, d.extent(0));
+    auto policy1 =
+        Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, d.extent(0));
 
     View1 v1 = d.as_view_1();
     Kokkos::parallel_for(
@@ -1145,9 +1147,9 @@ class TestDynViewAPI {
         });
     Kokkos::deep_copy(error_flag_host, error_flag);
     ASSERT_EQ(error_flag_host(), 0);
-#endif // MDRangePolict Rank < 7
+#endif  // MDRangePolict Rank < 7
 
-#endif // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+#endif  // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 
     // Error checking test
     bool mismatch_throws = false;
