@@ -436,8 +436,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION
   const view_type& ConstDownCast() const { return (const view_type&)(*this); }
 
-  view_type as_view() const { return view_type(data(), layout()); }
-
   Kokkos::View<DataType, Properties...> as_view_0() const {
     if (rank() != 0) {
       Kokkos::Impl::throw_runtime_exception(
