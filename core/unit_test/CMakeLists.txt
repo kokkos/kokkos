@@ -636,9 +636,9 @@ if(Kokkos_ENABLE_SYCL)
     UnitTest_SYCL3
     SOURCES
       UnitTestMainInit.cpp
-      sycl/TestSYCL_Task.cpp
       # FIXME_SYCL
-      #sycl/TestSYCL_TeamScratchStreams.cpp
+      sycl/TestSYCL_Task.cpp
+      sycl/TestSYCL_TeamScratchStreams.cpp
       sycl/TestSYCLHostUSM_SharedAlloc.cpp
       sycl/TestSYCLHostUSM_ViewAPI_a.cpp
       sycl/TestSYCLHostUSM_ViewAPI_b.cpp
