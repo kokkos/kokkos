@@ -174,7 +174,7 @@ int g_openmptarget_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<OpenMPTargetSpaceInitializer>(
         "160_OpenMPTarget");
 
-void OpenMPTargetSpaceInitializer::initialize(const InitArguments& args) {
+void OpenMPTargetSpaceInitializer::do_initialize(const InitArguments& args) {
   // Prevent "unused variable" warning for 'args' input struct.  If
   // Serial::initialize() ever needs to take arguments from the input
   // struct, you may remove this line of code.
@@ -191,7 +191,7 @@ void OpenMPTargetSpaceInitializer::initialize(const InitArguments& args) {
   }
 }
 
-void OpenMPTargetSpaceInitializer::finalize(const bool all_spaces) {
+void OpenMPTargetSpaceInitializer::do_finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
@@ -205,6 +205,10 @@ void OpenMPTargetSpaceInitializer::fence() {
 }
 void OpenMPTargetSpaceInitializer::fence(const std::string& name) {
   Kokkos::Experimental::OpenMPTarget::impl_static_fence(name);
+}
+
+void OpenMPTargetSpaceInitializer::print_exec_space_name(std::ostream& msg) {
+  msg << "OpenMPTarget";
 }
 
 void OpenMPTargetSpaceInitializer::print_configuration(std::ostream& msg,

@@ -159,7 +159,7 @@ namespace Impl {
 int g_hpx_space_factory_initialized =
     initialize_space_factory<HPXSpaceInitializer>("060_HPX");
 
-void HPXSpaceInitializer::initialize(const InitArguments &args) {
+void HPXSpaceInitializer::do_initialize(const InitArguments &args) {
   const int num_threads = args.num_threads;
 
   if (std::is_same<Kokkos::Experimental::HPX,
@@ -179,7 +179,7 @@ void HPXSpaceInitializer::initialize(const InitArguments &args) {
   }
 }
 
-void HPXSpaceInitializer::finalize(const bool all_spaces) {
+void HPXSpaceInitializer::do_finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Experimental::HPX,
                    Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Experimental::HPX,
@@ -193,6 +193,10 @@ void HPXSpaceInitializer::finalize(const bool all_spaces) {
 void HPXSpaceInitializer::fence() { Kokkos::Experimental::HPX().fence(); }
 void HPXSpaceInitializer::fence(const std::string &name) {
   Kokkos::Experimental::HPX().fence(name);
+}
+
+void HPXSpaceInitializer::print_exec_space_name(std::ostream &strm) {
+  strm << "HPX";
 }
 
 void HPXSpaceInitializer::print_configuration(std::ostream &msg,

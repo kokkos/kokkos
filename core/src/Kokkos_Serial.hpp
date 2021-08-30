@@ -222,14 +222,15 @@ struct DeviceTypeTraits<Serial> {
 
 namespace Impl {
 
-class SerialSpaceInitializer : public ExecSpaceInitializerBase {
+class SerialSpaceInitializer final : public ExecSpaceInitializerBase {
  public:
   SerialSpaceInitializer()  = default;
   ~SerialSpaceInitializer() = default;
-  void initialize(const InitArguments& args) final;
-  void finalize(const bool) final;
+  void do_initialize(const InitArguments& args) final;
+  void do_finalize(const bool) final;
   void fence() final;
   void fence(const std::string&) final;
+  void print_exec_space_name(std::ostream& msg) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 

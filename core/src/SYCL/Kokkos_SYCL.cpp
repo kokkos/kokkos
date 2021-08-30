@@ -286,7 +286,7 @@ namespace Impl {
 int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
 
-void SYCLSpaceInitializer::initialize(const InitArguments& args) {
+void SYCLSpaceInitializer::do_initialize(const InitArguments& args) {
   int use_gpu = Kokkos::Impl::get_gpu(args);
 
   if (std::is_same<Kokkos::Experimental::SYCL,
@@ -302,7 +302,7 @@ void SYCLSpaceInitializer::initialize(const InitArguments& args) {
   }
 }
 
-void SYCLSpaceInitializer::finalize(const bool all_spaces) {
+void SYCLSpaceInitializer::do_finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Experimental::SYCL,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
@@ -316,6 +316,10 @@ void SYCLSpaceInitializer::fence() {
 }
 void SYCLSpaceInitializer::fence(const std::string& name) {
   Kokkos::Experimental::SYCL::impl_static_fence(name);
+}
+
+void SYCLSpaceInitializer::print_exec_space_name(std::ostream& msg) {
+  msg << "SYCL";
 }
 
 void SYCLSpaceInitializer::print_configuration(std::ostream& msg,
