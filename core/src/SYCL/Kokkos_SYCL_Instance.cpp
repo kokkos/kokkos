@@ -314,18 +314,18 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
     using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
     // First free what we have (in case malloc can reuse it)
     if (m_data) {
-      m_data.get_deleter()(m_data.get());
-      Record::decrement(Record::get_record(m_data.get()));
+      m_deleter(m_data);
+      Record::decrement(Record::get_record(m_data));
     }
 
     Record* const r = Record::allocate(
         AllocationSpace(*m_q), "Kokkos::Experimental::SYCL::USMObjectMem", n);
     Record::increment(r);
 
-    m_data.reset(r->data());
+    m_data     = r->data();
     m_capacity = n;
   }
-  m_data.get_deleter() = [](void*) {};
+  m_deleter = null_deleter;
 
   return m_capacity;
 }
@@ -333,16 +333,15 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
 template <sycl::usm::alloc Kind>
 void SYCLInternal::USMObjectMem<Kind>::reset() {
   if (m_data) {
-    m_data.get_deleter()(m_data.get());
+    m_deleter(m_data);
     // This implies a fence since this class is not copyable
     // and deallocating implies a fence across all registered queues.
     using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
-    Record::decrement(Record::get_record(m_data.get()));
+    Record::decrement(Record::get_record(m_data));
 
-    m_capacity           = 0;
-    m_data.get_deleter() = [](void*) {};
-    m_data.reset();
-    m_size = 0;
+    m_capacity = 0;
+    m_deleter  = null_deleter;
+    m_data     = nullptr;
   }
   m_q.reset();
 }

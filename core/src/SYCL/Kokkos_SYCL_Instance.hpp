@@ -118,10 +118,9 @@ class SYCLInternal {
 
     ~USMObjectMem() { reset(); };
 
-    void* data() noexcept { return m_data.get(); }
-    const void* data() const noexcept { return m_data.get(); }
+    void* data() noexcept { return m_data; }
+    const void* data() const noexcept { return m_data; }
 
-    size_t size() const noexcept { return m_size; }
     size_t capacity() const noexcept { return m_capacity; }
 
     // reserve() allocates space for at least n bytes
@@ -142,14 +141,13 @@ class SYCLInternal {
     // faster because we can use USM device memory
     template <typename T>
     T* memcpy_from(const T& t) {
-      sycl::event memcopied =
-          m_q->memcpy(m_data.get(), std::addressof(t), sizeof(T));
+      sycl::event memcopied = m_q->memcpy(m_data, std::addressof(t), sizeof(T));
       SYCLInternal::fence_generic(
           memcopied,
           "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
           m_instance_id);
-      m_data.get_deleter() = [](void*) {};
-      return reinterpret_cast<T*>(m_data.get());
+      m_deleter = null_deleter;
+      return reinterpret_cast<T*>(m_data);
     }
 
     // This will copy-constuct an object T into memory held by this object
@@ -162,9 +160,9 @@ class SYCLInternal {
       static_assert(Kind != sycl::usm::alloc::device,
                     "Cannot copy construct into USM device memory");
 
-      new (m_data.get()) T(t);
-      m_data.get_deleter() = [](void* ptr) { static_cast<T*>(ptr)->~T(); };
-      return static_cast<T*>(m_data.get());
+      new (m_data) T(t);
+      m_deleter = [](void* ptr) { static_cast<T*>(ptr)->~T(); };
+      return static_cast<T*>(m_data);
     }
 
    public:
@@ -180,7 +178,6 @@ class SYCLInternal {
     T& copy_from(const T& t) {
       fence();
       reserve(sizeof(T));
-      m_size = sizeof(T);
       if constexpr (sycl::usm::alloc::device == Kind)
         return *memcpy_from(t);
       else
@@ -193,9 +190,8 @@ class SYCLInternal {
           "Kokkos::Experimental::SYCLInternal::USMObject fence to wait for "
           "last event to finish",
           m_instance_id);
-      m_data.get_deleter()(m_data.get());
-      m_data.get_deleter() = [](void*) {};
-      m_size               = 0;
+      m_deleter(m_data);
+      m_deleter = null_deleter;
     }
 
    private:
@@ -225,8 +221,6 @@ class SYCLInternal {
     // Returns a reference to t (helpful when debugging)
     template <typename T>
     T& transfer_to(T& t) {
-      assert(sizeof(T) == m_size);
-
       if constexpr (sycl::usm::alloc::device == Kind)
         return memcpy_to(t);
       else
@@ -246,22 +240,16 @@ class SYCLInternal {
     //
     //  !m_data == (m_capacity == 0)
     //      m_q || !m_data
-    //   m_data || (m_size == 0)
-    //   m_size <= m_capacity
     //
     //  The above invariants mean that:
-    //  if m_size != 0 then m_data != nullptr
     //  if m_data != nullptr then m_capacity != 0 && m_q != nullopt
     //  if m_data == nullptr then m_capacity == 0
-    //
-    //  m_size != 0 implies that there might be an active kernel using this
-    //  object. The status of that kernel can be queried using m_last_event. if
-    //  m_size == 0 then m_last_event is completed
 
     std::optional<sycl::queue> m_q;
-    std::unique_ptr<void, void (*)(void*)> m_data = {nullptr, [](void*) {}};
-    size_t m_size     = 0;  // sizeof(T) iff m_data points to live T
-    size_t m_capacity = 0;
+    void* m_data = nullptr;
+    static void null_deleter(void*) {}
+    void (*m_deleter)(void*) = null_deleter;
+    size_t m_capacity        = 0;
     sycl::event m_last_event;
 
     uint32_t m_instance_id;
