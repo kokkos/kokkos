@@ -128,9 +128,6 @@ void sycl_queue_scratch_test(
   }
 
   Kokkos::fence();
-  for (int i = 0; i < K; i++) {
-    sycl[i] = Kokkos::Experimental::SYCL();
-  }
 }
 }  // namespace Impl
 
