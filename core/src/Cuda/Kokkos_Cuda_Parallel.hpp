@@ -1159,8 +1159,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       !std::is_array<pointer_type>::value &&
       !std::is_array<value_type>::value &&
       !Policy::is_graph_kernel::value;  // &&
-  //std::is_same<ReducerType, InvalidType>::value;
-      
+  // std::is_same<ReducerType, InvalidType>::value;
+
   static constexpr bool is_thrust_using_no_join_init_red =
       !ReduceFunctorHasInit<FunctorType>::value &&
       !ReduceFunctorHasJoin<FunctorType>::value &&
@@ -1199,14 +1199,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const ValueJoin r;
 
     KOKKOS_FUNCTION
-    //ThrustReducerWrapper(const FunctorType& op)
-    ThrustReducerWrapper(const ValueJoin& op)
-        : r(std::move(op)){};
+    // ThrustReducerWrapper(const FunctorType& op)
+    ThrustReducerWrapper(const ValueJoin& op) : r(std::move(op)){};
 
     // KOKKOS_FUNCTION value_type operator()(volatile const  value_type& lhs, 
     // volatile const value_type& rhs) const {
     KOKKOS_FUNCTION value_type operator()(
-        // const volatile value_type& lhs, const volatile value_type& rhs) const {
+        // const volatile value_type& lhs, const volatile value_type& rhs) const 
+        // {
         const value_type& lhs, const value_type& rhs) const {
       value_type lhs_1{lhs};
       value_type rhs_1{rhs};
@@ -1221,11 +1221,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   inline std::enable_if_t<try_regular, bool> sum_thrust(
       thrust::counting_iterator<index_type>& temp_iter_d,
       thrust::counting_iterator<index_type>& temp_iter_end_d,
-      ThrustFunctorWrapper<WorkTag> &t_op){
+      ThrustFunctorWrapper<WorkTag>& t_op) {
     printf("using regular\n");
     *m_result_ptr = thrust::transform_reduce(
         thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init,
-        KOKKOS_LAMBDA(const value_type& lhs, const value_type& rhs){
+        KOKKOS_LAMBDA(const value_type& lhs, const value_type& rhs) {
           value_type tmp{};
           tmp += lhs;
           tmp += rhs;
@@ -1237,8 +1237,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   template <bool try_regular>
   inline std::enable_if_t<!try_regular, bool> sum_thrust(
       thrust::counting_iterator<index_type>,
-      thrust::counting_iterator<index_type>,
-      ThrustFunctorWrapper<WorkTag>){
+      thrust::counting_iterator<index_type>, ThrustFunctorWrapper<WorkTag>) {
     printf("using join/init/reducer\n");
     return false;
   }
@@ -1290,10 +1289,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // m_reducer));
 
     m_policy.space().fence();
-    
+
     if (sum_thrust<is_thrust_using_no_join_init_red>(temp_iter_d,
-                                                     temp_iter_end_d, t_op)){
-      // work done in SFINAE function above if it is using no join, init, or 
+                                                     temp_iter_end_d, t_op)) {
+      // work done in SFINAE function above if it is using no join, init, or
       // reducer
     } else {
       *m_result_ptr = thrust::transform_reduce(
@@ -1315,9 +1314,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
 #ifdef KOKKOS_ENABLE_THRUST
     if (thrust_execute<is_thrust_possible>(
-                (nwork > 0) && !ValueTraits::IsArray &&
-                !std::is_same<pointer_type,reference_type>::value &&
-                m_result_ptr_host_accessible)) {
+            (nwork > 0) && !ValueTraits::IsArray &&
+            !std::is_same<pointer_type,reference_type>::value &&
+            m_result_ptr_host_accessible)) {
       return;
     }
 #endif
@@ -1333,9 +1332,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
       m_unified_space = cuda_internal_scratch_unified(
-          m_policy.space(),
-          ValueTraits::value_size(
-              ReducerConditional::select(m_functor, m_reducer)));
+          m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
+                                            m_functor, m_reducer)));
 
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
