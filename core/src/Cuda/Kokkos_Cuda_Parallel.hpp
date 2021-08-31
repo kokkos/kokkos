@@ -1150,17 +1150,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   */
 
   static constexpr bool is_thrust_possible =
-      //!ReduceFunctorHasInit<FunctorType>::value &&
-      //!ReduceFunctorHasJoin<FunctorType>::value &&
+      //! ReduceFunctorHasInit<FunctorType>::value &&
+      //! ReduceFunctorHasJoin<FunctorType>::value &&
       !ReduceFunctorHasFinal<FunctorType>::value &&
-      !std::is_same<pointer_type,reference_type>::value &&
-      !std::is_same<value_type,reference_type>::value &&
-      !ValueTraits::IsArray &&
-      !std::is_array<reference_type>::value &&
+      !std::is_same<pointer_type, reference_type>::value &&
+      !std::is_same<value_type, reference_type>::value &&
+      !ValueTraits::IsArray && !std::is_array<reference_type>::value &&
       !std::is_array<pointer_type>::value &&
       !std::is_array<value_type>::value &&
-      !Policy::is_graph_kernel::value; // &&
-      //std::is_same<ReducerType, InvalidType>::value;
+      !Policy::is_graph_kernel::value;  // &&
+  //std::is_same<ReducerType, InvalidType>::value;
       
   static constexpr bool is_thrust_using_no_join_init_red =
       !ReduceFunctorHasInit<FunctorType>::value &&
@@ -1196,7 +1195,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   };
 
   struct ThrustReducerWrapper {
-    //const FunctorType r;
+    // const FunctorType r;
     const ValueJoin r;
 
     KOKKOS_FUNCTION
@@ -1204,44 +1203,45 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     ThrustReducerWrapper(const ValueJoin& op)
         : r(std::move(op)){};
 
-    //KOKKOS_FUNCTION value_type operator()(volatile const  value_type& lhs, volatile const value_type& rhs) const {
-    KOKKOS_FUNCTION value_type operator()(const volatile value_type& lhs, const volatile value_type& rhs) const {
-      value_type lhs_1{ lhs };
-      value_type rhs_1{ rhs };
+    // KOKKOS_FUNCTION value_type operator()(volatile const  value_type& lhs, 
+    // volatile const value_type& rhs) const {
+    KOKKOS_FUNCTION value_type operator()(
+        // const volatile value_type& lhs, const volatile value_type& rhs) const {
+        const value_type& lhs, const value_type& rhs) const {
+      value_type lhs_1{lhs};
+      value_type rhs_1{rhs};
       r(lhs_1, rhs_1);
-      //r(lhs, rhs);
-      //return lhs;
-      return lhs_1;   
+      // r(lhs, rhs);
+      // return lhs;
+      return lhs_1;
     }
   };
 
   template <bool try_regular>
   inline std::enable_if_t<try_regular, bool> sum_thrust(
-     thrust::counting_iterator<index_type> &temp_iter_d,
-     thrust::counting_iterator<index_type> &temp_iter_end_d,
-     ThrustFunctorWrapper<WorkTag> &t_op){
-      printf("using regular\n");
-      *m_result_ptr = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                     t_op, t_op.init, KOKKOS_LAMBDA 
-                                     (const value_type& lhs, const value_type& rhs){
-                                       value_type tmp {};
-                                       tmp += lhs;
-                                       tmp += rhs;
-                                       return tmp;
-                                     });
+      thrust::counting_iterator<index_type>& temp_iter_d,
+      thrust::counting_iterator<index_type>& temp_iter_end_d,
+      ThrustFunctorWrapper<WorkTag> &t_op){
+    printf("using regular\n");
+    *m_result_ptr = thrust::transform_reduce(
+        thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init,
+        KOKKOS_LAMBDA(const value_type& lhs, const value_type& rhs){
+          value_type tmp{};
+          tmp += lhs;
+          tmp += rhs;
+          return tmp;
+        });
 
-      return true;
+    return true;
   }
   template <bool try_regular>
   inline std::enable_if_t<!try_regular, bool> sum_thrust(
-     thrust::counting_iterator<index_type>,
-     thrust::counting_iterator<index_type>,
-     ThrustFunctorWrapper<WorkTag>){
-      printf("using join/init/reducer\n");
-      return false;
-
+      thrust::counting_iterator<index_type>,
+      thrust::counting_iterator<index_type>,
+      ThrustFunctorWrapper<WorkTag>){
+    printf("using join/init/reducer\n");
+    return false;
   }
-
 
   template <bool try_thrust>
   inline std::enable_if_t<!try_thrust, bool> thrust_execute(bool) {
@@ -1265,7 +1265,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // printf("m_policy.begin(): %d\n", m_policy.begin());
     // printf("m_policy.end(): %d\n", m_policy.end());
 
-    //value_type sum;
+    // value_type sum;
 
     // if want to check for default constructible for complex types
     // also needs an overloaded operator+ outside the struct scope
@@ -1278,50 +1278,28 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     */
     value_type init{};
-    if (  ReduceFunctorHasInit<FunctorType>::value ) {
+    if (ReduceFunctorHasInit<FunctorType>::value) {
       ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
     }
-    
+
     ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
-    ThrustReducerWrapper r_op(ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
+    ThrustReducerWrapper r_op(
+        ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
     // or
-    //ThrustReducerWrapper r_op(ReducerConditional::select(m_functor, m_reducer));
+    // ThrustReducerWrapper r_op(ReducerConditional::select(m_functor,
+    // m_reducer));
 
     m_policy.space().fence();
     
-    if (sum_thrust<is_thrust_using_no_join_init_red>(temp_iter_d, temp_iter_end_d, t_op)){
-        // work done in SFINAE function above if it is using no join, init, or reducer
-    }
-    else {
-      *m_result_ptr = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                     t_op, t_op.init, r_op);
-    }
-
-/*
-    if (  !ReduceFunctorHasInit<FunctorType>::value &&
-          !ReduceFunctorHasJoin<FunctorType>::value &&
-           std::is_same<ReducerType, InvalidType>::value ) {
-      printf("using if\n");
-      sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                     t_op, t_op.init, KOKKOS_LAMBDA 
-                                     (const value_type& lhs, const value_type& rhs){
-                                       value_type tmp {};
-                                       tmp += lhs;
-                                       tmp += rhs;
-                                       return tmp;
-                                     });
-
+    if (sum_thrust<is_thrust_using_no_join_init_red>(temp_iter_d,
+                                                     temp_iter_end_d, t_op)){
+      // work done in SFINAE function above if it is using no join, init, or 
+      // reducer
     } else {
-      printf("using else\n");
-      ThrustReducerWrapper r_op(ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
-      sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
-                                     t_op, t_op.init, r_op);
+      *m_result_ptr = thrust::transform_reduce(
+          thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init, r_op);
     }
-*/
-  //  m_policy.space().fence();
 
-   // *m_result_ptr =
-   //     sum;  // is m_result_ptr always the type of pointer to value_type?
     return true;
   }
 
@@ -1336,11 +1314,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  !std::is_same<ReducerType, InvalidType>::value;
 
 #ifdef KOKKOS_ENABLE_THRUST
-    if (thrust_execute<is_thrust_possible>((nwork > 0) &&
-                                            !ValueTraits::IsArray &&
-                                            !std::is_same<pointer_type,reference_type>::value &&
-                                            m_result_ptr_host_accessible)) {
-        return;
+    if (thrust_execute<is_thrust_possible>(
+                (nwork > 0) && !ValueTraits::IsArray &&
+                !std::is_same<pointer_type,reference_type>::value &&
+                m_result_ptr_host_accessible)) {
+      return;
     }
 #endif
     if ((nwork > 0) || need_device_set) {
@@ -1349,10 +1327,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       KOKKOS_ASSERT(block_size > 0);
 
       m_scratch_space = cuda_internal_scratch_space(
-          m_policy.space(),
-          ValueTraits::value_size(
-              ReducerConditional::select(m_functor, m_reducer)) *
-              block_size /* block_size == max block_count */);
+          m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
+                                m_functor, m_reducer)) *
+                                block_size /* block_size == max block_count */);
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
       m_unified_space = cuda_internal_scratch_unified(
@@ -1363,8 +1340,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)),
-                1, 1);
+      dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
+                1);
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
@@ -1404,8 +1381,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           } else {
             const int size = ValueTraits::value_size(
                 ReducerConditional::select(m_functor, m_reducer));
-            DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space,
-                                           size);
+            DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space, size);
           }
         }
       }
