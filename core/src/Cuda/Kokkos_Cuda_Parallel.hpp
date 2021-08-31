@@ -1141,8 +1141,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       // Intentionally do not downcast to word_size_type since we use Cuda
       // atomics in Kokkos_Cuda_ReduceScan.hpp
-      m_scratch_flags =
-          cuda_internal_scratch_flags(m_policy.space(), sizeof(word_size_type));
+      m_scratch_flags = cuda_internal_scratch_flags(m_policy.space(),
+                                                    sizeof(Cuda::size_type));
       m_unified_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_unified(
               m_policy.space(),

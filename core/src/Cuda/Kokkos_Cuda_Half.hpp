@@ -244,7 +244,7 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  half_t operator-() const volatile {
+  half_t operator-() const {
     half_t tmp = *this;
 #ifdef __CUDA_ARCH__
     tmp.val = -tmp.val;
@@ -327,14 +327,12 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator+=(const volatile half_t& rhs) volatile {
+  void operator+=(const volatile half_t& rhs) volatile {
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs += tmp_rhs;
-    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
-    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
-    return *this;
+    *this = tmp_lhs;
   }
 
   // Compound operators: upcast overloads for +=
@@ -371,14 +369,12 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator-=(const volatile half_t& rhs) volatile {
+  void operator-=(const volatile half_t& rhs) volatile {
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs -= tmp_rhs;
-    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
-    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
-    return *this;
+    *this = tmp_lhs;
   }
 
   // Compund operators: upcast overloads for -=
@@ -415,14 +411,12 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator*=(const volatile half_t& rhs) volatile {
+  void operator*=(const volatile half_t& rhs) volatile {
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs *= tmp_rhs;
-    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
-    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
-    return *this;
+    *this = tmp_lhs;
   }
 
   // Compund operators: upcast overloads for *=
@@ -459,14 +453,12 @@ class alignas(2) half_t {
   }
 
   KOKKOS_FUNCTION
-  volatile half_t operator/=(const volatile half_t& rhs) volatile {
+  void operator/=(const volatile half_t& rhs) volatile {
     half_t tmp_rhs = rhs;
     half_t tmp_lhs = *this;
 
     tmp_lhs /= tmp_rhs;
-    volatile uint16_t* val_ptr = reinterpret_cast<volatile uint16_t*>(&val);
-    *val_ptr = *reinterpret_cast<volatile uint16_t*>(&tmp_lhs.val);
-    return *this;
+    *this = tmp_lhs;
   }
 
   // Compund operators: upcast overloads for /=
