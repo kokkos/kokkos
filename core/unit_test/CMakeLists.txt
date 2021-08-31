@@ -209,7 +209,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     elseif(Tag STREQUAL "HIP")
       set(TagHostAccessible HIPHostPinned)
     elseif(Tag STREQUAL "SYCL")
-      set(TagHostAccessible SYCLSharedUSMSpace)
+      set(TagHostAccessible SYCLSharedUSM)
     endif()
 
     set(${Tag}_SOURCES2B)

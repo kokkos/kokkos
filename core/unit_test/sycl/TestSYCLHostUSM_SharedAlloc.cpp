@@ -42,5 +42,5 @@
 //@HEADER
 */
 
-#include <TestSYCLHostUSMSpace_Category.hpp>
+#include <TestSYCLHostUSM_Category.hpp>
 #include <TestSharedAlloc.hpp>
