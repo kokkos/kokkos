@@ -1202,10 +1202,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // ThrustReducerWrapper(const FunctorType& op)
     ThrustReducerWrapper(const ValueJoin& op) : r(std::move(op)){};
 
-    // KOKKOS_FUNCTION value_type operator()(volatile const  value_type& lhs, 
+    // KOKKOS_FUNCTION value_type operator()(volatile const  value_type& lhs,
     // volatile const value_type& rhs) const {
     KOKKOS_FUNCTION value_type operator()(
-        // const volatile value_type& lhs, const volatile value_type& rhs) const 
+        // const volatile value_type& lhs, const volatile value_type& rhs) const
         // {
         const value_type& lhs, const value_type& rhs) const {
       value_type lhs_1{lhs};
@@ -1315,7 +1315,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 #ifdef KOKKOS_ENABLE_THRUST
     if (thrust_execute<is_thrust_possible>(
             (nwork > 0) && !ValueTraits::IsArray &&
-            !std::is_same<pointer_type,reference_type>::value &&
+            !std::is_same<pointer_type, reference_type>::value &&
             m_result_ptr_host_accessible)) {
       return;
     }
@@ -1333,7 +1333,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
       m_unified_space = cuda_internal_scratch_unified(
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
-                                            m_functor, m_reducer)));
+                                m_functor, m_reducer)));
 
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
