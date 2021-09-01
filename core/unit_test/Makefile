@@ -73,7 +73,7 @@ tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
   ) \
 )
 
-GPU_SPACE_TESTS = ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewCopy_a ViewCopy_b ViewMapping_a ViewMapping_b ViewMapping_subview
+GPU_SPACE_TESTS = SharedAlloc ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewCopy_a ViewCopy_b ViewMapping_a ViewMapping_b ViewMapping_subview
 
 SUBVIEW_TESTS = SubView_a SubView_b SubView_c01 SubView_c02 SubView_c03 SubView_c04 SubView_c05 SubView_c06 SubView_c07 SubView_c08 SubView_c09 SubView_c10 SubView_c11 SubView_c12 SubView_c13
 

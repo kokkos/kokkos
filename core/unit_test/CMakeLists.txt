@@ -288,6 +288,7 @@ foreach(Tag HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
     file(MAKE_DIRECTORY ${dir})
     set(${DEVICE}_SOURCES3)
     foreach(Name
+      SharedAlloc
       ViewAPI_a
       ViewAPI_b
       ViewAPI_c
