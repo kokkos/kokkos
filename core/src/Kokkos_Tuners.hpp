@@ -306,7 +306,7 @@ class MultidimensionalSparseTuningProblem {
   static constexpr size_t max_space_dimension_size = MaxDimensionSize;
   static constexpr double tuning_min               = 0.0;
   static constexpr double tuning_max               = 0.999;
-  double tuning_step = tuning_max / max_space_dimension_size;
+  double const tuning_step = tuning_max / max_space_dimension_size;
 
   using StoredProblemSpace =
       typename Impl::MapTypeConverter<ProblemSpaceInput>::type;
