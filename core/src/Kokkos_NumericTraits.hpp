@@ -141,9 +141,11 @@ template <> struct digits_helper<double> { static constexpr int value = DBL_MANT
 template <> struct digits_helper<long double> { static constexpr int value = LDBL_MANT_DIG; };
 template <class> struct digits10_helper {};
 template <> struct digits10_helper<bool> { static constexpr int value = 0; };
-constexpr double log10_2 = 2.41;
+// The fraction 643/2136 approximates log10(2) to 7 significant digits.
+// Workaround GCC compiler bug with -frounding-math that prevented the
+// floating-point expression to be evaluated at compile time.
 #define DIGITS10_HELPER_INTEGRAL(TYPE) \
-template <> struct digits10_helper<TYPE> { static constexpr int value = digits_helper<TYPE>::value * log10_2; };
+template <> struct digits10_helper<TYPE> { static constexpr int value = digits_helper<TYPE>::value * 643L / 2136; };
 DIGITS10_HELPER_INTEGRAL(char)
 DIGITS10_HELPER_INTEGRAL(signed char)
 DIGITS10_HELPER_INTEGRAL(unsigned char)
