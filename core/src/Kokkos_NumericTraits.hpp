@@ -162,13 +162,27 @@ template <> struct digits10_helper<float> { static constexpr int value = FLT_DIG
 template <> struct digits10_helper<double> { static constexpr int value = DBL_DIG; };
 template <> struct digits10_helper<long double> { static constexpr int value = LDBL_DIG; };
 template <class> struct max_digits10_helper {};
-// FIXME not sure why were not defined in my <cfloat>
-//template <> struct max_digits10_helper<float> { static constexpr int value = FLT_DECIMAL_DIG; };
-//template <> struct max_digits10_helper<double> { static constexpr int value = DBL_DECIMAL_DIG; };
-//template <> struct max_digits10_helper<long double> { static constexpr int value = LDBL_DECIMAL_DIG; };
-template <> struct max_digits10_helper<float> { static constexpr int value = 9; };
-template <> struct max_digits10_helper<double> { static constexpr int value = 17; };
-template <> struct max_digits10_helper<long double> { static constexpr int value = 21; };
+// Approximate ceil(digits<T>::value * log10(2) + 1)
+#define MAX_DIGITS10_HELPER(TYPE) \
+template <> struct max_digits10_helper<TYPE> { static constexpr int value = (digits_helper<TYPE>::value * 643L + 2135) / 2136 + 1; };
+#ifdef FLT_DECIMAL_DIG
+template <> struct max_digits10_helper<float> { static constexpr int value = FLT_DECIMAL_DIG; };
+#else
+MAX_DIGITS10_HELPER(float)
+#endif
+#ifdef DBL_DECIMAL_DIG
+template <> struct max_digits10_helper<double> { static constexpr int value = DBL_DECIMAL_DIG; };
+#else
+MAX_DIGITS10_HELPER(double)
+#endif
+#ifdef DECIMAL_DIG
+template <> struct max_digits10_helper<long double> { static constexpr int value = DECIMAL_DIG; };
+#elif LDBL_DECIMAL_DIG
+template <> struct max_digits10_helper<long double> { static constexpr int value = LDBL_DECIMAL_DIG; };
+#else
+MAX_DIGITS10_HELPER(long double)
+#endif
+#undef MAX_DIGITS10_HELPER
 template <class> struct radix_helper {};
 template <> struct radix_helper<bool> { static constexpr int value = 2; };
 template <> struct radix_helper<char> { static constexpr int value = 2; };
