@@ -97,7 +97,8 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     HIPMalloc,
     HIPHostMalloc,
     SYCLMallocDevice,
-    SYCLMallocShared
+    SYCLMallocShared,
+    SYCLMallocHost
   };
 
  private:

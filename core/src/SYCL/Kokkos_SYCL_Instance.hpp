@@ -131,10 +131,12 @@ class SYCLInternal {
     size_t reserve(size_t n);
 
    private:
-    using AllocationSpace =
-        std::conditional_t<Kind == sycl::usm::alloc::device,
-                           Kokkos::Experimental::SYCLDeviceUSMSpace,
-                           Kokkos::Experimental::SYCLSharedUSMSpace>;
+    using AllocationSpace = std::conditional_t<
+        Kind == sycl::usm::alloc::device,
+        Kokkos::Experimental::SYCLDeviceUSMSpace,
+        std::conditional_t<Kind == sycl::usm::alloc::shared,
+                           Kokkos::Experimental::SYCLSharedUSMSpace,
+                           Kokkos::Experimental::SYCLHostUSMSpace>>;
 
     // This will memcpy an object T into memory held by this object
     // returns: a T* to that object

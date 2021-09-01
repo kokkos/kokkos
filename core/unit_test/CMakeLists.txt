@@ -625,13 +625,46 @@ if(Kokkos_ENABLE_SYCL)
       ${SYCL_SOURCES2C}
   )
 
- KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_SYCL2D
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES2D}
   )
- KOKKOS_ADD_EXECUTABLE_AND_TEST(
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL3
+    SOURCES
+      UnitTestMainInit.cpp
+      # FIXME_SYCL
+      sycl/TestSYCL_Task.cpp
+      sycl/TestSYCL_TeamScratchStreams.cpp
+      sycl/TestSYCLHostUSM_SharedAlloc.cpp
+      sycl/TestSYCLHostUSM_ViewAPI_a.cpp
+      sycl/TestSYCLHostUSM_ViewAPI_b.cpp
+      sycl/TestSYCLHostUSM_ViewAPI_c.cpp
+      sycl/TestSYCLHostUSM_ViewAPI_d.cpp
+      sycl/TestSYCLHostUSM_ViewAPI_e.cpp
+      sycl/TestSYCLHostUSM_ViewCopy_a.cpp
+      sycl/TestSYCLHostUSM_ViewCopy_b.cpp
+      sycl/TestSYCLHostUSM_ViewMapping_a.cpp
+      sycl/TestSYCLHostUSM_ViewMapping_b.cpp
+      sycl/TestSYCLHostUSM_ViewMapping_subview.cpp
+      sycl/TestSYCLSharedUSM_SharedAlloc.cpp
+      sycl/TestSYCLSharedUSM_ViewAPI_a.cpp
+      sycl/TestSYCLSharedUSM_ViewAPI_b.cpp
+      sycl/TestSYCLSharedUSM_ViewAPI_c.cpp
+      sycl/TestSYCLSharedUSM_ViewAPI_d.cpp
+      sycl/TestSYCLSharedUSM_ViewAPI_e.cpp
+      sycl/TestSYCLSharedUSM_ViewCopy_a.cpp
+      sycl/TestSYCLSharedUSM_ViewCopy_b.cpp
+      sycl/TestSYCLSharedUSM_ViewMapping_a.cpp
+      sycl/TestSYCLSharedUSM_ViewMapping_b.cpp
+      sycl/TestSYCLSharedUSM_ViewMapping_subview.cpp
+      sycl/TestSYCL_Spaces.cpp
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_SYCLInterOpInit
     SOURCES
       UnitTestMain.cpp

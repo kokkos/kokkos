@@ -42,20 +42,5 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_SYCL_FWD_HPP_
-#define KOKKOS_SYCL_FWD_HPP_
-
-#if defined(KOKKOS_ENABLE_SYCL)
-namespace Kokkos {
-namespace Experimental {
-class SYCLDeviceUSMSpace;  ///< Memory space on SYCL device, not accessible from
-                           ///< the host
-class SYCLSharedUSMSpace;  ///< Memory space accessible from both the SYCL
-                           ///< device and the host
-class SYCLHostUSMSpace;    ///< Memory space accessible from both the SYCL
-                           ///< device and the host (host pinned)
-class SYCL;                ///< Execution space for SYCL
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
-#endif
+#include <TestSYCLSharedUSMSpace_Category.hpp>
+#include <TestViewCopy_b.hpp>
