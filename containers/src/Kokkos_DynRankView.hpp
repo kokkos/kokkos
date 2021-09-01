@@ -2125,20 +2125,15 @@ inline void resize(DynRankView<T, P...>& v,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
 
-  const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  const bool sizeMismatch     = Impl::size_mismatch(v, v.rank(), new_extents);
+  drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
 
-  if (sizeMismatch) {
-    drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
+  Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
 
-    Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
-
-    v = v_resized;
-  }
+  v = v_resized;
 }
 
-/** \brief  Resize a view without copying old data to new data at the
- * corresponding indices. */
+/** \brief  Resize a view with copying old data to new data at the corresponding
+ * indices. */
 template <class T, class... P>
 inline void realloc(DynRankView<T, P...>& v,
                     const size_t n0 = KOKKOS_INVALID_INDEX,
@@ -2154,16 +2149,10 @@ inline void realloc(DynRankView<T, P...>& v,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
 
-  const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
-  const bool sizeMismatch     = Impl::size_mismatch(v, v.rank(), new_extents);
+  const std::string label = v.label();
 
-  if (sizeMismatch) {
-    const std::string label = v.label();
-
-    v = drview_type();  // Deallocate first, if the only view to allocation
-    v = drview_type(label, n0, n1, n2, n3, n4, n5, n6, n7);
-  } else
-    Kokkos::deep_copy(v, typename drview_type::value_type{});
+  v = drview_type();  // Deallocate first, if the only view to allocation
+  v = drview_type(label, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 }  // namespace Kokkos
