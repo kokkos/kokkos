@@ -276,9 +276,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   endif()
 endforeach()
 
-foreach(Tag HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
-  string(REGEX REPLACE "([^-]*)-(.*)" "\\1" DEVICE ${Tag})
-  string(REGEX REPLACE "([^-]*)-(.*)" "\\2" SPACE ${Tag})
+foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
+  string(REGEX REPLACE "([^-]*)-(.*)" "\\1" DEVICE ${PairDeviceSpace})
+  string(REGEX REPLACE "([^-]*)-(.*)" "\\2" SPACE ${PairDeviceSpace})
 
   string(TOUPPER ${DEVICE} UPPER_DEVICE)
   string(TOLOWER ${DEVICE} dir)
