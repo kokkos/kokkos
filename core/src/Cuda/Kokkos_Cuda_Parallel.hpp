@@ -1154,10 +1154,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       //! ReduceFunctorHasJoin<FunctorType>::value &&
       !ReduceFunctorHasFinal<FunctorType>::value &&
       !std::is_same<pointer_type, reference_type>::value &&
-      !std::is_same<value_type, reference_type>::value &&
-      !ValueTraits::IsArray && !std::is_array<reference_type>::value &&
-      !std::is_array<pointer_type>::value &&
-      !std::is_array<value_type>::value &&
+      //! std::is_same<value_type, reference_type>::value &&
       !Policy::is_graph_kernel::value;  // &&
   // std::is_same<ReducerType, InvalidType>::value;
 
@@ -1314,8 +1311,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
 #ifdef KOKKOS_ENABLE_THRUST
     if (thrust_execute<is_thrust_possible>(
-            (nwork > 0) && !ValueTraits::IsArray &&
-            !std::is_same<pointer_type, reference_type>::value &&
+            (nwork > 0) && !std::is_same<pointer_type, reference_type>::value &&
             m_result_ptr_host_accessible)) {
       return;
     }
