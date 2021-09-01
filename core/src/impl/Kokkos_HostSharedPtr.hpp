@@ -93,6 +93,8 @@ class HostSharedPtr {
     // FIXME_OPENMPTARGET requires something like KOKKOS_IMPL_IF_ON_HOST
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);
+#else
+    m_control = nullptr;
 #endif
   }
 
@@ -116,6 +118,8 @@ class HostSharedPtr {
       // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);
+#else
+      m_control = nullptr;
 #endif
     }
     return *this;

@@ -300,7 +300,6 @@ template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
 
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
-  assert(m_size == 0);
   assert(m_q);
 
   if (m_capacity < n) {
@@ -329,7 +328,6 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
 
     m_capacity = 0;
     m_data     = nullptr;
-    m_size     = 0;
   }
   m_q.reset();
 }
