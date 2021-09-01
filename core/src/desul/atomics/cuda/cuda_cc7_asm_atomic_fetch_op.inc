@@ -10,6 +10,8 @@
 #include "cuda_cc7_asm_atomic_fetch_op.inc_predicate"
 #endif
 
+// This version is not generally safe
+// Only here for performance comparison purposes
 #ifdef DESUL_IMPL_ATOMIC_CUDA_PTX_FORCEGLOBAL
 #include "cuda_cc7_asm_atomic_fetch_op.inc_forceglobal"
 #endif
