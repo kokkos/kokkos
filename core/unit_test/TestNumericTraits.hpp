@@ -389,10 +389,18 @@ TEST(TEST_CATEGORY, numeric_traits_sfinae_friendly) {
 }
 
 // Compare to std::numeric_limits
-#define CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(T, TRAIT)                \
-  static_assert(                                                              \
-      Kokkos::Experimental::TRAIT<T>::value == std::numeric_limits<T>::TRAIT, \
-      "")
+template <int V1, int V2>
+struct AssertIntEquality {
+  static constexpr bool value = false;
+};
+template <int V>
+struct AssertIntEquality<V, V> {
+  static constexpr bool value = true;
+};
+#define CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(T, TRAIT)           \
+  static_assert(AssertIntEquality<Kokkos::Experimental::TRAIT<T>::value, \
+                                  std::numeric_limits<T>::TRAIT>::value, \
+                "")
 #define CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(T, TRAIT) \
   static_assert(Kokkos::Experimental::TRAIT<T>::value ==       \
                     std::numeric_limits<T>::TRAIT(),           \
