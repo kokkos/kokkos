@@ -26,11 +26,8 @@ KOKKOS_CFG_DEPENDS(OPTIONS COMPILER_ID)
 # Put a check in just in case people are using this option
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
-# Set the Default for Desul Atomics usage. SYCL is not supported yet.
+# Set the Default for Desul Atomics usage.
 set(_DESUL_ATOMICS_DEFAULT ON)
-if(KOKKOS_ENABLE_SYCL)
-   set(_DESUL_ATOMICS_DEFAULT OFF)
-endif()
 # Intel 17 has an issue where it generates illegal instructions
 # by padding instructions incorrectly, which appears to happen
 # when asking for a few relaxed atomics close to each other
@@ -71,7 +68,7 @@ KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vecto
 KOKKOS_ENABLE_OPTION(LAUNCH_COMPILER      ON  "Whether to potentially use the launch compiler")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
-KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ${_DESUL_ATOMICS_DEFAULT}  "Whether to use desul based atomics - option only during beta")
+KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ON  "Whether to use desul based atomics - option only during beta")
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")

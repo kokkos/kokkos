@@ -29,4 +29,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifdef DESUL_HAVE_OPENMP_ATOMICS
 #include "desul/atomics/Compare_Exchange_OpenMP.hpp"
 #endif
+#ifdef DESUL_HAVE_SYCL_ATOMICS
+#include "desul/atomics/Compare_Exchange_SYCL.hpp"
+#endif
 #endif
