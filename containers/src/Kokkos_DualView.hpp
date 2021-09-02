@@ -877,8 +877,15 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    ::Kokkos::realloc(d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-    h_view = create_mirror_view(d_view);
+    const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
+    const bool sizeMismatch =
+        Impl::size_mismatch(h_view, h_view.rank_dynamic, new_extents);
+
+    if (sizeMismatch) {
+      ::Kokkos::realloc(d_view, n0, n1, n2, n3, n4, n5, n6, n7);
+      h_view = create_mirror_view(d_view);
+    } else
+      ::Kokkos::deep_copy(d_view, typename t_dev::value_type{});
 
     /* Reset dirty flags */
     if (modified_flags.data() == nullptr) {
@@ -899,41 +906,31 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+    const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
+    const bool sizeMismatch =
+        Impl::size_mismatch(h_view, h_view.rank_dynamic, new_extents);
+
     if (modified_flags.data() == nullptr) {
       modified_flags = t_modified_flags("DualView::modified_flags");
     }
     if (modified_flags(1) >= modified_flags(0)) {
       /* Resize on Device */
-      ::Kokkos::resize(d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-      h_view = create_mirror_view(d_view);
+      if (sizeMismatch) {
+        ::Kokkos::resize(d_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        h_view = create_mirror_view(d_view);
 
-      /* Mark Device copy as modified */
-      modified_flags(1) = modified_flags(1) + 1;
-
+        /* Mark Device copy as modified */
+        modified_flags(1) = modified_flags(1) + 1;
+      }
     } else {
       /* Realloc on Device */
-
-      ::Kokkos::realloc(d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-
-      const bool sizeMismatch =
-          (h_view.extent(0) != n0) || (h_view.extent(1) != n1) ||
-          (h_view.extent(2) != n2) || (h_view.extent(3) != n3) ||
-          (h_view.extent(4) != n4) || (h_view.extent(5) != n5) ||
-          (h_view.extent(6) != n6) || (h_view.extent(7) != n7);
-      if (sizeMismatch)
+      if (sizeMismatch) {
         ::Kokkos::resize(h_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        d_view = create_mirror_view(typename t_dev::execution_space(), h_view);
 
-      t_host temp_view = create_mirror_view(d_view);
-
-      /* Remap on Host */
-      Kokkos::deep_copy(temp_view, h_view);
-
-      h_view = temp_view;
-
-      d_view = create_mirror_view(typename t_dev::execution_space(), h_view);
-
-      /* Mark Host copy as modified */
-      modified_flags(0) = modified_flags(0) + 1;
+        /* Mark Host copy as modified */
+        modified_flags(0) = modified_flags(0) + 1;
+      }
     }
   }
 
