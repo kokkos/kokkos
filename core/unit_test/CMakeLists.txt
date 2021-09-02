@@ -286,7 +286,6 @@ foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYC
   if(Kokkos_ENABLE_${UPPER_DEVICE})
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
-    set(${DEVICE}_SOURCES3)
     foreach(Name
       SharedAlloc
       ViewAPI_a
@@ -304,7 +303,7 @@ foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYC
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
-	      "#include <Test${DEVICE}${SPACE}_Category.hpp>\n"
+          "#include <Test${DEVICE}${SPACE}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
@@ -530,7 +529,6 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMainInit.cpp
       cuda/TestCuda_Task.cpp
       cuda/TestCuda_TeamScratchStreams.cpp
-      cuda/TestCudaHostPinned_SharedAlloc.cpp
       ${Cuda_SOURCES3}
       cuda/TestCuda_Spaces.cpp
   )
@@ -647,7 +645,6 @@ if(Kokkos_ENABLE_SYCL)
       # FIXME_SYCL
       sycl/TestSYCL_Task.cpp
       sycl/TestSYCL_TeamScratchStreams.cpp
-      sycl/TestSYCLHostUSM_SharedAlloc.cpp
       ${SYCL_SOURCES3}
       sycl/TestSYCL_Spaces.cpp
   )
