@@ -310,7 +310,7 @@ class MultidimensionalSparseTuningProblem {
   // Not declared as static constexpr to work around the following compiler bug
   // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96862
   // where a floating-point expression cannot be constexpr under -frounding-math
-  double const tuning_step = tuning_max / max_space_dimension_size;
+  double tuning_step = tuning_max / max_space_dimension_size;
 
   using StoredProblemSpace =
       typename Impl::MapTypeConverter<ProblemSpaceInput>::type;
