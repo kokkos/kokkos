@@ -55,7 +55,7 @@
 // hierarchical reducers. It avoids hitting the code path which we wanted to
 // write but doesn't work. undef'ed at the end.
 // Intel compilers prefer the non-workaround version.
-#ifndef KOKKOS_ARCH_INTEL_GEN
+#ifndef KOKKOS_ARCH_INTEL_GPU
 #define KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 #endif
 
