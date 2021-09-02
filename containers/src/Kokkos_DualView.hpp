@@ -778,10 +778,11 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// If \c Device is the same as this DualView's device type, then
   /// mark the device's data as modified.  Otherwise, mark the host's
   /// data as modified.
-  template <class Device>
+  template <class Device, class Dummy = DualView,
+            std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
+                nullptr>
   void modify() {
     if (modified_flags.data() == nullptr) return;
-    if (impl_dualview_is_single_device::value) return;
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -813,8 +814,17 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 #endif
   }
 
+  template <
+      class Device, class Dummy = DualView,
+      std::enable_if_t<Dummy::impl_dualview_is_single_device::value>* = nullptr>
+  void modify() {
+    return;
+  }
+
+  template <class Dummy = DualView,
+            std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
+                nullptr>
   inline void modify_host() {
-    if (impl_dualview_is_single_device::value) return;
     if (modified_flags.data() != nullptr) {
       modified_flags(0) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
@@ -834,8 +844,17 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     }
   }
 
+  template <
+      class Dummy = DualView,
+      std::enable_if_t<Dummy::impl_dualview_is_single_device::value>* = nullptr>
+  inline void modify_host() {
+    return;
+  }
+
+  template <class Dummy = DualView,
+            std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
+                nullptr>
   inline void modify_device() {
-    if (impl_dualview_is_single_device::value) return;
     if (modified_flags.data() != nullptr) {
       modified_flags(1) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
@@ -853,6 +872,13 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       }
 #endif
     }
+  }
+
+  template <
+      class Dummy = DualView,
+      std::enable_if_t<Dummy::impl_dualview_is_single_device::value>* = nullptr>
+  inline void modify_device() {
+    return;
   }
 
   inline void clear_sync_state() {
