@@ -209,7 +209,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     elseif(Tag STREQUAL "HIP")
       set(TagHostAccessible HIPHostPinned)
     elseif(Tag STREQUAL "SYCL")
-      set(TagHostAccessible SYCLSharedUSMSpace)
+      set(TagHostAccessible SYCLSharedUSM)
     endif()
 
     set(${Tag}_SOURCES2B)
@@ -273,6 +273,43 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
     SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
     SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+  endif()
+endforeach()
+
+foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
+  string(REGEX REPLACE "([^-]*)-(.*)" "\\1" DEVICE ${PairDeviceSpace})
+  string(REGEX REPLACE "([^-]*)-(.*)" "\\2" SPACE ${PairDeviceSpace})
+
+  string(TOUPPER ${DEVICE} UPPER_DEVICE)
+  string(TOLOWER ${DEVICE} dir)
+
+  if(Kokkos_ENABLE_${UPPER_DEVICE})
+    set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
+    file(MAKE_DIRECTORY ${dir})
+    foreach(Name
+      SharedAlloc
+      ViewAPI_a
+      ViewAPI_b
+      ViewAPI_c
+      ViewAPI_d
+      ViewAPI_e
+      ViewCopy_a
+      ViewCopy_b
+      ViewMapping_a
+      ViewMapping_b
+      ViewMapping_subview
+      )
+      set(file ${dir}/Test${DEVICE}${SPACE}_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+          "#include <Test${DEVICE}${SPACE}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${DEVICE}_SOURCES3 ${file})
+    endforeach()
+    list(APPEND ${DEVICE}_SOURCES ${${DEVICE}_SOURCES3})
   endif()
 endforeach()
 
@@ -492,28 +529,7 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMainInit.cpp
       cuda/TestCuda_Task.cpp
       cuda/TestCuda_TeamScratchStreams.cpp
-      cuda/TestCudaHostPinned_SharedAlloc.cpp
-      cuda/TestCudaHostPinned_ViewAPI_a.cpp
-      cuda/TestCudaHostPinned_ViewAPI_b.cpp
-      cuda/TestCudaHostPinned_ViewAPI_c.cpp
-      cuda/TestCudaHostPinned_ViewAPI_d.cpp
-      cuda/TestCudaHostPinned_ViewAPI_e.cpp
-      cuda/TestCudaHostPinned_ViewCopy_a.cpp
-      cuda/TestCudaHostPinned_ViewCopy_b.cpp
-      cuda/TestCudaHostPinned_ViewMapping_a.cpp
-      cuda/TestCudaHostPinned_ViewMapping_b.cpp
-      cuda/TestCudaHostPinned_ViewMapping_subview.cpp
-      cuda/TestCudaUVM_SharedAlloc.cpp
-      cuda/TestCudaUVM_ViewAPI_a.cpp
-      cuda/TestCudaUVM_ViewAPI_b.cpp
-      cuda/TestCudaUVM_ViewAPI_c.cpp
-      cuda/TestCudaUVM_ViewAPI_d.cpp
-      cuda/TestCudaUVM_ViewAPI_e.cpp
-      cuda/TestCudaUVM_ViewCopy_a.cpp
-      cuda/TestCudaUVM_ViewCopy_b.cpp
-      cuda/TestCudaUVM_ViewMapping_a.cpp
-      cuda/TestCudaUVM_ViewMapping_b.cpp
-      cuda/TestCudaUVM_ViewMapping_subview.cpp
+      ${Cuda_SOURCES3}
       cuda/TestCuda_Spaces.cpp
   )
 
@@ -553,16 +569,6 @@ if(Kokkos_ENABLE_HIP)
       ${HIP_SOURCES}
       hip/TestHIP_ScanUnit.cpp
       hip/TestHIP_TeamScratchStreams.cpp
-      hip/TestHIPHostPinned_ViewAPI_a.cpp
-      hip/TestHIPHostPinned_ViewAPI_b.cpp
-      hip/TestHIPHostPinned_ViewAPI_c.cpp
-      hip/TestHIPHostPinned_ViewAPI_d.cpp
-      hip/TestHIPHostPinned_ViewAPI_e.cpp
-      hip/TestHIPHostPinned_ViewCopy_a.cpp
-      hip/TestHIPHostPinned_ViewCopy_b.cpp
-      hip/TestHIPHostPinned_ViewMapping_a.cpp
-      hip/TestHIPHostPinned_ViewMapping_b.cpp
-      hip/TestHIPHostPinned_ViewMapping_subview.cpp
       hip/TestHIP_AsyncLauncher.cpp
       hip/TestHIP_BlocksizeDeduction.cpp
   )
@@ -639,28 +645,7 @@ if(Kokkos_ENABLE_SYCL)
       # FIXME_SYCL
       sycl/TestSYCL_Task.cpp
       sycl/TestSYCL_TeamScratchStreams.cpp
-      sycl/TestSYCLHostUSM_SharedAlloc.cpp
-      sycl/TestSYCLHostUSM_ViewAPI_a.cpp
-      sycl/TestSYCLHostUSM_ViewAPI_b.cpp
-      sycl/TestSYCLHostUSM_ViewAPI_c.cpp
-      sycl/TestSYCLHostUSM_ViewAPI_d.cpp
-      sycl/TestSYCLHostUSM_ViewAPI_e.cpp
-      sycl/TestSYCLHostUSM_ViewCopy_a.cpp
-      sycl/TestSYCLHostUSM_ViewCopy_b.cpp
-      sycl/TestSYCLHostUSM_ViewMapping_a.cpp
-      sycl/TestSYCLHostUSM_ViewMapping_b.cpp
-      sycl/TestSYCLHostUSM_ViewMapping_subview.cpp
-      sycl/TestSYCLSharedUSM_SharedAlloc.cpp
-      sycl/TestSYCLSharedUSM_ViewAPI_a.cpp
-      sycl/TestSYCLSharedUSM_ViewAPI_b.cpp
-      sycl/TestSYCLSharedUSM_ViewAPI_c.cpp
-      sycl/TestSYCLSharedUSM_ViewAPI_d.cpp
-      sycl/TestSYCLSharedUSM_ViewAPI_e.cpp
-      sycl/TestSYCLSharedUSM_ViewCopy_a.cpp
-      sycl/TestSYCLSharedUSM_ViewCopy_b.cpp
-      sycl/TestSYCLSharedUSM_ViewMapping_a.cpp
-      sycl/TestSYCLSharedUSM_ViewMapping_b.cpp
-      sycl/TestSYCLSharedUSM_ViewMapping_subview.cpp
+      ${SYCL_SOURCES3}
       sycl/TestSYCL_Spaces.cpp
   )
 
