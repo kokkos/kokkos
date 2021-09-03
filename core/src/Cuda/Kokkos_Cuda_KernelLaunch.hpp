@@ -163,13 +163,15 @@ inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
 // KernelFuncPtr does not necessarily contain that type information.
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 inline void configure_shmem_preference(KernelFuncPtr const& func,
-                                       bool prefer_shmem) {
+                                       int prefer_shmem) {
 #ifndef KOKKOS_ARCH_KEPLER
   // On Kepler the L1 has no benefit since it doesn't cache reads
   auto set_cache_config = [&] {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-        func,
-        (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
+    CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+        func, (prefer_shmem == 0)
+                  ? cudaFuncCachePreferL1
+                  : (prefer_shmem == 1) ? cudaFuncCachePreferEqual
+                                        : cudaFuncCachePreferShared));
     return prefer_shmem;
   };
   static bool cache_config_preference_cached = set_cache_config();
@@ -188,7 +190,7 @@ std::enable_if_t<Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
     Policy const& policy, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
-    bool& prefer_shmem) {
+    int& prefer_shmem) {
   int const block_size        = block.x * block.y * block.z;
   int const desired_occupancy = policy.impl_get_desired_occupancy().value();
 
@@ -205,15 +207,38 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 
   if (dynamic_shmem > shmem) {
     shmem        = dynamic_shmem;
-    prefer_shmem = false;
+    prefer_shmem = 2;
   }
 }
 
 template <class Policy>
 std::enable_if_t<!Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    Policy const&, cudaDeviceProp const&, cudaFuncAttributes const&,
-    dim3 const& /*block*/, int& /*shmem*/, bool& /*prefer_shmem*/) {}
+    Policy const&, cudaDeviceProp const& properties,
+    cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
+    int& prefer_shmem) {
+  // prefer_shmem = 0 - cudaFuncCachePreferL1
+  // prefer_shmem = 1 - cudaFuncCachePreferEqual
+  // prefer_shmem = 2 - cudaFuncCachePreferShared
+
+  // If prefer_shmem is already set to 0, return.
+  if (prefer_shmem == 0) return;
+
+  int const block_size = block.x * block.y * block.z;
+  int active_blocks    = properties.maxThreadsPerMultiProcessor / block_size;
+  size_t const shmem_per_sm_prefer_equal =
+      get_shmem_per_sm_prefer_equal(properties);
+  size_t const static_shmem = attributes.sharedSizeBytes;
+  int const dynamic_shmem =
+      shmem_per_sm_prefer_equal / active_blocks - static_shmem;
+
+  // If the inflight use of shared memory is greater than requested shared
+  // memory, set pref_shmem to 1.
+  if (dynamic_shmem > shmem) {
+    prefer_shmem = 1;
+  } else
+    prefer_shmem = 2;
+}
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
 //==============================================================================
@@ -347,7 +372,7 @@ struct CudaParallelLaunchKernelInvoker<
 
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
-      CudaInternal const* cuda_instance, bool prefer_shmem) {
+      CudaInternal const* cuda_instance, int prefer_shmem) {
     //----------------------------------------
     auto const& graph = Impl::get_cuda_graph_from_kernel(driver);
     KOKKOS_EXPECTS(bool(graph));
@@ -439,7 +464,7 @@ struct CudaParallelLaunchKernelInvoker<
 
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
-      CudaInternal const* cuda_instance, bool prefer_shmem) {
+      CudaInternal const* cuda_instance, int prefer_shmem) {
     //----------------------------------------
     auto const& graph = Impl::get_cuda_graph_from_kernel(driver);
     KOKKOS_EXPECTS(bool(graph));
@@ -561,7 +586,7 @@ struct CudaParallelLaunchKernelInvoker<
 
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
-      CudaInternal const* cuda_instance, bool prefer_shmem) {
+      CudaInternal const* cuda_instance, int prefer_shmem) {
     // Just use global memory; coordinating through events to share constant
     // memory with the non-graph interface is not really reasonable since
     // events don't work with Graphs directly, and this would anyway require
@@ -608,7 +633,7 @@ struct CudaParallelLaunchImpl<
   inline static void launch_kernel(const DriverType& driver, const dim3& grid,
                                    const dim3& block, int shmem,
                                    const CudaInternal* cuda_instance,
-                                   bool prefer_shmem) {
+                                   int prefer_shmem) {
     if (!Impl::is_empty_launch(grid, block)) {
       // Prevent multiple threads to simultaneously set the cache configuration
       // preference and launch the same kernel
