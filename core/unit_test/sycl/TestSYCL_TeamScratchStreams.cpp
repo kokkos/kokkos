@@ -101,11 +101,18 @@ void sycl_queue_scratch_test(
     int N, int T, int M_base,
     Kokkos::View<int64_t, Kokkos::Experimental::SYCLDeviceUSMSpace> counter) {
   constexpr int K = 4;
-  std::array<sycl::queue, K> queue;
+  Kokkos::Experimental::SYCL default_space;
+  sycl::context default_context = default_space.sycl_context();
+
+  sycl::default_selector device_selector;
+  sycl::queue queue(default_context, device_selector);
+
   std::array<Kokkos::Experimental::SYCL, K> sycl;
   for (int i = 0; i < K; i++) {
-    sycl[i] = Kokkos::Experimental::SYCL(queue[i]);
+    sycl[i] = Kokkos::Experimental::SYCL(
+        sycl::queue(default_context, device_selector));
   }
+
   // Test that growing scratch size in subsequent calls doesn't crash things
 #if defined(KOKKOS_ENABLE_OPENMP)
 #pragma omp parallel
