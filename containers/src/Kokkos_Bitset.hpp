@@ -317,14 +317,18 @@ class ConstBitset {
   enum { block_shift = Kokkos::Impl::integral_power_of_two(block_size) };
 
  public:
+  KOKKOS_FORCEINLINE_FUNCTION
   ConstBitset() : m_size(0) {}
 
+  KOKKOS_FORCEINLINE_FUNCTION
   ConstBitset(Bitset<Device> const& rhs)
       : m_size(rhs.m_size), m_blocks(rhs.m_blocks) {}
 
+  KOKKOS_FORCEINLINE_FUNCTION
   ConstBitset(ConstBitset<Device> const& rhs)
       : m_size(rhs.m_size), m_blocks(rhs.m_blocks) {}
 
+  KOKKOS_FORCEINLINE_FUNCTION
   ConstBitset<Device>& operator=(Bitset<Device> const& rhs) {
     this->m_size   = rhs.m_size;
     this->m_blocks = rhs.m_blocks;
@@ -332,6 +336,7 @@ class ConstBitset {
     return *this;
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION
   ConstBitset<Device>& operator=(ConstBitset<Device> const& rhs) {
     this->m_size   = rhs.m_size;
     this->m_blocks = rhs.m_blocks;
