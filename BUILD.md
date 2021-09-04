@@ -171,6 +171,9 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
     * Whether HPX supports asynchronous dispatch
     * BOOL Default: OFF
+* Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC
+    * Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2). This is an experimental performance feature and currently has issue when using with UCX. See https://github.com/kokkos/kokkos/issues/4228 for more details. 
+    * BOOL Default: Off
 * Kokkos_ENABLE_LARGE_MEM_TESTS
     * Whether to perform extra large memory tests
     * BOOL_Default: OFF
