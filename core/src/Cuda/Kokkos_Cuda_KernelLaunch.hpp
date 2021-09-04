@@ -167,7 +167,7 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
 #ifndef KOKKOS_ARCH_KEPLER
   // On Kepler the L1 has no benefit since it doesn't cache reads
   auto set_cache_config = [&] {
-    CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
         func, (prefer_shmem == 0)
                   ? cudaFuncCachePreferL1
                   : (prefer_shmem == 1) ? cudaFuncCachePreferEqual
@@ -207,7 +207,7 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 
   if (dynamic_shmem > shmem) {
     shmem        = dynamic_shmem;
-    prefer_shmem = 2;
+    prefer_shmem = 0;
   }
 }
 
