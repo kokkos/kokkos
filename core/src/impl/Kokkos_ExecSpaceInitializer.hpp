@@ -52,20 +52,13 @@ namespace Impl {
 
 class ExecSpaceInitializerBase {
  public:
-  void initialize(const InitArguments &args);
-  void finalize(const bool all_spaces);
+  virtual void initialize(const InitArguments &args)                     = 0;
+  virtual void finalize(const bool all_spaces)                           = 0;
   virtual void fence()                                                   = 0;
   virtual void fence(const std::string &)                                = 0;
-  virtual void print_exec_space_name(std::ostream &strm)                 = 0;
   virtual void print_configuration(std::ostream &msg, const bool detail) = 0;
   ExecSpaceInitializerBase()          = default;
   virtual ~ExecSpaceInitializerBase() = default;
-
- private:
-  virtual void do_initialize(const InitArguments &args) = 0;
-  virtual void do_finalize(const bool all_spaces)       = 0;
-  bool m_is_initialized                                 = false;
-  bool m_is_finalized                                   = false;
 };
 
 }  // namespace Impl

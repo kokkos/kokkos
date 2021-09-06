@@ -166,11 +166,10 @@ namespace Impl {
 
 class SYCLSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
  public:
-  void do_initialize(const InitArguments& args) final;
-  void do_finalize(const bool) final;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
   void fence() final;
   void fence(const std::string&) final;
-  void print_exec_space_name(std::ostream& msg) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
