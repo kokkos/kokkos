@@ -161,6 +161,7 @@ class Serial {
         Kokkos::Tools::Experimental::SpecialSynchronizationCases::
             GlobalDeviceSynchronization,
         []() {});  // TODO: correct device ID
+    Kokkos::memory_fence();
   }
 
   void fence() const { fence("Kokkos::Serial::fence: Unnamed Instance Fence"); }
@@ -168,6 +169,7 @@ class Serial {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
         name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
         []() {});  // TODO: correct device ID
+    Kokkos::memory_fence();
   }
 
   /** \brief  Return the maximum amount of concurrency.  */

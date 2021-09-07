@@ -211,7 +211,9 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
     //     *queue = task;
     //   }
     //   old_head = *queue;
-    old_head = Kokkos::atomic_compare_exchange(queue, old_head, task);
+    old_head = Kokkos::Impl::desul_atomic_compare_exchange(
+        const_cast<task_root_type **>(queue), old_head, task,
+        Kokkos::Impl::MemoryOrderSeqCst(), Kokkos::Impl::MemoryScopeDevice());
 
     if (old_head_tmp == old_head) return true;
   }
@@ -274,6 +276,8 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
       //
       // This thread has exclusive access to
       // the queue and the popped task's m_next.
+
+      Kokkos::memory_fence();
 
       task_root_type *volatile &next = task->m_next;
 
@@ -554,8 +558,9 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::reschedule(
 
   task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
-
-  if (lock != Kokkos::atomic_exchange(&task->m_next, zero)) {
+  if (lock != Kokkos::Impl::desul_atomic_exchange(
+                  &task->m_next, zero, Kokkos::Impl::MemoryOrderSeqCst(),
+                  Kokkos::Impl::MemoryScopeDevice())) {
     Kokkos::abort("TaskScheduler::respawn ERROR: already respawned");
   }
 }
@@ -602,8 +607,9 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
 
     // Stop other tasks from adding themselves to this task's wait queue
     // by locking the head of this task's wait queue.
-
-    task_root_type *x = Kokkos::atomic_exchange(&t.m_wait, lock);
+    task_root_type *x = Kokkos::Impl::desul_atomic_exchange(
+        const_cast<task_root_type **>(&t.m_wait), lock,
+        Kokkos::Impl::MemoryOrderSeqCst(), Kokkos::Impl::MemoryScopeDevice());
 
     if (x != (task_root_type *)lock) {
       // This thread has transitioned this 'task' to complete.

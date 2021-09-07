@@ -70,6 +70,13 @@ void check_distinctive(Kokkos::Experimental::HIP exec1,
   ASSERT_NE(exec1.hip_stream(), exec2.hip_stream());
 }
 #endif
+#ifdef KOKKOS_ENABLE_SYCL
+void check_distinctive(Kokkos::Experimental::SYCL exec1,
+                       Kokkos::Experimental::SYCL exec2) {
+  ASSERT_NE(*exec1.impl_internal_space_instance()->m_queue,
+            *exec2.impl_internal_space_instance()->m_queue);
+}
+#endif
 }  // namespace
 
 void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
@@ -85,7 +92,8 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
   ASSERT_EQ(sum1, sum2);
   ASSERT_EQ(sum1, N * (N - 1) / 2);
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   // Eliminate unused function warning
   // (i.e. when compiling for Serial and CUDA, during Serial compilation the
   // Cuda overload is unused ...)
@@ -95,6 +103,10 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
 #endif
 #ifdef KOKKOS_ENABLE_HIP
     check_distinctive(Kokkos::Experimental::HIP(), Kokkos::Experimental::HIP());
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+    check_distinctive(Kokkos::Experimental::SYCL(),
+                      Kokkos::Experimental::SYCL());
 #endif
   }
 #endif

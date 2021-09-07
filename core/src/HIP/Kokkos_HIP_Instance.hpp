@@ -183,7 +183,7 @@ namespace Impl {
 inline void create_HIP_instances(std::vector<HIP> &instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     hipStream_t stream;
-    HIP_SAFE_CALL(hipStreamCreate(&stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
     instances[s] = HIP(stream, true);
   }
 }

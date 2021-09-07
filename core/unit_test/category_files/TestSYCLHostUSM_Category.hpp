@@ -42,5 +42,12 @@
 //@HEADER
 */
 
-#include <TestCudaHostPinned_Category.hpp>
-#include <TestViewMapping_a.hpp>
+#ifndef KOKKOS_TEST_SYCL_HOST_USM_SPACE_HPP
+#define KOKKOS_TEST_SYCL_HOST_USM_SPACE_HPP
+
+#include <gtest/gtest.h>
+
+#define TEST_CATEGORY sycl_host_usm
+#define TEST_EXECSPACE Kokkos::Experimental::SYCLHostUSMSpace
+
+#endif

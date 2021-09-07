@@ -87,10 +87,11 @@ void initialize_host_cuda_lock_arrays() {
   DESUL_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 #endif
   if (g_host_cuda_lock_arrays.atomic != nullptr) return;
-  CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.atomic,
-                            sizeof(int) * (CUDA_SPACE_ATOMIC_MASK + 1)));
-  CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.scratch,
-                            sizeof(int) * (Cuda::concurrency())));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMalloc(&g_host_cuda_lock_arrays.atomic,
+                 sizeof(int) * (CUDA_SPACE_ATOMIC_MASK + 1)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.scratch,
+                                        sizeof(int) * (Cuda::concurrency())));
   Impl::cuda_device_synchronize(
       "Kokkos::Impl::initialize_host_cuda_lock_arrays: Pre Init Lock Arrays");
   g_host_cuda_lock_arrays.n = Cuda::concurrency();

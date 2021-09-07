@@ -1243,7 +1243,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     // to avoid incomplete type errors from usng Kokkos::Cuda directly.
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence();
+      typename traits::device_type::memory_space::execution_space().fence(
+          "Kokkos::OffsetView::OffsetView(): fence before UVM allocation");
     }
 #endif
     //------------------------------------------------------------
@@ -1255,7 +1256,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 #if defined(KOKKOS_ENABLE_CUDA)
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence();
+      typename traits::device_type::memory_space::execution_space().fence(
+          "Kokkos::OffsetView::OffsetView(): fence after UVM allocation");
     }
 #endif
     //------------------------------------------------------------

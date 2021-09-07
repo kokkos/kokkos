@@ -151,7 +151,7 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 #define KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()                 \
   {                                                             \
     if (::Kokkos::Impl::lock_array_copied == 0) {               \
-      HIP_SAFE_CALL(hipMemcpyToSymbol(                          \
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbol(              \
           HIP_SYMBOL(::Kokkos::Impl::g_device_hip_lock_arrays), \
           &::Kokkos::Impl::g_host_hip_lock_arrays,              \
           sizeof(::Kokkos::Impl::HIPLockArrays)));              \

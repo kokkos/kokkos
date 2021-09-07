@@ -17,6 +17,26 @@ void atomic_store(volatile T* const dest, desul::Impl::dont_deduce_this_paramete
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_add (volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_add (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
+#ifdef DESUL_IMPL_ATOMIC_CUDA_USE_DOUBLE_ATOMICADD
+KOKKOS_INLINE_FUNCTION
+double atomic_fetch_add(volatile double* const dest, double val) {
+  #ifdef __CUDA_ARCH__
+  return atomicAdd(const_cast<double*>(dest),val);
+  #else
+  return desul::atomic_fetch_add (const_cast<double*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
+  #endif
+};
+
+KOKKOS_INLINE_FUNCTION
+double atomic_fetch_sub(volatile double* const dest, double val) {
+  #ifdef __CUDA_ARCH__
+  return atomicAdd(const_cast<double*>(dest),-val);
+  #else
+  return desul::atomic_fetch_sub (const_cast<double*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
+  #endif
+};
+#endif
+
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_sub (volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_sub (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
@@ -125,6 +145,14 @@ void atomic_min(volatile T* const dest, desul::Impl::dont_deduce_this_parameter_
 
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_max(volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_max (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
+
+// FIXME: Desul doesn't have atomic_and yet so call fetch_and
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_and(volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { (void) desul::atomic_fetch_and (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
+
+// FIXME: Desul doesn't have atomic_or yet so call fetch_or
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_or (volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { (void) desul::atomic_fetch_or  (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_inc(volatile T* const dest) { return desul::atomic_inc(const_cast<T*>(dest),desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }

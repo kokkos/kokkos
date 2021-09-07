@@ -90,42 +90,20 @@ static std::atomic<int> num_uvm_allocations(0);
 
 }  // namespace
 
-DeepCopy<CudaSpace, CudaSpace, Cuda>::DeepCopy(void *dst, const void *src,
-                                               size_t n) {
-  CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
+void DeepCopyCuda(void *dst, const void *src, size_t n) {
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
 }
 
-DeepCopy<HostSpace, CudaSpace, Cuda>::DeepCopy(void *dst, const void *src,
-                                               size_t n) {
-  CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
-}
-
-DeepCopy<CudaSpace, HostSpace, Cuda>::DeepCopy(void *dst, const void *src,
-                                               size_t n) {
-  CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
-}
-
-DeepCopy<CudaSpace, CudaSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
-                                               const void *src, size_t n) {
-  CUDA_SAFE_CALL(
-      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
-}
-
-DeepCopy<HostSpace, CudaSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
-                                               const void *src, size_t n) {
-  CUDA_SAFE_CALL(
-      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
-}
-
-DeepCopy<CudaSpace, HostSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
-                                               const void *src, size_t n) {
-  CUDA_SAFE_CALL(
+void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
+                       size_t n) {
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
 }
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   cudaStream_t s = cuda_get_deep_copy_stream();
-  CUDA_SAFE_CALL(cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
   Impl::cuda_stream_synchronize(
       s,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
@@ -233,11 +211,11 @@ void *CudaSpace::impl_allocate(
 
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif (CUDART_VERSION >= 11020)
+#elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
   } else {
     error_code = cudaMalloc(&ptr, arg_alloc_size);
   }
@@ -364,16 +342,16 @@ void CudaSpace::impl_deallocate(
   try {
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif (CUDART_VERSION >= 11020)
+#elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
     if (arg_alloc_size >= memory_threshold_g) {
-      CUDA_SAFE_CALL(cudaDeviceSynchronize());
-      CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
-      CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
     } else {
-      CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }
 #else
-    CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #endif
   } catch (...) {
   }
@@ -408,7 +386,7 @@ void CudaUVMSpace::impl_deallocate(
   try {
     if (arg_alloc_ptr != nullptr) {
       Kokkos::Impl::num_uvm_allocations--;
-      CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }
   } catch (...) {
   }
@@ -438,7 +416,7 @@ void CudaHostPinnedSpace::impl_deallocate(
                                       reported_size);
   }
   try {
-    CUDA_SAFE_CALL(cudaFreeHost(arg_alloc_ptr));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(arg_alloc_ptr));
   } catch (...) {
   }
 }
@@ -499,7 +477,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
   resDesc.res.linear.sizeInBytes = alloc_size;
   resDesc.res.linear.devPtr      = alloc_ptr;
 
-  CUDA_SAFE_CALL(
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaCreateTextureObject(&tex_obj, &resDesc, &texDesc, nullptr));
 
   return tex_obj;
@@ -618,7 +596,7 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
   if ((ptr == nullptr) || (bytes == 0)) return;
   cudaPointerAttributes attr;
-  CUDA_SAFE_CALL(cudaPointerGetAttributes(&attr, ptr));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attr, ptr));
   // I measured this and it turns out prefetching towards the host slows
   // DualView syncs down. Probably because the latency is not too bad in the
   // first place for the pull down. If we want to change that provde
@@ -630,8 +608,8 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
 #endif
   if (to_device && is_managed &&
       space.cuda_device_prop().concurrentManagedAccess) {
-    CUDA_SAFE_CALL(cudaMemPrefetchAsync(ptr, bytes, space.cuda_device(),
-                                        space.cuda_stream()));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemPrefetchAsync(
+        ptr, bytes, space.cuda_device(), space.cuda_stream()));
   }
 }
 

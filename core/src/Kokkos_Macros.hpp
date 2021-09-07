@@ -516,6 +516,7 @@
 #if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
 #endif
+// FIXME_SYCL Tasks not implemented
 #elif !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_TASKDAG
 #endif
@@ -529,7 +530,7 @@
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 #endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else

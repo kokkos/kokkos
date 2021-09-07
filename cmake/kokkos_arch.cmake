@@ -339,7 +339,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER8)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    NVHPC   -tp=host
+    NVHPC   -tp=pwr8
     DEFAULT -mcpu=power8 -mtune=power8
   )
 ENDIF()
@@ -347,7 +347,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER9)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    NVHPC   native
+    NVHPC   -tp=pwr9
     DEFAULT -mcpu=power9 -mtune=power9
   )
 ENDIF()
@@ -394,7 +394,7 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_FLAGS(
-    DEFAULT -fsycl
+    DEFAULT -fsycl -fno-sycl-id-queries-fit-in-int
   )
   COMPILER_SPECIFIC_OPTIONS(
     DEFAULT -fsycl-unnamed-lambda
