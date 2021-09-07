@@ -134,7 +134,8 @@ class HIPInternal {
   mutable void *m_team_scratch_ptr            = nullptr;
   mutable std::mutex m_team_scratch_mutex;
 
-  bool was_finalized = false;
+  bool m_was_finalized   = false;
+  bool m_was_initialized = false;
 
   // FIXME_HIP: these want to be per-device, not per-stream...  use of 'static'
   // here will break once there are multiple devices though

@@ -350,9 +350,10 @@ void CudaInternal::fence() const {
 
 void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
                               bool manage_stream) {
-  if (was_finalized)
-    Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
-  was_initialized = true;
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the Cuda backend after finalize is illegal.\n");
+
   if (is_initialized()) return;
 
   enum { WordSize = sizeof(size_type) };
@@ -584,6 +585,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
   }
+  m_was_initialized = true;
 }
 
 //----------------------------------------------------------------------------
@@ -722,9 +724,9 @@ std::pair<void *, int> CudaInternal::resize_team_scratch_space(
 
 void CudaInternal::finalize() {
   // skip if finalize() has already been called
-  if (was_finalized) return;
+  if (m_was_finalized) return;
 
-  was_finalized = true;
+  m_was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     // Only finalize this if we're the singleton
     if (this == &singleton()) {

@@ -97,7 +97,9 @@ class SerialInternal {
                                size_t thread_local_bytes);
 
   HostThreadTeamData m_thread_team_data;
-  bool m_is_initialized = false;
+  bool m_is_initialized  = false;
+  bool m_was_initialized = false;
+  bool m_was_finalized   = false;
 };
 }  // namespace Impl
 

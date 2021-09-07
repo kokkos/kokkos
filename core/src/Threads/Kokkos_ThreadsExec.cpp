@@ -572,9 +572,16 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
 int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
 
+bool ThreadsExec::m_was_initialized = false;
+bool ThreadsExec::m_was_finalized   = false;
+
 void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
                              unsigned use_cores_per_numa,
                              bool allow_asynchronous_threadpool) {
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the Threads backend after finalize is illegal.\n");
+
   // need to provide an initializer for Intel compilers
   static const Sentinel sentinel = {};
 
@@ -733,6 +740,7 @@ void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
   Impl::init_lock_array_host_space();
 
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
+  m_was_initialized = true;
 }
 
 //----------------------------------------------------------------------------
@@ -779,6 +787,8 @@ void ThreadsExec::finalize() {
   s_threads_process.m_pool_size      = 1;
   s_threads_process.m_pool_fan_size  = 0;
   s_threads_process.m_pool_state     = ThreadsExec::Inactive;
+
+  m_was_finalized = true;
 
   Kokkos::Profiling::finalize();
 }

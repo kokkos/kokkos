@@ -186,8 +186,9 @@ void HIPInternal::fence(const std::string &name) const {
 
 void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
                              bool manage_stream) {
-  if (was_finalized)
-    Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the HIP backend after finalize is illegal.\n");
 
   if (is_initialized()) return;
 
@@ -314,6 +315,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
   }
+  m_was_initialized = true;
 }
 
 //----------------------------------------------------------------------------
@@ -393,7 +395,10 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 
 void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
-  was_finalized = true;
+
+  if (m_was_finalized) return;
+  m_was_finalized = true;
+
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordHIP =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;

@@ -126,8 +126,8 @@ class CudaInternal {
   mutable void* m_team_scratch_ptr[10];
   mutable std::atomic_int m_team_scratch_pool[10];
 
-  bool was_initialized = false;
-  bool was_finalized   = false;
+  bool m_was_initialized = false;
+  bool m_was_finalized   = false;
 
   // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
   //  here will break once there are multiple devices though

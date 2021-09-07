@@ -204,6 +204,8 @@ namespace Experimental {
 class HPX {
  private:
   static bool m_hpx_initialized;
+  static bool m_was_initialized;
+  static bool m_was_finalized;
   static std::atomic<uint32_t> m_next_instance_id;
   uint32_t m_instance_id = 0;
 

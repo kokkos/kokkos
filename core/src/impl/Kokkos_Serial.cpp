@@ -62,6 +62,10 @@ namespace Impl {
 bool SerialInternal::is_initialized() { return m_is_initialized; }
 
 void SerialInternal::initialize() {
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the Serial backend after finalize is illegal.\n");
+
   if (is_initialized()) return;
 
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
@@ -69,7 +73,8 @@ void SerialInternal::initialize() {
   // Init the array of locks used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
 
-  m_is_initialized = true;
+  m_is_initialized  = true;
+  m_was_initialized = true;
 }
 
 void SerialInternal::finalize() {
@@ -83,11 +88,13 @@ void SerialInternal::finalize() {
                      m_thread_team_data.scratch_bytes());
 
     m_thread_team_data.scratch_assign(nullptr, 0, 0, 0, 0, 0);
+    m_was_finalized = true;
   }
 
   Kokkos::Profiling::finalize();
 
   m_is_initialized = false;
+  m_was_finalized  = true;
 }
 
 SerialInternal& SerialInternal::singleton() {

@@ -53,6 +53,9 @@ namespace Kokkos {
 namespace Experimental {
 
 bool HPX::m_hpx_initialized = false;
+bool HPX::m_was_initialized = false;
+bool HPX::m_was_finalized   = false;
+
 std::atomic<uint32_t> HPX::m_next_instance_id{1};
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 std::atomic<uint32_t> HPX::m_active_parallel_region_count{0};
@@ -75,6 +78,10 @@ int HPX::concurrency() {
 }
 
 void HPX::impl_initialize(int thread_count) {
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the HPX backend after finalize is illegal.\n");
+
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
     std::vector<std::string> config = {
@@ -104,9 +111,14 @@ void HPX::impl_initialize(int thread_count) {
 
     m_hpx_initialized = true;
   }
+  m_was_initialized = true;
 }
 
 void HPX::impl_initialize() {
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the HPX backend after finalize is illegal.\n");
+
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
     std::vector<std::string> config = {
@@ -131,6 +143,7 @@ void HPX::impl_initialize() {
 
     m_hpx_initialized = true;
   }
+  m_was_initialized = true;
 }
 
 bool HPX::impl_is_initialized() noexcept {
@@ -150,6 +163,7 @@ void HPX::impl_finalize() {
           "HPX but something else already stopped HPX\n");
     }
   }
+  m_was_finalized = true;
 }
 
 }  // namespace Experimental

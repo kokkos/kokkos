@@ -107,6 +107,10 @@ class ThreadsExec {
   int m_pool_size;
   int m_pool_fan_size;
   int volatile m_pool_state;  ///< State for global synchronizations
+  // For now initialize and finalize are static functions in threads,
+  // so this needs to be static too
+  static bool m_was_initialized;
+  static bool m_was_finalized;
 
   // Members for dynamic scheduling
   // Which thread am I stealing from currently

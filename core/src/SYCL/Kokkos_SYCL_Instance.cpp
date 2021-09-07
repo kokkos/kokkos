@@ -93,8 +93,9 @@ void SYCLInternal::initialize(const sycl::device& d) {
 
 // FIXME_SYCL
 void SYCLInternal::initialize(const sycl::queue& q) {
-  if (was_finalized)
-    Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
+  if (m_was_initialized && m_was_finalized)
+    Kokkos::abort(
+        "Reinitializing the SYCL backend after finalize is illegal.\n");
 
   if (is_initialized()) return;
 
@@ -160,6 +161,7 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
   m_team_scratch_current_size = 0;
   m_team_scratch_ptr          = nullptr;
+  m_was_initialized           = true;
 }
 
 void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
@@ -185,7 +187,8 @@ uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
 
 void SYCLInternal::finalize() {
   SYCL().fence();
-  was_finalized = true;
+  if (m_was_finalized) return;
+  m_was_finalized = true;
 
   using RecordSYCL = Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>;
   if (nullptr != m_scratchSpace)
