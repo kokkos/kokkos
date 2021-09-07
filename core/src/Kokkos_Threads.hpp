@@ -187,15 +187,14 @@ struct DeviceTypeTraits<Threads> {
 
 namespace Impl {
 
-class ThreadsSpaceInitializer final : public ExecSpaceInitializerBase {
+class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   ThreadsSpaceInitializer()  = default;
   ~ThreadsSpaceInitializer() = default;
-  void do_initialize(const InitArguments& args) final;
-  void do_finalize(const bool) final;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
   void fence() final;
   void fence(const std::string&) final;
-  void print_exec_space_name(std::ostream& strm) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
