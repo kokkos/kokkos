@@ -224,16 +224,31 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   // If prefer_shmem is already set to 0, return.
   if (prefer_shmem == 0) return;
 
-  int const block_size = block.x * block.y * block.z;
-  int active_blocks    = properties.maxThreadsPerMultiProcessor / block_size;
+  // Calculate maximum number of blocks that can simultaneously run on a SM
+  // based on the block size requested.
+  int const block_size   = block.x * block.y * block.z;
+  int max_blocks_threads = properties.maxThreadsPerMultiProcessor / block_size;
+
+  // Calculate the maximum number of blocks that can simultaneously run based on
+  // the number of registers.
+  int const regs_per_sm     = properties.regsPerMultiprocessor;
+  int const regs_per_thread = attributes.numRegs;
+  int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
+
+  // Set active_blocks to be the minimum of the two.
+  int const active_blocks = std::min({max_blocks_threads, max_blocks_regs});
+
+  // Returns approximately half of the configurable cache size.
   size_t const shmem_per_sm_prefer_equal =
       get_shmem_per_sm_prefer_equal(properties);
   size_t const static_shmem = attributes.sharedSizeBytes;
+
+  // Caclulate how much shmem will be assigned per active block.
   int const dynamic_shmem =
       shmem_per_sm_prefer_equal / active_blocks - static_shmem;
 
-  // If the inflight use of shared memory is greater than requested shared
-  // memory, set pref_shmem to 1.
+  // If dynamic_shmem is greater than requested shmem, set
+  // cudaFuncCachePreferEqual, else set cudaFuncCachePreferShared.
   if (dynamic_shmem > shmem) {
     prefer_shmem = 1;
   } else
