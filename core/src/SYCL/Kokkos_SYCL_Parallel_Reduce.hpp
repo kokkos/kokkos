@@ -46,6 +46,8 @@
 #define KOKKOS_SYCL_PARALLEL_REDUCE_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#include <vector>
 #if defined(KOKKOS_ENABLE_SYCL)
 
 //----------------------------------------------------------------------------
@@ -246,12 +248,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                            &results_ptr[0]);
         });
       });
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
-      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      space.fence();
-#endif
+      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -324,12 +321,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   static_cast<const FunctorType&>(functor), n_wgroups <= 1);
             });
       });
-// FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
-      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      space.fence();
-#endif
+      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
 
       last_reduction_event = parallel_reduce_event;
 
@@ -345,7 +337,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      space.fence();
+      space.fence(
+          "Kokkos::Impl::ParallelReduce::sycl_direct_launch: fence due to "
+          "inaccessible reducer result location");
     }
 
     return last_reduction_event;
@@ -467,8 +461,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         *m_space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    const int nwork = m_policy.m_num_tiles;
-    const int block_size =
+    const typename Policy::index_type nwork = m_policy.m_num_tiles;
+    const typename Policy::index_type block_size =
         std::pow(2, std::ceil(std::log2(m_policy.m_prod_tile_dims)));
 
     const sycl::range<1> local_range(block_size);
@@ -521,12 +515,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                            &results_ptr[0]);
         });
       });
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
-      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      m_space.fence();
-#endif
+      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -606,23 +595,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
         });
       });
-// FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
-      q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      m_space.fence();
-#endif
+      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
 
       // FIXME_SYCL this is likely not necessary, see above
       auto deep_copy_event =
           q.memcpy(results_ptr, results_ptr2,
                    sizeof(*m_result_ptr) * value_count * n_wgroups);
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
-      q.submit_barrier(sycl::vector_class<sycl::event>{deep_copy_event});
-#else
-      m_space.fence();
-#endif
+      q.submit_barrier(std::vector<sycl::event>{deep_copy_event});
       last_reduction_event = deep_copy_event;
 
       first_run = false;
@@ -637,7 +616,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           m_space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      m_space.fence();
+      m_space.fence(
+          "Kokkos::Impl::ParallelReduce::sycl_direct_launch: fence after deep "
+          "copying results back");
     }
 
     return last_reduction_event;

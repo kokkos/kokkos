@@ -420,9 +420,13 @@ class UnorderedMap {
   bool begin_erase() {
     bool result = !erasable();
     if (is_insertable_map && result) {
-      execution_space().fence();
+      execution_space().fence(
+          "Kokkos::UnorderedMap::begin_erase: fence before setting erasable "
+          "flag");
       set_flag(erasable_idx);
-      execution_space().fence();
+      execution_space().fence(
+          "Kokkos::UnorderedMap::begin_erase: fence after setting erasable "
+          "flag");
     }
     return result;
   }
@@ -430,10 +434,12 @@ class UnorderedMap {
   bool end_erase() {
     bool result = erasable();
     if (is_insertable_map && result) {
-      execution_space().fence();
+      execution_space().fence(
+          "Kokkos::UnorderedMap::end_erase: fence before erasing");
       Impl::UnorderedMapErase<declared_map_type> f(*this);
       f.apply();
-      execution_space().fence();
+      execution_space().fence(
+          "Kokkos::UnorderedMap::end_erase: fence after erasing");
       reset_flag(erasable_idx);
     }
     return result;

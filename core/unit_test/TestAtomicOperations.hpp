@@ -644,7 +644,10 @@ struct AndFunctor {
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_and(&data(), (T)i1); }
+  void operator()(int) const {
+    T result = Kokkos::atomic_fetch_and(&data(), (T)i1);
+    Kokkos::atomic_and(&data(), result);
+  }
 
   AndFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -715,7 +718,10 @@ struct OrFunctor {
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_or(&data(), (T)i1); }
+  void operator()(int) const {
+    T result = Kokkos::atomic_fetch_or(&data(), (T)i1);
+    Kokkos::atomic_or(&data(), result);
+  }
 
   OrFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };

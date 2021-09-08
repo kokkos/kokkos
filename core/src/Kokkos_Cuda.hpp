@@ -55,6 +55,7 @@
 
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_CudaSpace.hpp>
+#include <Cuda/Kokkos_Cuda_Error.hpp>  // CUDA_SAFE_CALL
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
@@ -278,17 +279,18 @@ class CudaSpaceInitializer : public ExecSpaceInitializerBase {
 
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
-  ZeroMemset(const Kokkos::Cuda& exec_space, const View<DT, DP...>& dst,
+  ZeroMemset(const Kokkos::Cuda& exec_space_instance,
+             const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    CUDA_SAFE_CALL(cudaMemsetAsync(
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemsetAsync(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
-        exec_space.cuda_stream()));
+        exec_space_instance.cuda_stream()));
   }
 
   ZeroMemset(const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    CUDA_SAFE_CALL(
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMemset(dst.data(), 0,
                    dst.size() * sizeof(typename View<DT, DP...>::value_type)));
   }

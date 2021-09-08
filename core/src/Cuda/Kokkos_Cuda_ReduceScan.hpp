@@ -573,10 +573,11 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     }
   }
 
+  template <class SizeType = Cuda::size_type>
   __device__ static inline bool scalar_inter_block_reduction(
       const FunctorType& functor, const Cuda::size_type /*block_id*/,
-      const Cuda::size_type block_count, Cuda::size_type* const shared_data,
-      Cuda::size_type* const global_data, Cuda::size_type* const global_flags) {
+      const Cuda::size_type block_count, SizeType* const shared_data,
+      SizeType* const global_data, Cuda::size_type* const global_flags) {
     Scalar* const global_team_buffer_element = ((Scalar*)global_data);
     Scalar* const my_global_team_buffer_element =
         global_team_buffer_element + blockIdx.x;
@@ -775,12 +776,13 @@ __device__ void cuda_intra_block_reduce_scan(
  *  Global reduce result is in the last threads' 'shared_data' location.
  */
 
-template <bool DoScan, class FunctorType, class ArgTag>
+template <bool DoScan, class FunctorType, class ArgTag,
+          class SizeType = Cuda::size_type>
 __device__ bool cuda_single_inter_block_reduce_scan2(
     const FunctorType& functor, const Cuda::size_type block_id,
-    const Cuda::size_type block_count, Cuda::size_type* const shared_data,
-    Cuda::size_type* const global_data, Cuda::size_type* const global_flags) {
-  using size_type   = Cuda::size_type;
+    const Cuda::size_type block_count, SizeType* const shared_data,
+    SizeType* const global_data, Cuda::size_type* const global_flags) {
+  using size_type   = SizeType;
   using ValueTraits = FunctorValueTraits<FunctorType, ArgTag>;
   using ValueJoin   = FunctorValueJoin<FunctorType, ArgTag>;
   using ValueInit   = FunctorValueInit<FunctorType, ArgTag>;
@@ -870,11 +872,12 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
   return is_last_block;
 }
 
-template <bool DoScan, class FunctorType, class ArgTag>
+template <bool DoScan, class FunctorType, class ArgTag,
+          class SizeType = Cuda::size_type>
 __device__ bool cuda_single_inter_block_reduce_scan(
     const FunctorType& functor, const Cuda::size_type block_id,
-    const Cuda::size_type block_count, Cuda::size_type* const shared_data,
-    Cuda::size_type* const global_data, Cuda::size_type* const global_flags) {
+    const Cuda::size_type block_count, SizeType* const shared_data,
+    SizeType* const global_data, Cuda::size_type* const global_flags) {
   using ValueTraits = FunctorValueTraits<FunctorType, ArgTag>;
   if (!DoScan && ValueTraits::StaticValueSize > 0)
     return Kokkos::Impl::CudaReductionsFunctor<

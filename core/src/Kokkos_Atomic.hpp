@@ -76,6 +76,37 @@
 #endif
 #include <Kokkos_Atomics_Desul_Wrapper.hpp>
 #include <Kokkos_Atomics_Desul_Volatile_Wrapper.hpp>
+#include <impl/Kokkos_Utilities.hpp>
+
+// Helper functions for places where we really should have called SeqCst atomics
+// anyway These can go away when we call desul unconditionally Non-Desul
+// versions are below
+namespace Kokkos {
+namespace Impl {
+using desul::MemoryOrderSeqCst;
+using desul::MemoryScopeDevice;
+
+template <class T>
+KOKKOS_INLINE_FUNCTION T
+desul_atomic_exchange(T* dest, const Kokkos::Impl::identity_t<T> val,
+                      MemoryOrderSeqCst, MemoryScopeDevice) {
+  return desul::atomic_exchange(const_cast<T*>(dest), val,
+                                desul::MemoryOrderSeqCst(),
+                                desul::MemoryScopeDevice());
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
+    T* dest, Kokkos::Impl::identity_t<const T> compare,
+    Kokkos::Impl::identity_t<const T> val, MemoryOrderSeqCst,
+    MemoryScopeDevice) {
+  return desul::atomic_compare_exchange(dest, compare, val,
+                                        desul::MemoryOrderSeqCst(),
+                                        desul::MemoryScopeDevice());
+}
+
+}  // namespace Impl
+}  // namespace Kokkos
 #else
 
 #include <Kokkos_HostSpace.hpp>
@@ -334,6 +365,31 @@ inline const char* atomic_query_version() {
 #endif
 
 //----------------------------------------------------------------------------
+
+// Helper functions for places where we really should have called SeqCst atomics
+// anyway These can go away when we call desul unconditionally
+namespace Kokkos {
+namespace Impl {
+struct MemoryOrderSeqCst {};
+struct MemoryScopeDevice {};
+
+template <class T>
+KOKKOS_INLINE_FUNCTION T
+desul_atomic_exchange(T* dest, Kokkos::Impl::identity_t<const T> val,
+                      MemoryOrderSeqCst, MemoryScopeDevice) {
+  return Kokkos::atomic_exchange(dest, val);
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
+    T* dest, Kokkos::Impl::identity_t<const T> compare,
+    Kokkos::Impl::identity_t<const T> val, MemoryOrderSeqCst,
+    MemoryScopeDevice) {
+  return Kokkos::atomic_compare_exchange(dest, compare, val);
+}
+
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif /* !KOKKOS_ENABLE_IMPL_DESUL_ATOMICS */
 #endif /* KOKKOS_ATOMIC_HPP */

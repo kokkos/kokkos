@@ -108,6 +108,10 @@ if [[ "$HOSTNAME" == cn* ]]; then # Warning: very generic name
   MACHINE=mayer
 fi
 
+if [[ "$HOSTNAME" == caraway* ]]; then
+  MACHINE=caraway
+fi
+
 if [[ "$HOSTNAME" == kokkos-dev\.sandia\.gov* ]]; then
   MACHINE=kokkos-dev
 fi
@@ -493,6 +497,23 @@ elif [ "$MACHINE" = "mayer" ]; then
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMV8_THUNDERX2"
+  fi
+
+elif [ "$MACHINE" = "caraway" ]; then
+  SKIP_HWLOC=True
+
+  BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+
+  HIPCLANG_BUILD_LIST="Hip_Serial,Hip_OpenMP"
+  HIPCLANG_WARNING_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG"
+
+  # Format: (compiler module-list build-list exe-name warning-flag)
+  COMPILERS=("rocm/4.2.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
+             "rocm/4.3.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
+  )
+
+  if [ -z "$ARCH_FLAG" ]; then
+    ARCH_FLAG="--arch=VEGA906"
   fi
 
 elif [ "$MACHINE" = "blake" ]; then

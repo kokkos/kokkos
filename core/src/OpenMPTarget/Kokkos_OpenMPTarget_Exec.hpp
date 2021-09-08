@@ -1348,28 +1348,31 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
+  // FIXME_OPENMPTARGET: Still need to figure out how to get value_count here.
+  const int value_count = 1;
+
 #pragma omp barrier
   TeamThread_scratch[0] = init_result;
 #pragma omp barrier
 
-  if constexpr (std::is_arithmetic<ValueType>::value) {
-#pragma omp for reduction(+ : TeamThread_scratch[:1])
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-      ValueType tmp = ValueType();
-      lambda(i, tmp);
-      TeamThread_scratch[0] += tmp;
-    }
-  } else {
-#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
-
-#pragma omp for reduction(custom : TeamThread_scratch[:1])
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-      ValueType tmp = ValueType();
-      lambda(i, tmp);
-      join(TeamThread_scratch[0], tmp);
-    }
+#pragma omp for
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    lambda(i, TeamThread_scratch[omp_get_num_threads() * value_count]);
   }
 
+  // Reduce all partial results within a team.
+  const int team_size      = omp_get_num_threads();
+  int tree_neighbor_offset = 1;
+  do {
+#pragma omp for
+    for (int i = 0; i < team_size - tree_neighbor_offset;
+         i += 2 * tree_neighbor_offset) {
+      const int neighbor = i + tree_neighbor_offset;
+      join(lambda, &TeamThread_scratch[i * value_count],
+           &TeamThread_scratch[neighbor * value_count]);
+    }
+    tree_neighbor_offset *= 2;
+  } while (tree_neighbor_offset < team_size);
   init_result = TeamThread_scratch[0];
 }
 

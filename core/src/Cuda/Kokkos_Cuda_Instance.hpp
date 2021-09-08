@@ -217,7 +217,7 @@ namespace Impl {
 inline void create_Cuda_instances(std::vector<Cuda>& instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     cudaStream_t stream;
-    CUDA_SAFE_CALL(cudaStreamCreate(&stream));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
     instances[s] = Cuda(stream, true);
   }
 }

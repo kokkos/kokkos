@@ -77,7 +77,7 @@ class HIPInternalDevices {
 };
 
 HIPInternalDevices::HIPInternalDevices() {
-  HIP_SAFE_CALL(hipGetDeviceCount(&m_hipDevCount));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&m_hipDevCount));
 
   if (m_hipDevCount > MAXIMUM_DEVICE_COUNT) {
     Kokkos::abort(
@@ -85,7 +85,7 @@ HIPInternalDevices::HIPInternalDevices() {
         "have. Please report this to github.com/kokkos/kokkos.");
   }
   for (int i = 0; i < m_hipDevCount; ++i) {
-    HIP_SAFE_CALL(hipGetDeviceProperties(m_hipProp + i, i));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(m_hipProp + i, i));
   }
 }
 
@@ -178,7 +178,7 @@ void HIPInternal::fence(const std::string &name) const {
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
       [&]() {
-        HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+        KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
         // can reset our cycle id now as well
         m_cycleId = 0;
       });
@@ -214,7 +214,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
     m_hipDev     = hip_device_id;
     m_deviceProp = hipProp;
 
-    HIP_SAFE_CALL(hipSetDevice(m_hipDev));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
     m_stream                    = stream;
     m_manage_stream             = manage_stream;
@@ -283,8 +283,8 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
       m_scratchConcurrentBitset = reinterpret_cast<uint32_t *>(r->data());
 
-      HIP_SAFE_CALL(hipMemset(m_scratchConcurrentBitset, 0,
-                              sizeof(uint32_t) * buffer_bound));
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchConcurrentBitset, 0,
+                                          sizeof(uint32_t) * buffer_bound));
     }
     //----------------------------------
 
@@ -309,10 +309,10 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
   if (m_stream == nullptr) {
-    HIP_SAFE_CALL(hipHostMalloc((void **)&constantMemHostStaging,
-                                HIPTraits::ConstantMemoryUsage));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc((void **)&constantMemHostStaging,
+                                            HIPTraits::ConstantMemoryUsage));
 
-    HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
   }
 }
 
@@ -366,7 +366,7 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
 
     m_scratchFlags = reinterpret_cast<size_type *>(r->data());
 
-    HIP_SAFE_CALL(
+    KOKKOS_IMPL_HIP_SAFE_CALL(
         hipMemset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain));
   }
 
@@ -392,7 +392,7 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
-  this->fence();
+  this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordHIP =
@@ -406,7 +406,7 @@ void HIPInternal::finalize() {
       Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
 
     if (m_manage_stream && m_stream != nullptr)
-      HIP_SAFE_CALL(hipStreamDestroy(m_stream));
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
 
     m_hipDev                    = -1;
     m_hipArch                   = -1;
@@ -425,34 +425,36 @@ void HIPInternal::finalize() {
     m_team_scratch_ptr          = nullptr;
   }
   if (nullptr != d_driverWorkArray) {
-    HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
     d_driverWorkArray = nullptr;
   }
 
   // only destroy these if we're finalizing the singleton
   if (this == &singleton()) {
-    HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
-    HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
   }
 }
 
 char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
   std::lock_guard<std::mutex> const lock(m_mutexWorkArray);
   if (d_driverWorkArray == nullptr) {
-    HIP_SAFE_CALL(
+    KOKKOS_IMPL_HIP_SAFE_CALL(
         hipHostMalloc(&d_driverWorkArray,
                       m_maxDriverCycles * m_maxDriverTypeSize * sizeof(char),
                       hipHostMallocNonCoherent));
   }
   if (driverTypeSize > m_maxDriverTypeSize) {
     // fence handles the cycle id reset for us
-    fence();
-    HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
+    fence(
+        "Kokkos::HIPInternal::get_next_driver: fence before reallocating "
+        "resources");
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
     m_maxDriverTypeSize = driverTypeSize;
     if (m_maxDriverTypeSize % 128 != 0)
       m_maxDriverTypeSize =
           m_maxDriverTypeSize + 128 - m_maxDriverTypeSize % 128;
-    HIP_SAFE_CALL(
+    KOKKOS_IMPL_HIP_SAFE_CALL(
         hipHostMalloc(&d_driverWorkArray,
                       m_maxDriverCycles * m_maxDriverTypeSize * sizeof(char),
                       hipHostMallocNonCoherent));
@@ -460,7 +462,9 @@ char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
     m_cycleId = (m_cycleId + 1) % m_maxDriverCycles;
     if (m_cycleId == 0) {
       // ensure any outstanding kernels are completed before we wrap around
-      fence();
+      fence(
+          "Kokkos::HIPInternal::get_next_driver: fence before reusing first "
+          "driver");
     }
   }
   return &d_driverWorkArray[m_maxDriverTypeSize * m_cycleId];
@@ -504,7 +508,7 @@ void hip_device_synchronize(const std::string &name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
-      [&]() { HIP_SAFE_CALL(hipDeviceSynchronize()); });
+      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
 }
 
 void hip_internal_error_throw(hipError_t e, const char *name, const char *file,

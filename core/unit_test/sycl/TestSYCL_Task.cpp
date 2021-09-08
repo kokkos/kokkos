@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,5 +43,5 @@
 //@HEADER
 */
 
-#include <TestHIPHostPinned_Category.hpp>
-#include <TestViewAPI_a.hpp>
+#include <TestSYCL_Category.hpp>
+#include <TestTaskScheduler.hpp>

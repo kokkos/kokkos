@@ -161,7 +161,7 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 #define KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE()                      \
   {                                                                   \
     if (::Kokkos::Impl::lock_array_copied == 0) {                     \
-      CUDA_SAFE_CALL(                                                 \
+      KOKKOS_IMPL_CUDA_SAFE_CALL(                                     \
           cudaMemcpyToSymbol(Kokkos::Impl::g_device_cuda_lock_arrays, \
                              &Kokkos::Impl::g_host_cuda_lock_arrays,  \
                              sizeof(Kokkos::Impl::CudaLockArrays)));  \

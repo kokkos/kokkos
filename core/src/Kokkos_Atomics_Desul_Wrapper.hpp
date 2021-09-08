@@ -53,6 +53,26 @@ void store_fence() { return desul::atomic_thread_fence(desul::MemoryOrderRelease
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_add (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_add (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
+#ifdef DESUL_IMPL_ATOMIC_CUDA_USE_DOUBLE_ATOMICADD
+KOKKOS_INLINE_FUNCTION
+double atomic_fetch_add(double* const dest, double val) {
+  #ifdef __CUDA_ARCH__
+  return atomicAdd(dest,val);
+  #else
+  return desul::atomic_fetch_add (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
+  #endif
+};
+
+KOKKOS_INLINE_FUNCTION
+double atomic_fetch_sub(double* const dest, double val) {
+  #ifdef __CUDA_ARCH__
+  return atomicAdd(dest,-val);
+  #else
+  return desul::atomic_fetch_sub (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
+  #endif
+};
+#endif
+
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_sub (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_sub (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
@@ -161,6 +181,14 @@ void atomic_min(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T
 
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_max(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_max (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
+
+// FIXME: Desul doesn't have atomic_and yet so call fetch_and
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_and(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { (void) desul::atomic_fetch_and (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
+
+// FIXME: Desul doesn't have atomic_or yet so call fetch_or
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_or(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val)  { (void) desul::atomic_fetch_or (dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_inc(T* const dest) { return desul::atomic_inc(dest, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
