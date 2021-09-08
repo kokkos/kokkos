@@ -293,8 +293,13 @@ void check_correct_initialization(const Kokkos::InitArguments& argstruct) {
 
 // TODO: Add check whether correct number of threads are actually started.
 void test_no_arguments() {
+  Kokkos::finalize();
+  Kokkos::finalize();
   Kokkos::initialize();
   check_correct_initialization(Kokkos::InitArguments());
+  Kokkos::initialize();
+  check_correct_initialization(Kokkos::InitArguments());
+  Kokkos::finalize();
   Kokkos::finalize();
 }
 
