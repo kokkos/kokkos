@@ -1251,8 +1251,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     printf("using CUDA Thrust\n");
 
-    using thrust_iter = thrust::counting_iterator<index_type>;
-
     thrust::counting_iterator<index_type> temp_iter_d(m_policy.begin());
 
     thrust::counting_iterator<index_type> temp_iter_end_d(m_policy.end());
