@@ -289,7 +289,7 @@ class TestRangePolicyConstruction {
   }
   void test_runtime_parameters() {
     using policy_t     = Kokkos::RangePolicy<>;
-    using index_t      = policy_t::member_type;
+    using index_t      = policy_t::index_type;
     index_t work_begin = 5;
     index_t work_end   = 15;
     index_t chunk_size = 10;
