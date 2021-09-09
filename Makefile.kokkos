@@ -1217,7 +1217,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   endif
 endif
 
-# Figure out the architecture flag for ROCm.
+# Figure out the architecture flag for SYCL.
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
   # Lets start with adding architecture defines
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN), 1)
