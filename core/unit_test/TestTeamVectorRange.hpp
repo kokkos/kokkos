@@ -495,22 +495,22 @@ bool Test(int test) {
 
 // With SYCL 33*8 exceeds the maximum work group size
 #ifdef KOKKOS_ENABLE_SYCL
-  int team_size = 31;
+  int team_size = 1;
 #else
   int team_size = 33;
 #endif
   if (team_size > int(ExecutionSpace::concurrency()))
     team_size = int(ExecutionSpace::concurrency());
-  passed = passed && test_scalar<int, ExecutionSpace>(1, team_size, test);
+/*  passed = passed && test_scalar<int, ExecutionSpace>(1, team_size, test);
   passed = passed &&
            test_scalar<long long int, ExecutionSpace>(1, team_size, test);
   passed = passed && test_scalar<float, ExecutionSpace>(1, team_size, test);
   passed = passed && test_scalar<double, ExecutionSpace>(1, team_size, test);
   // FIXME_OPENMPTARGET - Use of custom reducers currently results in runtime
-  // memory errors.
+  // memory errors.*/
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-/*  passed =
-      passed && test_scalar<my_complex, ExecutionSpace>(1, team_size, test);*/
+  passed =
+      passed && test_scalar<my_complex, ExecutionSpace>(1, team_size, test);
 #endif
 
   return passed;
