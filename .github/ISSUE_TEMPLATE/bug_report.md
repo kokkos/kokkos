@@ -8,14 +8,22 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear description of what the bug is, error log.
+Please provide a concise, clear description of the bug, as well as any
+available error logs.  
 
-**To Reproduce**
-A reproducer should list:
+**To Reproduce the Bug**
+
+Please also include the following items:
+
 1. compilers (with versions)
-2. Kokkos release or commit used
-3. platform/backends (e.g. HIP-AMD, or CUDA, OpenMP, etc)
-4. minimal code that reproduces the bug
+2. Kokkos release or commit used (i.e., the sha1 number)
+3. platform and backend (e.g. Carawy and HIP-AMD, or Weaver and CUDA, OpenMP, etc)
+4. cmake configure command
+5. output from cmake command 
+4. command line and / or code needed to reproduce the bug
+5. please also attach the "kokksCore_config.h" header file (generated during
+the build);
+
 
 **Any additional info**
 Add any other context about the problem here.
