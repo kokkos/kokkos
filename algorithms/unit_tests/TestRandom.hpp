@@ -208,6 +208,9 @@ struct test_random_functor {
 // a different unit test. This one here happens without desul atomics.
 // Inserting an assembly nop instruction changes the alignment and
 // works round this.
+//
+// 17.0.4 for 64bit Random works with 1/1/1/2/1
+// 17.0.4 for 1024bit Random works with 1/1/1/1/1
 #ifdef KOKKOS_COMPILER_INTEL
 #if (KOKKOS_COMPILER_INTEL < 1800)
       asm volatile("nop\n");
@@ -228,10 +231,17 @@ struct test_random_functor {
       atomic_fetch_add(&density_1d(ind3_1d), 1);
 #ifdef KOKKOS_COMPILER_INTEL
 #if (KOKKOS_COMPILER_INTEL < 1800)
+      if (std::is_same<rnd_type, Kokkos::Random_XorShift64<device_type>>::value)
+        asm volatile("nop\n");
       asm volatile("nop\n");
 #endif
 #endif
       atomic_fetch_add(&density_3d(ind1_3d, ind2_3d, ind3_3d), 1);
+#ifdef KOKKOS_COMPILER_INTEL
+#if (KOKKOS_COMPILER_INTEL < 1800)
+      asm volatile("nop\n");
+#endif
+#endif
     }
     rand_pool.free_state(rand_gen);
   }
