@@ -1290,9 +1290,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     */
     value_type init{};
-    if (ReduceFunctorHasInit<FunctorType>::value) {
+    if (ReduceFunctorHasInit<FunctorType>::value || // FunctorType for user Inits
+        ReduceFunctorHasInit<ReducerType>::value) { // ReducerType for builtins
       ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
+      printf("Here\n\n");
     }
+    m_policy.space().fence();
+      printf("init: %d\n", init);
 
     ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
     ThrustReducerWrapper r_op(
@@ -1308,6 +1312,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       // work done in SFINAE function above if it is using no join, init, or
       // reducer
     } else {
+      printf("t_op.init: %d\n", t_op.init);
       *m_result_ptr = thrust::transform_reduce(
           thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init, r_op);
     }
