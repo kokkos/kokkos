@@ -1237,7 +1237,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       thrust::counting_iterator<index_type>& temp_iter_d,
       thrust::counting_iterator<index_type>& temp_iter_end_d,
       ThrustFunctorWrapper<WorkTag>& t_op) {
-    printf("using regular\n");
+    // printf("using regular\n");
     *m_result_ptr = thrust::transform_reduce(
         thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init,
         KOKKOS_LAMBDA(const value_type& lhs, const value_type& rhs) {
@@ -1253,7 +1253,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   inline std::enable_if_t<!try_regular, bool> sum_thrust(
       thrust::counting_iterator<index_type>,
       thrust::counting_iterator<index_type>, ThrustFunctorWrapper<WorkTag>) {
-    printf("using join/init/reducer\n");
+    // printf("using join/init/reducer\n");
     return false;
   }
 
@@ -1267,7 +1267,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     if (!thrust_runtime_possible) {
       return false;
     }
-    printf("using CUDA Thrust\n");
+    // printf("using CUDA Thrust\n");
 
     thrust::counting_iterator<index_type> temp_iter_d(m_policy.begin());
 
