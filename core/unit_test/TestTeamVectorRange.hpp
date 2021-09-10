@@ -509,8 +509,8 @@ bool Test(int test) {
   // FIXME_OPENMPTARGET - Use of custom reducers currently results in runtime
   // memory errors.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-  passed =
-      passed && test_scalar<my_complex, ExecutionSpace>(1, team_size, test);
+/*  passed =
+      passed && test_scalar<my_complex, ExecutionSpace>(1, team_size, test);*/
 #endif
 
   return passed;
