@@ -87,6 +87,20 @@ using desul::MemoryOrderSeqCst;
 using desul::MemoryScopeDevice;
 
 template <class T>
+KOKKOS_INLINE_FUNCTION void desul_atomic_dec(T* dest, MemoryOrderSeqCst,
+                                             MemoryScopeDevice) {
+  return desul::atomic_dec(const_cast<T*>(dest), desul::MemoryOrderSeqCst(),
+                           desul::MemoryScopeDevice());
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION void desul_atomic_inc(T* dest, MemoryOrderSeqCst,
+                                             MemoryScopeDevice) {
+  return desul::atomic_inc(const_cast<T*>(dest), desul::MemoryOrderSeqCst(),
+                           desul::MemoryScopeDevice());
+}
+
+template <class T>
 KOKKOS_INLINE_FUNCTION T
 desul_atomic_exchange(T* dest, const Kokkos::Impl::identity_t<T> val,
                       MemoryOrderSeqCst, MemoryScopeDevice) {
@@ -372,6 +386,18 @@ namespace Kokkos {
 namespace Impl {
 struct MemoryOrderSeqCst {};
 struct MemoryScopeDevice {};
+
+template <class T>
+KOKKOS_INLINE_FUNCTION void desul_atomic_dec(T* dest, MemoryOrderSeqCst,
+                                             MemoryScopeDevice) {
+  return Kokkos::atomic_decrement(dest);
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION void desul_atomic_inc(T* dest, MemoryOrderSeqCst,
+                                             MemoryScopeDevice) {
+  return Kokkos::atomic_increment(dest);
+}
 
 template <class T>
 KOKKOS_INLINE_FUNCTION T

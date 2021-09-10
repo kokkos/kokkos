@@ -87,6 +87,7 @@ class TaskQueueCommonMixin {
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
   TaskQueueCommonMixin() : m_ready_count(0) {
+    Kokkos::memory_fence();
     // TODO @tasking @memory_order DSH figure out if I need this store to be
     // atomic
   }
@@ -157,14 +158,17 @@ class TaskQueueCommonMixin {
   KOKKOS_INLINE_FUNCTION
   void _increment_ready_count() {
     // TODO @tasking @memory_order DSH memory order
-    Kokkos::atomic_increment(&this->m_ready_count);
+    Kokkos::Impl::desul_atomic_inc(&this->m_ready_count,
+                                   Kokkos::Impl::MemoryOrderSeqCst(),
+                                   Kokkos::Impl::MemoryScopeDevice());
   }
 
   KOKKOS_INLINE_FUNCTION
   void _decrement_ready_count() {
     // TODO @tasking @memory_order DSH memory order
-    Kokkos::atomic_decrement(&this->m_ready_count);
-    Kokkos::memory_fence();
+    Kokkos::Impl::desul_atomic_dec(&this->m_ready_count,
+                                   Kokkos::Impl::MemoryOrderSeqCst(),
+                                   Kokkos::Impl::MemoryScopeDevice());
   }
 
  public:
