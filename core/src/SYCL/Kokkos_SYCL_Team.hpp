@@ -153,16 +153,16 @@ class SYCLTeamMember {
                   typename ReducerType::value_type& value) const noexcept {
     using value_type = typename ReducerType::value_type;
 
-    auto sg                = item.get_sub_group();
+    auto sg                = m_item.get_sub_group();
     const auto sub_group_range = sg.get_local_range()[0];
-    const auto vector_range = m_item.get_lcoal_range(1);
+    const auto vector_range = m_item.get_local_range(1);
 
     // First combine the values in the same subgroup
     for (unsigned int shift = 1; vector_range * shift < sub_group_range; shift <<= 1) {
-      const value_type tmp = sycl::shfl_down(value, vector_range * shift);
+      const value_type tmp = sg.shuffle_down(value, vector_range * shift);
       if (team_rank() + shift < team_size()) reducer.join(value, tmp);
     }
-    result = sycl::shfl(result, 0);
+    value = sg.shuffle(value, 0);
 
     // We need to chunk up the whole reduction because we might not have allocated enough memory.
     const auto n_subgroups = sg.get_group_range()[0];
@@ -173,15 +173,15 @@ class SYCLTeamMember {
     auto reduction_array = static_cast<value_type*>(m_team_reduce);
 
     // Load values into the first maximum_work_range values of the reduction array in chunks. This means that only sub groups with an id in the corresponding chunk load values.
+    const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == 0) {
-      const auto group_id = sg.get_group_id()[0];
       if (group_id < maximum_work_range) reduction_array[group_id] = value;
       m_item.barrier(sycl::access::fence_space::local_space);
 
       for (int start = maximum_work_range; start < n_subgroups;
            start += maximum_work_range) {
         if (group_id >= start &&
-            group_id < std::min(start + maximum_work_range, n_subgroups))
+            group_id < std::min<int>(start + maximum_work_range, n_subgroups))
           reducer.join(reduction_array[group_id - start], value);
         m_item.barrier(sycl::access::fence_space::local_space);
       }
@@ -202,9 +202,12 @@ class SYCLTeamMember {
         if (id_in_sg + stride < n_subgroups)
           reducer.join(result, tmp);
       }
-      reducer.reference() = result;
+      if (id_in_sg ==0 )
+        reduction_array[0] = result;
     }
-    team_broadcast(reducer.reference(), 0);
+    m_item.barrier(sycl::access::fence_space::local_space);
+    reducer.reference() = reduction_array[0];
+    m_item.barrier(sycl::access::fence_space::local_space);
   }
 
   // FIXME_SYCL move somewhere else and combine with other places that do
