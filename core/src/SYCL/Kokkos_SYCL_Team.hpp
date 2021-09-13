@@ -198,12 +198,8 @@ class SYCLTeamMember {
           reducer.join(result, reduction_array[id_in_sg + offset]);
       sg.barrier();
       
-      auto min_range = std::min<int>(maximum_work_range, local_range);
-/*      int smaller_power_of_two = 1;
-      while ((smaller_power_of_two << 1) < min_range)
-        smaller_power_of_two <<= 1;*/
-
       // Now do the actual subgroup reduction.
+      const int min_range = std::min<int>(maximum_work_range, local_range);
       for (unsigned int stride = 1; stride < min_range; stride <<= 1) {
         const auto tmp = sg.shuffle_down(result, stride);
         if (id_in_sg + stride < min_range)
