@@ -319,9 +319,6 @@ struct functor_teamvector_reduce {
           val += i - team.league_rank() + team.league_size() + team.team_size();
         },
         shared_value(0));
-    team.team_barrier();
-
-//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("parallel_reduce shared_value: %p, %lf, %lf, %d\n", &shared_value(0), shared_value(0).re, shared_value(0).im, shared_value(0).dummy);
 
     team.team_barrier();
     Kokkos::parallel_reduce(
@@ -330,9 +327,6 @@ struct functor_teamvector_reduce {
           val += i - team.league_rank() + team.league_size() + team.team_size();
         },
         value);
-
-    team.team_barrier();
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("parallel_reduce value:  %p, %lf, %lf, %d\n", &value, value.re, value.im, value.dummy);
 
     //    Kokkos::parallel_reduce( Kokkos::TeamVectorRange( team, 131 ), [&] (
     //    int i, Scalar & val )
@@ -351,24 +345,26 @@ struct functor_teamvector_reduce {
       }
 
       if (test != value) {
+        if (team.league_rank() == 0) {
           KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-              "FAILED teamvector_parallel_reduce %i %i, ref (%lf, %lf, %d) vs."
-              "actual (%lf, %lf, %d), %lu\n",
-              static_cast<int>(team.league_rank()),
-              static_cast<int>(team.team_rank()), test.re, test.im, test.dummy,
-              value.re, value.im, value.dummy,
+              "FAILED teamvector_parallel_reduce %i %i %lf %lf %lu\n",
+              (int)team.league_rank(), (int)team.team_rank(),
+              static_cast<double>(test), static_cast<double>(value),
               static_cast<unsigned long>(sizeof(Scalar)));
+        }
 
         flag() = 1;
       }
       if (test != shared_value(0)) {
+        if (team.league_rank() == 0) {
           KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-              "FAILED teamvector_parallel_reduce with shared result %i %i, ref (%lf, %lf, %d) vs."
-              "actual (%lf, %lf, %d), %lu\n",
+              "FAILED teamvector_parallel_reduce with shared result %i %i %lf "
+              "%lf %lu\n",
               static_cast<int>(team.league_rank()),
-              static_cast<int>(team.team_rank()), test.re, test.im, test.dummy,
-              shared_value(0).re, shared_value(0).im, shared_value(0).dummy,
+              static_cast<int>(team.team_rank()), static_cast<double>(test),
+              static_cast<double>(shared_value(0)),
               static_cast<unsigned long>(sizeof(Scalar)));
+        }
 
         flag() = 1;
       }
@@ -404,21 +400,16 @@ struct functor_teamvector_reduce_reducer {
         [&](int i, Scalar& val) {
           val += i - team.league_rank() + team.league_size() + team.team_size();
         },
-        shared_value(0));
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("parallel_reduce shared_value: %p, %lf, %lf, %d\n", &shared_value(0), shared_value(0).re, shared_value(0).im, shared_value(0).dummy);
+        Kokkos::Sum<Scalar>(value));
 
-    team.team_barrier();
     Kokkos::parallel_reduce(
         Kokkos::TeamVectorRange(team, 131),
         [&](int i, Scalar& val) {
           val += i - team.league_rank() + team.league_size() + team.team_size();
         },
-        value);
+        Kokkos::Sum<Scalar>(shared_value(0)));
 
-        team.team_barrier();
-
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("parallel_reduce value:  %p, %lf, %lf, %d\n", &value, value.re, value.im, value.dummy);
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("parallel_reduce shared_value: %p, %lf, %lf, %d\n", &shared_value(0), shared_value(0).re, shared_value(0).im, shared_value(0).dummy);
+    team.team_barrier();
 
     Kokkos::single(Kokkos::PerTeam(team), [&]() {
       Scalar test = 0;
@@ -427,25 +418,20 @@ struct functor_teamvector_reduce_reducer {
         test += i - team.league_rank() + team.league_size() + team.team_size();
       }
 
-     if (test != value) {
-       KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-              "FAILED teamvector_parallel_reduce %i %i, (%lf, %lf, %d) vs."
-              "(%lf, %lf, %d), %lu\n",
-              static_cast<int>(team.league_rank()),
-              static_cast<int>(team.team_rank()), test.re, test.im, test.dummy,
-              value.re, value.im, value.dummy,
-              static_cast<unsigned long>(sizeof(Scalar)));
+      if (test != value) {
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "FAILED teamvector_parallel_reduce_reducer %i %i %lf %lf\n",
+            team.league_rank(), team.team_rank(), static_cast<double>(test),
+            static_cast<double>(value));
 
         flag() = 1;
       }
       if (test != shared_value(0)) {
-          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-              "FAILED teamvector_parallel_reduce with shared result %i %i, (%lf, %lf, %d) vs."
-              "(%lf, %lf, %d), %lu\n",
-              static_cast<int>(team.league_rank()),
-              static_cast<int>(team.team_rank()), test.re, test.im, test.dummy,
-              shared_value(0).re, shared_value(0).im, shared_value(0).dummy,
-              static_cast<unsigned long>(sizeof(Scalar)));
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "FAILED teamvector_parallel_reduce_reducer shared value %i %i %lf "
+            "%lf\n",
+            team.league_rank(), team.team_rank(), static_cast<double>(test),
+            static_cast<double>(shared_value(0)));
 
         flag() = 1;
       }
@@ -509,22 +495,22 @@ bool Test(int test) {
 
 // With SYCL 33*8 exceeds the maximum work group size
 #ifdef KOKKOS_ENABLE_SYCL
-  int team_size = 5;
+  int team_size = 31;
 #else
   int team_size = 33;
 #endif
   if (team_size > int(ExecutionSpace::concurrency()))
     team_size = int(ExecutionSpace::concurrency());
-/*  passed = passed && test_scalar<int, ExecutionSpace>(1, team_size, test);
+  passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
   passed = passed &&
-           test_scalar<long long int, ExecutionSpace>(1, team_size, test);
-  passed = passed && test_scalar<float, ExecutionSpace>(1, team_size, test);
-  passed = passed && test_scalar<double, ExecutionSpace>(1, team_size, test);
+           test_scalar<long long int, ExecutionSpace>(317, team_size, test);
+  passed = passed && test_scalar<float, ExecutionSpace>(317, team_size, test);
+  passed = passed && test_scalar<double, ExecutionSpace>(317, team_size, test);
   // FIXME_OPENMPTARGET - Use of custom reducers currently results in runtime
-  // memory errors.*/
+  // memory errors.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
   passed =
-      passed && test_scalar<my_complex, ExecutionSpace>(1, team_size, test);
+      passed && test_scalar<my_complex, ExecutionSpace>(317, team_size, test);
 #endif
 
   return passed;
@@ -535,12 +521,12 @@ bool Test(int test) {
 namespace Test {
 
 TEST(TEST_CATEGORY, team_teamvector_range) {
-  //ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(0)));
+  ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(1)));
   // FIXME_OPENMPTARGET - Use of kokkos reducers currently results in runtime
   // memory errors.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-  //ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(2)));
+  ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(2)));
 #endif
 }
 }  // namespace Test
