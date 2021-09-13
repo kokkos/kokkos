@@ -113,22 +113,23 @@ class ParallelScanSYCLBase {
             else
               ValueInit::init(functor, &local_mem[local_id]);
             item.barrier(sycl::access::fence_space::local_space);
+            value_type local_value = local_mem[local_id];
 
             // subgroup scans
             auto sg                = item.get_sub_group();
             const auto sg_group_id = sg.get_group_id()[0];
             const int id_in_sg     = sg.get_local_id()[0];
             for (int stride = wgroup_size / 2; stride > 0; stride >>= 1) {
-              auto tmp = sg.shuffle_up(local_mem[local_id], stride);
+              auto tmp = sg.shuffle_up(local_value, stride);
               if (id_in_sg >= stride)
-                ValueJoin::join(functor, &local_mem[local_id], &tmp);
+                ValueJoin::join(functor, &local_value, &tmp);
             }
 
             const int local_range = sg.get_local_range()[0];
             if (id_in_sg == local_range - 1)
-              global_mem[sg_group_id + global_offset] = local_mem[local_id];
-            local_mem[local_id] = sg.shuffle_up(local_mem[local_id], 1);
-            if (id_in_sg == 0) ValueInit::init(functor, &local_mem[local_id]);
+              global_mem[sg_group_id + global_offset] = local_value;
+            local_value = sg.shuffle_up(local_value, 1);
+            if (id_in_sg == 0) ValueInit::init(functor, &local_value);
             item.barrier(sycl::access::fence_space::local_space);
 
             // scan subgroup results using the first subgroup
@@ -163,7 +164,7 @@ class ParallelScanSYCLBase {
 
             // add results to all subgroups
             if (sg_group_id > 0)
-              ValueJoin::join(functor, &local_mem[local_id],
+              ValueJoin::join(functor, &local_value,
                               &global_mem[sg_group_id - 1 + global_offset]);
             item.barrier(sycl::access::fence_space::local_space);
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
@@ -172,7 +173,7 @@ class ParallelScanSYCLBase {
             item.barrier(sycl::access::fence_space::local_space);
 
             // Write results to global memory
-            if (global_id < size) global_mem[global_id] = local_mem[local_id];
+            if (global_id < size) global_mem[global_id] = local_value;
           });
     });
     q.submit_barrier(std::vector<sycl::event>{local_scans});
