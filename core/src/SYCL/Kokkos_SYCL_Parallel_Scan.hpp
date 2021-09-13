@@ -103,11 +103,11 @@ class ParallelScanSYCLBase {
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
           [=](sycl::nd_item<1> item) {
-            const auto local_id      = item.get_local_linear_id();
-            const auto global_id     = item.get_global_linear_id();
+            const auto local_id  = item.get_local_linear_id();
+            const auto global_id = item.get_global_linear_id();
 
             // Initialize local memory
-	    value_type local_value;
+            value_type local_value;
             if (global_id < size)
               local_value = global_mem[global_id];
             else
