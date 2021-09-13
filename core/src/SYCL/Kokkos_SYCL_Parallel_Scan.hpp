@@ -105,15 +105,13 @@ class ParallelScanSYCLBase {
           [=](sycl::nd_item<1> item) {
             const auto local_id      = item.get_local_linear_id();
             const auto global_id     = item.get_global_linear_id();
-            const auto global_offset = global_id - local_id;
 
             // Initialize local memory
+	    value_type local_value;
             if (global_id < size)
-              local_mem[local_id] = global_mem[global_id];
+              local_value = global_mem[global_id];
             else
-              ValueInit::init(functor, &local_mem[local_id]);
-            item.barrier(sycl::access::fence_space::local_space);
-            value_type local_value = local_mem[local_id];
+              ValueInit::init(functor, &local_value);
 
             // subgroup scans
             auto sg                = item.get_sub_group();
@@ -127,7 +125,7 @@ class ParallelScanSYCLBase {
 
             const int local_range = sg.get_local_range()[0];
             if (id_in_sg == local_range - 1)
-              global_mem[sg_group_id + global_offset] = local_value;
+              local_mem[sg_group_id] = local_value;
             local_value = sg.shuffle_up(local_value, 1);
             if (id_in_sg == 0) ValueInit::init(functor, &local_value);
             item.barrier(sycl::access::fence_space::local_space);
@@ -159,18 +157,17 @@ class ParallelScanSYCLBase {
                       &global_mem[round * local_range - 1 + global_offset]);
                 if (round + 1 < n_rounds) sg.barrier();
               }
+              local_mem[id_in_sg] = local_value;
             }
             item.barrier(sycl::access::fence_space::local_space);
 
             // add results to all subgroups
             if (sg_group_id > 0)
               ValueJoin::join(functor, &local_value,
-                              &global_mem[sg_group_id - 1 + global_offset]);
-            item.barrier(sycl::access::fence_space::local_space);
+                              &local_mem[sg_group_id - 1]);
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
               group_results[item.get_group_linear_id()] =
-                  global_mem[sg_group_id + global_offset];
-            item.barrier(sycl::access::fence_space::local_space);
+                  local_mem[sg_group_id];
 
             // Write results to global memory
             if (global_id < size) global_mem[global_id] = local_value;
