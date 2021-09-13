@@ -187,37 +187,26 @@ class SYCLTeamMember {
       }
     }
 
-    /*
-    int smaller_power_of_two = 1;
-    while ((smaller_power_of_two << 1) < maximum_work_range)
-      smaller_power_of_two <<= 1;
-
-    const auto idx = m_item.get_local_linear_id();
-
-    for (int stride = smaller_power_of_two; stride > 0; stride >>= 1) {
-      if (idx < stride && idx + stride < maximum_work_range)
-        reducer.join(reduction_array[idx], reduction_array[idx + stride]);
-      m_item.barrier(sycl::access::fence_space::local_space);
-    }*/
-
     // Let the first subgroup do the final reduction
     if (group_id == 0) {
       const auto local_range = sg.get_local_range()[0];
-      auto result = reduction_array[id_in_sg];
-      // In case the number of subgroups is larger than the range of the first subgroup, we first combine the items with a higher index.
-      for (unsigned int offset = local_range; offset < n_subgroups;
+      auto result = reduction_array[id_in_sg<maximum_work_range?id_in_sg:0];
+      // In case the maximum_work_range is larger than the range of the first subgroup, we first combine the items with a higher index.
+      for (unsigned int offset = local_range; offset < maximum_work_range;
            offset += local_range)
-        if (id_in_sg + offset < n_subgroups)
+        if (id_in_sg + offset < maximum_work_range)
           reducer.join(result, reduction_array[id_in_sg + offset]);
-    }
+      sg.barrier();
+      
+      auto min_range = std::min<int>(maximum_work_range, local_range);
+      int smaller_power_of_two = 1;
+      while ((smaller_power_of_two << 1) < min_range)
+        smaller_power_of_two <<= 1;
 
-    if (group_id == 0) {
-      const auto local_range = sg.get_local_range()[0];
-      auto result = reduction_array[id_in_sg];
       // Now do the actual subgroup reduction.
-      for (unsigned int stride = local_range / 2; stride > 0; stride >>= 1) {
+      for (unsigned int stride = smaller_power_of_two; stride > 0; stride >>= 1) {
         const auto tmp = sg.shuffle_down(result, stride);
-        if (id_in_sg + stride < n_subgroups)
+        if (id_in_sg + stride < min_range)
           reducer.join(result, tmp);
       }
       if (id_in_sg ==0 )
