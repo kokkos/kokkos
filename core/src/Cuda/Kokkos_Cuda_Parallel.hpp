@@ -1317,15 +1317,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // ThrustReducerWrapper r_op(ReducerConditional::select(m_functor,
     // m_reducer));
 
-    ThrustHelper helping_functor{}; // this is needed because the lambda 
-                                    // version was causing
+    ThrustHelper helping_functor{};  // this is needed because the lambda 
+                                     // version was causing
     // issues when CUDA_LAMBDA was set to OFF, so it needs to be a functor
 
     m_policy.space().fence();
 
     if (sum_thrust<is_thrust_using_no_join_init_red>(
             temp_iter_d,
-            //temp_iter_end_d, t_op)) {
+            // temp_iter_end_d, t_op)) {
             temp_iter_end_d, helping_functor, t_op)) {
       // work done in SFINAE function above if it is using no join, init, or
       // reducer
