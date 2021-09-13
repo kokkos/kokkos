@@ -199,12 +199,12 @@ class SYCLTeamMember {
       sg.barrier();
       
       auto min_range = std::min<int>(maximum_work_range, local_range);
-      int smaller_power_of_two = 1;
+/*      int smaller_power_of_two = 1;
       while ((smaller_power_of_two << 1) < min_range)
-        smaller_power_of_two <<= 1;
+        smaller_power_of_two <<= 1;*/
 
       // Now do the actual subgroup reduction.
-      for (unsigned int stride = smaller_power_of_two; stride > 0; stride >>= 1) {
+      for (unsigned int stride = 1; stride < min_range; stride <<= 1) {
         const auto tmp = sg.shuffle_down(result, stride);
         if (id_in_sg + stride < min_range)
           reducer.join(result, tmp);
@@ -215,7 +215,6 @@ class SYCLTeamMember {
     m_item.barrier(sycl::access::fence_space::local_space);
 
     reducer.reference() = reduction_array[0];
-    m_item.barrier(sycl::access::fence_space::local_space);
   }
 
   // FIXME_SYCL move somewhere else and combine with other places that do
