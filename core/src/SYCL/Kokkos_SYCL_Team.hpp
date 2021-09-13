@@ -174,20 +174,32 @@ class SYCLTeamMember {
 
     // Load values into the first maximum_work_range values of the reduction array in chunks. This means that only sub groups with an id in the corresponding chunk load values.
     const auto group_id = sg.get_group_id()[0];
-    if (id_in_sg == 0) {
-      if (group_id < maximum_work_range) reduction_array[group_id] = value;
+    /*if (id_in_sg == 0)*/ {
+      if (id_in_sg ==0 && group_id < maximum_work_range) reduction_array[group_id] = value;
       m_item.barrier(sycl::access::fence_space::local_space);
 
       for (int start = maximum_work_range; start < n_subgroups;
            start += maximum_work_range) {
-        if (group_id >= start &&
+        if (id_in_sg ==0 && group_id >= start &&
             group_id < std::min<int>(start + maximum_work_range, n_subgroups))
           reducer.join(reduction_array[group_id - start], value);
         m_item.barrier(sycl::access::fence_space::local_space);
       }
     }
 
-    // Let the first subgroup do the final reduction
+    int smaller_power_of_two = 1;
+    while ((smaller_power_of_two << 1) < maximum_work_range)
+      smaller_power_of_two <<= 1;
+
+    const auto idx = m_item.get_local_linear_id();
+
+    for (int stride = smaller_power_of_two; stride > 0; stride >>= 1) {
+      if (idx < stride && idx + stride < maximum_work_range)
+        reducer.join(reduction_array[idx], reduction_array[idx + stride]);
+      m_item.barrier(sycl::access::fence_space::local_space);
+    }
+
+/*    // Let the first subgroup do the final reduction
     if (group_id == 0) {
       const auto local_range = sg.get_local_range()[0];
       auto result = reduction_array[id_in_sg];
@@ -205,7 +217,7 @@ class SYCLTeamMember {
       if (id_in_sg ==0 )
         reduction_array[0] = result;
     }
-    m_item.barrier(sycl::access::fence_space::local_space);
+    m_item.barrier(sycl::access::fence_space::local_space);*/
     reducer.reference() = reduction_array[0];
     m_item.barrier(sycl::access::fence_space::local_space);
   }

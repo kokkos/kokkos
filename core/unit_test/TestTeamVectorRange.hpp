@@ -313,13 +313,13 @@ struct functor_teamvector_reduce {
     Scalar value = Scalar();
     shared_scalar_t shared_value(team.team_scratch(0), 1);
 
-/*    Kokkos::parallel_reduce(
+    Kokkos::parallel_reduce(
         Kokkos::TeamVectorRange(team, 131),
         [&](int i, Scalar& val) {
           val += i - team.league_rank() + team.league_size() + team.team_size();
         },
         shared_value(0));
-    team.team_barrier();*/
+    team.team_barrier();
 
 //    KOKKOS_IMPL_DO_NOT_USE_PRINTF("parallel_reduce shared_value: %p, %lf, %lf, %d\n", &shared_value(0), shared_value(0).re, shared_value(0).im, shared_value(0).dummy);
 
@@ -361,7 +361,7 @@ struct functor_teamvector_reduce {
 
         flag() = 1;
       }
-/*      if (test != shared_value(0)) {
+      if (test != shared_value(0)) {
           KOKKOS_IMPL_DO_NOT_USE_PRINTF(
               "FAILED teamvector_parallel_reduce with shared result %i %i, ref (%lf, %lf, %d) vs."
               "actual (%lf, %lf, %d), %lu\n",
@@ -371,7 +371,7 @@ struct functor_teamvector_reduce {
               static_cast<unsigned long>(sizeof(Scalar)));
 
         flag() = 1;
-      }*/
+      }
     });
   }
 };
