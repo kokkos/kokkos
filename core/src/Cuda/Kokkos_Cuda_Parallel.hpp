@@ -1317,7 +1317,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // ThrustReducerWrapper r_op(ReducerConditional::select(m_functor,
     // m_reducer));
 
-    ThrustHelper helping_functor{};  // this is needed because the lambda 
+    ThrustHelper helping_functor{};  // this is needed because the lambda
                                      // version was causing
     // issues when CUDA_LAMBDA was set to OFF, so it needs to be a functor
 
