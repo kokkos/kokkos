@@ -1234,23 +1234,22 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   struct ThrustHelper {
     KOKKOS_FUNCTION
-    ThrustHelper() {};
+    ThrustHelper(){};
 
-    KOKKOS_FUNCTION value_type operator()(
-        const value_type& lhs, const value_type& rhs) {
+    KOKKOS_FUNCTION value_type operator()(const value_type& lhs,
+                                          const value_type& rhs) {
       value_type tmp{};
       tmp += lhs;
       tmp += rhs;
       return tmp;
-    } 
+    }
   };
 
   template <bool try_regular>
   inline std::enable_if_t<try_regular, bool> sum_thrust(
       thrust::counting_iterator<index_type>& temp_iter_d,
       thrust::counting_iterator<index_type>& temp_iter_end_d,
-      ThrustHelper& helping_functor,
-      ThrustFunctorWrapper<WorkTag>& t_op) {
+      ThrustHelper& helping_functor, ThrustFunctorWrapper<WorkTag>& t_op) {
     // printf("using regular\n");
     //*m_result_ptr = thrust::transform_reduce(
     //    thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init,
@@ -1259,9 +1258,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     //      tmp += lhs;
     //      tmp += rhs;
     //      return tmp;
-    *m_result_ptr = thrust::transform_reduce(
-        thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init,
-        helping_functor);
+    *m_result_ptr =
+        thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                 t_op, t_op.init, helping_functor);
 
     return true;
   }
@@ -1318,15 +1317,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // ThrustReducerWrapper r_op(ReducerConditional::select(m_functor,
     // m_reducer));
 
-    ThrustHelper helping_functor{}; // this is needed because the lambda version was causing
+    ThrustHelper helping_functor{}; // this is needed because the lambda 
+                                    // version was causing
     // issues when CUDA_LAMBDA was set to OFF, so it needs to be a functor
 
     m_policy.space().fence();
 
-    if (sum_thrust<is_thrust_using_no_join_init_red>(temp_iter_d,
-                                                     //temp_iter_end_d, t_op)) {
-                                                     temp_iter_end_d, helping_functor,
-                                                     t_op)) {
+    if (sum_thrust<is_thrust_using_no_join_init_red>(
+            temp_iter_d,
+            //temp_iter_end_d, t_op)) {
+            temp_iter_end_d, helping_functor, t_op)) {
       // work done in SFINAE function above if it is using no join, init, or
       // reducer
     } else {
