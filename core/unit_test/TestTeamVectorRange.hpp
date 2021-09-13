@@ -280,7 +280,7 @@ struct functor_teamvector_for {
 
         if (test != value) {
           KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-              "FAILED teamvector_parallel_for %i %i %f %f\n",
+              "FAILED teamvector_parallel_for %i %i %lf %lf\n",
               team.league_rank(), team.team_rank(), static_cast<double>(test),
               static_cast<double>(value));
           flag() = 1;

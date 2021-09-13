@@ -219,13 +219,7 @@ class TaskQueue : public TaskQueueBase {
 
     using task_type = Impl::Task<execution_space, value_type, FunctorType>;
 
-    enum : size_t { align = (1 << 4), align_mask = align - 1 };
-    enum : size_t { task_size = sizeof(task_type) };
-    enum : size_t { result_size = Impl::TaskResult<value_type>::size };
-    enum : size_t {
-      alloc_size = ((task_size + align_mask) & ~align_mask) +
-                   ((result_size + align_mask) & ~align_mask)
-    };
+    constexpr size_t task_size = sizeof(task_type);
 
     return m_memory.allocate_block_size(task_size);
   }
