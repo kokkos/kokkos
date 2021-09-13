@@ -1267,8 +1267,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   template <bool try_regular>
   inline std::enable_if_t<!try_regular, bool> sum_thrust(
       thrust::counting_iterator<index_type>,
-      thrust::counting_iterator<index_type>,
-      ThrustHelper helping_functor, ThrustFunctorWrapper<WorkTag>) {
+      thrust::counting_iterator<index_type>, ThrustHelper helping_functor,
+      ThrustFunctorWrapper<WorkTag>) {
     // printf("using join/init/reducer\n");
     return false;
   }
