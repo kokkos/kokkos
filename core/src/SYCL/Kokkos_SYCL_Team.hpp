@@ -187,6 +187,7 @@ class SYCLTeamMember {
       }
     }
 
+    /*
     int smaller_power_of_two = 1;
     while ((smaller_power_of_two << 1) < maximum_work_range)
       smaller_power_of_two <<= 1;
@@ -197,9 +198,9 @@ class SYCLTeamMember {
       if (idx < stride && idx + stride < maximum_work_range)
         reducer.join(reduction_array[idx], reduction_array[idx + stride]);
       m_item.barrier(sycl::access::fence_space::local_space);
-    }
+    }*/
 
-/*    // Let the first subgroup do the final reduction
+    // Let the first subgroup do the final reduction
     if (group_id == 0) {
       const auto local_range = sg.get_local_range()[0];
       auto result = reduction_array[id_in_sg];
@@ -208,6 +209,11 @@ class SYCLTeamMember {
            offset += local_range)
         if (id_in_sg + offset < n_subgroups)
           reducer.join(result, reduction_array[id_in_sg + offset]);
+    }
+
+    if (group_id == 0) {
+      const auto local_range = sg.get_local_range()[0];
+      auto result = reduction_array[id_in_sg];
       // Now do the actual subgroup reduction.
       for (unsigned int stride = local_range / 2; stride > 0; stride >>= 1) {
         const auto tmp = sg.shuffle_down(result, stride);
@@ -217,7 +223,8 @@ class SYCLTeamMember {
       if (id_in_sg ==0 )
         reduction_array[0] = result;
     }
-    m_item.barrier(sycl::access::fence_space::local_space);*/
+    m_item.barrier(sycl::access::fence_space::local_space);
+
     reducer.reference() = reduction_array[0];
     m_item.barrier(sycl::access::fence_space::local_space);
   }
