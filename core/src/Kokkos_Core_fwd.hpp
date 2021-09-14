@@ -337,6 +337,33 @@ struct LAnd;
 template <class ScalarType, class Space = HostSpace>
 struct LOr;
 
+template <class Scalar, class Index, class Space = HostSpace>
+struct MaxFirstLoc;
+template <class Scalar, class Index, class ComparatorType,
+          class Space = HostSpace>
+struct MaxFirstLocCustomComparator;
+
+template <class Scalar, class Index, class Space = HostSpace>
+struct MinFirstLoc;
+template <class Scalar, class Index, class ComparatorType,
+          class Space = HostSpace>
+struct MinFirstLocCustomComparator;
+
+template <class Scalar, class Index, class Space = HostSpace>
+struct MinMaxFirstLastLoc;
+template <class Scalar, class Index, class ComparatorType,
+          class Space = HostSpace>
+struct MinMaxFirstLastLocCustomComparator;
+
+template <class Scalar, class Index, class Space = HostSpace>
+struct StdMismatch;
+
+template <class Index, class Space = HostSpace>
+struct FirstLoc;
+template <class Index, class Space = HostSpace>
+struct StdIsPartitioned;
+template <class Index, class Space = HostSpace>
+struct StdPartitionedPoint;
 }  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
