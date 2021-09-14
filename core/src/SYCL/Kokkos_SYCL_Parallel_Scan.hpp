@@ -63,15 +63,15 @@ void workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::local_ptr
   // subgroup scans
   auto sg                = item.get_sub_group();
   const auto sg_group_id = sg.get_group_id()[0];
-  const int id_in_sg     = sg.get_local_id()[0];
+  const auto id_in_sg     = sg.get_local_id()[0];
   const auto wgroup_size = item.get_local_range()[0];
-  for (int stride = wgroup_size / 2; stride > 0; stride >>= 1) {
+  for (unsigned int stride = 1; stride < wgroup_size; stride <<= 1) {
     auto tmp = sg.shuffle_up(local_value, stride);
     if (id_in_sg >= stride)
       ValueJoin::join(functor, &local_value, &tmp);
   }
 
-  const int local_range = sg.get_local_range()[0];
+  const auto local_range = sg.get_local_range()[0];
   if (id_in_sg == local_range - 1)
     local_mem[sg_group_id] = local_value;
   local_value = sg.shuffle_up(local_value, 1);
