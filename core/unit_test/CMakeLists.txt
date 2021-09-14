@@ -756,7 +756,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
   )
   endif()
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_EventCorrectness
+    UnitTest_KokkosP
     SOURCES
     tools/TestEventCorrectness.cpp
   )
