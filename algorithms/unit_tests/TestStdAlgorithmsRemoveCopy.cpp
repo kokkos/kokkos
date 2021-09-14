@@ -82,8 +82,7 @@ struct UnifDist<double> {
 };
 
 template <class ViewType>
-void fill_view(ViewType dest_view, const std::string& name)
-{
+void fill_view(ViewType dest_view, const std::string& name) {
   using value_type      = typename ViewType::value_type;
   using exe_space       = typename ViewType::execution_space;
   const std::size_t ext = dest_view.extent(0);
@@ -150,21 +149,18 @@ void fill_view(ViewType dest_view, const std::string& name)
 }
 
 template <class ViewFromType, class ViewDestType, class MyItResult>
-void verify_data(ViewFromType view_from,
-		 ViewDestType view_dest,
-                 MyItResult my_result)
-{
+void verify_data(ViewFromType view_from, ViewDestType view_dest,
+                 MyItResult my_result) {
   // make a host copy of the view_from
-  auto view_from_h = create_host_space_copy(view_from);
+  auto view_from_h      = create_host_space_copy(view_from);
   const std::size_t ext = view_from_h.extent(0);
-  using value_type = typename ViewFromType::value_type;
+  using value_type      = typename ViewFromType::value_type;
 
   // run std::remove_copy
   std::vector<value_type> gold_dest_std(ext);
-  auto std_result = std::remove_copy(KE::cbegin(view_from_h),
-				     KE::cend(view_from_h),
-				     gold_dest_std.begin(),
-				     (value_type)match_value);
+  auto std_result =
+      std::remove_copy(KE::cbegin(view_from_h), KE::cend(view_from_h),
+                       gold_dest_std.begin(), (value_type)match_value);
 
   // check that returned iterators are correct
   const std::size_t std_diff = std_result - gold_dest_std.begin();
@@ -186,55 +182,60 @@ std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType, class InfoType>
-void run_single_scenario(const InfoType& scenario_info)
-{
-
+void run_single_scenario(const InfoType& scenario_info) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "remove_copy: " << name << ", "
-	    << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType())
-	    << std::endl;
+  std::cout << "remove_copy: " << name << ", " << view_tag_to_string(Tag{})
+            << ", " << value_type_to_string(ValueType()) << std::endl;
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
     fill_view(view_from, name);
 
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
-    auto rit    = KE::remove_copy(exespace(), KE::cbegin(view_from),
-				  KE::cend(view_from), KE::begin(view_dest),
-				  (ValueType)match_value);
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
+    auto rit =
+        KE::remove_copy(exespace(), KE::cbegin(view_from), KE::cend(view_from),
+                        KE::begin(view_dest), (ValueType)match_value);
     verify_data(view_from, view_dest, rit);
   }
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
     fill_view(view_from, name);
 
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
-    auto rit    = KE::remove_copy("label",
-				  exespace(), KE::cbegin(view_from),
-				  KE::cend(view_from), KE::begin(view_dest),
-				  (ValueType)match_value);
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
+    auto rit = KE::remove_copy("label", exespace(), KE::cbegin(view_from),
+                               KE::cend(view_from), KE::begin(view_dest),
+                               (ValueType)match_value);
     verify_data(view_from, view_dest, rit);
   }
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
     fill_view(view_from, name);
 
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
-    auto rit    = KE::remove_copy(exespace(), view_from, view_dest, (ValueType)match_value);
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
+    auto rit = KE::remove_copy(exespace(), view_from, view_dest,
+                               (ValueType)match_value);
     verify_data(view_from, view_dest, rit);
   }
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_from");
     fill_view(view_from, name);
 
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
-    auto rit    = KE::remove_copy("label", exespace(), view_from, view_dest, (ValueType)match_value);
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_view_dest");
+    auto rit = KE::remove_copy("label", exespace(), view_from, view_dest,
+                               (ValueType)match_value);
     verify_data(view_from, view_dest, rit);
   }
 
@@ -253,8 +254,7 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_mod_seq_ops, remove_copy)
-{
+TEST(std_algorithms_mod_seq_ops, remove_copy) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
   run_all_scenarios<DynamicTag, double>();
