@@ -50,6 +50,7 @@
 #include <utility>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 #include <Kokkos_Core.hpp>
 
@@ -66,7 +67,7 @@ namespace {
 
 ThreadsExec s_threads_process;
 ThreadsExec *s_threads_exec[ThreadsExec::MAX_THREAD_COUNT] = {nullptr};
-pthread_t s_threads_pid[ThreadsExec::MAX_THREAD_COUNT]     = {0};
+std::thread::id s_threads_pid[ThreadsExec::MAX_THREAD_COUNT];
 std::pair<unsigned, unsigned> s_threads_coord[ThreadsExec::MAX_THREAD_COUNT];
 
 int s_thread_pool_size[3] = {0, 0, 0};
@@ -164,7 +165,7 @@ ThreadsExec::ThreadsExec()
       m_pool_fan_size  = fan_size(m_pool_rank, m_pool_size);
       m_pool_state     = ThreadsExec::Active;
 
-      s_threads_pid[m_pool_rank] = pthread_self();
+      s_threads_pid[m_pool_rank] = std::this_thread::get_id();
 
       // Inform spawning process that the threads_exec entry has been set.
       s_threads_process.m_pool_state = ThreadsExec::Active;
@@ -178,7 +179,7 @@ ThreadsExec::ThreadsExec()
     m_pool_size  = 1;
     m_pool_state = ThreadsExec::Inactive;
 
-    s_threads_pid[m_pool_rank] = pthread_self();
+    s_threads_pid[m_pool_rank] = std::this_thread::get_id();
   }
 }
 
@@ -681,7 +682,8 @@ void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
         s_threads_process.m_pool_size     = thread_count;
         s_threads_process.m_pool_fan_size = fan_size(
             s_threads_process.m_pool_rank, s_threads_process.m_pool_size);
-        s_threads_pid[s_threads_process.m_pool_rank] = pthread_self();
+        s_threads_pid[s_threads_process.m_pool_rank] =
+            std::this_thread::get_id();
       } else {
         s_threads_process.m_pool_base     = nullptr;
         s_threads_process.m_pool_rank     = 0;
@@ -755,7 +757,7 @@ void ThreadsExec::finalize() {
       s_threads_process.m_pool_state = ThreadsExec::Inactive;
     }
 
-    s_threads_pid[i] = 0;
+    s_threads_pid[i] = std::thread::id();
   }
 
   if (s_threads_process.m_pool_base) {
@@ -812,8 +814,8 @@ int Threads::impl_thread_pool_size(int depth) {
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 int Threads::impl_thread_pool_rank() {
-  const pthread_t pid = pthread_self();
-  int i               = 0;
+  const std::thread::id pid = std::this_thread::get_id();
+  int i                     = 0;
   while ((i < Impl::s_thread_pool_size[0]) && (pid != Impl::s_threads_pid[i])) {
     ++i;
   }
@@ -843,10 +845,11 @@ void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
     } else {
       Kokkos::Threads::impl_initialize();
     }
-    // std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized"
+    // std::cout << "Kokkos::initialize() fyi: CppThread enabled and
+    // initialized"
     // << std::endl ;
   } else {
-    // std::cout << "Kokkos::initialize() fyi: Pthread enabled but not
+    // std::cout << "Kokkos::initialize() fyi: CppThread enabled but not
     // initialized" << std::endl ;
   }
 }
@@ -870,7 +873,7 @@ void ThreadsSpaceInitializer::print_configuration(std::ostream &msg,
                                                   const bool detail) {
   msg << "Host Parallel Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_THREADS: ";
-  msg << "yes" << std::endl;
+  msg << "yes (C++ std::thread)" << std::endl;
 
   msg << "\nThreads Runtime Configuration:" << std::endl;
   Kokkos::Threads::print_configuration(msg, detail);
