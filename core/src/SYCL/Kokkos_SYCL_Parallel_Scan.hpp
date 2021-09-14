@@ -53,6 +53,66 @@
 namespace Kokkos {
 namespace Impl {
 
+// Perform a scan over a workgroup and return the total sum.
+// wgroup_size is supposed to be a power of two.
+template <class ValueJoin, class ValueInit, typename ValueType, typename FunctorType>
+ValueType workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::local_ptr<ValueType> local_mem, ValueType& local_value)
+{	
+  // subgroup scans
+  auto sg                = item.get_sub_group();
+  const auto sg_group_id = sg.get_group_id()[0];
+  const int id_in_sg     = sg.get_local_id()[0];
+  const auto wgroup_size = item.get_local_range()[0];
+  for (int stride = wgroup_size / 2; stride > 0; stride >>= 1) {
+    auto tmp = sg.shuffle_up(local_value, stride);
+    if (id_in_sg >= stride)
+      ValueJoin::join(functor, &local_value, &tmp);
+  }
+
+  const int local_range = sg.get_local_range()[0];
+  if (id_in_sg == local_range - 1)
+    local_mem[sg_group_id] = local_value;
+  local_value = sg.shuffle_up(local_value, 1);
+  if (id_in_sg == 0) ValueInit::init(functor, &local_value);
+  item.barrier(sycl::access::fence_space::local_space);
+
+  // scan subgroup results using the first subgroup
+  if (sg_group_id == 0) {
+    const int n_subgroups = sg.get_group_range()[0];
+
+    const auto n_rounds = (n_subgroups + local_range - 1) / local_range;
+    for (int round = 0; round < n_rounds; ++round) {
+      const int idx = id_in_sg + round * local_range;
+      const auto upper_bound =
+        std::min(local_range, n_subgroups - round * local_range);
+      auto local_value = global_mem[idx + global_offset];
+      for (int stride = 1; stride < upper_bound; stride <<= 1) {
+        auto tmp = sg.shuffle_up(local_value, stride);
+        if (id_in_sg >= stride) {
+          if (idx < n_subgroups)
+            ValueJoin::join(functor, &local_value, &tmp);
+          else
+            local_value = tmp;
+        }
+      }
+      global_mem[idx + global_offset] = local_value;
+      if (round > 0)
+        ValueJoin::join(
+          functor, &global_mem[idx + global_offset],
+          &global_mem[round * local_range - 1 + global_offset]);
+        if (round + 1 < n_rounds) sg.barrier();
+      }
+    }
+  }
+  item.barrier(sycl::access::fence_space::local_space);
+
+  // add results to all subgroups
+  if (sg_group_id > 0)
+    ValueJoin::join(functor, &local_value, &local_mem[sg_group_id - 1]);
+  // return total sum
+  return local_mem[sg_group_id];
+}
+
 template <class FunctorType, class... Traits>
 class ParallelScanSYCLBase {
  public:
@@ -67,7 +127,6 @@ class ParallelScanSYCLBase {
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
   using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
   using ValueJoin   = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
-  using ValueOps    = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
  public:
   using pointer_type   = typename ValueTraits::pointer_type;
@@ -96,7 +155,7 @@ class ParallelScanSYCLBase {
     pointer_type group_results   = global_mem + n_wgroups * wgroup_size;
 
     auto local_scans = q.submit([&](sycl::handler& cgh) {
-      // Store subgroup scans
+      // Store subgroup totals
       const auto min_subgroup_size = q.get_device()
             .template get_info<sycl::info::device::sub_group_sizes>().front();
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
@@ -116,61 +175,11 @@ class ParallelScanSYCLBase {
             else
               ValueInit::init(functor, &local_value);
 
-            // subgroup scans
-            auto sg                = item.get_sub_group();
-            const auto sg_group_id = sg.get_group_id()[0];
-            const int id_in_sg     = sg.get_local_id()[0];
-            for (int stride = wgroup_size / 2; stride > 0; stride >>= 1) {
-              auto tmp = sg.shuffle_up(local_value, stride);
-              if (id_in_sg >= stride)
-                ValueJoin::join(functor, &local_value, &tmp);
-            }
+	    const auto workgroup_sum = workgroup_scan<ValueJoin, ValueInit>(item, functor, local_mem.get_pointer(), local_value);  
 
-            const int local_range = sg.get_local_range()[0];
-            if (id_in_sg == local_range - 1)
-              local_mem[sg_group_id] = local_value;
-            local_value = sg.shuffle_up(local_value, 1);
-            if (id_in_sg == 0) ValueInit::init(functor, &local_value);
-            item.barrier(sycl::access::fence_space::local_space);
-
-            // scan subgroup results using the first subgroup
-            if (sg_group_id == 0) {
-              const int n_subgroups = sg.get_group_range()[0];
-
-              const auto n_rounds =
-                  (n_subgroups + local_range - 1) / local_range;
-              for (int round = 0; round < n_rounds; ++round) {
-                const int idx = id_in_sg + round * local_range;
-                const auto upper_bound =
-                    std::min(local_range, n_subgroups - round * local_range);
-                auto local_value = global_mem[idx + global_offset];
-                for (int stride = 1; stride < upper_bound; stride <<= 1) {
-                  auto tmp = sg.shuffle_up(local_value, stride);
-                  if (id_in_sg >= stride) {
-                    if (idx < n_subgroups)
-                      ValueJoin::join(functor, &local_value, &tmp);
-                    else
-                      local_value = tmp;
-                  }
-                }
-                global_mem[idx + global_offset] = local_value;
-                if (round > 0)
-                  ValueJoin::join(
-                      functor, &global_mem[idx + global_offset],
-                      &global_mem[round * local_range - 1 + global_offset]);
-                if (round + 1 < n_rounds) sg.barrier();
-              }
-              local_mem[id_in_sg] = local_value;
-            }
-            item.barrier(sycl::access::fence_space::local_space);
-
-            // add results to all subgroups
-            if (sg_group_id > 0)
-              ValueJoin::join(functor, &local_value,
-                              &local_mem[sg_group_id - 1]);
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
               group_results[item.get_group_linear_id()] =
-                  local_mem[sg_group_id];
+                  workgroup_sum;
 
             // Write results to global memory
             if (global_id < size) global_mem[global_id] = local_value;
