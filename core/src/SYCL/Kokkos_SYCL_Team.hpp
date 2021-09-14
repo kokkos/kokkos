@@ -283,7 +283,8 @@ class SYCLTeamMember {
     Type intermediate;
     Type total{};
 
-    const int idx        = team_rank();
+    const int team_idx   = team_rank();
+    const int vector_idx = m_item.get_local_id(1); 
     const auto base_data = static_cast<Type*>(m_team_reduce);
 
     // Load values into the first not_greater_power_of_two values of the
@@ -293,15 +294,26 @@ class SYCLTeamMember {
     for (int start = 0; start < team_size();
          start += not_greater_power_of_two) {
       m_item.barrier(sycl::access::fence_space::local_space);
-      if (idx >= start && idx < start + not_greater_power_of_two) {
-        base_data[idx - start] = value;
+      if (vector_idx == 0 && team_idx >= start && team_idx < start + not_greater_power_of_two) {
+        base_data[team_idx - start] = value;
       }
       m_item.barrier(sycl::access::fence_space::local_space);
 
       const Type partial_total =
           prescan(m_item, base_data, not_greater_power_of_two);
-      if (idx >= start && idx < start + not_greater_power_of_two)
-        intermediate = base_data[idx - start] + total;
+      m_item.barrier(sycl::access::fence_space::local_space);
+/*
+      using FunctorType = Kokkos::Sum<Type>;
+      using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, void>;
+      using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, void>;
+      const auto linear_id = m_item.get_local_linear_id();
+      workgroup_scan<ValueJoin, ValueInit>(m_item, FunctorType{total}, base_data, base_data[linear_id<idx]alueType& local_value, not_greater_power_of_two);
+      const max_local_range = m_item.get_subgroup().max_local_range()[0];
+      const int n_active_subgroups = (n+max_local_range-1)/max_local_range;
+      const Type partial_total = base_data[n_active_subgroups];*/
+
+      if (team_idx >= start && team_idx < start + not_greater_power_of_two)
+        intermediate = base_data[team_idx - start] + total;
       if (start == 0)
         total = partial_total;
       else
@@ -309,7 +321,7 @@ class SYCLTeamMember {
     }
 
     if (global_accum) {
-      if (team_size() == idx + 1) {
+      if (vector_idx == 0 && team_size() == team_idx + 1) {
         base_data[team_size()] = atomic_fetch_add(global_accum, total);
       }
       m_item.barrier();  // Wait for atomic
