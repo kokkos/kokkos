@@ -759,6 +759,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     UnitTest_KokkosP
     SOURCES
     tools/TestEventCorrectness.cpp
+    tools/TestProfilingSection.cpp
   )
   if(KOKKOS_ENABLE_LIBDL)
 
