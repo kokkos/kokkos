@@ -67,6 +67,17 @@ struct StdAlgoEqualsValUnaryPredicate {
   StdAlgoEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
 };
 
+template <class T>
+struct StdAlgoNotEqualsValUnaryPredicate {
+  T m_value;
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(const T& val) const { return !(val == m_value); }
+
+  KOKKOS_INLINE_FUNCTION
+  StdAlgoNotEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
+};
+
 // ------------------
 // BINARY PREDICATES
 // ------------------
