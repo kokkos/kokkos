@@ -56,6 +56,9 @@ namespace Profiling {
 
 class ProfilingSection {
  public:
+  ProfilingSection(ProfilingSection const&) = delete;
+  ProfilingSection& operator=(ProfilingSection const&) = delete;
+
   ProfilingSection(const std::string& sectionName) : secName(sectionName) {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::createProfileSection(secName, &secID);
