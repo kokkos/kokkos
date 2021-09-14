@@ -53,10 +53,12 @@
 namespace Kokkos {
 namespace Impl {
 
-// Perform a scan over a workgroup and return the total sum.
+// Perform a scan over a workgroup. 
+// At the end of this function, the subgroup scans are stored in the local array
+// such that the last value (at position n_subgroups-1) contains the total sum.
 // wgroup_size is supposed to be a power of two.
 template <class ValueJoin, class ValueInit, typename ValueType, typename FunctorType>
-ValueType workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::local_ptr<ValueType> local_mem, ValueType& local_value)
+void workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::local_ptr<ValueType> local_mem, ValueType& local_value)
 {	
   // subgroup scans
   auto sg                = item.get_sub_group();
@@ -109,8 +111,6 @@ ValueType workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::loca
   // add results to all subgroups
   if (sg_group_id > 0)
     ValueJoin::join(functor, &local_value, &local_mem[sg_group_id - 1]);
-  // return total sum
-  return local_mem[sg_group_id];
 }
 
 template <class FunctorType, class... Traits>
@@ -175,11 +175,10 @@ class ParallelScanSYCLBase {
             else
               ValueInit::init(functor, &local_value);
 
-	    const auto workgroup_sum = workgroup_scan<ValueJoin, ValueInit>(item, functor, local_mem.get_pointer(), local_value);  
+	    workgroup_scan<ValueJoin, ValueInit>(item, functor, local_mem.get_pointer(), local_value);  
 
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
-              group_results[item.get_group_linear_id()] =
-                  workgroup_sum;
+              group_results[item.get_group_linear_id()] = local_mem[item.get_sub_group().get_group_range()[0]-1];
 
             // Write results to global memory
             if (global_id < size) global_mem[global_id] = local_value;
