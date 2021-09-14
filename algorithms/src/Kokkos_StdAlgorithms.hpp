@@ -78,7 +78,7 @@
 // swap_ranges
 // unique, unique_copy
 // rotate_copy
-// remove, remove_if
+// remove, remove_if, remove_copy, remove_copy_if
 #include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
 
 // is_sorted_until, is_sorted
