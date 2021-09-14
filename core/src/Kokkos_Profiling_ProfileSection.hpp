@@ -80,9 +80,11 @@ class ProfilingSection {
     }
   }
 
-  std::string getName() { return secName; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  KOKKOS_DEPRECATED std::string getName() { return secName; }
 
-  uint32_t getSectionID() { return secID; }
+  KOKKOS_DEPRECATED uint32_t getSectionID() { return secID; }
+#endif
 
  protected:
   const std::string secName;
