@@ -153,22 +153,24 @@ class SYCLTeamMember {
                   typename ReducerType::value_type& value) const noexcept {
     using value_type = typename ReducerType::value_type;
 
-    auto sg                    = m_item.get_sub_group();
-    const auto sub_group_range = sg.get_local_range()[0];
-    const auto vector_range    = m_item.get_local_range(1);
+    auto sg                       = m_item.get_sub_group();
+    const auto sub_group_range    = sg.get_local_range()[0];
+    const auto vector_range       = m_item.get_local_range(1);
+    const unsigned int team_size_ = team_size();
+    const unsigned int team_rank_ = team_rank();
 
     // First combine the values in the same subgroup
     for (unsigned int shift = 1; vector_range * shift < sub_group_range;
          shift <<= 1) {
       const value_type tmp = sg.shuffle_down(value, vector_range * shift);
-      if (team_rank() + shift < team_size()) reducer.join(value, tmp);
+      if (team_rank_ + shift < team_size_) reducer.join(value, tmp);
     }
     value = sg.shuffle(value, 0);
 
     // We need to chunk up the whole reduction because we might not have
     // allocated enough memory.
     const auto n_subgroups = sg.get_group_range()[0];
-    const int maximum_work_range =
+    const unsigned int maximum_work_range =
         std::min<int>(m_team_reduce_size / sizeof(value_type), n_subgroups);
 
     const auto id_in_sg  = sg.get_local_id()[0];
@@ -178,18 +180,17 @@ class SYCLTeamMember {
     // array in chunks. This means that only sub groups with an id in the
     // corresponding chunk load values.
     const auto group_id = sg.get_group_id()[0];
-    /*if (id_in_sg == 0)*/ {
-      if (id_in_sg == 0 && group_id < maximum_work_range)
-        reduction_array[group_id] = value;
-      m_item.barrier(sycl::access::fence_space::local_space);
+    if (id_in_sg == 0 && group_id < maximum_work_range)
+      reduction_array[group_id] = value;
+    m_item.barrier(sycl::access::fence_space::local_space);
 
-      for (int start = maximum_work_range; start < n_subgroups;
-           start += maximum_work_range) {
-        if (id_in_sg == 0 && group_id >= start &&
-            group_id < std::min<int>(start + maximum_work_range, n_subgroups))
-          reducer.join(reduction_array[group_id - start], value);
-        m_item.barrier(sycl::access::fence_space::local_space);
-      }
+    for (unsigned int start = maximum_work_range; start < n_subgroups;
+         start += maximum_work_range) {
+      if (id_in_sg == 0 && group_id >= start &&
+          group_id <
+              std::min<unsigned int>(start + maximum_work_range, n_subgroups))
+        reducer.join(reduction_array[group_id - start], value);
+      m_item.barrier(sycl::access::fence_space::local_space);
     }
 
     // Let the first subgroup do the final reduction
@@ -206,7 +207,8 @@ class SYCLTeamMember {
       sg.barrier();
 
       // Now do the actual subgroup reduction.
-      const int min_range = std::min<int>(maximum_work_range, local_range);
+      const auto min_range =
+          std::min<unsigned int>(maximum_work_range, local_range);
       for (unsigned int stride = 1; stride < min_range; stride <<= 1) {
         const auto tmp = sg.shuffle_down(result, stride);
         if (id_in_sg + stride < min_range) reducer.join(result, tmp);
