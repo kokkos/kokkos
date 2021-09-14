@@ -96,9 +96,12 @@ class ParallelScanSYCLBase {
     pointer_type group_results   = global_mem + n_wgroups * wgroup_size;
 
     auto local_scans = q.submit([&](sycl::handler& cgh) {
+      // Store subgroup scans
+      const auto min_subgroup_size = q.get_device()
+            .template get_info<sycl::info::device::sub_group_sizes>().front();
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
-          local_mem(sycl::range<1>(wgroup_size), cgh);
+          local_mem(sycl::range<1>((wgroup_size+min_subgroup_size-1)/min_subgroup_size), cgh);
 
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
