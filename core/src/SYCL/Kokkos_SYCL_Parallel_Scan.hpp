@@ -80,32 +80,33 @@ void workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::local_ptr
   item.barrier(sycl::access::fence_space::local_space);
 
   // scan subgroup results using the first subgroup
-  if (sg_group_id == 0) {
-    const auto n_rounds = (n_active_subgroups + local_range - 1) / local_range;
-    for (int round = 0; round < n_rounds; ++round) {
-      const int idx = id_in_sg + round * local_range;
-      const auto upper_bound =
-        std::min(local_range, n_active_subgroups - round * local_range);
-      auto local_value = global_mem[idx + global_offset];
-      for (int stride = 1; stride < upper_bound; stride <<= 1) {
-        auto tmp = sg.shuffle_up(local_value, stride);
-        if (id_in_sg >= stride) {
-          if (idx < n_active_subgroups)
-            ValueJoin::join(functor, &local_value, &tmp);
-          else
-            local_value = tmp;
+  if (n_active_subgroups > 1) {
+    if(sg_group_id == 0) {
+      const auto n_rounds = (n_active_subgroups + local_range - 1) / local_range;
+      for (int round = 0; round < n_rounds; ++round) {
+        const int idx = id_in_sg + round * local_range;
+        const auto upper_bound =
+          std::min(local_range, n_active_subgroups - round * local_range);
+        auto local_value = global_mem[idx + global_offset];
+        for (int stride = 1; stride < upper_bound; stride <<= 1) {
+          auto tmp = sg.shuffle_up(local_value, stride);
+          if (id_in_sg >= stride) {
+            if (idx < n_active_subgroups)
+              ValueJoin::join(functor, &local_value, &tmp);
+            else
+              local_value = tmp;
+          }
         }
-      }
-      global_mem[idx + global_offset] = local_value;
-      if (round > 0)
-        ValueJoin::join(
-          functor, &global_mem[idx + global_offset],
-          &global_mem[round * local_range - 1 + global_offset]);
+        global_mem[idx + global_offset] = local_value;
+        if (round > 0)
+          ValueJoin::join(
+            functor, &global_mem[idx + global_offset],
+            &global_mem[round * local_range - 1 + global_offset]);
         if (round + 1 < n_rounds) sg.barrier();
       }
     }
+    item.barrier(sycl::access::fence_space::local_space);
   }
-  item.barrier(sycl::access::fence_space::local_space);
 
   // add results to all subgroups
   if (sg_group_id > 0)
