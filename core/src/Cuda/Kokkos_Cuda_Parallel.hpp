@@ -1289,7 +1289,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     thrust::counting_iterator<index_type> temp_iter_end_d(m_policy.end());
 
-    // Used for debugging
+    // Used for debugging code
     // printf("m_policy.begin(): %d\n", m_policy.begin());
     // printf("m_policy.end(): %d\n", m_policy.end());
 
