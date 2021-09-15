@@ -91,6 +91,7 @@ struct StdIterSwapFunctor {
 
 template <class IteratorType1, class IteratorType2>
 void iter_swap_impl(IteratorType1 a, IteratorType2 b) {
+  // is there a better way to do this maybe?
   ::Kokkos::parallel_for(
       1, StdIterSwapFunctor<IteratorType1, IteratorType2>(a, b));
   Kokkos::DefaultExecutionSpace().fence("iter_swap: fence after operation");

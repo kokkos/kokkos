@@ -230,6 +230,37 @@ struct StdCompareFunctor {
         m_predicate(::Kokkos::Experimental::move(_predicate)) {}
 };
 
+template <class IteratorType, class ReducerType, class PredicateType>
+struct StdAdjacentFindFunctor {
+  using red_value_type = typename ReducerType::value_type;
+  using index_type     = typename red_value_type::index_type;
+
+  IteratorType m_first;
+  ReducerType m_reducer;
+  PredicateType m_p;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const index_type i, red_value_type& red_value) const {
+    auto my_it           = m_first + i;
+    auto next_it         = (my_it + 1);
+    const bool are_equal = m_p(*my_it, *next_it);
+
+    auto rv =
+        are_equal
+            ? red_value_type{i}
+            : red_value_type{::Kokkos::reduction_identity<index_type>::min()};
+
+    m_reducer.join(red_value, rv);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  StdAdjacentFindFunctor(IteratorType first, ReducerType reducer,
+                         PredicateType p)
+      : m_first(first),
+        m_reducer(::Kokkos::Experimental::move(reducer)),
+        m_p(::Kokkos::Experimental::move(p)) {}
+};
+
 //
 // impl functions
 //
@@ -297,7 +328,9 @@ IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
                              UnaryFunctorType functor) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
 
-  if (n <= 0) return first;
+  if (n <= 0) {
+    return first;
+  }
 
   auto last = first + n;
   for_each_impl(label, ex, first, last, ::Kokkos::Experimental::move(functor));
@@ -479,13 +512,12 @@ bool lexicographical_compare_impl(const std::string& label,
   result_view_type result("kokkos_lexicographical_compare_impl_result_view");
   reducer_type reducer(result);
 
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, range),
+  using func1_t =
       StdLexicographicalCompareFunctor<IteratorType1, IteratorType2,
-                                       reducer_type, ComparatorType>(
-          first1, first2, reducer, comp),
-      reducer);
-  ex.fence("lexicographical_compare: fence after operation");
+                                       reducer_type, ComparatorType>;
+  ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, range),
+                            func1_t(first1, first2, reducer, comp), reducer);
+  ex.fence("lexicographical_compare: fence after first reduce operation");
 
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
@@ -502,11 +534,12 @@ bool lexicographical_compare_impl(const std::string& label,
   int less = 0;
   auto it1 = first1 + r_h().min_loc_true;
   auto it2 = first2 + r_h().min_loc_true;
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, 1),
-      StdCompareFunctor<IteratorType1, IteratorType2, ComparatorType>(it1, it2,
-                                                                      comp),
-      less);
+  using func2_t =
+      StdCompareFunctor<IteratorType1, IteratorType2, ComparatorType>;
+  ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, 1),
+                            func2_t(it1, it2, comp), less);
+  ex.fence("lexicographical_compare: fence after second reduce operation");
+
   return static_cast<bool>(less);
 }
 
@@ -522,48 +555,6 @@ bool lexicographical_compare_impl(const std::string& label,
   return lexicographical_compare_impl(label, ex, first1, last1, first2, last2,
                                       predicate_t());
 }
-
-//
-//
-//
-template <class ValueType>
-struct StdAdjacentFindDefaultBinaryPredicate {
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType& a, const ValueType& b) const {
-    return (a == b);
-  }
-};
-
-template <class IteratorType, class ReducerType, class PredicateType>
-struct StdAdjacentFindFunctor {
-  using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename red_value_type::index_type;
-
-  IteratorType m_first;
-  ReducerType m_reducer;
-  PredicateType m_p;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
-    auto my_it           = m_first + i;
-    auto next_it         = (my_it + 1);
-    const bool are_equal = m_p(*my_it, *next_it);
-
-    auto rv =
-        are_equal
-            ? red_value_type{i}
-            : red_value_type{::Kokkos::reduction_identity<index_type>::min()};
-
-    m_reducer.join(red_value, rv);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  StdAdjacentFindFunctor(IteratorType first, ReducerType reducer,
-                         PredicateType p)
-      : m_first(first),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_p(::Kokkos::Experimental::move(p)) {}
-};
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType adjacent_find_impl(const std::string& label,
@@ -582,9 +573,6 @@ IteratorType adjacent_find_impl(const std::string& label,
   if (num_elements == 1) {
     return first + 1;
   } else {
-    // note that we use below num_elements-1 because
-    // each index i in the reduction checks i and (i+1).
-
     using index_type       = std::size_t;
     using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
     using result_view_type = typename reducer_type::result_view_type;
@@ -593,10 +581,11 @@ IteratorType adjacent_find_impl(const std::string& label,
     using func_t =
         StdAdjacentFindFunctor<IteratorType, reducer_type, PredicateType>;
 
-    const auto scan_size = num_elements - 1;
-    ::Kokkos::parallel_reduce(label,
-                              RangePolicy<ExecutionSpace>(ex, 0, scan_size),
-                              func_t(first, reducer, pred), reducer);
+    // note that we use below num_elements-1 because
+    // each index i in the reduction checks i and (i+1).
+    ::Kokkos::parallel_reduce(
+        label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
+        func_t(first, reducer, pred), reducer);
     ex.fence("adjacent_find: fence after operation");
 
     const auto r_h =
@@ -614,7 +603,7 @@ IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
                                 IteratorType last) {
   using value_type     = typename IteratorType::value_type;
-  using default_pred_t = StdAdjacentFindDefaultBinaryPredicate<value_type>;
+  using default_pred_t = StdAlgoEqualBinaryPredicate<value_type, value_type>;
   return adjacent_find_impl(label, ex, first, last, default_pred_t());
 }
 
