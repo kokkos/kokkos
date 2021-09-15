@@ -167,7 +167,7 @@ void run_single_scenario(const InfoType& scenario_info) {
             << ", " << value_type_to_string(ValueType()) << std::endl;
 
   using pred_type = IsEvenFunctor<ValueType>;
-  pred_type remove_all_even;
+  pred_type remove_if_even;
 
   {
     auto view = create_view<ValueType>(Tag{}, view_ext, "remove_if_view");
@@ -175,8 +175,8 @@ void run_single_scenario(const InfoType& scenario_info) {
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
     auto rit    = KE::remove_if(exespace(), KE::begin(view), KE::end(view),
-                             remove_all_even);
-    verify_data(data_h, view, rit, remove_all_even);
+                             remove_if_even);
+    verify_data(data_h, view, rit, remove_if_even);
   }
 
   {
@@ -185,8 +185,8 @@ void run_single_scenario(const InfoType& scenario_info) {
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
     auto rit    = KE::remove_if("label", exespace(), KE::begin(view),
-                             KE::end(view), remove_all_even);
-    verify_data(data_h, view, rit, remove_all_even);
+                             KE::end(view), remove_if_even);
+    verify_data(data_h, view, rit, remove_if_even);
   }
 
   {
@@ -194,8 +194,8 @@ void run_single_scenario(const InfoType& scenario_info) {
     fill_view(view, name);
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
-    auto rit    = KE::remove_if(exespace(), view, remove_all_even);
-    verify_data(data_h, view, rit, remove_all_even);
+    auto rit    = KE::remove_if(exespace(), view, remove_if_even);
+    verify_data(data_h, view, rit, remove_if_even);
   }
 
   {
@@ -203,8 +203,8 @@ void run_single_scenario(const InfoType& scenario_info) {
     fill_view(view, name);
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
-    auto rit    = KE::remove_if("label", exespace(), view, remove_all_even);
-    verify_data(data_h, view, rit, remove_all_even);
+    auto rit    = KE::remove_if("label", exespace(), view, remove_if_even);
+    verify_data(data_h, view, rit, remove_if_even);
   }
 
   Kokkos::fence();
