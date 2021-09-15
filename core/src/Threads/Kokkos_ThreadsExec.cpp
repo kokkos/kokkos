@@ -638,9 +638,8 @@ void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
       // Wait until spawned thread has attempted to initialize.
       // If spawning and initialization is successful then
       // an entry in 's_threads_exec' will be assigned.
-      if (ThreadsExec::spawn()) {
-        wait_yield(s_threads_process.m_pool_state, ThreadsExec::Inactive);
-      }
+      ThreadsExec::spawn();
+      wait_yield(s_threads_process.m_pool_state, ThreadsExec::Inactive);
       if (s_threads_process.m_pool_state == ThreadsExec::Terminating) break;
     }
 
@@ -873,7 +872,7 @@ void ThreadsSpaceInitializer::print_configuration(std::ostream &msg,
                                                   const bool detail) {
   msg << "Host Parallel Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_THREADS: ";
-  msg << "yes (C++ std::thread)" << std::endl;
+  msg << "yes" << std::endl;
 
   msg << "\nThreads Runtime Configuration:" << std::endl;
   Kokkos::Threads::print_configuration(msg, detail);

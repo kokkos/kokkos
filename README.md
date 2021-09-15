@@ -107,7 +107,7 @@ For specifics see the LICENSE file contained in the repository or distribution.
 
 Primary tested compiler are passing in release mode
 with warnings as errors. They also are tested with a comprehensive set of
-backend combinations (i.e. OpenMP, threads, Serial, OpenMP+Serial, ...).
+backend combinations (i.e. OpenMP, Threads, Serial, OpenMP+Serial, ...).
 We are using the following set of flags:
 * GCC:
    ````

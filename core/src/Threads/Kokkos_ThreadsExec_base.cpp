@@ -91,11 +91,9 @@ void internal_cppthread_driver() {
 //----------------------------------------------------------------------------
 // Spawn a thread
 
-bool ThreadsExec::spawn() {
+void ThreadsExec::spawn() {
   std::thread t(internal_cppthread_driver);
   t.detach();
-
-  return true;
 }
 
 //----------------------------------------------------------------------------
