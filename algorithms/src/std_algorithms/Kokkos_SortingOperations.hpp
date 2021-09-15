@@ -117,13 +117,15 @@ struct StdIsSortedFunctor {
         m_comparator(::Kokkos::Experimental::move(comparator)) {}
 };
 
+//
 // impl functions
-
+//
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 IteratorType is_sorted_until_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
                                   IteratorType last, ComparatorType comp) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
 
@@ -166,6 +168,7 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last,
                     ComparatorType comp) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   if (num_elements <= 1) {

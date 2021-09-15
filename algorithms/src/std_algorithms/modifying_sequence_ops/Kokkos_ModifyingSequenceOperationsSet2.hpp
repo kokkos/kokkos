@@ -313,6 +313,7 @@ OutputIterator unique_copy_impl(const std::string& label,
                                 PredicateType pred) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
 
@@ -347,6 +348,8 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator unique_copy_impl(const std::string& label,
                                 const ExecutionSpace& ex, InputIterator first,
                                 InputIterator last, OutputIterator d_first) {
+  expect_valid_range(first, last);
+
   using value_type1 = typename InputIterator::value_type;
   using value_type2 = typename OutputIterator::value_type;
   using binary_pred_t =
@@ -358,6 +361,7 @@ template <class ExecutionSpace, class InputIterator>
 void reverse_impl(const std::string& label, const ExecutionSpace& ex,
                   InputIterator first, InputIterator last) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator>();
+  expect_valid_range(first, last);
 
   if (last >= first + 2) {
     // only need half
@@ -375,6 +379,7 @@ OutputIterator reverse_copy_impl(const std::string& label,
                                  InputIterator last, OutputIterator d_first) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
@@ -390,6 +395,7 @@ OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
                          OutputIterator d_first) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
@@ -405,6 +411,7 @@ IteratorType2 move_backward_impl(const std::string& label,
                                  IteratorType1 last, IteratorType2 d_last) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
@@ -420,6 +427,7 @@ IteratorType2 swap_ranges_impl(const std::string& label,
                                IteratorType1 last1, IteratorType2 first2) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  expect_valid_range(first1, last1);
 
   const auto num_elements_to_swap = last1 - first1;
   ::Kokkos::parallel_for(
@@ -434,6 +442,7 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
                          PredicateType pred) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   if (num_elements == 0) {
@@ -521,6 +530,9 @@ OutputIterator rotate_copy_impl(const std::string& label,
                                 OutputIterator d_first) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first, last);
+  expect_valid_range(first, n_first);
+  expect_valid_range(n_first, last);
 
   if (first == last) {
     return d_first;
@@ -573,6 +585,7 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
                             IteratorType first, IteratorType last,
                             UnaryPredicateType pred) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   if (first == last) {
     return last;

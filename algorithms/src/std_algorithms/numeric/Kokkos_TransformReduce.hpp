@@ -186,6 +186,7 @@ ValueType transform_reduce_custom_functors_impl(
       admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType,
                                      IteratorType>::value,
       "");
+  expect_valid_range(first, last);
 
   if (first == last) {
     // init is returned, unmodified
@@ -227,6 +228,7 @@ ValueType transform_reduce_custom_functors_impl(
       admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType1,
                                      IteratorType2>::value,
       "");
+  expect_valid_range(first1, last1);
 
   if (first1 == last1) {
     // init is returned, unmodified
@@ -267,6 +269,7 @@ ValueType transform_reduce_default_functors_impl(
       admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType1,
                                      IteratorType2>::value,
       "");
+  expect_valid_range(first1, last1);
 
   using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
   using transformer_type =

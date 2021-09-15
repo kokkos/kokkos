@@ -243,6 +243,7 @@ OutputIteratorType exclusive_scan_custom_op_impl(
       admissible_to_exclusive_scan<ExecutionSpace, ValueType, InputIteratorType,
                                    OutputIteratorType>::value,
       "");
+  expect_valid_range(first_from, last_from);
 
   using index_type    = std::size_t;
   using value_type    = typename OutputIteratorType::value_type;
@@ -273,9 +274,10 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
       admissible_to_exclusive_scan<ExecutionSpace, ValueType, InputIteratorType,
                                    OutputIteratorType>::value,
       "");
+  expect_valid_range(first_from, last_from);
 
   // we are unnecessarily duplicating code, but this is on purpose
-  // so that we can usee the default_op for OpenMPTarget.
+  // so that we can use the default_op for OpenMPTarget.
   // Originally, I had this implemented as:
   // '''
   // using value_type = typename OutputIteratorType::value_type;
@@ -311,6 +313,7 @@ OutputIteratorType transform_exclusive_scan_impl(
                                              InputIteratorType,
                                              OutputIteratorType>::value,
       "");
+  expect_valid_range(first_from, last_from);
 
   using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;

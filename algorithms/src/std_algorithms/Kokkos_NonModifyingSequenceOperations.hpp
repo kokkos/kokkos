@@ -55,12 +55,11 @@
 
 namespace Kokkos {
 namespace Experimental {
-
-// ------------------------------------------
-// begin Impl namespace
 namespace Impl {
 
+// -------------
 // functors
+// -------------
 template <class IteratorType, class UnaryFunctorType>
 struct StdForEachFunctor {
   IteratorType m_first;
@@ -261,15 +260,16 @@ struct StdAdjacentFindFunctor {
         m_p(::Kokkos::Experimental::move(p)) {}
 };
 
-//
+// ---------------------
 // impl functions
-//
+// ---------------------
 template <bool is_find_if, class ExecutionSpace, class IteratorType,
           class PredicateType>
 IteratorType find_if_or_not_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType first,
                                  IteratorType last, PredicateType pred) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   if (first == last) {
     return last;
@@ -312,6 +312,7 @@ UnaryFunctorType for_each_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType first,
                                IteratorType last, UnaryFunctorType functor) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
@@ -333,6 +334,7 @@ IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
   }
 
   auto last = first + n;
+  expect_valid_range(first, last);
   for_each_impl(label, ex, first, last, ::Kokkos::Experimental::move(functor));
   return last;
 }
@@ -344,6 +346,7 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
                                                      IteratorType last,
                                                      Predicate predicate) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements                      = last - first;
   typename IteratorType::difference_type count = 0;
@@ -370,6 +373,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     BinaryPredicateType predicate) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  expect_valid_range(first1, last1);
+  expect_valid_range(first2, last2);
 
   const auto num_e1                = last1 - first1;
   const auto num_e2                = last2 - first2;
@@ -412,6 +417,9 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 ::Kokkos::pair<IteratorType1, IteratorType2> mismatch_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, IteratorType2 last2) {
+  expect_valid_range(first1, last1);
+  expect_valid_range(first2, last2);
+
   using value_type1 = typename IteratorType1::value_type;
   using value_type2 = typename IteratorType2::value_type;
   using pred_t      = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
@@ -444,6 +452,7 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 BinaryPredicateType predicate) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  expect_valid_range(first1, last1);
 
   const auto num_elements = last1 - first1;
   std::size_t different   = 0;
@@ -485,6 +494,9 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
                 IteratorType2 last2) {
+  expect_valid_range(first1, last1);
+  expect_valid_range(first2, last2);
+
   using value_type1 = typename IteratorType1::value_type;
   using value_type2 = typename IteratorType2::value_type;
   using pred_t      = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
@@ -500,6 +512,8 @@ bool lexicographical_compare_impl(const std::string& label,
                                   ComparatorType comp) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  expect_valid_range(first1, last1);
+  expect_valid_range(first2, last2);
 
   auto d1    = Kokkos::Experimental::distance(first1, last1);
   auto d2    = Kokkos::Experimental::distance(first2, last2);
@@ -548,6 +562,9 @@ bool lexicographical_compare_impl(const std::string& label,
                                   const ExecutionSpace& ex,
                                   IteratorType1 first1, IteratorType1 last1,
                                   IteratorType2 first2, IteratorType2 last2) {
+  expect_valid_range(first1, last1);
+  expect_valid_range(first2, last2);
+
   using value_type_1 = typename IteratorType1::value_type;
   using value_type_2 = typename IteratorType2::value_type;
   using predicate_t =
@@ -560,9 +577,8 @@ template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
                                 IteratorType last, PredicateType pred) {
-  static_assert(
-      are_random_access_iterators<IteratorType>::value,
-      "Currently, Kokkos standard algorithms require random access iterators.");
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   if (first == last) {
     return last;

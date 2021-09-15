@@ -211,6 +211,7 @@ OutputIteratorType inclusive_scan_default_op_impl(
     OutputIteratorType first_dest) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
@@ -233,6 +234,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
     OutputIteratorType first_dest, BinaryOpType binary_op) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   using index_type    = std::size_t;
   using value_type    = typename OutputIteratorType::value_type;
@@ -257,6 +259,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
     ValueType init_value) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
@@ -287,6 +290,7 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
                                                  UnaryOpType unary_op) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
@@ -312,6 +316,7 @@ OutputIteratorType transform_inclusive_scan_impl(
     ValueType init_value) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;

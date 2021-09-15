@@ -284,6 +284,7 @@ OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
                          OutputIterator d_first) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
@@ -314,6 +315,7 @@ IteratorType2 copy_backward_impl(const std::string& label,
                                  IteratorType1 last, IteratorType2 d_last) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
@@ -330,6 +332,7 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
                             OutputIterator d_first, PredicateType pred) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first, last);
 
   /*
     To explain the impl, suppose that our data is:
@@ -373,6 +376,7 @@ template <class ExecutionSpace, class IteratorType, class T>
 void fill_impl(const std::string& label, const ExecutionSpace& ex,
                IteratorType first, IteratorType last, const T& value) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(label,
@@ -391,6 +395,7 @@ IteratorType fill_n_impl(const std::string& label, const ExecutionSpace& ex,
   }
 
   auto last = first + n;
+  expect_valid_range(first, last);
   fill_impl(label, ex, first, last, value);
   return last;
 }
@@ -403,6 +408,7 @@ OutputIterator transform_impl(const std::string& label,
                               UnaryOperation unary_op) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
+  expect_valid_range(first1, last1);
 
   const auto num_elements = last1 - first1;
   ::Kokkos::parallel_for(
@@ -422,6 +428,7 @@ OutputIterator transform_impl(const std::string& label,
                               BinaryOperation binary_op) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator1,
                                              InputIterator2, OutputIterator>();
+  expect_valid_range(first1, last1);
 
   const auto num_elements = last1 - first1;
   ::Kokkos::parallel_for(
@@ -437,6 +444,7 @@ template <class ExecutionSpace, class IteratorType, class Generator>
 void generate_impl(const std::string& label, const ExecutionSpace& ex,
                    IteratorType first, IteratorType last, Generator g) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(label,
@@ -463,6 +471,7 @@ void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
                      IteratorType first, IteratorType last, PredicateType pred,
                      const ValueType& new_value) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   using func_t = StdReplaceIfFunctor<IteratorType, PredicateType, ValueType>;
@@ -476,6 +485,7 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
                   IteratorType first, IteratorType last,
                   const ValueType& old_value, const ValueType& new_value) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   using func_t            = StdReplaceFunctor<IteratorType, ValueType>;
@@ -495,6 +505,7 @@ OutputIteratorType replace_copy_impl(const std::string& label,
                                      const ValueType& new_value) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   const auto num_elements = last_from - first_from;
   using func_t =
@@ -516,6 +527,7 @@ OutputIteratorType replace_copy_if_impl(const std::string& label,
                                         const ValueType& new_value) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   const auto num_elements = last_from - first_from;
   using func_t = StdReplaceIfCopyFunctor<InputIteratorType, OutputIteratorType,

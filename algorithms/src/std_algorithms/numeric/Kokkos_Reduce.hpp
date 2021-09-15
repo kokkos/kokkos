@@ -125,6 +125,7 @@ ValueType reduce_custom_functors_impl(const std::string& label,
   static_assert(
       admissible_to_reduce<ExecutionSpace, ValueType, IteratorType>::value,
       "types not admissible to reduce");
+  expect_valid_range(first, last);
 
   if (first == last) {
     // init is returned, unmodified
@@ -160,6 +161,7 @@ ValueType reduce_default_functors_impl(const std::string& label,
   static_assert(
       admissible_to_reduce<ExecutionSpace, ValueType, IteratorType>::value,
       "types not admissible to reduce");
+  expect_valid_range(first, last);
 
   using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;
   using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;

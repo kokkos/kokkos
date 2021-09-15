@@ -109,6 +109,7 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
                                             BinaryOp bin_op) {
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   if (first_from == last_from) {
     return first_dest;
