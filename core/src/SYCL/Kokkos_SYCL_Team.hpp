@@ -319,8 +319,8 @@ class SYCLTeamMember {
       const int n_active_subgroups = (n+max_local_range-1)/max_local_range;
       const Type partial_total = base_data[n_active_subgroups];*/
 
-    const auto update = sg.shuffle_up(value, 1);
-    intermediate = base_data[group_id] + (id_in_sg>0?update:0);
+    const auto update = sg.shuffle_up(value, vector_range);
+    intermediate = base_data[group_id] + (id_in_sg>=vector_range?update:0);
 
     if (global_accum) {
       if (id_in_sg == sub_group_range-1 && group_id == n_subgroups -1 ) {
