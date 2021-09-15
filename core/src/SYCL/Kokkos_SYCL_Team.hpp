@@ -227,27 +227,27 @@ class SYCLTeamMember {
   // temp must point to an array containing the data to be processed
   // The accumulated value is returned.
   template <typename Type>
-  static Type prescan(sycl::nd_item<2> m_item, Type* temp, int n) {
+  static Type prescan(sycl::nd_item<2> m_item, Type* temp, int n, int max_range) {
     int thid = m_item.get_local_id(0);
 
     // First do a reduction saving intermediate results
     for (int stride = 1; stride < n; stride <<= 1) {
       auto idx = 2 * stride * (thid + 1) - 1;
-      if (idx < n) temp[idx] += temp[idx - stride];
+      if (idx < max_range) temp[idx] += temp[idx - stride];
       m_item.barrier(sycl::access::fence_space::local_space);
     }
 
-    Type total_sum = temp[n - 1];
+    Type total_sum = temp[max_range - 1];
     m_item.barrier(sycl::access::fence_space::local_space);
 
     // clear the last element so we get an exclusive scan
-    if (thid == 0) temp[n - 1] = Type{};
+    if (thid == 0) temp[max_range - 1] = Type{};
     m_item.barrier(sycl::access::fence_space::local_space);
 
     // Now add the intermediate results to the remaining items again
     for (int stride = n / 2; stride > 0; stride >>= 1) {
       auto idx = 2 * stride * (thid + 1) - 1;
-      if (idx < n) {
+      if (idx < max_range) {
         Type dummy         = temp[idx - stride];
         temp[idx - stride] = temp[idx];
         temp[idx] += dummy;
@@ -269,39 +269,56 @@ class SYCLTeamMember {
    *  non-deterministic.
    */
   template <typename Type>
-  KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value,
+  KOKKOS_INLINE_FUNCTION Type team_scan(const Type& input_value,
                                         Type* const global_accum) const {
+    KOKKOS_IMPL_DO_NOT_USE_PRINTF("in %d: %ld\n", team_rank(), input_value);
+    Type value = input_value;
+    auto sg                    = m_item.get_sub_group();
+    const auto sub_group_range = sg.get_local_range()[0];
+    const auto vector_range    = m_item.get_local_range(1);
+    const auto id_in_sg     = sg.get_local_id()[0];
+
+    // First combine the values in the same subgroup
+    for (unsigned int stride = 1; vector_range * stride < sub_group_range; stride <<= 1) {
+      auto tmp = sg.shuffle_up(value, vector_range*stride);
+      if (id_in_sg >= vector_range*stride)
+        value+= tmp;
+    }
+    KOKKOS_IMPL_DO_NOT_USE_PRINTF("sg reduced %d(%d, %d): %ld\n", team_rank(), sub_group_range, vector_range, value);
+
     // We need to chunk up the whole reduction because we might not have
     // allocated enough memory.
-    const int maximum_work_range =
-        std::min<int>(m_team_reduce_size / sizeof(Type), team_size());
+    const auto n_subgroups = sg.get_group_range()[0];
+    const unsigned int maximum_work_range =
+        std::min<int>(m_team_reduce_size / sizeof(Type), n_subgroups);
 
-    int not_greater_power_of_two = 1;
+    unsigned int not_greater_power_of_two = 1;
     while ((not_greater_power_of_two << 1) < maximum_work_range + 1)
       not_greater_power_of_two <<= 1;
 
     Type intermediate;
     Type total{};
 
-    const int team_idx   = team_rank();
-    const int vector_idx = m_item.get_local_id(1); 
     const auto base_data = static_cast<Type*>(m_team_reduce);
 
     // Load values into the first not_greater_power_of_two values of the
     // reduction array in chunks. This means that only threads with an id in the
     // corresponding chunk load values and the reduction is always done by the
     // first not_greater_power_of_two threads.
-    for (int start = 0; start < team_size();
+    const auto group_id = sg.get_group_id()[0];
+    for (unsigned int start = 0; start < n_subgroups;
          start += not_greater_power_of_two) {
       m_item.barrier(sycl::access::fence_space::local_space);
-      if (vector_idx == 0 && team_idx >= start && team_idx < start + not_greater_power_of_two) {
-        base_data[team_idx - start] = value;
+      if (id_in_sg == sub_group_range-1 && group_id >= start && group_id < start + not_greater_power_of_two) {
+	KOKKOS_IMPL_DO_NOT_USE_PRINTF("Loading group %d: %d\n", group_id, value);
+        base_data[group_id - start] = value;
       }
       m_item.barrier(sycl::access::fence_space::local_space);
 
       const Type partial_total =
-          prescan(m_item, base_data, not_greater_power_of_two);
+          prescan(m_item, base_data, not_greater_power_of_two, n_subgroups);
       m_item.barrier(sycl::access::fence_space::local_space);
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("partial_total: %d, n_subgroups: %d, %d\n", partial_total, n_subgroups, base_data[0]);
 /*
       using FunctorType = Kokkos::Sum<Type>;
       using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, void>;
@@ -312,8 +329,10 @@ class SYCLTeamMember {
       const int n_active_subgroups = (n+max_local_range-1)/max_local_range;
       const Type partial_total = base_data[n_active_subgroups];*/
 
-      if (team_idx >= start && team_idx < start + not_greater_power_of_two)
-        intermediate = base_data[team_idx - start] + total;
+      if (group_id >= start && group_id < start + not_greater_power_of_two) {
+        const auto update = sg.shuffle_up(value, 1);
+        intermediate = base_data[group_id - start] + total + (id_in_sg>0?update:0);
+      }
       if (start == 0)
         total = partial_total;
       else
@@ -321,13 +340,14 @@ class SYCLTeamMember {
     }
 
     if (global_accum) {
-      if (vector_idx == 0 && team_size() == team_idx + 1) {
-        base_data[team_size()] = atomic_fetch_add(global_accum, total);
+      if (id_in_sg == sub_group_range-1 && group_id == n_subgroups -1 ) {
+        base_data[n_subgroups] = atomic_fetch_add(global_accum, total);
       }
       m_item.barrier();  // Wait for atomic
-      intermediate += base_data[team_size()];
+      intermediate += base_data[n_subgroups];
     }
 
+    KOKKOS_IMPL_DO_NOT_USE_PRINTF("out %d: %ld\n", team_rank(), intermediate);
     return intermediate;
   }
 
