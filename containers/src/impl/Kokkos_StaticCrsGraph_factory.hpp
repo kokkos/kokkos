@@ -47,8 +47,8 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-#include<Kokkos_Core.hpp>
-#include<Kokkos_StaticCrsGraph.hpp>
+#include <Kokkos_Core.hpp>
+#include <Kokkos_StaticCrsGraph.hpp>
 
 namespace Kokkos {
 
