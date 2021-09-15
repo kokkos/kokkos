@@ -19,6 +19,7 @@ MACRO(kokkos_internal_have_compiler_nvcc)
   ENDIF()
 ENDMACRO()
 
+IF(NOT Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
 IF(Kokkos_ENABLE_CUDA)
   # find kokkos_launch_compiler
   FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
@@ -45,6 +46,11 @@ IF(Kokkos_ENABLE_CUDA)
     kokkos_internal_have_compiler_nvcc(
       ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER} -DKOKKOS_DEPENDENCE)
     SET(INTERNAL_USE_COMPILER_LAUNCHER true)
+  ENDIF()
+ENDIF()
+ELSE()
+  IF(Kokkos_ENABLE_CUDA)
+    kokkos_internal_have_compiler_nvcc(${CMAKE_CUDA_COMPILER})
   ENDIF()
 ENDIF()
 
