@@ -80,6 +80,7 @@ LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsRemoveIf.cpp
   TestStdAlgorithmsRemove.cpp
   TestStdAlgorithmsRemoveCopy.cpp
+  TestStdAlgorithmsRemoveCopyIf.cpp
 )
 
 IF(Kokkos_ENABLE_OPENMP)

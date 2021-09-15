@@ -651,6 +651,23 @@ auto remove_copy_impl(const std::string& label, const ExecutionSpace& ex,
                                          first_dest, predicate_type(value));
 }
 
+template <class ExecutionSpace, class InputIteratorType,
+          class OutputIteratorType, class UnaryPredicate>
+auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
+                         InputIteratorType first_from,
+                         InputIteratorType last_from,
+                         OutputIteratorType first_dest,
+                         const UnaryPredicate& pred) {
+  // this is like copy_if except that we need to *ignore* the elements
+  // satisfying the pred, so we can solve this as follows:
+
+  using value_type = typename InputIteratorType::value_type;
+  using pred_wrapper_type =
+      StdAlgoNegateUnaryPredicateWrapper<value_type, UnaryPredicate>;
+  return ::Kokkos::Experimental::copy_if(label, ex, first_from, last_from,
+                                         first_dest, pred_wrapper_type(pred));
+}
+
 }  // namespace Impl
 //----------------------------------------------------------------------------
 
@@ -1188,6 +1205,61 @@ auto remove_copy(const std::string& label, const ExecutionSpace& ex,
       label, ex, ::Kokkos::Experimental::cbegin(view_from),
       ::Kokkos::Experimental::cend(view_from),
       ::Kokkos::Experimental::begin(view_dest), value);
+}
+
+// -------------------
+// remove_copy_if
+// -------------------
+template <class ExecutionSpace, class InputIterator, class OutputIterator,
+          class UnaryPredicate>
+OutputIterator remove_copy_if(const ExecutionSpace& ex,
+                              InputIterator first_from, InputIterator last_from,
+                              OutputIterator first_dest,
+                              const UnaryPredicate& pred) {
+  return Impl::remove_copy_if_impl("kokkos_remove_copy_if_iterator_api_default",
+                                   ex, first_from, last_from, first_dest, pred);
+}
+
+template <class ExecutionSpace, class InputIterator, class OutputIterator,
+          class UnaryPredicate>
+OutputIterator remove_copy_if(const std::string& label,
+                              const ExecutionSpace& ex,
+                              InputIterator first_from, InputIterator last_from,
+                              OutputIterator first_dest,
+                              const UnaryPredicate& pred) {
+  return Impl::remove_copy_if_impl(label, ex, first_from, last_from, first_dest,
+                                   pred);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class UnaryPredicate>
+auto remove_copy_if(const ExecutionSpace& ex,
+                    const ::Kokkos::View<DataType1, Properties1...>& view_from,
+                    const ::Kokkos::View<DataType2, Properties2...>& view_dest,
+                    const UnaryPredicate& pred) {
+  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+
+  return Impl::remove_copy_if_impl(
+      "kokkos_remove_copy_if_iterator_api_default", ex,
+      ::Kokkos::Experimental::cbegin(view_from),
+      ::Kokkos::Experimental::cend(view_from),
+      ::Kokkos::Experimental::begin(view_dest), pred);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class UnaryPredicate>
+auto remove_copy_if(const std::string& label, const ExecutionSpace& ex,
+                    const ::Kokkos::View<DataType1, Properties1...>& view_from,
+                    const ::Kokkos::View<DataType2, Properties2...>& view_dest,
+                    const UnaryPredicate& pred) {
+  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+
+  return Impl::remove_copy_if_impl(
+      label, ex, ::Kokkos::Experimental::cbegin(view_from),
+      ::Kokkos::Experimental::cend(view_from),
+      ::Kokkos::Experimental::begin(view_dest), pred);
 }
 
 }  // namespace Experimental

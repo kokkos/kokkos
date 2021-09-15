@@ -78,6 +78,18 @@ struct StdAlgoNotEqualsValUnaryPredicate {
   StdAlgoNotEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
 };
 
+template <class ValueType, class PredicateType>
+struct StdAlgoNegateUnaryPredicateWrapper {
+  PredicateType m_pred;
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(const ValueType& val) const { return !m_pred(val); }
+
+  KOKKOS_INLINE_FUNCTION
+  StdAlgoNegateUnaryPredicateWrapper(const PredicateType& pred)
+      : m_pred(pred) {}
+};
+
 // ------------------
 // BINARY PREDICATES
 // ------------------
