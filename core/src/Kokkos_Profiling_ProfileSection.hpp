@@ -56,6 +56,9 @@ namespace Profiling {
 
 class ProfilingSection {
  public:
+  ProfilingSection(ProfilingSection const&) = delete;
+  ProfilingSection& operator=(ProfilingSection const&) = delete;
+  
   ProfilingSection(const std::string& sectionName)
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
       : secName(sectionName)
