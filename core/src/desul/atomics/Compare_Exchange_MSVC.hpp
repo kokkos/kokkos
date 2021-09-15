@@ -88,7 +88,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8 && sizeof(T) != 16), T>::type atomic_exchange(
+typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8), T>::type atomic_exchange(
      T* const dest, T val, MemoryOrder, MemoryScope scope) {
   while (!Impl::lock_address((void*)dest, scope)) {}
   if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
