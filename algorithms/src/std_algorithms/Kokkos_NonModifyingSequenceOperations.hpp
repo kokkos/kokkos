@@ -51,6 +51,7 @@
 #include "Kokkos_MinMaxOperations.hpp"
 #include "Kokkos_ModifyingOperations.hpp"
 #include "Kokkos_HelperPredicates.hpp"
+#include "Kokkos_RandomAccessIterator.hpp"
 #include <string>
 
 namespace Kokkos {
@@ -480,9 +481,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
                 IteratorType2 last2, BinaryPredicateType predicate) {
-  // FIXME: use Kokkos::Experimental::distance when available (?)
-  const auto d1 = last1 - first1;
-  const auto d2 = last2 - first2;
+  const auto d1 = ::Kokkos::Experimental::distance(first1, last1);
+  const auto d2 = ::Kokkos::Experimental::distance(first2, last2);
   if (d1 != d2) {
     return false;
   }
@@ -1159,7 +1159,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, BinaryPredicateType predicate) {
   return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
-                          last1, first2, predicate);
+                          last1, first2,
+                          ::Kokkos::Experimental::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -1167,7 +1168,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal(const std::string& label, const ExecutionSpace& ex,
            IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
            BinaryPredicateType predicate) {
-  return Impl::equal_impl(label, ex, first1, last1, first2, predicate);
+  return Impl::equal_impl(label, ex, first1, last1, first2,
+                          ::Kokkos::Experimental::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -1209,7 +1211,7 @@ bool equal(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl("kokkos_equal_view_api_default", ex,
                           KE::cbegin(view1), KE::cend(view1), KE::cbegin(view2),
-                          predicate);
+                          KE::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -1223,7 +1225,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl(label, ex, KE::cbegin(view1), KE::cend(view1),
-                          KE::cbegin(view2), predicate);
+                          KE::cbegin(view2), KE::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
@@ -1246,7 +1248,8 @@ bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, IteratorType2 last2,
            BinaryPredicateType predicate) {
   return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
-                          last1, first2, last2, predicate);
+                          last1, first2, last2,
+                          ::Kokkos::Experimental::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -1254,7 +1257,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal(const std::string& label, const ExecutionSpace& ex,
            IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
            IteratorType2 last2, BinaryPredicateType predicate) {
-  return Impl::equal_impl(label, ex, first1, last1, first2, last2, predicate);
+  return Impl::equal_impl(label, ex, first1, last1, first2, last2,
+                          ::Kokkos::Experimental::move(predicate));
 }
 
 // ----------------------------------
