@@ -56,11 +56,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest>
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest>
 struct InclusiveScanDefaultFunctor {
   using execution_space = ExeSpace;
   using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
+  using index_type      = typename FirstFrom::difference_type;
 
   FirstFrom m_first_from;
   FirstDest m_first_dest;
@@ -70,7 +70,7 @@ struct InclusiveScanDefaultFunctor {
       : m_first_from(first_from), m_first_dest(first_dest) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     const auto tmp = value_type{*(m_first_from + i), false};
     this->join(update, tmp);
@@ -99,11 +99,12 @@ struct InclusiveScanDefaultFunctor {
   }
 };
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest, class BinaryOpType, class UnaryOpType>
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest,
+          class BinaryOpType, class UnaryOpType>
 struct TransformInclusiveScanNoInitValueFunctor {
   using execution_space = ExeSpace;
   using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
+  using index_type      = typename FirstFrom::difference_type;
 
   FirstFrom m_first_from;
   FirstDest m_first_dest;
@@ -120,7 +121,7 @@ struct TransformInclusiveScanNoInitValueFunctor {
         m_unary_op(::Kokkos::Experimental::move(uop)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     const auto myit = (m_first_from + i);
     const auto tmp  = value_type{m_unary_op(*myit), false};
@@ -149,11 +150,12 @@ struct TransformInclusiveScanNoInitValueFunctor {
   }
 };
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest, class BinaryOpType, class UnaryOpType>
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest,
+          class BinaryOpType, class UnaryOpType>
 struct TransformInclusiveScanWithInitValueFunctor {
   using execution_space = ExeSpace;
   using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
+  using index_type      = typename FirstFrom::difference_type;
 
   FirstFrom m_first_from;
   FirstDest m_first_dest;
@@ -173,7 +175,7 @@ struct TransformInclusiveScanWithInitValueFunctor {
         m_init(::Kokkos::Experimental::move(init)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     const auto myit = (m_first_from + i);
     const auto tmp  = value_type{m_unary_op(*myit), false};
@@ -213,11 +215,10 @@ OutputIteratorType inclusive_scan_default_op_impl(
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
-  using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
   using func_type =
-      InclusiveScanDefaultFunctor<ExecutionSpace, index_type, value_type,
-                                  InputIteratorType, OutputIteratorType>;
+      InclusiveScanDefaultFunctor<ExecutionSpace, value_type, InputIteratorType,
+                                  OutputIteratorType>;
 
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(label,
@@ -236,12 +237,11 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
-  using index_type    = std::size_t;
   using value_type    = typename OutputIteratorType::value_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
   using func_type     = TransformInclusiveScanNoInitValueFunctor<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
-      OutputIteratorType, BinaryOpType, unary_op_type>;
+      ExecutionSpace, value_type, InputIteratorType, OutputIteratorType,
+      BinaryOpType, unary_op_type>;
 
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(
@@ -261,15 +261,14 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
-  using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
   static_assert(std::is_same<value_type, ValueType>::value,
                 "Mismatching value_type");
 
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
   using func_type     = TransformInclusiveScanWithInitValueFunctor<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
-      OutputIteratorType, BinaryOpType, unary_op_type>;
+      ExecutionSpace, value_type, InputIteratorType, OutputIteratorType,
+      BinaryOpType, unary_op_type>;
 
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(label,
@@ -292,12 +291,10 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
-  using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
-
-  using func_type = TransformInclusiveScanNoInitValueFunctor<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
-      OutputIteratorType, BinaryOpType, UnaryOpType>;
+  using func_type  = TransformInclusiveScanNoInitValueFunctor<
+      ExecutionSpace, value_type, InputIteratorType, OutputIteratorType,
+      BinaryOpType, UnaryOpType>;
 
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(
@@ -318,14 +315,13 @@ OutputIteratorType transform_inclusive_scan_impl(
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
-  using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
   static_assert(std::is_same<value_type, ValueType>::value,
                 "Mismatching value_type");
 
   using func_type = TransformInclusiveScanWithInitValueFunctor<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
-      OutputIteratorType, BinaryOpType, UnaryOpType>;
+      ExecutionSpace, value_type, InputIteratorType, OutputIteratorType,
+      BinaryOpType, UnaryOpType>;
 
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(

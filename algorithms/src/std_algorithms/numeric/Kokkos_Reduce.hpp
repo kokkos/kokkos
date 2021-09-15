@@ -69,14 +69,15 @@ struct StdReduceDefaultJoinFunctor {
   }
 };
 
-template <class IndexType, class IteratorType, class ReducerType>
+template <class IteratorType, class ReducerType>
 struct StdReduceFunctor {
   using RedValueType = typename ReducerType::value_type;
   const IteratorType m_first;
   const ReducerType m_reducer;
+  using index_type = typename IteratorType::difference_type;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, RedValueType& red_value) const {
+  void operator()(const index_type i, RedValueType& red_value) const {
     const auto my_iterator = m_first + i;
     auto tmp_wrapped_value = RedValueType{*my_iterator, false};
     if (red_value.is_initial) {
@@ -133,11 +134,10 @@ ValueType reduce_custom_functors_impl(const std::string& label,
   }
 
   using iterator_value_type = typename IteratorType::value_type;
-  using index_type          = std::size_t;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
                                                  JoinerType, ExecutionSpace>;
-  using functor_type = StdReduceFunctor<index_type, IteratorType, reducer_type>;
+  using functor_type = StdReduceFunctor<IteratorType, reducer_type>;
 
   using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("reduce_custom_functors_impl_result");

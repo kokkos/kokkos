@@ -122,11 +122,12 @@ struct admissible_to_transform_exclusive_scan {
   static constexpr bool value = true;
 };
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest, class BinaryOpType, class UnaryOpType>
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest,
+          class BinaryOpType, class UnaryOpType>
 struct TransformExclusiveScanFunctor {
   using execution_space = ExeSpace;
   using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
+  using index_type      = typename FirstFrom::difference_type;
 
   ValueType m_init;
   FirstFrom m_first_from;
@@ -145,7 +146,7 @@ struct TransformExclusiveScanFunctor {
         m_unary_op(::Kokkos::Experimental::move(uop)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     if (final_pass) {
       if (i == 0) {
@@ -181,12 +182,12 @@ struct TransformExclusiveScanFunctor {
   }
 };
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest>
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest>
 struct ExclusiveScanDefaultFunctor {
   using execution_space = ExeSpace;
   using value_type =
       ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
+  using index_type = typename FirstFrom::difference_type;
 
   ValueType m_init;
   FirstFrom m_first_from;
@@ -200,7 +201,7 @@ struct ExclusiveScanDefaultFunctor {
         m_first_dest(first_dest) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     if (final_pass) {
       if (i == 0) {
@@ -245,11 +246,10 @@ OutputIteratorType exclusive_scan_custom_op_impl(
       "");
   expect_valid_range(first_from, last_from);
 
-  using index_type    = std::size_t;
   using value_type    = typename OutputIteratorType::value_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
   using func_type =
-      TransformExclusiveScanFunctor<ExecutionSpace, index_type, value_type,
+      TransformExclusiveScanFunctor<ExecutionSpace, value_type,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, unary_op_type>;
 
@@ -288,11 +288,10 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
   // I cannot use a custom binary op.
   // This is the same problem that occurs for reductions.
 
-  using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
   using func_type =
-      ExclusiveScanDefaultFunctor<ExecutionSpace, index_type, value_type,
-                                  InputIteratorType, OutputIteratorType>;
+      ExclusiveScanDefaultFunctor<ExecutionSpace, value_type, InputIteratorType,
+                                  OutputIteratorType>;
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
@@ -315,10 +314,9 @@ OutputIteratorType transform_exclusive_scan_impl(
       "");
   expect_valid_range(first_from, last_from);
 
-  using index_type = std::size_t;
   using value_type = typename OutputIteratorType::value_type;
   using func_type =
-      TransformExclusiveScanFunctor<ExecutionSpace, index_type, value_type,
+      TransformExclusiveScanFunctor<ExecutionSpace, value_type,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, UnaryOpType>;
 

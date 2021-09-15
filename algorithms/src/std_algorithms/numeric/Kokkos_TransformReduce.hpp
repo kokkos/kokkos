@@ -80,16 +80,17 @@ struct StdTranformReduceDefaultJoinFunctor {
   }
 };
 
-template <class IndexType, class IteratorType, class ReducerType,
-          class TransformType>
+template <class IteratorType, class ReducerType, class TransformType>
 struct StdTransformReduceSingleIntervalFunctor {
   using RedValueType = typename ReducerType::value_type;
+  using index_type   = typename IteratorType::difference_type;
+
   const IteratorType m_first;
   const ReducerType m_reducer;
   const TransformType m_transform;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, RedValueType& red_value) const {
+  void operator()(const index_type i, RedValueType& red_value) const {
     const auto my_iterator = m_first + i;
     auto tmp_wrapped_value = RedValueType{m_transform(*my_iterator), false};
     if (red_value.is_initial) {
@@ -108,17 +109,19 @@ struct StdTransformReduceSingleIntervalFunctor {
         m_transform(::Kokkos::Experimental::move(transform)) {}
 };
 
-template <class IndexType, class IteratorType1, class IteratorType2,
-          class ReducerType, class TransformType>
+template <class IteratorType1, class IteratorType2, class ReducerType,
+          class TransformType>
 struct StdTransformReduceTwoIntervalsFunctor {
   using RedValueType = typename ReducerType::value_type;
+  using index_type   = typename IteratorType1::difference_type;
+
   const IteratorType1 m_first1;
   const IteratorType2 m_first2;
   const ReducerType m_reducer;
   const TransformType m_transform;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, RedValueType& red_value) const {
+  void operator()(const index_type i, RedValueType& red_value) const {
     const auto my_iterator1 = m_first1 + i;
     const auto my_iterator2 = m_first2 + i;
     auto tmp_wrapped_value =
@@ -194,12 +197,12 @@ ValueType transform_reduce_custom_functors_impl(
   }
 
   using iterator_value_type = typename IteratorType::value_type;
-  using index_type          = std::size_t;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
                                                  JoinerType, ExecutionSpace>;
-  using functor_type = StdTransformReduceSingleIntervalFunctor<
-      index_type, IteratorType, reducer_type, UnaryTransformerType>;
+  using functor_type =
+      StdTransformReduceSingleIntervalFunctor<IteratorType, reducer_type,
+                                              UnaryTransformerType>;
 
   using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("transform_reduce_custom_functors_impl_result");
@@ -236,15 +239,12 @@ ValueType transform_reduce_custom_functors_impl(
   }
 
   using iterator_value_type = typename IteratorType1::value_type;
-  using index_type          = std::size_t;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
                                                  JoinerType, ExecutionSpace>;
 
-  using functor_type =
-      StdTransformReduceTwoIntervalsFunctor<index_type, IteratorType1,
-                                            IteratorType2, reducer_type,
-                                            BinaryTransformerType>;
+  using functor_type = StdTransformReduceTwoIntervalsFunctor<
+      IteratorType1, IteratorType2, reducer_type, BinaryTransformerType>;
 
   using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("transform_reduce_custom_functors_impl_result");

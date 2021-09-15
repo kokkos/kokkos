@@ -61,15 +61,16 @@ struct StdAdjacentDifferenceDefaultBinaryOpFunctor {
   }
 };
 
-template <class IndexType, class IteratorType, class DestViewType,
-          class BinaryOperator>
+template <class IteratorType, class DestViewType, class BinaryOperator>
 struct StdAdjacentDiffItToViewFunctor {
+  using index_type = typename IteratorType::difference_type;
+
   const IteratorType m_first;
   const DestViewType m_dest_view;
   BinaryOperator m_op;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i) const {
+  void operator()(const index_type i) const {
     const auto my_iterator = m_first + i;
     if (i == 0) {
       m_dest_view(i) = *my_iterator;
@@ -120,13 +121,11 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
   // in that case, we don't need the auxiliary view.
 
   const auto num_elements = last_from - first_from;
-  using index_type        = std::size_t;
   using value_type        = typename OutputIteratorType::value_type;
   using aux_view_type     = ::Kokkos::View<value_type*, ExecutionSpace>;
   aux_view_type aux_view("aux_view", num_elements);
-  using functor_t =
-      StdAdjacentDiffItToViewFunctor<index_type, InputIteratorType,
-                                     aux_view_type, BinaryOp>;
+  using functor_t = StdAdjacentDiffItToViewFunctor<InputIteratorType,
+                                                   aux_view_type, BinaryOp>;
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          functor_t(first_from, aux_view, bin_op));
