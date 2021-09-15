@@ -271,7 +271,7 @@ class SYCLTeamMember {
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& input_value,
                                         Type* const global_accum) const {
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("in %d: %ld\n", team_rank(), input_value);
+//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("in %d: %ld\n", team_rank(), input_value);
     Type value = input_value;
     auto sg                    = m_item.get_sub_group();
     const auto sub_group_range = sg.get_local_range()[0];
@@ -284,7 +284,7 @@ class SYCLTeamMember {
       if (id_in_sg >= vector_range*stride)
         value+= tmp;
     }
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("sg reduced %d(%d, %d): %ld\n", team_rank(), sub_group_range, vector_range, value);
+//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("sg reduced %d(%d, %d): %ld\n", team_rank(), sub_group_range, vector_range, value);
 
     // We need to chunk up the whole reduction because we might not have
     // allocated enough memory.
@@ -310,7 +310,7 @@ class SYCLTeamMember {
          start += not_greater_power_of_two) {
       m_item.barrier(sycl::access::fence_space::local_space);
       if (id_in_sg == sub_group_range-1 && group_id >= start && group_id < start + not_greater_power_of_two) {
-	KOKKOS_IMPL_DO_NOT_USE_PRINTF("Loading group %d: %d\n", group_id, value);
+//	KOKKOS_IMPL_DO_NOT_USE_PRINTF("Loading group %d: %d\n", group_id, value);
         base_data[group_id - start] = value;
       }
       m_item.barrier(sycl::access::fence_space::local_space);
@@ -318,7 +318,7 @@ class SYCLTeamMember {
       const Type partial_total =
           prescan(m_item, base_data, not_greater_power_of_two, n_subgroups);
       m_item.barrier(sycl::access::fence_space::local_space);
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("partial_total: %d, n_subgroups: %d, %d\n", partial_total, n_subgroups, base_data[0]);
+//      KOKKOS_IMPL_DO_NOT_USE_PRINTF("partial_total: %d, n_subgroups: %d, %d\n", partial_total, n_subgroups, base_data[0]);
 /*
       using FunctorType = Kokkos::Sum<Type>;
       using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, void>;
@@ -347,7 +347,7 @@ class SYCLTeamMember {
       intermediate += base_data[n_subgroups];
     }
 
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("out %d: %ld\n", team_rank(), intermediate);
+//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("out %d: %ld\n", team_rank(), intermediate);
     return intermediate;
   }
 
