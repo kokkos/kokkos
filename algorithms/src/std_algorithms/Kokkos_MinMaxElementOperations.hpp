@@ -184,9 +184,7 @@ auto min_element(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 auto min_element(const ExecutionSpace& ex, IteratorType first,
                  IteratorType last, ComparatorType comp) {
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "min_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
       "kokkos_min_element_iterator_api_default", ex, first, last,
@@ -196,9 +194,7 @@ auto min_element(const ExecutionSpace& ex, IteratorType first,
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 auto min_element(const std::string& label, const ExecutionSpace& ex,
                  IteratorType first, IteratorType last, ComparatorType comp) {
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "min_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
       label, ex, first, last, ::Kokkos::Experimental::move(comp));
@@ -219,9 +215,7 @@ auto min_element(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& v,
                  ComparatorType comp) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "min_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
       "kokkos_min_element_view_api_default", ex, cbegin(v), cend(v),
@@ -243,9 +237,7 @@ auto min_element(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& v,
                  ComparatorType comp) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "min_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
       label, ex, cbegin(v), cend(v), ::Kokkos::Experimental::move(comp));
@@ -270,9 +262,7 @@ auto max_element(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 auto max_element(const ExecutionSpace& ex, IteratorType first,
                  IteratorType last, ComparatorType comp) {
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "max_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
       "kokkos_max_element_iterator_api_default", ex, first, last,
@@ -282,9 +272,7 @@ auto max_element(const ExecutionSpace& ex, IteratorType first,
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 auto max_element(const std::string& label, const ExecutionSpace& ex,
                  IteratorType first, IteratorType last, ComparatorType comp) {
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "max_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
       label, ex, first, last, ::Kokkos::Experimental::move(comp));
@@ -314,9 +302,7 @@ auto max_element(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& v,
                  ComparatorType comp) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "max_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
       "kokkos_max_element_view_api_default", ex, cbegin(v), cend(v),
@@ -329,9 +315,7 @@ auto max_element(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& v,
                  ComparatorType comp) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "max_element with custom comparator not currently supported in "
-                "OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
       label, ex, cbegin(v), cend(v), ::Kokkos::Experimental::move(comp));
@@ -356,9 +340,7 @@ auto minmax_element(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 auto minmax_element(const ExecutionSpace& ex, IteratorType first,
                     IteratorType last, ComparatorType comp) {
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "minmax_element with custom comparator not currently supported "
-                "in OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
       "kokkos_minmax_element_iterator_api_default", ex, first, last,
@@ -401,9 +383,7 @@ auto minmax_element(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v,
                     ComparatorType comp) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "minmax_element with custom comparator not currently supported "
-                "in OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
       "kokkos_minmax_element_view_api_default", ex, cbegin(v), cend(v),
@@ -416,9 +396,7 @@ auto minmax_element(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v,
                     ComparatorType comp) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "minmax_element with custom comparator not currently supported "
-                "in OpenMPTarget");
+  static_assert_is_not_opemnptarget(ex);
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
       label, ex, cbegin(v), cend(v), ::Kokkos::Experimental::move(comp));
