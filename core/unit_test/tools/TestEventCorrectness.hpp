@@ -48,6 +48,7 @@
 #include <impl/Kokkos_Stacktrace.hpp>
 #include <vector>
 #include <algorithm>
+#include <ToolTestingUtilities.hpp>
 namespace Kokkos {
 class Serial;
 class OpenMP;
@@ -280,5 +281,17 @@ TEST(defaultdevicetype, test_streams) {
 }
 
 #endif
+TEST(defaultdevicetype, test_new_test_interface) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events({{true, false}});
+  validate_event_set({
+    std::make_shared<BeginParallelForEvent>("dogs"),
+    std::make_shared<EndParallelForEvent>(),
+  },[&](){
+    Kokkos::parallel_for("dogs",Kokkos::RangePolicy<>(0,1), KOKKOS_LAMBDA(int){});
+  });
+  listen_tool_events({});
+}
+
 
 }  // namespace Test
