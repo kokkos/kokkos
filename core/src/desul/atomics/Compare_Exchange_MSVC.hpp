@@ -18,10 +18,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 namespace desul {
 
-template<class T, class MemoryOrder, class MemoryScope>
-T atomic_exchange(T* const, T val, MemoryOrder, MemoryScope) { return val;}
-
-
 template<class MemoryOrder, class MemoryScope>
 void atomic_thread_fence(MemoryOrder, MemoryScope) {
   std::atomic_thread_fence(CXXMemoryOrder<MemoryOrder>::value);
