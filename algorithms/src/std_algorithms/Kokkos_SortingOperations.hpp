@@ -159,7 +159,7 @@ IteratorType is_sorted_until_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
                                   IteratorType last) {
   using value_type = typename IteratorType::value_type;
-  using pred_t = Impl::StdAlgoLessThanBinaryPredicate<value_type, value_type>;
+  using pred_t     = Impl::StdAlgoLessThanBinaryPredicate<value_type>;
   return is_sorted_until_impl(label, ex, first, last, pred_t());
 }
 
@@ -195,7 +195,7 @@ template <class ExecutionSpace, class IteratorType>
 bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last) {
   using value_type = typename IteratorType::value_type;
-  using pred_t = Impl::StdAlgoLessThanBinaryPredicate<value_type, value_type>;
+  using pred_t     = Impl::StdAlgoLessThanBinaryPredicate<value_type>;
   return is_sorted_impl(label, ex, first, last, pred_t());
 }
 

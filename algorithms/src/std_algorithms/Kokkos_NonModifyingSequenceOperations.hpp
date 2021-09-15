@@ -619,7 +619,7 @@ IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
                                 IteratorType last) {
   using value_type     = typename IteratorType::value_type;
-  using default_pred_t = StdAlgoEqualBinaryPredicate<value_type, value_type>;
+  using default_pred_t = StdAlgoEqualBinaryPredicate<value_type>;
   return adjacent_find_impl(label, ex, first, last, default_pred_t());
 }
 

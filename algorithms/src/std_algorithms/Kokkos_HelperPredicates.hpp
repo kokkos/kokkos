@@ -64,7 +64,7 @@ struct StdAlgoEqualsValUnaryPredicate {
   bool operator()(const T& val) const { return val == m_value; }
 
   KOKKOS_INLINE_FUNCTION
-  StdAlgoEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
+  explicit StdAlgoEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
 };
 
 template <class T>
@@ -75,7 +75,8 @@ struct StdAlgoNotEqualsValUnaryPredicate {
   bool operator()(const T& val) const { return !(val == m_value); }
 
   KOKKOS_INLINE_FUNCTION
-  StdAlgoNotEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
+  explicit StdAlgoNotEqualsValUnaryPredicate(const T& _value)
+      : m_value(_value) {}
 };
 
 template <class ValueType, class PredicateType>
@@ -86,14 +87,14 @@ struct StdAlgoNegateUnaryPredicateWrapper {
   bool operator()(const ValueType& val) const { return !m_pred(val); }
 
   KOKKOS_INLINE_FUNCTION
-  StdAlgoNegateUnaryPredicateWrapper(const PredicateType& pred)
+  explicit StdAlgoNegateUnaryPredicateWrapper(const PredicateType& pred)
       : m_pred(pred) {}
 };
 
 // ------------------
 // BINARY PREDICATES
 // ------------------
-template <class ValueType1, class ValueType2>
+template <class ValueType1, class ValueType2 = ValueType1>
 struct StdAlgoEqualBinaryPredicate {
   KOKKOS_INLINE_FUNCTION
   bool operator()(const ValueType1& a, const ValueType2& b) const {
@@ -101,10 +102,10 @@ struct StdAlgoEqualBinaryPredicate {
   }
 };
 
-template <class ValueType1, class ValueType2>
+template <class ValueType1, class ValueType2 = ValueType1>
 struct StdAlgoLessThanBinaryPredicate {
   KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType1& a, const ValueType1& b) const {
+  bool operator()(const ValueType1& a, const ValueType2& b) const {
     return a < b;
   }
 };
