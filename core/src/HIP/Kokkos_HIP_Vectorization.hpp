@@ -129,10 +129,6 @@ struct in_place_shfl_fn : in_place_shfl_op<in_place_shfl_fn> {
   template <class T>
   __device__ KOKKOS_IMPL_FORCEINLINE T do_shfl_op(T& val, int lane,
                                                   int width) const noexcept {
-    // FIXME_HIP Not sure why there is a race condition here. Note that the
-    // problem was also found in the CUDA backend with CUDA clang
-    // (https://github.com/kokkos/kokkos/issues/941) but it seems more limited
-    // in CUDA clang.
     auto return_val = __shfl(val, lane, width);
     return return_val;
   }
@@ -147,10 +143,6 @@ struct in_place_shfl_up_fn : in_place_shfl_op<in_place_shfl_up_fn> {
   template <class T>
   __device__ KOKKOS_IMPL_FORCEINLINE T do_shfl_op(T& val, int lane,
                                                   int width) const noexcept {
-    // FIXME_HIP Not sure why there is a race condition here. Note that the
-    // problem was also found in the CUDA backend with CUDA clang
-    // (https://github.com/kokkos/kokkos/issues/941) but it seems more limited
-    // in CUDA clang.
     auto return_val = __shfl_up(val, lane, width);
     return return_val;
   }
@@ -166,10 +158,6 @@ struct in_place_shfl_down_fn : in_place_shfl_op<in_place_shfl_down_fn> {
   template <class T>
   __device__ KOKKOS_IMPL_FORCEINLINE T do_shfl_op(T& val, int lane,
                                                   int width) const noexcept {
-    // FIXME_HIP Not sure why there is a race condition here. Note that the
-    // problem was also found in the CUDA backend with CUDA clang
-    // (https://github.com/kokkos/kokkos/issues/941) but it seems more limited
-    // in CUDA clang.
     auto return_val = __shfl_down(val, lane, width);
     return return_val;
   }
