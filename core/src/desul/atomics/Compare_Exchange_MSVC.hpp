@@ -91,6 +91,23 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
   return *(reinterpret_cast<T*>(&return_val));
 }
 
+template <typename T, class MemoryOrder, class MemoryScope>
+typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 4 && sizeof(T) != 8 && sizeof(T) != 16), T>::type atomic_exchange(
+     T* const dest, T val, MemoryOrder, MemoryScope scope) {
+  while (!Impl::lock_address((void*)dest, scope)) {}
+  if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+          atomic_thread_fence(MemoryOrderRelease(), scope);
+  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  T return_val = *dest;
+  if(return_val == compare) {
+    *dest = val;
+    atomic_thread_fence(MemoryOrderRelease(),scope);
+  }
+
+  Impl::unlock_address((void*)dest, scope);
+  return return_val;
+}
+
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 1, T>::type atomic_compare_exchange(
     T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
