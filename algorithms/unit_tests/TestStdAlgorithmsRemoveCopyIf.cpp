@@ -131,12 +131,10 @@ void fill_view(ViewType dest_view, const std::string& name) {
   Kokkos::parallel_for("copy", dest_view.extent(0), F1);
 }
 
-template <class ViewTypeFrom, class ViewTypeDest, class MyItResult, class PredicateType>
-void verify_data(ViewTypeFrom view_from,
-		 ViewTypeDest view_dest,
-                 MyItResult my_result,
-		 PredicateType pred)
-{
+template <class ViewTypeFrom, class ViewTypeDest, class MyItResult,
+          class PredicateType>
+void verify_data(ViewTypeFrom view_from, ViewTypeDest view_dest,
+                 MyItResult my_result, PredicateType pred) {
   // make a host copy of the view_from
   auto view_from_h      = create_host_space_copy(view_from);
   const std::size_t ext = view_from_h.extent(0);
@@ -145,10 +143,8 @@ void verify_data(ViewTypeFrom view_from,
   // run std::remove_copy_if
   std::vector<value_type> gold_dest_std(ext);
   auto std_result =
-      std::remove_copy_if(KE::cbegin(view_from_h),
-			  KE::cend(view_from_h),
-			  gold_dest_std.begin(),
-			  pred);
+      std::remove_copy_if(KE::cbegin(view_from_h), KE::cend(view_from_h),
+                          gold_dest_std.begin(), pred);
 
   // check that returned iterators are correct
   const std::size_t std_diff = std_result - gold_dest_std.begin();
@@ -181,34 +177,48 @@ void run_single_scenario(const InfoType& scenario_info) {
   pred_type remove_if_even;
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
     fill_view(view_from, name);
-    auto rit    = KE::remove_copy_if(exespace(), KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest), remove_if_even);
+    auto rit = KE::remove_copy_if(exespace(), KE::cbegin(view_from),
+                                  KE::cend(view_from), KE::begin(view_dest),
+                                  remove_if_even);
     verify_data(view_from, view_dest, rit, remove_if_even);
   }
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
     fill_view(view_from, name);
-    auto rit    = KE::remove_copy_if("label", exespace(), KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest), remove_if_even);
+    auto rit = KE::remove_copy_if("label", exespace(), KE::cbegin(view_from),
+                                  KE::cend(view_from), KE::begin(view_dest),
+                                  remove_if_even);
     verify_data(view_from, view_dest, rit, remove_if_even);
   }
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
     fill_view(view_from, name);
-    auto rit    = KE::remove_copy_if(exespace(), view_from, view_dest, remove_if_even);
+    auto rit =
+        KE::remove_copy_if(exespace(), view_from, view_dest, remove_if_even);
     verify_data(view_from, view_dest, rit, remove_if_even);
   }
 
   {
-    auto view_from = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
+    auto view_from =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_from");
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "remove_copy_if_view_dest");
     fill_view(view_from, name);
-    auto rit    = KE::remove_copy_if("label", exespace(), view_from, view_dest, remove_if_even);
+    auto rit = KE::remove_copy_if("label", exespace(), view_from, view_dest,
+                                  remove_if_even);
     verify_data(view_from, view_dest, rit, remove_if_even);
   }
 
@@ -227,8 +237,7 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_mod_seq_ops, remove_copy_if)
-{
+TEST(std_algorithms_mod_seq_ops, remove_copy_if) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }
