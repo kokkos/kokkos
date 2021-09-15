@@ -289,18 +289,12 @@ class SYCLTeamMember {
     // We need to chunk up the whole reduction because we might not have
     // allocated enough memory.
     const auto n_subgroups = sg.get_group_range()[0];
-    const unsigned int maximum_work_range = n_subgroups;
-//        std::min<int>(m_team_reduce_size / sizeof(Type), n_subgroups);
-
-    if (n_subgroups * sizeof(Type) >  m_team_reduce_size)
-      Kokkos::abort("Not implemented!");
 
     unsigned int not_greater_power_of_two = 1;
-    while ((not_greater_power_of_two << 1) < maximum_work_range + 1)
+    while ((not_greater_power_of_two << 1) < n_subgroups + 1)
       not_greater_power_of_two <<= 1;
 
     Type intermediate;
-    Type total{};
 
     const auto base_data = static_cast<Type*>(m_team_reduce);
 
@@ -309,21 +303,12 @@ class SYCLTeamMember {
     // corresponding chunk load values and the reduction is always done by the
     // first not_greater_power_of_two threads.
     const auto group_id = sg.get_group_id()[0];
-    /*for (unsigned int start = 0; start < n_subgroups;
-         start += not_greater_power_of_two) {*/
-    {
-      unsigned int start = 0;
-      m_item.barrier(sycl::access::fence_space::local_space);
-      if (id_in_sg == sub_group_range-1 && group_id >= start && group_id < start + not_greater_power_of_two) {
-//	KOKKOS_IMPL_DO_NOT_USE_PRINTF("Loading group %d: %d\n", group_id, value);
-        base_data[group_id - start] = value;
-      }
-      m_item.barrier(sycl::access::fence_space::local_space);
+    if (id_in_sg == sub_group_range-1)
+      base_data[group_id] = value;
+    m_item.barrier(sycl::access::fence_space::local_space);
 
-      const Type partial_total =
-          prescan(m_item, base_data, not_greater_power_of_two, n_subgroups);
-      m_item.barrier(sycl::access::fence_space::local_space);
-//      KOKKOS_IMPL_DO_NOT_USE_PRINTF("partial_total: %d, n_subgroups: %d, %d\n", partial_total, n_subgroups, base_data[0]);
+    const Type total = prescan(m_item, base_data, not_greater_power_of_two, n_subgroups);
+    m_item.barrier(sycl::access::fence_space::local_space);
 /*
       using FunctorType = Kokkos::Sum<Type>;
       using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, void>;
@@ -334,15 +319,8 @@ class SYCLTeamMember {
       const int n_active_subgroups = (n+max_local_range-1)/max_local_range;
       const Type partial_total = base_data[n_active_subgroups];*/
 
-      if (group_id >= start && group_id < start + not_greater_power_of_two) {
-        const auto update = sg.shuffle_up(value, 1);
-        intermediate = base_data[group_id - start] + total + (id_in_sg>0?update:0);
-      }
-      if (start == 0)
-        total = partial_total;
-      else
-        total += partial_total;
-    }
+    const auto update = sg.shuffle_up(value, 1);
+    intermediate = base_data[group_id] + (id_in_sg>0?update:0);
 
     if (global_accum) {
       if (id_in_sg == sub_group_range-1 && group_id == n_subgroups -1 ) {
