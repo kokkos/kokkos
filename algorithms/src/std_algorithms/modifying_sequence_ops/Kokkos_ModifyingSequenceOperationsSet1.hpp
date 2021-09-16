@@ -287,8 +287,7 @@ OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
                          InputIterator first, InputIterator last,
                          OutputIterator d_first) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
-                                             OutputIterator>();
+  static_assert_random_access_and_accessible(ex, first, last, d_first);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
   expect_valid_range(first, last);
@@ -317,8 +316,7 @@ OutputIterator copy_n_impl(const std::string& label, const ExecutionSpace& ex,
                            InputIterator first, Size count,
                            OutputIterator result) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
-                                             OutputIterator>();
+  static_assert_random_access_and_accessible(ex, first);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
 
@@ -337,8 +335,7 @@ IteratorType2 copy_backward_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType1 first,
                                  IteratorType1 last, IteratorType2 d_last) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
-                                             IteratorType2>();
+  static_assert_random_access_and_accessible(ex, first, last, d_last);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first, last);
@@ -390,8 +387,7 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
    */
 
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
-                                             OutputIterator>();
+  static_assert_random_access_and_accessible(ex, first, last, d_first);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
   expect_valid_range(first, last);
@@ -424,7 +420,7 @@ template <class ExecutionSpace, class IteratorType, class T>
 void fill_impl(const std::string& label, const ExecutionSpace& ex,
                IteratorType first, IteratorType last, const T& value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // run
@@ -438,14 +434,14 @@ void fill_impl(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class SizeType, class T>
 IteratorType fill_n_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, SizeType n, const T& value) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  auto last = first + n;
+  static_assert_random_access_and_accessible(ex, first, last);
+  expect_valid_range(first, last);
 
   if (n <= 0) {
     return first;
   }
 
-  auto last = first + n;
-  expect_valid_range(first, last);
   fill_impl(label, ex, first, last, value);
   return last;
 }
@@ -460,8 +456,7 @@ OutputIterator transform_impl(const std::string& label,
                               InputIterator last1, OutputIterator d_first,
                               UnaryOperation unary_op) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
-                                             OutputIterator>();
+  static_assert_random_access_and_accessible(ex, first1, last1, d_first);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
   expect_valid_range(first1, last1);
@@ -490,8 +485,8 @@ OutputIterator transform_impl(const std::string& label,
                               OutputIterator d_first,
                               BinaryOperation binary_op) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator1,
-                                             InputIterator2, OutputIterator>();
+  static_assert_random_access_and_accessible(ex, first1, last1, first2,
+                                             d_first);
   static_assert_iterators_have_matching_difference_type<
       InputIterator1, InputIterator2, OutputIterator>();
   expect_valid_range(first1, last1);
@@ -518,7 +513,7 @@ template <class ExecutionSpace, class IteratorType, class Generator>
 void generate_impl(const std::string& label, const ExecutionSpace& ex,
                    IteratorType first, IteratorType last, Generator g) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // aliases
@@ -552,7 +547,7 @@ void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
                      IteratorType first, IteratorType last, PredicateType pred,
                      const ValueType& new_value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // aliases
@@ -574,7 +569,7 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
                   IteratorType first, IteratorType last,
                   const ValueType& old_value, const ValueType& new_value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // aliases
@@ -601,8 +596,8 @@ OutputIteratorType replace_copy_impl(const std::string& label,
                                      const ValueType& old_value,
                                      const ValueType& new_value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
@@ -635,8 +630,8 @@ OutputIteratorType replace_copy_if_impl(const std::string& label,
                                         PredicateType pred,
                                         const ValueType& new_value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
   expect_valid_range(first_from, last_from);

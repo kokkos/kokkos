@@ -211,8 +211,8 @@ OutputIteratorType inclusive_scan_default_op_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
   expect_valid_range(first_from, last_from);
@@ -246,8 +246,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, BinaryOpType binary_op) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
   expect_valid_range(first_from, last_from);
@@ -283,8 +283,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
     OutputIteratorType first_dest, BinaryOpType binary_op,
     ValueType init_value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
@@ -321,8 +321,8 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
                                                  BinaryOpType binary_op,
                                                  UnaryOpType unary_op) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
   expect_valid_range(first_from, last_from);
@@ -358,8 +358,8 @@ OutputIteratorType transform_inclusive_scan_impl(
     OutputIteratorType first_dest, BinaryOpType binary_op, UnaryOpType unary_op,
     ValueType init_value) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, last_from,
+                                             first_dest);
   expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();

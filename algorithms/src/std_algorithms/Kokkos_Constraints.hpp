@@ -139,16 +139,52 @@ struct are_accessible_iterators<ExeSpace, Head, Tail...> {
       are_accessible_iterators<ExeSpace, Tail...>::value;
 };
 
-template <class ExecutionSpace, class... IteratorTypes>
+template <class ExecutionSpace, class IteratorType>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_random_access_and_accessible() {
-  static_assert(
-      are_random_access_iterators<IteratorTypes...>::value,
-      "Currently, Kokkos standard algorithms require random access iterators.");
+static_assert_random_access_and_accessible(const ExecutionSpace& ex,
+                                           IteratorType it) {
+  // avoid compiler complaints
+  (void)ex;
+  (void)it;
 
   static_assert(
-      are_accessible_iterators<ExecutionSpace, IteratorTypes...>::value,
-      "Incompatible view/iterator and execution space");
+      are_random_access_iterators<IteratorType>::value,
+      "Currently, Kokkos standard algorithms require random access iterators.");
+  static_assert(are_accessible_iterators<ExecutionSpace, IteratorType>::value,
+                "Incompatible view/iterator and execution space");
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+KOKKOS_INLINE_FUNCTION constexpr void
+static_assert_random_access_and_accessible(const ExecutionSpace& ex,
+                                           IteratorType1 it1,
+                                           IteratorType2 it2) {
+  static_assert_random_access_and_accessible(ex, it1);
+  static_assert_random_access_and_accessible(ex, it2);
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class IteratorType3>
+KOKKOS_INLINE_FUNCTION constexpr void
+static_assert_random_access_and_accessible(const ExecutionSpace& ex,
+                                           IteratorType1 it1, IteratorType2 it2,
+                                           IteratorType3 it3) {
+  static_assert_random_access_and_accessible(ex, it1);
+  static_assert_random_access_and_accessible(ex, it2);
+  static_assert_random_access_and_accessible(ex, it3);
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class IteratorType3, class IteratorType4>
+KOKKOS_INLINE_FUNCTION constexpr void
+static_assert_random_access_and_accessible(const ExecutionSpace& ex,
+                                           IteratorType1 it1, IteratorType2 it2,
+                                           IteratorType3 it3,
+                                           IteratorType4 it4) {
+  static_assert_random_access_and_accessible(ex, it1);
+  static_assert_random_access_and_accessible(ex, it2);
+  static_assert_random_access_and_accessible(ex, it3);
+  static_assert_random_access_and_accessible(ex, it4);
 }
 
 //

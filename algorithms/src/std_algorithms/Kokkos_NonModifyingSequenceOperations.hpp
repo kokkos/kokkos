@@ -272,7 +272,7 @@ IteratorType find_if_or_not_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType first,
                                  IteratorType last, PredicateType pred) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   if (first == last) {
@@ -328,7 +328,7 @@ UnaryFunctorType for_each_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType first,
                                IteratorType last, UnaryFunctorType functor) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // run
@@ -350,13 +350,13 @@ template <class ExecutionSpace, class IteratorType, class SizeType,
 IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
                              IteratorType first, SizeType n,
                              UnaryFunctorType functor) {
-  if (n <= 0) {
+  auto last = first + n;
+  static_assert_random_access_and_accessible(ex, first, last);
+  expect_valid_range(first, last);
+
+  if (n == 0) {
     return first;
   }
-
-  auto last = first + n;
-  expect_valid_range(first, last);
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
 
   for_each_impl(label, ex, first, last, ::Kokkos::Experimental::move(functor));
   // no neeed to fence since for_each_impl fences already
@@ -374,7 +374,7 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
                                                      IteratorType last,
                                                      Predicate predicate) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // aliases
@@ -413,8 +413,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     IteratorType1 last1, IteratorType2 first2, IteratorType2 last2,
     BinaryPredicateType predicate) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
-                                             IteratorType2>();
+  static_assert_random_access_and_accessible(ex, first1, last1, first2, last2);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first1, last1);
@@ -464,10 +463,11 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 ::Kokkos::pair<IteratorType1, IteratorType2> mismatch_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, IteratorType2 last2) {
-  expect_valid_range(first1, last1);
-  expect_valid_range(first2, last2);
+  // checks
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
+  expect_valid_range(first1, last1);
+  expect_valid_range(first2, last2);
 
   using value_type1 = typename IteratorType1::value_type;
   using value_type2 = typename IteratorType2::value_type;
@@ -506,8 +506,7 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
                 BinaryPredicateType predicate) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
-                                             IteratorType2>();
+  static_assert_random_access_and_accessible(ex, first1, last1, first2);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first1, last1);
@@ -577,8 +576,7 @@ bool lexicographical_compare_impl(const std::string& label,
                                   IteratorType2 first2, IteratorType2 last2,
                                   ComparatorType comp) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
-                                             IteratorType2>();
+  static_assert_random_access_and_accessible(ex, first1, last1, first2, last2);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first1, last1);
@@ -648,7 +646,7 @@ IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
                                 IteratorType last, PredicateType pred) {
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   if (first == last) {

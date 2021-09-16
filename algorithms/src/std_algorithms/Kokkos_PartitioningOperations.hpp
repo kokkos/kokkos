@@ -218,7 +218,7 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   // so the range is partitioned if max_loc_true < (min_loc_false)
 
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   // trivial case
@@ -272,7 +272,7 @@ IteratorType partition_point_impl(const std::string& label,
   // Implementation below finds the first location where p is false.
 
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_random_access_and_accessible(ex, first, last);
   expect_valid_range(first, last);
 
   if (first == last) {
@@ -322,9 +322,8 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
   // impl uses a scan, this is similar how we implemented copy_if
 
   // checks
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
-                                             OutputIteratorTrueType,
-                                             OutputIteratorFalseType>();
+  static_assert_random_access_and_accessible(ex, from_first, from_last,
+                                             to_first_true, to_first_false);
   static_assert_iterators_have_matching_difference_type<
       InputIteratorType, OutputIteratorTrueType, OutputIteratorFalseType>();
   expect_valid_range(from_first, from_last);

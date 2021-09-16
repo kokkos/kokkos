@@ -103,7 +103,8 @@ ValueType reduce_custom_functors_impl(const std::string& label,
                                       IteratorType first, IteratorType last,
                                       ValueType init_reduction_value,
                                       JoinerType joiner) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  // checks
+  static_assert_random_access_and_accessible(ex, first, last);
   static_assert_is_not_opemnptarget(ex);
   expect_valid_range(first, last);
 
@@ -139,7 +140,8 @@ ValueType reduce_default_functors_impl(const std::string& label,
                                        const ExecutionSpace& ex,
                                        IteratorType first, IteratorType last,
                                        ValueType init_reduction_value) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  // checks
+  static_assert_random_access_and_accessible(ex, first, last);
   static_assert_is_not_opemnptarget(ex);
   expect_valid_range(first, last);
 

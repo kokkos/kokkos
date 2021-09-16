@@ -153,7 +153,8 @@ ValueType transform_reduce_custom_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType first,
     IteratorType last, ValueType init_reduction_value, JoinerType joiner,
     UnaryTransformerType transformer) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  // checks
+  static_assert_random_access_and_accessible(ex, first, last);
   static_assert_is_not_opemnptarget(ex);
   expect_valid_range(first, last);
 
@@ -196,8 +197,8 @@ ValueType transform_reduce_custom_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, ValueType init_reduction_value,
     JoinerType joiner, BinaryTransformerType transformer) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
-                                             IteratorType2>();
+  // checks
+  static_assert_random_access_and_accessible(ex, first1, last1, first2);
   static_assert_is_not_opemnptarget(ex);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
@@ -240,8 +241,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 ValueType transform_reduce_default_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, ValueType init_reduction_value) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
-                                             IteratorType2>();
+  // checks
+  static_assert_random_access_and_accessible(ex, first1, last1, first2);
   static_assert_is_not_opemnptarget(ex);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
