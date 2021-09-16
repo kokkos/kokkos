@@ -29,11 +29,11 @@ struct EventMatcher {
     return MatchResult{success, 0, 1, diagnostic};
   }
   virtual std::string repr() const                                     = 0;
-  virtual MatchResult matches(const EventSet& events, int event_index) = 0;
+  virtual MatchResult matches(const EventSet& events, EventSet::size_type event_index) = 0;
   virtual ~EventMatcher() {}
   void checkMatchAt(MatchDiagnostic& builder, const Pattern& pattern,
-                    const EventSet& events, int pattern_index,
-                    int event_index) {
+                    const EventSet& events, EventSet::size_type pattern_index,
+                    EventSet::size_type event_index) {
     if (pattern_index >= pattern.size()) {
       builder.messages.push_back("Error: stepped off end of pattern\n");
       return;
@@ -42,7 +42,7 @@ struct EventMatcher {
       builder.messages.push_back(
           "Error: event set completed, additional events found in the "
           "pattern\n");
-      for (int x = pattern_index; x < pattern.size(); ++x) {
+      for (EventSet::size_type x = pattern_index; x < pattern.size(); ++x) {
         std::stringstream s;
         s << "Additional pattern entry " << x << ": " << pattern[x]->repr()
           << std::endl;
@@ -74,7 +74,7 @@ struct EventMatcher {
 
 struct EventRoot : public EventMatcher {
   virtual std::string repr() const { return ""; };
-  virtual MatchResult matches(const EventSet& events, int event_index) {
+  virtual MatchResult matches(const EventSet&, EventSet::size_type) {
     return {false, 1, 1, ""};
   };
   virtual ~EventRoot() {}
@@ -82,7 +82,7 @@ struct EventRoot : public EventMatcher {
 
 struct EventBase : public EventMatcher {
   virtual MatchResult matches(const EventSet& events,
-                              int event_index) override {
+                              EventSet::size_type event_index) override {
     bool is_match = isEqual(*events[event_index]);
     if (is_match) {
       return {true, 1, 1, ""};
@@ -257,7 +257,7 @@ struct EventPair : public EventMatcher {
     return s.str();
   }
   virtual MatchResult matches(const EventSet& events,
-                              int event_index) override {
+                              EventSet::size_type event_index) override {
     MatchResult result{false, 1, 1};
     if (event_index >= (events.size() - 1)) {
       result.diagnostic = std::string(
