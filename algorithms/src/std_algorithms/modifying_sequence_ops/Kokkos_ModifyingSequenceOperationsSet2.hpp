@@ -55,22 +55,57 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+//-------------------------
 //
 // functors
 //
-template <class InputIterator, class OutputIterator>
-struct StdReverseCopyFunctor {
-  using index_type = typename InputIterator::difference_type;
-  InputIterator m_last;
-  OutputIterator m_dest_first;
+//-------------------------
+
+// template <class ValueType1, class ValueType2>
+// struct StdUniqueCopyDefaultBinaryPredicate
+// {
+//   KOKKOS_INLINE_FUNCTION
+//   bool operator()(const ValueType1& a, const ValueType2& b) const {
+//     return (a == b);
+//   }
+// };
+
+// template <class ValueType>
+// using StdUniqueDefaultBinaryPredicate =
+//     StdUniqueCopyDefaultBinaryPredicate<ValueType, ValueType>;
+
+template <class IndexType, class InputIt, class OutputIt,
+          class BinaryPredicateType>
+struct StdUniqueCopyFunctor {
+  InputIt m_first_from;
+  InputIt m_last_from;
+  OutputIt m_first_dest;
+  BinaryPredicateType m_pred;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const {
-    *(m_dest_first + i) = *(m_last - 1 - i);
-  }
+  StdUniqueCopyFunctor(InputIt first_from, InputIt last_from,
+                       OutputIt first_dest, BinaryPredicateType pred)
+      : m_first_from(first_from),
+        m_last_from(last_from),
+        m_first_dest(first_dest),
+        m_pred(::Kokkos::Experimental::move(pred)) {}
 
-  StdReverseCopyFunctor(InputIterator _last, OutputIterator _dest_first)
-      : m_last(_last), m_dest_first(_dest_first) {}
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const IndexType i, IndexType& update,
+                  const bool final_pass) const {
+    const auto& val_i = *(m_first_from + i);
+    auto itp1         = (m_first_from + i + 1);
+
+    if (final_pass) {
+      if (!m_pred(val_i, *itp1)) {
+        *(m_first_dest + update) = val_i;
+      }
+    }
+
+    if (!m_pred(val_i, *itp1)) {
+      update += 1;
+    }
+  }
 };
 
 template <class InputIterator>
@@ -88,14 +123,27 @@ struct StdReverseFunctor {
       : m_first(first), m_last(last) {}
 };
 
-template <class InputIterator, class OutputIterator>
+template <class IndexType, class InputIterator, class OutputIterator>
+struct StdReverseCopyFunctor {
+  InputIterator m_last;
+  OutputIterator m_dest_first;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(IndexType i) const {
+    *(m_dest_first + i) = *(m_last - 1 - i);
+  }
+
+  StdReverseCopyFunctor(InputIterator _last, OutputIterator _dest_first)
+      : m_last(_last), m_dest_first(_dest_first) {}
+};
+
+template <class IndexType, class InputIterator, class OutputIterator>
 struct StdMoveFunctor {
-  using index_type = typename InputIterator::difference_type;
   InputIterator m_first;
   OutputIterator m_dest_first;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const {
+  void operator()(IndexType i) const {
     *(m_dest_first + i) = ::Kokkos::Experimental::move(*(m_first + i));
   }
 
@@ -103,14 +151,13 @@ struct StdMoveFunctor {
       : m_first(_first), m_dest_first(_dest_first) {}
 };
 
-template <class IteratorType1, class IteratorType2>
+template <class IndexType, class IteratorType1, class IteratorType2>
 struct StdMoveBackwardFunctor {
-  using index_type = typename IteratorType1::difference_type;
   IteratorType1 m_last;
   IteratorType2 m_dest_last;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const {
+  void operator()(IndexType i) const {
     *(m_dest_last - i) = ::Kokkos::Experimental::move(*(m_last - i));
   }
 
@@ -118,68 +165,19 @@ struct StdMoveBackwardFunctor {
       : m_last(_last), m_dest_last(_dest_last) {}
 };
 
-template <class IteratorType1, class IteratorType2>
+template <class IndexType, class IteratorType1, class IteratorType2>
 struct StdSwapRangesFunctor {
-  using index_type = typename IteratorType1::difference_type;
   IteratorType1 m_first1;
   IteratorType2 m_first2;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const {
+  void operator()(IndexType i) const {
     ::Kokkos::Experimental::swap(*(m_first1 + i), *(m_first2 + i));
   }
 
   KOKKOS_INLINE_FUNCTION
   StdSwapRangesFunctor(IteratorType1 _first1, IteratorType2 _first2)
       : m_first1(_first1), m_first2(_first2) {}
-};
-
-template <class ValueType1, class ValueType2>
-struct StdUniqueCopyDefaultBinaryPredicate {
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType1& a, const ValueType2& b) const {
-    return (a == b);
-  }
-};
-
-template <class ValueType>
-using StdUniqueDefaultBinaryPredicate =
-    StdUniqueCopyDefaultBinaryPredicate<ValueType, ValueType>;
-
-template <class InputIt, class OutputIt, class BinaryPredicateType>
-struct StdUniqueCopyFunctor {
-  using index_type = typename InputIt::difference_type;
-  using value_type = index_type;
-
-  InputIt m_first_from;
-  InputIt m_last_from;
-  OutputIt m_first_dest;
-  BinaryPredicateType m_pred;
-
-  KOKKOS_INLINE_FUNCTION
-  StdUniqueCopyFunctor(InputIt first_from, InputIt last_from,
-                       OutputIt first_dest, BinaryPredicateType pred)
-      : m_first_from(first_from),
-        m_last_from(last_from),
-        m_first_dest(first_dest),
-        m_pred(::Kokkos::Experimental::move(pred)) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, value_type& update,
-                  const bool final_pass) const {
-    const auto& val_i = *(m_first_from + i);
-    auto itp1         = (m_first_from + i + 1);
-
-    if (final_pass) {
-      if (!m_pred(val_i, *itp1)) {
-        *(m_first_dest + update) = val_i;
-      }
-    }
-
-    if (!m_pred(val_i, *itp1)) {
-      update += 1;
-    }
-  }
 };
 
 template <class IteratorType, class ViewFromType>
@@ -198,11 +196,9 @@ struct StdUniqueStepThreeFunctor {
   }
 };
 
-template <class InputIt, class OutputIt, class BinaryPredicateType>
+template <class IndexType, class InputIt, class OutputIt,
+          class BinaryPredicateType>
 struct StdUniqueFunctor {
-  using index_type = typename InputIt::difference_type;
-  using value_type = index_type;
-
   InputIt m_first_from;
   InputIt m_last_from;
   OutputIt m_first_dest;
@@ -217,7 +213,7 @@ struct StdUniqueFunctor {
         m_pred(::Kokkos::Experimental::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, value_type& update,
+  void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
     auto& val_i         = *(m_first_from + i);
     const auto& val_ip1 = *(m_first_from + i + 1);
@@ -234,18 +230,17 @@ struct StdUniqueFunctor {
   }
 };
 
-template <class InputIterator, class OutputIterator>
+template <class IndexType, class InputIterator, class OutputIterator>
 struct StdRotateCopyFunctor {
-  using index_type = typename InputIterator::difference_type;
   InputIterator m_first;
   InputIterator m_last;
   InputIterator m_first_n;
   OutputIterator m_dest_first;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const {
-    auto fromit            = m_first + i;
-    const index_type shift = m_last - m_first_n;
+  void operator()(IndexType i) const {
+    auto fromit           = m_first + i;
+    const IndexType shift = m_last - m_first_n;
 
     if (i < shift) {
       *(m_dest_first + i) = *(m_first_n + i);
@@ -262,11 +257,8 @@ struct StdRotateCopyFunctor {
         m_dest_first(dest_first) {}
 };
 
-template <class FirstFrom, class FirstDest, class PredType>
+template <class IndexType, class FirstFrom, class FirstDest, class PredType>
 struct StdRemoveIfStage1Functor {
-  using index_type = typename FirstFrom::difference_type;
-  using value_type = index_type;
-
   FirstFrom m_first_from;
   FirstDest m_first_dest;
   PredType m_must_remove;
@@ -279,7 +271,7 @@ struct StdRemoveIfStage1Functor {
         m_must_remove(::Kokkos::Experimental::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, value_type& update,
+  void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
     auto& myval = *(m_first_from + i);
     if (final_pass) {
@@ -296,9 +288,8 @@ struct StdRemoveIfStage1Functor {
   }
 };
 
-template <class InputIteratorType, class OutputIteratorType>
+template <class IndexType, class InputIteratorType, class OutputIteratorType>
 struct StdRemoveIfStage2Functor {
-  using index_type = typename InputIteratorType::difference_type;
   InputIteratorType m_first_from;
   OutputIteratorType m_first_to;
 
@@ -308,44 +299,48 @@ struct StdRemoveIfStage2Functor {
       : m_first_from(first_from), m_first_to(first_to) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i) const {
+  void operator()(const IndexType i) const {
     *(m_first_to + i) = ::Kokkos::Experimental::move(*(m_first_from + i));
   }
 };
 
-//------------------------
+//-------------------------
+//
 // impl function
-//------------------------
+//
+//-------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class PredicateType>
 OutputIterator unique_copy_impl(const std::string& label,
                                 const ExecutionSpace& ex, InputIterator first,
                                 InputIterator last, OutputIterator d_first,
                                 PredicateType pred) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
-  expect_valid_range(first, last);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
+  expect_valid_range(first, last);
 
+  // branch for trivial vs non trivial case
   const auto num_elements = last - first;
-
   if (num_elements == 0) {
     return d_first;
   } else if (num_elements == 1) {
     return Impl::copy_impl("kokkos_copy_from_unique_copy", ex, first, last,
                            d_first);
   } else {
-    using func_type =
-        StdUniqueCopyFunctor<InputIterator, OutputIterator, PredicateType>;
+    // aliases
+    using index_type = typename InputIterator::difference_type;
+    using func_type  = StdUniqueCopyFunctor<index_type, InputIterator,
+                                           OutputIterator, PredicateType>;
 
     // note here that we run scan for num_elements - 1
     // because of the way we implement this, the last element is always needed.
     // We avoid performing checks inside functor that we are within limits
     // and run a "safe" scan and then copy the last element.
-
     const auto scan_size = num_elements - 1;
-    std::size_t count    = 0;
+    index_type count     = 0;
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, scan_size),
                             func_type(first, last, d_first, pred), count);
@@ -359,29 +354,39 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator unique_copy_impl(const std::string& label,
                                 const ExecutionSpace& ex, InputIterator first,
                                 InputIterator last, OutputIterator d_first) {
+  // checks
   expect_valid_range(first, last);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
 
+  // aliases
   using value_type1 = typename InputIterator::value_type;
   using value_type2 = typename OutputIterator::value_type;
-  using binary_pred_t =
-      StdUniqueCopyDefaultBinaryPredicate<value_type1, value_type2>;
+
+  // default binary predicate uses ==
+  using binary_pred_t = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
+
+  // run
   return unique_copy_impl(label, ex, first, last, d_first, binary_pred_t());
 }
 
 template <class ExecutionSpace, class InputIterator>
 void reverse_impl(const std::string& label, const ExecutionSpace& ex,
                   InputIterator first, InputIterator last) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator>();
   expect_valid_range(first, last);
 
+  // aliases
+  using func_t = StdReverseFunctor<InputIterator>;
+
+  // run
   if (last >= first + 2) {
     // only need half
     const auto num_elements = (last - first) / 2;
     ::Kokkos::parallel_for(label,
                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                           StdReverseFunctor<InputIterator>(first, last));
+                           func_t(first, last));
     ex.fence("reverse: fence after operation");
   }
 }
@@ -390,17 +395,26 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator reverse_copy_impl(const std::string& label,
                                  const ExecutionSpace& ex, InputIterator first,
                                  InputIterator last, OutputIterator d_first) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
-  expect_valid_range(first, last);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
+  expect_valid_range(first, last);
 
+  // aliases
+  using index_type = typename InputIterator::difference_type;
+  using func_t =
+      StdReverseCopyFunctor<index_type, InputIterator, OutputIterator>;
+
+  // run
   const auto num_elements = last - first;
-  ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdReverseCopyFunctor<InputIterator, OutputIterator>(last, d_first));
+  ::Kokkos::parallel_for(label,
+                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                         func_t(last, d_first));
   ex.fence("reverse_copy: fence after operation");
+
+  // return
   return d_first + num_elements;
 }
 
@@ -408,17 +422,25 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
                          InputIterator first, InputIterator last,
                          OutputIterator d_first) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
                                              OutputIterator>();
-  expect_valid_range(first, last);
   static_assert_iterators_have_matching_difference_type<InputIterator,
                                                         OutputIterator>();
+  expect_valid_range(first, last);
 
+  // aliases
+  using index_type = typename InputIterator::difference_type;
+  using func_t     = StdMoveFunctor<index_type, InputIterator, OutputIterator>;
+
+  // run
   const auto num_elements = last - first;
-  ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdMoveFunctor<InputIterator, OutputIterator>(first, d_first));
+  ::Kokkos::parallel_for(label,
+                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                         func_t(first, d_first));
   ex.fence("move: fence after operation");
+
+  // return
   return d_first + num_elements;
 }
 
@@ -426,17 +448,26 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 move_backward_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType1 first,
                                  IteratorType1 last, IteratorType2 d_last) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
-  expect_valid_range(first, last);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
+  expect_valid_range(first, last);
 
+  // aliases
+  using index_type = typename IteratorType1::difference_type;
+  using func_t =
+      StdMoveBackwardFunctor<index_type, IteratorType1, IteratorType2>;
+
+  // run
   const auto num_elements = last - first;
-  ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdMoveBackwardFunctor<IteratorType1, IteratorType2>(last, d_last));
+  ::Kokkos::parallel_for(label,
+                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                         func_t(last, d_last));
   ex.fence("move_backward: fence after operation");
+
+  // return
   return d_last - num_elements;
 }
 
@@ -444,17 +475,25 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 swap_ranges_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType1 first1,
                                IteratorType1 last1, IteratorType2 first2) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
-  expect_valid_range(first1, last1);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
+  expect_valid_range(first1, last1);
 
+  // aliases
+  using index_type = typename IteratorType1::difference_type;
+  using func_t = StdSwapRangesFunctor<index_type, IteratorType1, IteratorType2>;
+
+  // run
   const auto num_elements_to_swap = last1 - first1;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_to_swap),
-      StdSwapRangesFunctor<IteratorType1, IteratorType2>(first1, first2));
+      func_t(first1, first2));
   ex.fence("swap_ranges: fence after operation");
+
+  // return
   return first2 + num_elements_to_swap;
 }
 
@@ -462,6 +501,7 @@ template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
                          PredicateType pred) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
@@ -504,12 +544,15 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
       const auto scan_size = num_elements_to_explore - 1;
       auto tmp_first       = ::Kokkos::Experimental::begin(tmp_view);
       using output_it      = decltype(tmp_first);
+
+      using index_type = typename IteratorType::difference_type;
       using func_type =
-          StdUniqueFunctor<IteratorType, output_it, PredicateType>;
-      std::size_t count = 0;
+          StdUniqueFunctor<index_type, IteratorType, output_it, PredicateType>;
+      index_type count = 0;
       ::Kokkos::parallel_scan(
           label, RangePolicy<ExecutionSpace>(ex, 0, scan_size),
           func_type(it_found, last, tmp_first, pred), count);
+
       // move last element too, for the same reason as the unique_copy
       auto unused_r =
           Impl::move_impl("kokkos_move_from_unique", ex, it_found + scan_size,
@@ -539,7 +582,7 @@ template <class ExecutionSpace, class IteratorType>
 IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last) {
   using value_type    = typename IteratorType::value_type;
-  using binary_pred_t = StdUniqueDefaultBinaryPredicate<value_type>;
+  using binary_pred_t = StdAlgoEqualBinaryPredicate<value_type>;
   return unique_impl(label, ex, first, last, binary_pred_t());
 }
 
@@ -548,20 +591,6 @@ OutputIterator rotate_copy_impl(const std::string& label,
                                 const ExecutionSpace& ex, InputIterator first,
                                 InputIterator n_first, InputIterator last,
                                 OutputIterator d_first) {
-  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
-                                             OutputIterator>();
-  expect_valid_range(first, last);
-  expect_valid_range(first, n_first);
-  expect_valid_range(n_first, last);
-  static_assert_iterators_have_matching_difference_type<InputIterator,
-                                                        OutputIterator>();
-
-  if (first == last) {
-    return d_first;
-  }
-
-  using func_type = StdRotateCopyFunctor<InputIterator, OutputIterator>;
-
   /*
     algorithm is implemented as follows:
 
@@ -591,12 +620,33 @@ OutputIterator rotate_copy_impl(const std::string& label,
     }
   */
 
+  // checks
+  static_assert_random_access_and_accessible<ExecutionSpace, InputIterator,
+                                             OutputIterator>();
+  static_assert_iterators_have_matching_difference_type<InputIterator,
+                                                        OutputIterator>();
+  expect_valid_range(first, last);
+  expect_valid_range(first, n_first);
+  expect_valid_range(n_first, last);
+
+  if (first == last) {
+    return d_first;
+  }
+
+  // aliases
+  using index_type = typename InputIterator::difference_type;
+  using func_type =
+      StdRotateCopyFunctor<index_type, InputIterator, OutputIterator>;
+
+  // run
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_type(first, last, n_first, d_first));
 
   ex.fence("rotate_copy: fence after operation");
+
+  // return
   return d_first + num_elements;
 }
 
@@ -628,35 +678,39 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
     using value_type    = typename IteratorType::value_type;
     using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
     tmp_view_type tmp_view("std_remove_if_tmp_view", keep_count);
+    // tmp iterator types
     using tmp_readonly_iterator_type  = decltype(cbegin(tmp_view));
     using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
 
     // in stage 1, *move* all elements to keep from original range to tmp
     // we use similar impl as copy_if except that we *move* rather than copy
-    using func1_type =
-        StdRemoveIfStage1Functor<IteratorType, tmp_readwrite_iterator_type,
-                                 UnaryPredicateType>;
+    using index_type = typename IteratorType::difference_type;
+    using func1_type = StdRemoveIfStage1Functor<index_type, IteratorType,
+                                                tmp_readwrite_iterator_type,
+                                                UnaryPredicateType>;
 
     const auto scan_num_elements = last - first;
-    std::size_t scan_count       = 0;
+    index_type scan_count        = 0;
     ::Kokkos::parallel_scan(
         label, RangePolicy<ExecutionSpace>(ex, 0, scan_num_elements),
         func1_type(first, begin(tmp_view), pred), scan_count);
     ex.fence("remove_if: fence after stage1");
 
     // scan_count should be equal to keep_count
-    assert(scan_count == (std::size_t)keep_count);
+    assert(scan_count == keep_count);
     (void)scan_count;  // to avoid unused complaints
 
     // stage 2, we do parfor to move from tmp to original range
     using func2_type =
-        StdRemoveIfStage2Functor<tmp_readonly_iterator_type, IteratorType>;
+        StdRemoveIfStage2Functor<index_type, tmp_readonly_iterator_type,
+                                 IteratorType>;
     ::Kokkos::parallel_for(
         "remove_if_stage2_parfor",
         RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
         func2_type(cbegin(tmp_view), first));
     ex.fence("remove_if: fence after stage2");
 
+    // return
     return first + keep_count;
   }
 }
