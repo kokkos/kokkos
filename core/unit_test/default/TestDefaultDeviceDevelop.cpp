@@ -50,7 +50,27 @@
 #include <TestDefaultDeviceType_Category.hpp>
 
 namespace Test {
+struct Functor {
+  int val;
+  KOKKOS_FUNCTION
+  void operator()(int i) const { printf("HUHU %i %i\n", i, val); }
+};
 
-TEST(defaultdevicetype, development_test) {}
+template<class F>
+__global__ void bar(F f) { f(int(blockIdx.x*blockDim.x+threadIdx.x)); }
 
+void foo() {
+  int N = 100;
+  bar<<<4, 32>>>(Functor{1});
+  Kokkos::parallel_for(N, Functor{2});
+  bar<<<4, 32>>>(Functor{3});
+
+  Kokkos::fence();
+  cudaDeviceSynchronize();
+  printf("Done\n");
+}
+
+TEST(defaultdevicetype, development_test) { 
+  foo();
+}
 }  // namespace Test
