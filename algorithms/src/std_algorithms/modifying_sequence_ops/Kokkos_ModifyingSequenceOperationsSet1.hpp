@@ -86,8 +86,7 @@ struct StdCopyBackwardFunctor {
       : m_last(_last), m_dest_last(_dest_last) {}
 };
 
-template <class ExeSpace, class IndexType, class FirstFrom, class FirstDest,
-          class PredType>
+template <class IndexType, class FirstFrom, class FirstDest, class PredType>
 struct StdCopyIfFunctor {
   FirstFrom m_first_from;
   FirstDest m_first_dest;
@@ -400,9 +399,8 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
   } else {
     // aliases
     using index_type = typename InputIterator::difference_type;
-    using func_type =
-        StdCopyIfFunctor<ExecutionSpace, index_type, InputIterator,
-                         OutputIterator, PredicateType>;
+    using func_type  = StdCopyIfFunctor<index_type, InputIterator,
+                                       OutputIterator, PredicateType>;
 
     // run
     const auto num_elements = last - first;
