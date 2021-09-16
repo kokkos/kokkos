@@ -211,6 +211,7 @@ struct PolicyTraits
   using base_t =
       ExecPolicyTraitsWithDefaults<AnalyzeExecPolicy<void, Traits...>>;
   using base_t::base_t;
+  using index_type = int64_t;
 };
 
 }  // namespace Impl
