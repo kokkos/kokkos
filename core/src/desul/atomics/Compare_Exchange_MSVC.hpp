@@ -95,10 +95,8 @@ typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && s
           atomic_thread_fence(MemoryOrderRelease(), scope);
   atomic_thread_fence(MemoryOrderAcquire(),scope);
   T return_val = *dest;
-  if(return_val == compare) {
-    *dest = val;
-    atomic_thread_fence(MemoryOrderRelease(),scope);
-  }
+  *dest = val;
+  atomic_thread_fence(MemoryOrderRelease(),scope);
 
   Impl::unlock_address((void*)dest, scope);
   return return_val;
