@@ -144,40 +144,6 @@ struct StdTransformReduceTwoIntervalsFunctor {
         m_transform(::Kokkos::Experimental::move(transform)) {}
 };
 
-template <class ExecutionSpace, class ValueType, class IteratorType1,
-          class IteratorType2>
-struct admissible_to_transform_reduce {
-  static_assert(not_openmptarget<ExecutionSpace>::value,
-                "transform_reduce not currently supported in OpenMPTarget");
-
-  static_assert(
-      are_random_access_iterators<IteratorType1, IteratorType2>::value,
-      "Currently, Kokkos standard algorithms require random access iterators.");
-
-  static_assert(are_accessible_iterators<ExecutionSpace, IteratorType1,
-                                         IteratorType2>::value,
-                "Incompatible views/iterators and execution space");
-
-  // for now, we need to check iterators have same value type because reducers
-  // need that: reducer concept infact has a single nested value_type typedef
-  using iterator1_value_type = typename IteratorType1::value_type;
-  using iterator2_value_type = typename IteratorType2::value_type;
-  static_assert(
-      std::is_same<iterator1_value_type, iterator2_value_type>::value,
-      "transform_reduce currently only supports operands with same value_type");
-
-  static_assert(std::is_same<std::remove_cv_t<iterator1_value_type>,
-                             std::remove_cv_t<ValueType> >::value,
-                "transform_reduce: iterator1/view1 value_type must be the same "
-                "as type of init argument");
-  static_assert(std::is_same<std::remove_cv_t<iterator2_value_type>,
-                             std::remove_cv_t<ValueType> >::value,
-                "transform_reduce: iterator2/view2 value_type must be the same "
-                "as type of init argument");
-
-  static constexpr bool value = true;
-};
-
 //------------------------------
 //
 // impl functions
@@ -190,10 +156,8 @@ ValueType transform_reduce_custom_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType first,
     IteratorType last, ValueType init_reduction_value, JoinerType joiner,
     UnaryTransformerType transformer) {
-  static_assert(
-      admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType,
-                                     IteratorType>::value,
-      "");
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_is_not_opemnptarget(ex);
   expect_valid_range(first, last);
 
   if (first == last) {
@@ -202,10 +166,9 @@ ValueType transform_reduce_custom_functors_impl(
   }
 
   // aliases
-  using iterator_value_type = typename IteratorType::value_type;
   using reducer_type =
-      ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
-                                                 JoinerType, ExecutionSpace>;
+      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType,
+                                                 ExecutionSpace>;
   using functor_type =
       StdTransformReduceSingleIntervalFunctor<IteratorType, reducer_type,
                                               UnaryTransformerType>;
@@ -234,10 +197,9 @@ ValueType transform_reduce_custom_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, ValueType init_reduction_value,
     JoinerType joiner, BinaryTransformerType transformer) {
-  static_assert(
-      admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType1,
-                                     IteratorType2>::value,
-      "");
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
+                                             IteratorType2>();
+  static_assert_is_not_opemnptarget(ex);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first1, last1);
@@ -248,11 +210,10 @@ ValueType transform_reduce_custom_functors_impl(
   }
 
   // aliases
-  using index_type          = typename IteratorType1::difference_type;
-  using iterator_value_type = typename IteratorType1::value_type;
+  using index_type = typename IteratorType1::difference_type;
   using reducer_type =
-      ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
-                                                 JoinerType, ExecutionSpace>;
+      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType,
+                                                 ExecutionSpace>;
   using functor_type =
       StdTransformReduceTwoIntervalsFunctor<index_type, IteratorType1,
                                             IteratorType2, reducer_type,
@@ -279,19 +240,17 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 ValueType transform_reduce_default_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, ValueType init_reduction_value) {
-  static_assert(
-      admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType1,
-                                     IteratorType2>::value,
-      "");
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
+                                             IteratorType2>();
+  static_assert_is_not_opemnptarget(ex);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first1, last1);
 
   // aliases
-  using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
   using transformer_type =
-      Impl::StdTranformReduceDefaultBinaryTransformFunctor<value_type>;
-  using joiner_type = Impl::StdTranformReduceDefaultJoinFunctor<value_type>;
+      Impl::StdTranformReduceDefaultBinaryTransformFunctor<ValueType>;
+  using joiner_type = Impl::StdTranformReduceDefaultJoinFunctor<ValueType>;
 
   return transform_reduce_custom_functors_impl(
       label, ex, first1, last1, first2,

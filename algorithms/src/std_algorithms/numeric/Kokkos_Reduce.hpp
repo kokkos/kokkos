@@ -94,30 +94,6 @@ struct StdReduceFunctor {
       : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
 };
 
-template <class ExecutionSpace, class ValueType, class IteratorType>
-struct admissible_to_reduce {
-  static_assert(::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-                "transform_reduce not currently supported in OpenMPTarget");
-
-  static_assert(
-      are_random_access_iterators<IteratorType>::value,
-      "Currently, Kokkos standard algorithms require random access iterators.");
-
-  static_assert(::Kokkos::Experimental::are_accessible_iterators<
-                    ExecutionSpace, IteratorType>::value,
-                "Incompatible views/iterators and execution space");
-
-  // for now, we need to check iterators have same value type because reducers
-  // need that: reducer concept infact has a single nested value_type typedef
-  using iterator_value_type = typename IteratorType::value_type;
-  static_assert(std::is_same<std::remove_cv_t<iterator_value_type>,
-                             std::remove_cv_t<ValueType> >::value,
-                "reduce: iterator/view value_type must be the same "
-                "as type of init argument");
-
-  static constexpr bool value = true;
-};
-
 //------------------------------
 //
 // impl functions
@@ -131,9 +107,8 @@ ValueType reduce_custom_functors_impl(const std::string& label,
                                       IteratorType first, IteratorType last,
                                       ValueType init_reduction_value,
                                       JoinerType joiner) {
-  static_assert(
-      admissible_to_reduce<ExecutionSpace, ValueType, IteratorType>::value,
-      "types not admissible to reduce");
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_is_not_opemnptarget(ex);
   expect_valid_range(first, last);
 
   if (first == last) {
@@ -142,10 +117,9 @@ ValueType reduce_custom_functors_impl(const std::string& label,
   }
 
   // aliases
-  using iterator_value_type = typename IteratorType::value_type;
   using reducer_type =
-      ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
-                                                 JoinerType, ExecutionSpace>;
+      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType,
+                                                 ExecutionSpace>;
   using functor_type     = StdReduceFunctor<IteratorType, reducer_type>;
   using result_view_type = typename reducer_type::result_view_type;
 
@@ -168,9 +142,8 @@ ValueType reduce_default_functors_impl(const std::string& label,
                                        const ExecutionSpace& ex,
                                        IteratorType first, IteratorType last,
                                        ValueType init_reduction_value) {
-  static_assert(
-      admissible_to_reduce<ExecutionSpace, ValueType, IteratorType>::value,
-      "types not admissible to reduce");
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  static_assert_is_not_opemnptarget(ex);
   expect_valid_range(first, last);
 
   using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;

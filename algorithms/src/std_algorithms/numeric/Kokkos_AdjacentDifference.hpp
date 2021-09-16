@@ -129,7 +129,7 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
     return first_dest;
   }
 
-  // potentially, we might want to handle better the case where
+  // potentially, we could handle better the case where
   // source interval and output interval are not the same.
   // in that case, we don't need the auxiliary view.
 
@@ -157,7 +157,9 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
 
 }  // end namespace Impl
 
+//
 // public API
+//
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
 std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value,

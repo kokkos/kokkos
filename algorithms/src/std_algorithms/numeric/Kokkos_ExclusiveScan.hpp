@@ -56,79 +56,66 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class ExecutionSpace, class ValueType, class IteratorType1,
-          class IteratorType2>
-struct admissible_to_exclusive_scan {
-  static_assert(
-      ::Kokkos::Experimental::are_random_access_iterators<IteratorType1,
-                                                          IteratorType2>::value,
-      "Currently, Kokkos standard algorithms require random access iterators.");
+template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
+          class FirstDest>
+struct ExclusiveScanDefaultFunctor {
+  using execution_space = ExeSpace;
+  using value_type =
+      ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
 
-  static_assert(::Kokkos::Experimental::are_accessible_iterators<
-                    ExecutionSpace, IteratorType1, IteratorType2>::value,
-                "Incompatible views/iterators and execution space");
+  ValueType m_init_value;
+  FirstFrom m_first_from;
+  FirstDest m_first_dest;
 
-  // for now, we need to check iterators have same value type because reducers
-  using iterator1_value_type = typename IteratorType1::value_type;
-  using iterator2_value_type = typename IteratorType2::value_type;
-  static_assert(
-      std::is_same<std::remove_cv_t<iterator1_value_type>,
-                   std::remove_cv_t<iterator2_value_type> >::value,
-      "exclusive_scan currently only supports operands with same value_type");
+  KOKKOS_INLINE_FUNCTION
+  ExclusiveScanDefaultFunctor(ValueType init, FirstFrom first_from,
+                              FirstDest first_dest)
+      : m_init_value(::Kokkos::Experimental::move(init)),
+        m_first_from(first_from),
+        m_first_dest(first_dest) {}
 
-  static_assert(std::is_same<std::remove_cv_t<iterator1_value_type>,
-                             std::remove_cv_t<ValueType> >::value,
-                "exclusive_scan: iterator1/view1 value_type must be the same "
-                "as type of init argument");
-  static_assert(std::is_same<std::remove_cv_t<iterator2_value_type>,
-                             std::remove_cv_t<ValueType> >::value,
-                "exclusive_scan: iterator2/view2 value_type must be the same "
-                "as type of init argument");
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const IndexType i, value_type& update,
+                  const bool final_pass) const {
+    if (final_pass) {
+      if (i == 0) {
+        *(m_first_dest + i) = m_init_value;
+      } else {
+        *(m_first_dest + i) = update.val + m_init_value;
+      }
+    }
 
-  static constexpr bool value = true;
-};
+    const auto tmp = value_type{*(m_first_from + i), false};
+    this->join(update, tmp);
+  }
 
-template <class ExecutionSpace, class ValueType, class IteratorType1,
-          class IteratorType2>
-struct admissible_to_transform_exclusive_scan {
-  static_assert(
-      ::Kokkos::Experimental::are_random_access_iterators<IteratorType1,
-                                                          IteratorType2>::value,
-      "Currently, Kokkos standard algorithms require random access iterators.");
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type& update) const {
+    update.val        = {};
+    update.is_initial = true;
+  }
 
-  static_assert(::Kokkos::Experimental::are_accessible_iterators<
-                    ExecutionSpace, IteratorType1, IteratorType2>::value,
-                "Incompatible views/iterators and execution space");
-
-  // for now, we need to check iterators have same value type because reducers
-  using iterator1_value_type = typename IteratorType1::value_type;
-  using iterator2_value_type = typename IteratorType2::value_type;
-  static_assert(std::is_same<std::remove_cv_t<iterator1_value_type>,
-                             std::remove_cv_t<iterator2_value_type> >::value,
-                "transform_exclusive_scan currently only supports operands "
-                "with same value_type");
-
-  static_assert(
-      std::is_same<std::remove_cv_t<iterator1_value_type>,
-                   std::remove_cv_t<ValueType> >::value,
-      "transform_exclusive_scan: iterator1/view1 value_type must be the same "
-      "as type of init argument");
-  static_assert(
-      std::is_same<std::remove_cv_t<iterator2_value_type>,
-                   std::remove_cv_t<ValueType> >::value,
-      "transform_exclusive_scan: iterator2/view2 value_type must be the same "
-      "as type of init argument");
-
-  static constexpr bool value = true;
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& update,
+            volatile const value_type& input) const {
+    if (update.is_initial) {
+      update.val        = input.val;
+      update.is_initial = false;
+    } else {
+      update.val        = update.val + input.val;
+      update.is_initial = false;
+    }
+  }
 };
 
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest, class BinaryOpType, class UnaryOpType>
 struct TransformExclusiveScanFunctor {
   using execution_space = ExeSpace;
-  using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
+  using value_type =
+      ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
 
-  ValueType m_init;
+  ValueType m_init_value;
   FirstFrom m_first_from;
   FirstDest m_first_dest;
   BinaryOpType m_binary_op;
@@ -138,7 +125,7 @@ struct TransformExclusiveScanFunctor {
   TransformExclusiveScanFunctor(ValueType init, FirstFrom first_from,
                                 FirstDest first_dest, BinaryOpType bop,
                                 UnaryOpType uop)
-      : m_init(::Kokkos::Experimental::move(init)),
+      : m_init_value(::Kokkos::Experimental::move(init)),
         m_first_from(first_from),
         m_first_dest(first_dest),
         m_binary_op(::Kokkos::Experimental::move(bop)),
@@ -151,9 +138,9 @@ struct TransformExclusiveScanFunctor {
       if (i == 0) {
         // for both ExclusiveScan and TransformExclusiveScan,
         // init is unmodified
-        *(m_first_dest + i) = m_init;
+        *(m_first_dest + i) = m_init_value;
       } else {
-        *(m_first_dest + i) = m_binary_op(update.val, m_init);
+        *(m_first_dest + i) = m_binary_op(update.val, m_init_value);
       }
     }
 
@@ -181,84 +168,27 @@ struct TransformExclusiveScanFunctor {
   }
 };
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest>
-struct ExclusiveScanDefaultFunctor {
-  using execution_space = ExeSpace;
-  using value_type =
-      ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
-
-  ValueType m_init;
-  FirstFrom m_first_from;
-  FirstDest m_first_dest;
-
-  KOKKOS_INLINE_FUNCTION
-  ExclusiveScanDefaultFunctor(ValueType init, FirstFrom first_from,
-                              FirstDest first_dest)
-      : m_init(::Kokkos::Experimental::move(init)),
-        m_first_from(first_from),
-        m_first_dest(first_dest) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
-                  const bool final_pass) const {
-    if (final_pass) {
-      if (i == 0) {
-        *(m_first_dest + i) = m_init;
-      } else {
-        *(m_first_dest + i) = update.val + m_init;
-      }
-    }
-
-    const auto tmp = value_type{*(m_first_from + i), false};
-    this->join(update, tmp);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void init(value_type& update) const {
-    update.val        = {};
-    update.is_initial = true;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& update,
-            volatile const value_type& input) const {
-    if (update.is_initial) {
-      update.val        = input.val;
-      update.is_initial = false;
-    } else {
-      update.val        = update.val + input.val;
-      update.is_initial = false;
-    }
-  }
-};
-
-//------------------------------
-//
-// impl functions
-//
-//------------------------------
-
+// --------------------------------------------------
+// exclusive_scan_custom_op_impl
+// --------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
 OutputIteratorType exclusive_scan_custom_op_impl(
     const std::string& label, const ExecutionSpace& ex,
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop) {
-  static_assert(
-      admissible_to_exclusive_scan<ExecutionSpace, ValueType, InputIteratorType,
-                                   OutputIteratorType>::value,
-      "");
+  // checks
+  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
+                                             OutputIteratorType>();
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type    = typename InputIteratorType::difference_type;
-  using value_type    = typename OutputIteratorType::value_type;
-  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
   using func_type =
-      TransformExclusiveScanFunctor<ExecutionSpace, index_type, value_type,
+      TransformExclusiveScanFunctor<ExecutionSpace, index_type, ValueType,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, unary_op_type>;
 
@@ -273,46 +203,9 @@ OutputIteratorType exclusive_scan_custom_op_impl(
   return first_dest + num_elements;
 }
 
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType, class ValueType>
-OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
-                                                  const ExecutionSpace& ex,
-                                                  InputIteratorType first_from,
-                                                  InputIteratorType last_from,
-                                                  OutputIteratorType first_dest,
-                                                  ValueType init_value) {
-  static_assert(
-      admissible_to_exclusive_scan<ExecutionSpace, ValueType, InputIteratorType,
-                                   OutputIteratorType>::value,
-      "");
-  static_assert_iterators_have_matching_difference_type<InputIteratorType,
-                                                        OutputIteratorType>();
-  expect_valid_range(first_from, last_from);
-
-  // we are unnecessarily duplicating code, but this is on purpose
-  // so that we can use the default_op for OpenMPTarget.
-  // Originally, I had this implemented as:
-  // '''
-  // using value_type = typename OutputIteratorType::value_type;
-  // using bop_type   = StdExclusiveScanDefaultJoinFunctor<value_type>;
-  // call exclusive_scan_custom_op_impl(..., bop_type());
-  // '''
-  // which avoids duplicating the functors, but for OpenMPTarget
-  // I cannot use a custom binary op.
-  // This is the same problem that occurs for reductions.
-
-  using index_type = typename InputIteratorType::difference_type;
-  using value_type = typename OutputIteratorType::value_type;
-  using func_type =
-      ExclusiveScanDefaultFunctor<ExecutionSpace, index_type, value_type,
-                                  InputIteratorType, OutputIteratorType>;
-  const auto num_elements = last_from - first_from;
-  ::Kokkos::parallel_scan(label,
-                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                          func_type(init_value, first_from, first_dest));
-  return first_dest + num_elements;
-}
-
+// --------------------------------------------------
+// transform_exclusive_scan_impl
+// --------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
@@ -321,20 +214,17 @@ OutputIteratorType transform_exclusive_scan_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop,
     UnaryOpType uop) {
-  static_assert(
-      admissible_to_transform_exclusive_scan<ExecutionSpace, ValueType,
-                                             InputIteratorType,
-                                             OutputIteratorType>::value,
-      "");
+  // checks
+  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
+                                             OutputIteratorType>();
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
   expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
-  using value_type = typename OutputIteratorType::value_type;
   using func_type =
-      TransformExclusiveScanFunctor<ExecutionSpace, index_type, value_type,
+      TransformExclusiveScanFunctor<ExecutionSpace, index_type, ValueType,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, UnaryOpType>;
 
@@ -347,6 +237,58 @@ OutputIteratorType transform_exclusive_scan_impl(
                                     ::Kokkos::Experimental::move(uop)));
 
   // return
+  return first_dest + num_elements;
+}
+
+// --------------------------------------------------
+// exclusive_scan_default_op_impl
+// --------------------------------------------------
+template <class ExecutionSpace, class InputIteratorType,
+          class OutputIteratorType, class ValueType>
+OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
+                                                  const ExecutionSpace& ex,
+                                                  InputIteratorType first_from,
+                                                  InputIteratorType last_from,
+                                                  OutputIteratorType first_dest,
+                                                  ValueType init_value) {
+  // checks
+  static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
+                                             OutputIteratorType>();
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
+
+  // does it make sense to do this static_assert too?
+  // using input_iterator_value_type = typename InputIteratorType::value_type;
+  // static_assert
+  //   (std::is_convertible<std::remove_cv_t<input_iterator_value_type>,
+  //   ValueType>::value,
+  //    "exclusive_scan: InputIteratorType::value_type not convertible to
+  //    ValueType");
+
+  // we are unnecessarily duplicating code, but this is on purpose
+  // so that we can use the default_op for OpenMPTarget.
+  // Originally, I had this implemented as:
+  // '''
+  // using bop_type   = StdExclusiveScanDefaultJoinFunctor<ValueType>;
+  // call exclusive_scan_custom_op_impl(..., bop_type());
+  // '''
+  // which avoids duplicating the functors, but for OpenMPTarget
+  // I cannot use a custom binary op.
+  // This is the same problem that occurs for reductions.
+
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
+  using func_type =
+      ExclusiveScanDefaultFunctor<ExecutionSpace, index_type, ValueType,
+                                  InputIteratorType, OutputIteratorType>;
+
+  // run
+  const auto num_elements = last_from - first_from;
+  ::Kokkos::parallel_scan(label,
+                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                          func_type(init_value, first_from, first_dest));
+
   return first_dest + num_elements;
 }
 

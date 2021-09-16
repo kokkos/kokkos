@@ -203,12 +203,9 @@ struct TransformInclusiveScanWithInitValueFunctor {
   }
 };
 
-//------------------------------
-//
-// impl functions
-//
-//------------------------------
-
+// -------------------------------------------------------------
+// inclusive_scan_default_op_impl
+// -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
 OutputIteratorType inclusive_scan_default_op_impl(
@@ -224,7 +221,8 @@ OutputIteratorType inclusive_scan_default_op_impl(
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
-  using value_type = typename OutputIteratorType::value_type;
+  using value_type =
+      std::remove_const_t<typename InputIteratorType::value_type>;
   using func_type =
       InclusiveScanDefaultFunctor<ExecutionSpace, index_type, value_type,
                                   InputIteratorType, OutputIteratorType>;
@@ -239,6 +237,9 @@ OutputIteratorType inclusive_scan_default_op_impl(
   return first_dest + num_elements;
 }
 
+// -------------------------------------------------------------
+// inclusive_scan_custom_binary_op_impl
+// -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType>
 OutputIteratorType inclusive_scan_custom_binary_op_impl(
@@ -253,8 +254,9 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   expect_valid_range(first_from, last_from);
 
   // aliases
-  using index_type    = typename InputIteratorType::difference_type;
-  using value_type    = typename OutputIteratorType::value_type;
+  using index_type = typename InputIteratorType::difference_type;
+  using value_type =
+      std::remove_const_t<typename InputIteratorType::value_type>;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
   using func_type     = TransformInclusiveScanNoInitValueFunctor<
       ExecutionSpace, index_type, value_type, InputIteratorType,
@@ -270,6 +272,9 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   return first_dest + num_elements;
 }
 
+// -------------------------------------------------------------
+// inclusive_scan_custom_binary_op_impl with init_value
+// -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class ValueType>
 OutputIteratorType inclusive_scan_custom_binary_op_impl(
@@ -285,14 +290,10 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
                                                         OutputIteratorType>();
 
   // aliases
-  using value_type = typename OutputIteratorType::value_type;
-  static_assert(std::is_same<value_type, ValueType>::value,
-                "Mismatching value_type");
-
   using index_type    = typename InputIteratorType::difference_type;
-  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
   using func_type     = TransformInclusiveScanWithInitValueFunctor<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
+      ExecutionSpace, index_type, ValueType, InputIteratorType,
       OutputIteratorType, BinaryOpType, unary_op_type>;
 
   // run
@@ -306,6 +307,9 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   return first_dest + num_elements;
 }
 
+// -------------------------------------------------------------
+// transform_inclusive_scan_impl without init_value
+// -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType>
 OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
@@ -324,8 +328,9 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
-  using value_type = typename OutputIteratorType::value_type;
-  using func_type  = TransformInclusiveScanNoInitValueFunctor<
+  using value_type =
+      std::remove_const_t<typename InputIteratorType::value_type>;
+  using func_type = TransformInclusiveScanNoInitValueFunctor<
       ExecutionSpace, index_type, value_type, InputIteratorType,
       OutputIteratorType, BinaryOpType, UnaryOpType>;
 
@@ -339,6 +344,9 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
   return first_dest + num_elements;
 }
 
+// -------------------------------------------------------------
+// transform_inclusive_scan_impl with init_value
+// -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType,
           class ValueType>
@@ -355,12 +363,9 @@ OutputIteratorType transform_inclusive_scan_impl(
                                                         OutputIteratorType>();
 
   // aliases
-  using value_type = typename OutputIteratorType::value_type;
-  static_assert(std::is_same<value_type, ValueType>::value,
-                "Mismatching value_type");
   using index_type = typename InputIteratorType::difference_type;
   using func_type  = TransformInclusiveScanWithInitValueFunctor<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
+      ExecutionSpace, index_type, ValueType, InputIteratorType,
       OutputIteratorType, BinaryOpType, UnaryOpType>;
 
   // run
