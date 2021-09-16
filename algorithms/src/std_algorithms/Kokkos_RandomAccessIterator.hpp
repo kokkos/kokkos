@@ -81,7 +81,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
                 "RandomAccessIterator only supports 1D Views with LayoutLeft, "
                 "LayoutRight, LayoutStride.");
 
-  RandomAccessIterator() = default;
+  KOKKOS_DEFAULTED_FUNCTION RandomAccessIterator() = default;
 
   explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view)
       : m_view(view) {}
@@ -89,6 +89,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
                                                 ptrdiff_t current_index)
       : m_view(view), m_current_index(current_index) {}
 
+  // check if this can be omitted or defaulted
   KOKKOS_FUNCTION
   iterator_type& operator=(const iterator_type& it) {
     m_view          = it.m_view;
