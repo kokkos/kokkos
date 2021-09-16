@@ -54,10 +54,13 @@
 
 namespace Kokkos {
 namespace Experimental {
-
-// ------------------------------------------
-// begin Impl namespace
 namespace Impl {
+
+// ------------------
+//
+// functors
+//
+// ------------------
 
 template <class IteratorType, class IndicatorViewType, class ComparatorType>
 struct StdIsSortedUntilFunctor {
@@ -97,7 +100,8 @@ struct StdIsSortedFunctor {
   ComparatorType m_comparator;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, int& update, const bool final) const {
+  void operator()(const index_type i, std::size_t& update,
+                  const bool final) const {
     const auto val_i   = *(m_first + i);
     const auto val_ip1 = *(m_first + i + 1);
 
@@ -108,7 +112,9 @@ struct StdIsSortedFunctor {
     }
 
     if (final) {
-      // no op in this case
+      // no op in this case, because we don't need
+      // to do anything, we just need the update
+      // after the scan to know if it is sorted or not
     }
   }
 
@@ -118,9 +124,11 @@ struct StdIsSortedFunctor {
         m_comparator(::Kokkos::Experimental::move(comparator)) {}
 };
 
+// ------------------
 //
 // impl functions
 //
+// ------------------
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 IteratorType is_sorted_until_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
@@ -134,20 +142,30 @@ IteratorType is_sorted_until_impl(const std::string& label,
     return last;
   }
 
-  using indicator_type = ::Kokkos::View<int*, ExecutionSpace>;
-  using functor_type =
-      StdIsSortedUntilFunctor<IteratorType, indicator_type, ComparatorType>;
+  /*
+    use scan and a helper "indicator" view
+    such that we scan the data and fill the indicator with
+    partial sum that is always 0 unless we find a pair that
+    breaks the sorting, so in that case the indicator will
+    show a 1 at exactly the location where the sorting is broken.
+   */
 
+  using indicator_value_type = std::size_t;
+  using indicator_type = ::Kokkos::View<indicator_value_type*, ExecutionSpace>;
+
+  // use num_elements-1 because each index handles i and i+1
   const auto num_elements_minus_one = num_elements - 1;
   indicator_type indicator("is_sorted_until_indicator_helper",
                            num_elements_minus_one);
 
+  using functor_type =
+      StdIsSortedUntilFunctor<IteratorType, indicator_type, ComparatorType>;
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, indicator, ::Kokkos::Experimental::move(comp)));
 
-  constexpr int sentinel_value = 1;
-  auto r                       = ::Kokkos::Experimental::find(
+  constexpr indicator_value_type sentinel_value = 1;
+  auto r                                        = ::Kokkos::Experimental::find(
       ex, ::Kokkos::Experimental::cbegin(indicator),
       ::Kokkos::Experimental::cend(indicator), sentinel_value);
   const auto shift = r - ::Kokkos::Experimental::cbegin(indicator);
@@ -178,10 +196,11 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   const auto num_elements_minus_one = num_elements - 1;
   using functor_type = StdIsSortedFunctor<IteratorType, ComparatorType>;
 
-  int result = 0;
+  std::size_t result = 0;
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, ::Kokkos::Experimental::move(comp)), result);
+
   if (result == 0) {
     return true;
   } else {
