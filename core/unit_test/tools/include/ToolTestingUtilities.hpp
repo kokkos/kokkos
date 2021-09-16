@@ -7,17 +7,93 @@ namespace Test {
 
 namespace Tools {
 
+struct EventBase;
+using EventBasePtr = std::shared_ptr<EventBase>;
+using EventSet = std::vector<EventBasePtr>;
 
-struct EventBase {
+struct MatchDiagnostic {
+  bool success = true;
+  std::vector<std::string> messages = {};
+};
+
+struct EventMatcher {
+  using Pattern = std::vector<std::shared_ptr<EventMatcher>>;  
+  struct MatchResult {
+      bool match_success;
+      int increment_pattern;
+      int increment_event;
+      std::string diagnostic;
+  };
+  static MatchResult SimpleMatchResult(bool success, const std::string& diagnostic = ""){
+      return MatchResult { success, 0, 1, diagnostic};
+  }
+  virtual std::string repr() const = 0; 
+  virtual MatchResult matches(const EventSet& events, int event_index) = 0;
+  virtual ~EventMatcher() {}
+  void checkMatchAt(MatchDiagnostic& builder, const Pattern& pattern, const EventSet& events, int pattern_index, int event_index){
+    if(pattern_index >= pattern.size()){
+        builder.messages.push_back("Error: stepped off end of pattern\n");
+        return;
+    }
+    if(event_index >= events.size()){
+        builder.messages.push_back("Error: event set completed, additional events found in the pattern\n");
+        for(int x = pattern_index;x<pattern.size();++x){
+          std::stringstream s;
+          s<<"Additional pattern entry "<<x<<": "<<pattern[x]->repr()<<std::endl;
+          builder.messages.push_back(s.str());
+        }
+        return;
+    }
+    auto match = pattern[pattern_index]->matches(events,event_index);
+    if(!match.match_success) { 
+        builder.messages.push_back(match.diagnostic);
+        return; 
+    }
+    else{
+        if (((pattern_index+match.increment_pattern) == pattern.size() ) && ((event_index+match.increment_event) == events.size())){
+            builder.success = true;
+            return;
+        }
+        checkMatchAt(builder, pattern, events, pattern_index + match.increment_pattern, event_index+match.increment_event);
+    }
+  }
+  MatchDiagnostic checkMatch(const Pattern& pattern, const EventSet& events) {
+      MatchDiagnostic diagnostic {false};
+      checkMatchAt(diagnostic, pattern, events, 0, 0);
+      return diagnostic;
+  }
+};
+
+struct EventRoot : public EventMatcher {
+  virtual std::string repr() const { return ""; }; 
+  virtual MatchResult matches(const EventSet& events, int event_index) { return {false, 1, 1, ""};};
+  virtual ~EventRoot(){}
+};
+
+struct EventBase : public EventMatcher {
+  virtual MatchResult matches(const EventSet& events, int event_index) override {
+      bool is_match = isEqual(*events[event_index]);
+      if(is_match){
+          return {true, 1, 1, ""};
+      } else {
+          std::stringstream s;
+          s << "Failed match on event "<<event_index<<", expected "<<repr()<<", got "<<events[event_index]->repr()<<std::endl;
+          return {false, 1, 1, s.str()};
+      } 
+  }
   virtual bool isEqual(const EventBase&) const = 0;
   template<typename T>
-  constexpr static const uint64_t unspecified_sentinel = std::numeric_limits<T>::max();
+  constexpr static uint64_t unspecified_sentinel = std::numeric_limits<T>::max();
   virtual ~EventBase() = default;
-  virtual std::string repr() const = 0;
+  virtual std::string repr() const override = 0;
 
 };
 
-using EventBasePtr = std::shared_ptr<EventBase>;
+
+struct InitEvent : public EventBase {
+  virtual bool isEqual(const EventBase&) const = 0;
+};
+
 
 
 template<class Derived>
@@ -43,9 +119,22 @@ struct BeginOperation : public EventBase {
    name(n), deviceID(devID), kID(k) {} 
    virtual ~BeginOperation() = default;
    virtual std::string repr () const {
-     std::stringstream s;
-     
-     s << "BeginOp { "  << name <<  ", " <<deviceID <<"," <<kID <<"}";
+     std::stringstream s; 
+     s << "BeginOp { "  << name <<  ", ";
+     if (deviceID == unspecified_sentinel<uint32_t>) {
+         s << "(any deviceID) ";
+     }
+     else {
+         s << deviceID;
+     }
+     s << ",";
+     if (kID == unspecified_sentinel<uint64_t>) {
+         s << "(any kernelID) ";
+     }
+     else {
+         s << kID;
+     }
+     s <<"}";
      return s.str();
    }
 };
@@ -70,7 +159,14 @@ struct EndOperation : public EventBase {
 
       virtual std::string repr () const {
         std::stringstream s;
-     s<< "EndOp { "<<kID<<"}";
+     s<< "EndOp { ";
+     if (kID == unspecified_sentinel<uint64_t>) {
+         s << "(any kernelID) ";
+     }
+     else {
+         s << kID;
+     }
+     s<<"}";
      return s.str();
    }
 
@@ -124,31 +220,78 @@ struct EndFenceEvent : public EndOperation<EndFenceEvent> {
   virtual ~EndFenceEvent() = default;
 };
 
+template<typename MetaMatcher>
+struct EventPair : public EventMatcher {
+  using Ev = EventBasePtr;
+  Ev match;
+  using MatchType = std::shared_ptr<EventMatcher>;
+  MetaMatcher comparator;
+  std::string descriptor;
+  EventPair(const Ev& f, const MetaMatcher& n, const std::string& d) : match(f), comparator(n), descriptor(d) {}
+  virtual std::string repr() const override {
+      std::stringstream s;
+      s << "A pair of ("<<match->repr()<<"), then ("<<descriptor<<")"<<std::endl;
+      return s.str();
+  }
+  virtual MatchResult matches(const EventSet& events, int event_index) override {
+    MatchResult result {false, 1, 1};
+    if(event_index >= (events.size()-1)) {
+        result.diagnostic = std::string("EventPair searching for a pair of events, but not enough events left in pattern\n");
+        return result;
+    }
+    if(!match->isEqual(*events[event_index])){
+      std::stringstream s;
+      s << "EventPair failed to match first item, expected "<<match->repr()<<", got "<<events[event_index]->repr()<<"\n";
+      result.diagnostic = s.str();
+      return result;
+    }
+    auto submatch = comparator(events[event_index],events[event_index+1]);
+    if(!submatch.match_success){
+      result.diagnostic = submatch.diagnostic;
+      return result;    
+    }
+    result.increment_pattern += submatch.increment_pattern;
+    result.increment_event += submatch.increment_event;
+    result.match_success = true;
+    return result;
+    
+  }
+};
+
+template<typename MetaMatcher>
+auto make_event_pair(const EventBasePtr& first, const MetaMatcher& second, const std::string& descriptor){
+    return std::make_shared<EventPair<MetaMatcher>>(first, second, descriptor);
+}
+
+template<typename IntendedEventType1, typename IntendedEventType2, typename MetaMatcher>
+auto make_event_pair(const EventBasePtr& first, const MetaMatcher& second, const std::string& descriptor){
+    auto comparator = [&](const auto e1, const auto e2){
+      auto first_event = std::dynamic_pointer_cast<IntendedEventType1>(e1);
+      auto second_event = std::dynamic_pointer_cast<IntendedEventType2>(e2);
+       if((first_event==nullptr)||(second_event==nullptr)){
+            return EventMatcher::MatchResult{false,0,1,"Types of events don't match"};
+       }  
+      return second(first_event,second_event);
+    };
+    return std::make_shared<EventPair<decltype(comparator)>>(first, 
+    comparator, 
+    descriptor);
+}
+
 bool compare_event_vectors(
-  const std::vector<EventBasePtr>& expected,
+  const EventMatcher::Pattern& expected,
   const std::vector<EventBasePtr>& found 
 ) {
   
-  auto expected_size = expected.size();
-  if(found.size() != expected_size) {
-    std::cout << "Expected "<<expected_size<<" events, got "<<found.size()<<std::endl;
-    for(auto entry : found ){
-      std::cout << "Entry: "<<entry->repr()<<std::endl;
-    }
-    return false; 
-    }
-  for(int x =0 ; x<expected_size;++x){
-
-    if(!expected[x]->isEqual(*found[x])) {
-        for(int y =0;y<expected_size;++y){
-          std::cout <<"Expected ["<<y<<"] : "<<expected[y]->repr()<<std::endl;
-          std::cout <<"Actual   ["<<y<<"] : "<<found[y]->repr()<<std::endl;
-
-        } 
-      return false; 
+  EventMatcher* matcher = new EventRoot();
+  auto diagnostic = matcher->checkMatch(expected, found);
+  if(!diagnostic.success) {
+      for(const auto & message: diagnostic.messages){
+          std::cerr << message;
       }
   }
-  return true;
+  delete matcher;
+  return diagnostic.success;
 }
 
 std::vector<EventBasePtr> found_events;
@@ -170,22 +313,26 @@ struct ToolValidatorConfiguration {
   ToolValidatorConfiguration(Profiling p = Profiling(), Tuning t = Tuning(), Infrastructure i = Infrastructure()) :
   profiling(p), tuning(t), infrastructure(i) {}
 };
-
+static uint64_t last_kid;
 void listen_tool_events(ToolValidatorConfiguration config){
   Kokkos::Tools::Experimental::pause_tools();
   if(config.profiling.kernels){
     Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
       [](const char* n, const uint32_t d, uint64_t* k){
+        *k = ++last_kid;
         found_events.push_back(std::make_shared<BeginParallelForEvent>(std::string(n), d, *k));
       }
     );
     Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback(
       [](const char* n, const uint32_t d, uint64_t* k){
+        *k = ++last_kid;
         found_events.push_back(std::make_shared<BeginParallelReduceEvent>(std::string(n), d, *k));
       }
     );
     Kokkos::Tools::Experimental::set_begin_parallel_scan_callback(
       [](const char* n, const uint32_t d, uint64_t* k){
+                *k = ++last_kid;
+
         found_events.push_back(std::make_shared<BeginParallelScanEvent>(std::string(n), d, *k));
       }
     );
@@ -222,7 +369,7 @@ void listen_tool_events(ToolValidatorConfiguration config){
 
 template<class Lambda, class... Args>
 bool validate_event_set(
-  const std::vector<EventBasePtr>& expected,
+  const EventMatcher::Pattern& expected,
   const Lambda& lam, Args... args
 ) {
   found_events.clear();
