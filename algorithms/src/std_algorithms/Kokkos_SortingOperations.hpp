@@ -59,15 +59,15 @@ namespace Experimental {
 // begin Impl namespace
 namespace Impl {
 
-template <class IndexType, class IteratorType, class IndicatorViewType,
-          class ComparatorType>
+template <class IteratorType, class IndicatorViewType, class ComparatorType>
 struct StdIsSortedUntilFunctor {
+  using index_type = typename IteratorType::difference_type;
   IteratorType m_first;
   IndicatorViewType m_indicator;
   ComparatorType m_comparator;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, int& update, const bool final) const {
+  void operator()(const index_type i, int& update, const bool final) const {
     const auto val_i   = *(m_first + i);
     const auto val_ip1 = *(m_first + i + 1);
 
@@ -90,13 +90,14 @@ struct StdIsSortedUntilFunctor {
         m_comparator(::Kokkos::Experimental::move(comparator)) {}
 };
 
-template <class IndexType, class IteratorType, class ComparatorType>
+template <class IteratorType, class ComparatorType>
 struct StdIsSortedFunctor {
+  using index_type = typename IteratorType::difference_type;
   IteratorType m_first;
   ComparatorType m_comparator;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, int& update, const bool final) const {
+  void operator()(const index_type i, int& update, const bool final) const {
     const auto val_i   = *(m_first + i);
     const auto val_ip1 = *(m_first + i + 1);
 
@@ -134,9 +135,8 @@ IteratorType is_sorted_until_impl(const std::string& label,
   }
 
   using indicator_type = ::Kokkos::View<int*, ExecutionSpace>;
-  using index_type     = int;
-  using functor_type   = StdIsSortedUntilFunctor<index_type, IteratorType,
-                                               indicator_type, ComparatorType>;
+  using functor_type =
+      StdIsSortedUntilFunctor<IteratorType, indicator_type, ComparatorType>;
 
   const auto num_elements_minus_one = num_elements - 1;
   indicator_type indicator("is_sorted_until_indicator_helper",
@@ -176,9 +176,7 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   }
 
   const auto num_elements_minus_one = num_elements - 1;
-  using index_type                  = int;
-  using functor_type =
-      StdIsSortedFunctor<index_type, IteratorType, ComparatorType>;
+  using functor_type = StdIsSortedFunctor<IteratorType, ComparatorType>;
 
   int result = 0;
   ::Kokkos::parallel_scan(

@@ -71,15 +71,15 @@ struct StdReduceDefaultJoinFunctor {
 
 template <class IteratorType, class ReducerType>
 struct StdReduceFunctor {
-  using RedValueType = typename ReducerType::value_type;
+  using red_value_type = typename ReducerType::value_type;
   const IteratorType m_first;
   const ReducerType m_reducer;
   using index_type = typename IteratorType::difference_type;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, RedValueType& red_value) const {
+  void operator()(const index_type i, red_value_type& red_value) const {
     const auto my_iterator = m_first + i;
-    auto tmp_wrapped_value = RedValueType{*my_iterator, false};
+    auto tmp_wrapped_value = red_value_type{*my_iterator, false};
     if (red_value.is_initial) {
       red_value = tmp_wrapped_value;
     } else {

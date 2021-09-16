@@ -245,6 +245,8 @@ OutputIteratorType exclusive_scan_custom_op_impl(
                                    OutputIteratorType>::value,
       "");
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type    = typename OutputIteratorType::value_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
@@ -275,6 +277,8 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
                                    OutputIteratorType>::value,
       "");
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   // we are unnecessarily duplicating code, but this is on purpose
   // so that we can use the default_op for OpenMPTarget.
@@ -313,6 +317,8 @@ OutputIteratorType transform_exclusive_scan_impl(
                                              OutputIteratorType>::value,
       "");
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type = typename OutputIteratorType::value_type;
   using func_type =

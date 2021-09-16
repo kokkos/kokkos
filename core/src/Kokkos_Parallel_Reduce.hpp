@@ -1168,7 +1168,6 @@ struct MinMaxFirstLastLocCustomComparator {
 //
 template <class Index>
 struct StdMismatchScalar {
-  using index_type = Index;
   bool flag;
   Index loc;
 
@@ -1185,14 +1184,14 @@ struct StdMismatchScalar {
   }
 };
 
-template <class Scalar, class Index, class Space>
+template <class Index, class Space>
 struct StdMismatch {
  private:
   using index_type = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  using reducer    = StdMismatch<Scalar, Index, Space>;
+  using reducer    = StdMismatch<Index, Space>;
   using value_type = StdMismatchScalar<index_type>;
 
   using result_view_type = ::Kokkos::View<value_type, Space>;
@@ -1257,7 +1256,6 @@ struct StdMismatch {
 //
 template <class Index>
 struct FirstLocScalar {
-  using index_type = Index;
   Index min_loc_true;
 
   KOKKOS_INLINE_FUNCTION
@@ -1325,7 +1323,6 @@ struct FirstLoc {
 
 template <class Index>
 struct StdIsPartScalar {
-  using index_type = Index;
   Index max_loc_true, min_loc_false;
 
   KOKKOS_INLINE_FUNCTION
@@ -1410,7 +1407,6 @@ struct StdIsPartitioned {
 
 template <class Index>
 struct StdPartPointScalar {
-  using index_type = Index;
   Index min_loc_false;
 
   KOKKOS_INLINE_FUNCTION

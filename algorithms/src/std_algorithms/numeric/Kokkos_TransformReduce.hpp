@@ -82,17 +82,17 @@ struct StdTranformReduceDefaultJoinFunctor {
 
 template <class IteratorType, class ReducerType, class TransformType>
 struct StdTransformReduceSingleIntervalFunctor {
-  using RedValueType = typename ReducerType::value_type;
-  using index_type   = typename IteratorType::difference_type;
+  using red_value_type = typename ReducerType::value_type;
+  using index_type     = typename IteratorType::difference_type;
 
   const IteratorType m_first;
   const ReducerType m_reducer;
   const TransformType m_transform;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, RedValueType& red_value) const {
+  void operator()(const index_type i, red_value_type& red_value) const {
     const auto my_iterator = m_first + i;
-    auto tmp_wrapped_value = RedValueType{m_transform(*my_iterator), false};
+    auto tmp_wrapped_value = red_value_type{m_transform(*my_iterator), false};
     if (red_value.is_initial) {
       red_value = tmp_wrapped_value;
     } else {
@@ -112,8 +112,8 @@ struct StdTransformReduceSingleIntervalFunctor {
 template <class IteratorType1, class IteratorType2, class ReducerType,
           class TransformType>
 struct StdTransformReduceTwoIntervalsFunctor {
-  using RedValueType = typename ReducerType::value_type;
-  using index_type   = typename IteratorType1::difference_type;
+  using red_value_type = typename ReducerType::value_type;
+  using index_type     = typename IteratorType1::difference_type;
 
   const IteratorType1 m_first1;
   const IteratorType2 m_first2;
@@ -121,11 +121,11 @@ struct StdTransformReduceTwoIntervalsFunctor {
   const TransformType m_transform;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, RedValueType& red_value) const {
+  void operator()(const index_type i, red_value_type& red_value) const {
     const auto my_iterator1 = m_first1 + i;
     const auto my_iterator2 = m_first2 + i;
     auto tmp_wrapped_value =
-        RedValueType{m_transform(*my_iterator1, *my_iterator2), false};
+        red_value_type{m_transform(*my_iterator1, *my_iterator2), false};
 
     if (red_value.is_initial) {
       red_value = tmp_wrapped_value;
@@ -232,6 +232,8 @@ ValueType transform_reduce_custom_functors_impl(
                                      IteratorType2>::value,
       "");
   expect_valid_range(first1, last1);
+  static_assert_iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>();
 
   if (first1 == last1) {
     // init is returned, unmodified
@@ -270,6 +272,8 @@ ValueType transform_reduce_default_functors_impl(
                                      IteratorType2>::value,
       "");
   expect_valid_range(first1, last1);
+  static_assert_iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>();
 
   using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
   using transformer_type =

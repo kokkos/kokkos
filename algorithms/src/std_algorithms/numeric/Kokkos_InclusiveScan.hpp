@@ -214,6 +214,8 @@ OutputIteratorType inclusive_scan_default_op_impl(
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type = typename OutputIteratorType::value_type;
   using func_type =
@@ -236,6 +238,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type    = typename OutputIteratorType::value_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
@@ -260,6 +264,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type = typename OutputIteratorType::value_type;
   static_assert(std::is_same<value_type, ValueType>::value,
@@ -290,6 +296,8 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type = typename OutputIteratorType::value_type;
   using func_type  = TransformInclusiveScanNoInitValueFunctor<
@@ -314,6 +322,8 @@ OutputIteratorType transform_inclusive_scan_impl(
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   using value_type = typename OutputIteratorType::value_type;
   static_assert(std::is_same<value_type, ValueType>::value,

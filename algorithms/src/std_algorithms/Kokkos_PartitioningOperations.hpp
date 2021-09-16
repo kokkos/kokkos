@@ -64,7 +64,7 @@ namespace Impl {
 template <class IteratorType, class ReducerType, class PredicateType>
 struct StdIsPartitionedFunctor {
   using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename red_value_type::index_type;
+  using index_type     = typename IteratorType::difference_type;
 
   IteratorType m_first;
   ReducerType m_reducer;
@@ -95,7 +95,7 @@ struct StdIsPartitionedFunctor {
 template <class IteratorType, class ReducerType, class PredicateType>
 struct StdPartitionPointFunctor {
   using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename red_value_type::index_type;
+  using index_type     = typename IteratorType::difference_type;
 
   IteratorType m_first;
   ReducerType m_reducer;
@@ -150,10 +150,11 @@ struct StdPartitionCopyScalar {
   }
 };
 
-template <class IndexType, class FirstFrom, class FirstDestTrue,
-          class FirstDestFalse, class PredType>
+template <class FirstFrom, class FirstDestTrue, class FirstDestFalse,
+          class PredType>
 struct StdPartitionCopyFunctor {
-  using value_type = StdPartitionCopyScalar<IndexType>;
+  using index_type = typename FirstFrom::difference_type;
+  using value_type = StdPartitionCopyScalar<index_type>;
 
   FirstFrom m_first_from;
   FirstDestTrue m_first_dest_true;
@@ -169,7 +170,7 @@ struct StdPartitionCopyFunctor {
         m_pred(::Kokkos::Experimental::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     const auto& myval = *(m_first_from + i);
     if (final_pass) {
@@ -215,7 +216,7 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   }
 
   const auto num_elements = last - first;
-  using index_type        = int;
+  using index_type        = typename IteratorType::difference_type;
   using reducer_type      = StdIsPartitioned<index_type, ExecutionSpace>;
 
   using result_view_type = typename reducer_type::result_view_type;
@@ -252,7 +253,7 @@ IteratorType partition_point_impl(const std::string& label,
   }
 
   const auto num_elements = last - first;
-  using index_type        = int;
+  using index_type        = typename IteratorType::difference_type;
   using reducer_type      = StdPartitionPoint<index_type, ExecutionSpace>;
 
   using result_view_type = typename reducer_type::result_view_type;
@@ -288,16 +289,16 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorTrueType,
                                              OutputIteratorFalseType>();
+  static_assert_iterators_have_matching_difference_type<
+      InputIteratorType, OutputIteratorTrueType, OutputIteratorFalseType>();
 
   if (from_first == from_last) {
     return {to_first_true, to_first_false};
   }
 
-  using index_type = std::size_t;
   using func_type =
-      StdPartitionCopyFunctor<index_type, InputIteratorType,
-                              OutputIteratorTrueType, OutputIteratorFalseType,
-                              PredicateType>;
+      StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
+                              OutputIteratorFalseType, PredicateType>;
 
   const auto num_elements = from_last - from_first;
   typename func_type::value_type counts{0, 0};

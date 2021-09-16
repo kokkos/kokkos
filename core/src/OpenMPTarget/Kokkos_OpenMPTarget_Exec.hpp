@@ -625,11 +625,10 @@ struct OpenMPTargetReducerWrapper<MinMaxFirstLastLoc<Scalar, Index, Space>> {
 //
 // specialize for StdMismatch
 //
-template <class Scalar, class Index, class Space>
-struct OpenMPTargetReducerWrapper<StdMismatch<Scalar, Index, Space>> {
+template <class Index, class Space>
+struct OpenMPTargetReducerWrapper<StdMismatch<Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using index_type = typename std::remove_cv<Index>::type;
 
  public:
   // Required

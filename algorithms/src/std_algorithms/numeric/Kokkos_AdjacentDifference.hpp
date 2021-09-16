@@ -111,6 +111,8 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
   expect_valid_range(first_from, last_from);
+  static_assert_iterators_have_matching_difference_type<InputIteratorType,
+                                                        OutputIteratorType>();
 
   if (first_from == last_from) {
     return first_dest;

@@ -153,6 +153,39 @@ static_assert_random_access_and_accessible() {
 }
 
 //
+// have matching difference_type
+//
+template <class... Args>
+struct iterators_have_matching_difference_type;
+
+template <class T>
+struct iterators_have_matching_difference_type<T> {
+  static constexpr bool value = true;
+};
+
+template <class T1, class T2>
+struct iterators_have_matching_difference_type<T1, T2> {
+  static constexpr bool value =
+      std::is_same<typename T1::difference_type,
+                   typename T2::difference_type>::value;
+};
+
+template <class T1, class T2, class... Tail>
+struct iterators_have_matching_difference_type<T1, T2, Tail...> {
+  static constexpr bool value =
+      iterators_have_matching_difference_type<T1, T2>::value &&
+      iterators_have_matching_difference_type<T2, Tail...>::value;
+};
+
+template <class... IteratorTypes>
+KOKKOS_INLINE_FUNCTION constexpr void
+static_assert_iterators_have_matching_difference_type() {
+  static_assert(
+      iterators_have_matching_difference_type<IteratorTypes...>::value,
+      "Iterators do not have matching difference_type");
+}
+
+//
 // not_openmptarget
 //
 template <class ExeSpace>

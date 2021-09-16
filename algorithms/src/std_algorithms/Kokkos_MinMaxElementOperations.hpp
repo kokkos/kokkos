@@ -58,14 +58,16 @@ namespace Impl {
 
 template <class IteratorType, class ReducerType>
 struct StdMinOrMaxElemFunctor {
-  using RedValueType = typename ReducerType::value_type;
+  using index_type     = typename IteratorType::difference_type;
+  using red_value_type = typename ReducerType::value_type;
+
   IteratorType m_first;
   ReducerType m_reducer;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, RedValueType& red_value) const {
+  void operator()(const index_type i, red_value_type& red_value) const {
     auto my_iterator = m_first + i;
-    m_reducer.join(red_value, RedValueType{*my_iterator, i});
+    m_reducer.join(red_value, red_value_type{*my_iterator, i});
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -75,14 +77,15 @@ struct StdMinOrMaxElemFunctor {
 
 template <class IteratorType, class ReducerType>
 struct StdMinMaxElemFunctor {
-  using RedValueType = typename ReducerType::value_type;
+  using index_type     = typename IteratorType::difference_type;
+  using red_value_type = typename ReducerType::value_type;
   IteratorType m_first;
   ReducerType m_reducer;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, RedValueType& red_value) const {
+  void operator()(const index_type i, red_value_type& red_value) const {
     auto my_iterator = m_first + i;
-    m_reducer.join(red_value, RedValueType{*my_iterator, *my_iterator, i, i});
+    m_reducer.join(red_value, red_value_type{*my_iterator, *my_iterator, i, i});
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -106,16 +109,18 @@ IteratorType min_or_max_element_impl(const std::string& label,
     return last;
   }
 
-  const auto num_elements   = last - first;
-  using iterator_value_type = typename IteratorType::value_type;
-  using reducer_type        = typename std::conditional<
+  using index_type   = typename IteratorType::difference_type;
+  using value_type   = typename IteratorType::value_type;
+  using reducer_type = typename std::conditional<
       (0 < sizeof...(Args)),
-      ReducerType<iterator_value_type, int, Args..., ExecutionSpace>,
-      ReducerType<iterator_value_type, int, ExecutionSpace> >::type;
+      ReducerType<value_type, index_type, Args..., ExecutionSpace>,
+      ReducerType<value_type, index_type, ExecutionSpace> >::type;
 
   using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("min_or_max_elem_impl_result");
   reducer_type reducer(result, std::forward<Args>(args)...);
+
+  const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdMinOrMaxElemFunctor<IteratorType, reducer_type>(first, reducer),
@@ -142,16 +147,18 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
     return {first, first};
   }
 
-  const auto num_elements   = last - first;
-  using iterator_value_type = typename IteratorType::value_type;
-  using reducer_type        = typename std::conditional<
+  using index_type   = typename IteratorType::difference_type;
+  using value_type   = typename IteratorType::value_type;
+  using reducer_type = typename std::conditional<
       (0 < sizeof...(Args)),
-      ReducerType<iterator_value_type, int, Args..., ExecutionSpace>,
-      ReducerType<iterator_value_type, int, ExecutionSpace> >::type;
+      ReducerType<value_type, index_type, Args..., ExecutionSpace>,
+      ReducerType<value_type, index_type, ExecutionSpace> >::type;
 
   using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("minmax_elem_impl_result");
   reducer_type reducer(result, std::forward<Args>(args)...);
+
+  const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdMinMaxElemFunctor<IteratorType, reducer_type>(first, reducer),

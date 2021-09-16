@@ -59,90 +59,32 @@ namespace Experimental {
 namespace Impl {
 
 // -------------
+//
 // functors
+//
 // -------------
-template <class IteratorType, class UnaryFunctorType>
-struct StdForEachFunctor {
-  IteratorType m_first;
-  UnaryFunctorType m_functor;
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
-    auto my_iterator = m_first + i;
-    m_functor(*my_iterator);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  StdForEachFunctor(IteratorType _first, UnaryFunctorType _functor)
-      : m_first(_first), m_functor(::Kokkos::Experimental::move(_functor)) {}
-};
-
-template <class IteratorType, class Predicate>
-struct StdCountIfFunctor {
-  IteratorType m_first;
-  Predicate m_predicate;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int i, typename IteratorType::difference_type& lsum) const {
-    auto my_iterator = m_first + i;
-    if (m_predicate(*my_iterator)) {
-      lsum++;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  StdCountIfFunctor(IteratorType _first, Predicate _predicate)
-      : m_first(_first),
-        m_predicate(::Kokkos::Experimental::move(_predicate)) {}
-};
-
-template <class IteratorType1, class IteratorType2, class ReducerType,
-          class BinaryPredicateType>
-struct StdMismatchRedFunctor {
-  using RedValueType = typename ReducerType::value_type;
-  IteratorType1 m_first1;
-  IteratorType2 m_first2;
-  ReducerType m_reducer;
-  BinaryPredicateType m_predicate;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, RedValueType& red_value) const {
-    auto my_iterator1 = m_first1 + i;
-    auto my_iterator2 = m_first2 + i;
-    m_reducer.join(red_value,
-                   RedValueType{!m_predicate(*my_iterator1, *my_iterator2), i});
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  StdMismatchRedFunctor(IteratorType1 first1, IteratorType2 first2,
-                        ReducerType reducer, BinaryPredicateType predicate)
-      : m_first1(first1),
-        m_first2(first2),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_predicate(::Kokkos::Experimental::move(predicate)) {}
-};
-
-template <bool is_find_if, class IteratorType, class ReducerType,
-          class PredicateType>
+template <bool is_find_if, class IndexType, class IteratorType,
+          class ReducerType, class PredicateType>
 struct StdFindIfOrNotFunctor {
   using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename red_value_type::index_type;
 
   IteratorType m_first;
   ReducerType m_reducer;
   PredicateType m_p;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
+  void operator()(const IndexType i, red_value_type& red_value) const {
     auto my_it = m_first + i;
-    // if i am doing find_if, I want to look for when predicate is true
-    // if I am doing find_if_not, look for when predicate is false
+
+    // if doing find_if, look for when predicate is true
+    // if doing find_if_not, look for when predicate is false
     const bool found_condition = is_find_if ? m_p(*my_it) : !m_p(*my_it);
 
     auto rv =
         found_condition
             ? red_value_type{i}
-            : red_value_type{::Kokkos::reduction_identity<index_type>::min()};
+            : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
 
     m_reducer.join(red_value, rv);
   }
@@ -155,14 +97,80 @@ struct StdFindIfOrNotFunctor {
         m_p(::Kokkos::Experimental::move(p)) {}
 };
 
-template <class IteratorType1, class IteratorType2, class BinaryPredicateType>
+template <class IteratorType, class UnaryFunctorType>
+struct StdForEachFunctor {
+  using index_type = typename IteratorType::difference_type;
+  IteratorType m_first;
+  UnaryFunctorType m_functor;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(index_type i) const {
+    auto my_iterator = m_first + i;
+    m_functor(*my_iterator);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  StdForEachFunctor(IteratorType _first, UnaryFunctorType _functor)
+      : m_first(_first), m_functor(::Kokkos::Experimental::move(_functor)) {}
+};
+
+template <class IteratorType, class Predicate>
+struct StdCountIfFunctor {
+  using index_type = typename IteratorType::difference_type;
+  IteratorType m_first;
+  Predicate m_predicate;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(index_type i, index_type& lsum) const {
+    auto my_iterator = m_first + i;
+    if (m_predicate(*my_iterator)) {
+      lsum++;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  StdCountIfFunctor(IteratorType _first, Predicate _predicate)
+      : m_first(_first),
+        m_predicate(::Kokkos::Experimental::move(_predicate)) {}
+};
+
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class BinaryPredicateType>
+struct StdMismatchRedFunctor {
+  using red_value_type = typename ReducerType::value_type;
+
+  IteratorType1 m_first1;
+  IteratorType2 m_first2;
+  ReducerType m_reducer;
+  BinaryPredicateType m_predicate;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const IndexType i, red_value_type& red_value) const {
+    auto my_iterator1 = m_first1 + i;
+    auto my_iterator2 = m_first2 + i;
+    m_reducer.join(
+        red_value,
+        red_value_type{!m_predicate(*my_iterator1, *my_iterator2), i});
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  StdMismatchRedFunctor(IteratorType1 first1, IteratorType2 first2,
+                        ReducerType reducer, BinaryPredicateType predicate)
+      : m_first1(first1),
+        m_first2(first2),
+        m_reducer(::Kokkos::Experimental::move(reducer)),
+        m_predicate(::Kokkos::Experimental::move(predicate)) {}
+};
+
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
 struct StdEqualFunctor {
   IteratorType1 m_first1;
   IteratorType2 m_first2;
   BinaryPredicateType m_predicate;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i, std::size_t& lsum) const {
+  void operator()(IndexType i, std::size_t& lsum) const {
     if (!m_predicate(*(m_first1 + i), *(m_first2 + i))) {
       lsum = 1;
     }
@@ -174,19 +182,17 @@ struct StdEqualFunctor {
       : m_first1(_first1), m_first2(_first2), m_predicate(_predicate) {}
 };
 
-template <class IteratorType1, class IteratorType2, class ReducerType,
-          class ComparatorType>
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class ComparatorType>
 struct StdLexicographicalCompareFunctor {
   using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename red_value_type::index_type;
-
   IteratorType1 m_first1;
   IteratorType2 m_first2;
   ReducerType m_reducer;
   ComparatorType m_comparator;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
+  void operator()(const IndexType i, red_value_type& red_value) const {
     auto current1 = m_first1 + i;
     auto current2 = m_first2 + i;
 
@@ -195,7 +201,7 @@ struct StdLexicographicalCompareFunctor {
     auto rv =
         different
             ? red_value_type{i}
-            : red_value_type{::Kokkos::reduction_identity<index_type>::min()};
+            : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
 
     m_reducer.join(red_value, rv);
   }
@@ -209,14 +215,15 @@ struct StdLexicographicalCompareFunctor {
         m_comparator(_comp) {}
 };
 
-template <class IteratorType1, class IteratorType2, class ComparatorType>
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ComparatorType>
 struct StdCompareFunctor {
   IteratorType1 m_it1;
   IteratorType2 m_it2;
   ComparatorType m_predicate;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int, int& lsum) const {
+  void operator()(IndexType /* i */, int& lsum) const {
     if (m_predicate(*m_it1, *m_it2)) {
       lsum = 1;
     }
@@ -230,25 +237,25 @@ struct StdCompareFunctor {
         m_predicate(::Kokkos::Experimental::move(_predicate)) {}
 };
 
-template <class IteratorType, class ReducerType, class PredicateType>
+template <class IndexType, class IteratorType, class ReducerType,
+          class PredicateType>
 struct StdAdjacentFindFunctor {
   using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename red_value_type::index_type;
 
   IteratorType m_first;
   ReducerType m_reducer;
   PredicateType m_p;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
-    auto my_it           = m_first + i;
+  void operator()(const IndexType i, red_value_type& red_value) const {
+    auto my_it           = (m_first + i);
     auto next_it         = (my_it + 1);
     const bool are_equal = m_p(*my_it, *next_it);
 
     auto rv =
         are_equal
             ? red_value_type{i}
-            : red_value_type{::Kokkos::reduction_identity<index_type>::min()};
+            : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
 
     m_reducer.join(red_value, rv);
   }
@@ -262,7 +269,9 @@ struct StdAdjacentFindFunctor {
 };
 
 // ---------------------
+//
 // impl functions
+//
 // ---------------------
 template <bool is_find_if, class ExecutionSpace, class IteratorType,
           class PredicateType>
@@ -276,25 +285,29 @@ IteratorType find_if_or_not_impl(const std::string& label,
     return last;
   }
 
-  const auto num_elements = last - first;
-  using index_type        = std::size_t;
-  using reducer_type      = FirstLoc<index_type, ExecutionSpace>;
-
+  using index_type       = typename IteratorType::difference_type;
+  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("kokkos_find_if_impl_result_view");
   reducer_type reducer(result);
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdFindIfOrNotFunctor<is_find_if, IteratorType, reducer_type,
-                            PredicateType>(first, reducer, pred),
-      reducer);
+
+  using func_t = StdFindIfOrNotFunctor<is_find_if, index_type, IteratorType,
+                                       reducer_type, PredicateType>;
+
+  const auto num_elements = last - first;
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first, reducer, pred), reducer);
   ex.fence("find_if_or_not: fence after operation");
+
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
   if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+    // here, it means a valid loc has not been found,
     return last;
   } else {
+    // a location has been found
     return first + r_h().min_loc_true;
   }
 }
@@ -320,6 +333,7 @@ UnaryFunctorType for_each_impl(const std::string& label,
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
   ex.fence("for_each: fence after operation");
+
   return functor;
 }
 
@@ -337,6 +351,8 @@ IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
   auto last = first + n;
   expect_valid_range(first, last);
   for_each_impl(label, ex, first, last, ::Kokkos::Experimental::move(functor));
+  // no neeed to fence since for_each_impl fences already
+
   return last;
 }
 
@@ -374,18 +390,21 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     BinaryPredicateType predicate) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  static_assert_iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>();
   expect_valid_range(first1, last1);
   expect_valid_range(first2, last2);
+
+  using index_type       = typename IteratorType1::difference_type;
+  using reducer_type     = StdMismatch<index_type, ExecutionSpace>;
+  using result_view_type = typename reducer_type::result_view_type;
+  using functor_type =
+      StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
+                            reducer_type, BinaryPredicateType>;
 
   const auto num_e1                = last1 - first1;
   const auto num_e2                = last2 - first2;
   auto num_elements_for_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
-
-  using iterator_value_type = typename IteratorType1::value_type;
-  using reducer_type = StdMismatch<iterator_value_type, int, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
-  using functor_type     = StdMismatchRedFunctor<IteratorType1, IteratorType2,
-                                             reducer_type, BinaryPredicateType>;
 
   result_view_type result("mismatch_impl_result");
   reducer_type reducer(result);
@@ -398,7 +417,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
   using return_type = ::Kokkos::pair<IteratorType1, IteratorType2>;
-  if (r_h().loc == ::Kokkos::reduction_identity<int>::min()) {
+  if (r_h().loc == ::Kokkos::reduction_identity<index_type>::min()) {
     // in here means mismatch has not been found
 
     if (num_e1 == num_e2) {
@@ -420,6 +439,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
     IteratorType1 last1, IteratorType2 first2, IteratorType2 last2) {
   expect_valid_range(first1, last1);
   expect_valid_range(first2, last2);
+  static_assert_iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>();
 
   using value_type1 = typename IteratorType1::value_type;
   using value_type2 = typename IteratorType2::value_type;
@@ -453,16 +474,21 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 BinaryPredicateType predicate) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  static_assert_iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>();
   expect_valid_range(first1, last1);
+
+  using index_type = typename IteratorType1::difference_type;
+  using func_t     = StdEqualFunctor<index_type, IteratorType1, IteratorType2,
+                                 BinaryPredicateType>;
 
   const auto num_elements = last1 - first1;
   std::size_t different   = 0;
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdEqualFunctor<IteratorType1, IteratorType2, BinaryPredicateType>(
-          first1, first2, predicate),
-      different);
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first1, first2, predicate), different);
   ex.fence("equal: fence after operation");
+
   return !different;
 }
 
@@ -512,6 +538,8 @@ bool lexicographical_compare_impl(const std::string& label,
                                   ComparatorType comp) {
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
+  static_assert_iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>();
   expect_valid_range(first1, last1);
   expect_valid_range(first2, last2);
 
@@ -519,7 +547,7 @@ bool lexicographical_compare_impl(const std::string& label,
   auto d2    = Kokkos::Experimental::distance(first2, last2);
   auto range = Kokkos::Experimental::min(d1, d2);
 
-  using index_type   = int;
+  using index_type   = typename IteratorType1::difference_type;
   using reducer_type = FirstLoc<index_type, ExecutionSpace>;
 
   using result_view_type = typename reducer_type::result_view_type;
@@ -527,7 +555,7 @@ bool lexicographical_compare_impl(const std::string& label,
   reducer_type reducer(result);
 
   using func1_t =
-      StdLexicographicalCompareFunctor<IteratorType1, IteratorType2,
+      StdLexicographicalCompareFunctor<index_type, IteratorType1, IteratorType2,
                                        reducer_type, ComparatorType>;
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, range),
                             func1_t(first1, first2, reducer, comp), reducer);
@@ -545,11 +573,11 @@ bool lexicographical_compare_impl(const std::string& label,
   }
 
   // check mismatched
-  int less = 0;
-  auto it1 = first1 + r_h().min_loc_true;
-  auto it2 = first2 + r_h().min_loc_true;
-  using func2_t =
-      StdCompareFunctor<IteratorType1, IteratorType2, ComparatorType>;
+  int less      = 0;
+  auto it1      = first1 + r_h().min_loc_true;
+  auto it2      = first2 + r_h().min_loc_true;
+  using func2_t = StdCompareFunctor<index_type, IteratorType1, IteratorType2,
+                                    ComparatorType>;
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, 1),
                             func2_t(it1, it2, comp), less);
   ex.fence("lexicographical_compare: fence after second reduce operation");
@@ -562,9 +590,6 @@ bool lexicographical_compare_impl(const std::string& label,
                                   const ExecutionSpace& ex,
                                   IteratorType1 first1, IteratorType1 last1,
                                   IteratorType2 first2, IteratorType2 last2) {
-  expect_valid_range(first1, last1);
-  expect_valid_range(first2, last2);
-
   using value_type_1 = typename IteratorType1::value_type;
   using value_type_2 = typename IteratorType2::value_type;
   using predicate_t =
@@ -589,13 +614,14 @@ IteratorType adjacent_find_impl(const std::string& label,
   if (num_elements == 1) {
     return first + 1;
   } else {
-    using index_type       = std::size_t;
+    using index_type       = typename IteratorType::difference_type;
     using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
     using result_view_type = typename reducer_type::result_view_type;
+
     result_view_type result("kokkos_adjacent_find_impl_result_view");
     reducer_type reducer(result);
-    using func_t =
-        StdAdjacentFindFunctor<IteratorType, reducer_type, PredicateType>;
+    using func_t = StdAdjacentFindFunctor<index_type, IteratorType,
+                                          reducer_type, PredicateType>;
 
     // note that we use below num_elements-1 because
     // each index i in the reduction checks i and (i+1).
