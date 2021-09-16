@@ -76,12 +76,12 @@ struct StdAdjacentDiffItToViewFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i) const {
-    const auto my_iterator = m_first + i;
+    const auto& my_value = m_first[i];
     if (i == 0) {
-      m_dest_view(i) = *my_iterator;
+      m_dest_view(i) = my_value;
     } else {
-      const auto left_iterator = my_iterator - 1;
-      m_dest_view(i)           = m_op(*my_iterator, *left_iterator);
+      const auto& left_value = m_first[i - 1];
+      m_dest_view(i)         = m_op(my_value, left_value);
     }
   }
 
@@ -102,7 +102,7 @@ struct StdAdjDiffCopyFunctor {
       : m_view_from(view_from), m_first_dest(first_dest) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const { *(m_first_dest + i) = m_view_from(i); }
+  void operator()(int i) const { m_first_dest[i] = m_view_from(i); }
 };
 
 // ------------------------------------------

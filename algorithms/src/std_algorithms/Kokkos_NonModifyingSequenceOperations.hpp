@@ -75,11 +75,11 @@ struct StdFindIfOrNotFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
-    auto my_it = m_first + i;
+    const auto& my_value = m_first[i];
 
     // if doing find_if, look for when predicate is true
     // if doing find_if_not, look for when predicate is false
-    const bool found_condition = is_find_if ? m_p(*my_it) : !m_p(*my_it);
+    const bool found_condition = is_find_if ? m_p(my_value) : !m_p(my_value);
 
     auto rv =
         found_condition
@@ -104,10 +104,7 @@ struct StdForEachFunctor {
   UnaryFunctorType m_functor;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const {
-    auto my_iterator = m_first + i;
-    m_functor(*my_iterator);
-  }
+  void operator()(index_type i) const { m_functor(m_first[i]); }
 
   KOKKOS_INLINE_FUNCTION
   StdForEachFunctor(IteratorType _first, UnaryFunctorType _functor)
@@ -122,8 +119,7 @@ struct StdCountIfFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(index_type i, index_type& lsum) const {
-    auto my_iterator = m_first + i;
-    if (m_predicate(*my_iterator)) {
+    if (m_predicate(m_first[i])) {
       lsum++;
     }
   }
@@ -146,11 +142,10 @@ struct StdMismatchRedFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
-    auto my_iterator1 = m_first1 + i;
-    auto my_iterator2 = m_first2 + i;
-    m_reducer.join(
-        red_value,
-        red_value_type{!m_predicate(*my_iterator1, *my_iterator2), i});
+    const auto& my_value1 = m_first1[i];
+    const auto& my_value2 = m_first2[i];
+    m_reducer.join(red_value,
+                   red_value_type{!m_predicate(my_value1, my_value2), i});
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -171,7 +166,7 @@ struct StdEqualFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i, std::size_t& lsum) const {
-    if (!m_predicate(*(m_first1 + i), *(m_first2 + i))) {
+    if (!m_predicate(m_first1[i], m_first2[i])) {
       lsum = 1;
     }
   }
@@ -193,11 +188,11 @@ struct StdLexicographicalCompareFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
-    auto current1 = m_first1 + i;
-    auto current2 = m_first2 + i;
+    const auto& my_value1 = m_first1[i];
+    const auto& my_value2 = m_first2[i];
 
-    bool different = m_comparator(*current1, *current2) ||
-                     m_comparator(*current2, *current1);
+    bool different = m_comparator(my_value1, my_value2) ||
+                     m_comparator(my_value2, my_value1);
     auto rv =
         different
             ? red_value_type{i}
@@ -223,7 +218,7 @@ struct StdCompareFunctor {
   ComparatorType m_predicate;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType /* i */, int& lsum) const {
+  void operator()(IndexType /* i is unused */, int& lsum) const {
     if (m_predicate(*m_it1, *m_it2)) {
       lsum = 1;
     }
@@ -248,9 +243,9 @@ struct StdAdjacentFindFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
-    auto my_it           = (m_first + i);
-    auto next_it         = (my_it + 1);
-    const bool are_equal = m_p(*my_it, *next_it);
+    const auto& my_value   = m_first[i];
+    const auto& next_value = m_first[i + 1];
+    const bool are_equal   = m_p(my_value, next_value);
 
     auto rv =
         are_equal

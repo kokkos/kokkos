@@ -79,13 +79,13 @@ struct ExclusiveScanDefaultFunctor {
                   const bool final_pass) const {
     if (final_pass) {
       if (i == 0) {
-        *(m_first_dest + i) = m_init_value;
+        m_first_dest[i] = m_init_value;
       } else {
-        *(m_first_dest + i) = update.val + m_init_value;
+        m_first_dest[i] = update.val + m_init_value;
       }
     }
 
-    const auto tmp = value_type{*(m_first_from + i), false};
+    const auto tmp = value_type{m_first_from[i], false};
     this->join(update, tmp);
   }
 
@@ -138,14 +138,13 @@ struct TransformExclusiveScanFunctor {
       if (i == 0) {
         // for both ExclusiveScan and TransformExclusiveScan,
         // init is unmodified
-        *(m_first_dest + i) = m_init_value;
+        m_first_dest[i] = m_init_value;
       } else {
-        *(m_first_dest + i) = m_binary_op(update.val, m_init_value);
+        m_first_dest[i] = m_binary_op(update.val, m_init_value);
       }
     }
 
-    const auto myit = (m_first_from + i);
-    const auto tmp  = value_type{m_unary_op(*myit), false};
+    const auto tmp = value_type{m_unary_op(m_first_from[i]), false};
     this->join(update, tmp);
   }
 

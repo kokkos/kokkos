@@ -80,16 +80,16 @@ struct StdUniqueCopyFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
-    const auto& val_i = *(m_first_from + i);
-    auto itp1         = (m_first_from + i + 1);
+    const auto& val_i   = m_first_from[i];
+    const auto& val_ip1 = m_first_from[i + 1];
 
     if (final_pass) {
-      if (!m_pred(val_i, *itp1)) {
-        *(m_first_dest + update) = val_i;
+      if (!m_pred(val_i, val_ip1)) {
+        m_first_dest[update] = val_i;
       }
     }
 
-    if (!m_pred(val_i, *itp1)) {
+    if (!m_pred(val_i, val_ip1)) {
       update += 1;
     }
   }
@@ -103,7 +103,7 @@ struct StdReverseFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(index_type i) const {
-    ::Kokkos::Experimental::swap(*(m_first + i), *(m_last - i - 1));
+    ::Kokkos::Experimental::swap(m_first[i], m_last[-i - 1]);
   }
 
   StdReverseFunctor(InputIterator first, InputIterator last)
@@ -116,9 +116,7 @@ struct StdReverseCopyFunctor {
   OutputIterator m_dest_first;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    *(m_dest_first + i) = *(m_last - 1 - i);
-  }
+  void operator()(IndexType i) const { m_dest_first[i] = m_last[-1 - i]; }
 
   StdReverseCopyFunctor(InputIterator _last, OutputIterator _dest_first)
       : m_last(_last), m_dest_first(_dest_first) {}
@@ -131,7 +129,7 @@ struct StdMoveFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i) const {
-    *(m_dest_first + i) = ::Kokkos::Experimental::move(*(m_first + i));
+    m_dest_first[i] = ::Kokkos::Experimental::move(m_first[i]);
   }
 
   StdMoveFunctor(InputIterator _first, OutputIterator _dest_first)
@@ -145,7 +143,7 @@ struct StdMoveBackwardFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i) const {
-    *(m_dest_last - i) = ::Kokkos::Experimental::move(*(m_last - i));
+    m_dest_last[-i] = ::Kokkos::Experimental::move(m_last[-i]);
   }
 
   StdMoveBackwardFunctor(IteratorType1 _last, IteratorType2 _dest_last)
@@ -159,7 +157,7 @@ struct StdSwapRangesFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i) const {
-    ::Kokkos::Experimental::swap(*(m_first1 + i), *(m_first2 + i));
+    ::Kokkos::Experimental::swap(m_first1[i], m_first2[i]);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -179,7 +177,7 @@ struct StdUniqueStepThreeFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i) const {
-    *(m_first_to + i) = ::Kokkos::Experimental::move(m_view_from(i));
+    m_first_to[i] = ::Kokkos::Experimental::move(m_view_from(i));
   }
 };
 
@@ -202,12 +200,12 @@ struct StdUniqueFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
-    auto& val_i         = *(m_first_from + i);
-    const auto& val_ip1 = *(m_first_from + i + 1);
+    auto& val_i         = m_first_from[i];
+    const auto& val_ip1 = m_first_from[i + 1];
 
     if (final_pass) {
       if (!m_pred(val_i, val_ip1)) {
-        *(m_first_dest + update) = ::Kokkos::Experimental::move(val_i);
+        m_first_dest[update] = ::Kokkos::Experimental::move(val_i);
       }
     }
 
@@ -226,13 +224,12 @@ struct StdRotateCopyFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i) const {
-    auto fromit           = m_first + i;
     const IndexType shift = m_last - m_first_n;
 
     if (i < shift) {
-      *(m_dest_first + i) = *(m_first_n + i);
+      m_dest_first[i] = m_first_n[i];
     } else {
-      *(m_dest_first + i) = *(m_first + i - shift);
+      m_dest_first[i] = m_first[i - shift];
     }
   }
 
@@ -260,12 +257,12 @@ struct StdRemoveIfStage1Functor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
-    auto& myval = *(m_first_from + i);
+    auto& myval = m_first_from[i];
     if (final_pass) {
       if (!m_must_remove(myval)) {
         // calling move here is ok because we are inside final pass
         // we are calling move assign as specified by the std
-        *(m_first_dest + update) = ::Kokkos::Experimental::move(myval);
+        m_first_dest[update] = ::Kokkos::Experimental::move(myval);
       }
     }
 
@@ -287,7 +284,7 @@ struct StdRemoveIfStage2Functor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i) const {
-    *(m_first_to + i) = ::Kokkos::Experimental::move(*(m_first_from + i));
+    m_first_to[i] = ::Kokkos::Experimental::move(m_first_from[i]);
   }
 };
 

@@ -91,8 +91,7 @@ struct StdTransformReduceSingleIntervalFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
-    const auto my_iterator = m_first + i;
-    auto tmp_wrapped_value = red_value_type{m_transform(*my_iterator), false};
+    auto tmp_wrapped_value = red_value_type{m_transform(m_first[i]), false};
     if (red_value.is_initial) {
       red_value = tmp_wrapped_value;
     } else {
@@ -121,10 +120,8 @@ struct StdTransformReduceTwoIntervalsFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
-    const auto my_iterator1 = m_first1 + i;
-    const auto my_iterator2 = m_first2 + i;
     auto tmp_wrapped_value =
-        red_value_type{m_transform(*my_iterator1, *my_iterator2), false};
+        red_value_type{m_transform(m_first1[i], m_first2[i]), false};
 
     if (red_value.is_initial) {
       red_value = tmp_wrapped_value;

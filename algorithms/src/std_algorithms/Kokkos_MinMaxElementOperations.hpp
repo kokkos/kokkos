@@ -64,8 +64,7 @@ struct StdMinOrMaxElemFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
-    auto my_iterator = m_first + i;
-    m_reducer.join(red_value, red_value_type{*my_iterator, i});
+    m_reducer.join(red_value, red_value_type{m_first[i], i});
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -82,8 +81,8 @@ struct StdMinMaxElemFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
-    auto my_iterator = m_first + i;
-    m_reducer.join(red_value, red_value_type{*my_iterator, *my_iterator, i, i});
+    const auto& my_value = m_first[i];
+    m_reducer.join(red_value, red_value_type{my_value, my_value, i, i});
   }
 
   KOKKOS_INLINE_FUNCTION

@@ -79,8 +79,7 @@ struct StdReduceFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
-    const auto my_iterator = m_first + i;
-    auto tmp_wrapped_value = red_value_type{*my_iterator, false};
+    auto tmp_wrapped_value = red_value_type{m_first[i], false};
 
     if (red_value.is_initial) {
       red_value = tmp_wrapped_value;

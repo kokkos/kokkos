@@ -71,8 +71,8 @@ struct StdIsSortedUntilFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, int& update, const bool final) const {
-    const auto& val_i   = *(m_first + i);
-    const auto& val_ip1 = *(m_first + i + 1);
+    const auto& val_i   = m_first[i];
+    const auto& val_ip1 = m_first[i + 1];
 
     if (m_comparator(val_ip1, val_i)) {
       update += 1;
@@ -102,20 +102,15 @@ struct StdIsSortedFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, std::size_t& update,
                   const bool final) const {
-    const auto& val_i   = *(m_first + i);
-    const auto& val_ip1 = *(m_first + i + 1);
+    const auto& val_i   = m_first[i];
+    const auto& val_ip1 = m_first[i + 1];
 
     if (m_comparator(val_ip1, val_i)) {
       update += 1;
     } else {
       update += 0;
     }
-
-    if (final) {
-      // no op in this case, because we don't need
-      // to do anything, we just need the "update"
-      // after the scan to know if it is sorted or not
-    }
+    (void)final;
   }
 
   KOKKOS_INLINE_FUNCTION

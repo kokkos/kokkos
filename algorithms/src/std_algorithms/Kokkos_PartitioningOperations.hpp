@@ -73,9 +73,7 @@ struct StdIsPartitionedFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, red_value_type& redValue) const {
-    auto my_iterator           = m_first + i;
-    const auto predicate_value = m_p(*my_iterator);
-
+    const auto predicate_value = m_p(m_first[i]);
     constexpr index_type m_red_id_min =
         ::Kokkos::reduction_identity<index_type>::min();
     constexpr index_type m_red_id_max =
@@ -105,9 +103,7 @@ struct StdPartitionPointFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, red_value_type& redValue) const {
-    auto my_iterator           = m_first + i;
-    const auto predicate_value = m_p(*my_iterator);
-
+    const auto predicate_value = m_p(m_first[i]);
     auto rv =
         predicate_value
             ? red_value_type{::Kokkos::reduction_identity<index_type>::min()}
@@ -173,12 +169,12 @@ struct StdPartitionCopyFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
-    const auto& myval = *(m_first_from + i);
+    const auto& myval = m_first_from[i];
     if (final_pass) {
       if (m_pred(myval)) {
-        *(m_first_dest_true + update.true_count_) = myval;
+        m_first_dest_true[update.true_count_] = myval;
       } else {
-        *(m_first_dest_false + update.false_count_) = myval;
+        m_first_dest_false[update.false_count_] = myval;
       }
     }
 

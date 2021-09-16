@@ -72,11 +72,11 @@ struct InclusiveScanDefaultFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
-    const auto tmp = value_type{*(m_first_from + i), false};
+    const auto tmp = value_type{m_first_from[i], false};
     this->join(update, tmp);
 
     if (final_pass) {
-      *(m_first_dest + i) = update.val;
+      m_first_dest[i] = update.val;
     }
   }
 
@@ -122,11 +122,10 @@ struct TransformInclusiveScanNoInitValueFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
-    const auto myit = (m_first_from + i);
-    const auto tmp  = value_type{m_unary_op(*myit), false};
+    const auto tmp = value_type{m_unary_op(m_first_from[i]), false};
     this->join(update, tmp);
     if (final_pass) {
-      *(m_first_dest + i) = update.val;
+      m_first_dest[i] = update.val;
     }
   }
 
@@ -175,12 +174,11 @@ struct TransformInclusiveScanWithInitValueFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
-    const auto myit = (m_first_from + i);
-    const auto tmp  = value_type{m_unary_op(*myit), false};
+    const auto tmp = value_type{m_unary_op(m_first_from[i]), false};
     this->join(update, tmp);
 
     if (final_pass) {
-      *(m_first_dest + i) = m_binary_op(update.val, m_init);
+      m_first_dest[i] = m_binary_op(update.val, m_init);
     }
   }
 
