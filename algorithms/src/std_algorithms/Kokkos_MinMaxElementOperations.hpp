@@ -52,8 +52,6 @@
 
 namespace Kokkos {
 namespace Experimental {
-
-// begin Impl namespace
 namespace Impl {
 
 template <class IteratorType, class ReducerType>

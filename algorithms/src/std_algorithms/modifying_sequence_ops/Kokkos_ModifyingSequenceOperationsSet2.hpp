@@ -61,19 +61,6 @@ namespace Impl {
 //
 //-------------------------
 
-// template <class ValueType1, class ValueType2>
-// struct StdUniqueCopyDefaultBinaryPredicate
-// {
-//   KOKKOS_INLINE_FUNCTION
-//   bool operator()(const ValueType1& a, const ValueType2& b) const {
-//     return (a == b);
-//   }
-// };
-
-// template <class ValueType>
-// using StdUniqueDefaultBinaryPredicate =
-//     StdUniqueCopyDefaultBinaryPredicate<ValueType, ValueType>;
-
 template <class IndexType, class InputIt, class OutputIt,
           class BinaryPredicateType>
 struct StdUniqueCopyFunctor {
