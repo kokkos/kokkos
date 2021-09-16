@@ -83,110 +83,110 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
 
   RandomAccessIterator() = default;
 
-  explicit KOKKOS_INLINE_FUNCTION RandomAccessIterator(const view_type view)
+  explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view)
       : m_view(view) {}
-  explicit KOKKOS_INLINE_FUNCTION RandomAccessIterator(const view_type view,
-                                                       ptrdiff_t current_index)
+  explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view,
+                                                ptrdiff_t current_index)
       : m_view(view), m_current_index(current_index) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type& operator=(const iterator_type& it) {
     m_view          = it.m_view;
     m_current_index = it.m_current_index;
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type& operator++() {
     ++m_current_index;
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type operator++(int) {
     auto tmp = *this;
     ++*this;
     return tmp;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type& operator--() {
     --m_current_index;
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type operator--(int) {
     auto tmp = *this;
     --*this;
     return tmp;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   reference operator[](difference_type n) const {
     return m_view(m_current_index + n);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type& operator+=(difference_type n) {
     m_current_index += n;
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type& operator-=(difference_type n) {
     m_current_index -= n;
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type operator+(difference_type n) const {
     return iterator_type(m_view, m_current_index + n);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   iterator_type operator-(difference_type n) const {
     return iterator_type(m_view, m_current_index - n);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   difference_type operator-(iterator_type it) const {
     return m_current_index - it.m_current_index;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool operator==(iterator_type other) const {
     return m_current_index == other.m_current_index &&
            m_view.data() == other.m_view.data();
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool operator!=(iterator_type other) const {
     return m_current_index != other.m_current_index ||
            m_view.data() != other.m_view.data();
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool operator<(iterator_type other) const {
     return m_current_index < other.m_current_index;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool operator<=(iterator_type other) const {
     return m_current_index <= other.m_current_index;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool operator>(iterator_type other) const {
     return m_current_index > other.m_current_index;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool operator>=(iterator_type other) const {
     return m_current_index >= other.m_current_index;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   reference operator*() const { return m_view(m_current_index); }
 
  private:
@@ -197,8 +197,8 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
 }  // namespace Impl
 
 template <class IteratorType>
-typename IteratorType::difference_type distance(IteratorType first,
-                                                IteratorType last) {
+KOKKOS_FUNCTION constexpr typename IteratorType::difference_type distance(
+    IteratorType first, IteratorType last) {
   static_assert(
       ::Kokkos::Experimental::are_random_access_iterators<IteratorType>::value,
       "Kokkos::Experimental::distance: only implemented for random access "
