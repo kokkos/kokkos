@@ -280,36 +280,34 @@ TEST(defaultdevicetype, test_streams) {
   });
 }
 
-
 #endif
 TEST(defaultdevicetype, test_new_test_interface) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events({{true, false}});
-  validate_event_set({
-    std::make_shared<BeginParallelForEvent>("dogs"),
-    std::make_shared<EndParallelForEvent>()
-  },[&](){
-    Kokkos::parallel_for("dogs",Kokkos::RangePolicy<>(0,1), KOKKOS_LAMBDA(int){});
-  });
+  validate_event_set({std::make_shared<BeginParallelForEvent>("dogs"),
+                      std::make_shared<EndParallelForEvent>()},
+                     [&]() {
+                       Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1),
+                                            KOKKOS_LAMBDA(int){});
+                     });
 
   validate_event_set(
-    {
-      make_event_pair<BeginParallelForEvent, EndParallelForEvent>(
-        std::make_shared<BeginParallelForEvent>("dogs"),
-        [&](const auto begin_event, const auto end_event){          
-           if(end_event->kID != ((begin_event->kID))){
-             return EventMatcher::SimpleMatchResult(false, "Kernel ID's don't match\n");
-           }
-           return EventMatcher::SimpleMatchResult(true);
-
-        }, "a kernel with the same kID\n")
-    },
-    [&](){
-      Kokkos::parallel_for("dogs",Kokkos::RangePolicy<>(0,1), KOKKOS_LAMBDA(int){});
-    });
+      {make_event_pair<BeginParallelForEvent, EndParallelForEvent>(
+          std::make_shared<BeginParallelForEvent>("dogs"),
+          [&](const auto begin_event, const auto end_event) {
+            if (end_event->kID != ((begin_event->kID))) {
+              return EventMatcher::SimpleMatchResult(
+                  false, "Kernel ID's don't match\n");
+            }
+            return EventMatcher::SimpleMatchResult(true);
+          },
+          "a kernel with the same kID\n")},
+      [&]() {
+        Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1),
+                             KOKKOS_LAMBDA(int){});
+      });
 
   listen_tool_events({});
 }
-
 
 }  // namespace Test
