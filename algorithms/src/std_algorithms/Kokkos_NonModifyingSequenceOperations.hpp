@@ -58,11 +58,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-// -------------
+// ------------------------------------------
 //
 // functors
 //
-// -------------
+// ------------------------------------------
 
 template <bool is_find_if, class IndexType, class IteratorType,
           class ReducerType, class PredicateType>
@@ -268,11 +268,9 @@ struct StdAdjacentFindFunctor {
         m_p(::Kokkos::Experimental::move(p)) {}
 };
 
-// ---------------------
-//
-// impl functions
-//
-// ---------------------
+// ------------------------------------------
+// find_if_or_not_impl
+// ------------------------------------------
 template <bool is_find_if, class ExecutionSpace, class IteratorType,
           class PredicateType>
 IteratorType find_if_or_not_impl(const std::string& label,
@@ -315,6 +313,9 @@ IteratorType find_if_or_not_impl(const std::string& label,
   }
 }
 
+// ------------------------------------------
+// find_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class T>
 InputIterator find_impl(const std::string& label, ExecutionSpace ex,
                         InputIterator first, InputIterator last,
@@ -324,6 +325,9 @@ InputIterator find_impl(const std::string& label, ExecutionSpace ex,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
 }
 
+// ------------------------------------------
+// for_each_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class UnaryFunctorType>
 UnaryFunctorType for_each_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType first,
@@ -343,6 +347,9 @@ UnaryFunctorType for_each_impl(const std::string& label,
   return functor;
 }
 
+// ------------------------------------------
+// for_each_n_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class SizeType,
           class UnaryFunctorType>
 IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
@@ -362,6 +369,9 @@ IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
   return last;
 }
 
+// ------------------------------------------
+// count_if_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class Predicate>
 typename IteratorType::difference_type count_if_impl(const std::string& label,
                                                      const ExecutionSpace& ex,
@@ -387,6 +397,9 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
   return count;
 }
 
+// ------------------------------------------
+// count_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class T>
 std::size_t count_impl(const std::string& label, const ExecutionSpace& ex,
                        IteratorType first, IteratorType last, const T& value) {
@@ -395,6 +408,9 @@ std::size_t count_impl(const std::string& label, const ExecutionSpace& ex,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
 }
 
+// ------------------------------------------
+// mismatch_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
 ::Kokkos::pair<IteratorType1, IteratorType2> mismatch_impl(
@@ -464,6 +480,9 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
   return mismatch_impl(label, ex, first1, last1, first2, last2, pred_t());
 }
 
+// ------------------------------------------
+// all_of_impl, any_of_impl, none_of_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class Predicate>
 bool all_of_impl(const std::string& label, const ExecutionSpace& ex,
                  InputIterator first, InputIterator last, Predicate predicate) {
@@ -483,6 +502,9 @@ bool none_of_impl(const std::string& label, const ExecutionSpace& ex,
   return (find_if_or_not_impl<true>(label, ex, first, last, predicate) == last);
 }
 
+// ------------------------------------------
+// equal_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
 bool equal_impl(const std::string& label, const ExecutionSpace& ex,
@@ -549,6 +571,9 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
   return equal_impl(label, ex, first1, last1, first2, last2, pred_t());
 }
 
+// ------------------------------------------
+// lexicographical_compare_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class ComparatorType>
 bool lexicographical_compare_impl(const std::string& label,
@@ -620,6 +645,9 @@ bool lexicographical_compare_impl(const std::string& label,
                                       predicate_t());
 }
 
+// ------------------------------------------
+// adjacent_find_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
@@ -673,7 +701,6 @@ IteratorType adjacent_find_impl(const std::string& label,
 }
 
 }  // namespace Impl
-// ------------------------------------------
 
 // ----------------------------------
 // find public API

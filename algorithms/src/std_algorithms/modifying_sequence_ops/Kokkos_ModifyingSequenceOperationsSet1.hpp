@@ -284,11 +284,9 @@ struct StdReplaceIfCopyFunctor {
         m_new_value(::Kokkos::Experimental::move(new_value)) {}
 };
 
-//---------------------------
-//
-// impl function
-//
-//---------------------------
+// ------------------------------------------
+// copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
                          InputIterator first, InputIterator last,
@@ -315,6 +313,9 @@ OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
   return d_first + num_elements;
 }
 
+// ------------------------------------------
+// copy_n_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class Size,
           class OutputIterator>
 OutputIterator copy_n_impl(const std::string& label, const ExecutionSpace& ex,
@@ -333,6 +334,9 @@ OutputIterator copy_n_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
+// ------------------------------------------
+// copy_backward_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 copy_backward_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType1 first,
@@ -360,6 +364,9 @@ IteratorType2 copy_backward_impl(const std::string& label,
   return d_last - num_elements;
 }
 
+// ------------------------------------------
+// copy_if_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class PredicateType>
 OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
@@ -414,6 +421,9 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
+// ------------------------------------------
+// fill_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class T>
 void fill_impl(const std::string& label, const ExecutionSpace& ex,
                IteratorType first, IteratorType last, const T& value) {
@@ -444,6 +454,9 @@ IteratorType fill_n_impl(const std::string& label, const ExecutionSpace& ex,
   return last;
 }
 
+// ------------------------------------------
+// transform_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class UnaryOperation>
 OutputIterator transform_impl(const std::string& label,
@@ -502,6 +515,9 @@ OutputIterator transform_impl(const std::string& label,
   return d_first + num_elements;
 }
 
+// ------------------------------------------
+// generate_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class Generator>
 void generate_impl(const std::string& label, const ExecutionSpace& ex,
                    IteratorType first, IteratorType last, Generator g) {
@@ -531,6 +547,9 @@ IteratorType generate_n_impl(const std::string& label, const ExecutionSpace& ex,
   return first + count;
 }
 
+// ------------------------------------------
+// replace_if_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class PredicateType,
           class ValueType>
 void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
@@ -568,6 +587,9 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
                          func_t(first, old_value, new_value));
 }
 
+// ------------------------------------------
+// replace_copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
 OutputIteratorType replace_copy_impl(const std::string& label,
@@ -598,6 +620,9 @@ OutputIteratorType replace_copy_impl(const std::string& label,
   return first_dest + num_elements;
 }
 
+// ------------------------------------------
+// replace_copy_if_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class PredicateType, class ValueType>
 OutputIteratorType replace_copy_if_impl(const std::string& label,
@@ -632,7 +657,6 @@ OutputIteratorType replace_copy_if_impl(const std::string& label,
 }
 
 }  // namespace Impl
-//----------------------------------------------------------------------------
 
 // -------------------
 // replace copy

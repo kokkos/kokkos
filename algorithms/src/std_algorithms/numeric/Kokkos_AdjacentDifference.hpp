@@ -105,11 +105,9 @@ struct StdAdjDiffCopyFunctor {
   void operator()(int i) const { *(m_first_dest + i) = m_view_from(i); }
 };
 
-// ------------------------
-//
-// impl functions
-//
-// ------------------------
+// ------------------------------------------
+// adjacent_difference_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOp>
 OutputIteratorType adjacent_difference_impl(const std::string& label,
@@ -157,9 +155,11 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
 
 }  // end namespace Impl
 
+// ------------------------
 //
 // public API
 //
+// ------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
 std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value,

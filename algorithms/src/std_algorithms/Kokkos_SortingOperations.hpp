@@ -124,11 +124,9 @@ struct StdIsSortedFunctor {
         m_comparator(::Kokkos::Experimental::move(comparator)) {}
 };
 
-// ------------------
-//
-// impl functions
-//
-// ------------------
+// ------------------------------------------
+// is_sorted_until_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 IteratorType is_sorted_until_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
@@ -191,6 +189,9 @@ IteratorType is_sorted_until_impl(const std::string& label,
   return is_sorted_until_impl(label, ex, first, last, pred_t());
 }
 
+// ------------------------------------------
+// is_sorted_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last,
@@ -232,7 +233,6 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
 }
 
 }  // namespace Impl
-// ------------------------------------------
 
 // ----------------------------------
 // is_sorted_until public API

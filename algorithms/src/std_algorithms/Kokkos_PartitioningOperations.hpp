@@ -203,11 +203,9 @@ struct StdPartitionCopyFunctor {
   }
 };
 
-//------------------------------
-//
-// impl functions
-//
-//------------------------------
+// ------------------------------------------
+// is_partitioned_impl
+// ------------------------------------------
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
@@ -266,6 +264,9 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
+// ------------------------------------------
+// partition_point_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType partition_point_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
@@ -310,6 +311,9 @@ IteratorType partition_point_impl(const std::string& label,
   }
 }
 
+// ------------------------------------------
+// partition_copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorTrueType, class OutputIteratorFalseType,
           class PredicateType>
@@ -354,9 +358,7 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
           to_first_false + counts.false_count_};
 }
 
-// ------------------------------------------
 }  // end namespace Impl
-// ------------------------------------------
 
 // ----------------------
 // is_partitioned public API

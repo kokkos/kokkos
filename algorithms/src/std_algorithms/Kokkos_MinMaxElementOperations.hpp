@@ -91,9 +91,9 @@ struct StdMinMaxElemFunctor {
       : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
 };
 
-//
+// ------------------------------------------
 // min_or_max_element_impl
-//
+// ------------------------------------------
 template <template <class... Args> class ReducerType, class ExecutionSpace,
           class IteratorType, class... Args>
 IteratorType min_or_max_element_impl(const std::string& label,
@@ -134,9 +134,9 @@ IteratorType min_or_max_element_impl(const std::string& label,
   return first + result_h().loc;
 }
 
-//
+// ------------------------------------------
 // minmax_element_impl
-//
+// ------------------------------------------
 template <template <class... Args> class ReducerType, class ExecutionSpace,
           class IteratorType, class... Args>
 ::Kokkos::pair<IteratorType, IteratorType> minmax_element_impl(

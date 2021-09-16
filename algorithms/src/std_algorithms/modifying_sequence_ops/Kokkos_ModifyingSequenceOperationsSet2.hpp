@@ -291,11 +291,9 @@ struct StdRemoveIfStage2Functor {
   }
 };
 
-//-------------------------
-//
-// impl function
-//
-//-------------------------
+// ------------------------------------------
+// unique_copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class PredicateType>
 OutputIterator unique_copy_impl(const std::string& label,
@@ -357,6 +355,9 @@ OutputIterator unique_copy_impl(const std::string& label,
   return unique_copy_impl(label, ex, first, last, d_first, binary_pred_t());
 }
 
+// ------------------------------------------
+// reverse_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator>
 void reverse_impl(const std::string& label, const ExecutionSpace& ex,
                   InputIterator first, InputIterator last) {
@@ -378,6 +379,9 @@ void reverse_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
+// ------------------------------------------
+// reverse_copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator reverse_copy_impl(const std::string& label,
                                  const ExecutionSpace& ex, InputIterator first,
@@ -405,6 +409,9 @@ OutputIterator reverse_copy_impl(const std::string& label,
   return d_first + num_elements;
 }
 
+// ------------------------------------------
+// move_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
                          InputIterator first, InputIterator last,
@@ -431,6 +438,9 @@ OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
   return d_first + num_elements;
 }
 
+// ------------------------------------------
+// move_backward_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 move_backward_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType1 first,
@@ -458,6 +468,9 @@ IteratorType2 move_backward_impl(const std::string& label,
   return d_last - num_elements;
 }
 
+// ------------------------------------------
+// swap_ranges_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 swap_ranges_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType1 first1,
@@ -484,6 +497,9 @@ IteratorType2 swap_ranges_impl(const std::string& label,
   return first2 + num_elements_to_swap;
 }
 
+// ------------------------------------------
+// unique_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
@@ -574,6 +590,9 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
   return unique_impl(label, ex, first, last, binary_pred_t());
 }
 
+// ------------------------------------------
+// rotate_copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator rotate_copy_impl(const std::string& label,
                                 const ExecutionSpace& ex, InputIterator first,
@@ -638,6 +657,9 @@ OutputIterator rotate_copy_impl(const std::string& label,
   return d_first + num_elements;
 }
 
+// ------------------------------------------
+// remove_if_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class UnaryPredicateType>
 IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
                             IteratorType first, IteratorType last,
@@ -703,6 +725,9 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
+// ------------------------------------------
+// remove_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class ValueType>
 auto remove_impl(const std::string& label, const ExecutionSpace& ex,
                  IteratorType first, IteratorType last,
@@ -711,6 +736,9 @@ auto remove_impl(const std::string& label, const ExecutionSpace& ex,
   return remove_if_impl(label, ex, first, last, predicate_type(value));
 }
 
+// ------------------------------------------
+// remove_copy_impl
+// ------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
 auto remove_copy_impl(const std::string& label, const ExecutionSpace& ex,
@@ -748,7 +776,6 @@ auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
 }
 
 }  // namespace Impl
-//----------------------------------------------------------------------------
 
 // -------------------
 // reverse_copy

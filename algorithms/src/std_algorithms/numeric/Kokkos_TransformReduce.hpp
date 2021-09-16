@@ -267,7 +267,7 @@ ValueType transform_reduce_default_functors_impl(
 ///////////////////////////////
 
 // ----------------------------
-// overload1:
+// overload set1:
 // no custom functors passed, so equivalent to
 // transform_reduce(first1, last1, first2, init, plus<>(), multiplies<>());
 // ----------------------------
@@ -327,11 +327,10 @@ ValueType transform_reduce(
       ::Kokkos::Experimental::move(init_reduction_value));
 }
 
-// ---------------------------------------------
-// overload2:
 //
+// overload set2:
 // accepts a custom transform and joiner functor
-// ---------------------------------------------
+//
 
 // Note the std refers to the arg BinaryReductionOp
 // but in the Kokkos naming convention, it corresponds
@@ -424,12 +423,9 @@ ValueType transform_reduce(
       ::Kokkos::Experimental::move(transformer));
 }
 
-// ----------------------------
 //
-// overload3:
+// overload set3:
 //
-// ----------------------------
-
 // accepting iterators
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class BinaryJoinerType, class UnaryTransform>

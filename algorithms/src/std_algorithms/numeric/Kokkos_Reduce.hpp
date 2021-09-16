@@ -95,11 +95,8 @@ struct StdReduceFunctor {
 };
 
 //------------------------------
-//
-// impl functions
-//
+// reduce_custom_functors_impl
 //------------------------------
-
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class JoinerType>
 ValueType reduce_custom_functors_impl(const std::string& label,
@@ -161,8 +158,9 @@ ValueType reduce_default_functors_impl(const std::string& label,
 //
 ///////////////////////////////
 
-// overload1:
-// reduce(first, last, typename std::iterator_traits<InputIt>::value_type{})
+//
+// overload set 1
+//
 template <class ExecutionSpace, class IteratorType>
 typename IteratorType::value_type reduce(const ExecutionSpace& ex,
                                          IteratorType first,
@@ -209,9 +207,8 @@ auto reduce(const std::string& label, const ExecutionSpace& ex,
 }
 
 //
-// overload2:
+// overload set2:
 //
-// reduce(first, last, T init_value)
 template <class ExecutionSpace, class IteratorType, class ValueType>
 ValueType reduce(const ExecutionSpace& ex, IteratorType first,
                  IteratorType last, ValueType init_reduction_value) {
@@ -265,10 +262,9 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex,
       label, ex, KE::cbegin(view), KE::cend(view), init_reduction_value);
 }
 
-// overload3
-// template< class IteratorType, class T, class BinaryOp >
-// T reduce( IteratorType first, IteratorType last, T init, BinaryOp binary_op
-// );
+//
+// overload set 3
+//
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class BinaryOp>
 ValueType reduce(const ExecutionSpace& ex, IteratorType first,
