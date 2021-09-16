@@ -45,6 +45,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 #define KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 
+#include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_View.hpp>
 
 namespace Kokkos {
@@ -74,13 +75,11 @@ static_assert_is_admissible_to_kokkos_std_algorithms(const ViewType&) {
 //
 // is_iterator
 //
-template <class T, class = void>
-struct is_iterator : std::false_type {};
+template <class T>
+using iterator_category_t = typename T::iterator_category;
 
 template <class T>
-struct is_iterator<
-    T, std::enable_if_t<!std::is_void<typename T::iterator_category>::value> >
-    : std::true_type {};
+using is_iterator = Kokkos::is_detected<iterator_category_t, T>;
 
 //
 // are_iterators
