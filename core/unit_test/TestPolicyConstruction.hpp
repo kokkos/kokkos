@@ -787,9 +787,9 @@ TEST(TEST_CATEGORY, desired_occupancy_prefer) {
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
 // MSVC+NVCC: #C3520 parameter pack must be expanded in this context (actually
 // complaining about the assignment)
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
+//#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
   test_prefer_desired_occupancy(Kokkos::TeamPolicy<TEST_EXECSPACE>{});
-#endif
+//#endif
 }
 
 // For a more informative static assertion:
@@ -842,10 +842,10 @@ TEST(TEST_CATEGORY, desired_occupancy_converting_constructors) {
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
 // MSVC+NVCC: #C3520 parameter pack must be expanded in this context (actually
 // complaining about the assignment)
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
+//#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
   test_desired_occupancy_converting_constructors(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
-  #endif
+//  #endif
 }
 
 template <class T>
