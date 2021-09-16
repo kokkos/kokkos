@@ -71,8 +71,8 @@ struct StdIsSortedUntilFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, int& update, const bool final) const {
-    const auto val_i   = *(m_first + i);
-    const auto val_ip1 = *(m_first + i + 1);
+    const auto& val_i   = *(m_first + i);
+    const auto& val_ip1 = *(m_first + i + 1);
 
     if (m_comparator(val_ip1, val_i)) {
       update += 1;
@@ -102,8 +102,8 @@ struct StdIsSortedFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i, std::size_t& update,
                   const bool final) const {
-    const auto val_i   = *(m_first + i);
-    const auto val_ip1 = *(m_first + i + 1);
+    const auto& val_i   = *(m_first + i);
+    const auto& val_ip1 = *(m_first + i + 1);
 
     if (m_comparator(val_ip1, val_i)) {
       update += 1;
@@ -113,7 +113,7 @@ struct StdIsSortedFunctor {
 
     if (final) {
       // no op in this case, because we don't need
-      // to do anything, we just need the update
+      // to do anything, we just need the "update"
       // after the scan to know if it is sorted or not
     }
   }
@@ -133,11 +133,13 @@ template <class ExecutionSpace, class IteratorType, class ComparatorType>
 IteratorType is_sorted_until_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
                                   IteratorType last, ComparatorType comp) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
   const auto num_elements = last - first;
 
+  // trivial case
   if (num_elements <= 1) {
     return last;
   }
@@ -147,28 +149,36 @@ IteratorType is_sorted_until_impl(const std::string& label,
     such that we scan the data and fill the indicator with
     partial sum that is always 0 unless we find a pair that
     breaks the sorting, so in that case the indicator will
-    show a 1 at exactly the location where the sorting is broken.
+    have a 1 starting at the location where the sorting breaks.
+    So finding that 1 means finding the location we want.
    */
 
+  // aliases
   using indicator_value_type = std::size_t;
-  using indicator_type = ::Kokkos::View<indicator_value_type*, ExecutionSpace>;
+  using indicator_view_type =
+      ::Kokkos::View<indicator_value_type*, ExecutionSpace>;
+  using functor_type =
+      StdIsSortedUntilFunctor<IteratorType, indicator_view_type,
+                              ComparatorType>;
 
+  // do scan
   // use num_elements-1 because each index handles i and i+1
   const auto num_elements_minus_one = num_elements - 1;
-  indicator_type indicator("is_sorted_until_indicator_helper",
-                           num_elements_minus_one);
-
-  using functor_type =
-      StdIsSortedUntilFunctor<IteratorType, indicator_type, ComparatorType>;
+  indicator_view_type indicator("is_sorted_until_indicator_helper",
+                                num_elements_minus_one);
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, indicator, ::Kokkos::Experimental::move(comp)));
 
+  // try to find the first sentinel value, which indicates
+  // where the sorting condition breaks
+  namespace KE                                  = ::Kokkos::Experimental;
   constexpr indicator_value_type sentinel_value = 1;
-  auto r                                        = ::Kokkos::Experimental::find(
-      ex, ::Kokkos::Experimental::cbegin(indicator),
-      ::Kokkos::Experimental::cend(indicator), sentinel_value);
+  auto r =
+      KE::find(ex, KE::cbegin(indicator), KE::cend(indicator), sentinel_value);
   const auto shift = r - ::Kokkos::Experimental::cbegin(indicator);
+
+  // return
   return first + (shift + 1);
 }
 
@@ -185,6 +195,7 @@ template <class ExecutionSpace, class IteratorType, class ComparatorType>
 bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last,
                     ComparatorType comp) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
@@ -193,14 +204,18 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
     return true;
   }
 
+  // use num_elements-1 because each index handles i and i+1
   const auto num_elements_minus_one = num_elements - 1;
   using functor_type = StdIsSortedFunctor<IteratorType, ComparatorType>;
 
+  // do scan, and result is incremented if sorting breaks
+  // so if at the end we have result==0, then data is sorted
   std::size_t result = 0;
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, ::Kokkos::Experimental::move(comp)), result);
 
+  // decide and return
   if (result == 0) {
     return true;
   } else {

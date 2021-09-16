@@ -54,13 +54,14 @@
 
 namespace Kokkos {
 namespace Experimental {
-
-// ------------------------------------------
-// begin Impl namespace
-// ------------------------------------------
 namespace Impl {
 
-// impl functors
+// -------------------------
+//
+// functors
+//
+// -------------------------
+
 template <class IteratorType, class ReducerType, class PredicateType>
 struct StdIsPartitionedFunctor {
   using red_value_type = typename ReducerType::value_type;
@@ -75,11 +76,12 @@ struct StdIsPartitionedFunctor {
     auto my_iterator           = m_first + i;
     const auto predicate_value = m_p(*my_iterator);
 
-    auto rv =
-        predicate_value
-            ? red_value_type{i, ::Kokkos::reduction_identity<index_type>::min()}
-            : red_value_type{::Kokkos::reduction_identity<index_type>::max(),
-                             i};
+    constexpr index_type m_red_id_min =
+        ::Kokkos::reduction_identity<index_type>::min();
+    constexpr index_type m_red_id_max =
+        ::Kokkos::reduction_identity<index_type>::max();
+    auto rv = predicate_value ? red_value_type{i, m_red_id_min}
+                              : red_value_type{m_red_id_max, i};
 
     m_reducer.join(redValue, rv);
   }
@@ -150,11 +152,10 @@ struct StdPartitionCopyScalar {
   }
 };
 
-template <class FirstFrom, class FirstDestTrue, class FirstDestFalse,
-          class PredType>
+template <class IndexType, class FirstFrom, class FirstDestTrue,
+          class FirstDestFalse, class PredType>
 struct StdPartitionCopyFunctor {
-  using index_type = typename FirstFrom::difference_type;
-  using value_type = StdPartitionCopyScalar<index_type>;
+  using value_type = StdPartitionCopyScalar<IndexType>;
 
   FirstFrom m_first_from;
   FirstDestTrue m_first_dest_true;
@@ -170,7 +171,7 @@ struct StdPartitionCopyFunctor {
         m_pred(::Kokkos::Experimental::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, value_type& update,
+  void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
     const auto& myval = *(m_first_from + i);
     if (final_pass) {
@@ -202,38 +203,61 @@ struct StdPartitionCopyFunctor {
   }
 };
 
+//------------------------------
 //
 // impl functions
 //
+//------------------------------
+
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
                          PredicateType pred) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  // true if all elements in the range [first, last) that satisfy
+  // the predicate "pred" appear before all elements that don't.
+  // Also returns true if [first, last) is empty.
+  // also true if all elements satisfy the predicate.
 
+  // we implement it by finding:
+  // - the max location where predicate is true  (max_loc_true)
+  // - the min location where predicate is false (min_loc_false)
+  // so the range is partitioned if max_loc_true < (min_loc_false)
+
+  // checks
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
+
+  // trivial case
   if (first == last) {
     return true;
   }
 
-  const auto num_elements = last - first;
-  using index_type        = typename IteratorType::difference_type;
-  using reducer_type      = StdIsPartitioned<index_type, ExecutionSpace>;
-
+  // aliases
+  using index_type       = typename IteratorType::difference_type;
+  using reducer_type     = StdIsPartitioned<index_type, ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
+  using func_t =
+      StdIsPartitionedFunctor<IteratorType, reducer_type, PredicateType>;
+
+  // run
   result_view_type result("is_partitioned_impl_result_view");
   reducer_type reducer(result);
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdIsPartitionedFunctor<IteratorType, reducer_type, PredicateType>(
-          first, reducer, pred),
-      reducer);
+  const auto num_elements = last - first;
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first, reducer, pred), reducer);
   ex.fence("is_partitioned: fence after operation");
 
+  // decide and return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
-  if (r_h().max_loc_true != ::Kokkos::reduction_identity<index_type>::max() &&
-      r_h().min_loc_false != ::Kokkos::reduction_identity<index_type>::min()) {
+  constexpr index_type red_id_min =
+      ::Kokkos::reduction_identity<index_type>::min();
+  constexpr index_type red_id_max =
+      ::Kokkos::reduction_identity<index_type>::max();
+
+  if (r_h().max_loc_true != red_id_max && r_h().min_loc_false != red_id_min) {
     return r_h().max_loc_true < r_h().min_loc_false;
   } else if (first + r_h().max_loc_true == --last) {
     return true;
@@ -246,26 +270,35 @@ template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType partition_point_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
                                   IteratorType last, PredicateType pred) {
+  // locates the end of the first partition, that is, the first
+  // element that does not satisfy p or last if all elements satisfy p.
+  // Implementation below finds the first location where p is false.
+
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+  expect_valid_range(first, last);
 
   if (first == last) {
     return first;
   }
 
-  const auto num_elements = last - first;
-  using index_type        = typename IteratorType::difference_type;
-  using reducer_type      = StdPartitionPoint<index_type, ExecutionSpace>;
-
+  // aliases
+  using index_type       = typename IteratorType::difference_type;
+  using reducer_type     = StdPartitionPoint<index_type, ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
+  using func_t =
+      StdPartitionPointFunctor<IteratorType, reducer_type, PredicateType>;
+
+  // run
   result_view_type result("partition_point_impl_result_view");
   reducer_type reducer(result);
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdPartitionPointFunctor<IteratorType, reducer_type, PredicateType>(
-          first, reducer, pred),
-      reducer);
+  const auto num_elements = last - first;
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first, reducer, pred), reducer);
   ex.fence("partition_point: fence after operation");
 
+  // decide and return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
@@ -286,20 +319,28 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
                     OutputIteratorTrueType to_first_true,
                     OutputIteratorFalseType to_first_false,
                     PredicateType pred) {
+  // impl uses a scan, this is similar how we implemented copy_if
+
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorTrueType,
                                              OutputIteratorFalseType>();
   static_assert_iterators_have_matching_difference_type<
       InputIteratorType, OutputIteratorTrueType, OutputIteratorFalseType>();
+  expect_valid_range(from_first, from_last);
 
   if (from_first == from_last) {
     return {to_first_true, to_first_false};
   }
 
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
   using func_type =
-      StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
-                              OutputIteratorFalseType, PredicateType>;
+      StdPartitionCopyFunctor<index_type, InputIteratorType,
+                              OutputIteratorTrueType, OutputIteratorFalseType,
+                              PredicateType>;
 
+  // run
   const auto num_elements = from_last - from_first;
   typename func_type::value_type counts{0, 0};
   ::Kokkos::parallel_scan(
@@ -308,6 +349,7 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
 
   ex.fence("partition_copy: fence after operation");
 
+  // return
   return {to_first_true + counts.true_count_,
           to_first_false + counts.false_count_};
 }
