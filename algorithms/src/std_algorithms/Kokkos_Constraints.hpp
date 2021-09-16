@@ -212,12 +212,24 @@ struct iterators_have_matching_difference_type<T1, T2, Tail...> {
       iterators_have_matching_difference_type<T2, Tail...>::value;
 };
 
-template <class... IteratorTypes>
+template <class IteratorType1, class IteratorType2>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_iterators_have_matching_difference_type() {
-  static_assert(
-      iterators_have_matching_difference_type<IteratorTypes...>::value,
-      "Iterators do not have matching difference_type");
+static_assert_iterators_have_matching_difference_type(IteratorType1 it1,
+                                                      IteratorType2 it2) {
+  (void)it1;
+  (void)it2;
+  static_assert(iterators_have_matching_difference_type<IteratorType1,
+                                                        IteratorType2>::value,
+                "Iterators do not have matching difference_type");
+}
+
+template <class IteratorType1, class IteratorType2, class IteratorType3>
+KOKKOS_INLINE_FUNCTION constexpr void
+static_assert_iterators_have_matching_difference_type(IteratorType1 it1,
+                                                      IteratorType2 it2,
+                                                      IteratorType3 it3) {
+  static_assert_iterators_have_matching_difference_type(it1, it2);
+  static_assert_iterators_have_matching_difference_type(it2, it3);
 }
 
 //

@@ -100,7 +100,7 @@ IteratorType min_or_max_element_impl(const std::string& label,
                                      IteratorType first, IteratorType last,
                                      Args&&... args) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, last);
+  static_assert_random_access_and_accessible(ex, first);
   expect_valid_range(first, last);
 
   if (first == last) {
@@ -142,7 +142,7 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
     const std::string& label, const ExecutionSpace& ex, IteratorType first,
     IteratorType last, Args&&... args) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, last);
+  static_assert_random_access_and_accessible(ex, first);
   expect_valid_range(first, last);
 
   if (first == last) {

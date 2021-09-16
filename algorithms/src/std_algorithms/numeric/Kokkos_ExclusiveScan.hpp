@@ -177,10 +177,8 @@ OutputIteratorType exclusive_scan_custom_op_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, last_from,
-                                             first_dest);
-  static_assert_iterators_have_matching_difference_type<InputIteratorType,
-                                                        OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
   expect_valid_range(first_from, last_from);
 
   // aliases
@@ -215,10 +213,8 @@ OutputIteratorType transform_exclusive_scan_impl(
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop,
     UnaryOpType uop) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, last_from,
-                                             first_dest);
-  static_assert_iterators_have_matching_difference_type<InputIteratorType,
-                                                        OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
   expect_valid_range(first_from, last_from);
 
   // aliases
@@ -253,10 +249,8 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
                                                   OutputIteratorType first_dest,
                                                   ValueType init_value) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, last_from,
-                                             first_dest);
-  static_assert_iterators_have_matching_difference_type<InputIteratorType,
-                                                        OutputIteratorType>();
+  static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
   expect_valid_range(first_from, last_from);
 
   // does it make sense to do this static_assert too?

@@ -127,7 +127,7 @@ IteratorType is_sorted_until_impl(const std::string& label,
                                   const ExecutionSpace& ex, IteratorType first,
                                   IteratorType last, ComparatorType comp) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, last);
+  static_assert_random_access_and_accessible(ex, first);
   expect_valid_range(first, last);
 
   const auto num_elements = last - first;
@@ -194,7 +194,7 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last,
                     ComparatorType comp) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, last);
+  static_assert_random_access_and_accessible(ex, first);
   expect_valid_range(first, last);
 
   const auto num_elements = last - first;
