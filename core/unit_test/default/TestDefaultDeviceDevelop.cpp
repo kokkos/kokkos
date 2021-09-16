@@ -50,22 +50,24 @@
 #include <TestDefaultDeviceType_Category.hpp>
 
 namespace Test {
-struct Functor {
-  int val;
-  KOKKOS_FUNCTION
-  void operator()(int i) const { printf("HUHU %i %i\n", i, val); }
-};
+using policy_t = Kokkos::RangePolicy<>;
 
-template<class F>
-__global__ void bar(F f) { f(int(blockIdx.x*blockDim.x+threadIdx.x)); }
+__global__ void bar() {
+  printf("Device %i %i %i %i\n", 
+         int(sizeof(policy_t)),
+         int(sizeof(typename policy_t::traits::execution_space)),
+         int(sizeof(typename policy_t::index_type)),
+         int(sizeof(typename policy_t::traits)));
+}
 
 void foo() {
   int N = 100;
-  bar<<<4, 32>>>(Functor{1});
-  Kokkos::parallel_for(N, Functor{2});
-  bar<<<4, 32>>>(Functor{3});
+  printf("Host %i %i %i %i\n", int(sizeof(policy_t)),
+         int(sizeof(typename policy_t::traits::execution_space)),
+         int(sizeof(typename policy_t::index_type)),
+         int(sizeof(typename policy_t::traits)));
+  bar<<<1, 1>>>();
 
-  Kokkos::fence();
   cudaDeviceSynchronize();
   printf("Done\n");
 }
