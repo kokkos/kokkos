@@ -121,6 +121,8 @@ struct in_place_shfl_op {
       reinterpret_cast<shuffle_as_t*>(&out)[i] = self().do_shfl_op(
           reinterpret_cast<shuffle_as_t const*>(&val)[i], lane_or_delta, width);
     }
+    // FIXME_HIP - this fence should be removed once the hip-clang compiler
+    // properly supports fence semanics for shuffles
     __atomic_signal_fence(__ATOMIC_SEQ_CST);
   }
 };
