@@ -50,21 +50,47 @@
 #include <TestDefaultDeviceType_Category.hpp>
 
 namespace Test {
-using policy_t = Kokkos::RangePolicy<>;
+struct ExecutionSpaceTrait { 
+  using execution_space = double; 
+};
+struct IndexTypeTrait {
+  using index_type = int;
+};
+struct WorkTagTrait {
+  using work_tag = char;
+};
+
+template <class... Properties>
+struct /* __declspec(empty_bases) */ Base : public Properties... {};
+
+template<class ... Properties>
+struct Derived :
+   public Base<Properties...> {
+   using traits = Base<Properties...>;
+  typename traits::execution_space m_space;
+  typename traits::index_type m_begin;
+  typename traits::index_type m_end;
+  typename traits::index_type m_granularity;
+  typename traits::index_type m_granularity_mask;
+};
+
+using policy_t = Derived<ExecutionSpaceTrait,IndexTypeTrait,WorkTagTrait>;
 
 __global__ void bar() {
-  printf("Device %i %i %i %i\n", 
+  printf("Device %i %i %i %i %i\n", 
          int(sizeof(policy_t)),
-         int(sizeof(typename policy_t::traits::execution_space)),
+         int(sizeof(typename policy_t::execution_space)),
          int(sizeof(typename policy_t::index_type)),
+         int(sizeof(typename policy_t::work_tag)),
          int(sizeof(typename policy_t::traits)));
 }
 
 void foo() {
   int N = 100;
-  printf("Host %i %i %i %i\n", int(sizeof(policy_t)),
-         int(sizeof(typename policy_t::traits::execution_space)),
+  printf("Host %i %i %i %i %i\n", int(sizeof(policy_t)),
+         int(sizeof(typename policy_t::execution_space)),
          int(sizeof(typename policy_t::index_type)),
+         int(sizeof(typename policy_t::work_tag)),
          int(sizeof(typename policy_t::traits)));
   bar<<<1, 1>>>();
 
