@@ -415,6 +415,7 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_type(first, d_first, pred), count);
+    ex.fence("copy_if: fence after operation");
 
     // return
     return d_first + count;
@@ -567,8 +568,12 @@ void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_t(first, ::Kokkos::Experimental::move(pred), new_value));
+  ex.fence("replace_if: fence after operation");
 }
 
+// ------------------------------------------
+// replace_impl
+// ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class ValueType>
 void replace_impl(const std::string& label, const ExecutionSpace& ex,
                   IteratorType first, IteratorType last,
@@ -585,6 +590,7 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, old_value, new_value));
+  ex.fence("replace: fence after operation");
 }
 
 // ------------------------------------------
@@ -615,6 +621,7 @@ OutputIteratorType replace_copy_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first_from, first_dest, old_value, new_value));
+  ex.fence("replace_copy: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -651,6 +658,7 @@ OutputIteratorType replace_copy_if_impl(const std::string& label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first_from, first_dest,
                                 ::Kokkos::Experimental::move(pred), new_value));
+  ex.fence("replace_copy_if: fence after operation");
 
   // return
   return first_dest + num_elements;

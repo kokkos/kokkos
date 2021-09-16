@@ -575,6 +575,8 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
           RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
           step3_func_t((first + num_unique_found_in_step_one), tmp_view));
 
+      ex.fence("uniqute: fence after operation");
+
       // return iterator to one passed the last written
       // (the +1 is needed to account for the last element, see above)
       return (first + num_unique_found_in_step_one + count + 1);
@@ -704,7 +706,6 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_scan(
         label, RangePolicy<ExecutionSpace>(ex, 0, scan_num_elements),
         func1_type(first, begin(tmp_view), pred), scan_count);
-    ex.fence("remove_if: fence after stage1");
 
     // scan_count should be equal to keep_count
     assert(scan_count == keep_count);

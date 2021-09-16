@@ -176,6 +176,8 @@ IteratorType is_sorted_until_impl(const std::string& label,
       KE::find(ex, KE::cbegin(indicator), KE::cend(indicator), sentinel_value);
   const auto shift = r - ::Kokkos::Experimental::cbegin(indicator);
 
+  ex.fence("is_sorted_until: fence after operation");
+
   // return
   return first + (shift + 1);
 }
@@ -215,6 +217,8 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, ::Kokkos::Experimental::move(comp)), result);
+
+  ex.fence("is_sorted: fence after operation");
 
   // decide and return
   if (result == 0) {

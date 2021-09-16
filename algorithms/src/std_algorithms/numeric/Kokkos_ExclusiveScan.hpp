@@ -198,6 +198,7 @@ OutputIteratorType exclusive_scan_custom_op_impl(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(init_value, first_from, first_dest,
                 ::Kokkos::Experimental::move(bop), unary_op_type()));
+  ex.fence("exclusive_scan_custom_op: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -235,6 +236,7 @@ OutputIteratorType transform_exclusive_scan_impl(
                           func_type(init_value, first_from, first_dest,
                                     ::Kokkos::Experimental::move(bop),
                                     ::Kokkos::Experimental::move(uop)));
+  ex.fence("transform_exclusive_scan: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -288,6 +290,7 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(init_value, first_from, first_dest));
+  ex.fence("exclusive_scan_default_op: fence after operation");
 
   return first_dest + num_elements;
 }

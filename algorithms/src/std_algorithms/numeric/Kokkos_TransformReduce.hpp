@@ -182,6 +182,8 @@ ValueType transform_reduce_custom_functors_impl(
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer, transformer), reducer);
 
+  ex.fence("transform_reduce: fence after operation");
+
   // return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
@@ -228,6 +230,7 @@ ValueType transform_reduce_custom_functors_impl(
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       functor_type(first1, first2, reducer, transformer), reducer);
+  ex.fence("transform_reduce: fence after operation");
 
   // return
   const auto r_h =

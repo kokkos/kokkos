@@ -232,6 +232,7 @@ OutputIteratorType inclusive_scan_default_op_impl(
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(first_from, first_dest));
+  ex.fence("inclusive_scan_default_op: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -267,6 +268,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op_type()));
+  ex.fence("inclusive_scan_custom_binary_op: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -302,6 +304,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(first_from, first_dest, binary_op,
                                     unary_op_type(), init_value));
+  ex.fence("inclusive_scan_custom_binary_op: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -339,6 +342,7 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op));
+  ex.fence("transform_inclusive_scan: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -373,6 +377,7 @@ OutputIteratorType transform_inclusive_scan_impl(
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op, init_value));
+  ex.fence("transform_inclusive_scan: fence after operation");
 
   // return
   return first_dest + num_elements;
