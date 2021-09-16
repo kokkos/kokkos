@@ -109,11 +109,10 @@ struct StdTransformReduceSingleIntervalFunctor {
         m_transform(::Kokkos::Experimental::move(transform)) {}
 };
 
-template <class IteratorType1, class IteratorType2, class ReducerType,
-          class TransformType>
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class TransformType>
 struct StdTransformReduceTwoIntervalsFunctor {
   using red_value_type = typename ReducerType::value_type;
-  using index_type     = typename IteratorType1::difference_type;
 
   const IteratorType1 m_first1;
   const IteratorType2 m_first2;
@@ -121,7 +120,7 @@ struct StdTransformReduceTwoIntervalsFunctor {
   const TransformType m_transform;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
+  void operator()(const IndexType i, red_value_type& red_value) const {
     const auto my_iterator1 = m_first1 + i;
     const auto my_iterator2 = m_first2 + i;
     auto tmp_wrapped_value =
@@ -249,12 +248,15 @@ ValueType transform_reduce_custom_functors_impl(
   }
 
   // aliases
+  using index_type          = typename IteratorType1::difference_type;
   using iterator_value_type = typename IteratorType1::value_type;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
                                                  JoinerType, ExecutionSpace>;
-  using functor_type = StdTransformReduceTwoIntervalsFunctor<
-      IteratorType1, IteratorType2, reducer_type, BinaryTransformerType>;
+  using functor_type =
+      StdTransformReduceTwoIntervalsFunctor<index_type, IteratorType1,
+                                            IteratorType2, reducer_type,
+                                            BinaryTransformerType>;
   using result_view_type = typename reducer_type::result_view_type;
 
   // run

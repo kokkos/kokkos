@@ -136,19 +136,19 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
   // aliases
   using value_type    = typename OutputIteratorType::value_type;
   using aux_view_type = ::Kokkos::View<value_type*, ExecutionSpace>;
-  using functor_t     = StdAdjacentDiffItToViewFunctor<InputIteratorType,
-                                                   aux_view_type, BinaryOp>;
+  using functor1_t    = StdAdjacentDiffItToViewFunctor<InputIteratorType,
+                                                    aux_view_type, BinaryOp>;
+  using functor2_t = StdAdjDiffCopyFunctor<aux_view_type, OutputIteratorType>;
 
   // run
   const auto num_elements = last_from - first_from;
   aux_view_type aux_view("aux_view", num_elements);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         functor_t(first_from, aux_view, bin_op));
-  ::Kokkos::parallel_for(
-      "copy", RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdAdjDiffCopyFunctor<aux_view_type, OutputIteratorType>(aux_view,
-                                                               first_dest));
+                         functor1_t(first_from, aux_view, bin_op));
+  ::Kokkos::parallel_for("copy",
+                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                         functor2_t(aux_view, first_dest));
   ex.fence("adjacent_difference: fence after operation");
 
   // return
