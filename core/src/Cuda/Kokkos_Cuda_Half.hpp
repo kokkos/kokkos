@@ -141,9 +141,12 @@ class alignas(2) half_t {
   KOKKOS_FUNCTION
   half_t() : val(0.0F) {}
 
+  
   // Copy constructors
-  KOKKOS_DEFAULTED_FUNCTION
-  half_t(const half_t&) noexcept = default;
+  KOKKOS_FUNCTION
+  half_t(const half_t& rhs) : val(rhs.val){};
+  
+  
 
   KOKKOS_INLINE_FUNCTION
   half_t(const volatile half_t& rhs) {

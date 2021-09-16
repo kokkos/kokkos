@@ -90,6 +90,7 @@ template <class... Properties>
 class RangePolicy : public Impl::PolicyTraits<Properties...> {
  public:
   using traits = Impl::PolicyTraits<Properties...>;
+  //typedef Impl::PolicyTraits<Properties...> traits;
 
  private:
   typename traits::execution_space m_space;

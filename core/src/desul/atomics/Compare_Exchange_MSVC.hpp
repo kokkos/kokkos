@@ -188,6 +188,13 @@ typename std::enable_if<sizeof(T) == 16, T>::type atomic_compare_exchange(
   return compare;
 }
 
+namespace Impl {
+template <typename MemoryScope>
+inline bool lock_address(void* ptr, MemoryScope ms);
+
+template <typename MemoryScope>
+void unlock_address(void* ptr, MemoryScope ms);
+}
 
 template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8 && sizeof(T) != 16), T>::type atomic_compare_exchange(

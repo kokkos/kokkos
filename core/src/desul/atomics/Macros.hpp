@@ -20,8 +20,11 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_GCC_ATOMICS
 #endif
 
-#ifdef _MSC_VER
-#define DESUL_HAVE_MSVC_ATOMICS
+#if defined(_MSC_VER)  && \
+    (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) && \
+    (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
+    !defined(SYCL_LANGUAGE_VERSION)
+#define DESUL_HAVE_MSVC_ATOMICS 
 #endif
 
 #ifdef __CUDACC__
