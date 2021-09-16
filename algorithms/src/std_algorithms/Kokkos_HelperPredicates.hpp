@@ -45,6 +45,8 @@
 #ifndef KOKKOS_STD_HELPER_PREDICATES_HPP
 #define KOKKOS_STD_HELPER_PREDICATES_HPP
 
+#include <Kokkos_Macros.hpp>
+
 // naming convetion:
 // StdAlgoSomeExpressiveNameUnaryPredicate
 // StdAlgoSomeExpressiveNameBinaryPredicate
@@ -60,22 +62,23 @@ template <class T>
 struct StdAlgoEqualsValUnaryPredicate {
   T m_value;
 
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const T& val) const { return val == m_value; }
+  KOKKOS_FUNCTION
+  constexpr bool operator()(const T& val) const { return val == m_value; }
 
-  KOKKOS_INLINE_FUNCTION
-  explicit StdAlgoEqualsValUnaryPredicate(const T& _value) : m_value(_value) {}
+  KOKKOS_FUNCTION
+  constexpr explicit StdAlgoEqualsValUnaryPredicate(const T& _value)
+      : m_value(_value) {}
 };
 
 template <class T>
 struct StdAlgoNotEqualsValUnaryPredicate {
   T m_value;
 
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const T& val) const { return !(val == m_value); }
+  KOKKOS_FUNCTION
+  constexpr bool operator()(const T& val) const { return !(val == m_value); }
 
-  KOKKOS_INLINE_FUNCTION
-  explicit StdAlgoNotEqualsValUnaryPredicate(const T& _value)
+  KOKKOS_FUNCTION
+  constexpr explicit StdAlgoNotEqualsValUnaryPredicate(const T& _value)
       : m_value(_value) {}
 };
 
@@ -83,11 +86,12 @@ template <class ValueType, class PredicateType>
 struct StdAlgoNegateUnaryPredicateWrapper {
   PredicateType m_pred;
 
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType& val) const { return !m_pred(val); }
+  KOKKOS_FUNCTION
+  constexpr bool operator()(const ValueType& val) const { return !m_pred(val); }
 
-  KOKKOS_INLINE_FUNCTION
-  explicit StdAlgoNegateUnaryPredicateWrapper(const PredicateType& pred)
+  KOKKOS_FUNCTION
+  constexpr explicit StdAlgoNegateUnaryPredicateWrapper(
+      const PredicateType& pred)
       : m_pred(pred) {}
 };
 
@@ -96,16 +100,16 @@ struct StdAlgoNegateUnaryPredicateWrapper {
 // ------------------
 template <class ValueType1, class ValueType2 = ValueType1>
 struct StdAlgoEqualBinaryPredicate {
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType1& a, const ValueType2& b) const {
+  KOKKOS_FUNCTION
+  constexpr bool operator()(const ValueType1& a, const ValueType2& b) const {
     return a == b;
   }
 };
 
 template <class ValueType1, class ValueType2 = ValueType1>
 struct StdAlgoLessThanBinaryPredicate {
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType1& a, const ValueType2& b) const {
+  KOKKOS_FUNCTION
+  constexpr bool operator()(const ValueType1& a, const ValueType2& b) const {
     return a < b;
   }
 };
