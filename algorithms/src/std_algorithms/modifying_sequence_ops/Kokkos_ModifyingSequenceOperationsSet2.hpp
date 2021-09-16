@@ -540,7 +540,8 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
       using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
       tmp_view_type tmp_view("std_unique_tmp_view", num_elements_to_explore);
 
-      // scan extent is this for same reason as the one explained in unique_copy
+      // scan extent is: num_elements_to_explore - 1
+      // for same reason as the one explained in unique_copy
       const auto scan_size = num_elements_to_explore - 1;
       auto tmp_first       = ::Kokkos::Experimental::begin(tmp_view);
       using output_it      = decltype(tmp_first);

@@ -278,6 +278,7 @@ template <bool is_find_if, class ExecutionSpace, class IteratorType,
 IteratorType find_if_or_not_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType first,
                                  IteratorType last, PredicateType pred) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
@@ -285,21 +286,23 @@ IteratorType find_if_or_not_impl(const std::string& label,
     return last;
   }
 
+  // aliases
   using index_type       = typename IteratorType::difference_type;
   using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
-  result_view_type result("kokkos_find_if_impl_result_view");
-  reducer_type reducer(result);
-
   using func_t = StdFindIfOrNotFunctor<is_find_if, index_type, IteratorType,
                                        reducer_type, PredicateType>;
 
+  // run
+  result_view_type result("kokkos_find_if_impl_result_view");
+  reducer_type reducer(result);
   const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
   ex.fence("find_if_or_not: fence after operation");
 
+  // decide and return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
@@ -325,15 +328,18 @@ template <class ExecutionSpace, class IteratorType, class UnaryFunctorType>
 UnaryFunctorType for_each_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType first,
                                IteratorType last, UnaryFunctorType functor) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
+  // run
   const auto num_elements = last - first;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
   ex.fence("for_each: fence after operation");
 
+  // return
   return functor;
 }
 
@@ -342,14 +348,14 @@ template <class ExecutionSpace, class IteratorType, class SizeType,
 IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
                              IteratorType first, SizeType n,
                              UnaryFunctorType functor) {
-  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
-
   if (n <= 0) {
     return first;
   }
 
   auto last = first + n;
   expect_valid_range(first, last);
+  static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
+
   for_each_impl(label, ex, first, last, ::Kokkos::Experimental::move(functor));
   // no neeed to fence since for_each_impl fences already
 
@@ -362,15 +368,22 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
                                                      IteratorType first,
                                                      IteratorType last,
                                                      Predicate predicate) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
+  // aliases
+  using func_t = StdCountIfFunctor<IteratorType, Predicate>;
+
+  // run
   const auto num_elements                      = last - first;
   typename IteratorType::difference_type count = 0;
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdCountIfFunctor<IteratorType, Predicate>(first, predicate), count);
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first, predicate), count);
   ex.fence("count_if: fence after operation");
+
+  // return
   return count;
 }
 
@@ -388,6 +401,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, IteratorType2 last2,
     BinaryPredicateType predicate) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
   static_assert_iterators_have_matching_difference_type<IteratorType1,
@@ -395,6 +409,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   expect_valid_range(first1, last1);
   expect_valid_range(first2, last2);
 
+  // aliases
   using index_type       = typename IteratorType1::difference_type;
   using reducer_type     = StdMismatch<index_type, ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
@@ -402,10 +417,10 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
       StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
                             reducer_type, BinaryPredicateType>;
 
+  // run
   const auto num_e1                = last1 - first1;
   const auto num_e2                = last2 - first2;
   auto num_elements_for_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
-
   result_view_type result("mismatch_impl_result");
   reducer_type reducer(result);
   ::Kokkos::parallel_reduce(
@@ -413,6 +428,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
       functor_type(first1, first2, reducer, std::move(predicate)), reducer);
   ex.fence("mismatch: fence after operation");
 
+  // decide and return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
@@ -472,16 +488,19 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
                 BinaryPredicateType predicate) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
   expect_valid_range(first1, last1);
 
+  // aliases
   using index_type = typename IteratorType1::difference_type;
   using func_t     = StdEqualFunctor<index_type, IteratorType1, IteratorType2,
                                  BinaryPredicateType>;
 
+  // run
   const auto num_elements = last1 - first1;
   std::size_t different   = 0;
   ::Kokkos::parallel_reduce(label,
@@ -489,6 +508,7 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                             func_t(first1, first2, predicate), different);
   ex.fence("equal: fence after operation");
 
+  // return
   return !different;
 }
 
@@ -536,6 +556,7 @@ bool lexicographical_compare_impl(const std::string& label,
                                   IteratorType1 first1, IteratorType1 last1,
                                   IteratorType2 first2, IteratorType2 last2,
                                   ComparatorType comp) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType1,
                                              IteratorType2>();
   static_assert_iterators_have_matching_difference_type<IteratorType1,
@@ -543,20 +564,21 @@ bool lexicographical_compare_impl(const std::string& label,
   expect_valid_range(first1, last1);
   expect_valid_range(first2, last2);
 
+  // aliases
+  using index_type       = typename IteratorType1::difference_type;
+  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
+  using result_view_type = typename reducer_type::result_view_type;
+
+  // run
   auto d1    = Kokkos::Experimental::distance(first1, last1);
   auto d2    = Kokkos::Experimental::distance(first2, last2);
   auto range = Kokkos::Experimental::min(d1, d2);
-
-  using index_type   = typename IteratorType1::difference_type;
-  using reducer_type = FirstLoc<index_type, ExecutionSpace>;
-
-  using result_view_type = typename reducer_type::result_view_type;
   result_view_type result("kokkos_lexicographical_compare_impl_result_view");
   reducer_type reducer(result);
-
   using func1_t =
       StdLexicographicalCompareFunctor<index_type, IteratorType1, IteratorType2,
                                        reducer_type, ComparatorType>;
+
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, range),
                             func1_t(first1, first2, reducer, comp), reducer);
   ex.fence("lexicographical_compare: fence after first reduce operation");
@@ -602,6 +624,7 @@ template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
                                 IteratorType last, PredicateType pred) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
@@ -617,11 +640,11 @@ IteratorType adjacent_find_impl(const std::string& label,
     using index_type       = typename IteratorType::difference_type;
     using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
     using result_view_type = typename reducer_type::result_view_type;
+    using func_t           = StdAdjacentFindFunctor<index_type, IteratorType,
+                                          reducer_type, PredicateType>;
 
     result_view_type result("kokkos_adjacent_find_impl_result_view");
     reducer_type reducer(result);
-    using func_t = StdAdjacentFindFunctor<index_type, IteratorType,
-                                          reducer_type, PredicateType>;
 
     // note that we use below num_elements-1 because
     // each index i in the reduction checks i and (i+1).

@@ -179,6 +179,12 @@ struct admissible_to_transform_reduce {
   static constexpr bool value = true;
 };
 
+//------------------------------
+//
+// impl functions
+//
+//------------------------------
+
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class JoinerType, class UnaryTransformerType>
 ValueType transform_reduce_custom_functors_impl(
@@ -196,6 +202,7 @@ ValueType transform_reduce_custom_functors_impl(
     return init_reduction_value;
   }
 
+  // aliases
   using iterator_value_type = typename IteratorType::value_type;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
@@ -203,16 +210,17 @@ ValueType transform_reduce_custom_functors_impl(
   using functor_type =
       StdTransformReduceSingleIntervalFunctor<IteratorType, reducer_type,
                                               UnaryTransformerType>;
-
   using result_view_type = typename reducer_type::result_view_type;
+
+  // run
   result_view_type result("transform_reduce_custom_functors_impl_result");
   reducer_type reducer(result, joiner);
-
   const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer, transformer), reducer);
 
+  // return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
 
@@ -231,24 +239,25 @@ ValueType transform_reduce_custom_functors_impl(
       admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType1,
                                      IteratorType2>::value,
       "");
-  expect_valid_range(first1, last1);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
+  expect_valid_range(first1, last1);
 
   if (first1 == last1) {
     // init is returned, unmodified
     return init_reduction_value;
   }
 
+  // aliases
   using iterator_value_type = typename IteratorType1::value_type;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
                                                  JoinerType, ExecutionSpace>;
-
   using functor_type = StdTransformReduceTwoIntervalsFunctor<
       IteratorType1, IteratorType2, reducer_type, BinaryTransformerType>;
-
   using result_view_type = typename reducer_type::result_view_type;
+
+  // run
   result_view_type result("transform_reduce_custom_functors_impl_result");
   reducer_type reducer(result, joiner);
 
@@ -257,6 +266,7 @@ ValueType transform_reduce_custom_functors_impl(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       functor_type(first1, first2, reducer, transformer), reducer);
 
+  // return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
   return joiner(r_h().val, init_reduction_value);
@@ -271,10 +281,11 @@ ValueType transform_reduce_default_functors_impl(
       admissible_to_transform_reduce<ExecutionSpace, ValueType, IteratorType1,
                                      IteratorType2>::value,
       "");
-  expect_valid_range(first1, last1);
   static_assert_iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>();
+  expect_valid_range(first1, last1);
 
+  // aliases
   using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
   using transformer_type =
       Impl::StdTranformReduceDefaultBinaryTransformFunctor<value_type>;

@@ -116,6 +116,12 @@ struct admissible_to_reduce {
   static constexpr bool value = true;
 };
 
+//------------------------------
+//
+// impl functions
+//
+//------------------------------
+
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class JoinerType>
 ValueType reduce_custom_functors_impl(const std::string& label,
@@ -133,21 +139,23 @@ ValueType reduce_custom_functors_impl(const std::string& label,
     return init_reduction_value;
   }
 
+  // aliases
   using iterator_value_type = typename IteratorType::value_type;
   using reducer_type =
       ReducerWithArbitraryJoinerNoNeutralElement<iterator_value_type,
                                                  JoinerType, ExecutionSpace>;
-  using functor_type = StdReduceFunctor<IteratorType, reducer_type>;
-
+  using functor_type     = StdReduceFunctor<IteratorType, reducer_type>;
   using result_view_type = typename reducer_type::result_view_type;
+
+  // run
   result_view_type result("reduce_custom_functors_impl_result");
   reducer_type reducer(result, joiner);
-
   const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer), reducer);
 
+  // return
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
   return joiner(r_h().val, init_reduction_value);
@@ -165,7 +173,6 @@ ValueType reduce_default_functors_impl(const std::string& label,
 
   using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;
   using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;
-
   return reduce_custom_functors_impl(
       label, ex, first, last,
       ::Kokkos::Experimental::move(init_reduction_value), joiner_type());

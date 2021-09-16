@@ -384,7 +384,8 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
               *   *       *   *   *   *           *
 
     which provides the indexing in the destination where
-    each starred (*) element needs to be copied to.
+    each starred (*) element needs to be copied to since
+    the starred elements are those that satisfy the predicate.
    */
 
   // checks

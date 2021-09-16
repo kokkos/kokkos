@@ -53,6 +53,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+// ------------------------
+//
+// functors
+//
+// ------------------------
 template <class ValueType1, class ValueType2, class RetType = ValueType2>
 struct StdAdjacentDifferenceDefaultBinaryOpFunctor {
   KOKKOS_INLINE_FUNCTION
@@ -100,6 +105,11 @@ struct StdAdjDiffCopyFunctor {
   void operator()(int i) const { *(m_first_dest + i) = m_view_from(i); }
 };
 
+// ------------------------
+//
+// impl functions
+//
+// ------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOp>
 OutputIteratorType adjacent_difference_impl(const std::string& label,
@@ -108,11 +118,12 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
                                             InputIteratorType last_from,
                                             OutputIteratorType first_dest,
                                             BinaryOp bin_op) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, InputIteratorType,
                                              OutputIteratorType>();
-  expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   if (first_from == last_from) {
     return first_dest;
@@ -122,12 +133,15 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
   // source interval and output interval are not the same.
   // in that case, we don't need the auxiliary view.
 
-  const auto num_elements = last_from - first_from;
-  using value_type        = typename OutputIteratorType::value_type;
-  using aux_view_type     = ::Kokkos::View<value_type*, ExecutionSpace>;
-  aux_view_type aux_view("aux_view", num_elements);
-  using functor_t = StdAdjacentDiffItToViewFunctor<InputIteratorType,
+  // aliases
+  using value_type    = typename OutputIteratorType::value_type;
+  using aux_view_type = ::Kokkos::View<value_type*, ExecutionSpace>;
+  using functor_t     = StdAdjacentDiffItToViewFunctor<InputIteratorType,
                                                    aux_view_type, BinaryOp>;
+
+  // run
+  const auto num_elements = last_from - first_from;
+  aux_view_type aux_view("aux_view", num_elements);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          functor_t(first_from, aux_view, bin_op));
@@ -135,19 +149,15 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
       "copy", RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdAdjDiffCopyFunctor<aux_view_type, OutputIteratorType>(aux_view,
                                                                first_dest));
-  ex.fence();
+  ex.fence("adjacent_difference: fence after operation");
 
+  // return
   return first_dest + num_elements;
 }
 
 }  // end namespace Impl
 
-///////////////////////////////
-//
 // public API
-//
-///////////////////////////////
-
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
 std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value,

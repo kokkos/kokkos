@@ -234,6 +234,12 @@ struct ExclusiveScanDefaultFunctor {
   }
 };
 
+//------------------------------
+//
+// impl functions
+//
+//------------------------------
+
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
 OutputIteratorType exclusive_scan_custom_op_impl(
@@ -244,10 +250,11 @@ OutputIteratorType exclusive_scan_custom_op_impl(
       admissible_to_exclusive_scan<ExecutionSpace, ValueType, InputIteratorType,
                                    OutputIteratorType>::value,
       "");
-  expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
+  // aliases
   using value_type    = typename OutputIteratorType::value_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
   using func_type =
@@ -255,12 +262,14 @@ OutputIteratorType exclusive_scan_custom_op_impl(
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, unary_op_type>;
 
+  // run
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(init_value, first_from, first_dest,
                 ::Kokkos::Experimental::move(bop), unary_op_type()));
 
+  // return
   return first_dest + num_elements;
 }
 
@@ -276,9 +285,9 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
       admissible_to_exclusive_scan<ExecutionSpace, ValueType, InputIteratorType,
                                    OutputIteratorType>::value,
       "");
-  expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
   // we are unnecessarily duplicating code, but this is on purpose
   // so that we can use the default_op for OpenMPTarget.
@@ -316,16 +325,18 @@ OutputIteratorType transform_exclusive_scan_impl(
                                              InputIteratorType,
                                              OutputIteratorType>::value,
       "");
-  expect_valid_range(first_from, last_from);
   static_assert_iterators_have_matching_difference_type<InputIteratorType,
                                                         OutputIteratorType>();
+  expect_valid_range(first_from, last_from);
 
+  // aliases
   using value_type = typename OutputIteratorType::value_type;
   using func_type =
       TransformExclusiveScanFunctor<ExecutionSpace, value_type,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, UnaryOpType>;
 
+  // run
   const auto num_elements = last_from - first_from;
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
@@ -333,6 +344,7 @@ OutputIteratorType transform_exclusive_scan_impl(
                                     ::Kokkos::Experimental::move(bop),
                                     ::Kokkos::Experimental::move(uop)));
 
+  // return
   return first_dest + num_elements;
 }
 

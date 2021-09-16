@@ -102,6 +102,7 @@ IteratorType min_or_max_element_impl(const std::string& label,
                                      const ExecutionSpace& ex,
                                      IteratorType first, IteratorType last,
                                      Args&&... args) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
@@ -109,6 +110,7 @@ IteratorType min_or_max_element_impl(const std::string& label,
     return last;
   }
 
+  // aliases
   using index_type   = typename IteratorType::difference_type;
   using value_type   = typename IteratorType::value_type;
   using reducer_type = typename std::conditional<
@@ -117,16 +119,18 @@ IteratorType min_or_max_element_impl(const std::string& label,
       ReducerType<value_type, index_type, ExecutionSpace> >::type;
 
   using result_view_type = typename reducer_type::result_view_type;
+  using func_t           = StdMinOrMaxElemFunctor<IteratorType, reducer_type>;
+
+  // run
   result_view_type result("min_or_max_elem_impl_result");
   reducer_type reducer(result, std::forward<Args>(args)...);
-
   const auto num_elements = last - first;
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdMinOrMaxElemFunctor<IteratorType, reducer_type>(first, reducer),
-      reducer);
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first, reducer), reducer);
   ex.fence("min_or_max_element: fence after operation");
 
+  // return
   const auto result_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
   return first + result_h().loc;
@@ -140,6 +144,7 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
 ::Kokkos::pair<IteratorType, IteratorType> minmax_element_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType first,
     IteratorType last, Args&&... args) {
+  // checks
   static_assert_random_access_and_accessible<ExecutionSpace, IteratorType>();
   expect_valid_range(first, last);
 
@@ -147,6 +152,7 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
     return {first, first};
   }
 
+  // aliases
   using index_type   = typename IteratorType::difference_type;
   using value_type   = typename IteratorType::value_type;
   using reducer_type = typename std::conditional<
@@ -155,16 +161,18 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
       ReducerType<value_type, index_type, ExecutionSpace> >::type;
 
   using result_view_type = typename reducer_type::result_view_type;
+  using func_t           = StdMinMaxElemFunctor<IteratorType, reducer_type>;
+
+  // run
   result_view_type result("minmax_elem_impl_result");
   reducer_type reducer(result, std::forward<Args>(args)...);
-
   const auto num_elements = last - first;
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdMinMaxElemFunctor<IteratorType, reducer_type>(first, reducer),
-      reducer);
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            func_t(first, reducer), reducer);
   ex.fence("minmax_element: fence after operation");
 
+  // return
   const auto result_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
   return {first + result_h().min_loc, first + result_h().max_loc};
