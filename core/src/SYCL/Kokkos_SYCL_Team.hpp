@@ -271,7 +271,7 @@ class SYCLTeamMember {
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& input_value,
                                         Type* const global_accum) const {
-//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("in %d: %ld\n", team_rank(), input_value);
+    //KOKKOS_IMPL_DO_NOT_USE_PRINTF("in %d: %ld\n", team_rank(), input_value);
     Type value = input_value;
     auto sg                    = m_item.get_sub_group();
     const auto sub_group_range = sg.get_local_range()[0];
@@ -284,17 +284,16 @@ class SYCLTeamMember {
       if (id_in_sg >= vector_range*stride)
         value+= tmp;
     }
-//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("sg reduced %d(%d, %d): %ld\n", team_rank(), sub_group_range, vector_range, value);
+    //KOKKOS_IMPL_DO_NOT_USE_PRINTF("sg reduced %d(%d, %d, %d): %ld\n", team_rank(), sub_group_range, vector_range, team_size(), value);
 
     // We need to chunk up the whole reduction because we might not have
     // allocated enough memory.
     const auto n_subgroups = sg.get_group_range()[0];
+    //KOKKOS_IMPL_DO_NOT_USE_PRINTF("%d subgroups: %d\n", id_in_sg, n_subgroups);
 
     unsigned int not_greater_power_of_two = 1;
     while ((not_greater_power_of_two << 1) < n_subgroups + 1)
       not_greater_power_of_two <<= 1;
-
-    Type intermediate;
 
     const auto base_data = static_cast<Type*>(m_team_reduce);
 
@@ -303,24 +302,29 @@ class SYCLTeamMember {
     // corresponding chunk load values and the reduction is always done by the
     // first not_greater_power_of_two threads.
     const auto group_id = sg.get_group_id()[0];
-    if (id_in_sg == sub_group_range-1)
+    if (id_in_sg == sub_group_range-1){
+      //KOKKOS_IMPL_DO_NOT_USE_PRINTF("Loading %d: %d\n", group_id, value);
       base_data[group_id] = value;
+    }
     m_item.barrier(sycl::access::fence_space::local_space);
 
-    const Type total = prescan(m_item, base_data, not_greater_power_of_two, n_subgroups);
+    if (group_id==0) {
+      if (n_subgroups > sub_group_range)
+        Kokkos::abort("Not implemented!");
+
+      Type sg_value = base_data[std::min<int>(id_in_sg, n_subgroups)];
+      for (unsigned int stride = 1; stride < n_subgroups; stride <<= 1) {
+        auto tmp = sg.shuffle_up(sg_value, stride);
+        if (id_in_sg >= stride)
+          sg_value += tmp;
+      }
+      base_data[id_in_sg+1] = sg_value;
+    }
     m_item.barrier(sycl::access::fence_space::local_space);
-/*
-      using FunctorType = Kokkos::Sum<Type>;
-      using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, void>;
-      using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, void>;
-      const auto linear_id = m_item.get_local_linear_id();
-      workgroup_scan<ValueJoin, ValueInit>(m_item, FunctorType{total}, base_data, base_data[linear_id<idx]alueType& local_value, not_greater_power_of_two);
-      const max_local_range = m_item.get_subgroup().max_local_range()[0];
-      const int n_active_subgroups = (n+max_local_range-1)/max_local_range;
-      const Type partial_total = base_data[n_active_subgroups];*/
+    auto total = base_data[n_subgroups];
 
     const auto update = sg.shuffle_up(value, vector_range);
-    intermediate = base_data[group_id] + (id_in_sg>=vector_range?update:0);
+    Type intermediate = (group_id>0?base_data[group_id]:0) + (id_in_sg>=vector_range?update:0);
 
     if (global_accum) {
       if (id_in_sg == sub_group_range-1 && group_id == n_subgroups -1 ) {
@@ -330,7 +334,7 @@ class SYCLTeamMember {
       intermediate += base_data[n_subgroups];
     }
 
-//    KOKKOS_IMPL_DO_NOT_USE_PRINTF("out %d: %ld\n", team_rank(), intermediate);
+    //KOKKOS_IMPL_DO_NOT_USE_PRINTF("final out %d: %ld total: %ld %ld\n\n", team_rank(), intermediate, base_data[n_subgroups], total);
     return intermediate;
   }
 

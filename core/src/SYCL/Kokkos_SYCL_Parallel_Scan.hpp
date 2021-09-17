@@ -56,8 +56,8 @@ namespace Impl {
 // Perform a scan over a workgroup. 
 // At the end of this function, the subgroup scans are stored in the local array
 // such that the last value (at position n_active_subgroups-1) contains the total sum.
-template <class ValueJoin, class ValueInit, typename ValueType, typename FunctorType>
-void workgroup_scan(sycl::nd_item<1> item, FunctorType& functor, sycl::local_ptr<ValueType> local_mem, ValueType& local_value, unsigned int global_range)
+template <class ValueJoin, class ValueInit, int dim, typename ValueType, typename FunctorType>
+void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor, sycl::local_ptr<ValueType> local_mem, ValueType& local_value, unsigned int global_range)
 {	
   // subgroup scans
   auto sg                = item.get_sub_group();
