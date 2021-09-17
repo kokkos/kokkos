@@ -141,12 +141,8 @@ struct are_accessible_iterators<ExeSpace, Head, Tail...> {
 
 template <class ExecutionSpace, class IteratorType>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_random_access_and_accessible(const ExecutionSpace& ex,
-                                           IteratorType it) {
-  // avoid compiler complaints
-  (void)ex;
-  (void)it;
-
+static_assert_random_access_and_accessible(const ExecutionSpace&,
+                                           IteratorType) {
   static_assert(
       are_random_access_iterators<IteratorType>::value,
       "Currently, Kokkos standard algorithms require random access iterators.");
@@ -214,10 +210,8 @@ struct iterators_have_matching_difference_type<T1, T2, Tail...> {
 
 template <class IteratorType1, class IteratorType2>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_iterators_have_matching_difference_type(IteratorType1 it1,
-                                                      IteratorType2 it2) {
-  (void)it1;
-  (void)it2;
+static_assert_iterators_have_matching_difference_type(IteratorType1,
+                                                      IteratorType2) {
   static_assert(iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>::value,
                 "Iterators do not have matching difference_type");
