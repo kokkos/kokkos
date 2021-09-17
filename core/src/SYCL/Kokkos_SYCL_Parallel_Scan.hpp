@@ -53,24 +53,27 @@
 namespace Kokkos {
 namespace Impl {
 
-// Perform a scan over a workgroup. 
+// Perform a scan over a workgroup.
 // At the end of this function, the subgroup scans are stored in the local array
-// such that the last value (at position n_active_subgroups-1) contains the total sum.
-template <class ValueJoin, class ValueInit, int dim, typename ValueType, typename FunctorType>
-void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor, sycl::local_ptr<ValueType> local_mem, ValueType& local_value, unsigned int global_range)
-{	
+// such that the last value (at position n_active_subgroups-1) contains the
+// total sum.
+template <class ValueJoin, class ValueInit, int dim, typename ValueType,
+          typename FunctorType>
+void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
+                    sycl::local_ptr<ValueType> local_mem,
+                    ValueType& local_value, unsigned int global_range) {
   // subgroup scans
   auto sg                = item.get_sub_group();
   const auto sg_group_id = sg.get_group_id()[0];
-  const auto id_in_sg     = sg.get_local_id()[0];
+  const auto id_in_sg    = sg.get_local_id()[0];
   for (unsigned int stride = 1; stride < global_range; stride <<= 1) {
     auto tmp = sg.shuffle_up(local_value, stride);
-    if (id_in_sg >= stride)
-      ValueJoin::join(functor, &local_value, &tmp);
+    if (id_in_sg >= stride) ValueJoin::join(functor, &local_value, &tmp);
   }
 
   const auto max_subgroup_size = sg.get_max_local_range()[0];
-  const auto n_active_subgroups = (global_range + max_subgroup_size-1)/max_subgroup_size;
+  const auto n_active_subgroups =
+      (global_range + max_subgroup_size - 1) / max_subgroup_size;
 
   const auto local_range = sg.get_local_range()[0];
   if (id_in_sg == local_range - 1 && sg_group_id < n_active_subgroups)
@@ -156,11 +159,15 @@ class ParallelScanSYCLBase {
 
     auto local_scans = q.submit([&](sycl::handler& cgh) {
       // Store subgroup totals
-      const auto min_subgroup_size = q.get_device()
-            .template get_info<sycl::info::device::sub_group_sizes>().front();
+      const auto min_subgroup_size =
+          q.get_device()
+              .template get_info<sycl::info::device::sub_group_sizes>()
+              .front();
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
-          local_mem(sycl::range<1>((wgroup_size+min_subgroup_size-1)/min_subgroup_size), cgh);
+          local_mem(sycl::range<1>((wgroup_size + min_subgroup_size - 1) /
+                                   min_subgroup_size),
+                    cgh);
 
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
@@ -175,10 +182,13 @@ class ParallelScanSYCLBase {
             else
               ValueInit::init(functor, &local_value);
 
-	    workgroup_scan<ValueJoin, ValueInit>(item, functor, local_mem.get_pointer(), local_value, wgroup_size);  
+            workgroup_scan<ValueJoin, ValueInit>(item, functor,
+                                                 local_mem.get_pointer(),
+                                                 local_value, wgroup_size);
 
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
-              group_results[item.get_group_linear_id()] = local_mem[item.get_sub_group().get_group_range()[0]-1];
+              group_results[item.get_group_linear_id()] =
+                  local_mem[item.get_sub_group().get_group_range()[0] - 1];
 
             // Write results to global memory
             if (global_id < size) global_mem[global_id] = local_value;
