@@ -95,7 +95,10 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC CUDA)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC HPX)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBDL)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
-KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
+# On *nix-like systems (Linux, macOS) we need pthread for C++ std::thread
+IF (NOT WIN32)
+  KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
+ENDIF()
 KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
 
 # FIXME: We need a proper solution to figure out whether to enable

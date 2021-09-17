@@ -790,6 +790,7 @@ struct static_assert_dummy_policy_must_be_size_of_desired_occupancy<
     sizeof(Kokkos::Experimental::DesiredOccupancy),
     sizeof(Kokkos::Experimental::DesiredOccupancy)> {};
 
+#ifndef _WIN32
 TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
   DummyPolicy<TEST_EXECSPACE> const policy{};
   static_assert(sizeof(decltype(policy)) == 1, "");
@@ -807,6 +808,7 @@ TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
       _assert2{};
   (void)&_assert2;  // avoid unused variable warning
 }
+#endif
 
 template <typename Policy>
 void test_desired_occupancy_converting_constructors(Policy const& policy) {
