@@ -1479,6 +1479,12 @@ class TestViewAPI {
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
       return;
 #endif
+// This test doesn't behave as expected on Windows with CUDA
+#if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
+    if (std::is_same<typename dView1::memory_space,
+                     Kokkos::CudaUVMSpace>::value)
+      return;
+#endif
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);
