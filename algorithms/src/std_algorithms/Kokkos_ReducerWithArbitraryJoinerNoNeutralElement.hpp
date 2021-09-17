@@ -74,40 +74,40 @@ struct ReducerWithArbitraryJoinerNoNeutralElement {
   bool m_references_scalar_v;
 
  public:
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ReducerWithArbitraryJoinerNoNeutralElement(value_type& value_,
                                              JoinerType joiner_)
       : m_joiner(joiner_), m_value(&value_), m_references_scalar_v(true) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ReducerWithArbitraryJoinerNoNeutralElement(const result_view_type& value_,
                                              JoinerType joiner_)
       : m_joiner(joiner_), m_value(value_), m_references_scalar_v(false) {}
 
   // Required
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void join(value_type& dest, const value_type& src) const {
     dest.val = m_joiner(dest.val, src.val);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void join(volatile value_type& dest, const volatile value_type& src) const {
     dest.val = m_joiner(dest.val, src.val);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void init(value_type& val) const {
     // I cannot call reduction_identity, so need to default this
     val = {};
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   value_type& reference() const { return *m_value.data(); }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   result_view_type view() const { return m_value; }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   bool references_scalar() const { return m_references_scalar_v; }
 };
 

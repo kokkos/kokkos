@@ -58,13 +58,13 @@ struct ValueWrapperForNoNeutralElement {
   Scalar val;
   bool is_initial = true;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator=(const ValueWrapperForNoNeutralElement& rhs) {
     val        = rhs.val;
     is_initial = rhs.is_initial;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator=(const volatile ValueWrapperForNoNeutralElement& rhs) volatile {
     val        = rhs.val;
     is_initial = rhs.is_initial;

@@ -62,12 +62,12 @@ struct StdMinOrMaxElemFunctor {
   IteratorType m_first;
   ReducerType m_reducer;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
     m_reducer.join(red_value, red_value_type{m_first[i], i});
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdMinOrMaxElemFunctor(IteratorType first, ReducerType reducer)
       : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
 };
@@ -79,13 +79,13 @@ struct StdMinMaxElemFunctor {
   IteratorType m_first;
   ReducerType m_reducer;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
     const auto& my_value = m_first[i];
     m_reducer.join(red_value, red_value_type{my_value, my_value, i, i});
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdMinMaxElemFunctor(IteratorType first, ReducerType reducer)
       : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
 };

@@ -65,9 +65,10 @@ struct StdCopyFunctor {
   InputIterator m_first;
   OutputIterator m_dest_first;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const { m_dest_first[i] = m_first[i]; }
 
+  KOKKOS_FUNCTION
   StdCopyFunctor(InputIterator _first, OutputIterator _dest_first)
       : m_first(_first), m_dest_first(_dest_first) {}
 };
@@ -77,9 +78,10 @@ struct StdCopyBackwardFunctor {
   IteratorType1 m_last;
   IteratorType2 m_dest_last;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const { m_dest_last[-i - 1] = m_last[-i - 1]; }
 
+  KOKKOS_FUNCTION
   StdCopyBackwardFunctor(IteratorType1 _last, IteratorType2 _dest_last)
       : m_last(_last), m_dest_last(_dest_last) {}
 };
@@ -90,13 +92,13 @@ struct StdCopyIfFunctor {
   FirstDest m_first_dest;
   PredType m_pred;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdCopyIfFunctor(FirstFrom first_from, FirstDest first_dest, PredType pred)
       : m_first_from(first_from),
         m_first_dest(first_dest),
         m_pred(::Kokkos::Experimental::move(pred)) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
     const auto& myval = m_first_from[i];
@@ -118,9 +120,10 @@ struct StdFillFunctor {
   InputIterator m_first;
   T m_value;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const { m_first[i] = m_value; }
 
+  KOKKOS_FUNCTION
   StdFillFunctor(InputIterator _first, T _value)
       : m_first(_first), m_value(::Kokkos::Experimental::move(_value)) {}
 };
@@ -132,9 +135,10 @@ struct StdTransformFunctor {
   OutputIterator m_d_first;
   UnaryFunctorType m_unary_op;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const { m_d_first[i] = m_unary_op(m_first[i]); }
 
+  KOKKOS_FUNCTION
   StdTransformFunctor(InputIterator _first, OutputIterator _m_d_first,
                       UnaryFunctorType _functor)
       : m_first(_first),
@@ -150,11 +154,12 @@ struct StdTransformBinaryFunctor {
   OutputIterator m_d_first;
   BinaryFunctorType m_binary_op;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     m_d_first[i] = m_binary_op(m_first1[i], m_first2[i]);
   }
 
+  KOKKOS_FUNCTION
   StdTransformBinaryFunctor(InputIterator1 _first1, InputIterator2 _first2,
                             OutputIterator _m_d_first,
                             BinaryFunctorType _functor)
@@ -170,9 +175,10 @@ struct StdGenerateFunctor {
   IteratorType m_first;
   Generator m_generator;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const { m_first[i] = m_generator(); }
 
+  KOKKOS_FUNCTION
   StdGenerateFunctor(IteratorType _first, Generator _g)
       : m_first(_first), m_generator(::Kokkos::Experimental::move(_g)) {}
 };
@@ -185,7 +191,7 @@ struct StdReplaceIfFunctor {
   PredicateType m_predicate;
   NewValueType m_new_value;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const {
     auto& myvalue = m_first[i];
     if (m_predicate(myvalue)) {
@@ -193,6 +199,7 @@ struct StdReplaceIfFunctor {
     }
   }
 
+  KOKKOS_FUNCTION
   StdReplaceIfFunctor(InputIterator first, PredicateType pred,
                       NewValueType new_value)
       : m_first(first),
@@ -207,7 +214,7 @@ struct StdReplaceFunctor {
   ValueType m_old_value;
   ValueType m_new_value;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const {
     auto& myvalue = m_first[i];
     if (myvalue == m_old_value) {
@@ -215,6 +222,7 @@ struct StdReplaceFunctor {
     }
   }
 
+  KOKKOS_FUNCTION
   StdReplaceFunctor(InputIterator first, ValueType old_value,
                     ValueType new_value)
       : m_first(first),
@@ -231,7 +239,7 @@ struct StdReplaceCopyFunctor {
   ValueType m_old_value;
   ValueType m_new_value;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const {
     const auto& myvalue_from = m_first_from[i];
     auto& myvalue_dest       = m_first_dest[i];
@@ -243,6 +251,7 @@ struct StdReplaceCopyFunctor {
     }
   }
 
+  KOKKOS_FUNCTION
   StdReplaceCopyFunctor(InputIterator first_from, OutputIterator first_dest,
                         ValueType old_value, ValueType new_value)
       : m_first_from(first_from),
@@ -259,7 +268,7 @@ struct StdReplaceIfCopyFunctor {
   PredicateType m_pred;
   ValueType m_new_value;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     const auto& myvalue_from = m_first_from[i];
     auto& myvalue_dest       = m_first_dest[i];
@@ -271,6 +280,7 @@ struct StdReplaceIfCopyFunctor {
     }
   }
 
+  KOKKOS_FUNCTION
   StdReplaceIfCopyFunctor(InputIterator first_from, OutputIterator first_dest,
                           PredicateType pred, ValueType new_value)
       : m_first_from(first_from),

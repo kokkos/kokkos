@@ -73,7 +73,7 @@ struct StdFindIfOrNotFunctor {
   ReducerType m_reducer;
   PredicateType m_p;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
     const auto& my_value = m_first[i];
 
@@ -89,7 +89,7 @@ struct StdFindIfOrNotFunctor {
     m_reducer.join(red_value, rv);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdFindIfOrNotFunctor(IteratorType first, ReducerType reducer,
                         PredicateType p)
       : m_first(first),
@@ -103,10 +103,10 @@ struct StdForEachFunctor {
   IteratorType m_first;
   UnaryFunctorType m_functor;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const { m_functor(m_first[i]); }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdForEachFunctor(IteratorType _first, UnaryFunctorType _functor)
       : m_first(_first), m_functor(::Kokkos::Experimental::move(_functor)) {}
 };
@@ -117,14 +117,14 @@ struct StdCountIfFunctor {
   IteratorType m_first;
   Predicate m_predicate;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i, index_type& lsum) const {
     if (m_predicate(m_first[i])) {
       lsum++;
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdCountIfFunctor(IteratorType _first, Predicate _predicate)
       : m_first(_first),
         m_predicate(::Kokkos::Experimental::move(_predicate)) {}
@@ -140,7 +140,7 @@ struct StdMismatchRedFunctor {
   ReducerType m_reducer;
   BinaryPredicateType m_predicate;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
     const auto& my_value1 = m_first1[i];
     const auto& my_value2 = m_first2[i];
@@ -148,7 +148,7 @@ struct StdMismatchRedFunctor {
                    red_value_type{!m_predicate(my_value1, my_value2), i});
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdMismatchRedFunctor(IteratorType1 first1, IteratorType2 first2,
                         ReducerType reducer, BinaryPredicateType predicate)
       : m_first1(first1),
@@ -164,14 +164,14 @@ struct StdEqualFunctor {
   IteratorType2 m_first2;
   BinaryPredicateType m_predicate;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i, std::size_t& lsum) const {
     if (!m_predicate(m_first1[i], m_first2[i])) {
       lsum = 1;
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdEqualFunctor(IteratorType1 _first1, IteratorType2 _first2,
                   BinaryPredicateType _predicate)
       : m_first1(_first1), m_first2(_first2), m_predicate(_predicate) {}
@@ -186,7 +186,7 @@ struct StdLexicographicalCompareFunctor {
   ReducerType m_reducer;
   ComparatorType m_comparator;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
     const auto& my_value1 = m_first1[i];
     const auto& my_value2 = m_first2[i];
@@ -201,7 +201,7 @@ struct StdLexicographicalCompareFunctor {
     m_reducer.join(red_value, rv);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdLexicographicalCompareFunctor(IteratorType1 _first1, IteratorType2 _first2,
                                    ReducerType _reducer, ComparatorType _comp)
       : m_first1(_first1),
@@ -217,14 +217,14 @@ struct StdCompareFunctor {
   IteratorType2 m_it2;
   ComparatorType m_predicate;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType /* i is unused */, int& lsum) const {
     if (m_predicate(*m_it1, *m_it2)) {
       lsum = 1;
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdCompareFunctor(IteratorType1 _it1, IteratorType2 _it2,
                     ComparatorType _predicate)
       : m_it1(_it1),
@@ -241,7 +241,7 @@ struct StdAdjacentFindFunctor {
   ReducerType m_reducer;
   PredicateType m_p;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
     const auto& my_value   = m_first[i];
     const auto& next_value = m_first[i + 1];
@@ -255,7 +255,7 @@ struct StdAdjacentFindFunctor {
     m_reducer.join(red_value, rv);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdAdjacentFindFunctor(IteratorType first, ReducerType reducer,
                          PredicateType p)
       : m_first(first),

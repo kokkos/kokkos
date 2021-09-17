@@ -79,13 +79,13 @@ struct StdIterSwapFunctor {
   IteratorType1 m_a;
   IteratorType2 m_b;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(int i) const {
     (void)i;
     ::Kokkos::Experimental::swap(*m_a, *m_b);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdIterSwapFunctor(IteratorType1 _a, IteratorType2 _b) : m_a(_a), m_b(_b) {}
 };
 

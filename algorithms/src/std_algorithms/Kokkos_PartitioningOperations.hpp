@@ -71,7 +71,7 @@ struct StdIsPartitionedFunctor {
   ReducerType m_reducer;
   PredicateType m_p;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& redValue) const {
     const auto predicate_value = m_p(m_first[i]);
     constexpr index_type m_red_id_min =
@@ -84,7 +84,7 @@ struct StdIsPartitionedFunctor {
     m_reducer.join(redValue, rv);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdIsPartitionedFunctor(IteratorType first, ReducerType reducer,
                           PredicateType p)
       : m_first(first),
@@ -101,7 +101,7 @@ struct StdPartitionPointFunctor {
   ReducerType m_reducer;
   PredicateType m_p;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& redValue) const {
     const auto predicate_value = m_p(m_first[i]);
     auto rv =
@@ -111,7 +111,7 @@ struct StdPartitionPointFunctor {
     m_reducer.join(redValue, rv);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdPartitionPointFunctor(IteratorType first, ReducerType reducer,
                            PredicateType p)
       : m_first(first),
@@ -124,14 +124,14 @@ struct StdPartitionCopyScalar {
   ValueType true_count_;
   ValueType false_count_;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdPartitionCopyScalar& operator=(const StdPartitionCopyScalar& other) {
     true_count_  = other.true_count_;
     false_count_ = other.false_count_;
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator=(const volatile StdPartitionCopyScalar& other) {
     true_count_  = other.true_count_;
     false_count_ = other.false_count_;
@@ -141,7 +141,7 @@ struct StdPartitionCopyScalar {
   // OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp:699:21: error: no viable
   // overloaded '=' m_returnvalue = 0;
   //
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator=(const ValueType value) {
     true_count_  = value;
     false_count_ = value;
@@ -158,7 +158,7 @@ struct StdPartitionCopyFunctor {
   FirstDestFalse m_first_dest_false;
   PredType m_pred;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdPartitionCopyFunctor(FirstFrom first_from, FirstDestTrue first_dest_true,
                           FirstDestFalse first_dest_false, PredType pred)
       : m_first_from(first_from),
@@ -166,7 +166,7 @@ struct StdPartitionCopyFunctor {
         m_first_dest_false(first_dest_false),
         m_pred(::Kokkos::Experimental::move(pred)) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
     const auto& myval = m_first_from[i];
@@ -185,13 +185,13 @@ struct StdPartitionCopyFunctor {
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void init(value_type& update) const {
     update.true_count_  = 0;
     update.false_count_ = 0;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void join(volatile value_type& update,
             volatile const value_type& input) const {
     update.true_count_ += input.true_count_;

@@ -69,7 +69,7 @@ struct StdIsSortedUntilFunctor {
   IndicatorViewType m_indicator;
   ComparatorType m_comparator;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, int& update, const bool final) const {
     const auto& val_i   = m_first[i];
     const auto& val_ip1 = m_first[i + 1];
@@ -85,7 +85,7 @@ struct StdIsSortedUntilFunctor {
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdIsSortedUntilFunctor(IteratorType _first1, IndicatorViewType indicator,
                           ComparatorType comparator)
       : m_first(_first1),
@@ -99,7 +99,7 @@ struct StdIsSortedFunctor {
   IteratorType m_first;
   ComparatorType m_comparator;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, std::size_t& update,
                   const bool final) const {
     const auto& val_i   = m_first[i];
@@ -113,7 +113,7 @@ struct StdIsSortedFunctor {
     (void)final;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdIsSortedFunctor(IteratorType _first1, ComparatorType comparator)
       : m_first(_first1),
         m_comparator(::Kokkos::Experimental::move(comparator)) {}
