@@ -220,45 +220,6 @@ class SYCLTeamMember {
     reducer.reference() = reduction_array[0];
   }
 
-  // FIXME_SYCL move somewhere else and combine with other places that do
-  // parallel_scan
-  // Exclusive scan returning the total sum.
-  // n is required to be a power of two and
-  // temp must point to an array containing the data to be processed
-  // The accumulated value is returned.
-  template <typename Type>
-  static Type prescan(sycl::nd_item<2> m_item, Type* temp, int n,
-                      int max_range) {
-    int thid = m_item.get_local_id(0);
-
-    // First do a reduction saving intermediate results
-    for (int stride = 1; stride < n; stride <<= 1) {
-      auto idx = 2 * stride * (thid + 1) - 1;
-      if (idx < max_range) temp[idx] += temp[idx - stride];
-      m_item.barrier(sycl::access::fence_space::local_space);
-    }
-
-    Type total_sum = temp[max_range - 1];
-    m_item.barrier(sycl::access::fence_space::local_space);
-
-    // clear the last element so we get an exclusive scan
-    if (thid == 0) temp[max_range - 1] = Type{};
-    m_item.barrier(sycl::access::fence_space::local_space);
-
-    // Now add the intermediate results to the remaining items again
-    for (int stride = n / 2; stride > 0; stride >>= 1) {
-      auto idx = 2 * stride * (thid + 1) - 1;
-      if (idx < max_range) {
-        Type dummy         = temp[idx - stride];
-        temp[idx - stride] = temp[idx];
-        temp[idx] += dummy;
-      }
-      m_item.barrier(sycl::access::fence_space::local_space);
-    }
-
-    return total_sum;
-  }
-
   //--------------------------------------------------------------------------
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
    *          with intra-team non-deterministic ordering accumulation.
