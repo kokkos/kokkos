@@ -233,7 +233,6 @@ class SYCLTeamMember {
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& input_value,
                                         Type* const global_accum) const {
-    // KOKKOS_IMPL_DO_NOT_USE_PRINTF("in %d: %ld\n", team_rank(), input_value);
     Type value                 = input_value;
     auto sg                    = m_item.get_sub_group();
     const auto sub_group_range = sg.get_local_range()[0];
@@ -246,30 +245,19 @@ class SYCLTeamMember {
       auto tmp = sg.shuffle_up(value, vector_range * stride);
       if (id_in_sg >= vector_range * stride) value += tmp;
     }
-    // KOKKOS_IMPL_DO_NOT_USE_PRINTF("sg reduced %d(%d, %d, %d): %ld\n",
-    // team_rank(), sub_group_range, vector_range, team_size(), value);
 
     // We need to chunk up the whole reduction because we might not have
     // allocated enough memory.
     const auto n_subgroups = sg.get_group_range()[0];
-    // KOKKOS_IMPL_DO_NOT_USE_PRINTF("%d subgroups: %d\n", id_in_sg,
-    // n_subgroups);
-
-    unsigned int not_greater_power_of_two = 1;
-    while ((not_greater_power_of_two << 1) < n_subgroups + 1)
-      not_greater_power_of_two <<= 1;
 
     const auto base_data = static_cast<Type*>(m_team_reduce);
 
-    // Load values into the first not_greater_power_of_two values of the
-    // reduction array in chunks. This means that only threads with an id in the
-    // corresponding chunk load values and the reduction is always done by the
-    // first not_greater_power_of_two threads.
+    // Load values into the first entries of the reduction array in chunks. This
+    // means that only threads with an id in the corresponding chunk load values
+    // and the reduction is always done by the first not_greater_power_of_two
+    // threads.
     const auto group_id = sg.get_group_id()[0];
-    if (id_in_sg == sub_group_range - 1) {
-      // KOKKOS_IMPL_DO_NOT_USE_PRINTF("Loading %d: %d\n", group_id, value);
-      base_data[group_id] = value;
-    }
+    if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;
     m_item.barrier(sycl::access::fence_space::local_space);
 
     if (group_id == 0) {
@@ -297,8 +285,6 @@ class SYCLTeamMember {
       intermediate += base_data[n_subgroups];
     }
 
-    // KOKKOS_IMPL_DO_NOT_USE_PRINTF("final out %d: %ld total: %ld %ld\n\n",
-    // team_rank(), intermediate, base_data[n_subgroups], total);
     return intermediate;
   }
 
