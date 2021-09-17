@@ -90,7 +90,7 @@ struct StdReduceFunctor {
 
   KOKKOS_INLINE_FUNCTION
   StdReduceFunctor(IteratorType first, ReducerType reducer)
-      : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
+      : m_first(first), m_reducer(std::move(reducer)) {}
 };
 
 //------------------------------
@@ -148,8 +148,7 @@ ValueType reduce_default_functors_impl(const std::string& label,
   using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;
   using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;
   return reduce_custom_functors_impl(
-      label, ex, first, last,
-      ::Kokkos::Experimental::move(init_reduction_value), joiner_type());
+      label, ex, first, last, std::move(init_reduction_value), joiner_type());
 }
 
 }  // end namespace Impl

@@ -116,8 +116,8 @@ struct TransformInclusiveScanNoInitValueFunctor {
                                            BinaryOpType bop, UnaryOpType uop)
       : m_first_from(first_from),
         m_first_dest(first_dest),
-        m_binary_op(::Kokkos::Experimental::move(bop)),
-        m_unary_op(::Kokkos::Experimental::move(uop)) {}
+        m_binary_op(std::move(bop)),
+        m_unary_op(std::move(uop)) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,
@@ -167,9 +167,9 @@ struct TransformInclusiveScanWithInitValueFunctor {
                                              ValueType init)
       : m_first_from(first_from),
         m_first_dest(first_dest),
-        m_binary_op(::Kokkos::Experimental::move(bop)),
-        m_unary_op(::Kokkos::Experimental::move(uop)),
-        m_init(::Kokkos::Experimental::move(init)) {}
+        m_binary_op(std::move(bop)),
+        m_unary_op(std::move(uop)),
+        m_init(std::move(init)) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,

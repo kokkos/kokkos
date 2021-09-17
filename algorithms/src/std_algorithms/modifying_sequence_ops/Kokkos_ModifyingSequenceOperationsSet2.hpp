@@ -75,7 +75,7 @@ struct StdUniqueCopyFunctor {
       : m_first_from(first_from),
         m_last_from(last_from),
         m_first_dest(first_dest),
-        m_pred(::Kokkos::Experimental::move(pred)) {}
+        m_pred(std::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, IndexType& update,
@@ -129,7 +129,7 @@ struct StdMoveFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i) const {
-    m_dest_first[i] = ::Kokkos::Experimental::move(m_first[i]);
+    m_dest_first[i] = std::move(m_first[i]);
   }
 
   StdMoveFunctor(InputIterator _first, OutputIterator _dest_first)
@@ -143,7 +143,7 @@ struct StdMoveBackwardFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType i) const {
-    m_dest_last[-i] = ::Kokkos::Experimental::move(m_last[-i]);
+    m_dest_last[-i] = std::move(m_last[-i]);
   }
 
   StdMoveBackwardFunctor(IteratorType1 _last, IteratorType2 _dest_last)
@@ -177,7 +177,7 @@ struct StdUniqueStepThreeFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const index_type i) const {
-    m_first_to[i] = ::Kokkos::Experimental::move(m_view_from(i));
+    m_first_to[i] = std::move(m_view_from(i));
   }
 };
 
@@ -195,7 +195,7 @@ struct StdUniqueFunctor {
       : m_first_from(first_from),
         m_last_from(last_from),
         m_first_dest(first_dest),
-        m_pred(::Kokkos::Experimental::move(pred)) {}
+        m_pred(std::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, IndexType& update,
@@ -205,7 +205,7 @@ struct StdUniqueFunctor {
 
     if (final_pass) {
       if (!m_pred(val_i, val_ip1)) {
-        m_first_dest[update] = ::Kokkos::Experimental::move(val_i);
+        m_first_dest[update] = std::move(val_i);
       }
     }
 
@@ -252,7 +252,7 @@ struct StdRemoveIfStage1Functor {
                            PredType pred)
       : m_first_from(first_from),
         m_first_dest(first_dest),
-        m_must_remove(::Kokkos::Experimental::move(pred)) {}
+        m_must_remove(std::move(pred)) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, IndexType& update,
@@ -262,7 +262,7 @@ struct StdRemoveIfStage1Functor {
       if (!m_must_remove(myval)) {
         // calling move here is ok because we are inside final pass
         // we are calling move assign as specified by the std
-        m_first_dest[update] = ::Kokkos::Experimental::move(myval);
+        m_first_dest[update] = std::move(myval);
       }
     }
 
@@ -284,7 +284,7 @@ struct StdRemoveIfStage2Functor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i) const {
-    m_first_to[i] = ::Kokkos::Experimental::move(m_first_from[i]);
+    m_first_to[i] = std::move(m_first_from[i]);
   }
 };
 
@@ -1013,7 +1013,7 @@ auto unique(const ExecutionSpace& ex,
             BinaryPredicate pred) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::unique_impl("kokkos_unique_view_api_default", ex, begin(view),
-                           end(view), ::Kokkos::Experimental::move(pred));
+                           end(view), std::move(pred));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1022,8 +1022,7 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             BinaryPredicate pred) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::unique_impl(label, ex, begin(view), end(view),
-                           ::Kokkos::Experimental::move(pred));
+  return Impl::unique_impl(label, ex, begin(view), end(view), std::move(pred));
 }
 
 // -------------------
@@ -1102,7 +1101,7 @@ auto unique_copy(const ExecutionSpace& ex,
 
   return Impl::unique_copy_impl("kokkos_unique_copy_view_api_default", ex,
                                 cbegin(source), cend(source), begin(dest),
-                                ::Kokkos::Experimental::move(pred));
+                                std::move(pred));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -1115,8 +1114,7 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::unique_copy_impl(label, ex, cbegin(source), cend(source),
-                                begin(dest),
-                                ::Kokkos::Experimental::move(pred));
+                                begin(dest), std::move(pred));
 }
 
 // -------------------

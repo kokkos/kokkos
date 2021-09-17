@@ -70,7 +70,7 @@ struct ExclusiveScanDefaultFunctor {
   KOKKOS_INLINE_FUNCTION
   ExclusiveScanDefaultFunctor(ValueType init, FirstFrom first_from,
                               FirstDest first_dest)
-      : m_init_value(::Kokkos::Experimental::move(init)),
+      : m_init_value(std::move(init)),
         m_first_from(first_from),
         m_first_dest(first_dest) {}
 
@@ -125,11 +125,11 @@ struct TransformExclusiveScanFunctor {
   TransformExclusiveScanFunctor(ValueType init, FirstFrom first_from,
                                 FirstDest first_dest, BinaryOpType bop,
                                 UnaryOpType uop)
-      : m_init_value(::Kokkos::Experimental::move(init)),
+      : m_init_value(std::move(init)),
         m_first_from(first_from),
         m_first_dest(first_dest),
-        m_binary_op(::Kokkos::Experimental::move(bop)),
-        m_unary_op(::Kokkos::Experimental::move(uop)) {}
+        m_binary_op(std::move(bop)),
+        m_unary_op(std::move(uop)) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const IndexType i, value_type& update,
@@ -191,10 +191,10 @@ OutputIteratorType exclusive_scan_custom_op_impl(
 
   // run
   const auto num_elements = last_from - first_from;
-  ::Kokkos::parallel_scan(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      func_type(init_value, first_from, first_dest,
-                ::Kokkos::Experimental::move(bop), unary_op_type()));
+  ::Kokkos::parallel_scan(label,
+                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                          func_type(init_value, first_from, first_dest,
+                                    std::move(bop), unary_op_type()));
   ex.fence("exclusive_scan_custom_op: fence after operation");
 
   // return
@@ -229,8 +229,7 @@ OutputIteratorType transform_exclusive_scan_impl(
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(init_value, first_from, first_dest,
-                                    ::Kokkos::Experimental::move(bop),
-                                    ::Kokkos::Experimental::move(uop)));
+                                    std::move(bop), std::move(uop)));
   ex.fence("transform_exclusive_scan: fence after operation");
 
   // return

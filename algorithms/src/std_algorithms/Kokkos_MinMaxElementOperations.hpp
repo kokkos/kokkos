@@ -69,7 +69,7 @@ struct StdMinOrMaxElemFunctor {
 
   KOKKOS_FUNCTION
   StdMinOrMaxElemFunctor(IteratorType first, ReducerType reducer)
-      : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
+      : m_first(first), m_reducer(std::move(reducer)) {}
 };
 
 template <class IteratorType, class ReducerType>
@@ -87,7 +87,7 @@ struct StdMinMaxElemFunctor {
 
   KOKKOS_FUNCTION
   StdMinMaxElemFunctor(IteratorType first, ReducerType reducer)
-      : m_first(first), m_reducer(::Kokkos::Experimental::move(reducer)) {}
+      : m_first(first), m_reducer(std::move(reducer)) {}
 };
 
 // ------------------------------------------
@@ -200,7 +200,7 @@ auto min_element(const ExecutionSpace& ex, IteratorType first,
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
       "kokkos_min_element_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
@@ -209,7 +209,7 @@ auto min_element(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
-      label, ex, first, last, ::Kokkos::Experimental::move(comp));
+      label, ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
@@ -231,7 +231,7 @@ auto min_element(const ExecutionSpace& ex,
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
       "kokkos_min_element_view_api_default", ex, cbegin(v), cend(v),
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
@@ -252,7 +252,7 @@ auto min_element(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MinFirstLocCustomComparator>(
-      label, ex, cbegin(v), cend(v), ::Kokkos::Experimental::move(comp));
+      label, ex, cbegin(v), cend(v), std::move(comp));
 }
 
 // ----------------------
@@ -278,7 +278,7 @@ auto max_element(const ExecutionSpace& ex, IteratorType first,
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
       "kokkos_max_element_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
@@ -287,7 +287,7 @@ auto max_element(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
-      label, ex, first, last, ::Kokkos::Experimental::move(comp));
+      label, ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
@@ -318,7 +318,7 @@ auto max_element(const ExecutionSpace& ex,
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
       "kokkos_max_element_view_api_default", ex, cbegin(v), cend(v),
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class ComparatorType,
@@ -330,7 +330,7 @@ auto max_element(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   return Impl::min_or_max_element_impl<MaxFirstLocCustomComparator>(
-      label, ex, cbegin(v), cend(v), ::Kokkos::Experimental::move(comp));
+      label, ex, cbegin(v), cend(v), std::move(comp));
 }
 
 // -------------------------
@@ -356,7 +356,7 @@ auto minmax_element(const ExecutionSpace& ex, IteratorType first,
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
       "kokkos_minmax_element_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
@@ -368,7 +368,7 @@ auto minmax_element(const std::string& label, const ExecutionSpace& ex,
                 "in OpenMPTarget");
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
-      label, ex, first, last, ::Kokkos::Experimental::move(comp));
+      label, ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
@@ -399,7 +399,7 @@ auto minmax_element(const ExecutionSpace& ex,
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
       "kokkos_minmax_element_view_api_default", ex, cbegin(v), cend(v),
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class ComparatorType,
@@ -411,7 +411,7 @@ auto minmax_element(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
-      label, ex, cbegin(v), cend(v), ::Kokkos::Experimental::move(comp));
+      label, ex, cbegin(v), cend(v), std::move(comp));
 }
 
 }  // namespace Experimental

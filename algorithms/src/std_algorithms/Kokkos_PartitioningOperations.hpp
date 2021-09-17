@@ -87,9 +87,7 @@ struct StdIsPartitionedFunctor {
   KOKKOS_FUNCTION
   StdIsPartitionedFunctor(IteratorType first, ReducerType reducer,
                           PredicateType p)
-      : m_first(first),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_p(::Kokkos::Experimental::move(p)) {}
+      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
 };
 
 template <class IteratorType, class ReducerType, class PredicateType>
@@ -114,9 +112,7 @@ struct StdPartitionPointFunctor {
   KOKKOS_FUNCTION
   StdPartitionPointFunctor(IteratorType first, ReducerType reducer,
                            PredicateType p)
-      : m_first(first),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_p(::Kokkos::Experimental::move(p)) {}
+      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
 };
 
 template <class ValueType>
@@ -164,7 +160,7 @@ struct StdPartitionCopyFunctor {
       : m_first_from(first_from),
         m_first_dest_true(first_dest_true),
         m_first_dest_false(first_dest_false),
-        m_pred(::Kokkos::Experimental::move(pred)) {}
+        m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
   void operator()(const IndexType i, value_type& update,
@@ -362,15 +358,13 @@ template <class ExecutionSpace, class IteratorType, class PredicateType>
 bool is_partitioned(const ExecutionSpace& ex, IteratorType first,
                     IteratorType last, PredicateType p) {
   return Impl::is_partitioned_impl("kokkos_is_partitioned_iterator_api_default",
-                                   ex, first, last,
-                                   ::Kokkos::Experimental::move(p));
+                                   ex, first, last, std::move(p));
 }
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 bool is_partitioned(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last, PredicateType p) {
-  return Impl::is_partitioned_impl(label, ex, first, last,
-                                   ::Kokkos::Experimental::move(p));
+  return Impl::is_partitioned_impl(label, ex, first, last, std::move(p));
 }
 
 template <class ExecutionSpace, class PredicateType, class DataType,
@@ -404,9 +398,9 @@ template <class ExecutionSpace, class InputIteratorType,
     const ExecutionSpace& ex, InputIteratorType from_first,
     InputIteratorType from_last, OutputIteratorTrueType to_first_true,
     OutputIteratorFalseType to_first_false, PredicateType p) {
-  return Impl::partition_copy_impl(
-      "kokkos_partition_copy_iterator_api_default", ex, from_first, from_last,
-      to_first_true, to_first_false, ::Kokkos::Experimental::move(p));
+  return Impl::partition_copy_impl("kokkos_partition_copy_iterator_api_default",
+                                   ex, from_first, from_last, to_first_true,
+                                   to_first_false, std::move(p));
 }
 
 template <class ExecutionSpace, class InputIteratorType,
@@ -418,8 +412,7 @@ template <class ExecutionSpace, class InputIteratorType,
     OutputIteratorTrueType to_first_true,
     OutputIteratorFalseType to_first_false, PredicateType p) {
   return Impl::partition_copy_impl(label, ex, from_first, from_last,
-                                   to_first_true, to_first_false,
-                                   ::Kokkos::Experimental::move(p));
+                                   to_first_true, to_first_false, std::move(p));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -458,15 +451,14 @@ IteratorType partition_point(const ExecutionSpace& ex, IteratorType first,
                              IteratorType last, UnaryPredicate p) {
   return Impl::partition_point_impl(
       "kokkos_partitioned_point_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(p));
+      std::move(p));
 }
 
 template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
 IteratorType partition_point(const std::string& label, const ExecutionSpace& ex,
                              IteratorType first, IteratorType last,
                              UnaryPredicate p) {
-  return Impl::partition_point_impl(label, ex, first, last,
-                                    ::Kokkos::Experimental::move(p));
+  return Impl::partition_point_impl(label, ex, first, last, std::move(p));
 }
 
 template <class ExecutionSpace, class UnaryPredicate, class DataType,

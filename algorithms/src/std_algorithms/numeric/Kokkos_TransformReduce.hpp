@@ -104,8 +104,8 @@ struct StdTransformReduceSingleIntervalFunctor {
                                           ReducerType reducer,
                                           TransformType transform)
       : m_first(first),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_transform(::Kokkos::Experimental::move(transform)) {}
+        m_reducer(std::move(reducer)),
+        m_transform(std::move(transform)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
@@ -137,8 +137,8 @@ struct StdTransformReduceTwoIntervalsFunctor {
                                         TransformType transform)
       : m_first1(first1),
         m_first2(first2),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_transform(::Kokkos::Experimental::move(transform)) {}
+        m_reducer(std::move(reducer)),
+        m_transform(std::move(transform)) {}
 };
 
 //------------------------------
@@ -252,9 +252,8 @@ ValueType transform_reduce_default_functors_impl(
   using joiner_type = Impl::StdTranformReduceDefaultJoinFunctor<ValueType>;
 
   return transform_reduce_custom_functors_impl(
-      label, ex, first1, last1, first2,
-      ::Kokkos::Experimental::move(init_reduction_value), joiner_type(),
-      transformer_type());
+      label, ex, first1, last1, first2, std::move(init_reduction_value),
+      joiner_type(), transformer_type());
 }
 
 }  // end namespace Impl
@@ -277,7 +276,7 @@ ValueType transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
                            ValueType init_reduction_value) {
   return Impl::transform_reduce_default_functors_impl(
       "kokkos_transform_reduce_default_functors_iterator_api", ex, first1,
-      last1, first2, ::Kokkos::Experimental::move(init_reduction_value));
+      last1, first2, std::move(init_reduction_value));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -287,8 +286,7 @@ ValueType transform_reduce(const std::string& label, const ExecutionSpace& ex,
                            IteratorType2 first2,
                            ValueType init_reduction_value) {
   return Impl::transform_reduce_default_functors_impl(
-      label, ex, first1, last1, first2,
-      ::Kokkos::Experimental::move(init_reduction_value));
+      label, ex, first1, last1, first2, std::move(init_reduction_value));
 }
 
 // overload1 accepting views
@@ -306,7 +304,7 @@ ValueType transform_reduce(
   return Impl::transform_reduce_default_functors_impl(
       "kokkos_transform_reduce_default_functors_iterator_api", ex,
       KE::cbegin(first_view), KE::cend(first_view), KE::cbegin(second_view),
-      ::Kokkos::Experimental::move(init_reduction_value));
+      std::move(init_reduction_value));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -322,8 +320,7 @@ ValueType transform_reduce(
 
   return Impl::transform_reduce_default_functors_impl(
       label, ex, KE::cbegin(first_view), KE::cend(first_view),
-      KE::cbegin(second_view),
-      ::Kokkos::Experimental::move(init_reduction_value));
+      KE::cbegin(second_view), std::move(init_reduction_value));
 }
 
 //
@@ -351,9 +348,8 @@ ValueType transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
 
   return Impl::transform_reduce_custom_functors_impl(
       "kokkos_transform_reduce_custom_functors_iterator_api", ex, first1, last1,
-      first2, ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      first2, std::move(init_reduction_value), std::move(joiner),
+      std::move(transformer));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -367,10 +363,8 @@ ValueType transform_reduce(const std::string& label, const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
 
   return Impl::transform_reduce_custom_functors_impl(
-      label, ex, first1, last1, first2,
-      ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      label, ex, first1, last1, first2, std::move(init_reduction_value),
+      std::move(joiner), std::move(transformer));
 }
 
 // accepting views
@@ -393,9 +387,8 @@ ValueType transform_reduce(
   return Impl::transform_reduce_custom_functors_impl(
       "kokkos_transform_reduce_custom_functors_view_api", ex,
       KE::cbegin(first_view), KE::cend(first_view), KE::cbegin(second_view),
-      ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      std::move(init_reduction_value), std::move(joiner),
+      std::move(transformer));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -416,10 +409,8 @@ ValueType transform_reduce(
 
   return Impl::transform_reduce_custom_functors_impl(
       label, ex, KE::cbegin(first_view), KE::cend(first_view),
-      KE::cbegin(second_view),
-      ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      KE::cbegin(second_view), std::move(init_reduction_value),
+      std::move(joiner), std::move(transformer));
 }
 
 //
@@ -439,9 +430,8 @@ transform_reduce(const ExecutionSpace& ex, IteratorType first1,
 
   return Impl::transform_reduce_custom_functors_impl(
       "kokkos_transform_reduce_custom_functors_iterator_api", ex, first1, last1,
-      ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      std::move(init_reduction_value), std::move(joiner),
+      std::move(transformer));
 }
 
 template <class ExecutionSpace, class IteratorType, class ValueType,
@@ -457,10 +447,8 @@ transform_reduce(const std::string& label, const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
 
   return Impl::transform_reduce_custom_functors_impl(
-      label, ex, first1, last1,
-      ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      label, ex, first1, last1, std::move(init_reduction_value),
+      std::move(joiner), std::move(transformer));
 }
 
 // accepting views
@@ -479,9 +467,8 @@ ValueType transform_reduce(const ExecutionSpace& ex,
 
   return Impl::transform_reduce_custom_functors_impl(
       "kokkos_transform_reduce_custom_functors_view_api", ex, KE::cbegin(view),
-      KE::cend(view), ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      KE::cend(view), std::move(init_reduction_value), std::move(joiner),
+      std::move(transformer));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -499,9 +486,8 @@ ValueType transform_reduce(const std::string& label, const ExecutionSpace& ex,
 
   return Impl::transform_reduce_custom_functors_impl(
       label, ex, KE::cbegin(view), KE::cend(view),
-      ::Kokkos::Experimental::move(init_reduction_value),
-      ::Kokkos::Experimental::move(joiner),
-      ::Kokkos::Experimental::move(transformer));
+      std::move(init_reduction_value), std::move(joiner),
+      std::move(transformer));
 }
 
 }  // namespace Experimental

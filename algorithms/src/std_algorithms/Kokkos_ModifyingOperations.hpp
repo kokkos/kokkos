@@ -66,9 +66,9 @@ KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) noexcept {
       "Kokkos::Experimental::swap arguments must be move assignable "
       "and move constructible");
 
-  T tmp = ::Kokkos::Experimental::move(a);
-  a     = ::Kokkos::Experimental::move(b);
-  b     = ::Kokkos::Experimental::move(tmp);
+  T tmp = std::move(a);
+  a     = std::move(b);
+  b     = std::move(tmp);
 }
 
 //----------------------------------------------------------------------------

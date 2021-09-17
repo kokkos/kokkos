@@ -90,7 +90,7 @@ struct StdIsSortedUntilFunctor {
                           ComparatorType comparator)
       : m_first(_first1),
         m_indicator(indicator),
-        m_comparator(::Kokkos::Experimental::move(comparator)) {}
+        m_comparator(std::move(comparator)) {}
 };
 
 template <class IteratorType, class ComparatorType>
@@ -115,8 +115,7 @@ struct StdIsSortedFunctor {
 
   KOKKOS_FUNCTION
   StdIsSortedFunctor(IteratorType _first1, ComparatorType comparator)
-      : m_first(_first1),
-        m_comparator(::Kokkos::Experimental::move(comparator)) {}
+      : m_first(_first1), m_comparator(std::move(comparator)) {}
 };
 
 // ------------------------------------------
@@ -161,7 +160,7 @@ IteratorType is_sorted_until_impl(const std::string& label,
                                 num_elements_minus_one);
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
-      functor_type(first, indicator, ::Kokkos::Experimental::move(comp)));
+      functor_type(first, indicator, std::move(comp)));
 
   // try to find the first sentinel value, which indicates
   // where the sorting condition breaks
@@ -211,7 +210,7 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   std::size_t result = 0;
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
-      functor_type(first, ::Kokkos::Experimental::move(comp)), result);
+      functor_type(first, std::move(comp)), result);
 
   ex.fence("is_sorted: fence after operation");
 
@@ -275,7 +274,7 @@ IteratorType is_sorted_until(const ExecutionSpace& ex, IteratorType first,
   static_assert_is_not_opemnptarget(ex);
   return Impl::is_sorted_until_impl(
       "kokkos_is_sorted_until_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(comp));
+      std::move(comp));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
@@ -284,8 +283,7 @@ IteratorType is_sorted_until(const std::string& label, const ExecutionSpace& ex,
                              ComparatorType comp) {
   static_assert_is_not_opemnptarget(ex);
 
-  return Impl::is_sorted_until_impl(label, ex, first, last,
-                                    ::Kokkos::Experimental::move(comp));
+  return Impl::is_sorted_until_impl(label, ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -355,15 +353,14 @@ bool is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last,
                ComparatorType comp) {
   static_assert_is_not_opemnptarget(ex);
   return Impl::is_sorted_impl("kokkos_is_sorted_iterator_api_default", ex,
-                              first, last, ::Kokkos::Experimental::move(comp));
+                              first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
 bool is_sorted(const std::string& label, const ExecutionSpace& ex,
                IteratorType first, IteratorType last, ComparatorType comp) {
   static_assert_is_not_opemnptarget(ex);
-  return Impl::is_sorted_impl(label, ex, first, last,
-                              ::Kokkos::Experimental::move(comp));
+  return Impl::is_sorted_impl(label, ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,

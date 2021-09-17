@@ -92,9 +92,7 @@ struct StdFindIfOrNotFunctor {
   KOKKOS_FUNCTION
   StdFindIfOrNotFunctor(IteratorType first, ReducerType reducer,
                         PredicateType p)
-      : m_first(first),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_p(::Kokkos::Experimental::move(p)) {}
+      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
 };
 
 template <class IteratorType, class UnaryFunctorType>
@@ -108,7 +106,7 @@ struct StdForEachFunctor {
 
   KOKKOS_FUNCTION
   StdForEachFunctor(IteratorType _first, UnaryFunctorType _functor)
-      : m_first(_first), m_functor(::Kokkos::Experimental::move(_functor)) {}
+      : m_first(_first), m_functor(std::move(_functor)) {}
 };
 
 template <class IteratorType, class Predicate>
@@ -126,8 +124,7 @@ struct StdCountIfFunctor {
 
   KOKKOS_FUNCTION
   StdCountIfFunctor(IteratorType _first, Predicate _predicate)
-      : m_first(_first),
-        m_predicate(::Kokkos::Experimental::move(_predicate)) {}
+      : m_first(_first), m_predicate(std::move(_predicate)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
@@ -153,8 +150,8 @@ struct StdMismatchRedFunctor {
                         ReducerType reducer, BinaryPredicateType predicate)
       : m_first1(first1),
         m_first2(first2),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_predicate(::Kokkos::Experimental::move(predicate)) {}
+        m_reducer(std::move(reducer)),
+        m_predicate(std::move(predicate)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
@@ -227,9 +224,7 @@ struct StdCompareFunctor {
   KOKKOS_FUNCTION
   StdCompareFunctor(IteratorType1 _it1, IteratorType2 _it2,
                     ComparatorType _predicate)
-      : m_it1(_it1),
-        m_it2(_it2),
-        m_predicate(::Kokkos::Experimental::move(_predicate)) {}
+      : m_it1(_it1), m_it2(_it2), m_predicate(std::move(_predicate)) {}
 };
 
 template <class IndexType, class IteratorType, class ReducerType,
@@ -258,9 +253,7 @@ struct StdAdjacentFindFunctor {
   KOKKOS_FUNCTION
   StdAdjacentFindFunctor(IteratorType first, ReducerType reducer,
                          PredicateType p)
-      : m_first(first),
-        m_reducer(::Kokkos::Experimental::move(reducer)),
-        m_p(::Kokkos::Experimental::move(p)) {}
+      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
 };
 
 // ------------------------------------------
@@ -359,7 +352,7 @@ IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
     return first;
   }
 
-  for_each_impl(label, ex, first, last, ::Kokkos::Experimental::move(functor));
+  for_each_impl(label, ex, first, last, std::move(functor));
   // no neeed to fence since for_each_impl fences already
 
   return last;
@@ -728,17 +721,16 @@ auto find(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType find_if(const ExecutionSpace& ex, IteratorType first,
                      IteratorType last, PredicateType predicate) {
-  return Impl::find_if_or_not_impl<true>(
-      "kokkos_find_if_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(predicate));
+  return Impl::find_if_or_not_impl<true>("kokkos_find_if_iterator_api_default",
+                                         ex, first, last, std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType find_if(const std::string& label, const ExecutionSpace& ex,
                      IteratorType first, IteratorType last,
                      PredicateType predicate) {
-  return Impl::find_if_or_not_impl<true>(
-      label, ex, first, last, ::Kokkos::Experimental::move(predicate));
+  return Impl::find_if_or_not_impl<true>(label, ex, first, last,
+                                         std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -772,15 +764,15 @@ IteratorType find_if_not(const ExecutionSpace& ex, IteratorType first,
                          IteratorType last, Predicate predicate) {
   return Impl::find_if_or_not_impl<false>(
       "kokkos_find_if_not_iterator_api_default", ex, first, last,
-      ::Kokkos::Experimental::move(predicate));
+      std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType, class Predicate>
 IteratorType find_if_not(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
                          Predicate predicate) {
-  return Impl::find_if_or_not_impl<false>(
-      label, ex, first, last, ::Kokkos::Experimental::move(predicate));
+  return Impl::find_if_or_not_impl<false>(label, ex, first, last,
+                                          std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -815,15 +807,14 @@ template <class ExecutionSpace, class IteratorType, class UnaryFunctorType>
 UnaryFunctorType for_each(const std::string& label, const ExecutionSpace& ex,
                           IteratorType first, IteratorType last,
                           UnaryFunctorType functor) {
-  return Impl::for_each_impl(label, ex, first, last,
-                             ::Kokkos::Experimental::move(functor));
+  return Impl::for_each_impl(label, ex, first, last, std::move(functor));
 }
 
 template <class ExecutionSpace, class IteratorType, class UnaryFunctorType>
 UnaryFunctorType for_each(const ExecutionSpace& ex, IteratorType first,
                           IteratorType last, UnaryFunctorType functor) {
   return Impl::for_each_impl("kokkos_for_each_iterator_api_default", ex, first,
-                             last, ::Kokkos::Experimental::move(functor));
+                             last, std::move(functor));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -858,8 +849,7 @@ template <class ExecutionSpace, class IteratorType, class SizeType,
 IteratorType for_each_n(const std::string& label, const ExecutionSpace& ex,
                         IteratorType first, SizeType n,
                         UnaryFunctorType functor) {
-  return Impl::for_each_n_impl(label, ex, first, n,
-                               ::Kokkos::Experimental::move(functor));
+  return Impl::for_each_n_impl(label, ex, first, n, std::move(functor));
 }
 
 template <class ExecutionSpace, class IteratorType, class SizeType,
@@ -867,7 +857,7 @@ template <class ExecutionSpace, class IteratorType, class SizeType,
 IteratorType for_each_n(const ExecutionSpace& ex, IteratorType first,
                         SizeType n, UnaryFunctorType functor) {
   return Impl::for_each_n_impl("kokkos_for_each_n_iterator_api_default", ex,
-                               first, n, ::Kokkos::Experimental::move(functor));
+                               first, n, std::move(functor));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -902,7 +892,7 @@ typename IteratorType::difference_type count_if(const ExecutionSpace& ex,
                                                 IteratorType last,
                                                 Predicate predicate) {
   return Impl::count_if_impl("kokkos_count_if_iterator_api_default", ex, first,
-                             last, ::Kokkos::Experimental::move(predicate));
+                             last, std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType, class Predicate>
@@ -911,8 +901,7 @@ typename IteratorType::difference_type count_if(const std::string& label,
                                                 IteratorType first,
                                                 IteratorType last,
                                                 Predicate predicate) {
-  return Impl::count_if_impl(label, ex, first, last,
-                             ::Kokkos::Experimental::move(predicate));
+  return Impl::count_if_impl(label, ex, first, last, std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1220,8 +1209,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, BinaryPredicateType predicate) {
   return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
-                          last1, first2,
-                          ::Kokkos::Experimental::move(predicate));
+                          last1, first2, std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -1230,7 +1218,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
            IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
            BinaryPredicateType predicate) {
   return Impl::equal_impl(label, ex, first1, last1, first2,
-                          ::Kokkos::Experimental::move(predicate));
+                          std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -1309,8 +1297,7 @@ bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, IteratorType2 last2,
            BinaryPredicateType predicate) {
   return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
-                          last1, first2, last2,
-                          ::Kokkos::Experimental::move(predicate));
+                          last1, first2, last2, std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -1319,7 +1306,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
            IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
            IteratorType2 last2, BinaryPredicateType predicate) {
   return Impl::equal_impl(label, ex, first1, last1, first2, last2,
-                          ::Kokkos::Experimental::move(predicate));
+                          std::move(predicate));
 }
 
 // ----------------------------------
