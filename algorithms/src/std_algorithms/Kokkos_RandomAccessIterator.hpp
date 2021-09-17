@@ -89,9 +89,6 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
                                                 ptrdiff_t current_index)
       : m_view(view), m_current_index(current_index) {}
 
-  KOKKOS_DEFAULTED_FUNCTION
-  iterator_type& operator=(const iterator_type&) = default;
-
   KOKKOS_FUNCTION
   iterator_type& operator++() {
     ++m_current_index;
