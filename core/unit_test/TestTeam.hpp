@@ -453,7 +453,7 @@ class TestScanTeam {
     using result_type =
         Kokkos::View<int64_t, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
-    const unsigned REPEAT = 1;
+    const unsigned REPEAT = 100000;
     unsigned Repeat;
 
     if (nteam == 0) {
