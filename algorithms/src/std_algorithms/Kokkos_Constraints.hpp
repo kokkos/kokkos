@@ -67,7 +67,8 @@ struct is_admissible_to_kokkos_std_algorithms<
 
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_is_admissible_to_kokkos_std_algorithms(const ViewType&) {
+static_assert_is_admissible_to_kokkos_std_algorithms(
+    const ViewType& /* view */) {
   static_assert(is_admissible_to_kokkos_std_algorithms<ViewType>::value,
                 "Currently, Kokkos standard algorithms only accept 1D Views.");
 }
@@ -119,13 +120,13 @@ struct are_random_access_iterators<Head, Tail...> {
 };
 
 //
-// are_accessible_iterators
+// iterators_are_accessible_from
 //
 template <class... Args>
-struct are_accessible_iterators;
+struct iterators_are_accessible_from;
 
 template <class ExeSpace, class IteratorType>
-struct are_accessible_iterators<ExeSpace, IteratorType> {
+struct iterators_are_accessible_from<ExeSpace, IteratorType> {
   using view_type = typename IteratorType::view_type;
   static constexpr bool value =
       SpaceAccessibility<ExeSpace,
@@ -133,21 +134,22 @@ struct are_accessible_iterators<ExeSpace, IteratorType> {
 };
 
 template <class ExeSpace, class Head, class... Tail>
-struct are_accessible_iterators<ExeSpace, Head, Tail...> {
+struct iterators_are_accessible_from<ExeSpace, Head, Tail...> {
   static constexpr bool value =
-      are_accessible_iterators<ExeSpace, Head>::value &&
-      are_accessible_iterators<ExeSpace, Tail...>::value;
+      iterators_are_accessible_from<ExeSpace, Head>::value &&
+      iterators_are_accessible_from<ExeSpace, Tail...>::value;
 };
 
 template <class ExecutionSpace, class IteratorType>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_random_access_and_accessible(const ExecutionSpace&,
-                                           IteratorType) {
+static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
+                                           IteratorType /* it */) {
   static_assert(
       are_random_access_iterators<IteratorType>::value,
       "Currently, Kokkos standard algorithms require random access iterators.");
-  static_assert(are_accessible_iterators<ExecutionSpace, IteratorType>::value,
-                "Incompatible view/iterator and execution space");
+  static_assert(
+      iterators_are_accessible_from<ExecutionSpace, IteratorType>::value,
+      "Incompatible view/iterator and execution space");
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
@@ -210,8 +212,8 @@ struct iterators_have_matching_difference_type<T1, T2, Tail...> {
 
 template <class IteratorType1, class IteratorType2>
 KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_iterators_have_matching_difference_type(IteratorType1,
-                                                      IteratorType2) {
+static_assert_iterators_have_matching_difference_type(IteratorType1 /* it1 */,
+                                                      IteratorType2 /* it2 */) {
   static_assert(iterators_have_matching_difference_type<IteratorType1,
                                                         IteratorType2>::value,
                 "Iterators do not have matching difference_type");
