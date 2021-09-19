@@ -256,6 +256,100 @@ struct StdAdjacentFindFunctor {
       : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
 };
 
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class PredicateType>
+struct StdSearchFunctor {
+  using red_value_type = typename ReducerType::value_type;
+
+  IteratorType1 m_first;
+  IteratorType1 m_last;
+  IteratorType2 m_s_first;
+  IteratorType2 m_s_last;
+  ReducerType m_reducer;
+  PredicateType m_p;
+
+  KOKKOS_FUNCTION
+  void operator()(const IndexType i, red_value_type& red_value) const {
+    namespace KE = ::Kokkos::Experimental;
+    auto myit    = m_first + i;
+    bool found   = true;
+
+    const auto search_count = KE::distance(m_s_first, m_s_last);
+    for (IndexType k = 0; k < search_count; ++k) {
+      // note that we add this EXPECT to check if we are in a valid range
+      // but I think we can remvoe this beceause the guarantee we don't go
+      // out of bounds is taken care of at the calling site
+      // where we launch the par-reduce.
+      KOKKOS_EXPECTS((myit + k) < m_last);
+
+      if (!m_p(myit[k], m_s_first[k])) {
+        found = false;
+        break;
+      }
+    }
+
+    const auto rv =
+        found ? red_value_type{i}
+              : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
+
+    m_reducer.join(red_value, rv);
+  }
+
+  KOKKOS_FUNCTION
+  StdSearchFunctor(IteratorType1 first, IteratorType1 last,
+                   IteratorType2 s_first, IteratorType2 s_last,
+                   ReducerType reducer, PredicateType p)
+      : m_first(first),
+        m_last(last),
+        m_s_first(s_first),
+        m_s_last(s_last),
+        m_reducer(reducer),
+        m_p(std::move(p)) {}
+};
+
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class PredicateType>
+struct StdFindFirstOfFunctor {
+  using red_value_type = typename ReducerType::value_type;
+
+  IteratorType1 m_first;
+  IteratorType2 m_s_first;
+  IteratorType2 m_s_last;
+  ReducerType m_reducer;
+  PredicateType m_p;
+
+  KOKKOS_FUNCTION
+  void operator()(const IndexType i, red_value_type& red_value) const {
+    namespace KE        = ::Kokkos::Experimental;
+    const auto& myvalue = m_first[i];
+    bool found          = false;
+
+    const auto search_count = KE::distance(m_s_first, m_s_last);
+    for (IndexType k = 0; k < search_count; ++k) {
+      if (m_p(myvalue, m_s_first[k])) {
+        found = true;
+        break;
+      }
+    }
+
+    const auto rv =
+        found ? red_value_type{i}
+              : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
+
+    m_reducer.join(red_value, rv);
+  }
+
+  KOKKOS_FUNCTION
+  StdFindFirstOfFunctor(IteratorType1 first, IteratorType2 s_first,
+                        IteratorType2 s_last, ReducerType reducer,
+                        PredicateType p)
+      : m_first(first),
+        m_s_first(s_first),
+        m_s_last(s_last),
+        m_reducer(reducer),
+        m_p(std::move(p)) {}
+};
+
 // ------------------------------------------
 // find_if_or_not_impl
 // ------------------------------------------
@@ -678,55 +772,6 @@ IteratorType adjacent_find_impl(const std::string& label,
   return adjacent_find_impl(label, ex, first, last, default_pred_t());
 }
 
-template <class IndexType, class IteratorType1, class IteratorType2,
-          class ReducerType, class PredicateType>
-struct StdSearchFunctor {
-  using red_value_type = typename ReducerType::value_type;
-
-  IteratorType1 m_first;
-  IteratorType1 m_last;
-  IteratorType2 m_s_first;
-  IteratorType2 m_s_last;
-  ReducerType m_reducer;
-  PredicateType m_p;
-
-  KOKKOS_FUNCTION
-  void operator()(const IndexType i, red_value_type& red_value) const {
-    namespace KE = ::Kokkos::Experimental;
-    auto myit    = m_first + i;
-    bool found   = true;
-
-    const auto num_elements_to_search = KE::distance(m_s_first, m_s_last);
-    if (KE::distance(myit, m_last) >= num_elements_to_search) {
-      for (IndexType k = 0; k < num_elements_to_search; ++k) {
-        if (!m_p(myit[k], m_s_first[k])) {
-          found = false;
-          break;
-        }
-      }
-    } else {
-      found = false;
-    }
-
-    const auto rv =
-        found ? red_value_type{i}
-              : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
-
-    m_reducer.join(red_value, rv);
-  }
-
-  KOKKOS_FUNCTION
-  StdSearchFunctor(IteratorType1 first, IteratorType1 last,
-                   IteratorType2 s_first, IteratorType2 s_last,
-                   ReducerType reducer, PredicateType p)
-      : m_first(first),
-        m_last(last),
-        m_s_first(s_first),
-        m_s_last(s_last),
-        m_reducer(reducer),
-        m_p(std::move(p)) {}
-};
-
 // ------------------------------------------
 // search_impl
 // ------------------------------------------
@@ -742,35 +787,59 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
   expect_valid_range(first, last);
   expect_valid_range(s_first, s_last);
 
+  // check that the target sequence is not
+  // larger than the num elements in [first, last)
+  namespace KE            = ::Kokkos::Experimental;
+  const auto num_elements = KE::distance(first, last);
+  const auto s_count      = KE::distance(s_first, s_last);
+  KOKKOS_EXPECTS(num_elements >= s_count);
+  (void)s_count;
+
   if (s_first == s_last) {
     return first;
   }
 
-  using index_type       = typename IteratorType1::difference_type;
-  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
-  using func_t = StdSearchFunctor<index_type, IteratorType1, IteratorType2,
-                                  reducer_type, BinaryPredicateType>;
-
-  // run
-  result_view_type result("kokkos_search_impl_result_view");
-  reducer_type reducer(result);
-  const auto num_elements = last - first;
-  ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      func_t(first, last, s_first, s_last, reducer, pred), reducer);
-  ex.fence("search: fence after operation");
-
-  // decide and return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
-  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
-    // if here, a subrange has not been found
+  if (first == last) {
     return last;
+  }
+
+  // the special case where the two ranges have equal size
+  if (num_elements == s_count) {
+    const auto equal_result = equal_impl(label, ex, first, last, s_first, pred);
+    return (equal_result) ? first : last;
   } else {
-    // a location has been found
-    return first + r_h().min_loc_true;
+    using index_type       = typename IteratorType1::difference_type;
+    using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
+    using result_view_type = typename reducer_type::result_view_type;
+    using func_t = StdSearchFunctor<index_type, IteratorType1, IteratorType2,
+                                    reducer_type, BinaryPredicateType>;
+
+    // run
+    result_view_type result("kokkos_search_impl_result");
+    reducer_type reducer(result);
+
+    // to decide the size of the range policy, note that
+    // the last feasible index to start looking is the index
+    // whose distance from the "last" is equal to the sequence count.
+    const auto range_size = num_elements - s_count;
+
+    // run par reduce
+    ::Kokkos::parallel_reduce(
+        label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
+        func_t(first, last, s_first, s_last, reducer, pred), reducer);
+    ex.fence("search: fence after operation");
+
+    // decide and return
+    const auto r_h =
+        ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
+
+    if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+      // if here, a subrange has not been found
+      return last;
+    } else {
+      // a location has been found
+      return first + r_h().min_loc_true;
+    }
   }
 }
 
@@ -782,6 +851,66 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
   using value_type2    = typename IteratorType2::value_type;
   using predicate_type = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
   return search_impl(label, ex, first, last, s_first, s_last, predicate_type());
+}
+
+// ------------------------------------------
+// find_first_of_impl
+// ------------------------------------------
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
+IteratorType1 find_first_of_impl(const std::string& label,
+                                 const ExecutionSpace& ex, IteratorType1 first,
+                                 IteratorType1 last, IteratorType2 s_first,
+                                 IteratorType2 s_last,
+                                 const BinaryPredicateType& pred) {
+  // checks
+  static_assert_random_access_and_accessible(ex, first, s_first);
+  static_assert_iterators_have_matching_difference_type(first, s_first);
+  expect_valid_range(first, last);
+  expect_valid_range(s_first, s_last);
+
+  if ((s_first == s_last) || (first == last)) {
+    return last;
+  }
+
+  using index_type       = typename IteratorType1::difference_type;
+  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
+  using result_view_type = typename reducer_type::result_view_type;
+  using func_t = StdFindFirstOfFunctor<index_type, IteratorType1, IteratorType2,
+                                       reducer_type, BinaryPredicateType>;
+
+  // run
+  result_view_type result("kokkos_find_first_of_impl_result");
+  reducer_type reducer(result);
+  const auto num_elements = last - first;
+  ::Kokkos::parallel_reduce(
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      func_t(first, s_first, s_last, reducer, pred), reducer);
+  ex.fence("find_first_of: fence after operation");
+
+  // decide and return
+  const auto r_h =
+      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
+
+  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+    // if here, nothing found
+    return last;
+  } else {
+    // a location has been found
+    return first + r_h().min_loc_true;
+  }
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+IteratorType1 find_first_of_impl(const std::string& label,
+                                 const ExecutionSpace& ex, IteratorType1 first,
+                                 IteratorType1 last, IteratorType2 s_first,
+                                 IteratorType2 s_last) {
+  using value_type1    = typename IteratorType1::value_type;
+  using value_type2    = typename IteratorType2::value_type;
+  using predicate_type = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
+  return find_first_of_impl(label, ex, first, last, s_first, s_last,
+                            predicate_type());
 }
 
 }  // namespace Impl
@@ -1588,7 +1717,6 @@ auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
 // ----------------------------------
 // search
 // ----------------------------------
-
 // overload set 1: no binary predicate passed
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType1 search(const ExecutionSpace& ex, IteratorType1 first,
@@ -1666,6 +1794,90 @@ auto search(const std::string& label, const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_impl(label, ex, KE::cbegin(view), KE::cend(view),
                            KE::cbegin(s_view), KE::cend(s_view), pred);
+}
+
+// ----------------------------------
+// find_first_of
+// ----------------------------------
+// overload set 1: no binary predicate passed
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+IteratorType1 find_first_of(const ExecutionSpace& ex, IteratorType1 first,
+                            IteratorType1 last, IteratorType2 s_first,
+                            IteratorType2 s_last) {
+  return Impl::find_first_of_impl("kokkos_find_first_of_iterator_api_default",
+                                  ex, first, last, s_first, s_last);
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+IteratorType1 find_first_of(const std::string& label, const ExecutionSpace& ex,
+                            IteratorType1 first, IteratorType1 last,
+                            IteratorType2 s_first, IteratorType2 s_last) {
+  return Impl::find_first_of_impl(label, ex, first, last, s_first, s_last);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2>
+auto find_first_of(const ExecutionSpace& ex,
+                   const ::Kokkos::View<DataType1, Properties1...>& view,
+                   const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_first_of_impl("kokkos_find_first_of_view_api_default", ex,
+                                  KE::cbegin(view), KE::cend(view),
+                                  KE::cbegin(s_view), KE::cend(s_view));
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2>
+auto find_first_of(const std::string& label, const ExecutionSpace& ex,
+                   const ::Kokkos::View<DataType1, Properties1...>& view,
+                   const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_first_of_impl(label, ex, KE::cbegin(view), KE::cend(view),
+                                  KE::cbegin(s_view), KE::cend(s_view));
+}
+
+// overload set 2: binary predicate passed
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
+IteratorType1 find_first_of(const ExecutionSpace& ex, IteratorType1 first,
+                            IteratorType1 last, IteratorType2 s_first,
+                            IteratorType2 s_last,
+                            const BinaryPredicateType& pred) {
+  return Impl::find_first_of_impl("kokkos_find_first_of_iterator_api_default",
+                                  ex, first, last, s_first, s_last, pred);
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
+IteratorType1 find_first_of(const std::string& label, const ExecutionSpace& ex,
+                            IteratorType1 first, IteratorType1 last,
+                            IteratorType2 s_first, IteratorType2 s_last,
+                            const BinaryPredicateType& pred) {
+  return Impl::find_first_of_impl(label, ex, first, last, s_first, s_last,
+                                  pred);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicateType>
+auto find_first_of(const ExecutionSpace& ex,
+                   const ::Kokkos::View<DataType1, Properties1...>& view,
+                   const ::Kokkos::View<DataType2, Properties2...>& s_view,
+                   const BinaryPredicateType& pred) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_first_of_impl("kokkos_find_first_of_view_api_default", ex,
+                                  KE::cbegin(view), KE::cend(view),
+                                  KE::cbegin(s_view), KE::cend(s_view), pred);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicateType>
+auto find_first_of(const std::string& label, const ExecutionSpace& ex,
+                   const ::Kokkos::View<DataType1, Properties1...>& view,
+                   const ::Kokkos::View<DataType2, Properties2...>& s_view,
+                   const BinaryPredicateType& pred) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_first_of_impl(label, ex, KE::cbegin(view), KE::cend(view),
+                                  KE::cbegin(s_view), KE::cend(s_view), pred);
 }
 
 }  // namespace Experimental
