@@ -66,6 +66,7 @@
 // all_of, any_of, none_of
 // adjacent_find
 // lexicographical_compare
+// search
 #include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
 
 // replace, replace_copy_if, replace_copy, replace_if
