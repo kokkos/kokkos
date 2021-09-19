@@ -169,7 +169,8 @@ void fill_view(ViewType dest_view, const std::string& name) {
 }
 
 template <class ViewType>
-auto create_subseq_to_find_first_of(ViewType data_view, std::size_t subseq_extent) {
+auto create_subseq_to_find_first_of(ViewType data_view,
+                                    std::size_t subseq_extent) {
   // using the data view, select a subsequence that we use to find_first_of for
   auto data_view_h = create_host_space_copy(data_view);
 
@@ -185,24 +186,23 @@ auto create_subseq_to_find_first_of(ViewType data_view, std::size_t subseq_exten
   // then we pick randomly between 0 and data_view.extent(0) - subseq_extent.
 
   const auto view_extent = data_view.extent(0);
-  if (subseq_extent == view_extent)
-  {
+  if (subseq_extent == view_extent) {
     for (std::size_t i = 0; i < subseq_extent; ++i) {
       subseq_view_h(i) = data_view_h(i);
     }
-  }
-  else{
+  } else {
     using dist_type = std::uniform_int_distribution<int>;
     std::random_device r;
-    // from this: https://stackoverflow.com/questions/34490599/c11-how-to-set-seed-using-random
+    // from this:
+    // https://stackoverflow.com/questions/34490599/c11-how-to-set-seed-using-random
     std::seed_seq seed{r(), r(), r(), r(), r(), r()};
     std::mt19937 gen(seed);
-    dist_type dist(0, view_extent-subseq_extent);
+    dist_type dist(0, view_extent - subseq_extent);
     const auto start = dist(gen);
-    //std::cout << "start= " << start << "\n";
+    // std::cout << "start= " << start << "\n";
     for (std::size_t i = 0; i < subseq_extent; ++i) {
       subseq_view_h(i) = data_view_h(start + i);
-      //std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
+      // std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
     }
   }
 
@@ -233,37 +233,38 @@ void print_scenario_details(const std::string& name, std::size_t subseq_ext,
 
 template <class Tag, class ValueType, class InfoType, class... Args>
 void run_single_scenario(const InfoType& scenario_info, std::size_t subseq_ext,
-                         Args... args)
-{
+                         Args... args) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   print_scenario_details<Tag, ValueType>(name, subseq_ext, args...);
 
-  auto view = create_view<ValueType>(Tag{}, view_ext, "find_first_of_test_view");
+  auto view =
+      create_view<ValueType>(Tag{}, view_ext, "find_first_of_test_view");
   fill_view(view, name);
   auto s_view = create_subseq_to_find_first_of(view, subseq_ext);
 
   // run std
   auto view_h   = create_host_space_copy(view);
   auto s_view_h = create_host_space_copy(s_view);
-  auto stdrit = std::find_first_of(KE::cbegin(view_h),
-				     KE::cend(view_h), KE::cbegin(s_view_h),
-				     KE::cend(s_view_h), args...);
+  auto stdrit =
+      std::find_first_of(KE::cbegin(view_h), KE::cend(view_h),
+                         KE::cbegin(s_view_h), KE::cend(s_view_h), args...);
 
   {
-    auto myrit = KE::find_first_of(exespace(), KE::cbegin(view), KE::cend(view),
-				   KE::cbegin(s_view), KE::cend(s_view), args...);
-    const auto mydiff = myrit - KE::cbegin(view);
+    auto myrit =
+        KE::find_first_of(exespace(), KE::cbegin(view), KE::cend(view),
+                          KE::cbegin(s_view), KE::cend(s_view), args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    //std::cout << "result: " << mydiff << " " << stddiff << std::endl;
+    // std::cout << "result: " << mydiff << " " << stddiff << std::endl;
     EXPECT_TRUE(mydiff == stddiff);
   }
 
   {
     auto myrit =
         KE::find_first_of("label", exespace(), KE::cbegin(view), KE::cend(view),
-                   KE::cbegin(s_view), KE::cend(s_view), args...);
+                          KE::cbegin(s_view), KE::cend(s_view), args...);
     const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     EXPECT_TRUE(mydiff == stddiff);
@@ -277,7 +278,7 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t subseq_ext,
   }
 
   {
-    auto myrit         = KE::find_first_of("label", exespace(), view, s_view, args...);
+    auto myrit = KE::find_first_of("label", exespace(), view, s_view, args...);
     const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     EXPECT_TRUE(mydiff == stddiff);
@@ -288,18 +289,24 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t subseq_ext,
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-  const std::map<std::string, std::size_t> scenarios = {
-    {"empty", 0},
-    {"one-element-a", 1},  {"one-element-b", 1},
-    {"two-elements-a", 2},  {"two-elements-b", 2},
-    {"three-elements-a", 3}, {"three-elements-b", 3},
-    {"four-elements-a", 4}, {"four-elements-b", 4},
-    {"small-a", 11},       {"small-b", 13},
-    {"medium-a", 11103},    {"medium-b", 21103},
-    {"large-a", 101513}, {"large-b", 100111}};
+  const std::map<std::string, std::size_t> scenarios = {{"empty", 0},
+                                                        {"one-element-a", 1},
+                                                        {"one-element-b", 1},
+                                                        {"two-elements-a", 2},
+                                                        {"two-elements-b", 2},
+                                                        {"three-elements-a", 3},
+                                                        {"three-elements-b", 3},
+                                                        {"four-elements-a", 4},
+                                                        {"four-elements-b", 4},
+                                                        {"small-a", 11},
+                                                        {"small-b", 13},
+                                                        {"medium-a", 11103},
+                                                        {"medium-b", 21103},
+                                                        {"large-a", 101513},
+                                                        {"large-b", 100111}};
 
-  const std::vector<std::size_t> subseq_extents =
-    {0, 1, 2, 3, 4, 5, 8, 11, 20, 31, 113, 523, 1035, 11103};
+  const std::vector<std::size_t> subseq_extents = {
+      0, 1, 2, 3, 4, 5, 8, 11, 20, 31, 113, 523, 1035, 11103};
 
   // for each scenario we want to run "find_first_of"
   // for a set of subsequences of various extents
@@ -316,12 +323,11 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_non_mod_seq_ops, find_first_of)
-{
+TEST(std_algorithms_non_mod_seq_ops, find_first_of) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace Find_First_Of
+}  // namespace FindFirstOf
 }  // namespace stdalgos
 }  // namespace Test
