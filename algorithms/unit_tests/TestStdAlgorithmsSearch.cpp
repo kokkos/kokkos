@@ -348,8 +348,8 @@ void run_all_scenarios() {
       if (it.second >= it2) {
         run_single_scenario<Tag, ValueType>(it, it2);
 
-        // using func_t = IsEqualFunctor<ValueType>;
-        // run_single_scenario<Tag, ValueType>(it, it2, func_t());
+        using func_t = IsEqualFunctor<ValueType>;
+        run_single_scenario<Tag, ValueType>(it, it2, func_t());
       }
     }
   }
@@ -357,7 +357,7 @@ void run_all_scenarios() {
 
 TEST(std_algorithms_non_mod_seq_ops, search) {
   run_all_scenarios<DynamicTag, int>();
-  // run_all_scenarios<StridedThreeTag, int>();
+  run_all_scenarios<StridedThreeTag, int>();
 }
 
 }  // namespace Search
