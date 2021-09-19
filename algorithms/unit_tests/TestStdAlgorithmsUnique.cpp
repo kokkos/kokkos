@@ -63,10 +63,7 @@ struct UnifDist<int> {
   std::mt19937 m_gen;
   dist_type m_dist;
 
-  // make bounds tight so that it is likely we get
-  // consecutive equal elements
   UnifDist() : m_dist(2, 7) { m_gen.seed(1034343); }
-
   int operator()() { return m_dist(m_gen); }
 };
 
