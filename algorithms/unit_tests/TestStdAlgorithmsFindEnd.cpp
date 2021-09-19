@@ -312,31 +312,32 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
                               KE::cbegin(s_view), KE::cend(s_view), args...);
     const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    std::cout << "result : " << mydiff << " " << stddiff << std::endl;
+    // std::cout << "result : " << mydiff << " " << stddiff << std::endl;
     EXPECT_TRUE(mydiff == stddiff);
   }
 
-  // {
-  //   auto myrit =
-  //       KE::find_end("label", exespace(), KE::cbegin(view), KE::cend(view),
-  //                  KE::cbegin(s_view), KE::cend(s_view), args...);
-  //   const auto mydiff  = myrit - KE::cbegin(view);
-  //   const auto stddiff = stdrit - KE::cbegin(view_h);
-  //   EXPECT_TRUE(mydiff == stddiff);
-  // }
+  {
+    auto myrit =
+        KE::find_end("label", exespace(), KE::cbegin(view), KE::cend(view),
+                     KE::cbegin(s_view), KE::cend(s_view), args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
+    const auto stddiff = stdrit - KE::cbegin(view_h);
+    EXPECT_TRUE(mydiff == stddiff);
+  }
 
-  // {
-  //   auto myrit         = KE::find_end(exespace(), view, s_view, args...);
-  //   const auto mydiff  = myrit - KE::cbegin(view);
-  //   const auto stddiff = stdrit - KE::cbegin(view_h);
-  //   EXPECT_TRUE(mydiff == stddiff);
-  // }
+  {
+    auto myrit         = KE::find_end(exespace(), view, s_view, args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
+    const auto stddiff = stdrit - KE::cbegin(view_h);
+    EXPECT_TRUE(mydiff == stddiff);
+  }
 
-  // {
-  //   auto myrit         = KE::find_end("label", exespace(), view, s_view,
-  //   args...); const auto mydiff  = myrit - KE::cbegin(view); const auto
-  //   stddiff = stdrit - KE::cbegin(view_h); EXPECT_TRUE(mydiff == stddiff);
-  // }
+  {
+    auto myrit = KE::find_end("label", exespace(), view, s_view, args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
+    const auto stddiff = stdrit - KE::cbegin(view_h);
+    EXPECT_TRUE(mydiff == stddiff);
+  }
 
   Kokkos::fence();
 }
@@ -370,8 +371,8 @@ void run_all_scenarios() {
       if (it.second >= it2) {
         run_single_scenario<Tag, ValueType>(it, it2);
 
-        // using func_t = IsEqualFunctor<ValueType>;
-        // run_single_scenario<Tag, ValueType>(it, it2, func_t());
+        using func_t = IsEqualFunctor<ValueType>;
+        run_single_scenario<Tag, ValueType>(it, it2, func_t());
       }
     }
   }
@@ -379,7 +380,7 @@ void run_all_scenarios() {
 
 TEST(std_algorithms_non_mod_seq_ops, find_end) {
   run_all_scenarios<DynamicTag, int>();
-  // run_all_scenarios<StridedThreeTag, int>();
+  run_all_scenarios<StridedThreeTag, int>();
 }
 
 }  // namespace FindEnd
