@@ -350,6 +350,57 @@ struct StdFindFirstOfFunctor {
         m_p(std::move(p)) {}
 };
 
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class PredicateType>
+struct StdFindEndFunctor {
+  using red_value_type = typename ReducerType::value_type;
+
+  IteratorType1 m_first;
+  IteratorType1 m_last;
+  IteratorType2 m_s_first;
+  IteratorType2 m_s_last;
+  ReducerType m_reducer;
+  PredicateType m_p;
+
+  KOKKOS_FUNCTION
+  void operator()(const IndexType i, red_value_type& red_value) const {
+    namespace KE = ::Kokkos::Experimental;
+    auto myit    = m_first + i;
+    bool found   = true;
+
+    const auto search_count = KE::distance(m_s_first, m_s_last);
+    for (IndexType k = 0; k < search_count; ++k) {
+      // note that we add this EXPECT to check if we are in a valid range
+      // but I think we can remvoe this beceause the guarantee we don't go
+      // out of bounds is taken care of at the calling site
+      // where we launch the par-reduce.
+      KOKKOS_EXPECTS((myit + k) < m_last);
+
+      if (!m_p(myit[k], m_s_first[k])) {
+        found = false;
+        break;
+      }
+    }
+
+    const auto rv =
+        found ? red_value_type{i}
+              : red_value_type{::Kokkos::reduction_identity<IndexType>::max()};
+
+    m_reducer.join(red_value, rv);
+  }
+
+  KOKKOS_FUNCTION
+  StdFindEndFunctor(IteratorType1 first, IteratorType1 last,
+                    IteratorType2 s_first, IteratorType2 s_last,
+                    ReducerType reducer, PredicateType p)
+      : m_first(first),
+        m_last(last),
+        m_s_first(s_first),
+        m_s_last(s_last),
+        m_reducer(reducer),
+        m_p(std::move(p)) {}
+};
+
 // ------------------------------------------
 // find_if_or_not_impl
 // ------------------------------------------
@@ -911,6 +962,88 @@ IteratorType1 find_first_of_impl(const std::string& label,
   using predicate_type = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
   return find_first_of_impl(label, ex, first, last, s_first, s_last,
                             predicate_type());
+}
+
+// ------------------------------------------
+// find_end_impl
+// ------------------------------------------
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
+IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
+                            IteratorType1 first, IteratorType1 last,
+                            IteratorType2 s_first, IteratorType2 s_last,
+                            const BinaryPredicateType& pred) {
+  // checks
+  static_assert_random_access_and_accessible(ex, first, s_first);
+  static_assert_iterators_have_matching_difference_type(first, s_first);
+  expect_valid_range(first, last);
+  expect_valid_range(s_first, s_last);
+
+  // the target sequence should not be larger than the range [first, last)
+  namespace KE            = ::Kokkos::Experimental;
+  const auto num_elements = KE::distance(first, last);
+  const auto s_count      = KE::distance(s_first, s_last);
+  KOKKOS_EXPECTS(num_elements >= s_count);
+  (void)s_count;  // needed when macro above is a no-op
+
+  if (s_first == s_last) {
+    return last;
+  }
+
+  if (first == last) {
+    return last;
+  }
+
+  // special case where the two ranges have equal size
+  if (num_elements == s_count) {
+    const auto equal_result = equal_impl(label, ex, first, last, s_first, pred);
+    return (equal_result) ? first : last;
+  } else {
+    using index_type       = typename IteratorType1::difference_type;
+    using reducer_type     = LastLoc<index_type, ExecutionSpace>;
+    using result_view_type = typename reducer_type::result_view_type;
+    using func_t = StdFindEndFunctor<index_type, IteratorType1, IteratorType2,
+                                     reducer_type, BinaryPredicateType>;
+
+    // run
+    result_view_type result("kokkos_find_end_impl_result");
+    reducer_type reducer(result);
+
+    // decide the size of the range policy of the par_red:
+    // note that the last feasible index to start looking is the index
+    // whose distance from the "last" is equal to the sequence count.
+    // the +1 is because we need to include that location too.
+    const auto range_size = num_elements - s_count + 1;
+
+    // run par reduce
+    ::Kokkos::parallel_reduce(
+        label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
+        func_t(first, last, s_first, s_last, reducer, pred), reducer);
+    ex.fence("find_end: fence after operation");
+
+    // decide and return
+    const auto r_h =
+        ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
+
+    if (r_h().max_loc_true == ::Kokkos::reduction_identity<index_type>::max()) {
+      // if here, a subrange has not been found
+      return last;
+    } else {
+      // a location has been found
+      return first + r_h().max_loc_true;
+    }
+  }
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
+                            IteratorType1 first, IteratorType1 last,
+                            IteratorType2 s_first, IteratorType2 s_last) {
+  using value_type1    = typename IteratorType1::value_type;
+  using value_type2    = typename IteratorType2::value_type;
+  using predicate_type = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
+  return find_end_impl(label, ex, first, last, s_first, s_last,
+                       predicate_type());
 }
 
 }  // namespace Impl
@@ -1878,6 +2011,88 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_impl(label, ex, KE::cbegin(view), KE::cend(view),
                                   KE::cbegin(s_view), KE::cend(s_view), pred);
+}
+
+// ----------------------------------
+// find_end
+// ----------------------------------
+// overload set 1: no binary predicate passed
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+IteratorType1 find_end(const ExecutionSpace& ex, IteratorType1 first,
+                       IteratorType1 last, IteratorType2 s_first,
+                       IteratorType2 s_last) {
+  return Impl::find_end_impl("kokkos_find_end_iterator_api_default", ex, first,
+                             last, s_first, s_last);
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2>
+IteratorType1 find_end(const std::string& label, const ExecutionSpace& ex,
+                       IteratorType1 first, IteratorType1 last,
+                       IteratorType2 s_first, IteratorType2 s_last) {
+  return Impl::find_end_impl(label, ex, first, last, s_first, s_last);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2>
+auto find_end(const ExecutionSpace& ex,
+              const ::Kokkos::View<DataType1, Properties1...>& view,
+              const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_end_impl("kokkos_find_end_view_api_default", ex,
+                             KE::cbegin(view), KE::cend(view),
+                             KE::cbegin(s_view), KE::cend(s_view));
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2>
+auto find_end(const std::string& label, const ExecutionSpace& ex,
+              const ::Kokkos::View<DataType1, Properties1...>& view,
+              const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_end_impl(label, ex, KE::cbegin(view), KE::cend(view),
+                             KE::cbegin(s_view), KE::cend(s_view));
+}
+
+// overload set 2: binary predicate passed
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
+IteratorType1 find_end(const ExecutionSpace& ex, IteratorType1 first,
+                       IteratorType1 last, IteratorType2 s_first,
+                       IteratorType2 s_last, const BinaryPredicateType& pred) {
+  return Impl::find_end_impl("kokkos_find_end_iterator_api_default", ex, first,
+                             last, s_first, s_last, pred);
+}
+
+template <class ExecutionSpace, class IteratorType1, class IteratorType2,
+          class BinaryPredicateType>
+IteratorType1 find_end(const std::string& label, const ExecutionSpace& ex,
+                       IteratorType1 first, IteratorType1 last,
+                       IteratorType2 s_first, IteratorType2 s_last,
+                       const BinaryPredicateType& pred) {
+  return Impl::find_end_impl(label, ex, first, last, s_first, s_last, pred);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicateType>
+auto find_end(const ExecutionSpace& ex,
+              const ::Kokkos::View<DataType1, Properties1...>& view,
+              const ::Kokkos::View<DataType2, Properties2...>& s_view,
+              const BinaryPredicateType& pred) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_end_impl("kokkos_find_end_view_api_default", ex,
+                             KE::cbegin(view), KE::cend(view),
+                             KE::cbegin(s_view), KE::cend(s_view), pred);
+}
+
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicateType>
+auto find_end(const std::string& label, const ExecutionSpace& ex,
+              const ::Kokkos::View<DataType1, Properties1...>& view,
+              const ::Kokkos::View<DataType2, Properties2...>& s_view,
+              const BinaryPredicateType& pred) {
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::find_end_impl(label, ex, KE::cbegin(view), KE::cend(view),
+                             KE::cbegin(s_view), KE::cend(s_view), pred);
 }
 
 }  // namespace Experimental

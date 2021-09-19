@@ -83,6 +83,7 @@ LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsRemoveCopyIf.cpp
   TestStdAlgorithmsSearch.cpp
   TestStdAlgorithmsFindFirstOf.cpp
+  TestStdAlgorithmsFindEnd.cpp
 )
 
 IF(Kokkos_ENABLE_OPENMP)
