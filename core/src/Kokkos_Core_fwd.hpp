@@ -361,6 +361,8 @@ struct StdMismatch;
 template <class Index, class Space = HostSpace>
 struct FirstLoc;
 template <class Index, class Space = HostSpace>
+struct LastLoc;
+template <class Index, class Space = HostSpace>
 struct StdIsPartitioned;
 template <class Index, class Space = HostSpace>
 struct StdPartitionedPoint;

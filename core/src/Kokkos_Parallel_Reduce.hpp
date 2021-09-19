@@ -1321,6 +1321,76 @@ struct FirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+//
+// LastLoc
+//
+template <class Index>
+struct LastLocScalar {
+  Index max_loc_true;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator=(const LastLocScalar& rhs) { max_loc_true = rhs.max_loc_true; }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator=(const volatile LastLocScalar& rhs) volatile {
+    max_loc_true = rhs.max_loc_true;
+  }
+};
+
+template <class Index, class Space>
+struct LastLoc {
+ private:
+  using index_type = typename std::remove_cv<Index>::type;
+
+ public:
+  // Required
+  using reducer    = LastLoc<Index, Space>;
+  using value_type = LastLocScalar<index_type>;
+
+  using result_view_type = ::Kokkos::View<value_type, Space>;
+
+ private:
+  result_view_type value;
+  bool references_scalar_v;
+
+ public:
+  KOKKOS_INLINE_FUNCTION
+  LastLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+
+  KOKKOS_INLINE_FUNCTION
+  LastLoc(const result_view_type& value_)
+      : value(value_), references_scalar_v(false) {}
+
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src) const {
+    dest.max_loc_true = (src.max_loc_true > dest.max_loc_true)
+                            ? src.max_loc_true
+                            : dest.max_loc_true;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    dest.max_loc_true = (src.max_loc_true > dest.max_loc_true)
+                            ? src.max_loc_true
+                            : dest.max_loc_true;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type& val) const {
+    val.max_loc_true = ::Kokkos::reduction_identity<index_type>::max();
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  value_type& reference() const { return *value.data(); }
+
+  KOKKOS_INLINE_FUNCTION
+  result_view_type view() const { return value; }
+
+  KOKKOS_INLINE_FUNCTION
+  bool references_scalar() const { return references_scalar_v; }
+};
+
 template <class Index>
 struct StdIsPartScalar {
   Index max_loc_true, min_loc_false;

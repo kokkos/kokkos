@@ -712,6 +712,44 @@ struct OpenMPTargetReducerWrapper<FirstLoc<Index, Space>> {
 };
 
 //
+// specialize for LastLoc
+//
+template <class Index, class Space>
+struct OpenMPTargetReducerWrapper<LastLoc<Index, Space>> {
+ private:
+  using index_type = typename std::remove_cv<Index>::type;
+
+ public:
+  // Required
+  using value_type = LastLocScalar<index_type>;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    dest.max_loc_true = (src.max_loc_true > dest.max_loc_true)
+                            ? src.max_loc_true
+                            : dest.max_loc_true;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest.max_loc_true = (src.max_loc_true > dest.max_loc_true)
+                            ? src.max_loc_true
+                            : dest.max_loc_true;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val.max_loc_true = reduction_identity<index_type>::max();
+  }
+#pragma omp end declare target
+};
+
+//
 // specialize for StdIsPartitioned
 //
 template <class Index, class Space>
