@@ -69,10 +69,8 @@ struct UnifDist<int> {
   int operator()() { return m_dist(m_gen); }
 };
 
-
 template <class ViewType>
-void fill_view(ViewType dest_view, const std::string& name)
-{
+void fill_view(ViewType dest_view, const std::string& name) {
   using value_type      = typename ViewType::value_type;
   using exe_space       = typename ViewType::execution_space;
   const std::size_t ext = dest_view.extent(0);
@@ -146,7 +144,7 @@ void fill_view(ViewType dest_view, const std::string& name)
     v_h(12) = static_cast<value_type>(8);
   }
 
-  else{
+  else {
     UnifDist<value_type> randObj;
     for (std::size_t i = 0; i < ext; ++i) {
       v_h(i) = randObj();
@@ -159,14 +157,12 @@ void fill_view(ViewType dest_view, const std::string& name)
 }
 
 template <class ViewType>
-auto create_subseq_to_search(ViewType data_view,
-			     std::size_t subseq_extent)
-{
+auto create_subseq_to_search(ViewType data_view, std::size_t subseq_extent) {
   // using the data view, select a subsequence that we use to search for
   auto data_view_h = create_host_space_copy(data_view);
 
-  using value_type      = typename ViewType::value_type;
-  using exe_space       = typename ViewType::execution_space;
+  using value_type    = typename ViewType::value_type;
+  using exe_space     = typename ViewType::execution_space;
   using subseq_view_t = Kokkos::View<value_type*, exe_space>;
   subseq_view_t subseq_view("subseq_view", subseq_extent);
   auto subseq_view_h = create_mirror_view(Kokkos::HostSpace(), subseq_view);
@@ -177,17 +173,15 @@ auto create_subseq_to_search(ViewType data_view,
   // from the first element + extent of the subseq.
 
   const auto view_extent = data_view.extent(0);
-  if (subseq_extent >= view_extent/2)
-  {
-    for (std::size_t i=0; i<subseq_extent; ++i){
+  if (subseq_extent >= view_extent / 2) {
+    for (std::size_t i = 0; i < subseq_extent; ++i) {
       subseq_view_h(i) = data_view_h(i);
-      //std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
+      // std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
     }
-  }
-  else{
-    for (std::size_t i=0; i<subseq_extent; ++i){
-      subseq_view_h(i) = data_view_h(view_extent/2+i);
-      //std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
+  } else {
+    for (std::size_t i = 0; i < subseq_extent; ++i) {
+      subseq_view_h(i) = data_view_h(view_extent / 2 + i);
+      // std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
     }
   }
 
@@ -196,32 +190,29 @@ auto create_subseq_to_search(ViewType data_view,
 }
 
 // search is only avai from c++17, so I have to put it here
-template<class ForwardIt1, class ForwardIt2, class BinaryPredicate>
-ForwardIt1 my_std_search(ForwardIt1 first, ForwardIt1 last,
-			 ForwardIt2 s_first, ForwardIt2 s_last,
-			 BinaryPredicate p)
-{
-    for (; ; ++first) {
-        ForwardIt1 it = first;
-        for (ForwardIt2 s_it = s_first; ; ++it, ++s_it) {
-            if (s_it == s_last) {
-                return first;
-            }
-            if (it == last) {
-                return last;
-            }
-            if (!p(*it, *s_it)) {
-                break;
-            }
-        }
+template <class ForwardIt1, class ForwardIt2, class BinaryPredicate>
+ForwardIt1 my_std_search(ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first,
+                         ForwardIt2 s_last, BinaryPredicate p) {
+  for (;; ++first) {
+    ForwardIt1 it = first;
+    for (ForwardIt2 s_it = s_first;; ++it, ++s_it) {
+      if (s_it == s_last) {
+        return first;
+      }
+      if (it == last) {
+        return last;
+      }
+      if (!p(*it, *s_it)) {
+        break;
+      }
     }
+  }
 }
 
 // search is only avai from c++17, so I have to put it here
-template<class ForwardIt1, class ForwardIt2>
-ForwardIt1 my_std_search(ForwardIt1 first, ForwardIt1 last,
-			 ForwardIt2 s_first, ForwardIt2 s_last)
-{
+template <class ForwardIt1, class ForwardIt2>
+ForwardIt1 my_std_search(ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first,
+                         ForwardIt2 s_last) {
   using value_type1 = typename ForwardIt1::value_type;
   using value_type2 = typename ForwardIt2::value_type;
 
@@ -233,34 +224,26 @@ std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType>
-void print_scenario_details(const std::string& name,
-			    std::size_t subseq_ext)
-{
+void print_scenario_details(const std::string& name, std::size_t subseq_ext) {
   std::cout << "search: default predicate: " << name << ", "
-	    << "subseq_ext = " << subseq_ext << ", "
+            << "subseq_ext = " << subseq_ext << ", "
             << view_tag_to_string(Tag{}) << " "
-            << value_type_to_string(ValueType())
-	    << std::endl;
+            << value_type_to_string(ValueType()) << std::endl;
 }
 
 template <class Tag, class ValueType, class Predicate>
-void print_scenario_details(const std::string& name,
-			    std::size_t subseq_ext,
-			    Predicate pred)
-{
+void print_scenario_details(const std::string& name, std::size_t subseq_ext,
+                            Predicate pred) {
   (void)pred;
   std::cout << "search: custom  predicate: " << name << ", "
-	    << "subseq_ext = " << subseq_ext << ", "
+            << "subseq_ext = " << subseq_ext << ", "
             << view_tag_to_string(Tag{}) << " "
-            << value_type_to_string(ValueType())
-	    << std::endl;
+            << value_type_to_string(ValueType()) << std::endl;
 }
 
 template <class Tag, class ValueType, class InfoType, class... Args>
-void run_single_scenario(const InfoType& scenario_info,
-			 std::size_t subseq_ext,
-			 Args... args)
-{
+void run_single_scenario(const InfoType& scenario_info, std::size_t subseq_ext,
+                         Args... args) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
@@ -271,38 +254,40 @@ void run_single_scenario(const InfoType& scenario_info,
   auto s_view = create_subseq_to_search(view, subseq_ext);
 
   // run std
-  auto view_h = create_host_space_copy(view);
+  auto view_h   = create_host_space_copy(view);
   auto s_view_h = create_host_space_copy(s_view);
-  auto stdrit = my_std_search(KE::cbegin(view_h),   KE::cend(view_h),
-			      KE::cbegin(s_view_h), KE::cend(s_view_h), args...);
+  auto stdrit =
+      my_std_search(KE::cbegin(view_h), KE::cend(view_h), KE::cbegin(s_view_h),
+                    KE::cend(s_view_h), args...);
 
   {
-    auto myrit = KE::search(exespace(),KE::cbegin(view), KE::cend(view),
-			    KE::cbegin(s_view), KE::cend(s_view), args...);
-    const auto mydiff  = myrit  - KE::cbegin(view);
+    auto myrit        = KE::search(exespace(), KE::cbegin(view), KE::cend(view),
+                            KE::cbegin(s_view), KE::cend(s_view), args...);
+    const auto mydiff = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    //std::cout << "result: " << mydiff << " " << stddiff << std::endl;
+    // std::cout << "result: " << mydiff << " " << stddiff << std::endl;
     EXPECT_TRUE(mydiff == stddiff);
   }
 
   {
-    auto myrit = KE::search("label", exespace(), KE::cbegin(view), KE::cend(view),
-			    KE::cbegin(s_view), KE::cend(s_view), args...);
-    const auto mydiff  = myrit  - KE::cbegin(view);
-    const auto stddiff = stdrit - KE::cbegin(view_h);
-    EXPECT_TRUE(mydiff == stddiff);
-  }
-
-  {
-    auto myrit = KE::search(exespace(), view, s_view, args...);
-    const auto mydiff  = myrit  - KE::cbegin(view);
+    auto myrit =
+        KE::search("label", exespace(), KE::cbegin(view), KE::cend(view),
+                   KE::cbegin(s_view), KE::cend(s_view), args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     EXPECT_TRUE(mydiff == stddiff);
   }
 
   {
-    auto myrit = KE::search("label", exespace(), view, s_view, args...);
-    const auto mydiff  = myrit  - KE::cbegin(view);
+    auto myrit         = KE::search(exespace(), view, s_view, args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
+    const auto stddiff = stdrit - KE::cbegin(view_h);
+    EXPECT_TRUE(mydiff == stddiff);
+  }
+
+  {
+    auto myrit         = KE::search("label", exespace(), view, s_view, args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     EXPECT_TRUE(mydiff == stddiff);
   }
@@ -311,44 +296,33 @@ void run_single_scenario(const InfoType& scenario_info,
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
+void run_all_scenarios() {
   const std::map<std::string, std::size_t> scenarios = {
-    {"empty", 0},
-    {"one-element-a", 1},
-    {"one-element-b", 1},
-    {"two-elements-a", 2},
-    {"two-elements-b", 2},
-    {"four-elements-a", 4},
-    {"four-elements-b", 4},
-    {"small-a", 11},
-    {"small-b", 13},
-    {"medium-a", 11103},
-    {"medium-b", 21103},
-    {"large-a", 101513},
-    {"large-b", 100111}};
+      {"empty", 0},           {"one-element-a", 1},  {"one-element-b", 1},
+      {"two-elements-a", 2},  {"two-elements-b", 2}, {"four-elements-a", 4},
+      {"four-elements-b", 4}, {"small-a", 11},       {"small-b", 13},
+      {"medium-a", 11103},    {"medium-b", 21103},   {"large-a", 101513},
+      {"large-b", 100111}};
 
-  const std::vector<std::size_t> subseq_extents =
-    {0, 1, 2, 3, 5, 8, 11, 15, 31, 113, 1035, 10113};
+  const std::vector<std::size_t> subseq_extents = {
+      0, 1, 2, 3, 5, 8, 11, 15, 31, 113, 1035, 10113};
 
   // for each scenario we want to run "search"
   // for a set of subsequences of various extents
-  for (const auto& it : scenarios){
-    for (const auto& it2 : subseq_extents)
-    {
+  for (const auto& it : scenarios) {
+    for (const auto& it2 : subseq_extents) {
       // only run if view is larger than subsequence to search for
-      if (it.second > it2){
-	run_single_scenario<Tag, ValueType>(it, it2);
+      if (it.second > it2) {
+        run_single_scenario<Tag, ValueType>(it, it2);
 
-	using func_t = IsEqualFunctor<ValueType>;
-	run_single_scenario<Tag, ValueType>(it, it2, func_t());
+        using func_t = IsEqualFunctor<ValueType>;
+        run_single_scenario<Tag, ValueType>(it, it2, func_t());
       }
     }
   }
 }
 
-TEST(std_algorithms_non_mod_seq_ops, search)
-{
+TEST(std_algorithms_non_mod_seq_ops, search) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }
