@@ -235,12 +235,11 @@ ForwardIt1 my_std_search(ForwardIt1 first, ForwardIt1 last, ForwardIt2 s_first,
 }
 
 // only avai from c++17, so I have to put it here
-template<class ForwardIt1, class ForwardIt2, class BinaryPredicate>
+template <class ForwardIt1, class ForwardIt2, class BinaryPredicate>
 ForwardIt1 my_std_find_end(ForwardIt1 first, ForwardIt1 last,
-			   ForwardIt2 s_first, ForwardIt2 s_last,
-			   BinaryPredicate p)
-{
-  if (s_first == s_last){
+                           ForwardIt2 s_first, ForwardIt2 s_last,
+                           BinaryPredicate p) {
+  if (s_first == s_last) {
     return last;
   }
 
@@ -251,7 +250,7 @@ ForwardIt1 my_std_find_end(ForwardIt1 first, ForwardIt1 last,
       break;
     } else {
       result = new_result;
-      first = result;
+      first  = result;
       ++first;
     }
   }
@@ -259,11 +258,8 @@ ForwardIt1 my_std_find_end(ForwardIt1 first, ForwardIt1 last,
 }
 
 template <class ForwardIt1, class ForwardIt2>
-ForwardIt1 my_std_find_end(ForwardIt1 first,
-			   ForwardIt1 last,
-			   ForwardIt2 s_first,
-			   ForwardIt2 s_last)
-{
+ForwardIt1 my_std_find_end(ForwardIt1 first, ForwardIt1 last,
+                           ForwardIt2 s_first, ForwardIt2 s_last) {
   using value_type1 = typename ForwardIt1::value_type;
   using value_type2 = typename ForwardIt2::value_type;
 
@@ -308,13 +304,13 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
   auto view_h   = create_host_space_copy(view);
   auto s_view_h = create_host_space_copy(s_view);
   auto stdrit =
-      my_std_find_end(KE::cbegin(view_h), KE::cend(view_h), KE::cbegin(s_view_h),
-                    KE::cend(s_view_h), args...);
+      my_std_find_end(KE::cbegin(view_h), KE::cend(view_h),
+                      KE::cbegin(s_view_h), KE::cend(s_view_h), args...);
 
   {
-    auto myrit        = KE::find_end(exespace(), KE::cbegin(view), KE::cend(view),
-                            KE::cbegin(s_view), KE::cend(s_view), args...);
-    const auto mydiff = myrit - KE::cbegin(view);
+    auto myrit = KE::find_end(exespace(), KE::cbegin(view), KE::cend(view),
+                              KE::cbegin(s_view), KE::cend(s_view), args...);
+    const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     std::cout << "result : " << mydiff << " " << stddiff << std::endl;
     EXPECT_TRUE(mydiff == stddiff);
@@ -337,10 +333,9 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
   // }
 
   // {
-  //   auto myrit         = KE::find_end("label", exespace(), view, s_view, args...);
-  //   const auto mydiff  = myrit - KE::cbegin(view);
-  //   const auto stddiff = stdrit - KE::cbegin(view_h);
-  //   EXPECT_TRUE(mydiff == stddiff);
+  //   auto myrit         = KE::find_end("label", exespace(), view, s_view,
+  //   args...); const auto mydiff  = myrit - KE::cbegin(view); const auto
+  //   stddiff = stdrit - KE::cbegin(view_h); EXPECT_TRUE(mydiff == stddiff);
   // }
 
   Kokkos::fence();
@@ -382,10 +377,9 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_non_mod_seq_ops, find_end)
-{
+TEST(std_algorithms_non_mod_seq_ops, find_end) {
   run_all_scenarios<DynamicTag, int>();
-  //run_all_scenarios<StridedThreeTag, int>();
+  // run_all_scenarios<StridedThreeTag, int>();
 }
 
 }  // namespace FindEnd
