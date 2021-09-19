@@ -62,9 +62,8 @@ struct UnifDist<int> {
   std::mt19937 m_gen;
   dist_type m_dist;
 
-  // make bounds tight so that it is likely we get
-  // consecutive equal elements
-  UnifDist() : m_dist(0, 20) { m_gen.seed(1034343); }
+  UnifDist() : m_dist(-100, 100) { m_gen.seed(1034343); }
+  UnifDist(int a, int b) : m_dist(a, b) { m_gen.seed(514343); }
 
   int operator()() { return m_dist(m_gen); }
 };
@@ -169,80 +168,56 @@ void fill_view(ViewType dest_view, const std::string& name) {
 }
 
 template <class ViewType>
-auto create_subseq_to_find_first_of(ViewType data_view,
-                                    std::size_t subseq_extent) {
-  // using the data view, select a subsequence that we use to find_first_of for
-  auto data_view_h = create_host_space_copy(data_view);
+auto create_seq_for_find_first_of(ViewType data_view, std::size_t seq_extent) {
+  (void)data_view;
+  using value_type = typename ViewType::value_type;
+  using exe_space  = typename ViewType::execution_space;
+  using seq_view_t = Kokkos::View<value_type*, exe_space>;
+  seq_view_t seq_view("seq_view", seq_extent);
+  auto seq_view_h = create_mirror_view(Kokkos::HostSpace(), seq_view);
 
-  using value_type    = typename ViewType::value_type;
-  using exe_space     = typename ViewType::execution_space;
-  using subseq_view_t = Kokkos::View<value_type*, exe_space>;
-  subseq_view_t subseq_view("subseq_view", subseq_extent);
-  auto subseq_view_h = create_mirror_view(Kokkos::HostSpace(), subseq_view);
-
-  // pick a starting point to copy data from to make the the subsequence.
-  // if the extent of the subseq is == extent of the view, then we pick 0
-  // if the extent of the subseq is < extent of the view,
-  // then we pick randomly between 0 and data_view.extent(0) - subseq_extent.
-
-  const auto view_extent = data_view.extent(0);
-  if (subseq_extent == view_extent) {
-    for (std::size_t i = 0; i < subseq_extent; ++i) {
-      subseq_view_h(i) = data_view_h(i);
-    }
-  } else {
-    using dist_type = std::uniform_int_distribution<int>;
-    std::random_device r;
-    // from this:
-    // https://stackoverflow.com/questions/34490599/c11-how-to-set-seed-using-random
-    std::seed_seq seed{r(), r(), r(), r(), r(), r()};
-    std::mt19937 gen(seed);
-    dist_type dist(0, view_extent - subseq_extent);
-    const auto start = dist(gen);
-    // std::cout << "start= " << start << "\n";
-    for (std::size_t i = 0; i < subseq_extent; ++i) {
-      subseq_view_h(i) = data_view_h(start + i);
-      // std::cout << "i= " << i << " " << subseq_view_h(i) << "\n";
-    }
+  UnifDist<value_type> randObj(-10, -10);
+  for (std::size_t i = 0; i < seq_extent; ++i) {
+    seq_view_h(i) = randObj();
   }
 
-  Kokkos::deep_copy(subseq_view, subseq_view_h);
-  return subseq_view;
+  Kokkos::deep_copy(seq_view, seq_view_h);
+  return seq_view;
 }
 
 std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType>
-void print_scenario_details(const std::string& name, std::size_t subseq_ext) {
+void print_scenario_details(const std::string& name, std::size_t seq_ext) {
   std::cout << "find_first_of: default predicate: " << name << ", "
-            << "subseq_ext = " << subseq_ext << ", "
+            << "seach_seq_ext = " << seq_ext << ", "
             << view_tag_to_string(Tag{}) << " "
             << value_type_to_string(ValueType()) << std::endl;
 }
 
 template <class Tag, class ValueType, class Predicate>
-void print_scenario_details(const std::string& name, std::size_t subseq_ext,
+void print_scenario_details(const std::string& name, std::size_t seq_ext,
                             Predicate pred) {
   (void)pred;
   std::cout << "find_first_of: custom  predicate: " << name << ", "
-            << "subseq_ext = " << subseq_ext << ", "
+            << "seach_seq_ext = " << seq_ext << ", "
             << view_tag_to_string(Tag{}) << " "
             << value_type_to_string(ValueType()) << std::endl;
 }
 
 template <class Tag, class ValueType, class InfoType, class... Args>
-void run_single_scenario(const InfoType& scenario_info, std::size_t subseq_ext,
+void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
                          Args... args) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  print_scenario_details<Tag, ValueType>(name, subseq_ext, args...);
+  print_scenario_details<Tag, ValueType>(name, seq_ext, args...);
 
   auto view =
       create_view<ValueType>(Tag{}, view_ext, "find_first_of_test_view");
   fill_view(view, name);
-  auto s_view = create_subseq_to_find_first_of(view, subseq_ext);
+  auto s_view = create_seq_for_find_first_of(view, seq_ext);
 
   // run std
   auto view_h   = create_host_space_copy(view);
@@ -257,7 +232,6 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t subseq_ext,
                           KE::cbegin(s_view), KE::cend(s_view), args...);
     const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    // std::cout << "result: " << mydiff << " " << stddiff << std::endl;
     EXPECT_TRUE(mydiff == stddiff);
   }
 
@@ -305,20 +279,17 @@ void run_all_scenarios() {
                                                         {"large-a", 101513},
                                                         {"large-b", 100111}};
 
-  const std::vector<std::size_t> subseq_extents = {
-      0, 1, 2, 3, 4, 5, 8, 11, 20, 31, 113, 523, 1035, 11103};
+  const std::vector<std::size_t> seq_extents = {0,  1,  2,  3,   4,   5,   8,
+                                                11, 20, 31, 113, 523, 1035};
 
   // for each scenario we want to run "find_first_of"
-  // for a set of subsequences of various extents
+  // for a set of sequences of various extents
   for (const auto& it : scenarios) {
-    for (const auto& it2 : subseq_extents) {
-      // only run if view is larger than subsequence to find_first_of for
-      if (it.second >= it2) {
-        run_single_scenario<Tag, ValueType>(it, it2);
+    for (const auto& it2 : seq_extents) {
+      run_single_scenario<Tag, ValueType>(it, it2);
 
-        using func_t = IsEqualFunctor<ValueType>;
-        run_single_scenario<Tag, ValueType>(it, it2, func_t());
-      }
+      using func_t = IsEqualFunctor<ValueType>;
+      run_single_scenario<Tag, ValueType>(it, it2, func_t());
     }
   }
 }

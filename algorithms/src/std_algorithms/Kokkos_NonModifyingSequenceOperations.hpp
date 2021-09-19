@@ -787,13 +787,12 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
   expect_valid_range(first, last);
   expect_valid_range(s_first, s_last);
 
-  // check that the target sequence is not
-  // larger than the num elements in [first, last)
+  // the target sequence should not be larger than the range [first, last)
   namespace KE            = ::Kokkos::Experimental;
   const auto num_elements = KE::distance(first, last);
   const auto s_count      = KE::distance(s_first, s_last);
   KOKKOS_EXPECTS(num_elements >= s_count);
-  (void)s_count;
+  (void)s_count;  // needed when macro above is a no-op
 
   if (s_first == s_last) {
     return first;
@@ -803,7 +802,7 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     return last;
   }
 
-  // the special case where the two ranges have equal size
+  // special case where the two ranges have equal size
   if (num_elements == s_count) {
     const auto equal_result = equal_impl(label, ex, first, last, s_first, pred);
     return (equal_result) ? first : last;
@@ -818,10 +817,11 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     result_view_type result("kokkos_search_impl_result");
     reducer_type reducer(result);
 
-    // to decide the size of the range policy, note that
-    // the last feasible index to start looking is the index
+    // decide the size of the range policy of the par_red:
+    // note that the last feasible index to start looking is the index
     // whose distance from the "last" is equal to the sequence count.
-    const auto range_size = num_elements - s_count;
+    // the +1 is because we need to include that location too.
+    const auto range_size = num_elements - s_count + 1;
 
     // run par reduce
     ::Kokkos::parallel_reduce(
