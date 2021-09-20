@@ -69,7 +69,6 @@ struct FencePayload {
   uint32_t dev_id;
 };
 
-
 std::vector<FencePayload> found_payloads;
 template <typename Lambda>
 void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
@@ -121,7 +120,8 @@ struct increment {
 };
 int num_instances = 1;
 struct TestFunctor {
-  KOKKOS_FUNCTION void operator()(const Kokkos::RangePolicy<>::index_type) const {}
+  KOKKOS_FUNCTION void operator()(
+      const Kokkos::RangePolicy<>::index_type) const {}
 };
 template <typename Lambda>
 void test_wrapper(const Lambda& lambda) {
@@ -306,8 +306,7 @@ TEST(defaultdevicetype, test_new_test_interface) {
           "a kernel with the same kID\n")},
       [&]() {
         TestFunctor tf;
-        Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1),
-                             tf);
+        Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1), tf);
       });
 
   listen_tool_events({});
