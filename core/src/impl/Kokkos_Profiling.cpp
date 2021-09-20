@@ -42,11 +42,18 @@
 //@HEADER
 */
 
+#define KOKKOS_TOOLS_INDEPENDENT_BUILD
+
+#ifndef KOKKOS_TOOLS_INDEPENDENT_BUILD
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
+#endif
+
 #include <impl/Kokkos_Profiling.hpp>
-#if defined(KOKKOS_ENABLE_LIBDL)
+
+#if defined(KOKKOS_ENABLE_LIBDL) || defined(KOKKOS_TOOLS_INDEPENDENT_BUILD)
 #include <dlfcn.h>
+#define KOKKOS_TOOLS_ENABLE_LIBDL
 #endif
 
 #include <algorithm>
@@ -71,9 +78,11 @@ void tool_invoked_fence(const uint32_t /* devID */) {
    * Eventually we want to support fencing only
    * a given stream/resource
    */
+   #ifndef KOKKOS_TOOLS_INDEPENDENT_BUILD
   Kokkos::fence(
       "Kokkos::Tools::Experimental::Impl::tool_invoked_fence: Tool Requested "
       "Fence");
+      #endif
 }
 }  // namespace Impl
 #ifdef KOKKOS_ENABLE_TUNING
@@ -134,8 +143,10 @@ inline void invoke_kokkosp_callback(
     if (may_require_global_fencing == MayRequireGlobalFencing::Yes &&
         (Kokkos::Tools::Experimental::tool_requirements
              .requires_global_fencing)) {
+               #ifndef KOKKOS_TOOLS_INDEPENDENT_BUILD
       Kokkos::fence(
           "Kokkos::Tools::invoke_kokkosp_callback: Kokkos Profile Tool Fence");
+          #endif
     }
     (*callback)(std::forward<Args>(args)...);
   }
@@ -421,7 +432,7 @@ SpaceHandle make_space_handle(const char* space_name) {
 template <typename Callback>
 void lookup_function(void* dlopen_handle, const std::string& basename,
                      Callback& callback) {
-#ifdef KOKKOS_ENABLE_LIBDL
+#ifdef KOKKOS_TOOLS_ENABLE_LIBDL
   // dlsym returns a pointer to an object, while we want to assign to
   // pointer to function A direct cast will give warnings hence, we have to
   // workaround the issue by casting pointer to pointers.
@@ -458,7 +469,7 @@ void initialize(const std::string& profileLibrary) {
         actions);
   };
 
-#ifdef KOKKOS_ENABLE_LIBDL
+#ifdef KOKKOS_TOOLS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
   if (profileLibrary.empty()) {

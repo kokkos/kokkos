@@ -45,7 +45,14 @@
 #ifndef KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
+
 #include <impl/Kokkos_Profiling.hpp>
+
+#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Tuners.hpp>
+
 
 namespace Kokkos {
 

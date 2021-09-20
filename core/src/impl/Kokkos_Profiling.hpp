@@ -45,10 +45,10 @@
 #ifndef KOKKOS_IMPL_KOKKOS_PROFILING_HPP
 #define KOKKOS_IMPL_KOKKOS_PROFILING_HPP
 
-#include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_ExecPolicy.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Tuners.hpp>
+//#include <Kokkos_Core_fwd.hpp>
+//#include <Kokkos_ExecPolicy.hpp>
+//#include <Kokkos_Macros.hpp>
+//#include <Kokkos_Tuners.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <memory>
 #include <unordered_map>
