@@ -28,8 +28,9 @@ struct EventMatcher {
                                        const std::string& diagnostic = "") {
     return MatchResult{success, 0, 1, diagnostic};
   }
-  virtual std::string repr() const                                     = 0;
-  virtual MatchResult matches(const EventSet& events, EventSet::size_type event_index) = 0;
+  virtual std::string repr() const                             = 0;
+  virtual MatchResult matches(const EventSet& events,
+                              EventSet::size_type event_index) = 0;
   virtual ~EventMatcher() {}
   void checkMatchAt(MatchDiagnostic& builder, const Pattern& pattern,
                     const EventSet& events, EventSet::size_type pattern_index,
