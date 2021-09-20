@@ -304,7 +304,7 @@ void initialize_backends(const InitArguments& args) {
   Impl::ExecSpaceManager::get_instance().initialize_spaces(args);
 }
 
-void initialize_profiling(const InitArguments& args) {
+void initialize_profiling(const Tools::InitArguments& args) {
   Kokkos::Profiling::initialize(args.tool_lib);
   if (args.tool_help) {
     if (!Kokkos::Tools::printHelp(args.tool_args)) {
@@ -656,8 +656,15 @@ void parse_command_line_arguments(int& narg, char* arg[],
   bool kokkos_device_found   = false;
   bool kokkos_ndevices_found = false;
 
-  int iarg = 0;
+  Tools::Impl::parse_command_line_arguments(narg, arg, arguments.tools);
+  
+  tune_internals = arguments.tools.tune_internals; // maintain consistency between deprecated and current
+  tool_help = arguments.tools.help; // maintain consistency between deprecated and current
+  tool_lib = arguments.tools.lib; // maintain consistency between deprecated and current
+  tool_args = arguments.tools.args; // maintain consistency between deprecated and current
 
+  int iarg = 0;
+  
   while (iarg < narg) {
     if (check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
       for (int k = iarg; k < narg - 1; k++) {
@@ -766,37 +773,6 @@ void parse_command_line_arguments(int& narg, char* arg[],
       narg--;
     } else if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
       tune_internals = true;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
-    } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", tool_lib)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
-    } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", tool_args)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
-      // strip any leading and/or trailing quotes if they were retained in the
-      // string because this will very likely cause parsing issues for tools.
-      // If the quotes are retained (via bypassing the shell):
-      //    <EXE> --kokkos-tools-args="-c my example"
-      // would be tokenized as:
-      //    "<EXE>" "\"-c" "my" "example\""
-      // instead of:
-      //    "<EXE>" "-c" "my" "example"
-      if (!tool_args.empty()) {
-        if (tool_args.front() == '"') tool_args = tool_args.substr(1);
-        if (tool_args.back() == '"')
-          tool_args = tool_args.substr(0, tool_args.length() - 1);
-      }
-      // add the name of the executable to the beginning
-      if (narg > 0) tool_args = std::string(arg[0]) + " " + tool_args;
-    } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
-      tool_help = true;
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }

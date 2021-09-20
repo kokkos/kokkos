@@ -69,6 +69,59 @@ namespace Kokkos {
 
 namespace Tools {
 
+namespace Impl {
+  void parse_command_line_arguments(int& narg, char* arg[],
+                                  InitArguments& arguments) {
+                                      int iarg = 0;
+
+  auto& lib = arguments.lib;
+  auto& args = arguments.args;
+  auto& help = arguments.help;
+  auto& tune_internals = arguments.tune_internals;
+  while (iarg < narg) {
+
+  if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
+      tune_internals = true;
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+    } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", tool_lib)) {
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+    } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", tool_args)) {
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+      // strip any leading and/or trailing quotes if they were retained in the
+      // string because this will very likely cause parsing issues for tools.
+      // If the quotes are retained (via bypassing the shell):
+      //    <EXE> --kokkos-tools-args="-c my example"
+      // would be tokenized as:
+      //    "<EXE>" "\"-c" "my" "example\""
+      // instead of:
+      //    "<EXE>" "-c" "my" "example"
+      if (!tool_args.empty()) {
+        if (tool_args.front() == '"') tool_args = tool_args.substr(1);
+        if (tool_args.back() == '"')
+          tool_args = tool_args.substr(0, tool_args.length() - 1);
+      }
+      // add the name of the executable to the beginning
+      if (narg > 0) tool_args = std::string(arg[0]) + " " + tool_args;
+    } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
+      tool_help = true;
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+    }
+  }
+}
+
+
 namespace Experimental {
 
 namespace Impl {

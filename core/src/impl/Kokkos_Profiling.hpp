@@ -63,6 +63,18 @@ bool tune_internals() noexcept;
 
 namespace Tools {
 
+struct InitArguments {
+  bool tune_internals   = false;
+  bool help        = false;
+  std::string lib  = {};
+  std::string args = {};
+};
+
+namespace Impl {
+  void parse_command_line_arguments(int& narg, char* arg[],
+                                  InitArguments& arguments);
+}
+
 bool profileLibraryLoaded();
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
@@ -129,7 +141,9 @@ void modifyDualView(const std::string& label, const void* const ptr,
                     bool on_device);
 
 void declareMetadata(const std::string& key, const std::string& value);
-void initialize(const std::string& = {});
+void initialize(const std::string& = {}); // should rename to impl_initialize ASAP
+void initialize(const Kokkos::Tools::InitArguments&);
+void initialize(int argc, char* argv[]);
 void finalize();
 bool printHelp(const std::string&);
 void parseArgs(const std::string&);

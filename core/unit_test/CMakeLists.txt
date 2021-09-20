@@ -743,7 +743,15 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     tools/TestEventCorrectness.cpp
   )
   if(KOKKOS_ENABLE_LIBDL)
-
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_ToolIndependence
+      SOURCES
+      tools/TestIndependence.cpp
+    )
+    TARGET_COMPILE_DEFINITIONS(
+      KokkosCore_UnitTest_ToolIndependence PUBLIC
+      KOKKOS_TOOLS_INDEPENDENT_BUILD
+    )
     KOKKOS_ADD_TEST_LIBRARY(
       kokkosprinter-tool SHARED
       SOURCES tools/printing-tool.cpp
