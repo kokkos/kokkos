@@ -1110,7 +1110,7 @@ auto find_if(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<true>("kokkos_find_if_view_api_default", ex,
                                          KE::cbegin(v), KE::cend(v),
-                                         KE::move(predicate));
+                                         std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1121,7 +1121,7 @@ auto find_if(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<true>(label, ex, KE::cbegin(v), KE::cend(v),
-                                         KE::move(predicate));
+                                         std::move(predicate));
 }
 
 // ----------------------------------
@@ -1153,7 +1153,7 @@ auto find_if_not(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<false>("kokkos_find_if_not_view_api_default",
                                           ex, KE::cbegin(v), KE::cend(v),
-                                          KE::move(predicate));
+                                          std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1165,7 +1165,7 @@ auto find_if_not(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<false>(label, ex, KE::cbegin(v), KE::cend(v),
-                                          KE::move(predicate));
+                                          std::move(predicate));
 }
 
 // ----------------------------------
@@ -1194,7 +1194,7 @@ UnaryFunctorType for_each(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_impl(label, ex, KE::begin(v), KE::end(v),
-                             KE::move(functor));
+                             std::move(functor));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1206,7 +1206,7 @@ UnaryFunctorType for_each(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_impl("kokkos_for_each_view_api_default", ex,
-                             KE::begin(v), KE::end(v), KE::move(functor));
+                             KE::begin(v), KE::end(v), std::move(functor));
 }
 
 // ----------------------------------
@@ -1236,7 +1236,7 @@ auto for_each_n(const std::string& label, const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::for_each_n_impl(label, ex, KE::begin(v), n, KE::move(functor));
+  return Impl::for_each_n_impl(label, ex, KE::begin(v), n, std::move(functor));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1248,7 +1248,7 @@ auto for_each_n(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_n_impl("kokkos_for_each_n_view_api_default", ex,
-                               KE::begin(v), n, KE::move(functor));
+                               KE::begin(v), n, std::move(functor));
 }
 
 // ----------------------------------
@@ -1281,7 +1281,7 @@ auto count_if(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::count_if_impl("kokkos_count_if_view_api_default", ex,
-                             KE::cbegin(v), KE::cend(v), KE::move(predicate));
+                             KE::cbegin(v), KE::cend(v), std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1293,7 +1293,7 @@ auto count_if(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::count_if_impl(label, ex, KE::cbegin(v), KE::cend(v),
-                             KE::move(predicate));
+                             std::move(predicate));
 }
 
 // ----------------------------------
@@ -1461,7 +1461,7 @@ bool all_of(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::all_of_impl("kokkos_all_of_view_api_default", ex, KE::cbegin(v),
-                           KE::cend(v), KE::move(predicate));
+                           KE::cend(v), std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1473,7 +1473,7 @@ bool all_of(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::all_of_impl(label, ex, KE::cbegin(v), KE::cend(v),
-                           KE::move(predicate));
+                           std::move(predicate));
 }
 
 // ----------------------------------
@@ -1501,7 +1501,7 @@ bool any_of(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::any_of_impl("kokkos_any_of_view_api_default", ex, KE::cbegin(v),
-                           KE::cend(v), KE::move(predicate));
+                           KE::cend(v), std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1513,7 +1513,7 @@ bool any_of(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::any_of_impl(label, ex, KE::cbegin(v), KE::cend(v),
-                           KE::move(predicate));
+                           std::move(predicate));
 }
 
 // ----------------------------------
@@ -1541,7 +1541,7 @@ bool none_of(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::none_of_impl("kokkos_none_of_view_api_default", ex,
-                            KE::cbegin(v), KE::cend(v), KE::move(predicate));
+                            KE::cbegin(v), KE::cend(v), std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1553,7 +1553,7 @@ bool none_of(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::none_of_impl(label, ex, KE::cbegin(v), KE::cend(v),
-                            KE::move(predicate));
+                            std::move(predicate));
 }
 
 // ----------------------------------
@@ -1628,7 +1628,7 @@ bool equal(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl("kokkos_equal_view_api_default", ex,
                           KE::cbegin(view1), KE::cend(view1), KE::cbegin(view2),
-                          KE::move(predicate));
+                          std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -1642,7 +1642,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl(label, ex, KE::cbegin(view1), KE::cend(view1),
-                          KE::cbegin(view2), KE::move(predicate));
+                          KE::cbegin(view2), std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>

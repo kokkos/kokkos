@@ -297,7 +297,7 @@ auto is_sorted_until(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::is_sorted_until_impl("kokkos_is_sorted_until_view_api_default",
                                     ex, KE::cbegin(view), KE::cend(view),
-                                    KE::move(comp));
+                                    std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -310,7 +310,7 @@ auto is_sorted_until(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::is_sorted_until_impl(label, ex, KE::cbegin(view), KE::cend(view),
-                                    KE::move(comp));
+                                    std::move(comp));
 }
 
 // ----------------------------------
@@ -373,7 +373,8 @@ bool is_sorted(const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::is_sorted_impl("kokkos_is_sorted_view_api_default", ex,
-                              KE::cbegin(view), KE::cend(view), KE::move(comp));
+                              KE::cbegin(view), KE::cend(view),
+                              std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -386,7 +387,7 @@ bool is_sorted(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::is_sorted_impl(label, ex, KE::cbegin(view), KE::cend(view),
-                              KE::move(comp));
+                              std::move(comp));
 }
 
 }  // namespace Experimental
