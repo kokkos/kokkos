@@ -1,105 +1,136 @@
 #include <Kokkos_Core.hpp>
 #include <sstream>
 #include <iostream>
+#include <utility>
+#include <type_traits>
 namespace Kokkos {
 
 namespace Test {
 
 namespace Tools {
 
-struct EventBase;
-using EventBasePtr = std::shared_ptr<EventBase>;
-using EventSet     = std::vector<EventBasePtr>;
-
 struct MatchDiagnostic {
   bool success                      = true;
   std::vector<std::string> messages = {};
 };
 
-struct EventMatcher {
-  using Pattern = std::vector<std::shared_ptr<EventMatcher>>;
-  struct MatchResult {
-    bool match_success;
-    int increment_pattern;
-    int increment_event;
-    std::string diagnostic;
-  };
-  static MatchResult SimpleMatchResult(bool success,
-                                       const std::string& diagnostic = "") {
-    return MatchResult{success, 0, 1, diagnostic};
-  }
-  virtual std::string repr() const                             = 0;
-  virtual MatchResult matches(const EventSet& events,
-                              EventSet::size_type event_index) = 0;
-  virtual ~EventMatcher() {}
-  void checkMatchAt(MatchDiagnostic& builder, const Pattern& pattern,
-                    const EventSet& events, EventSet::size_type pattern_index,
-                    EventSet::size_type event_index) {
-    if (pattern_index >= pattern.size()) {
-      builder.messages.push_back("Error: stepped off end of pattern\n");
-      return;
+// Originally found at https://stackoverflow.com/a/39717241
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+template <typename T, typename = void>
+struct function_traits;
+
+struct EventBase;
+using EventBasePtr = std::shared_ptr<EventBase>;
+using EventSet     = std::vector<EventBasePtr>;
+using event_vector = EventSet;
+
+bool is_nonnull() { return true; }
+
+template<class Head, class... Tail>
+bool is_nonnull(const Head& head, const Tail... tail) { return (head != nullptr) && (is_nonnull(tail...)) ; }
+
+
+template <typename R, typename... A>
+struct function_traits<R (*)(A...)>
+{
+    using return_type = R;
+    using class_type  = void;
+    using args_type   = std:: tuple< A... >;
+    constexpr static int num_arguments = std::tuple_size<args_type>::value;
+    template<class Call, class... Args>
+    static auto invoke_as(Call call, Args... args){
+     if(!is_nonnull(std::dynamic_pointer_cast<A>(args)...)){
+            return false;
+        }
+        return call(*std::dynamic_pointer_cast<A>(args)...); 
     }
-    if (event_index >= events.size()) {
-      builder.messages.push_back(
-          "Error: event set completed, additional events found in the "
-          "pattern\n");
-      for (EventSet::size_type x = pattern_index; x < pattern.size(); ++x) {
-        std::stringstream s;
-        s << "Additional pattern entry " << x << ": " << pattern[x]->repr()
-          << std::endl;
-        builder.messages.push_back(s.str());
-      }
-      return;
-    }
-    auto match = pattern[pattern_index]->matches(events, event_index);
-    if (!match.match_success) {
-      builder.messages.push_back(match.diagnostic);
-      return;
-    } else {
-      if (((pattern_index + match.increment_pattern) == pattern.size()) &&
-          ((event_index + match.increment_event) == events.size())) {
-        builder.success = true;
-        return;
-      }
-      checkMatchAt(builder, pattern, events,
-                   pattern_index + match.increment_pattern,
-                   event_index + match.increment_event);
-    }
-  }
-  MatchDiagnostic checkMatch(const Pattern& pattern, const EventSet& events) {
-    MatchDiagnostic diagnostic{false};
-    checkMatchAt(diagnostic, pattern, events, 0, 0);
-    return diagnostic;
-  }
 };
 
-struct EventRoot : public EventMatcher {
-  virtual std::string repr() const { return ""; };
-  virtual MatchResult matches(const EventSet&, EventSet::size_type) {
-    return {false, 1, 1, ""};
-  };
-  virtual ~EventRoot() {}
+template <typename R, typename C, typename... A>
+struct function_traits<R (C::*)(A...)>
+{
+    using return_type = R;
+    using class_type  = void;
+    using args_type   = std:: tuple< A... >;
+        constexpr static int num_arguments = std::tuple_size<args_type>::value;
+    template<class Call, class... Args>
+    static auto invoke_as(Call call, Args... args){
+     if(!is_nonnull(std::dynamic_pointer_cast<A>(args)...)){
+            return false;
+        }
+        return call(*std::dynamic_pointer_cast<A>(args)...);
+    }
 };
 
-struct EventBase : public EventMatcher {
-  virtual MatchResult matches(const EventSet& events,
-                              EventSet::size_type event_index) override {
-    bool is_match = isEqual(*events[event_index]);
-    if (is_match) {
-      return {true, 1, 1, ""};
-    } else {
-      std::stringstream s;
-      s << "Failed match on event " << event_index << ", expected " << repr()
-        << ", got " << events[event_index]->repr() << std::endl;
-      return {false, 1, 1, s.str()};
+
+template <typename R, typename C, typename... A>
+struct function_traits<R (C::*)(A...) const> // const
+{
+    using return_type = R;
+    using class_type  = C;
+    using args_type   = std:: tuple< A... >;
+        constexpr static int num_arguments = std::tuple_size<args_type>::value;
+    template<class Call, class... Args>
+    static auto invoke_as(Call call, const Args&... args){
+        if(!is_nonnull(std::dynamic_pointer_cast<A>(args)...)){
+            return MatchDiagnostic{false, {"Types didn't match on arguments"}};
+        }
+        return call(*std::dynamic_pointer_cast<A>(args)...);
     }
-  }
+};
+
+template <typename T>
+struct   function_traits<T, void_t< decltype(&T::operator()) > > 
+: public function_traits<           decltype(&T::operator())   >
+{
+};
+
+MatchDiagnostic check_match(event_vector::size_type index, event_vector events){
+  return (index == events.size()) ? MatchDiagnostic{true} : MatchDiagnostic{false, {"Wrong number of events encountered"}};
+}
+
+
+template<int num, class Matcher>
+struct invoke_helper{
+    template<class Traits, class... Args>
+    static auto call(int index, event_vector events, Matcher matcher, Args... args){
+        return invoke_helper<num-1, Matcher>::template call<Traits>(index+1,events, matcher, args..., events[index]);
+    }
+};
+
+template<class Matcher>
+struct invoke_helper<0, Matcher>{
+    template<class Traits, class... Args>
+    static auto call(int, event_vector, Matcher matcher, Args... args){
+       return Traits::invoke_as(matcher, args...);
+    }
+};
+
+
+template<class Matcher, class... Matchers>
+MatchDiagnostic check_match(event_vector::size_type index, event_vector events, Matcher matcher, Matchers... matchers){
+  using Traits = function_traits<Matcher>;
+  constexpr static event_vector::size_type num_args = Traits::num_arguments;
+  if(index + num_args > events.size()) { return {false, {"Too many events encounted"}}; }
+  auto result = invoke_helper<num_args, Matcher>::template call<Traits>(index, events, matcher);
+  if(!result.success) { return result; }
+  return check_match(index+num_args, events, matchers...);
+}
+
+template<class... Matchers>
+auto check_match(event_vector events, Matchers... matchers){
+  return check_match(0, events, matchers...);
+}
+
+struct EventBase {
   virtual bool isEqual(const EventBase&) const = 0;
   template <typename T>
   constexpr static uint64_t unspecified_sentinel =
       std::numeric_limits<T>::max();
   virtual ~EventBase()                      = default;
-  virtual std::string repr() const override = 0;
+  virtual std::string repr() const = 0;
 };
 
 struct InitEvent : public EventBase {
@@ -242,82 +273,15 @@ struct EndFenceEvent : public EndOperation<EndFenceEvent> {
   virtual ~EndFenceEvent() = default;
 };
 
-template <typename MetaMatcher>
-struct EventPair : public EventMatcher {
-  using Ev = EventBasePtr;
-  Ev match;
-  using MatchType = std::shared_ptr<EventMatcher>;
-  MetaMatcher comparator;
-  std::string descriptor;
-  EventPair(const Ev& f, const MetaMatcher& n, const std::string& d)
-      : match(f), comparator(n), descriptor(d) {}
-  virtual std::string repr() const override {
-    std::stringstream s;
-    s << "A pair of (" << match->repr() << "), then (" << descriptor << ")"
-      << std::endl;
-    return s.str();
-  }
-  virtual MatchResult matches(const EventSet& events,
-                              EventSet::size_type event_index) override {
-    MatchResult result{false, 1, 1};
-    if (event_index >= (events.size() - 1)) {
-      result.diagnostic = std::string(
-          "EventPair searching for a pair of events, but not enough events "
-          "left in pattern\n");
-      return result;
-    }
-    if (!match->isEqual(*events[event_index])) {
-      std::stringstream s;
-      s << "EventPair failed to match first item, expected " << match->repr()
-        << ", got " << events[event_index]->repr() << "\n";
-      result.diagnostic = s.str();
-      return result;
-    }
-    auto submatch = comparator(events[event_index], events[event_index + 1]);
-    if (!submatch.match_success) {
-      result.diagnostic = submatch.diagnostic;
-      return result;
-    }
-    result.increment_pattern += submatch.increment_pattern;
-    result.increment_event += submatch.increment_event;
-    result.match_success = true;
-    return result;
-  }
-};
 
-template <typename MetaMatcher>
-auto make_event_pair(const EventBasePtr& first, const MetaMatcher& second,
-                     const std::string& descriptor) {
-  return std::make_shared<EventPair<MetaMatcher>>(first, second, descriptor);
-}
-
-template <typename IntendedEventType1, typename IntendedEventType2,
-          typename MetaMatcher>
-auto make_event_pair(const EventBasePtr& first, const MetaMatcher& second,
-                     const std::string& descriptor) {
-  auto comparator = [&](const auto e1, const auto e2) {
-    auto first_event  = std::dynamic_pointer_cast<IntendedEventType1>(e1);
-    auto second_event = std::dynamic_pointer_cast<IntendedEventType2>(e2);
-    if ((first_event == nullptr) || (second_event == nullptr)) {
-      return EventMatcher::MatchResult{false, 0, 1,
-                                       "Types of events don't match"};
-    }
-    return second(first_event, second_event);
-  };
-  return std::make_shared<EventPair<decltype(comparator)>>(first, comparator,
-                                                           descriptor);
-}
-
-bool compare_event_vectors(const EventMatcher::Pattern& expected,
-                           const std::vector<EventBasePtr>& found) {
-  EventMatcher* matcher = new EventRoot();
-  auto diagnostic       = matcher->checkMatch(expected, found);
+template<class... Matchers>
+bool compare_event_vectors(event_vector events, Matchers... matchers){
+  auto diagnostic = check_match(0, events, matchers...);
   if (!diagnostic.success) {
     for (const auto& message : diagnostic.messages) {
       std::cerr << message;
     }
   }
-  delete matcher;
   return diagnostic.success;
 }
 
@@ -395,18 +359,18 @@ void listen_tool_events(ToolValidatorConfiguration config) {
    */
 }
 
-template <class Lambda, class... Args>
-bool validate_event_set(const EventMatcher::Pattern& expected,
-                        const Lambda& lam, Args... args) {
+template <class Lambda, class... Matchers>
+bool validate_event_set(
+  const Lambda& lam, const Matchers... matchers) {
   found_events.clear();
-  lam(args...);
-  return compare_event_vectors(expected, found_events);
+  lam();
+  return compare_event_vectors(found_events, matchers...);
 }
 
 template <class Lambda, class... Args>
-auto get_event_set(const Lambda& lam, Args... args) {
+auto get_event_set(const Lambda& lam) {
   found_events.clear();
-  lam(args...);
+  lam();
   // return compare_event_vectors(expected, found_events);
   std::vector<EventBasePtr> events;
   std::copy(found_events.begin(), found_events.end(),
