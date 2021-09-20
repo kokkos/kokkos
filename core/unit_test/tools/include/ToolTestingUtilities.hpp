@@ -15,8 +15,12 @@ struct MatchDiagnostic {
 };
 
 // Originally found at https://stackoverflow.com/a/39717241
-template<typename... Ts> struct make_void { typedef void type;};
-template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+template <typename... Ts>
+struct make_void {
+  typedef void type;
+};
+template <typename... Ts>
+using void_t = typename make_void<Ts...>::type;
 
 template <typename T, typename = void>
 struct function_traits;
@@ -28,99 +32,104 @@ using event_vector = EventSet;
 
 bool is_nonnull() { return true; }
 
-template<class Head, class... Tail>
-bool is_nonnull(const Head& head, const Tail... tail) { return (head != nullptr) && (is_nonnull(tail...)) ; }
-
+template <class Head, class... Tail>
+bool is_nonnull(const Head& head, const Tail... tail) {
+  return (head != nullptr) && (is_nonnull(tail...));
+}
 
 template <typename R, typename... A>
-struct function_traits<R (*)(A...)>
-{
-    using return_type = R;
-    using class_type  = void;
-    using args_type   = std:: tuple< A... >;
-    constexpr static int num_arguments = std::tuple_size<args_type>::value;
-    template<class Call, class... Args>
-    static auto invoke_as(Call call, Args... args){
-     if(!is_nonnull(std::dynamic_pointer_cast<A>(args)...)){
-            return false;
-        }
-        return call(*std::dynamic_pointer_cast<A>(args)...); 
+struct function_traits<R (*)(A...)> {
+  using return_type                  = R;
+  using class_type                   = void;
+  using args_type                    = std::tuple<A...>;
+  constexpr static int num_arguments = std::tuple_size<args_type>::value;
+  template <class Call, class... Args>
+  static auto invoke_as(Call call, Args... args) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
+      return false;
     }
+    return call(*std::dynamic_pointer_cast<A>(args)...);
+  }
 };
 
 template <typename R, typename C, typename... A>
-struct function_traits<R (C::*)(A...)>
-{
-    using return_type = R;
-    using class_type  = void;
-    using args_type   = std:: tuple< A... >;
-        constexpr static int num_arguments = std::tuple_size<args_type>::value;
-    template<class Call, class... Args>
-    static auto invoke_as(Call call, Args... args){
-     if(!is_nonnull(std::dynamic_pointer_cast<A>(args)...)){
-            return false;
-        }
-        return call(*std::dynamic_pointer_cast<A>(args)...);
+struct function_traits<R (C::*)(A...)> {
+  using return_type                  = R;
+  using class_type                   = void;
+  using args_type                    = std::tuple<A...>;
+  constexpr static int num_arguments = std::tuple_size<args_type>::value;
+  template <class Call, class... Args>
+  static auto invoke_as(Call call, Args... args) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
+      return false;
     }
+    return call(*std::dynamic_pointer_cast<A>(args)...);
+  }
 };
 
-
 template <typename R, typename C, typename... A>
-struct function_traits<R (C::*)(A...) const> // const
+struct function_traits<R (C::*)(A...) const>  // const
 {
-    using return_type = R;
-    using class_type  = C;
-    using args_type   = std:: tuple< A... >;
-        constexpr static int num_arguments = std::tuple_size<args_type>::value;
-    template<class Call, class... Args>
-    static auto invoke_as(Call call, const Args&... args){
-        if(!is_nonnull(std::dynamic_pointer_cast<A>(args)...)){
-            return MatchDiagnostic{false, {"Types didn't match on arguments"}};
-        }
-        return call(*std::dynamic_pointer_cast<A>(args)...);
+  using return_type                  = R;
+  using class_type                   = C;
+  using args_type                    = std::tuple<A...>;
+  constexpr static int num_arguments = std::tuple_size<args_type>::value;
+  template <class Call, class... Args>
+  static auto invoke_as(Call call, const Args&... args) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
+      return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
+    return call(*std::dynamic_pointer_cast<A>(args)...);
+  }
 };
 
 template <typename T>
-struct   function_traits<T, void_t< decltype(&T::operator()) > > 
-: public function_traits<           decltype(&T::operator())   >
-{
-};
+struct function_traits<T, void_t<decltype(&T::operator())> >
+    : public function_traits<decltype(&T::operator())> {};
 
-MatchDiagnostic check_match(event_vector::size_type index, event_vector events){
-  return (index == events.size()) ? MatchDiagnostic{true} : MatchDiagnostic{false, {"Wrong number of events encountered"}};
+MatchDiagnostic check_match(event_vector::size_type index,
+                            event_vector events) {
+  return (index == events.size())
+             ? MatchDiagnostic{true}
+             : MatchDiagnostic{false, {"Wrong number of events encountered"}};
 }
 
-
-template<int num, class Matcher>
-struct invoke_helper{
-    template<class Traits, class... Args>
-    static auto call(int index, event_vector events, Matcher matcher, Args... args){
-        return invoke_helper<num-1, Matcher>::template call<Traits>(index+1,events, matcher, args..., events[index]);
-    }
+template <int num, class Matcher>
+struct invoke_helper {
+  template <class Traits, class... Args>
+  static auto call(int index, event_vector events, Matcher matcher,
+                   Args... args) {
+    return invoke_helper<num - 1, Matcher>::template call<Traits>(
+        index + 1, events, matcher, args..., events[index]);
+  }
 };
 
-template<class Matcher>
-struct invoke_helper<0, Matcher>{
-    template<class Traits, class... Args>
-    static auto call(int, event_vector, Matcher matcher, Args... args){
-       return Traits::invoke_as(matcher, args...);
-    }
+template <class Matcher>
+struct invoke_helper<0, Matcher> {
+  template <class Traits, class... Args>
+  static auto call(int, event_vector, Matcher matcher, Args... args) {
+    return Traits::invoke_as(matcher, args...);
+  }
 };
 
-
-template<class Matcher, class... Matchers>
-MatchDiagnostic check_match(event_vector::size_type index, event_vector events, Matcher matcher, Matchers... matchers){
-  using Traits = function_traits<Matcher>;
+template <class Matcher, class... Matchers>
+MatchDiagnostic check_match(event_vector::size_type index, event_vector events,
+                            Matcher matcher, Matchers... matchers) {
+  using Traits                                      = function_traits<Matcher>;
   constexpr static event_vector::size_type num_args = Traits::num_arguments;
-  if(index + num_args > events.size()) { return {false, {"Too many events encounted"}}; }
-  auto result = invoke_helper<num_args, Matcher>::template call<Traits>(index, events, matcher);
-  if(!result.success) { return result; }
-  return check_match(index+num_args, events, matchers...);
+  if (index + num_args > events.size()) {
+    return {false, {"Too many events encounted"}};
+  }
+  auto result = invoke_helper<num_args, Matcher>::template call<Traits>(
+      index, events, matcher);
+  if (!result.success) {
+    return result;
+  }
+  return check_match(index + num_args, events, matchers...);
 }
 
-template<class... Matchers>
-auto check_match(event_vector events, Matchers... matchers){
+template <class... Matchers>
+auto check_match(event_vector events, Matchers... matchers) {
   return check_match(0, events, matchers...);
 }
 
@@ -129,7 +138,7 @@ struct EventBase {
   template <typename T>
   constexpr static uint64_t unspecified_sentinel =
       std::numeric_limits<T>::max();
-  virtual ~EventBase()                      = default;
+  virtual ~EventBase()             = default;
   virtual std::string repr() const = 0;
 };
 
@@ -273,9 +282,8 @@ struct EndFenceEvent : public EndOperation<EndFenceEvent> {
   virtual ~EndFenceEvent() = default;
 };
 
-
-template<class... Matchers>
-bool compare_event_vectors(event_vector events, Matchers... matchers){
+template <class... Matchers>
+bool compare_event_vectors(event_vector events, Matchers... matchers) {
   auto diagnostic = check_match(0, events, matchers...);
   if (!diagnostic.success) {
     for (const auto& message : diagnostic.messages) {
@@ -360,8 +368,7 @@ void listen_tool_events(ToolValidatorConfiguration config) {
 }
 
 template <class Lambda, class... Matchers>
-bool validate_event_set(
-  const Lambda& lam, const Matchers... matchers) {
+bool validate_event_set(const Lambda& lam, const Matchers... matchers) {
   found_events.clear();
   lam();
   auto success = compare_event_vectors(found_events, matchers...);
