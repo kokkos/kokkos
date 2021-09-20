@@ -432,7 +432,7 @@ IteratorType find_if_or_not_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
-  ex.fence("find_if_or_not: fence after operation");
+  ex.fence("Kokkos::find_if_or_not: fence after operation");
 
   // decide and return
   const auto r_h =
@@ -475,9 +475,8 @@ UnaryFunctorType for_each_impl(const std::string& label,
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
-  ex.fence("for_each: fence after operation");
+  ex.fence("Kokkos::for_each: fence after operation");
 
-  // return
   return functor;
 }
 
@@ -525,9 +524,8 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, predicate), count);
-  ex.fence("count_if: fence after operation");
+  ex.fence("Kokkos::count_if: fence after operation");
 
-  // return
   return count;
 }
 
@@ -574,7 +572,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_for_par_reduce),
       functor_type(first1, first2, reducer, std::move(predicate)), reducer);
-  ex.fence("mismatch: fence after operation");
+  ex.fence("Kokkos::mismatch: fence after operation");
 
   // decide and return
   const auto r_h =
@@ -653,9 +651,8 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first1, first2, predicate), different);
-  ex.fence("equal: fence after operation");
+  ex.fence("Kokkos::equal: fence after operation");
 
-  // return
   return !different;
 }
 
@@ -729,7 +726,8 @@ bool lexicographical_compare_impl(const std::string& label,
 
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, range),
                             func1_t(first1, first2, reducer, comp), reducer);
-  ex.fence("lexicographical_compare: fence after first reduce operation");
+  ex.fence(
+      "Kokkos::lexicographical_compare: fence after first reduce operation");
 
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
@@ -750,7 +748,8 @@ bool lexicographical_compare_impl(const std::string& label,
                                     ComparatorType>;
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, 1),
                             func2_t(it1, it2, comp), less);
-  ex.fence("lexicographical_compare: fence after second reduce operation");
+  ex.fence(
+      "Kokkos::lexicographical_compare: fence after second reduce operation");
 
   return static_cast<bool>(less);
 }
@@ -802,7 +801,7 @@ IteratorType adjacent_find_impl(const std::string& label,
     ::Kokkos::parallel_reduce(
         label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
         func_t(first, reducer, pred), reducer);
-    ex.fence("adjacent_find: fence after operation");
+    ex.fence("Kokkos::adjacent_find: fence after operation");
 
     const auto r_h =
         ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
@@ -878,7 +877,7 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_reduce(
         label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
-    ex.fence("search: fence after operation");
+    ex.fence("Kokkos::search: fence after operation");
 
     // decide and return
     const auto r_h =
@@ -937,7 +936,7 @@ IteratorType1 find_first_of_impl(const std::string& label,
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_t(first, s_first, s_last, reducer, pred), reducer);
-  ex.fence("find_first_of: fence after operation");
+  ex.fence("Kokkos::find_first_of: fence after operation");
 
   // decide and return
   const auto r_h =
@@ -1019,7 +1018,7 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_reduce(
         label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
-    ex.fence("find_end: fence after operation");
+    ex.fence("Kokkos::find_end: fence after operation");
 
     // decide and return
     const auto r_h =

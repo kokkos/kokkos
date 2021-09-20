@@ -370,7 +370,7 @@ void reverse_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_for(label,
                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                            func_t(first, last));
-    ex.fence("reverse: fence after operation");
+    ex.fence("Kokkos::reverse: fence after operation");
   }
 }
 
@@ -396,7 +396,7 @@ OutputIterator reverse_copy_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(last, d_first));
-  ex.fence("reverse_copy: fence after operation");
+  ex.fence("Kokkos::reverse_copy: fence after operation");
 
   // return
   return d_first + num_elements;
@@ -423,7 +423,7 @@ OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, d_first));
-  ex.fence("move: fence after operation");
+  ex.fence("Kokkos::move: fence after operation");
 
   // return
   return d_first + num_elements;
@@ -451,7 +451,7 @@ IteratorType2 move_backward_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(last, d_last));
-  ex.fence("move_backward: fence after operation");
+  ex.fence("Kokkos::move_backward: fence after operation");
 
   // return
   return d_last - num_elements;
@@ -478,7 +478,7 @@ IteratorType2 swap_ranges_impl(const std::string& label,
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_to_swap),
       func_t(first1, first2));
-  ex.fence("swap_ranges: fence after operation");
+  ex.fence("Kokkos::swap_ranges: fence after operation");
 
   // return
   return first2 + num_elements_to_swap;
@@ -562,7 +562,7 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
           RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
           step3_func_t((first + num_unique_found_in_step_one), tmp_view));
 
-      ex.fence("uniqute: fence after operation");
+      ex.fence("Kokkos::uniqute: fence after operation");
 
       // return iterator to one passed the last written
       // (the +1 is needed to account for the last element, see above)
@@ -638,7 +638,7 @@ OutputIterator rotate_copy_impl(const std::string& label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_type(first, last, n_first, d_first));
 
-  ex.fence("rotate_copy: fence after operation");
+  ex.fence("Kokkos::rotate_copy: fence after operation");
 
   // return
   return d_first + num_elements;
@@ -704,7 +704,7 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
         "remove_if_stage2_parfor",
         RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
         func2_type(cbegin(tmp_view), first));
-    ex.fence("remove_if: fence after stage2");
+    ex.fence("Kokkos::remove_if: fence after stage2");
 
     // return
     return first + keep_count;

@@ -127,7 +127,7 @@ ValueType reduce_custom_functors_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer), reducer);
-  ex.fence("reduce: fence after operation");
+  ex.fence("Kokkos::reduce: fence after operation");
 
   // return
   const auto r_h =

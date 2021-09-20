@@ -145,7 +145,7 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
   ::Kokkos::parallel_for("copy",
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          functor2_t(aux_view, first_dest));
-  ex.fence("adjacent_difference: fence after operation");
+  ex.fence("Kokkos::adjacent_difference: fence after operation");
 
   // return
   return first_dest + num_elements;

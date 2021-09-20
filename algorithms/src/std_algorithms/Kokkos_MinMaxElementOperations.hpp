@@ -125,7 +125,7 @@ IteratorType min_or_max_element_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer), reducer);
-  ex.fence("min_or_max_element: fence after operation");
+  ex.fence("Kokkos::min_or_max_element: fence after operation");
 
   // return
   const auto result_h =
@@ -167,7 +167,7 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer), reducer);
-  ex.fence("minmax_element: fence after operation");
+  ex.fence("Kokkos::minmax_element: fence after operation");
 
   // return
   const auto result_h =

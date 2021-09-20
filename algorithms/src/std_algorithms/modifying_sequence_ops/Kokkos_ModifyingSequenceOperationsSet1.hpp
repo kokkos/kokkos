@@ -310,7 +310,7 @@ OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, d_first));
-  ex.fence("copy: fence after operation");
+  ex.fence("Kokkos::copy: fence after operation");
 
   // return
   return d_first + num_elements;
@@ -357,7 +357,7 @@ IteratorType2 copy_backward_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(last, d_last));
-  ex.fence("copy_backward: fence after operation");
+  ex.fence("Kokkos::copy_backward: fence after operation");
 
   // return
   return d_last - num_elements;
@@ -412,7 +412,7 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_type(first, d_first, pred), count);
-    ex.fence("copy_if: fence after operation");
+    ex.fence("Kokkos::copy_if: fence after operation");
 
     // return
     return d_first + count;
@@ -434,7 +434,7 @@ void fill_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          StdFillFunctor<IteratorType, T>(first, value));
-  ex.fence("fill: fence after operation");
+  ex.fence("Kokkos::fill: fence after operation");
 }
 
 template <class ExecutionSpace, class IteratorType, class SizeType, class T>
@@ -476,7 +476,7 @@ OutputIterator transform_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first1, d_first, unary_op));
-  ex.fence("transform: fence after operation");
+  ex.fence("Kokkos::transform: fence after operation");
 
   // return
   return d_first + num_elements;
@@ -506,7 +506,7 @@ OutputIterator transform_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first1, first2, d_first, binary_op));
-  ex.fence("transform: fence after operation");
+  ex.fence("Kokkos::transform: fence after operation");
   return d_first + num_elements;
 }
 
@@ -528,7 +528,7 @@ void generate_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, g));
-  ex.fence("generate: fence after operation");
+  ex.fence("Kokkos::generate: fence after operation");
 }
 
 template <class ExecutionSpace, class IteratorType, class Size, class Generator>
@@ -562,7 +562,7 @@ void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, std::move(pred), new_value));
-  ex.fence("replace_if: fence after operation");
+  ex.fence("Kokkos::replace_if: fence after operation");
 }
 
 // ------------------------------------------
@@ -584,7 +584,7 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, old_value, new_value));
-  ex.fence("replace: fence after operation");
+  ex.fence("Kokkos::replace: fence after operation");
 }
 
 // ------------------------------------------
@@ -613,7 +613,7 @@ OutputIteratorType replace_copy_impl(const std::string& label,
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first_from, first_dest, old_value, new_value));
-  ex.fence("replace_copy: fence after operation");
+  ex.fence("Kokkos::replace_copy: fence after operation");
 
   // return
   return first_dest + num_elements;
@@ -647,7 +647,7 @@ OutputIteratorType replace_copy_if_impl(const std::string& label,
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_t(first_from, first_dest, std::move(pred), new_value));
-  ex.fence("replace_copy_if: fence after operation");
+  ex.fence("Kokkos::replace_copy_if: fence after operation");
 
   // return
   return first_dest + num_elements;

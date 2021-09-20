@@ -236,7 +236,7 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
-  ex.fence("is_partitioned: fence after operation");
+  ex.fence("Kokkos::is_partitioned: fence after operation");
 
   // decide and return
   const auto r_h =
@@ -289,7 +289,7 @@ IteratorType partition_point_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
-  ex.fence("partition_point: fence after operation");
+  ex.fence("Kokkos::partition_point: fence after operation");
 
   // decide and return
   const auto r_h =
@@ -342,7 +342,7 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(from_first, to_first_true, to_first_false, pred), counts);
 
-  ex.fence("partition_copy: fence after operation");
+  ex.fence("Kokkos::partition_copy: fence after operation");
 
   // return
   return {to_first_true + counts.true_count_,
