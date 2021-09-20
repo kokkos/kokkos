@@ -121,7 +121,7 @@ class ThreadsExec {
 
   static void global_lock();
   static void global_unlock();
-  static bool spawn();
+  static void spawn();
 
   static void execute_resize_scratch(ThreadsExec &, const void *);
   static void execute_sleep(ThreadsExec &, const void *);

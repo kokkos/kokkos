@@ -45,11 +45,11 @@ struct MinOper {
   }
 };
 
-// This exit early optimization causes weird compiler errors with MSVC 2019
-#ifndef DESUL_HAVE_MSVC_ATOMICS
 template <typename Op, typename Scalar1, typename Scalar2, typename = bool>
 struct may_exit_early : std::false_type {};
 
+// This exit early optimization causes weird compiler errors with MSVC 2019
+#ifndef DESUL_HAVE_MSVC_ATOMICS
 template <typename Op, typename Scalar1, typename Scalar2>
 struct may_exit_early<Op,
                       Scalar1,
@@ -57,6 +57,7 @@ struct may_exit_early<Op,
                       decltype(Op::check_early_exit(std::declval<Scalar1 const&>(),
                                                     std::declval<Scalar2 const&>()))>
     : std::true_type {};
+#endif
 
 template <typename Op, typename Scalar1, typename Scalar2>
 constexpr DESUL_FUNCTION typename std::enable_if<may_exit_early<Op, Scalar1, Scalar2>::value, bool>::type
@@ -69,7 +70,6 @@ constexpr DESUL_FUNCTION typename std::enable_if<!may_exit_early<Op, Scalar1, Sc
 check_early_exit(Op const&, Scalar1 const&, Scalar2 const&) {
   return false;
 }
-#endif
 
 template <class Scalar1, class Scalar2>
 struct AddOper {
@@ -172,9 +172,7 @@ atomic_fetch_oper(const Oper& op,
   cas_t assume = oldval;
 
   do {
-#ifndef DESUL_HAVE_MSVC_ATOMICS
     if (Impl::check_early_exit(op, reinterpret_cast<T&>(oldval), val)) return reinterpret_cast<T&>(oldval);
-#endif
     assume = oldval;
     T newval = op.apply(reinterpret_cast<T&>(assume), val);
     oldval = desul::atomic_compare_exchange(
@@ -200,9 +198,7 @@ atomic_oper_fetch(const Oper& op,
   T newval = val;
   cas_t assume = oldval;
   do {
-#ifndef DESUL_HAVE_MSVC_ATOMICS
     if (Impl::check_early_exit(op, reinterpret_cast<T&>(oldval), val)) return reinterpret_cast<T&>(oldval);
-#endif
     assume = oldval;
     newval = op.apply(reinterpret_cast<T&>(assume), val);
     oldval = desul::atomic_compare_exchange(
