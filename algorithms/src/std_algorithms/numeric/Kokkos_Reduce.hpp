@@ -167,7 +167,7 @@ typename IteratorType::value_type reduce(const ExecutionSpace& ex,
                                          IteratorType first,
                                          IteratorType last) {
   return Impl::reduce_default_functors_impl(
-      "kokkos_reduce_default_functors_iterator_api", ex, first, last,
+      "Kokkos::reduce_default_functors_iterator_api", ex, first, last,
       typename IteratorType::value_type());
 }
 
@@ -190,7 +190,7 @@ auto reduce(const ExecutionSpace& ex,
   using value_type = typename view_type::value_type;
 
   return Impl::reduce_default_functors_impl(
-      "kokkos_reduce_default_functors_view_api", ex, KE::cbegin(view),
+      "Kokkos::reduce_default_functors_view_api", ex, KE::cbegin(view),
       KE::cend(view), value_type());
 }
 
@@ -217,7 +217,7 @@ ValueType reduce(const ExecutionSpace& ex, IteratorType first,
                 "ValueType must be move constructible.");
 
   return Impl::reduce_default_functors_impl(
-      "kokkos_reduce_default_functors_iterator_api", ex, first, last,
+      "Kokkos::reduce_default_functors_iterator_api", ex, first, last,
       init_reduction_value);
 }
 
@@ -244,7 +244,7 @@ ValueType reduce(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::reduce_default_functors_impl(
-      "kokkos_reduce_default_functors_view_api", ex, KE::cbegin(view),
+      "Kokkos::reduce_default_functors_view_api", ex, KE::cbegin(view),
       KE::cend(view), init_reduction_value);
 }
 
@@ -275,7 +275,7 @@ ValueType reduce(const ExecutionSpace& ex, IteratorType first,
                 "ValueType must be move constructible.");
 
   return Impl::reduce_custom_functors_impl(
-      "kokkos_reduce_default_functors_iterator_api", ex, first, last,
+      "Kokkos::reduce_default_functors_iterator_api", ex, first, last,
       init_reduction_value, joiner);
 }
 
@@ -303,7 +303,7 @@ ValueType reduce(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::reduce_custom_functors_impl(
-      "kokkos_reduce_custom_functors_view_api", ex, KE::cbegin(view),
+      "Kokkos::reduce_custom_functors_view_api", ex, KE::cbegin(view),
       KE::cend(view), init_reduction_value, joiner);
 }
 

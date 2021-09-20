@@ -307,7 +307,7 @@ exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::exclusive_scan_default_op_impl(
-      "kokkos_exclusive_scan_default_functors_iterator_api", ex, first, last,
+      "Kokkos::exclusive_scan_default_functors_iterator_api", ex, first, last,
       first_dest, init_value);
 }
 
@@ -337,7 +337,7 @@ auto exclusive_scan(const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
   return Impl::exclusive_scan_default_op_impl(
-      "kokkos_exclusive_scan_default_functors_view_api", ex,
+      "Kokkos::exclusive_scan_default_functors_view_api", ex,
       KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest),
       init_value);
 }
@@ -374,7 +374,7 @@ exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::exclusive_scan_custom_op_impl(
-      "kokkos_exclusive_scan_custom_functors_iterator_api", ex, first, last,
+      "Kokkos::exclusive_scan_custom_functors_iterator_api", ex, first, last,
       first_dest, init_value, bop);
 }
 
@@ -414,7 +414,7 @@ auto exclusive_scan(const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
   return Impl::exclusive_scan_custom_op_impl(
-      "kokkos_exclusive_scan_custom_functors_view_api", ex,
+      "Kokkos::exclusive_scan_custom_functors_view_api", ex,
       KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest),
       init_value, bop);
 }
@@ -464,8 +464,8 @@ transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_impl(
-      "kokkos_transform_exclusive_scan_custom_functors_iterator_api", ex, first,
-      last, first_dest, init_value, binary_op, unary_op);
+      "Kokkos::transform_exclusive_scan_custom_functors_iterator_api", ex,
+      first, last, first_dest, init_value, binary_op, unary_op);
 }
 
 template <class ExecutionSpace, class InputIteratorType,
@@ -508,7 +508,7 @@ auto transform_exclusive_scan(
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_exclusive_scan_impl(
-      "kokkos_transform_exclusive_scan_custom_functors_view_api", ex,
+      "Kokkos::transform_exclusive_scan_custom_functors_view_api", ex,
       KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest),
       init_value, binary_op, unary_op);
 }

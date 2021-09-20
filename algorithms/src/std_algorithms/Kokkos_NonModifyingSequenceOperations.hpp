@@ -426,7 +426,7 @@ IteratorType find_if_or_not_impl(const std::string& label,
                                        reducer_type, PredicateType>;
 
   // run
-  result_view_type result("kokkos_find_if_impl_result_view");
+  result_view_type result("Kokkos::find_if_impl_result_view");
   reducer_type reducer(result);
   const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(label,
@@ -721,7 +721,7 @@ bool lexicographical_compare_impl(const std::string& label,
   auto d1    = Kokkos::Experimental::distance(first1, last1);
   auto d2    = Kokkos::Experimental::distance(first2, last2);
   auto range = Kokkos::Experimental::min(d1, d2);
-  result_view_type result("kokkos_lexicographical_compare_impl_result_view");
+  result_view_type result("Kokkos::lexicographical_compare_impl_result_view");
   reducer_type reducer(result);
   using func1_t =
       StdLexicographicalCompareFunctor<index_type, IteratorType1, IteratorType2,
@@ -794,7 +794,7 @@ IteratorType adjacent_find_impl(const std::string& label,
     using func_t           = StdAdjacentFindFunctor<index_type, IteratorType,
                                           reducer_type, PredicateType>;
 
-    result_view_type result("kokkos_adjacent_find_impl_result_view");
+    result_view_type result("Kokkos::adjacent_find_impl_result_view");
     reducer_type reducer(result);
 
     // note that we use below num_elements-1 because
@@ -865,7 +865,7 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
                                     reducer_type, BinaryPredicateType>;
 
     // run
-    result_view_type result("kokkos_search_impl_result");
+    result_view_type result("Kokkos::search_impl_result");
     reducer_type reducer(result);
 
     // decide the size of the range policy of the par_red:
@@ -931,7 +931,7 @@ IteratorType1 find_first_of_impl(const std::string& label,
                                        reducer_type, BinaryPredicateType>;
 
   // run
-  result_view_type result("kokkos_find_first_of_impl_result");
+  result_view_type result("Kokkos::find_first_of_impl_result");
   reducer_type reducer(result);
   const auto num_elements = last - first;
   ::Kokkos::parallel_reduce(
@@ -1006,7 +1006,7 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
                                      reducer_type, BinaryPredicateType>;
 
     // run
-    result_view_type result("kokkos_find_end_impl_result");
+    result_view_type result("Kokkos::find_end_impl_result");
     reducer_type reducer(result);
 
     // decide the size of the range policy of the par_red:
@@ -1054,7 +1054,7 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIterator, class T>
 InputIterator find(const ExecutionSpace& ex, InputIterator first,
                    InputIterator last, const T& value) {
-  return Impl::find_impl("kokkos_find_iterator_api_default", ex, first, last,
+  return Impl::find_impl("Kokkos::find_iterator_api_default", ex, first, last,
                          value);
 }
 
@@ -1070,7 +1070,7 @@ auto find(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_impl("kokkos_find_view_api_default", ex, KE::cbegin(view),
+  return Impl::find_impl("Kokkos::find_view_api_default", ex, KE::cbegin(view),
                          KE::cend(view), value);
 }
 
@@ -1089,7 +1089,7 @@ auto find(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 IteratorType find_if(const ExecutionSpace& ex, IteratorType first,
                      IteratorType last, PredicateType predicate) {
-  return Impl::find_if_or_not_impl<true>("kokkos_find_if_iterator_api_default",
+  return Impl::find_if_or_not_impl<true>("Kokkos::find_if_iterator_api_default",
                                          ex, first, last, std::move(predicate));
 }
 
@@ -1108,7 +1108,7 @@ auto find_if(const ExecutionSpace& ex,
              Predicate predicate) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_if_or_not_impl<true>("kokkos_find_if_view_api_default", ex,
+  return Impl::find_if_or_not_impl<true>("Kokkos::find_if_view_api_default", ex,
                                          KE::cbegin(v), KE::cend(v),
                                          std::move(predicate));
 }
@@ -1131,7 +1131,7 @@ template <class ExecutionSpace, class IteratorType, class Predicate>
 IteratorType find_if_not(const ExecutionSpace& ex, IteratorType first,
                          IteratorType last, Predicate predicate) {
   return Impl::find_if_or_not_impl<false>(
-      "kokkos_find_if_not_iterator_api_default", ex, first, last,
+      "Kokkos::find_if_not_iterator_api_default", ex, first, last,
       std::move(predicate));
 }
 
@@ -1151,9 +1151,9 @@ auto find_if_not(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_if_or_not_impl<false>("kokkos_find_if_not_view_api_default",
-                                          ex, KE::cbegin(v), KE::cend(v),
-                                          std::move(predicate));
+  return Impl::find_if_or_not_impl<false>(
+      "Kokkos::find_if_not_view_api_default", ex, KE::cbegin(v), KE::cend(v),
+      std::move(predicate));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -1181,7 +1181,7 @@ UnaryFunctorType for_each(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class UnaryFunctorType>
 UnaryFunctorType for_each(const ExecutionSpace& ex, IteratorType first,
                           IteratorType last, UnaryFunctorType functor) {
-  return Impl::for_each_impl("kokkos_for_each_iterator_api_default", ex, first,
+  return Impl::for_each_impl("Kokkos::for_each_iterator_api_default", ex, first,
                              last, std::move(functor));
 }
 
@@ -1205,7 +1205,7 @@ UnaryFunctorType for_each(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::for_each_impl("kokkos_for_each_view_api_default", ex,
+  return Impl::for_each_impl("Kokkos::for_each_view_api_default", ex,
                              KE::begin(v), KE::end(v), std::move(functor));
 }
 
@@ -1224,7 +1224,7 @@ template <class ExecutionSpace, class IteratorType, class SizeType,
           class UnaryFunctorType>
 IteratorType for_each_n(const ExecutionSpace& ex, IteratorType first,
                         SizeType n, UnaryFunctorType functor) {
-  return Impl::for_each_n_impl("kokkos_for_each_n_iterator_api_default", ex,
+  return Impl::for_each_n_impl("Kokkos::for_each_n_iterator_api_default", ex,
                                first, n, std::move(functor));
 }
 
@@ -1247,7 +1247,7 @@ auto for_each_n(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::for_each_n_impl("kokkos_for_each_n_view_api_default", ex,
+  return Impl::for_each_n_impl("Kokkos::for_each_n_view_api_default", ex,
                                KE::begin(v), n, std::move(functor));
 }
 
@@ -1259,7 +1259,7 @@ typename IteratorType::difference_type count_if(const ExecutionSpace& ex,
                                                 IteratorType first,
                                                 IteratorType last,
                                                 Predicate predicate) {
-  return Impl::count_if_impl("kokkos_count_if_iterator_api_default", ex, first,
+  return Impl::count_if_impl("Kokkos::count_if_iterator_api_default", ex, first,
                              last, std::move(predicate));
 }
 
@@ -1280,7 +1280,7 @@ auto count_if(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::count_if_impl("kokkos_count_if_view_api_default", ex,
+  return Impl::count_if_impl("Kokkos::count_if_view_api_default", ex,
                              KE::cbegin(v), KE::cend(v), std::move(predicate));
 }
 
@@ -1304,7 +1304,7 @@ typename IteratorType::difference_type count(const ExecutionSpace& ex,
                                              IteratorType first,
                                              IteratorType last,
                                              const T& value) {
-  return Impl::count_impl("kokkos_count_iterator_api_default", ex, first, last,
+  return Impl::count_impl("Kokkos::count_iterator_api_default", ex, first, last,
                           value);
 }
 
@@ -1323,7 +1323,7 @@ auto count(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::count_impl("kokkos_count_view_api_default", ex, KE::cbegin(v),
+  return Impl::count_impl("Kokkos::count_view_api_default", ex, KE::cbegin(v),
                           KE::cend(v), value);
 }
 
@@ -1346,8 +1346,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
                                                       IteratorType1 last1,
                                                       IteratorType2 first2,
                                                       IteratorType2 last2) {
-  return Impl::mismatch_impl("kokkos_mismatch_iterator_api_default", ex, first1,
-                             last1, first2, last2);
+  return Impl::mismatch_impl("Kokkos::mismatch_iterator_api_default", ex,
+                             first1, last1, first2, last2);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -1356,8 +1356,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
     IteratorType2 first2, IteratorType2 last2,
     BinaryPredicateType&& predicate) {
-  return Impl::mismatch_impl("kokkos_mismatch_iterator_api_default", ex, first1,
-                             last1, first2, last2,
+  return Impl::mismatch_impl("Kokkos::mismatch_iterator_api_default", ex,
+                             first1, last1, first2, last2,
                              std::forward<BinaryPredicateType>(predicate));
 }
 
@@ -1387,7 +1387,7 @@ auto mismatch(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::mismatch_impl("kokkos_mismatch_view_api_default", ex,
+  return Impl::mismatch_impl("Kokkos::mismatch_view_api_default", ex,
                              KE::cbegin(view1), KE::cend(view1),
                              KE::cbegin(view2), KE::cend(view2));
 }
@@ -1402,7 +1402,7 @@ auto mismatch(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::mismatch_impl("kokkos_mismatch_view_api_default", ex,
+  return Impl::mismatch_impl("Kokkos::mismatch_view_api_default", ex,
                              KE::cbegin(view1), KE::cend(view1),
                              KE::cbegin(view2), KE::cend(view2),
                              std::forward<BinaryPredicateType>(predicate));
@@ -1442,7 +1442,7 @@ auto mismatch(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIterator, class Predicate>
 bool all_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
             Predicate predicate) {
-  return Impl::all_of_impl("kokkos_all_of_iterator_api_default", ex, first,
+  return Impl::all_of_impl("Kokkos::all_of_iterator_api_default", ex, first,
                            last, predicate);
 }
 
@@ -1460,7 +1460,7 @@ bool all_of(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::all_of_impl("kokkos_all_of_view_api_default", ex, KE::cbegin(v),
+  return Impl::all_of_impl("Kokkos::all_of_view_api_default", ex, KE::cbegin(v),
                            KE::cend(v), std::move(predicate));
 }
 
@@ -1482,7 +1482,7 @@ bool all_of(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIterator, class Predicate>
 bool any_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
             Predicate predicate) {
-  return Impl::any_of_impl("kokkos_any_of_view_api_default", ex, first, last,
+  return Impl::any_of_impl("Kokkos::any_of_view_api_default", ex, first, last,
                            predicate);
 }
 
@@ -1500,7 +1500,7 @@ bool any_of(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::any_of_impl("kokkos_any_of_view_api_default", ex, KE::cbegin(v),
+  return Impl::any_of_impl("Kokkos::any_of_view_api_default", ex, KE::cbegin(v),
                            KE::cend(v), std::move(predicate));
 }
 
@@ -1522,7 +1522,7 @@ bool any_of(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class Predicate>
 bool none_of(const ExecutionSpace& ex, IteratorType first, IteratorType last,
              Predicate predicate) {
-  return Impl::none_of_impl("kokkos_none_of_iterator_api_default", ex, first,
+  return Impl::none_of_impl("Kokkos::none_of_iterator_api_default", ex, first,
                             last, predicate);
 }
 
@@ -1540,7 +1540,7 @@ bool none_of(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::none_of_impl("kokkos_none_of_view_api_default", ex,
+  return Impl::none_of_impl("Kokkos::none_of_view_api_default", ex,
                             KE::cbegin(v), KE::cend(v), std::move(predicate));
 }
 
@@ -1562,7 +1562,7 @@ bool none_of(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2) {
-  return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
+  return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2);
 }
 
@@ -1576,7 +1576,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, BinaryPredicateType predicate) {
-  return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
+  return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2, std::move(predicate));
 }
 
@@ -1598,7 +1598,7 @@ bool equal(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::equal_impl("kokkos_equal_view_api_default", ex,
+  return Impl::equal_impl("Kokkos::equal_view_api_default", ex,
                           KE::cbegin(view1), KE::cend(view1),
                           KE::cbegin(view2));
 }
@@ -1626,7 +1626,7 @@ bool equal(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::equal_impl("kokkos_equal_view_api_default", ex,
+  return Impl::equal_impl("Kokkos::equal_view_api_default", ex,
                           KE::cbegin(view1), KE::cend(view1), KE::cbegin(view2),
                           std::move(predicate));
 }
@@ -1648,7 +1648,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, IteratorType2 last2) {
-  return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
+  return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2, last2);
 }
 
@@ -1664,7 +1664,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2, IteratorType2 last2,
            BinaryPredicateType predicate) {
-  return Impl::equal_impl("kokkos_equal_iterator_api_default", ex, first1,
+  return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2, last2, std::move(predicate));
 }
 
@@ -1685,7 +1685,7 @@ bool lexicographical_compare(const ExecutionSpace& ex, IteratorType1 first1,
                              IteratorType1 last1, IteratorType2 first2,
                              IteratorType2 last2) {
   return Impl::lexicographical_compare_impl(
-      "kokkos_lexicographical_compare_iterator_api_default", ex, first1, last1,
+      "Kokkos::lexicographical_compare_iterator_api_default", ex, first1, last1,
       first2, last2);
 }
 
@@ -1708,7 +1708,7 @@ bool lexicographical_compare(
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::lexicographical_compare_impl(
-      "kokkos_lexicographical_compare_view_api_default", ex, KE::cbegin(view1),
+      "Kokkos::lexicographical_compare_view_api_default", ex, KE::cbegin(view1),
       KE::cend(view1), KE::cbegin(view2), KE::cend(view2));
 }
 
@@ -1733,7 +1733,7 @@ bool lexicographical_compare(const ExecutionSpace& ex, IteratorType1 first1,
                              IteratorType1 last1, IteratorType2 first2,
                              IteratorType2 last2, ComparatorType comp) {
   return Impl::lexicographical_compare_impl(
-      "kokkos_lexicographical_compare_iterator_api_default", ex, first1, last1,
+      "Kokkos::lexicographical_compare_iterator_api_default", ex, first1, last1,
       first2, last2, comp);
 }
 
@@ -1758,7 +1758,7 @@ bool lexicographical_compare(
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::lexicographical_compare_impl(
-      "kokkos_lexicographical_compare_view_api_default", ex, KE::cbegin(view1),
+      "Kokkos::lexicographical_compare_view_api_default", ex, KE::cbegin(view1),
       KE::cend(view1), KE::cbegin(view2), KE::cend(view2), comp);
 }
 
@@ -1784,7 +1784,7 @@ bool lexicographical_compare(
 template <class ExecutionSpace, class IteratorType>
 IteratorType adjacent_find(const ExecutionSpace& ex, IteratorType first,
                            IteratorType last) {
-  return Impl::adjacent_find_impl("kokkos_adjacent_find_iterator_api_default",
+  return Impl::adjacent_find_impl("Kokkos::adjacent_find_iterator_api_default",
                                   ex, first, last);
 }
 
@@ -1799,7 +1799,7 @@ auto adjacent_find(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::adjacent_find_impl("kokkos_adjacent_find_view_api_default", ex,
+  return Impl::adjacent_find_impl("Kokkos::adjacent_find_view_api_default", ex,
                                   KE::cbegin(v), KE::cend(v));
 }
 
@@ -1815,7 +1815,7 @@ auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class BinaryPredicateType>
 IteratorType adjacent_find(const ExecutionSpace& ex, IteratorType first,
                            IteratorType last, BinaryPredicateType pred) {
-  return Impl::adjacent_find_impl("kokkos_adjacent_find_iterator_api_default",
+  return Impl::adjacent_find_impl("Kokkos::adjacent_find_iterator_api_default",
                                   ex, first, last, pred);
 }
 
@@ -1833,7 +1833,7 @@ auto adjacent_find(const ExecutionSpace& ex,
                    BinaryPredicateType pred) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::adjacent_find_impl("kokkos_adjacent_find_view_api_default", ex,
+  return Impl::adjacent_find_impl("Kokkos::adjacent_find_view_api_default", ex,
                                   KE::cbegin(v), KE::cend(v), pred);
 }
 
@@ -1855,7 +1855,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType1 search(const ExecutionSpace& ex, IteratorType1 first,
                      IteratorType1 last, IteratorType2 s_first,
                      IteratorType2 s_last) {
-  return Impl::search_impl("kokkos_search_iterator_api_default", ex, first,
+  return Impl::search_impl("Kokkos::search_iterator_api_default", ex, first,
                            last, s_first, s_last);
 }
 
@@ -1872,7 +1872,7 @@ auto search(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& view,
             const ::Kokkos::View<DataType2, Properties2...>& s_view) {
   namespace KE = ::Kokkos::Experimental;
-  return Impl::search_impl("kokkos_search_view_api_default", ex,
+  return Impl::search_impl("Kokkos::search_view_api_default", ex,
                            KE::cbegin(view), KE::cend(view), KE::cbegin(s_view),
                            KE::cend(s_view));
 }
@@ -1893,7 +1893,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 IteratorType1 search(const ExecutionSpace& ex, IteratorType1 first,
                      IteratorType1 last, IteratorType2 s_first,
                      IteratorType2 s_last, const BinaryPredicateType& pred) {
-  return Impl::search_impl("kokkos_search_iterator_api_default", ex, first,
+  return Impl::search_impl("Kokkos::search_iterator_api_default", ex, first,
                            last, s_first, s_last, pred);
 }
 
@@ -1913,7 +1913,7 @@ auto search(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType2, Properties2...>& s_view,
             const BinaryPredicateType& pred) {
   namespace KE = ::Kokkos::Experimental;
-  return Impl::search_impl("kokkos_search_view_api_default", ex,
+  return Impl::search_impl("Kokkos::search_view_api_default", ex,
                            KE::cbegin(view), KE::cend(view), KE::cbegin(s_view),
                            KE::cend(s_view), pred);
 }
@@ -1937,7 +1937,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType1 find_first_of(const ExecutionSpace& ex, IteratorType1 first,
                             IteratorType1 last, IteratorType2 s_first,
                             IteratorType2 s_last) {
-  return Impl::find_first_of_impl("kokkos_find_first_of_iterator_api_default",
+  return Impl::find_first_of_impl("Kokkos::find_first_of_iterator_api_default",
                                   ex, first, last, s_first, s_last);
 }
 
@@ -1954,7 +1954,7 @@ auto find_first_of(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view) {
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_first_of_impl("kokkos_find_first_of_view_api_default", ex,
+  return Impl::find_first_of_impl("Kokkos::find_first_of_view_api_default", ex,
                                   KE::cbegin(view), KE::cend(view),
                                   KE::cbegin(s_view), KE::cend(s_view));
 }
@@ -1976,7 +1976,7 @@ IteratorType1 find_first_of(const ExecutionSpace& ex, IteratorType1 first,
                             IteratorType1 last, IteratorType2 s_first,
                             IteratorType2 s_last,
                             const BinaryPredicateType& pred) {
-  return Impl::find_first_of_impl("kokkos_find_first_of_iterator_api_default",
+  return Impl::find_first_of_impl("Kokkos::find_first_of_iterator_api_default",
                                   ex, first, last, s_first, s_last, pred);
 }
 
@@ -1997,7 +1997,7 @@ auto find_first_of(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view,
                    const BinaryPredicateType& pred) {
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_first_of_impl("kokkos_find_first_of_view_api_default", ex,
+  return Impl::find_first_of_impl("Kokkos::find_first_of_view_api_default", ex,
                                   KE::cbegin(view), KE::cend(view),
                                   KE::cbegin(s_view), KE::cend(s_view), pred);
 }
@@ -2021,7 +2021,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType1 find_end(const ExecutionSpace& ex, IteratorType1 first,
                        IteratorType1 last, IteratorType2 s_first,
                        IteratorType2 s_last) {
-  return Impl::find_end_impl("kokkos_find_end_iterator_api_default", ex, first,
+  return Impl::find_end_impl("Kokkos::find_end_iterator_api_default", ex, first,
                              last, s_first, s_last);
 }
 
@@ -2038,7 +2038,7 @@ auto find_end(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view) {
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_end_impl("kokkos_find_end_view_api_default", ex,
+  return Impl::find_end_impl("Kokkos::find_end_view_api_default", ex,
                              KE::cbegin(view), KE::cend(view),
                              KE::cbegin(s_view), KE::cend(s_view));
 }
@@ -2059,7 +2059,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 IteratorType1 find_end(const ExecutionSpace& ex, IteratorType1 first,
                        IteratorType1 last, IteratorType2 s_first,
                        IteratorType2 s_last, const BinaryPredicateType& pred) {
-  return Impl::find_end_impl("kokkos_find_end_iterator_api_default", ex, first,
+  return Impl::find_end_impl("Kokkos::find_end_iterator_api_default", ex, first,
                              last, s_first, s_last, pred);
 }
 
@@ -2079,7 +2079,7 @@ auto find_end(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType2, Properties2...>& s_view,
               const BinaryPredicateType& pred) {
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_end_impl("kokkos_find_end_view_api_default", ex,
+  return Impl::find_end_impl("Kokkos::find_end_view_api_default", ex,
                              KE::cbegin(view), KE::cend(view),
                              KE::cbegin(s_view), KE::cend(s_view), pred);
 }

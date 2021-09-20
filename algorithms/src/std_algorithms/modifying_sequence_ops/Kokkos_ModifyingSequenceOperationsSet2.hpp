@@ -307,7 +307,7 @@ OutputIterator unique_copy_impl(const std::string& label,
   if (num_elements == 0) {
     return d_first;
   } else if (num_elements == 1) {
-    return Impl::copy_impl("kokkos_copy_from_unique_copy", ex, first, last,
+    return Impl::copy_impl("Kokkos::copy_from_unique_copy", ex, first, last,
                            d_first);
   } else {
     // aliases
@@ -325,7 +325,7 @@ OutputIterator unique_copy_impl(const std::string& label,
                             RangePolicy<ExecutionSpace>(ex, 0, scan_size),
                             func_type(first, last, d_first, pred), count);
 
-    return Impl::copy_impl("kokkos_copy_from_unique_copy", ex,
+    return Impl::copy_impl("Kokkos::copy_from_unique_copy", ex,
                            first + scan_size, last, d_first + count);
   }
 }
@@ -546,7 +546,7 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
 
       // move last element too, for the same reason as the unique_copy
       auto unused_r =
-          Impl::move_impl("kokkos_move_from_unique", ex, it_found + scan_size,
+          Impl::move_impl("Kokkos::move_from_unique", ex, it_found + scan_size,
                           last, tmp_first + count);
       (void)unused_r;  // r1 not used
 
@@ -763,8 +763,8 @@ auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator reverse_copy(const ExecutionSpace& ex, InputIterator first,
                             InputIterator last, OutputIterator d_first) {
-  return Impl::reverse_copy_impl("kokkos_reverse_copy_iterator_api_default", ex,
-                                 first, last, d_first);
+  return Impl::reverse_copy_impl("Kokkos::reverse_copy_iterator_api_default",
+                                 ex, first, last, d_first);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
@@ -782,7 +782,7 @@ auto reverse_copy(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(source);
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::reverse_copy_impl("kokkos_reverse_copy_view_api_default", ex,
+  return Impl::reverse_copy_impl("Kokkos::reverse_copy_view_api_default", ex,
                                  cbegin(source), cend(source), begin(dest));
 }
 
@@ -804,7 +804,7 @@ auto reverse_copy(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIterator>
 void reverse(const ExecutionSpace& ex, InputIterator first,
              InputIterator last) {
-  return Impl::reverse_impl("kokkos_reverse_iterator_api_default", ex, first,
+  return Impl::reverse_impl("Kokkos::reverse_iterator_api_default", ex, first,
                             last);
 }
 
@@ -819,7 +819,7 @@ void reverse(const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& view) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::reverse_impl("kokkos_reverse_view_api_default", ex,
+  return Impl::reverse_impl("Kokkos::reverse_view_api_default", ex,
                             KE::begin(view), KE::end(view));
 }
 
@@ -837,7 +837,7 @@ void reverse(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator move(const ExecutionSpace& ex, InputIterator first,
                     InputIterator last, OutputIterator d_first) {
-  return Impl::move_impl("kokkos_move_iterator_api_default", ex, first, last,
+  return Impl::move_impl("Kokkos::move_iterator_api_default", ex, first, last,
                          d_first);
 }
 
@@ -856,7 +856,7 @@ auto move(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(source);
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::move_impl("kokkos_move_view_api_default", ex, begin(source),
+  return Impl::move_impl("Kokkos::move_view_api_default", ex, begin(source),
                          end(source), begin(dest));
 }
 
@@ -877,7 +877,7 @@ auto move(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 move_backward(const ExecutionSpace& ex, IteratorType1 first,
                             IteratorType1 last, IteratorType2 d_last) {
-  return Impl::move_backward_impl("kokkos_move_backward_iterator_api_default",
+  return Impl::move_backward_impl("Kokkos::move_backward_iterator_api_default",
                                   ex, first, last, d_last);
 }
 
@@ -889,7 +889,7 @@ auto move_backward(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(source);
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::move_backward_impl("kokkos_move_backward_view_api_default", ex,
+  return Impl::move_backward_impl("Kokkos::move_backward_view_api_default", ex,
                                   begin(source), end(source), end(dest));
 }
 
@@ -918,7 +918,7 @@ auto move_backward(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 swap_ranges(const ExecutionSpace& ex, IteratorType1 first1,
                           IteratorType1 last1, IteratorType2 first2) {
-  return Impl::swap_ranges_impl("kokkos_swap_ranges_iterator_api_default", ex,
+  return Impl::swap_ranges_impl("Kokkos::swap_ranges_iterator_api_default", ex,
                                 first1, last1, first2);
 }
 
@@ -931,7 +931,7 @@ auto swap_ranges(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   assert(source.extent(0) == dest.extent(0));
-  return Impl::swap_ranges_impl("kokkos_swap_ranges_view_api_default", ex,
+  return Impl::swap_ranges_impl("Kokkos::swap_ranges_view_api_default", ex,
                                 begin(source), end(source), begin(dest));
 }
 
@@ -965,7 +965,7 @@ auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType>
 std::enable_if_t<!::Kokkos::is_view<IteratorType>::value, IteratorType> unique(
     const ExecutionSpace& ex, IteratorType first, IteratorType last) {
-  return Impl::unique_impl("kokkos_unique_iterator_api_default", ex, first,
+  return Impl::unique_impl("Kokkos::unique_iterator_api_default", ex, first,
                            last);
 }
 
@@ -980,7 +980,7 @@ template <class ExecutionSpace, class DataType, class... Properties>
 auto unique(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return ::Kokkos::Experimental::unique("kokkos_unique_view_api_default", ex,
+  return ::Kokkos::Experimental::unique("Kokkos::unique_view_api_default", ex,
                                         begin(view), end(view));
 }
 
@@ -995,7 +995,7 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class BinaryPredicate>
 IteratorType unique(const ExecutionSpace& ex, IteratorType first,
                     IteratorType last, BinaryPredicate pred) {
-  return Impl::unique_impl("kokkos_unique_iterator_api_default", ex, first,
+  return Impl::unique_impl("Kokkos::unique_iterator_api_default", ex, first,
                            last, pred);
 }
 
@@ -1012,7 +1012,7 @@ auto unique(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             BinaryPredicate pred) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::unique_impl("kokkos_unique_view_api_default", ex, begin(view),
+  return Impl::unique_impl("Kokkos::unique_view_api_default", ex, begin(view),
                            end(view), std::move(pred));
 }
 
@@ -1036,7 +1036,7 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator>
 std::enable_if_t<!::Kokkos::is_view<InputIterator>::value, OutputIterator>
 unique_copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
             OutputIterator d_first) {
-  return Impl::unique_copy_impl("kokkos_unique_copy_iterator_api_default", ex,
+  return Impl::unique_copy_impl("Kokkos::unique_copy_iterator_api_default", ex,
                                 first, last, d_first);
 }
 
@@ -1056,7 +1056,7 @@ auto unique_copy(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return ::Kokkos::Experimental::unique_copy(
-      "kokkos_unique_copy_view_api_default", ex, cbegin(source), cend(source),
+      "Kokkos::unique_copy_view_api_default", ex, cbegin(source), cend(source),
       begin(dest));
 }
 
@@ -1078,7 +1078,7 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator,
 OutputIterator unique_copy(const ExecutionSpace& ex, InputIterator first,
                            InputIterator last, OutputIterator d_first,
                            BinaryPredicate pred) {
-  return Impl::unique_copy_impl("kokkos_unique_copy_iterator_api_default", ex,
+  return Impl::unique_copy_impl("Kokkos::unique_copy_iterator_api_default", ex,
                                 first, last, d_first, pred);
 }
 
@@ -1099,7 +1099,7 @@ auto unique_copy(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(source);
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::unique_copy_impl("kokkos_unique_copy_view_api_default", ex,
+  return Impl::unique_copy_impl("Kokkos::unique_copy_view_api_default", ex,
                                 cbegin(source), cend(source), begin(dest),
                                 std::move(pred));
 }
@@ -1125,7 +1125,7 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator rotate_copy(const ExecutionSpace& ex, InputIterator first,
                            InputIterator n_first, InputIterator last,
                            OutputIterator d_first) {
-  return Impl::rotate_copy_impl("kokkos_rotate_copy_iterator_api_default", ex,
+  return Impl::rotate_copy_impl("Kokkos::rotate_copy_iterator_api_default", ex,
                                 first, n_first, last, d_first);
 }
 
@@ -1145,7 +1145,7 @@ auto rotate_copy(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(source);
   static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::rotate_copy_impl("kokkos_rotate_copy_view_api_default", ex,
+  return Impl::rotate_copy_impl("Kokkos::rotate_copy_view_api_default", ex,
                                 cbegin(source), cbegin(source) + n_location,
                                 cend(source), begin(dest));
 }
@@ -1170,7 +1170,7 @@ auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class Iterator, class UnaryPredicate>
 Iterator remove_if(const ExecutionSpace& ex, Iterator first, Iterator last,
                    UnaryPredicate pred) {
-  return Impl::remove_if_impl("kokkos_remove_if_iterator_api_default", ex,
+  return Impl::remove_if_impl("Kokkos::remove_if_iterator_api_default", ex,
                               first, last, pred);
 }
 
@@ -1187,7 +1187,7 @@ auto remove_if(const ExecutionSpace& ex,
                UnaryPredicate pred) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  return Impl::remove_if_impl("kokkos_remove_if_iterator_api_default", ex,
+  return Impl::remove_if_impl("Kokkos::remove_if_iterator_api_default", ex,
                               ::Kokkos::Experimental::begin(view),
                               ::Kokkos::Experimental::end(view), pred);
 }
@@ -1208,7 +1208,7 @@ auto remove_if(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class Iterator, class ValueType>
 Iterator remove(const ExecutionSpace& ex, Iterator first, Iterator last,
                 const ValueType& value) {
-  return Impl::remove_impl("kokkos_remove_iterator_api_default", ex, first,
+  return Impl::remove_impl("Kokkos::remove_iterator_api_default", ex, first,
                            last, value);
 }
 
@@ -1224,7 +1224,7 @@ auto remove(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::remove_impl("kokkos_remove_iterator_api_default", ex,
+  return Impl::remove_impl("Kokkos::remove_iterator_api_default", ex,
                            ::Kokkos::Experimental::begin(view),
                            ::Kokkos::Experimental::end(view), value);
 }
@@ -1247,7 +1247,7 @@ template <class ExecutionSpace, class InputIterator, class OutputIterator,
 OutputIterator remove_copy(const ExecutionSpace& ex, InputIterator first_from,
                            InputIterator last_from, OutputIterator first_dest,
                            const ValueType& value) {
-  return Impl::remove_copy_impl("kokkos_remove_copy_iterator_api_default", ex,
+  return Impl::remove_copy_impl("Kokkos::remove_copy_iterator_api_default", ex,
                                 first_from, last_from, first_dest, value);
 }
 
@@ -1269,7 +1269,7 @@ auto remove_copy(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
-  return Impl::remove_copy_impl("kokkos_remove_copy_iterator_api_default", ex,
+  return Impl::remove_copy_impl("Kokkos::remove_copy_iterator_api_default", ex,
                                 ::Kokkos::Experimental::cbegin(view_from),
                                 ::Kokkos::Experimental::cend(view_from),
                                 ::Kokkos::Experimental::begin(view_dest),
@@ -1300,8 +1300,9 @@ OutputIterator remove_copy_if(const ExecutionSpace& ex,
                               InputIterator first_from, InputIterator last_from,
                               OutputIterator first_dest,
                               const UnaryPredicate& pred) {
-  return Impl::remove_copy_if_impl("kokkos_remove_copy_if_iterator_api_default",
-                                   ex, first_from, last_from, first_dest, pred);
+  return Impl::remove_copy_if_impl(
+      "Kokkos::remove_copy_if_iterator_api_default", ex, first_from, last_from,
+      first_dest, pred);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
@@ -1325,7 +1326,7 @@ auto remove_copy_if(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   return Impl::remove_copy_if_impl(
-      "kokkos_remove_copy_if_iterator_api_default", ex,
+      "Kokkos::remove_copy_if_iterator_api_default", ex,
       ::Kokkos::Experimental::cbegin(view_from),
       ::Kokkos::Experimental::cend(view_from),
       ::Kokkos::Experimental::begin(view_dest), pred);

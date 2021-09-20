@@ -275,7 +275,7 @@ ValueType transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
                            IteratorType1 last1, IteratorType2 first2,
                            ValueType init_reduction_value) {
   return Impl::transform_reduce_default_functors_impl(
-      "kokkos_transform_reduce_default_functors_iterator_api", ex, first1,
+      "Kokkos::transform_reduce_default_functors_iterator_api", ex, first1,
       last1, first2, std::move(init_reduction_value));
 }
 
@@ -302,7 +302,7 @@ ValueType transform_reduce(
   static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
 
   return Impl::transform_reduce_default_functors_impl(
-      "kokkos_transform_reduce_default_functors_iterator_api", ex,
+      "Kokkos::transform_reduce_default_functors_iterator_api", ex,
       KE::cbegin(first_view), KE::cend(first_view), KE::cbegin(second_view),
       std::move(init_reduction_value));
 }
@@ -347,8 +347,8 @@ ValueType transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
                 "ValueType must be move constructible.");
 
   return Impl::transform_reduce_custom_functors_impl(
-      "kokkos_transform_reduce_custom_functors_iterator_api", ex, first1, last1,
-      first2, std::move(init_reduction_value), std::move(joiner),
+      "Kokkos::transform_reduce_custom_functors_iterator_api", ex, first1,
+      last1, first2, std::move(init_reduction_value), std::move(joiner),
       std::move(transformer));
 }
 
@@ -385,7 +385,7 @@ ValueType transform_reduce(
   static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
 
   return Impl::transform_reduce_custom_functors_impl(
-      "kokkos_transform_reduce_custom_functors_view_api", ex,
+      "Kokkos::transform_reduce_custom_functors_view_api", ex,
       KE::cbegin(first_view), KE::cend(first_view), KE::cbegin(second_view),
       std::move(init_reduction_value), std::move(joiner),
       std::move(transformer));
@@ -429,8 +429,8 @@ transform_reduce(const ExecutionSpace& ex, IteratorType first1,
                 "ValueType must be move constructible.");
 
   return Impl::transform_reduce_custom_functors_impl(
-      "kokkos_transform_reduce_custom_functors_iterator_api", ex, first1, last1,
-      std::move(init_reduction_value), std::move(joiner),
+      "Kokkos::transform_reduce_custom_functors_iterator_api", ex, first1,
+      last1, std::move(init_reduction_value), std::move(joiner),
       std::move(transformer));
 }
 
@@ -466,7 +466,7 @@ ValueType transform_reduce(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::transform_reduce_custom_functors_impl(
-      "kokkos_transform_reduce_custom_functors_view_api", ex, KE::cbegin(view),
+      "Kokkos::transform_reduce_custom_functors_view_api", ex, KE::cbegin(view),
       KE::cend(view), std::move(init_reduction_value), std::move(joiner),
       std::move(transformer));
 }

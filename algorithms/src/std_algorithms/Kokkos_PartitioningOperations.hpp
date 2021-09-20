@@ -357,8 +357,9 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 bool is_partitioned(const ExecutionSpace& ex, IteratorType first,
                     IteratorType last, PredicateType p) {
-  return Impl::is_partitioned_impl("kokkos_is_partitioned_iterator_api_default",
-                                   ex, first, last, std::move(p));
+  return Impl::is_partitioned_impl(
+      "Kokkos::is_partitioned_iterator_api_default", ex, first, last,
+      std::move(p));
 }
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
@@ -374,8 +375,8 @@ bool is_partitioned(const ExecutionSpace& ex,
                     PredicateType p) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
-  return Impl::is_partitioned_impl("kokkos_is_partitioned_view_api_default", ex,
-                                   cbegin(v), cend(v), std::move(p));
+  return Impl::is_partitioned_impl("Kokkos::is_partitioned_view_api_default",
+                                   ex, cbegin(v), cend(v), std::move(p));
 }
 
 template <class ExecutionSpace, class PredicateType, class DataType,
@@ -398,9 +399,9 @@ template <class ExecutionSpace, class InputIteratorType,
     const ExecutionSpace& ex, InputIteratorType from_first,
     InputIteratorType from_last, OutputIteratorTrueType to_first_true,
     OutputIteratorFalseType to_first_false, PredicateType p) {
-  return Impl::partition_copy_impl("kokkos_partition_copy_iterator_api_default",
-                                   ex, from_first, from_last, to_first_true,
-                                   to_first_false, std::move(p));
+  return Impl::partition_copy_impl(
+      "Kokkos::partition_copy_iterator_api_default", ex, from_first, from_last,
+      to_first_true, to_first_false, std::move(p));
 }
 
 template <class ExecutionSpace, class InputIteratorType,
@@ -424,8 +425,8 @@ auto partition_copy(
     const ::Kokkos::View<DataType2, Properties2...>& view_dest_true,
     const ::Kokkos::View<DataType3, Properties3...>& view_dest_false,
     PredicateType p) {
-  return Impl::partition_copy_impl("kokkos_partition_copy_view_api_default", ex,
-                                   cbegin(view_from), cend(view_from),
+  return Impl::partition_copy_impl("Kokkos::partition_copy_view_api_default",
+                                   ex, cbegin(view_from), cend(view_from),
                                    begin(view_dest_true),
                                    begin(view_dest_false), std::move(p));
 }
@@ -451,7 +452,7 @@ template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
 IteratorType partition_point(const ExecutionSpace& ex, IteratorType first,
                              IteratorType last, UnaryPredicate p) {
   return Impl::partition_point_impl(
-      "kokkos_partitioned_point_iterator_api_default", ex, first, last,
+      "Kokkos::partitioned_point_iterator_api_default", ex, first, last,
       std::move(p));
 }
 
@@ -478,7 +479,7 @@ auto partition_point(const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
   static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  return Impl::partition_point_impl("kokkos_partition_point_view_api_default",
+  return Impl::partition_point_impl("Kokkos::partition_point_view_api_default",
                                     ex, cbegin(v), cend(v), std::move(p));
 }
 

@@ -239,7 +239,7 @@ template <class ExecutionSpace, class IteratorType>
 IteratorType is_sorted_until(const ExecutionSpace& ex, IteratorType first,
                              IteratorType last) {
   return Impl::is_sorted_until_impl(
-      "kokkos_is_sorted_until_iterator_api_default", ex, first, last);
+      "Kokkos::is_sorted_until_iterator_api_default", ex, first, last);
 }
 
 template <class ExecutionSpace, class IteratorType>
@@ -254,7 +254,7 @@ auto is_sorted_until(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_until_impl("kokkos_is_sorted_until_view_api_default",
+  return Impl::is_sorted_until_impl("Kokkos::is_sorted_until_view_api_default",
                                     ex, KE::cbegin(view), KE::cend(view));
 }
 
@@ -273,7 +273,7 @@ IteratorType is_sorted_until(const ExecutionSpace& ex, IteratorType first,
                              IteratorType last, ComparatorType comp) {
   static_assert_is_not_opemnptarget(ex);
   return Impl::is_sorted_until_impl(
-      "kokkos_is_sorted_until_iterator_api_default", ex, first, last,
+      "Kokkos::is_sorted_until_iterator_api_default", ex, first, last,
       std::move(comp));
 }
 
@@ -295,7 +295,7 @@ auto is_sorted_until(const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_until_impl("kokkos_is_sorted_until_view_api_default",
+  return Impl::is_sorted_until_impl("Kokkos::is_sorted_until_view_api_default",
                                     ex, KE::cbegin(view), KE::cend(view),
                                     std::move(comp));
 }
@@ -319,7 +319,7 @@ auto is_sorted_until(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class IteratorType>
 bool is_sorted(const ExecutionSpace& ex, IteratorType first,
                IteratorType last) {
-  return Impl::is_sorted_impl("kokkos_is_sorted_iterator_api_default", ex,
+  return Impl::is_sorted_impl("Kokkos::is_sorted_iterator_api_default", ex,
                               first, last);
 }
 
@@ -335,7 +335,7 @@ bool is_sorted(const ExecutionSpace& ex,
   static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_impl("kokkos_is_sorted_view_api_default", ex,
+  return Impl::is_sorted_impl("Kokkos::is_sorted_view_api_default", ex,
                               KE::cbegin(view), KE::cend(view));
 }
 
@@ -352,7 +352,7 @@ template <class ExecutionSpace, class IteratorType, class ComparatorType>
 bool is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last,
                ComparatorType comp) {
   static_assert_is_not_opemnptarget(ex);
-  return Impl::is_sorted_impl("kokkos_is_sorted_iterator_api_default", ex,
+  return Impl::is_sorted_impl("Kokkos::is_sorted_iterator_api_default", ex,
                               first, last, std::move(comp));
 }
 
@@ -372,7 +372,7 @@ bool is_sorted(const ExecutionSpace& ex,
   static_assert_is_not_opemnptarget(ex);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_impl("kokkos_is_sorted_view_api_default", ex,
+  return Impl::is_sorted_impl("Kokkos::is_sorted_view_api_default", ex,
                               KE::cbegin(view), KE::cend(view),
                               std::move(comp));
 }

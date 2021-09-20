@@ -171,7 +171,7 @@ adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
       Impl::StdAdjacentDifferenceDefaultBinaryOpFunctor<value_type1,
                                                         value_type2>;
   return Impl::adjacent_difference_impl(
-      "kokkos_adjacent_difference_iterator_api", ex, first_from, last_from,
+      "Kokkos::adjacent_difference_iterator_api", ex, first_from, last_from,
       first_dest, binary_op());
 }
 
@@ -183,7 +183,7 @@ adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
                     InputIteratorType last_from, OutputIteratorType first_dest,
                     BinaryOp bin_op) {
   return Impl::adjacent_difference_impl(
-      "kokkos_adjacent_difference_iterator_api", ex, first_from, last_from,
+      "Kokkos::adjacent_difference_iterator_api", ex, first_from, last_from,
       first_dest, bin_op);
 }
 
@@ -232,7 +232,7 @@ auto adjacent_difference(
       Impl::StdAdjacentDifferenceDefaultBinaryOpFunctor<value_type1,
                                                         value_type2>;
   return Impl::adjacent_difference_impl(
-      "kokkos_adjacent_difference_view_api", ex, KE::cbegin(view_from),
+      "Kokkos::adjacent_difference_view_api", ex, KE::cbegin(view_from),
       KE::cend(view_from), KE::begin(view_dest), binary_op());
 }
 
@@ -247,7 +247,7 @@ auto adjacent_difference(
   static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   return Impl::adjacent_difference_impl(
-      "kokkos_adjacent_difference_view_api", ex, KE::cbegin(view_from),
+      "Kokkos::adjacent_difference_view_api", ex, KE::cbegin(view_from),
       KE::cend(view_from), KE::begin(view_dest), bin_op);
 }
 
