@@ -286,17 +286,18 @@ TEST(defaultdevicetype, test_new_test_interface) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events({{true, false}});
 
-  auto success = validate_event_set( 
+  auto success = validate_event_set(
       [&]() {
         TestFunctor tf;
         Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1), tf);
       },
-      [&](const BeginParallelForEvent begin_event, const EndParallelForEvent end_event) {
-        if(begin_event.name != "dogs") {
+      [&](const BeginParallelForEvent begin_event,
+          const EndParallelForEvent end_event) {
+        if (begin_event.name != "dogs") {
           return MatchDiagnostic{false, {"No match on BeginParallelFor name"}};
         }
         if (end_event.kID != ((begin_event.kID))) {
-          return MatchDiagnostic{false, {"No match on kID's"}};  
+          return MatchDiagnostic{false, {"No match on kID's"}};
         }
         return MatchDiagnostic{true};
       });
