@@ -45,13 +45,15 @@
 #ifndef KOKKOS_STD_NUMERIC_IDENTITY_REFERENCE_UNARY_FUNCTOR_HPP
 #define KOKKOS_STD_NUMERIC_IDENTITY_REFERENCE_UNARY_FUNCTOR_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
 template <class ValueType>
 struct StdNumericScanIdentityReferenceUnaryFunctor {
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   const ValueType& operator()(const ValueType& a) const { return a; }
 };
 

@@ -69,7 +69,7 @@ struct StdUniqueCopyFunctor {
   OutputIt m_first_dest;
   BinaryPredicateType m_pred;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdUniqueCopyFunctor(InputIt first_from, InputIt last_from,
                        OutputIt first_dest, BinaryPredicateType pred)
       : m_first_from(first_from),
@@ -77,7 +77,7 @@ struct StdUniqueCopyFunctor {
         m_first_dest(first_dest),
         m_pred(std::move(pred)) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
     const auto& val_i   = m_first_from[i];
@@ -101,7 +101,7 @@ struct StdReverseFunctor {
   InputIterator m_first;
   InputIterator m_last;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(index_type i) const {
     ::Kokkos::Experimental::swap(m_first[i], m_last[-i - 1]);
   }
@@ -115,7 +115,7 @@ struct StdReverseCopyFunctor {
   InputIterator m_last;
   OutputIterator m_dest_first;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const { m_dest_first[i] = m_last[-1 - i]; }
 
   StdReverseCopyFunctor(InputIterator _last, OutputIterator _dest_first)
@@ -127,7 +127,7 @@ struct StdMoveFunctor {
   InputIterator m_first;
   OutputIterator m_dest_first;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     m_dest_first[i] = std::move(m_first[i]);
   }
@@ -141,7 +141,7 @@ struct StdMoveBackwardFunctor {
   IteratorType1 m_last;
   IteratorType2 m_dest_last;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     m_dest_last[-i] = std::move(m_last[-i]);
   }
@@ -155,12 +155,12 @@ struct StdSwapRangesFunctor {
   IteratorType1 m_first1;
   IteratorType2 m_first2;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     ::Kokkos::Experimental::swap(m_first1[i], m_first2[i]);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdSwapRangesFunctor(IteratorType1 _first1, IteratorType2 _first2)
       : m_first1(_first1), m_first2(_first2) {}
 };
@@ -171,11 +171,11 @@ struct StdUniqueStepThreeFunctor {
   IteratorType m_first_to;
   ViewFromType m_view_from;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdUniqueStepThreeFunctor(IteratorType first_to, ViewFromType view_from)
       : m_first_to(first_to), m_view_from(view_from) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i) const {
     m_first_to[i] = std::move(m_view_from(i));
   }
@@ -189,7 +189,7 @@ struct StdUniqueFunctor {
   OutputIt m_first_dest;
   BinaryPredicateType m_pred;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdUniqueFunctor(InputIt first_from, InputIt last_from, OutputIt first_dest,
                    BinaryPredicateType pred)
       : m_first_from(first_from),
@@ -197,7 +197,7 @@ struct StdUniqueFunctor {
         m_first_dest(first_dest),
         m_pred(std::move(pred)) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
     auto& val_i         = m_first_from[i];
@@ -222,7 +222,7 @@ struct StdRotateCopyFunctor {
   InputIterator m_first_n;
   OutputIterator m_dest_first;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     const IndexType shift = m_last - m_first_n;
 
@@ -247,14 +247,14 @@ struct StdRemoveIfStage1Functor {
   FirstDest m_first_dest;
   PredType m_must_remove;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdRemoveIfStage1Functor(FirstFrom first_from, FirstDest first_dest,
                            PredType pred)
       : m_first_from(first_from),
         m_first_dest(first_dest),
         m_must_remove(std::move(pred)) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, IndexType& update,
                   const bool final_pass) const {
     auto& myval = m_first_from[i];
@@ -277,12 +277,12 @@ struct StdRemoveIfStage2Functor {
   InputIteratorType m_first_from;
   OutputIteratorType m_first_to;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdRemoveIfStage2Functor(InputIteratorType first_from,
                            OutputIteratorType first_to)
       : m_first_from(first_from), m_first_to(first_to) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i) const {
     m_first_to[i] = std::move(m_first_from[i]);
   }

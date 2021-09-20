@@ -67,14 +67,14 @@ struct ExclusiveScanDefaultFunctor {
   FirstFrom m_first_from;
   FirstDest m_first_dest;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ExclusiveScanDefaultFunctor(ValueType init, FirstFrom first_from,
                               FirstDest first_dest)
       : m_init_value(std::move(init)),
         m_first_from(first_from),
         m_first_dest(first_dest) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
     if (final_pass) {
@@ -89,13 +89,13 @@ struct ExclusiveScanDefaultFunctor {
     this->join(update, tmp);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void init(value_type& update) const {
     update.val        = {};
     update.is_initial = true;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void join(volatile value_type& update,
             volatile const value_type& input) const {
     if (update.is_initial) {
@@ -121,7 +121,7 @@ struct TransformExclusiveScanFunctor {
   BinaryOpType m_binary_op;
   UnaryOpType m_unary_op;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   TransformExclusiveScanFunctor(ValueType init, FirstFrom first_from,
                                 FirstDest first_dest, BinaryOpType bop,
                                 UnaryOpType uop)
@@ -131,7 +131,7 @@ struct TransformExclusiveScanFunctor {
         m_binary_op(std::move(bop)),
         m_unary_op(std::move(uop)) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
     if (final_pass) {
@@ -148,13 +148,13 @@ struct TransformExclusiveScanFunctor {
     this->join(update, tmp);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void init(value_type& update) const {
     update.val        = {};
     update.is_initial = true;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void join(volatile value_type& update,
             volatile const value_type& input) const {
     if (update.is_initial) {

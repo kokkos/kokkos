@@ -60,7 +60,7 @@ namespace Impl {
 //
 template <class ValueType>
 struct StdTranformReduceDefaultBinaryTransformFunctor {
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ValueType operator()(const ValueType& a, const ValueType& b) const {
     return (a * b);
   }
@@ -68,12 +68,12 @@ struct StdTranformReduceDefaultBinaryTransformFunctor {
 
 template <class ValueType>
 struct StdTranformReduceDefaultJoinFunctor {
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ValueType operator()(const ValueType& a, const ValueType& b) const {
     return a + b;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ValueType operator()(const volatile ValueType& a,
                        const volatile ValueType& b) const {
     return a + b;
@@ -89,7 +89,7 @@ struct StdTransformReduceSingleIntervalFunctor {
   const ReducerType m_reducer;
   const TransformType m_transform;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
     auto tmp_wrapped_value = red_value_type{m_transform(m_first[i]), false};
     if (red_value.is_initial) {
@@ -99,7 +99,7 @@ struct StdTransformReduceSingleIntervalFunctor {
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdTransformReduceSingleIntervalFunctor(IteratorType first,
                                           ReducerType reducer,
                                           TransformType transform)
@@ -118,7 +118,7 @@ struct StdTransformReduceTwoIntervalsFunctor {
   const ReducerType m_reducer;
   const TransformType m_transform;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const IndexType i, red_value_type& red_value) const {
     auto tmp_wrapped_value =
         red_value_type{m_transform(m_first1[i], m_first2[i]), false};
@@ -130,7 +130,7 @@ struct StdTransformReduceTwoIntervalsFunctor {
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdTransformReduceTwoIntervalsFunctor(IteratorType1 first1,
                                         IteratorType2 first2,
                                         ReducerType reducer,

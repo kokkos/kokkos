@@ -60,7 +60,7 @@ namespace Impl {
 // ------------------------
 template <class ValueType1, class ValueType2, class RetType = ValueType2>
 struct StdAdjacentDifferenceDefaultBinaryOpFunctor {
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   RetType operator()(const ValueType1& a, const ValueType2& b) const {
     return a - b;
   }
@@ -74,7 +74,7 @@ struct StdAdjacentDiffItToViewFunctor {
   const DestViewType m_dest_view;
   BinaryOperator m_op;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i) const {
     const auto& my_value = m_first[i];
     if (i == 0) {
@@ -85,7 +85,7 @@ struct StdAdjacentDiffItToViewFunctor {
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdAdjacentDiffItToViewFunctor(IteratorType first, DestViewType dest_view,
                                  BinaryOperator op)
       : m_first(first), m_dest_view(dest_view), m_op(op) {}
@@ -96,12 +96,12 @@ struct StdAdjDiffCopyFunctor {
   ViewTypeFrom m_view_from;
   OutputIteratorType m_first_dest;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdAdjDiffCopyFunctor(const ViewTypeFrom view_from,
                         OutputIteratorType first_dest)
       : m_view_from(view_from), m_first_dest(first_dest) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(int i) const { m_first_dest[i] = m_view_from(i); }
 };
 

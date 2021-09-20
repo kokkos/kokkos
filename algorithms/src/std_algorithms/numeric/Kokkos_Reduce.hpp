@@ -57,12 +57,12 @@ namespace Impl {
 
 template <class ValueType>
 struct StdReduceDefaultJoinFunctor {
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ValueType operator()(const ValueType& a, const ValueType& b) const {
     return a + b;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ValueType operator()(const volatile ValueType& a,
                        const volatile ValueType& b) const {
     return a + b;
@@ -77,7 +77,7 @@ struct StdReduceFunctor {
   const IteratorType m_first;
   const ReducerType m_reducer;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& red_value) const {
     auto tmp_wrapped_value = red_value_type{m_first[i], false};
 
@@ -88,7 +88,7 @@ struct StdReduceFunctor {
     }
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   StdReduceFunctor(IteratorType first, ReducerType reducer)
       : m_first(first), m_reducer(std::move(reducer)) {}
 };
