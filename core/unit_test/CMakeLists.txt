@@ -730,7 +730,6 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       "PASSED: I am the custom std::terminate handler."
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tools/include)
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_TuningBuiltins
