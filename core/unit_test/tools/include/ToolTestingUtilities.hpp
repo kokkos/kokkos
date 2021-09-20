@@ -364,7 +364,13 @@ bool validate_event_set(
   const Lambda& lam, const Matchers... matchers) {
   found_events.clear();
   lam();
-  return compare_event_vectors(found_events, matchers...);
+  auto success = compare_event_vectors(found_events, matchers...);
+  if(!success){
+    for(const auto& event: found_events){
+      std::cout << event->repr() << std::endl;
+    }
+  }
+  return success;
 }
 
 template <class Lambda, class... Args>

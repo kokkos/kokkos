@@ -48,6 +48,7 @@
 #include <impl/Kokkos_Stacktrace.hpp>
 #include <vector>
 #include <algorithm>
+#include "Kokkos_Core_fwd.hpp"
 #include "include/ToolTestingUtilities.hpp"
 namespace Kokkos {
 class Serial;
@@ -301,6 +302,33 @@ TEST(defaultdevicetype, test_new_test_interface) {
         return MatchDiagnostic{true};
       });
   ASSERT_TRUE(success);
+  listen_tool_events({{false, true}});
+  success = validate_event_set( 
+      [&]() {
+        Kokkos::View<float*> left("left",5), right("right",5);
+        Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), left, right);
+      },
+      [&](BeginFenceEvent begin, EndFenceEvent) {
+        // DeepCopy: fence before copy
+        MatchDiagnostic diagnostic = {
+          begin.deviceID == Kokkos::DefaultExecutionSpace().impl_instance_id()
+        };
+        if(!diagnostic.success){
+          diagnostic.messages.push_back("Saw a fence on the wrong device ID");
+        }
+        return diagnostic;
+      },
+      [&](BeginFenceEvent begin, EndFenceEvent) {
+        // DeepCopy: fence after copy
+        MatchDiagnostic diagnostic = {
+          begin.deviceID == Kokkos::DefaultExecutionSpace().impl_instance_id()
+        };
+        if(!diagnostic.success){
+          diagnostic.messages.push_back("Saw a fence on the wrong device ID");
+        }
+        return diagnostic;
+      });
+  
   listen_tool_events({});
 }
 
