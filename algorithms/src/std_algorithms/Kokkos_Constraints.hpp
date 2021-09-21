@@ -140,49 +140,16 @@ struct iterators_are_accessible_from<ExeSpace, Head, Tail...> {
       iterators_are_accessible_from<ExeSpace, Tail...>::value;
 };
 
-template <class ExecutionSpace, class IteratorType>
+template <class ExecutionSpace, class... IteratorTypes>
 KOKKOS_INLINE_FUNCTION constexpr void
 static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
-                                           IteratorType /* it */) {
+                                           IteratorTypes... /* iterators */) {
   static_assert(
-      are_random_access_iterators<IteratorType>::value,
+      are_random_access_iterators<IteratorTypes...>::value,
       "Currently, Kokkos standard algorithms require random access iterators.");
   static_assert(
-      iterators_are_accessible_from<ExecutionSpace, IteratorType>::value,
+      iterators_are_accessible_from<ExecutionSpace, IteratorTypes...>::value,
       "Incompatible view/iterator and execution space");
-}
-
-template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_random_access_and_accessible(const ExecutionSpace& ex,
-                                           IteratorType1 it1,
-                                           IteratorType2 it2) {
-  static_assert_random_access_and_accessible(ex, it1);
-  static_assert_random_access_and_accessible(ex, it2);
-}
-
-template <class ExecutionSpace, class IteratorType1, class IteratorType2,
-          class IteratorType3>
-KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_random_access_and_accessible(const ExecutionSpace& ex,
-                                           IteratorType1 it1, IteratorType2 it2,
-                                           IteratorType3 it3) {
-  static_assert_random_access_and_accessible(ex, it1);
-  static_assert_random_access_and_accessible(ex, it2);
-  static_assert_random_access_and_accessible(ex, it3);
-}
-
-template <class ExecutionSpace, class IteratorType1, class IteratorType2,
-          class IteratorType3, class IteratorType4>
-KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_random_access_and_accessible(const ExecutionSpace& ex,
-                                           IteratorType1 it1, IteratorType2 it2,
-                                           IteratorType3 it3,
-                                           IteratorType4 it4) {
-  static_assert_random_access_and_accessible(ex, it1);
-  static_assert_random_access_and_accessible(ex, it2);
-  static_assert_random_access_and_accessible(ex, it3);
-  static_assert_random_access_and_accessible(ex, it4);
 }
 
 //
@@ -233,11 +200,11 @@ static_assert_iterators_have_matching_difference_type(IteratorType1 it1,
 //
 template <class ExeSpace>
 struct not_openmptarget {
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
   static constexpr bool value = true;
 #else
   static constexpr bool value =
-      !std::is_same<std::remove_cv_t<std::remove_reference_t<ExeSpace> >,
+      !std::is_same<std::decay_t<ExeSpace>,
                     ::Kokkos::Experimental::OpenMPTarget>::value;
 #endif
 };
