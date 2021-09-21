@@ -100,8 +100,7 @@ struct StdIsSortedFunctor {
   ComparatorType m_comparator;
 
   KOKKOS_FUNCTION
-  void operator()(const index_type i, std::size_t& update,
-                  const bool final) const {
+  void operator()(const index_type i, std::size_t& update) const {
     const auto& val_i   = m_first[i];
     const auto& val_ip1 = m_first[i + 1];
 
@@ -110,7 +109,6 @@ struct StdIsSortedFunctor {
     } else {
       update += 0;
     }
-    (void)final;
   }
 
   KOKKOS_FUNCTION
@@ -205,10 +203,9 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   const auto num_elements_minus_one = num_elements - 1;
   using functor_type = StdIsSortedFunctor<IteratorType, ComparatorType>;
 
-  // do scan, and result is incremented if sorting breaks
-  // so if at the end we have result==0, then data is sorted
+  // result is incremented by one if sorting breaks at index i
   std::size_t result = 0;
-  ::Kokkos::parallel_scan(
+  ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, std::move(comp)), result);
 
