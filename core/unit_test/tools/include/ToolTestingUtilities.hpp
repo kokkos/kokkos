@@ -1,3 +1,23 @@
+/**
+ * Before digging in to the code, it's worth taking a moment to review this design.
+ * Fundamentally, what we're looking to do is allow people to test that a piece of code
+ * Produces some expected series of tool events. Maybe we want to check that deep_copy on an
+ * execution space instance only causes the expected types of fences, or that calls to
+ * resize(WithoutInitializing,...) don't call an initialization kernel.
+ *
+ * This design is realized with an interface in which you provide a code region, and a set of
+ * matchers that consume the events. These matchers are lambdas that accept some set of tool events,
+ * and analyze their content, and return success or failure.
+ *
+ * Digging into implementation, this works by having a class hierarchy of Tool Events, rooted at
+ * EventBase. Every Tool event inherits from this (BeginParallelForEvent, PushRegionEvent, etc).
+ * We subscribe a Kokkos Tool that pushes instances of these events into a vector as a code region
+ * runs. We then iterate over the list of events and the matchers, first making sure that every event
+ * is of the right type to be used in the matcher, and then passing it to the matcher.
+ *
+ * Current examples are in TestEventCorrectness.hpp 
+ */
+
 #include <Kokkos_Core.hpp>
 #include <sstream>
 #include <iostream>
