@@ -17,7 +17,7 @@ struct MatchDiagnostic {
 // Originally found at https://stackoverflow.com/a/39717241
 template <typename... Ts>
 struct make_void {
-  typedef void type;
+  using type = void;
 };
 template <typename... Ts>
 using void_t = typename make_void<Ts...>::type;
