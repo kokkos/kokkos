@@ -70,7 +70,7 @@ struct StdCopyFunctor {
 
   KOKKOS_FUNCTION
   StdCopyFunctor(InputIterator _first, OutputIterator _dest_first)
-      : m_first(_first), m_dest_first(_dest_first) {}
+      : m_first(std::move(_first)), m_dest_first(std::move(_dest_first)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2>
@@ -83,7 +83,7 @@ struct StdCopyBackwardFunctor {
 
   KOKKOS_FUNCTION
   StdCopyBackwardFunctor(IteratorType1 _last, IteratorType2 _dest_last)
-      : m_last(_last), m_dest_last(_dest_last) {}
+      : m_last(std::move(_last)), m_dest_last(std::move(_dest_last)) {}
 };
 
 template <class IndexType, class FirstFrom, class FirstDest, class PredType>
@@ -94,8 +94,8 @@ struct StdCopyIfFunctor {
 
   KOKKOS_FUNCTION
   StdCopyIfFunctor(FirstFrom first_from, FirstDest first_dest, PredType pred)
-      : m_first_from(first_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
@@ -125,7 +125,7 @@ struct StdFillFunctor {
 
   KOKKOS_FUNCTION
   StdFillFunctor(InputIterator _first, T _value)
-      : m_first(_first), m_value(std::move(_value)) {}
+      : m_first(std::move(_first)), m_value(std::move(_value)) {}
 };
 
 template <class IndexType, class InputIterator, class OutputIterator,
@@ -141,8 +141,8 @@ struct StdTransformFunctor {
   KOKKOS_FUNCTION
   StdTransformFunctor(InputIterator _first, OutputIterator _m_d_first,
                       UnaryFunctorType _functor)
-      : m_first(_first),
-        m_d_first(_m_d_first),
+      : m_first(std::move(_first)),
+        m_d_first(std::move(_m_d_first)),
         m_unary_op(std::move(_functor)) {}
 };
 
@@ -163,9 +163,9 @@ struct StdTransformBinaryFunctor {
   StdTransformBinaryFunctor(InputIterator1 _first1, InputIterator2 _first2,
                             OutputIterator _m_d_first,
                             BinaryFunctorType _functor)
-      : m_first1(_first1),
-        m_first2(_first2),
-        m_d_first(_m_d_first),
+      : m_first1(std::move(_first1)),
+        m_first2(std::move(_first2)),
+        m_d_first(std::move(_m_d_first)),
         m_binary_op(std::move(_functor)) {}
 };
 
@@ -180,7 +180,7 @@ struct StdGenerateFunctor {
 
   KOKKOS_FUNCTION
   StdGenerateFunctor(IteratorType _first, Generator _g)
-      : m_first(_first), m_generator(std::move(_g)) {}
+      : m_first(std::move(_first)), m_generator(std::move(_g)) {}
 };
 
 template <class InputIterator, class PredicateType, class NewValueType>
@@ -202,7 +202,7 @@ struct StdReplaceIfFunctor {
   KOKKOS_FUNCTION
   StdReplaceIfFunctor(InputIterator first, PredicateType pred,
                       NewValueType new_value)
-      : m_first(first),
+      : m_first(std::move(first)),
         m_predicate(std::move(pred)),
         m_new_value(std::move(new_value)) {}
 };
@@ -225,7 +225,7 @@ struct StdReplaceFunctor {
   KOKKOS_FUNCTION
   StdReplaceFunctor(InputIterator first, ValueType old_value,
                     ValueType new_value)
-      : m_first(first),
+      : m_first(std::move(first)),
         m_old_value(std::move(old_value)),
         m_new_value(std::move(new_value)) {}
 };
@@ -254,8 +254,8 @@ struct StdReplaceCopyFunctor {
   KOKKOS_FUNCTION
   StdReplaceCopyFunctor(InputIterator first_from, OutputIterator first_dest,
                         ValueType old_value, ValueType new_value)
-      : m_first_from(first_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_old_value(std::move(old_value)),
         m_new_value(std::move(new_value)) {}
 };
@@ -283,8 +283,8 @@ struct StdReplaceIfCopyFunctor {
   KOKKOS_FUNCTION
   StdReplaceIfCopyFunctor(InputIterator first_from, OutputIterator first_dest,
                           PredicateType pred, ValueType new_value)
-      : m_first_from(first_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_pred(std::move(pred)),
         m_new_value(std::move(new_value)) {}
 };

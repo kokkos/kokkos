@@ -93,7 +93,9 @@ struct StdFindIfOrNotFunctor {
   KOKKOS_FUNCTION
   StdFindIfOrNotFunctor(IteratorType first, ReducerType reducer,
                         PredicateType p)
-      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
+      : m_first(std::move(first)),
+        m_reducer(std::move(reducer)),
+        m_p(std::move(p)) {}
 };
 
 template <class IteratorType, class UnaryFunctorType>
@@ -107,7 +109,7 @@ struct StdForEachFunctor {
 
   KOKKOS_FUNCTION
   StdForEachFunctor(IteratorType _first, UnaryFunctorType _functor)
-      : m_first(_first), m_functor(std::move(_functor)) {}
+      : m_first(std::move(_first)), m_functor(std::move(_functor)) {}
 };
 
 template <class IteratorType, class Predicate>
@@ -125,7 +127,7 @@ struct StdCountIfFunctor {
 
   KOKKOS_FUNCTION
   StdCountIfFunctor(IteratorType _first, Predicate _predicate)
-      : m_first(_first), m_predicate(std::move(_predicate)) {}
+      : m_first(std::move(_first)), m_predicate(std::move(_predicate)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
@@ -149,8 +151,8 @@ struct StdMismatchRedFunctor {
   KOKKOS_FUNCTION
   StdMismatchRedFunctor(IteratorType1 first1, IteratorType2 first2,
                         ReducerType reducer, BinaryPredicateType predicate)
-      : m_first1(first1),
-        m_first2(first2),
+      : m_first1(std::move(first1)),
+        m_first2(std::move(first2)),
         m_reducer(std::move(reducer)),
         m_predicate(std::move(predicate)) {}
 };
@@ -172,8 +174,8 @@ struct StdEqualFunctor {
   KOKKOS_FUNCTION
   StdEqualFunctor(IteratorType1 _first1, IteratorType2 _first2,
                   BinaryPredicateType _predicate)
-      : m_first1(_first1),
-        m_first2(_first2),
+      : m_first1(std::move(_first1)),
+        m_first2(std::move(_first2)),
         m_predicate(std::move(_predicate)) {}
 };
 
@@ -204,10 +206,10 @@ struct StdLexicographicalCompareFunctor {
   KOKKOS_FUNCTION
   StdLexicographicalCompareFunctor(IteratorType1 _first1, IteratorType2 _first2,
                                    ReducerType _reducer, ComparatorType _comp)
-      : m_first1(_first1),
-        m_first2(_first2),
-        m_reducer(_reducer),
-        m_comparator(_comp) {}
+      : m_first1(std::move(_first1)),
+        m_first2(std::move(_first2)),
+        m_reducer(std::move(_reducer)),
+        m_comparator(std::move(_comp)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
@@ -227,7 +229,9 @@ struct StdCompareFunctor {
   KOKKOS_FUNCTION
   StdCompareFunctor(IteratorType1 _it1, IteratorType2 _it2,
                     ComparatorType _predicate)
-      : m_it1(_it1), m_it2(_it2), m_predicate(std::move(_predicate)) {}
+      : m_it1(std::move(_it1)),
+        m_it2(std::move(_it2)),
+        m_predicate(std::move(_predicate)) {}
 };
 
 template <class IndexType, class IteratorType, class ReducerType,
@@ -256,7 +260,9 @@ struct StdAdjacentFindFunctor {
   KOKKOS_FUNCTION
   StdAdjacentFindFunctor(IteratorType first, ReducerType reducer,
                          PredicateType p)
-      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
+      : m_first(std::move(first)),
+        m_reducer(std::move(reducer)),
+        m_p(std::move(p)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
@@ -302,11 +308,11 @@ struct StdSearchFunctor {
   StdSearchFunctor(IteratorType1 first, IteratorType1 last,
                    IteratorType2 s_first, IteratorType2 s_last,
                    ReducerType reducer, PredicateType p)
-      : m_first(first),
-        m_last(last),
-        m_s_first(s_first),
-        m_s_last(s_last),
-        m_reducer(reducer),
+      : m_first(std::move(first)),
+        m_last(std::move(last)),
+        m_s_first(std::move(s_first)),
+        m_s_last(std::move(s_last)),
+        m_reducer(std::move(reducer)),
         m_p(std::move(p)) {}
 };
 
@@ -346,10 +352,10 @@ struct StdFindFirstOfFunctor {
   StdFindFirstOfFunctor(IteratorType1 first, IteratorType2 s_first,
                         IteratorType2 s_last, ReducerType reducer,
                         PredicateType p)
-      : m_first(first),
-        m_s_first(s_first),
-        m_s_last(s_last),
-        m_reducer(reducer),
+      : m_first(std::move(first)),
+        m_s_first(std::move(s_first)),
+        m_s_last(std::move(s_last)),
+        m_reducer(std::move(reducer)),
         m_p(std::move(p)) {}
 };
 
@@ -396,11 +402,11 @@ struct StdFindEndFunctor {
   StdFindEndFunctor(IteratorType1 first, IteratorType1 last,
                     IteratorType2 s_first, IteratorType2 s_last,
                     ReducerType reducer, PredicateType p)
-      : m_first(first),
-        m_last(last),
-        m_s_first(s_first),
-        m_s_last(s_last),
-        m_reducer(reducer),
+      : m_first(std::move(first)),
+        m_last(std::move(last)),
+        m_s_first(std::move(s_first)),
+        m_s_last(std::move(s_last)),
+        m_reducer(std::move(reducer)),
         m_p(std::move(p)) {}
 };
 

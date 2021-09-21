@@ -72,9 +72,9 @@ struct StdUniqueCopyFunctor {
   KOKKOS_FUNCTION
   StdUniqueCopyFunctor(InputIt first_from, InputIt last_from,
                        OutputIt first_dest, BinaryPredicateType pred)
-      : m_first_from(first_from),
-        m_last_from(last_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_last_from(std::move(last_from)),
+        m_first_dest(std::move(first_dest)),
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
@@ -107,7 +107,7 @@ struct StdReverseFunctor {
   }
 
   StdReverseFunctor(InputIterator first, InputIterator last)
-      : m_first(first), m_last(last) {}
+      : m_first(std::move(first)), m_last(std::move(last)) {}
 };
 
 template <class IndexType, class InputIterator, class OutputIterator>
@@ -119,7 +119,7 @@ struct StdReverseCopyFunctor {
   void operator()(IndexType i) const { m_dest_first[i] = m_last[-1 - i]; }
 
   StdReverseCopyFunctor(InputIterator _last, OutputIterator _dest_first)
-      : m_last(_last), m_dest_first(_dest_first) {}
+      : m_last(std::move(_last)), m_dest_first(std::move(_dest_first)) {}
 };
 
 template <class IndexType, class InputIterator, class OutputIterator>
@@ -133,7 +133,7 @@ struct StdMoveFunctor {
   }
 
   StdMoveFunctor(InputIterator _first, OutputIterator _dest_first)
-      : m_first(_first), m_dest_first(_dest_first) {}
+      : m_first(std::move(_first)), m_dest_first(std::move(_dest_first)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2>
@@ -147,7 +147,7 @@ struct StdMoveBackwardFunctor {
   }
 
   StdMoveBackwardFunctor(IteratorType1 _last, IteratorType2 _dest_last)
-      : m_last(_last), m_dest_last(_dest_last) {}
+      : m_last(std::move(_last)), m_dest_last(std::move(_dest_last)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2>
@@ -162,7 +162,7 @@ struct StdSwapRangesFunctor {
 
   KOKKOS_FUNCTION
   StdSwapRangesFunctor(IteratorType1 _first1, IteratorType2 _first2)
-      : m_first1(_first1), m_first2(_first2) {}
+      : m_first1(std::move(_first1)), m_first2(std::move(_first2)) {}
 };
 
 template <class IteratorType, class ViewFromType>
@@ -173,7 +173,7 @@ struct StdUniqueStepThreeFunctor {
 
   KOKKOS_FUNCTION
   StdUniqueStepThreeFunctor(IteratorType first_to, ViewFromType view_from)
-      : m_first_to(first_to), m_view_from(view_from) {}
+      : m_first_to(std::move(first_to)), m_view_from(std::move(view_from)) {}
 
   KOKKOS_FUNCTION
   void operator()(const index_type i) const {
@@ -192,9 +192,9 @@ struct StdUniqueFunctor {
   KOKKOS_FUNCTION
   StdUniqueFunctor(InputIt first_from, InputIt last_from, OutputIt first_dest,
                    BinaryPredicateType pred)
-      : m_first_from(first_from),
-        m_last_from(last_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_last_from(std::move(last_from)),
+        m_first_dest(std::move(first_dest)),
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
@@ -235,10 +235,10 @@ struct StdRotateCopyFunctor {
 
   StdRotateCopyFunctor(InputIterator first, InputIterator last,
                        InputIterator first_n, OutputIterator dest_first)
-      : m_first(first),
-        m_last(last),
-        m_first_n(first_n),
-        m_dest_first(dest_first) {}
+      : m_first(std::move(first)),
+        m_last(std::move(last)),
+        m_first_n(std::move(first_n)),
+        m_dest_first(std::move(dest_first)) {}
 };
 
 template <class IndexType, class FirstFrom, class FirstDest, class PredType>
@@ -250,8 +250,8 @@ struct StdRemoveIfStage1Functor {
   KOKKOS_FUNCTION
   StdRemoveIfStage1Functor(FirstFrom first_from, FirstDest first_dest,
                            PredType pred)
-      : m_first_from(first_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_must_remove(std::move(pred)) {}
 
   KOKKOS_FUNCTION
@@ -280,7 +280,7 @@ struct StdRemoveIfStage2Functor {
   KOKKOS_FUNCTION
   StdRemoveIfStage2Functor(InputIteratorType first_from,
                            OutputIteratorType first_to)
-      : m_first_from(first_from), m_first_to(first_to) {}
+      : m_first_from(std::move(first_from)), m_first_to(std::move(first_to)) {}
 
   KOKKOS_FUNCTION
   void operator()(const IndexType i) const {
