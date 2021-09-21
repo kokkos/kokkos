@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
   Kokkos::ScopeGuard(argc, argv);
   Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
 
-  const long n = argc>1?atoi(argv[1]):10;
+  const long n = argc > 1 ? atoi(argv[1]) : 10;
 
   printf("Number of even integers from 0 to %ld\n", n - 1);
 
