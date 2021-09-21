@@ -9,12 +9,20 @@ namespace Test {
 
 namespace Tools {
 
+/**
+ * @brief This is what a matcher should return
+ * It is a two-part struct, with a bool representing
+ * success (true if the match holds), and a vector of
+ * strings representing the diagnostics that should be
+ * printed in case of a failure
+ */
 struct MatchDiagnostic {
   bool success                      = true;
   std::vector<std::string> messages = {};
 };
 
 // Originally found at https://stackoverflow.com/a/39717241
+// make_void is in C++17
 template <typename... Ts>
 struct make_void {
   using type = void;
@@ -22,21 +30,60 @@ struct make_void {
 template <typename... Ts>
 using void_t = typename make_void<Ts...>::type;
 
-template <typename T, typename = void>
-struct function_traits;
-
-struct EventBase;
+struct EventBase; // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
 using EventSet     = std::vector<EventBasePtr>;
 using event_vector = EventSet;
 
+/**
+ * @brief Base case of a recursive reduction using templates
+ * Should be replaced with a fold in C++17
+ */
+
 bool is_nonnull() { return true; }
 
+/**
+ * @brief Recursive reduction to check whether any pointer in a set is null
+ * 
+ * @tparam Head Type of the pointer to examine
+ * @tparam Tail Types of the rest of the pointers
+ * @param head The pointer to examine
+ * @param tail The rest of the pointers
+ * @return true if no pointer is null, false otherwise
+ *
+ */
 template <class Head, class... Tail>
 bool is_nonnull(const Head& head, const Tail... tail) {
   return (head != nullptr) && (is_nonnull(tail...));
 }
 
+/**
+ * @brief In order to call some arbitrary set of lambdas representing matchers,
+ * we need the ability to look at a lambda, and deduce its arguments.
+ *
+ * This is the base template, and will be specialized. All specializations should define
+ * A return type R, an args pack A, a num_args, and a function "invoke_as" that takes a
+ * functor and an arg-pack, and tries to call the functor with that arg-pack
+ *
+ * The main original intent here is two-fold, one to allow us to look at how many args a
+ * functor takes, and two to look at the types of its args. The second of these is used
+ * to do a series of dynamic_casts, making sure that the EventBase's captured in our event
+ * vectors are of the types being looked for by our matchers
+ * 
+ * @tparam T a functor-like object
+ * @tparam typename used for specialization shenanigans
+ */
+template <typename T, typename = void>
+struct function_traits;
+
+
+/**
+ * @brief Specialization of function traits, representing a free function.
+ * See the base template for info on what this struct is doing
+ * 
+ * @tparam R return type of the function
+ * @tparam A arg pack
+ */
 template <typename R, typename... A>
 struct function_traits<R (*)(A...)> {
   using return_type                  = R;
@@ -45,12 +92,21 @@ struct function_traits<R (*)(A...)> {
   constexpr static int num_arguments = std::tuple_size<args_type>::value;
   template <class Call, class... Args>
   static auto invoke_as(Call call, Args... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) { 
       return false;
     }
     return call(*std::dynamic_pointer_cast<A>(args)...);
   }
 };
+
+/**
+ * @brief Specialization of function traits, representing a class member function.
+ * See the base template for info on what this struct is doing
+ * 
+ * @tparam R return type of the function
+ * @tparam C the class function being represented
+ * @tparam A arg pack
+ */
 
 template <typename R, typename C, typename... A>
 struct function_traits<R (C::*)(A...)> {
@@ -66,6 +122,15 @@ struct function_traits<R (C::*)(A...)> {
     return call(*std::dynamic_pointer_cast<A>(args)...);
   }
 };
+
+/**
+ * @brief Specialization of function traits, representing a *const* class member function.
+ * See the base template for info on what this struct is doing
+ * 
+ * @tparam R return type of the function
+ * @tparam C the class function being represented
+ * @tparam A arg pack
+ */
 
 template <typename R, typename C, typename... A>
 struct function_traits<R (C::*)(A...) const>  // const
@@ -83,10 +148,26 @@ struct function_traits<R (C::*)(A...) const>  // const
   }
 };
 
+/**
+ * @brief Specialization of function traits, representing a T that has a non-generic call operator,
+ * i.e. a functor/lambda whose operator() has no auto or template on it
+ * See the base template for info on what this struct is doing
+ * 
+ * @tparam T The functor type
+ */
 template <typename T>
 struct function_traits<T, void_t<decltype(&T::operator())> >
     : public function_traits<decltype(&T::operator())> {};
 
+/**
+ * @brief This is the base case of a recursive check of matchers, meaning no more matchers
+ * exist. The only check now should be that we made it all the way through the list of events
+ * captured by our lambda
+ * 
+ * @param index how many events we scanned
+ * @param events the vector containing our events
+ * @return MatchDiagnostic success if we scanned all events, failure otherwise
+ */
 MatchDiagnostic check_match(event_vector::size_type index,
                             event_vector events) {
   return (index == events.size())
@@ -94,21 +175,25 @@ MatchDiagnostic check_match(event_vector::size_type index,
              : MatchDiagnostic{false, {"Wrong number of events encountered"}};
 }
 
+/**
+ * @brief A struct to extract events from an event vector, and invoke a matcher with them
+ *
+ * This one is a bit funky, you can't do a lot of 
+ * 
+ * @tparam num 
+ * @tparam Matcher 
+ */
 template <int num, class Matcher>
 struct invoke_helper {
-  template <class Traits, class... Args>
-  static auto call(int index, event_vector events, Matcher matcher,
-                   Args... args) {
-    return invoke_helper<num - 1, Matcher>::template call<Traits>(
-        index + 1, events, matcher, args..., events[index]);
+  private:
+  template<class Traits, size_t... Indices>
+  static auto call(int index, event_vector events, std::index_sequence<Indices...>, Matcher matcher){
+    return Traits::invoke_as(matcher, events[index+Indices]...);
   }
-};
-
-template <class Matcher>
-struct invoke_helper<0, Matcher> {
-  template <class Traits, class... Args>
-  static auto call(int, event_vector, Matcher matcher, Args... args) {
-    return Traits::invoke_as(matcher, args...);
+  public:
+  template <class Traits>
+  static auto call(int index, event_vector events, Matcher matcher) {
+    return call<Traits>(index, events, std::make_index_sequence<num>{}, matcher);
   }
 };
 
