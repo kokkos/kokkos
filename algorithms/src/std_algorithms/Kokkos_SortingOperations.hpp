@@ -75,9 +75,7 @@ struct StdIsSortedUntilFunctor {
     const auto& val_ip1 = m_first[i + 1];
 
     if (m_comparator(val_ip1, val_i)) {
-      update += 1;
-    } else {
-      update += 0;
+      ++update;
     }
 
     if (final) {
@@ -105,9 +103,7 @@ struct StdIsSortedFunctor {
     const auto& val_ip1 = m_first[i + 1];
 
     if (m_comparator(val_ip1, val_i)) {
-      update += 1;
-    } else {
-      update += 0;
+      ++update;
     }
   }
 
@@ -209,14 +205,7 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
       functor_type(first, std::move(comp)), result);
 
-  ex.fence("Kokkos::is_sorted: fence after operation");
-
-  // decide and return
-  if (result == 0) {
-    return true;
-  } else {
-    return false;
-  }
+  return result == 0;
 }
 
 template <class ExecutionSpace, class IteratorType>
