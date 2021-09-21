@@ -188,19 +188,6 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
 };
 
 }  // namespace Impl
-
-template <class IteratorType>
-KOKKOS_FUNCTION constexpr typename IteratorType::difference_type distance(
-    IteratorType first, IteratorType last) {
-  static_assert(
-      ::Kokkos::Experimental::Impl::are_random_access_iterators<
-          IteratorType>::value,
-      "Kokkos::Experimental::distance: only implemented for random access "
-      "iterators.");
-
-  return last - first;
-}
-
 }  // namespace Experimental
 }  // namespace Kokkos
 

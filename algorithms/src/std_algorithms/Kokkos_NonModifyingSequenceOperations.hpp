@@ -52,6 +52,7 @@
 #include "Kokkos_ModifyingOperations.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_RandomAccessIterator.hpp"
+#include "Kokkos_Distance.hpp"
 #include <string>
 
 namespace Kokkos {
