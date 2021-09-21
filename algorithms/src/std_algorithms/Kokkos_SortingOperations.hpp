@@ -164,9 +164,6 @@ IteratorType is_sorted_until_impl(const std::string& label,
       KE::find(ex, KE::cbegin(indicator), KE::cend(indicator), sentinel_value);
   const auto shift = r - ::Kokkos::Experimental::cbegin(indicator);
 
-  ex.fence("Kokkos::is_sorted_until: fence after operation");
-
-  // return
   return first + (shift + 1);
 }
 
