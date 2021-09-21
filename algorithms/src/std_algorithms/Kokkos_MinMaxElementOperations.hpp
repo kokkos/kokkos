@@ -108,13 +108,10 @@ IteratorType min_or_max_element_impl(const std::string& label,
   }
 
   // aliases
-  using index_type   = typename IteratorType::difference_type;
-  using value_type   = typename IteratorType::value_type;
-  using reducer_type = typename std::conditional<
-      (0 < sizeof...(Args)),
-      ReducerType<value_type, index_type, Args..., ExecutionSpace>,
-      ReducerType<value_type, index_type, ExecutionSpace> >::type;
-
+  using index_type = typename IteratorType::difference_type;
+  using value_type = typename IteratorType::value_type;
+  using reducer_type =
+      ReducerType<value_type, index_type, Args..., ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
   using func_t           = StdMinOrMaxElemFunctor<IteratorType, reducer_type>;
 
@@ -150,13 +147,10 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
   }
 
   // aliases
-  using index_type   = typename IteratorType::difference_type;
-  using value_type   = typename IteratorType::value_type;
-  using reducer_type = typename std::conditional<
-      (0 < sizeof...(Args)),
-      ReducerType<value_type, index_type, Args..., ExecutionSpace>,
-      ReducerType<value_type, index_type, ExecutionSpace> >::type;
-
+  using index_type = typename IteratorType::difference_type;
+  using value_type = typename IteratorType::value_type;
+  using reducer_type =
+      ReducerType<value_type, index_type, Args..., ExecutionSpace>;
   using result_view_type = typename reducer_type::result_view_type;
   using func_t           = StdMinMaxElemFunctor<IteratorType, reducer_type>;
 
