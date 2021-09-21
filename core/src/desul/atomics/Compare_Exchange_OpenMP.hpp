@@ -124,7 +124,7 @@ atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
 #pragma omp begin declare variant match(device = {kind(nohost)})
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T) == 16), T>
-atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
+atomic_compare_exchange(T* /*dest*/, T /*compare*/, T value, MemoryOrder, MemoryScope) {
   // FIXME make sure this never gets called
   return value;
 }
