@@ -98,8 +98,6 @@ std::enable_if_t<Impl::atomic_always_lock_free(sizeof(T)),T> atomic_compare_exch
      reinterpret_cast<cas_t&>(value));
   return reinterpret_cast<T&>(retval);
 }
-// Make 16 byte cas work on host at least (is_initial_device check, note this requires C++17)
-#if __cplusplus>=201703L
 
 #if defined(__clang__) && (__clang_major__>=7)
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
@@ -108,6 +106,7 @@ std::enable_if_t<Impl::atomic_always_lock_free(sizeof(T)),T> atomic_compare_exch
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif
 
+// Make 16 byte cas work on host at least
 #pragma omp begin declare variant match(device = {kind(host)})
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T) == 16), T>
@@ -126,13 +125,13 @@ atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T) == 16), T>
 atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
+  // FIXME make sure this never gets called
   return value;
 }
 #pragma omp end declare variant
 
 #if defined(__clang__) && (__clang_major__>=7)
 #pragma GCC diagnostic pop
-#endif
 #endif
 
 }  // namespace desul
