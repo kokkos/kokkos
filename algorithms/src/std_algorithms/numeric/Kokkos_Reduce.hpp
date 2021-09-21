@@ -104,9 +104,9 @@ ValueType reduce_custom_functors_impl(const std::string& label,
                                       ValueType init_reduction_value,
                                       JoinerType joiner) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  static_assert_is_not_opemnptarget(ex);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::expect_valid_range(first, last);
 
   if (first == last) {
     // init is returned, unmodified
@@ -141,9 +141,9 @@ ValueType reduce_default_functors_impl(const std::string& label,
                                        IteratorType first, IteratorType last,
                                        ValueType init_reduction_value) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  static_assert_is_not_opemnptarget(ex);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::expect_valid_range(first, last);
 
   using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;
   using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;
@@ -184,7 +184,7 @@ template <class ExecutionSpace, class DataType, class... Properties>
 auto reduce(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   using view_type  = ::Kokkos::View<DataType, Properties...>;
   using value_type = typename view_type::value_type;
@@ -198,7 +198,7 @@ template <class ExecutionSpace, class DataType, class... Properties>
 auto reduce(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   using view_type  = ::Kokkos::View<DataType, Properties...>;
   using value_type = typename view_type::value_type;
@@ -241,7 +241,7 @@ ValueType reduce(const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
 
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::reduce_default_functors_impl(
       "Kokkos::reduce_default_functors_view_api", ex, KE::cbegin(view),
@@ -257,7 +257,7 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
 
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::reduce_default_functors_impl(
       label, ex, KE::cbegin(view), KE::cend(view), init_reduction_value);
@@ -300,7 +300,7 @@ ValueType reduce(const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
 
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::reduce_custom_functors_impl(
       "Kokkos::reduce_custom_functors_view_api", ex, KE::cbegin(view),
@@ -316,7 +316,7 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex,
                 "ValueType must be move constructible.");
 
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::reduce_custom_functors_impl(label, ex, KE::cbegin(view),
                                            KE::cend(view), init_reduction_value,

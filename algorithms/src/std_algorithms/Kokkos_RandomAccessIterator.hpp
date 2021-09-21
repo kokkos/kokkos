@@ -193,7 +193,8 @@ template <class IteratorType>
 KOKKOS_FUNCTION constexpr typename IteratorType::difference_type distance(
     IteratorType first, IteratorType last) {
   static_assert(
-      ::Kokkos::Experimental::are_random_access_iterators<IteratorType>::value,
+      ::Kokkos::Experimental::Impl::are_random_access_iterators<
+          IteratorType>::value,
       "Kokkos::Experimental::distance: only implemented for random access "
       "iterators.");
 

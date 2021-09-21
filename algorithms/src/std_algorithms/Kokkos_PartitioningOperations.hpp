@@ -214,8 +214,8 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   // so the range is partitioned if max_loc_true < (min_loc_false)
 
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   // trivial case
   if (first == last) {
@@ -268,8 +268,8 @@ IteratorType partition_point_impl(const std::string& label,
   // Implementation below finds the first location where p is false.
 
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   if (first == last) {
     return first;
@@ -318,11 +318,11 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
   // impl uses a scan, this is similar how we implemented copy_if
 
   // checks
-  static_assert_random_access_and_accessible(ex, from_first, to_first_true,
-                                             to_first_false);
-  static_assert_iterators_have_matching_difference_type(
+  Impl::static_assert_random_access_and_accessible(
+      ex, from_first, to_first_true, to_first_false);
+  Impl::static_assert_iterators_have_matching_difference_type(
       from_first, to_first_true, to_first_false);
-  expect_valid_range(from_first, from_last);
+  Impl::expect_valid_range(from_first, from_last);
 
   if (from_first == from_last) {
     return {to_first_true, to_first_false};
@@ -373,7 +373,7 @@ template <class ExecutionSpace, class PredicateType, class DataType,
 bool is_partitioned(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v,
                     PredicateType p) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   return Impl::is_partitioned_impl("Kokkos::is_partitioned_view_api_default",
                                    ex, cbegin(v), cend(v), std::move(p));
@@ -384,7 +384,7 @@ template <class ExecutionSpace, class PredicateType, class DataType,
 bool is_partitioned(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v,
                     PredicateType p) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   return Impl::is_partitioned_impl(label, ex, cbegin(v), cend(v), std::move(p));
 }
@@ -468,7 +468,7 @@ template <class ExecutionSpace, class UnaryPredicate, class DataType,
 auto partition_point(const std::string& label, const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   return Impl::partition_point_impl(label, ex, cbegin(v), cend(v),
                                     std::move(p));
 }
@@ -478,7 +478,7 @@ template <class ExecutionSpace, class UnaryPredicate, class DataType,
 auto partition_point(const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   return Impl::partition_point_impl("Kokkos::partition_point_view_api_default",
                                     ex, cbegin(v), cend(v), std::move(p));
 }

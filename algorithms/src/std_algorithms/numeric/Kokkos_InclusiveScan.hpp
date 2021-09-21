@@ -211,9 +211,10 @@ OutputIteratorType inclusive_scan_default_op_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
@@ -244,9 +245,10 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, BinaryOpType binary_op) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
@@ -279,9 +281,10 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
     OutputIteratorType first_dest, BinaryOpType binary_op,
     ValueType init_value) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type    = typename InputIteratorType::difference_type;
@@ -315,9 +318,10 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
                                                  BinaryOpType binary_op,
                                                  UnaryOpType unary_op) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
@@ -350,9 +354,10 @@ OutputIteratorType transform_inclusive_scan_impl(
     OutputIteratorType first_dest, BinaryOpType binary_op, UnaryOpType unary_op,
     ValueType init_value) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
@@ -382,7 +387,7 @@ OutputIteratorType transform_inclusive_scan_impl(
 // overload set 1
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
@@ -394,7 +399,7 @@ inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 inclusive_scan(const std::string& label, const ExecutionSpace& ex,
@@ -410,8 +415,8 @@ auto inclusive_scan(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_default_op_impl(
       "Kokkos::inclusive_scan_default_functors_view_api", ex,
@@ -424,8 +429,8 @@ auto inclusive_scan(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_default_op_impl(label, ex, KE::cbegin(view_from),
                                               KE::cend(view_from),
@@ -435,7 +440,7 @@ auto inclusive_scan(
 // overload set 2 (accepting custom binary op)
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOp>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
@@ -448,7 +453,7 @@ inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOp>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 inclusive_scan(const std::string& label, const ExecutionSpace& ex,
@@ -464,8 +469,8 @@ auto inclusive_scan(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     BinaryOp binary_op) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_impl(
       "Kokkos::inclusive_scan_custom_functors_view_api", ex,
@@ -479,8 +484,8 @@ auto inclusive_scan(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     BinaryOp binary_op) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),
@@ -490,7 +495,7 @@ auto inclusive_scan(const std::string& label, const ExecutionSpace& ex,
 // overload set 3
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOp, class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
@@ -503,7 +508,7 @@ inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOp, class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 inclusive_scan(const std::string& label, const ExecutionSpace& ex,
@@ -521,8 +526,8 @@ auto inclusive_scan(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     BinaryOp binary_op, ValueType init_value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_impl(
       "Kokkos::inclusive_scan_custom_functors_view_api", ex,
@@ -537,8 +542,8 @@ auto inclusive_scan(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     BinaryOp binary_op, ValueType init_value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),
@@ -554,16 +559,13 @@ auto inclusive_scan(const std::string& label, const ExecutionSpace& ex,
 // overload set 1 (no init value)
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 transform_inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                          InputIteratorType last, OutputIteratorType first_dest,
                          BinaryOpType binary_op, UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
+  Impl::static_assert_is_not_openmptarget(ex);
 
   return Impl::transform_inclusive_scan_impl(
       "Kokkos::transform_inclusive_scan_custom_functors_iterator_api", ex,
@@ -572,17 +574,14 @@ transform_inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 transform_inclusive_scan(const std::string& label, const ExecutionSpace& ex,
                          InputIteratorType first, InputIteratorType last,
                          OutputIteratorType first_dest, BinaryOpType binary_op,
                          UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
+  Impl::static_assert_is_not_openmptarget(ex);
 
   return Impl::transform_inclusive_scan_impl(label, ex, first, last, first_dest,
                                              binary_op, unary_op);
@@ -596,13 +595,9 @@ auto transform_inclusive_scan(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     BinaryOpType binary_op, UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_impl(
       "Kokkos::transform_inclusive_scan_custom_functors_view_api", ex,
@@ -618,13 +613,9 @@ auto transform_inclusive_scan(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     BinaryOpType binary_op, UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),
@@ -635,18 +626,14 @@ auto transform_inclusive_scan(
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType,
           class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 transform_inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                          InputIteratorType last, OutputIteratorType first_dest,
                          BinaryOpType binary_op, UnaryOpType unary_op,
                          ValueType init_value) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
+  Impl::static_assert_is_not_openmptarget(ex);
   return Impl::transform_inclusive_scan_impl(
       "Kokkos::transform_inclusive_scan_custom_functors_iterator_api", ex,
       first, last, first_dest, binary_op, unary_op, init_value);
@@ -655,18 +642,14 @@ transform_inclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType,
           class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 transform_inclusive_scan(const std::string& label, const ExecutionSpace& ex,
                          InputIteratorType first, InputIteratorType last,
                          OutputIteratorType first_dest, BinaryOpType binary_op,
                          UnaryOpType unary_op, ValueType init_value) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
+  Impl::static_assert_is_not_openmptarget(ex);
   return Impl::transform_inclusive_scan_impl(label, ex, first, last, first_dest,
                                              binary_op, unary_op, init_value);
 }
@@ -679,13 +662,9 @@ auto transform_inclusive_scan(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     BinaryOpType binary_op, UnaryOpType unary_op, ValueType init_value) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_impl(
       "Kokkos::transform_inclusive_scan_custom_functors_view_api", ex,
@@ -701,13 +680,9 @@ auto transform_inclusive_scan(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     BinaryOpType binary_op, UnaryOpType unary_op, ValueType init_value) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_inclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),

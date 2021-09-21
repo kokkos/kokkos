@@ -50,6 +50,7 @@
 
 namespace Kokkos {
 namespace Experimental {
+namespace Impl {
 
 template <typename T, typename enable = void>
 struct is_admissible_to_kokkos_std_algorithms : std::false_type {};
@@ -210,7 +211,7 @@ struct not_openmptarget {
 };
 
 template <class ExecutionSpace>
-KOKKOS_INLINE_FUNCTION constexpr void static_assert_is_not_opemnptarget(
+KOKKOS_INLINE_FUNCTION constexpr void static_assert_is_not_openmptarget(
     const ExecutionSpace&) {
   static_assert(not_openmptarget<ExecutionSpace>::value,
                 "Currently, Kokkos standard algorithms do not support custom "
@@ -229,6 +230,7 @@ void expect_valid_range(IteratorType first, IteratorType last) {
   (void)last;
 }
 
+}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
 

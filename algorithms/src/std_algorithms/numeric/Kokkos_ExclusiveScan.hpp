@@ -177,9 +177,10 @@ OutputIteratorType exclusive_scan_custom_op_impl(
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type    = typename InputIteratorType::difference_type;
@@ -213,9 +214,10 @@ OutputIteratorType transform_exclusive_scan_impl(
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop,
     UnaryOpType uop) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
@@ -248,9 +250,10 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
                                                   OutputIteratorType first_dest,
                                                   ValueType init_value) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   // does it make sense to do this static_assert too?
   // using input_iterator_value_type = typename InputIteratorType::value_type;
@@ -298,7 +301,7 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
 // overload set 1
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
@@ -313,7 +316,7 @@ exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 exclusive_scan(const std::string& label, const ExecutionSpace& ex,
@@ -331,8 +334,8 @@ auto exclusive_scan(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     ValueType init_value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
@@ -348,8 +351,8 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     ValueType init_value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
@@ -361,16 +364,13 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
 // overload set 2
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                InputIteratorType last, OutputIteratorType first_dest,
                ValueType init_value, BinaryOpType bop) {
-  static_assert(::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-                "exclusive_scan with custom binary op not currently supported "
-                "in OpenMPTarget");
-
+  Impl::static_assert_is_not_openmptarget(ex);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::exclusive_scan_custom_op_impl(
@@ -380,17 +380,14 @@ exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                InputIteratorType first, InputIteratorType last,
                OutputIteratorType first_dest, ValueType init_value,
                BinaryOpType bop) {
-  static_assert(::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-                "exclusive_scan with custom binary op not currently supported "
-                "in OpenMPTarget");
-
+  Impl::static_assert_is_not_openmptarget(ex);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::exclusive_scan_custom_op_impl(label, ex, first, last, first_dest,
@@ -404,12 +401,9 @@ auto exclusive_scan(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     ValueType init_value, BinaryOpType bop) {
-  static_assert(::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-                "exclusive_scan with custom binary op not currently supported "
-                "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
@@ -426,12 +420,9 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     ValueType init_value, BinaryOpType bop) {
-  static_assert(::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-                "exclusive_scan with custom binary op not currently supported "
-                "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
@@ -449,18 +440,14 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                          InputIteratorType last, OutputIteratorType first_dest,
                          ValueType init_value, BinaryOpType binary_op,
                          UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_exclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
+  Impl::static_assert_is_not_openmptarget(ex);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_impl(
@@ -471,18 +458,14 @@ transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
                       InputIteratorType, OutputIteratorType>::value,
                   OutputIteratorType>
 transform_exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                          InputIteratorType first, InputIteratorType last,
                          OutputIteratorType first_dest, ValueType init_value,
                          BinaryOpType binary_op, UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_exclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
+  Impl::static_assert_is_not_openmptarget(ex);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_impl(label, ex, first, last, first_dest,
@@ -497,13 +480,9 @@ auto transform_exclusive_scan(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     ValueType init_value, BinaryOpType binary_op, UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_exclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
@@ -521,13 +500,9 @@ auto transform_exclusive_scan(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     ValueType init_value, BinaryOpType binary_op, UnaryOpType unary_op) {
-  static_assert(
-      ::Kokkos::Experimental::not_openmptarget<ExecutionSpace>::value,
-      "transform_exclusive_scan with custom binary op not currently supported "
-      "in OpenMPTarget");
-
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;

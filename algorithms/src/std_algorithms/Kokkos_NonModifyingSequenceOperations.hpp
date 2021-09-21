@@ -410,9 +410,9 @@ IteratorType find_if_or_not_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType first,
                                  IteratorType last, PredicateType pred) {
   // checks
-  static_assert_random_access_and_accessible(
+  Impl::static_assert_random_access_and_accessible(
       ex, first);  // only need one It per type
-  expect_valid_range(first, last);
+  Impl::expect_valid_range(first, last);
 
   if (first == last) {
     return last;
@@ -467,8 +467,8 @@ UnaryFunctorType for_each_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType first,
                                IteratorType last, UnaryFunctorType functor) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   // run
   const auto num_elements = last - first;
@@ -489,8 +489,8 @@ IteratorType for_each_n_impl(const std::string& label, const ExecutionSpace& ex,
                              IteratorType first, SizeType n,
                              UnaryFunctorType functor) {
   auto last = first + n;
-  static_assert_random_access_and_accessible(ex, first, last);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, last);
+  Impl::expect_valid_range(first, last);
 
   if (n == 0) {
     return first;
@@ -512,8 +512,8 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
                                                      IteratorType last,
                                                      Predicate predicate) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   // aliases
   using func_t = StdCountIfFunctor<IteratorType, Predicate>;
@@ -550,10 +550,10 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     IteratorType1 last1, IteratorType2 first2, IteratorType2 last2,
     BinaryPredicateType predicate) {
   // checks
-  static_assert_random_access_and_accessible(ex, first1, first2);
-  static_assert_iterators_have_matching_difference_type(first1, first2);
-  expect_valid_range(first1, last1);
-  expect_valid_range(first2, last2);
+  Impl::static_assert_random_access_and_accessible(ex, first1, first2);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
+  Impl::expect_valid_range(first1, last1);
+  Impl::expect_valid_range(first2, last2);
 
   // aliases
   using index_type       = typename IteratorType1::difference_type;
@@ -636,9 +636,9 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
                 BinaryPredicateType predicate) {
   // checks
-  static_assert_random_access_and_accessible(ex, first1, first2);
-  static_assert_iterators_have_matching_difference_type(first1, first2);
-  expect_valid_range(first1, last1);
+  Impl::static_assert_random_access_and_accessible(ex, first1, first2);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
+  Impl::expect_valid_range(first1, last1);
 
   // aliases
   using index_type = typename IteratorType1::difference_type;
@@ -684,8 +684,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                 IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
                 IteratorType2 last2) {
-  expect_valid_range(first1, last1);
-  expect_valid_range(first2, last2);
+  Impl::expect_valid_range(first1, last1);
+  Impl::expect_valid_range(first2, last2);
 
   using value_type1 = typename IteratorType1::value_type;
   using value_type2 = typename IteratorType2::value_type;
@@ -704,10 +704,10 @@ bool lexicographical_compare_impl(const std::string& label,
                                   IteratorType2 first2, IteratorType2 last2,
                                   ComparatorType comp) {
   // checks
-  static_assert_random_access_and_accessible(ex, first1, first2);
-  static_assert_iterators_have_matching_difference_type(first1, first2);
-  expect_valid_range(first1, last1);
-  expect_valid_range(first2, last2);
+  Impl::static_assert_random_access_and_accessible(ex, first1, first2);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
+  Impl::expect_valid_range(first1, last1);
+  Impl::expect_valid_range(first2, last2);
 
   // aliases
   using index_type       = typename IteratorType1::difference_type;
@@ -775,8 +775,8 @@ IteratorType adjacent_find_impl(const std::string& label,
                                 const ExecutionSpace& ex, IteratorType first,
                                 IteratorType last, PredicateType pred) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   if (first == last) {
     return last;
@@ -832,10 +832,10 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
                           IteratorType2 s_first, IteratorType2 s_last,
                           const BinaryPredicateType& pred) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, s_first);
-  static_assert_iterators_have_matching_difference_type(first, s_first);
-  expect_valid_range(first, last);
-  expect_valid_range(s_first, s_last);
+  Impl::static_assert_random_access_and_accessible(ex, first, s_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, s_first);
+  Impl::expect_valid_range(first, last);
+  Impl::expect_valid_range(s_first, s_last);
 
   // the target sequence should not be larger than the range [first, last)
   namespace KE            = ::Kokkos::Experimental;
@@ -914,10 +914,10 @@ IteratorType1 find_first_of_impl(const std::string& label,
                                  IteratorType2 s_last,
                                  const BinaryPredicateType& pred) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, s_first);
-  static_assert_iterators_have_matching_difference_type(first, s_first);
-  expect_valid_range(first, last);
-  expect_valid_range(s_first, s_last);
+  Impl::static_assert_random_access_and_accessible(ex, first, s_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, s_first);
+  Impl::expect_valid_range(first, last);
+  Impl::expect_valid_range(s_first, s_last);
 
   if ((s_first == s_last) || (first == last)) {
     return last;
@@ -973,10 +973,10 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
                             IteratorType2 s_first, IteratorType2 s_last,
                             const BinaryPredicateType& pred) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, s_first);
-  static_assert_iterators_have_matching_difference_type(first, s_first);
-  expect_valid_range(first, last);
-  expect_valid_range(s_first, s_last);
+  Impl::static_assert_random_access_and_accessible(ex, first, s_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, s_first);
+  Impl::expect_valid_range(first, last);
+  Impl::expect_valid_range(s_first, s_last);
 
   // the target sequence should not be larger than the range [first, last)
   namespace KE            = ::Kokkos::Experimental;
@@ -1066,7 +1066,7 @@ InputIterator find(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties, class T>
 auto find(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_impl("Kokkos::find_view_api_default", ex, KE::cbegin(view),
@@ -1076,7 +1076,7 @@ auto find(const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties, class T>
 auto find(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_impl(label, ex, KE::cbegin(view), KE::cend(view), value);
@@ -1105,7 +1105,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto find_if(const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& v,
              Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<true>("Kokkos::find_if_view_api_default", ex,
                                          KE::cbegin(v), KE::cend(v),
@@ -1117,7 +1117,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto find_if(const std::string& label, const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& v,
              Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<true>(label, ex, KE::cbegin(v), KE::cend(v),
                                          std::move(predicate));
@@ -1147,7 +1147,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto find_if_not(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& v,
                  Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<false>(
@@ -1160,7 +1160,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto find_if_not(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& v,
                  Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<false>(label, ex, KE::cbegin(v), KE::cend(v),
@@ -1189,7 +1189,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 UnaryFunctorType for_each(const std::string& label, const ExecutionSpace& ex,
                           const ::Kokkos::View<DataType, Properties...>& v,
                           UnaryFunctorType functor) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_impl(label, ex, KE::begin(v), KE::end(v),
@@ -1201,7 +1201,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 UnaryFunctorType for_each(const ExecutionSpace& ex,
                           const ::Kokkos::View<DataType, Properties...>& v,
                           UnaryFunctorType functor) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_impl("Kokkos::for_each_view_api_default", ex,
@@ -1232,7 +1232,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto for_each_n(const std::string& label, const ExecutionSpace& ex,
                 const ::Kokkos::View<DataType, Properties...>& v, SizeType n,
                 UnaryFunctorType functor) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_n_impl(label, ex, KE::begin(v), n, std::move(functor));
@@ -1243,7 +1243,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto for_each_n(const ExecutionSpace& ex,
                 const ::Kokkos::View<DataType, Properties...>& v, SizeType n,
                 UnaryFunctorType functor) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::for_each_n_impl("Kokkos::for_each_n_view_api_default", ex,
@@ -1276,7 +1276,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto count_if(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& v,
               Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::count_if_impl("Kokkos::count_if_view_api_default", ex,
@@ -1288,7 +1288,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto count_if(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& v,
               Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::count_if_impl(label, ex, KE::cbegin(v), KE::cend(v),
@@ -1319,7 +1319,7 @@ typename IteratorType::difference_type count(const std::string& label,
 template <class ExecutionSpace, class DataType, class... Properties, class T>
 auto count(const ExecutionSpace& ex,
            const ::Kokkos::View<DataType, Properties...>& v, const T& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::count_impl("Kokkos::count_view_api_default", ex, KE::cbegin(v),
@@ -1329,7 +1329,7 @@ auto count(const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties, class T>
 auto count(const std::string& label, const ExecutionSpace& ex,
            const ::Kokkos::View<DataType, Properties...>& v, const T& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::count_impl(label, ex, KE::cbegin(v), KE::cend(v), value);
@@ -1382,8 +1382,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto mismatch(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::mismatch_impl("Kokkos::mismatch_view_api_default", ex,
@@ -1397,8 +1397,8 @@ auto mismatch(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2,
               BinaryPredicateType&& predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::mismatch_impl("Kokkos::mismatch_view_api_default", ex,
@@ -1412,8 +1412,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto mismatch(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::mismatch_impl(label, ex, KE::cbegin(view1), KE::cend(view1),
@@ -1426,8 +1426,8 @@ auto mismatch(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2,
               BinaryPredicateType&& predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::mismatch_impl(label, ex, KE::cbegin(view1), KE::cend(view1),
@@ -1456,7 +1456,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 bool all_of(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& v,
             Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::all_of_impl("Kokkos::all_of_view_api_default", ex, KE::cbegin(v),
@@ -1468,7 +1468,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 bool all_of(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& v,
             Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::all_of_impl(label, ex, KE::cbegin(v), KE::cend(v),
@@ -1496,7 +1496,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 bool any_of(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& v,
             Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::any_of_impl("Kokkos::any_of_view_api_default", ex, KE::cbegin(v),
@@ -1508,7 +1508,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 bool any_of(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& v,
             Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::any_of_impl(label, ex, KE::cbegin(v), KE::cend(v),
@@ -1536,7 +1536,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 bool none_of(const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& v,
              Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::none_of_impl("Kokkos::none_of_view_api_default", ex,
@@ -1548,7 +1548,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 bool none_of(const std::string& label, const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& v,
              Predicate predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::none_of_impl(label, ex, KE::cbegin(v), KE::cend(v),
@@ -1593,8 +1593,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 bool equal(const ExecutionSpace& ex,
            const ::Kokkos::View<DataType1, Properties1...>& view1,
            ::Kokkos::View<DataType2, Properties2...>& view2) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl("Kokkos::equal_view_api_default", ex,
@@ -1607,8 +1607,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 bool equal(const std::string& label, const ExecutionSpace& ex,
            const ::Kokkos::View<DataType1, Properties1...>& view1,
            ::Kokkos::View<DataType2, Properties2...>& view2) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl(label, ex, KE::cbegin(view1), KE::cend(view1),
@@ -1621,8 +1621,8 @@ bool equal(const ExecutionSpace& ex,
            const ::Kokkos::View<DataType1, Properties1...>& view1,
            ::Kokkos::View<DataType2, Properties2...>& view2,
            BinaryPredicateType predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl("Kokkos::equal_view_api_default", ex,
@@ -1636,8 +1636,8 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
            const ::Kokkos::View<DataType1, Properties1...>& view1,
            ::Kokkos::View<DataType2, Properties2...>& view2,
            BinaryPredicateType predicate) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::equal_impl(label, ex, KE::cbegin(view1), KE::cend(view1),
@@ -1702,8 +1702,8 @@ bool lexicographical_compare(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view1,
     ::Kokkos::View<DataType2, Properties2...>& view2) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::lexicographical_compare_impl(
@@ -1717,8 +1717,8 @@ bool lexicographical_compare(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view1,
     ::Kokkos::View<DataType2, Properties2...>& view2) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::lexicographical_compare_impl(label, ex, KE::cbegin(view1),
@@ -1752,8 +1752,8 @@ bool lexicographical_compare(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view1,
     ::Kokkos::View<DataType2, Properties2...>& view2, ComparatorType comp) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::lexicographical_compare_impl(
@@ -1767,8 +1767,8 @@ bool lexicographical_compare(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view1,
     ::Kokkos::View<DataType2, Properties2...>& view2, ComparatorType comp) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view1);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view2);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::lexicographical_compare_impl(label, ex, KE::cbegin(view1),
@@ -1796,7 +1796,7 @@ IteratorType adjacent_find(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties>
 auto adjacent_find(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::adjacent_find_impl("Kokkos::adjacent_find_view_api_default", ex,
                                   KE::cbegin(v), KE::cend(v));
@@ -1805,7 +1805,7 @@ auto adjacent_find(const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties>
 auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::adjacent_find_impl(label, ex, KE::cbegin(v), KE::cend(v));
 }
@@ -1830,7 +1830,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto adjacent_find(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v,
                    BinaryPredicateType pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::adjacent_find_impl("Kokkos::adjacent_find_view_api_default", ex,
                                   KE::cbegin(v), KE::cend(v), pred);
@@ -1841,7 +1841,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v,
                    BinaryPredicateType pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::adjacent_find_impl(label, ex, KE::cbegin(v), KE::cend(v), pred);
 }

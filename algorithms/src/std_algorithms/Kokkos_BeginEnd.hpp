@@ -58,7 +58,7 @@ namespace Experimental {
 template <class DataType, class... Properties>
 KOKKOS_INLINE_FUNCTION auto begin(
     const Kokkos::View<DataType, Properties...>& v) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   using it_t =
       Impl::RandomAccessIterator<Kokkos::View<DataType, Properties...>>;
@@ -68,7 +68,7 @@ KOKKOS_INLINE_FUNCTION auto begin(
 template <class DataType, class... Properties>
 KOKKOS_INLINE_FUNCTION auto end(
     const Kokkos::View<DataType, Properties...>& v) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   using it_t =
       Impl::RandomAccessIterator<Kokkos::View<DataType, Properties...>>;
@@ -78,7 +78,7 @@ KOKKOS_INLINE_FUNCTION auto end(
 template <class DataType, class... Properties>
 KOKKOS_INLINE_FUNCTION auto cbegin(
     const Kokkos::View<DataType, Properties...>& v) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   using ViewConstType =
       typename Kokkos::View<DataType, Properties...>::const_type;
@@ -90,7 +90,7 @@ KOKKOS_INLINE_FUNCTION auto cbegin(
 template <class DataType, class... Properties>
 KOKKOS_INLINE_FUNCTION auto cend(
     const Kokkos::View<DataType, Properties...>& v) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   using ViewConstType =
       typename Kokkos::View<DataType, Properties...>::const_type;

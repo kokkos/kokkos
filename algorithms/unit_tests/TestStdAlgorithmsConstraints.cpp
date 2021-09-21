@@ -73,9 +73,12 @@ TEST(std_algorithms, is_admissible_to_std_algorithms) {
   EXPECT_EQ(layout1d.dimension[0], 13);
   EXPECT_EQ(layout1d.stride[0], 2);
   // they are admissible
-  KE::static_assert_is_admissible_to_kokkos_std_algorithms(static_view_1d);
-  KE::static_assert_is_admissible_to_kokkos_std_algorithms(dynamic_view_1d);
-  KE::static_assert_is_admissible_to_kokkos_std_algorithms(strided_view_1d);
+  KE::Impl::static_assert_is_admissible_to_kokkos_std_algorithms(
+      static_view_1d);
+  KE::Impl::static_assert_is_admissible_to_kokkos_std_algorithms(
+      dynamic_view_1d);
+  KE::Impl::static_assert_is_admissible_to_kokkos_std_algorithms(
+      strided_view_1d);
 
   //-------------
   // 2d views
@@ -84,12 +87,12 @@ TEST(std_algorithms, is_admissible_to_std_algorithms) {
   using dyn_view_2d_t     = Kokkos::View<value_type**>;
   using strided_view_2d_t = Kokkos::View<value_type**, Kokkos::LayoutStride>;
   // non admissible
+  EXPECT_FALSE(KE::Impl::is_admissible_to_kokkos_std_algorithms<
+               static_view_2d_t>::value);
   EXPECT_FALSE(
-      KE::is_admissible_to_kokkos_std_algorithms<static_view_2d_t>::value);
-  EXPECT_FALSE(
-      KE::is_admissible_to_kokkos_std_algorithms<dyn_view_2d_t>::value);
-  EXPECT_FALSE(
-      KE::is_admissible_to_kokkos_std_algorithms<strided_view_2d_t>::value);
+      KE::Impl::is_admissible_to_kokkos_std_algorithms<dyn_view_2d_t>::value);
+  EXPECT_FALSE(KE::Impl::is_admissible_to_kokkos_std_algorithms<
+               strided_view_2d_t>::value);
 
   //-------------
   // 3d views
@@ -98,12 +101,12 @@ TEST(std_algorithms, is_admissible_to_std_algorithms) {
   using dyn_view_3d_t     = Kokkos::View<value_type***>;
   using strided_view_3d_t = Kokkos::View<value_type***, Kokkos::LayoutStride>;
   // non admissible
+  EXPECT_FALSE(KE::Impl::is_admissible_to_kokkos_std_algorithms<
+               static_view_3d_t>::value);
   EXPECT_FALSE(
-      KE::is_admissible_to_kokkos_std_algorithms<static_view_3d_t>::value);
-  EXPECT_FALSE(
-      KE::is_admissible_to_kokkos_std_algorithms<dyn_view_3d_t>::value);
-  EXPECT_FALSE(
-      KE::is_admissible_to_kokkos_std_algorithms<strided_view_3d_t>::value);
+      KE::Impl::is_admissible_to_kokkos_std_algorithms<dyn_view_3d_t>::value);
+  EXPECT_FALSE(KE::Impl::is_admissible_to_kokkos_std_algorithms<
+               strided_view_3d_t>::value);
 }
 
 }  // namespace stdalgos

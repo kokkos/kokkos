@@ -154,9 +154,9 @@ ValueType transform_reduce_custom_functors_impl(
     IteratorType last, ValueType init_reduction_value, JoinerType joiner,
     UnaryTransformerType transformer) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  static_assert_is_not_opemnptarget(ex);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::expect_valid_range(first, last);
 
   if (first == last) {
     // init is returned, unmodified
@@ -198,10 +198,10 @@ ValueType transform_reduce_custom_functors_impl(
     IteratorType1 last1, IteratorType2 first2, ValueType init_reduction_value,
     JoinerType joiner, BinaryTransformerType transformer) {
   // checks
-  static_assert_random_access_and_accessible(ex, first1, first2);
-  static_assert_is_not_opemnptarget(ex);
-  static_assert_iterators_have_matching_difference_type(first1, first2);
-  expect_valid_range(first1, last1);
+  Impl::static_assert_random_access_and_accessible(ex, first1, first2);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
+  Impl::expect_valid_range(first1, last1);
 
   if (first1 == last1) {
     // init is returned, unmodified
@@ -241,10 +241,10 @@ ValueType transform_reduce_default_functors_impl(
     const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
     IteratorType1 last1, IteratorType2 first2, ValueType init_reduction_value) {
   // checks
-  static_assert_random_access_and_accessible(ex, first1, first2);
-  static_assert_is_not_opemnptarget(ex);
-  static_assert_iterators_have_matching_difference_type(first1, first2);
-  expect_valid_range(first1, last1);
+  Impl::static_assert_random_access_and_accessible(ex, first1, first2);
+  Impl::static_assert_is_not_openmptarget(ex);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
+  Impl::expect_valid_range(first1, last1);
 
   // aliases
   using transformer_type =
@@ -298,8 +298,8 @@ ValueType transform_reduce(
     const ::Kokkos::View<DataType2, Properties2...>& second_view,
     ValueType init_reduction_value) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
-  static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
 
   return Impl::transform_reduce_default_functors_impl(
       "Kokkos::transform_reduce_default_functors_iterator_api", ex,
@@ -315,8 +315,8 @@ ValueType transform_reduce(
     const ::Kokkos::View<DataType2, Properties2...>& second_view,
     ValueType init_reduction_value) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
-  static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
 
   return Impl::transform_reduce_default_functors_impl(
       label, ex, KE::cbegin(first_view), KE::cend(first_view),
@@ -381,8 +381,8 @@ ValueType transform_reduce(
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
-  static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
-  static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
 
   return Impl::transform_reduce_custom_functors_impl(
       "Kokkos::transform_reduce_custom_functors_view_api", ex,
@@ -404,8 +404,8 @@ ValueType transform_reduce(
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
-  static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
-  static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
 
   return Impl::transform_reduce_custom_functors_impl(
       label, ex, KE::cbegin(first_view), KE::cend(first_view),
@@ -420,8 +420,8 @@ ValueType transform_reduce(
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class BinaryJoinerType, class UnaryTransform>
 // need this to avoid ambiguous call
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<IteratorType>::value,
-                  ValueType>
+std::enable_if_t<
+    ::Kokkos::Experimental::Impl::are_iterators<IteratorType>::value, ValueType>
 transform_reduce(const ExecutionSpace& ex, IteratorType first1,
                  IteratorType last1, ValueType init_reduction_value,
                  BinaryJoinerType joiner, UnaryTransform transformer) {
@@ -437,8 +437,8 @@ transform_reduce(const ExecutionSpace& ex, IteratorType first1,
 template <class ExecutionSpace, class IteratorType, class ValueType,
           class BinaryJoinerType, class UnaryTransform>
 // need this to avoid ambiguous call
-std::enable_if_t< ::Kokkos::Experimental::are_iterators<IteratorType>::value,
-                  ValueType>
+std::enable_if_t<
+    ::Kokkos::Experimental::Impl::are_iterators<IteratorType>::value, ValueType>
 transform_reduce(const std::string& label, const ExecutionSpace& ex,
                  IteratorType first1, IteratorType last1,
                  ValueType init_reduction_value, BinaryJoinerType joiner,
@@ -463,7 +463,7 @@ ValueType transform_reduce(const ExecutionSpace& ex,
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::transform_reduce_custom_functors_impl(
       "Kokkos::transform_reduce_custom_functors_view_api", ex, KE::cbegin(view),
@@ -482,7 +482,7 @@ ValueType transform_reduce(const std::string& label, const ExecutionSpace& ex,
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::transform_reduce_custom_functors_impl(
       label, ex, KE::cbegin(view), KE::cend(view),

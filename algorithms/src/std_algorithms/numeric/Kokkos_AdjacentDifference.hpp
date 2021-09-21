@@ -117,9 +117,10 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
                                             OutputIteratorType first_dest,
                                             BinaryOp bin_op) {
   // checks
-  static_assert_random_access_and_accessible(ex, first_from, first_dest);
-  static_assert_iterators_have_matching_difference_type(first_from, first_dest);
-  expect_valid_range(first_from, last_from);
+  Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
 
   if (first_from == last_from) {
     return first_dest;
@@ -221,8 +222,8 @@ auto adjacent_difference(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   using view_type1  = ::Kokkos::View<DataType1, Properties1...>;
   using view_type2  = ::Kokkos::View<DataType2, Properties2...>;
@@ -244,8 +245,8 @@ auto adjacent_difference(
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     BinaryOp bin_op) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   return Impl::adjacent_difference_impl(
       "Kokkos::adjacent_difference_view_api", ex, KE::cbegin(view_from),
       KE::cend(view_from), KE::begin(view_dest), bin_op);
@@ -258,8 +259,8 @@ auto adjacent_difference(
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
     const ::Kokkos::View<DataType2, Properties2...>& view_dest) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   using view_type1  = ::Kokkos::View<DataType1, Properties1...>;
   using view_type2  = ::Kokkos::View<DataType2, Properties2...>;
@@ -282,8 +283,8 @@ auto adjacent_difference(
     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
     BinaryOp bin_op) {
   namespace KE = ::Kokkos::Experimental;
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   return Impl::adjacent_difference_impl(label, ex, KE::cbegin(view_from),
                                         KE::cend(view_from),
                                         KE::begin(view_dest), bin_op);

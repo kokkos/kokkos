@@ -298,9 +298,9 @@ OutputIterator unique_copy_impl(const std::string& label,
                                 InputIterator last, OutputIterator d_first,
                                 PredicateType pred) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, d_first);
-  static_assert_iterators_have_matching_difference_type(first, d_first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
 
   // branch for trivial vs non trivial case
   const auto num_elements = last - first;
@@ -335,9 +335,9 @@ OutputIterator unique_copy_impl(const std::string& label,
                                 const ExecutionSpace& ex, InputIterator first,
                                 InputIterator last, OutputIterator d_first) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, d_first);
-  static_assert_iterators_have_matching_difference_type(first, d_first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
 
   // aliases
   using value_type1 = typename InputIterator::value_type;
@@ -357,8 +357,8 @@ template <class ExecutionSpace, class InputIterator>
 void reverse_impl(const std::string& label, const ExecutionSpace& ex,
                   InputIterator first, InputIterator last) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   // aliases
   using func_t = StdReverseFunctor<InputIterator>;
@@ -382,9 +382,9 @@ OutputIterator reverse_copy_impl(const std::string& label,
                                  const ExecutionSpace& ex, InputIterator first,
                                  InputIterator last, OutputIterator d_first) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, d_first);
-  static_assert_iterators_have_matching_difference_type(first, d_first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
 
   // aliases
   using index_type = typename InputIterator::difference_type;
@@ -410,9 +410,9 @@ OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
                          InputIterator first, InputIterator last,
                          OutputIterator d_first) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, d_first);
-  static_assert_iterators_have_matching_difference_type(first, d_first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
 
   // aliases
   using index_type = typename InputIterator::difference_type;
@@ -437,9 +437,9 @@ IteratorType2 move_backward_impl(const std::string& label,
                                  const ExecutionSpace& ex, IteratorType1 first,
                                  IteratorType1 last, IteratorType2 d_last) {
   // checks
-  static_assert_random_access_and_accessible(ex, first, d_last);
-  static_assert_iterators_have_matching_difference_type(first, d_last);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, d_last);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_last);
+  Impl::expect_valid_range(first, last);
 
   // aliases
   using index_type = typename IteratorType1::difference_type;
@@ -465,9 +465,9 @@ IteratorType2 swap_ranges_impl(const std::string& label,
                                const ExecutionSpace& ex, IteratorType1 first1,
                                IteratorType1 last1, IteratorType2 first2) {
   // checks
-  static_assert_random_access_and_accessible(ex, first1, first2);
-  static_assert_iterators_have_matching_difference_type(first1, first2);
-  expect_valid_range(first1, last1);
+  Impl::static_assert_random_access_and_accessible(ex, first1, first2);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
+  Impl::expect_valid_range(first1, last1);
 
   // aliases
   using index_type = typename IteratorType1::difference_type;
@@ -492,8 +492,8 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
                          PredicateType pred) {
   // checks
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   const auto num_elements = last - first;
   if (num_elements == 0) {
@@ -617,11 +617,11 @@ OutputIterator rotate_copy_impl(const std::string& label,
   */
 
   // checks
-  static_assert_random_access_and_accessible(ex, first, d_first);
-  static_assert_iterators_have_matching_difference_type(first, d_first);
-  expect_valid_range(first, last);
-  expect_valid_range(first, n_first);
-  expect_valid_range(n_first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
+  Impl::expect_valid_range(first, n_first);
+  Impl::expect_valid_range(n_first, last);
 
   if (first == last) {
     return d_first;
@@ -651,8 +651,8 @@ template <class ExecutionSpace, class IteratorType, class UnaryPredicateType>
 IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
                             IteratorType first, IteratorType last,
                             UnaryPredicateType pred) {
-  static_assert_random_access_and_accessible(ex, first);
-  expect_valid_range(first, last);
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
 
   if (first == last) {
     return last;
@@ -779,8 +779,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto reverse_copy(const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& source,
                   ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::reverse_copy_impl("Kokkos::reverse_copy_view_api_default", ex,
                                  cbegin(source), cend(source), begin(dest));
@@ -791,8 +791,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto reverse_copy(const std::string& label, const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& source,
                   ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::reverse_copy_impl(label, ex, cbegin(source), cend(source),
                                  begin(dest));
@@ -817,7 +817,7 @@ void reverse(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties>
 void reverse(const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& view) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
   return Impl::reverse_impl("Kokkos::reverse_view_api_default", ex,
                             KE::begin(view), KE::end(view));
@@ -826,7 +826,7 @@ void reverse(const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties>
 void reverse(const std::string& label, const ExecutionSpace& ex,
              const ::Kokkos::View<DataType, Properties...>& view) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
   return Impl::reverse_impl(label, ex, KE::begin(view), KE::end(view));
 }
@@ -853,8 +853,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto move(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType1, Properties1...>& source,
           ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::move_impl("Kokkos::move_view_api_default", ex, begin(source),
                          end(source), begin(dest));
@@ -865,8 +865,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto move(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType1, Properties1...>& source,
           ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::move_impl(label, ex, begin(source), end(source), begin(dest));
 }
@@ -886,8 +886,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto move_backward(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& source,
                    ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::move_backward_impl("Kokkos::move_backward_view_api_default", ex,
                                   begin(source), end(source), end(dest));
@@ -905,8 +905,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto move_backward(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& source,
                    ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::move_backward_impl(label, ex, begin(source), end(source),
                                   end(dest));
@@ -927,8 +927,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto swap_ranges(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   assert(source.extent(0) == dest.extent(0));
   return Impl::swap_ranges_impl("Kokkos::swap_ranges_view_api_default", ex,
@@ -947,8 +947,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   assert(source.extent(0) == dest.extent(0));
   return Impl::swap_ranges_impl(label, ex, begin(source), end(source),
@@ -979,7 +979,7 @@ std::enable_if_t<!::Kokkos::is_view<IteratorType>::value, IteratorType> unique(
 template <class ExecutionSpace, class DataType, class... Properties>
 auto unique(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return ::Kokkos::Experimental::unique("Kokkos::unique_view_api_default", ex,
                                         begin(view), end(view));
 }
@@ -987,7 +987,7 @@ auto unique(const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType, class... Properties>
 auto unique(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return ::Kokkos::Experimental::unique(label, ex, begin(view), end(view));
 }
 
@@ -1011,7 +1011,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto unique(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             BinaryPredicate pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::unique_impl("Kokkos::unique_view_api_default", ex, begin(view),
                            end(view), std::move(pred));
 }
@@ -1021,7 +1021,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto unique(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             BinaryPredicate pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::unique_impl(label, ex, begin(view), end(view), std::move(pred));
 }
 
@@ -1052,8 +1052,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto unique_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return ::Kokkos::Experimental::unique_copy(
       "Kokkos::unique_copy_view_api_default", ex, cbegin(source), cend(source),
@@ -1065,8 +1065,8 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto unique_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return ::Kokkos::Experimental::unique_copy(label, ex, cbegin(source),
                                              cend(source), begin(dest));
@@ -1096,8 +1096,8 @@ auto unique_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest,
                  BinaryPredicate pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::unique_copy_impl("Kokkos::unique_copy_view_api_default", ex,
                                 cbegin(source), cend(source), begin(dest),
@@ -1110,8 +1110,8 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest,
                  BinaryPredicate pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::unique_copy_impl(label, ex, cbegin(source), cend(source),
                                 begin(dest), std::move(pred));
@@ -1142,8 +1142,8 @@ auto rotate_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  std::size_t n_location,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::rotate_copy_impl("Kokkos::rotate_copy_view_api_default", ex,
                                 cbegin(source), cbegin(source) + n_location,
@@ -1156,8 +1156,8 @@ auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  std::size_t n_location,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(source);
-  static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::rotate_copy_impl(label, ex, cbegin(source),
                                 cbegin(source) + n_location, cend(source),
@@ -1185,7 +1185,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto remove_if(const ExecutionSpace& ex,
                const ::Kokkos::View<DataType, Properties...>& view,
                UnaryPredicate pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   return Impl::remove_if_impl("Kokkos::remove_if_iterator_api_default", ex,
                               ::Kokkos::Experimental::begin(view),
@@ -1197,7 +1197,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto remove_if(const std::string& label, const ExecutionSpace& ex,
                const ::Kokkos::View<DataType, Properties...>& view,
                UnaryPredicate pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::remove_if_impl(label, ex, ::Kokkos::Experimental::begin(view),
                               ::Kokkos::Experimental::end(view), pred);
 }
@@ -1223,7 +1223,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto remove(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::remove_impl("Kokkos::remove_iterator_api_default", ex,
                            ::Kokkos::Experimental::begin(view),
                            ::Kokkos::Experimental::end(view), value);
@@ -1234,7 +1234,7 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto remove(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::remove_impl(label, ex, ::Kokkos::Experimental::begin(view),
                            ::Kokkos::Experimental::end(view), value);
 }
@@ -1266,8 +1266,8 @@ auto remove_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& view_from,
                  const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                  const ValueType& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   return Impl::remove_copy_impl("Kokkos::remove_copy_iterator_api_default", ex,
                                 ::Kokkos::Experimental::cbegin(view_from),
@@ -1282,8 +1282,8 @@ auto remove_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& view_from,
                  const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                  const ValueType& value) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   return Impl::remove_copy_impl(
       label, ex, ::Kokkos::Experimental::cbegin(view_from),
@@ -1322,8 +1322,8 @@ auto remove_copy_if(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     const UnaryPredicate& pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   return Impl::remove_copy_if_impl(
       "Kokkos::remove_copy_if_iterator_api_default", ex,
@@ -1338,8 +1338,8 @@ auto remove_copy_if(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
                     const UnaryPredicate& pred) {
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
-  static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
 
   return Impl::remove_copy_if_impl(
       label, ex, ::Kokkos::Experimental::cbegin(view_from),
