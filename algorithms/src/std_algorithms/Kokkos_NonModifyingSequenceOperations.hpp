@@ -172,7 +172,9 @@ struct StdEqualFunctor {
   KOKKOS_FUNCTION
   StdEqualFunctor(IteratorType1 _first1, IteratorType2 _first2,
                   BinaryPredicateType _predicate)
-      : m_first1(_first1), m_first2(_first2), m_predicate(_predicate) {}
+      : m_first1(_first1),
+        m_first2(_first2),
+        m_predicate(std::move(_predicate)) {}
 };
 
 template <class IndexType, class IteratorType1, class IteratorType2,
