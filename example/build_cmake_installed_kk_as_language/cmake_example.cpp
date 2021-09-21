@@ -48,23 +48,17 @@
 extern "C" void print_fortran_();
 void print_cxx();
 
-struct CountFunctor {
+struct CountEvenIntegers {
   KOKKOS_FUNCTION void operator()(const long i, long& lcount) const {
     lcount += (i % 2) == 0;
   }
 };
 
 int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
+  Kokkos::ScopeGuard(argc, argv);
   Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
-    Kokkos::finalize();
-    exit(1);
-  }
-
-  const long n = strtol(argv[1], nullptr, 10);
+  const long n = argc>1?atoi(argv[1]):10;
 
   printf("Number of even integers from 0 to %ld\n", n - 1);
 
@@ -73,7 +67,7 @@ int main(int argc, char* argv[]) {
 
   // Compute the number of even integers from 0 to n-1, in parallel.
   long count = 0;
-  CountFunctor functor;
+  CountEvenIntegers functor;
   Kokkos::parallel_reduce(n, functor, count);
 
   double count_time = timer.seconds();
@@ -91,8 +85,6 @@ int main(int argc, char* argv[]) {
   printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
 
   print_fortran_();
-
-  Kokkos::finalize();
 
   return (count == seq_count) ? 0 : -1;
 }
