@@ -108,7 +108,7 @@ std::enable_if_t<Impl::atomic_always_lock_free(sizeof(T)),T> atomic_compare_exch
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif
 
-#pragma omp begin declare target device_type(host)
+#pragma omp begin declare variant match(device = {kind(host)})
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T) == 16), T>
 atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
@@ -120,7 +120,15 @@ atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
                                   GCCMemoryOrder<MemoryOrder>::value);
   return compare;
 }
-#pragma omp end declare target
+#pragma omp end declare variant
+
+#pragma omp begin declare variant match(device = {kind(nohost)})
+template <typename T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T) == 16), T>
+atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope) {
+  return value;
+}
+#pragma omp end declare variant
 
 #if defined(__clang__) && (__clang_major__>=7)
 #pragma GCC diagnostic pop
