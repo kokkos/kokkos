@@ -103,7 +103,7 @@ struct StdTransformReduceSingleIntervalFunctor {
   StdTransformReduceSingleIntervalFunctor(IteratorType first,
                                           ReducerType reducer,
                                           TransformType transform)
-      : m_first(first),
+      : m_first(std::move(first)),
         m_reducer(std::move(reducer)),
         m_transform(std::move(transform)) {}
 };
@@ -135,8 +135,8 @@ struct StdTransformReduceTwoIntervalsFunctor {
                                         IteratorType2 first2,
                                         ReducerType reducer,
                                         TransformType transform)
-      : m_first1(first1),
-        m_first2(first2),
+      : m_first1(std::move(first1)),
+        m_first2(std::move(first2)),
         m_reducer(std::move(reducer)),
         m_transform(std::move(transform)) {}
 };

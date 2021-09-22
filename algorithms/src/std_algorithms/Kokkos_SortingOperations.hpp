@@ -86,8 +86,8 @@ struct StdIsSortedUntilFunctor {
   KOKKOS_FUNCTION
   StdIsSortedUntilFunctor(IteratorType _first1, IndicatorViewType indicator,
                           ComparatorType comparator)
-      : m_first(_first1),
-        m_indicator(indicator),
+      : m_first(std::move(_first1)),
+        m_indicator(std::move(indicator)),
         m_comparator(std::move(comparator)) {}
 };
 
@@ -109,7 +109,7 @@ struct StdIsSortedFunctor {
 
   KOKKOS_FUNCTION
   StdIsSortedFunctor(IteratorType _first1, ComparatorType comparator)
-      : m_first(_first1), m_comparator(std::move(comparator)) {}
+      : m_first(std::move(_first1)), m_comparator(std::move(comparator)) {}
 };
 
 // ------------------------------------------

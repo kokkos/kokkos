@@ -86,7 +86,8 @@ struct StdIterSwapFunctor {
   }
 
   KOKKOS_FUNCTION
-  StdIterSwapFunctor(IteratorType1 _a, IteratorType2 _b) : m_a(_a), m_b(_b) {}
+  StdIterSwapFunctor(IteratorType1 _a, IteratorType2 _b)
+      : m_a(std::move(_a)), m_b(std::move(_b)) {}
 };
 
 template <class IteratorType1, class IteratorType2>

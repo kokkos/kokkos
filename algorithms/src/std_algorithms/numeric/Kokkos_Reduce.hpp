@@ -90,7 +90,7 @@ struct StdReduceFunctor {
 
   KOKKOS_FUNCTION
   StdReduceFunctor(IteratorType first, ReducerType reducer)
-      : m_first(first), m_reducer(std::move(reducer)) {}
+      : m_first(std::move(first)), m_reducer(std::move(reducer)) {}
 };
 
 //------------------------------

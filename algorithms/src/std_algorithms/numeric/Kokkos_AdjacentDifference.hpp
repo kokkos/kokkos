@@ -88,7 +88,9 @@ struct StdAdjacentDiffItToViewFunctor {
   KOKKOS_FUNCTION
   StdAdjacentDiffItToViewFunctor(IteratorType first, DestViewType dest_view,
                                  BinaryOperator op)
-      : m_first(first), m_dest_view(dest_view), m_op(op) {}
+      : m_first(std::move(first)),
+        m_dest_view(dest_view),
+        m_op(std::move(op)) {}
 };
 
 template <class ViewTypeFrom, class OutputIteratorType>
@@ -99,7 +101,7 @@ struct StdAdjDiffCopyFunctor {
   KOKKOS_FUNCTION
   StdAdjDiffCopyFunctor(const ViewTypeFrom view_from,
                         OutputIteratorType first_dest)
-      : m_view_from(view_from), m_first_dest(first_dest) {}
+      : m_view_from(view_from), m_first_dest(std::move(first_dest)) {}
 
   KOKKOS_FUNCTION
   void operator()(int i) const { m_first_dest[i] = m_view_from(i); }

@@ -69,7 +69,7 @@ struct StdMinOrMaxElemFunctor {
 
   KOKKOS_FUNCTION
   StdMinOrMaxElemFunctor(IteratorType first, ReducerType reducer)
-      : m_first(first), m_reducer(std::move(reducer)) {}
+      : m_first(std::move(first)), m_reducer(std::move(reducer)) {}
 };
 
 template <class IteratorType, class ReducerType>
@@ -87,7 +87,7 @@ struct StdMinMaxElemFunctor {
 
   KOKKOS_FUNCTION
   StdMinMaxElemFunctor(IteratorType first, ReducerType reducer)
-      : m_first(first), m_reducer(std::move(reducer)) {}
+      : m_first(std::move(first)), m_reducer(std::move(reducer)) {}
 };
 
 // ------------------------------------------

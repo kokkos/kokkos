@@ -67,7 +67,8 @@ struct InclusiveScanDefaultFunctor {
 
   KOKKOS_FUNCTION
   InclusiveScanDefaultFunctor(FirstFrom first_from, FirstDest first_dest)
-      : m_first_from(first_from), m_first_dest(first_dest) {}
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)) {}
 
   KOKKOS_FUNCTION
   void operator()(const IndexType i, value_type& update,
@@ -114,8 +115,8 @@ struct TransformInclusiveScanNoInitValueFunctor {
   TransformInclusiveScanNoInitValueFunctor(FirstFrom first_from,
                                            FirstDest first_dest,
                                            BinaryOpType bop, UnaryOpType uop)
-      : m_first_from(first_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_binary_op(std::move(bop)),
         m_unary_op(std::move(uop)) {}
 
@@ -165,8 +166,8 @@ struct TransformInclusiveScanWithInitValueFunctor {
                                              FirstDest first_dest,
                                              BinaryOpType bop, UnaryOpType uop,
                                              ValueType init)
-      : m_first_from(first_from),
-        m_first_dest(first_dest),
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_binary_op(std::move(bop)),
         m_unary_op(std::move(uop)),
         m_init(std::move(init)) {}

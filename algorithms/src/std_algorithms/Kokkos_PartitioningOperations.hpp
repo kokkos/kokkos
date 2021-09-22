@@ -87,7 +87,9 @@ struct StdIsPartitionedFunctor {
   KOKKOS_FUNCTION
   StdIsPartitionedFunctor(IteratorType first, ReducerType reducer,
                           PredicateType p)
-      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
+      : m_first(std::move(first)),
+        m_reducer(std::move(reducer)),
+        m_p(std::move(p)) {}
 };
 
 template <class IteratorType, class ReducerType, class PredicateType>
@@ -112,7 +114,9 @@ struct StdPartitionPointFunctor {
   KOKKOS_FUNCTION
   StdPartitionPointFunctor(IteratorType first, ReducerType reducer,
                            PredicateType p)
-      : m_first(first), m_reducer(std::move(reducer)), m_p(std::move(p)) {}
+      : m_first(std::move(first)),
+        m_reducer(std::move(reducer)),
+        m_p(std::move(p)) {}
 };
 
 template <class ValueType>
@@ -159,9 +163,9 @@ struct StdPartitionCopyFunctor {
   KOKKOS_FUNCTION
   StdPartitionCopyFunctor(FirstFrom first_from, FirstDestTrue first_dest_true,
                           FirstDestFalse first_dest_false, PredType pred)
-      : m_first_from(first_from),
-        m_first_dest_true(first_dest_true),
-        m_first_dest_false(first_dest_false),
+      : m_first_from(std::move(first_from)),
+        m_first_dest_true(std::move(first_dest_true)),
+        m_first_dest_false(std::move(first_dest_false)),
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
