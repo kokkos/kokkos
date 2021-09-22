@@ -368,7 +368,7 @@ struct BeginOperation : public EventBase {
                  (deviceID == other.deviceID);
       matches &= name == other.name;
       return matches;
-    } catch (std::bad_cast) {
+    } catch (const std::bad_cast&) {
       return false;
     }
     return false;
@@ -413,7 +413,7 @@ struct EndOperation : public EventBase {
       bool matches =
           (kID == unspecified_sentinel<uint64_t>) || (kID == other.kID);
       return matches;
-    } catch (std::bad_cast) {
+    } catch (const std::bad_cast&) {
       return false;
     }
     return false;
