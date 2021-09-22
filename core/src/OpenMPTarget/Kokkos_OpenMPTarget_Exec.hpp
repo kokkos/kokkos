@@ -504,7 +504,7 @@ class OpenMPTargetExecTeamMember {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
-  // set_team_thread_mode routine parameters for future understanding: 
+  // set_team_thread_mode routine parameters for future understanding:
   // first parameter - scratch level.
   // second parameter - offset in the scratch buffer.
   // third parameter - offset for next scratch view.
