@@ -156,16 +156,15 @@ void fill_view(ViewType dest_view, const std::string& name) {
 }
 
 template <class ViewTypeFrom, class ViewTypeTest>
-void verify_data(const std::string& name, ViewTypeFrom view_from,
-                 ViewTypeTest view_test) {
-  (void)name;
+void verify_data(ViewTypeFrom view_from, ViewTypeTest view_test,
+                 std::size_t rotation_point) {
   auto view_from_h      = create_host_space_copy(view_from);
   auto view_test_h      = create_host_space_copy(view_test);
   const std::size_t ext = view_test_h.extent(0);
 
   using value_type = typename ViewTypeTest::value_type;
   std::vector<value_type> std_gold_h(ext);
-  auto first_n = KE::cbegin(view_from_h) + (ext / 2);
+  auto first_n = KE::cbegin(view_from_h) + rotation_point;
   std::rotate_copy(KE::cbegin(view_from_h), first_n, KE::cend(view_from_h),
                    std_gold_h.begin());
 
@@ -183,60 +182,60 @@ std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType>
-void print_scenario_details(const std::string& name) {
-  std::cout << "rotate_copy: default predicate: " << name << ", "
-            << view_tag_to_string(Tag{}) << " "
-            << value_type_to_string(ValueType()) << '\n';
+void print_scenario_details(const std::string& name,
+                            std::size_t rotation_point) {
+  std::cout << "rotate_copy: "
+            << " at " << rotation_point << ", " << name << ", "
+            << view_tag_to_string(Tag{}) << ", "
+            << value_type_to_string(ValueType()) << std::endl;
 }
 
 template <class Tag, class ValueType, class InfoType>
-void run_single_scenario(const InfoType& scenario_info) {
+void run_single_scenario(const InfoType& scenario_info,
+                         std::size_t rotation_point) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  print_scenario_details<Tag, ValueType>(name);
+  print_scenario_details<Tag, ValueType>(name, rotation_point);
 
   auto view_from = create_view<ValueType>(Tag{}, view_ext, "rotate_copy_from");
+  fill_view(view_from, name);
 
   {
-    fill_view(view_from, name);
     auto view_dest =
         create_view<ValueType>(Tag{}, view_ext, "rotate_copy_dest");
-    auto n_it = KE::cbegin(view_from) + view_ext / 2;
+    auto n_it = KE::cbegin(view_from) + rotation_point;
     auto rit  = KE::rotate_copy(exespace(), KE::cbegin(view_from), n_it,
                                KE::cend(view_from), KE::begin(view_dest));
-    verify_data(name, view_from, view_dest);
+    verify_data(view_from, view_dest, rotation_point);
     EXPECT_TRUE(rit == (KE::begin(view_dest) + view_ext));
   }
 
   {
-    fill_view(view_from, name);
     auto view_dest =
         create_view<ValueType>(Tag{}, view_ext, "rotate_copy_dest");
-    auto n_it = KE::cbegin(view_from) + view_ext / 2;
+    auto n_it = KE::cbegin(view_from) + rotation_point;
     auto rit = KE::rotate_copy("label", exespace(), KE::cbegin(view_from), n_it,
                                KE::cend(view_from), KE::begin(view_dest));
-    verify_data(name, view_from, view_dest);
+    verify_data(view_from, view_dest, rotation_point);
     EXPECT_TRUE(rit == (KE::begin(view_dest) + view_ext));
   }
 
   {
-    fill_view(view_from, name);
     auto view_dest =
         create_view<ValueType>(Tag{}, view_ext, "rotate_copy_dest");
     auto rit =
-        KE::rotate_copy(exespace(), view_from, (view_ext / 2), view_dest);
-    verify_data(name, view_from, view_dest);
+        KE::rotate_copy(exespace(), view_from, rotation_point, view_dest);
+    verify_data(view_from, view_dest, rotation_point);
     EXPECT_TRUE(rit == (KE::begin(view_dest) + view_ext));
   }
 
   {
-    fill_view(view_from, name);
     auto view_dest =
         create_view<ValueType>(Tag{}, view_ext, "rotate_copy_dest");
-    auto rit = KE::rotate_copy("label", exespace(), view_from, (view_ext / 2),
+    auto rit = KE::rotate_copy("label", exespace(), view_from, rotation_point,
                                view_dest);
-    verify_data(name, view_from, view_dest);
+    verify_data(view_from, view_dest, rotation_point);
     EXPECT_TRUE(rit == (KE::begin(view_dest) + view_ext));
   }
 
@@ -250,8 +249,18 @@ void run_all_scenarios() {
       {"two-elements-a", 2}, {"two-elements-b", 2}, {"small-a", 11},
       {"small-b", 13},       {"medium", 21103},     {"large", 101513}};
 
+  std::vector<std::size_t> rotation_points = {0,  1,   2,    3,     8,
+                                              56, 101, 1003, 101501};
+
   for (const auto& it : scenarios) {
-    run_single_scenario<Tag, ValueType>(it);
+    for (const auto& it2 : rotation_points) {
+      // for each view scenario, we rotate at multiple points
+      // but only if the view has an extent that is >= rotation point
+      const auto view_ext = it.second;
+      if (view_ext >= it2) {
+        run_single_scenario<Tag, ValueType>(it, it2);
+      }
+    }
   }
 }
 
