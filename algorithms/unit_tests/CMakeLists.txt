@@ -38,53 +38,62 @@ SET(ALGORITHM UnitTestMain.cpp)
 
 LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsCommon2.cpp
-  #-----
-  TestRandomAccessIterator.cpp
-  TestStdAlgorithmsConstraints.cpp
+
   TestStdReducers.cpp
-  #-----
-  TestStdAlgorithmsModOps.cpp
-  TestStdAlgorithmsModSeqOps.cpp
-  TestStdAlgorithmsNonModSeqOps.cpp
+  TestStdAlgorithmsConstraints.cpp
+  TestRandomAccessIterator.cpp
+
+  #--- min,max ---
   TestStdAlgorithmsMinMaxOps.cpp
   TestStdAlgorithmsMinMaxElementOps.cpp
-  TestStdAlgorithmsIsSorted.cpp
-  TestStdAlgorithmsIsSortedUntil.cpp
-  TestStdAlgorithmsPartitioningOps.cpp
-  TestStdAlgorithmsReverse.cpp
-  #--- numerics ----
-  TestStdAlgorithmsExclusiveScan.cpp
-  TestStdAlgorithmsTransformExclusiveScan.cpp
-  TestStdAlgorithmsInclusiveScan.cpp
-  TestStdAlgorithmsTransformInclusiveScan.cpp
-  TestStdAlgorithmsAdjacentDifference.cpp
-  TestStdAlgorithmsNumerics.cpp
-  #-----
+
+  #--- non mod sequence ----
+  TestStdAlgorithmsNonModSeqOps.cpp
+  TestStdAlgorithmsLexicographicalCompare.cpp
   TestStdAlgorithmsForEach.cpp
-  TestStdAlgorithmsCount.cpp
   TestStdAlgorithmsFind.cpp
+  TestStdAlgorithmsCount.cpp
   TestStdAlgorithmsEqual.cpp
   TestStdAlgorithmsAllAnyNoneOf.cpp
+  TestStdAlgorithmsAdjacentFind.cpp
+  TestStdAlgorithmsSearch.cpp
+  TestStdAlgorithmsFindFirstOf.cpp
+  TestStdAlgorithmsFindEnd.cpp
   TestStdAlgorithmsMismatch.cpp
+
+  #--- mod ----
+  TestStdAlgorithmsModOps.cpp
+  TestStdAlgorithmsModSeqOps.cpp
   TestStdAlgorithmsReplaceIf.cpp
   TestStdAlgorithmsReplace.cpp
   TestStdAlgorithmsReplaceCopy.cpp
   TestStdAlgorithmsReplaceCopyIf.cpp
-  TestStdAlgorithmsLexicographicalCompare.cpp
   TestStdAlgorithmsCopyIf.cpp
-  TestStdAlgorithmsUniqueCopy.cpp
-  TestStdAlgorithmsAdjacentFind.cpp
   TestStdAlgorithmsUnique.cpp
-  TestStdAlgorithmsPartitionCopy.cpp
-  TestStdAlgorithmsRotate.cpp
-  TestStdAlgorithmsRotateCopy.cpp
+  TestStdAlgorithmsUniqueCopy.cpp
   TestStdAlgorithmsRemoveIf.cpp
   TestStdAlgorithmsRemove.cpp
   TestStdAlgorithmsRemoveCopy.cpp
   TestStdAlgorithmsRemoveCopyIf.cpp
-  TestStdAlgorithmsSearch.cpp
-  TestStdAlgorithmsFindFirstOf.cpp
-  TestStdAlgorithmsFindEnd.cpp
+  TestStdAlgorithmsRotate.cpp
+  TestStdAlgorithmsRotateCopy.cpp
+  TestStdAlgorithmsReverse.cpp
+
+  #--- sorting ----
+  TestStdAlgorithmsIsSorted.cpp
+  TestStdAlgorithmsIsSortedUntil.cpp
+
+  #--- partitioning ----
+  TestStdAlgorithmsPartitioningOps.cpp
+  TestStdAlgorithmsPartitionCopy.cpp
+
+  #--- numerics ----
+  TestStdAlgorithmsNumerics.cpp
+  TestStdAlgorithmsAdjacentDifference.cpp
+  TestStdAlgorithmsExclusiveScan.cpp
+  TestStdAlgorithmsTransformExclusiveScan.cpp
+  TestStdAlgorithmsInclusiveScan.cpp
+  TestStdAlgorithmsTransformInclusiveScan.cpp
 )
 
 IF(Kokkos_ENABLE_OPENMP)

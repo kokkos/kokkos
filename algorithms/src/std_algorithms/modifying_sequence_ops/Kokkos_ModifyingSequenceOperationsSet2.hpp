@@ -165,22 +165,6 @@ struct StdSwapRangesFunctor {
       : m_first1(std::move(_first1)), m_first2(std::move(_first2)) {}
 };
 
-template <class IteratorType, class ViewFromType>
-struct StdUniqueStepThreeFunctor {
-  using index_type = typename IteratorType::difference_type;
-  IteratorType m_first_to;
-  ViewFromType m_view_from;
-
-  KOKKOS_FUNCTION
-  StdUniqueStepThreeFunctor(IteratorType first_to, ViewFromType view_from)
-      : m_first_to(std::move(first_to)), m_view_from(std::move(view_from)) {}
-
-  KOKKOS_FUNCTION
-  void operator()(const index_type i) const {
-    m_first_to[i] = std::move(m_view_from(i));
-  }
-};
-
 template <class IndexType, class InputIt, class OutputIt,
           class BinaryPredicateType>
 struct StdUniqueFunctor {
@@ -555,14 +539,17 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
       // ----------
       // move back from tmp to original range,
       // ensuring we start overwriting after the original unique found
+      using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
       using step3_func_t =
-          StdUniqueStepThreeFunctor<IteratorType, tmp_view_type>;
+          StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
+
       ::Kokkos::parallel_for(
           "unique_step3_parfor",
           RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-          step3_func_t((first + num_unique_found_in_step_one), tmp_view));
+          step3_func_t(begin(tmp_view),
+                       (first + num_unique_found_in_step_one)));
 
-      ex.fence("Kokkos::uniqute: fence after operation");
+      ex.fence("Kokkos::unique: fence after operation");
 
       // return iterator to one passed the last written
       // (the +1 is needed to account for the last element, see above)
@@ -684,8 +671,6 @@ IteratorType rotate_for_target_in_left_half(const std::string& label,
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
   tmp_view_type tmp_view("rotate_impl_for_target_in_left_half_impl",
                          num_elements_on_right);
-  // tmp iterator types
-  using tmp_readonly_iterator_type  = decltype(cbegin(tmp_view));
   using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
 
   // index_type is the same and needed in all steps
@@ -707,10 +692,10 @@ IteratorType rotate_for_target_in_left_half(const std::string& label,
 
   // step 3
   using step3_func_type =
-      StdMoveFunctor<index_type, tmp_readonly_iterator_type, IteratorType>;
+      StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-                         step3_func_type(cbegin(tmp_view), first));
+                         step3_func_type(begin(tmp_view), first));
 
   ex.fence("Kokkos::rotate: fence after operation");
   return first + (last - n_first);
@@ -754,8 +739,6 @@ IteratorType rotate_for_target_in_right_half(const std::string& label,
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
   tmp_view_type tmp_view("rotate_impl_for_target_in_left_half_impl",
                          num_elements_on_left);
-  // tmp iterator types
-  using tmp_readonly_iterator_type  = decltype(cbegin(tmp_view));
   using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
 
   // index_type is the same and needed in all steps
@@ -777,10 +760,10 @@ IteratorType rotate_for_target_in_right_half(const std::string& label,
 
   // step 3:
   using step3_func_type =
-      StdMoveFunctor<index_type, tmp_readonly_iterator_type, IteratorType>;
+      StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-      step3_func_type(cbegin(tmp_view), first + num_elements_on_right));
+      step3_func_type(begin(tmp_view), first + num_elements_on_right));
 
   ex.fence("Kokkos::rotate: fence after operation");
   return first + (last - n_first);
@@ -837,8 +820,6 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
     using value_type    = typename IteratorType::value_type;
     using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
     tmp_view_type tmp_view("std_remove_if_tmp_view", keep_count);
-    // tmp iterator types
-    using tmp_readonly_iterator_type  = decltype(cbegin(tmp_view));
     using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
 
     // in stage 1, *move* all elements to keep from original range to tmp
@@ -860,12 +841,12 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
 
     // stage 2, we do parfor to move from tmp to original range
     using func2_type =
-        StdRemoveIfStage2Functor<index_type, tmp_readonly_iterator_type,
+        StdRemoveIfStage2Functor<index_type, tmp_readwrite_iterator_type,
                                  IteratorType>;
     ::Kokkos::parallel_for(
         "remove_if_stage2_parfor",
         RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-        func2_type(cbegin(tmp_view), first));
+        func2_type(begin(tmp_view), first));
     ex.fence("Kokkos::remove_if: fence after stage2");
 
     // return
