@@ -61,7 +61,7 @@ namespace Impl {
 template <class ValueType1, class ValueType2, class RetType = ValueType2>
 struct StdAdjacentDifferenceDefaultBinaryOpFunctor {
   KOKKOS_FUNCTION
-  RetType operator()(const ValueType1& a, const ValueType2& b) const {
+  constexpr RetType operator()(const ValueType1& a, const ValueType2& b) const {
     return a - b;
   }
 };
