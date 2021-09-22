@@ -712,7 +712,8 @@ class TestDynViewAPI {
   using host_view_space = typename View0::host_mirror_space;
 
   static void run_tests() {
-    run_test_resize_realloc();
+    run_test_resize_realloc<false>();
+    run_test_resize_realloc<true>();
     run_test_mirror();
     run_test_mirror_and_copy();
     run_test_scalar();
@@ -739,17 +740,24 @@ class TestDynViewAPI {
     TestViewOperator_LeftAndRight<int, device, 6>::testit(2, 3, 4, 2, 3, 4);
   }
 
+  template <bool Initialize>
   static void run_test_resize_realloc() {
     dView0 drv0("drv0", 10, 20, 30);
     ASSERT_EQ(drv0.rank(), 3);
 
-    Kokkos::resize(drv0, 5, 10);
+    if (Initialize)
+      Kokkos::resize(Kokkos::WithoutInitializing, drv0, 5, 10);
+    else
+      Kokkos::resize(drv0, 5, 10);
     ASSERT_EQ(drv0.rank(), 2);
     ASSERT_EQ(drv0.extent(0), 5);
     ASSERT_EQ(drv0.extent(1), 10);
     ASSERT_EQ(drv0.extent(2), 1);
 
-    Kokkos::realloc(drv0, 10, 20);
+    if (Initialize)
+      Kokkos::realloc(Kokkos::WithoutInitializing, drv0, 10, 20);
+    else
+      Kokkos::realloc(drv0, 10, 20);
     ASSERT_EQ(drv0.rank(), 2);
     ASSERT_EQ(drv0.extent(0), 10);
     ASSERT_EQ(drv0.extent(1), 20);
