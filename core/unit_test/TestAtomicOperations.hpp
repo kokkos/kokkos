@@ -351,8 +351,8 @@ bool IncAtomicTest(T i0) {
 
 template <class T, class DEVICE_TYPE>
 struct WrappingIncFunctor {
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T, execution_space> type;
+  using execution_space = DEVICE_TYPE;
+  using type            = Kokkos::View<T, execution_space>;
 
   type data;
   T i0;
@@ -498,8 +498,8 @@ bool DecAtomicTest(T i0) {
 
 template <class T, class DEVICE_TYPE>
 struct WrappingDecFunctor {
-  typedef DEVICE_TYPE execution_space;
-  typedef Kokkos::View<T, execution_space> type;
+  using execution_space = DEVICE_TYPE;
+  using type            = Kokkos::View<T, execution_space>;
 
   type data;
   T i0;
