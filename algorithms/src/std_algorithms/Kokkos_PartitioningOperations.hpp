@@ -120,15 +120,17 @@ struct StdPartitionCopyScalar {
   ValueType true_count_;
   ValueType false_count_;
 
+  // Here we implement the copy assignment operators explicitly for consistency
+  // with how the Scalar structs are implemented inside
+  // Kokkos_Parallel_Reduce.hpp.
   KOKKOS_FUNCTION
-  StdPartitionCopyScalar& operator=(const StdPartitionCopyScalar& other) {
+  void operator=(const StdPartitionCopyScalar& other) {
     true_count_  = other.true_count_;
     false_count_ = other.false_count_;
-    return *this;
   }
 
   KOKKOS_FUNCTION
-  void operator=(const volatile StdPartitionCopyScalar& other) {
+  void operator=(const volatile StdPartitionCopyScalar& other) volatile {
     true_count_  = other.true_count_;
     false_count_ = other.false_count_;
   }

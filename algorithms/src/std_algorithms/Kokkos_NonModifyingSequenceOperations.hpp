@@ -787,38 +787,34 @@ IteratorType adjacent_find_impl(const std::string& label,
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
-  if (first == last) {
+  const auto num_elements = last - first;
+
+  if (num_elements <= 1) {
     return last;
   }
 
-  const auto num_elements = last - first;
+  using index_type       = typename IteratorType::difference_type;
+  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
+  using result_view_type = typename reducer_type::result_view_type;
+  using func_t = StdAdjacentFindFunctor<index_type, IteratorType, reducer_type,
+                                        PredicateType>;
 
-  if (num_elements == 1) {
-    return first + 1;
+  result_view_type result("Kokkos::adjacent_find_impl_result_view");
+  reducer_type reducer(result);
+
+  // note that we use below num_elements-1 because
+  // each index i in the reduction checks i and (i+1).
+  ::Kokkos::parallel_reduce(
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
+      func_t(first, reducer, pred), reducer);
+  ex.fence("Kokkos::adjacent_find: fence after operation");
+
+  const auto r_h =
+      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
+  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+    return last;
   } else {
-    using index_type       = typename IteratorType::difference_type;
-    using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-    using result_view_type = typename reducer_type::result_view_type;
-    using func_t           = StdAdjacentFindFunctor<index_type, IteratorType,
-                                          reducer_type, PredicateType>;
-
-    result_view_type result("Kokkos::adjacent_find_impl_result_view");
-    reducer_type reducer(result);
-
-    // note that we use below num_elements-1 because
-    // each index i in the reduction checks i and (i+1).
-    ::Kokkos::parallel_reduce(
-        label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
-        func_t(first, reducer, pred), reducer);
-    ex.fence("Kokkos::adjacent_find: fence after operation");
-
-    const auto r_h =
-        ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-    if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
-      return last;
-    } else {
-      return first + r_h().min_loc_true;
-    }
+    return first + r_h().min_loc_true;
   }
 }
 
