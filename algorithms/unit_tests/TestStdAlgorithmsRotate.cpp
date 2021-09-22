@@ -156,14 +156,12 @@ void fill_view(ViewType dest_view, const std::string& name) {
 }
 
 template <class ViewType, class ResultIt, class ViewHostType>
-void verify_data(ResultIt result_it,
-		 ViewType view,
-                 ViewHostType data_view_host,
-		 std::size_t rotation_point)
-{
+void verify_data(ResultIt result_it, ViewType view, ViewHostType data_view_host,
+                 std::size_t rotation_point) {
   // run std::rotate
   auto n_it = KE::begin(data_view_host) + rotation_point;
-  auto std_rit = std::rotate(KE::begin(data_view_host), n_it, KE::end(data_view_host));
+  auto std_rit =
+      std::rotate(KE::begin(data_view_host), n_it, KE::end(data_view_host));
 
   // make sure results match
   const auto my_diff  = result_it - KE::begin(view);
@@ -171,7 +169,7 @@ void verify_data(ResultIt result_it,
   EXPECT_TRUE(my_diff == std_diff);
 
   // check views match
-  auto view_h = create_host_space_copy(view);
+  auto view_h           = create_host_space_copy(view);
   const std::size_t ext = view_h.extent(0);
   for (std::size_t i = 0; i < ext; ++i) {
     EXPECT_TRUE(view_h(i) == data_view_host[i]);
@@ -186,20 +184,17 @@ std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType>
-void print_scenario_details(const std::string& name, std::size_t rotation_point)
-{
+void print_scenario_details(const std::string& name,
+                            std::size_t rotation_point) {
   std::cout << "rotate: "
-	    << " at " << rotation_point << ", "
-	    << name << ", "
+            << " at " << rotation_point << ", " << name << ", "
             << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType())
-	    << std::endl;
+            << value_type_to_string(ValueType()) << std::endl;
 }
 
 template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info,
-			 std::size_t rotation_point)
-{
+                         std::size_t rotation_point) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
@@ -210,8 +205,8 @@ void run_single_scenario(const InfoType& scenario_info,
     fill_view(view, name);
     // create host copy BEFORE rotate or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto n_it = KE::begin(view) + rotation_point;
-    auto rit  = KE::rotate(exespace(), KE::begin(view), n_it, KE::end(view));
+    auto n_it   = KE::begin(view) + rotation_point;
+    auto rit    = KE::rotate(exespace(), KE::begin(view), n_it, KE::end(view));
     verify_data(rit, view, view_h, rotation_point);
   }
 
@@ -220,8 +215,9 @@ void run_single_scenario(const InfoType& scenario_info,
     fill_view(view, name);
     // create host copy BEFORE rotate or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto n_it = KE::begin(view) + rotation_point;
-    auto rit  = KE::rotate("label", exespace(), KE::begin(view), n_it, KE::end(view));
+    auto n_it   = KE::begin(view) + rotation_point;
+    auto rit =
+        KE::rotate("label", exespace(), KE::begin(view), n_it, KE::end(view));
     verify_data(rit, view, view_h, rotation_point);
   }
 
@@ -230,8 +226,8 @@ void run_single_scenario(const InfoType& scenario_info,
     fill_view(view, name);
     // create host copy BEFORE rotate or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit  = KE::rotate(exespace(), view, rotation_point);
-    //verify_data(rit, view, view_h, rotation_point);
+    auto rit    = KE::rotate(exespace(), view, rotation_point);
+    // verify_data(rit, view, view_h, rotation_point);
   }
 
   {
@@ -239,7 +235,7 @@ void run_single_scenario(const InfoType& scenario_info,
     fill_view(view, name);
     // create host copy BEFORE rotate or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit  = KE::rotate("label", exespace(), view, rotation_point);
+    auto rit    = KE::rotate("label", exespace(), view, rotation_point);
     verify_data(rit, view, view_h, rotation_point);
   }
 
@@ -247,33 +243,28 @@ void run_single_scenario(const InfoType& scenario_info,
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
+void run_all_scenarios() {
   const std::map<std::string, std::size_t> scenarios = {
-    {"empty", 0},          {"one-element-a", 1},  {"one-element-b", 1},
-    {"two-elements-a", 2}, {"two-elements-b", 2},
-    {"small-a", 11},
-    {"small-b", 13},
-    {"medium", 21103},
-    {"large", 101513}};
+      {"empty", 0},          {"one-element-a", 1},  {"one-element-b", 1},
+      {"two-elements-a", 2}, {"two-elements-b", 2}, {"small-a", 11},
+      {"small-b", 13},       {"medium", 21103},     {"large", 101513}};
 
-  std::vector<std::size_t> rotation_points = {0, 1, 2, 3, 8, 56, 101, 1003, 101501};
+  std::vector<std::size_t> rotation_points = {0,  1,   2,    3,     8,
+                                              56, 101, 1003, 101501};
 
-  for (const auto& it : scenarios)
-  {
-    for (const auto& it2 : rotation_points){
+  for (const auto& it : scenarios) {
+    for (const auto& it2 : rotation_points) {
       // for each view scenario, we rotate at multiple points
       // but only if the view has an extent that is >= rotation point
       const auto view_ext = it.second;
-      if (view_ext >= it2){
-	run_single_scenario<Tag, ValueType>(it, it2);
+      if (view_ext >= it2) {
+        run_single_scenario<Tag, ValueType>(it, it2);
       }
     }
   }
 }
 
-TEST(std_algorithms_mod_seq_ops, rotate)
-{
+TEST(std_algorithms_mod_seq_ops, rotate) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
   run_all_scenarios<DynamicTag, double>();
