@@ -172,22 +172,15 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     ValueType result = ValueType();
 
-    // FIXME_OPENMPTARGET : For a single range parallel loop, the number of
-    // teams (league_size) should be chosen by the compiler for optimal
-    // performance based on the architecture.
-    // However currently we have hardcoded it to 512 as it has shown the best
-    // performance for some micro-benchmarks with LLVM compiler on NVIDIA V100.
-
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
-#pragma omp target teams distribute parallel for num_teams(512) map(to   \
-                                                                    : f) \
-    reduction(custom                                                     \
-              : result)
+#pragma omp target teams distribute parallel for map(to                    \
+                                                     : f) reduction(custom \
+                                                                    : result)
     for (auto i = begin; i < end; ++i) {
       if constexpr (std::is_same<TagType, void>::value) {
         f(i, result);
@@ -218,7 +211,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     if constexpr (NumReductions == 1) {
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
-#pragma omp target teams distribute parallel for num_teams(512) \
+#pragma omp target teams distribute parallel for \
          map(to:f) reduction(+: result)
         for (auto i = begin; i < end; ++i)
 
@@ -229,10 +222,9 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
           }
       } else {
 #pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
-#pragma omp target teams distribute parallel for num_teams(512) map(to   \
-                                                                    : f) \
-    reduction(custom                                                     \
-              : result)
+#pragma omp target teams distribute parallel for map(to                    \
+                                                     : f) reduction(custom \
+                                                                    : result)
         for (auto i = begin; i < end; ++i)
 
           if constexpr (std::is_same<TagType, void>::value) {
