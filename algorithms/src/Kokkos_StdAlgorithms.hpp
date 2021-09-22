@@ -81,7 +81,7 @@
 // move, move_backward
 // swap_ranges
 // unique, unique_copy
-// rotate_copy
+// rotate, rotate_copy
 // remove, remove_if, remove_copy, remove_copy_if
 #include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
 
