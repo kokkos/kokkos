@@ -473,7 +473,7 @@ struct DeepCopy<MemSpace1, MemSpace2, ExecutionSpace,
     DeepCopyCuda(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncCuda(dst, src, n);
   }
@@ -487,7 +487,7 @@ struct DeepCopy<MemSpace, HostSpace, ExecutionSpace,
     DeepCopyCuda(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncCuda(dst, src, n);
   }
@@ -509,7 +509,7 @@ struct DeepCopy<HostSpace, MemSpace, ExecutionSpace,
     DeepCopyCuda(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncCuda(dst, src, n);
   }

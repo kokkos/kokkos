@@ -122,7 +122,7 @@ struct DeepCopy<
     DeepCopySYCL(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncSYCL(dst, src, n);
   }
@@ -138,7 +138,7 @@ struct DeepCopy<
     DeepCopySYCL(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncSYCL(dst, src, n);
   }
@@ -154,7 +154,7 @@ struct DeepCopy<
     DeepCopySYCL(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncSYCL(dst, src, n);
   }

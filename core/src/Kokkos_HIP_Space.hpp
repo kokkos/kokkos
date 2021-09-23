@@ -335,7 +335,7 @@ struct DeepCopy<
     DeepCopyHIP(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncHIP(dst, src, n);
   }
@@ -360,7 +360,7 @@ struct DeepCopy<
     DeepCopyHIP(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncHIP(dst, src, n);
   }
@@ -384,7 +384,7 @@ struct DeepCopy<
     DeepCopyHIP(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
                   size_t n) {
     DeepCopyAsyncHIP(dst, src, n);
   }
