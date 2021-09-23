@@ -266,6 +266,9 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
     SharedAllocationHeader header;
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    Kokkos::fence(
+        "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
+        "void>::~SharedAllocationRecord(): fence after obtaining label");
     label = header.label();
   }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
@@ -304,6 +307,9 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
   // Copy to device memory
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
       RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  Kokkos::fence(
+      "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
+      "void>::SharedAllocationRecord(): fence after copying header");
 }
 
 SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::

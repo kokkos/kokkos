@@ -253,6 +253,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   // Copy to device memory
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
       RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  Kokkos::fence(
+      "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
+      "void>::SharedAllocationRecord(): fence after copying header");
 }
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
@@ -314,6 +317,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                            Kokkos::HostSpace>(&header, RecordBase::m_alloc_ptr,
                                               sizeof(SharedAllocationHeader));
+    Kokkos::fence(
+        "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
+        "void>::~SharedAllocationRecord(): fence after copying header");
     label = header.label();
   }
   const auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;

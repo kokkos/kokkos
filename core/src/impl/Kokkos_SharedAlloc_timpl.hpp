@@ -104,6 +104,9 @@ void* SharedAllocationRecordCommon<MemorySpace>::reallocate_tracked(
 
   Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
       r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
+  Kokkos::fence(
+      "SharedAllocationRecord<Kokkos::Experimental::HBWSpace, "
+      "void>::reallocate_tracked(): fence after copying data");
 
   record_base_t::increment(r_new);
   record_base_t::decrement(r_old);
@@ -181,6 +184,9 @@ void HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::print_records(
       if (r->m_alloc_ptr) {
         Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
             &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
+        Kokkos::fence(
+            "HostInaccessibleSharedAllocationRecordCommon::print_records(): "
+            "fence after copying head");
       } else {
         head.m_label[0] = 0;
       }
@@ -213,6 +219,9 @@ void HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::print_records(
       if (r->m_alloc_ptr) {
         Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
             &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
+        Kokkos::fence(
+            "HostInaccessibleSharedAllocationRecordCommon::print_records(): "
+            "fence after copying head");
 
         // Formatting dependent on sizeof(uintptr_t)
         const char* format_string;
@@ -255,6 +264,9 @@ auto HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_record(
   if (alloc_ptr) {
     Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
         &head, head_cuda, sizeof(SharedAllocationHeader));
+    Kokkos::fence(
+        "HostInaccessibleSharedAllocationRecordCommon::get_record(): fence "
+        "after copying head");
   }
 
   derived_t* const record =
@@ -277,6 +289,9 @@ HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_label() const {
 
   Kokkos::Impl::DeepCopy<Kokkos::HostSpace, MemorySpace>(
       &header, this->record_base_t::head(), sizeof(SharedAllocationHeader));
+  Kokkos::fence(
+      "HostInaccessibleSharedAllocationRecordCommon::get_label(): fence after "
+      "copying head");
 
   return std::string(header.m_label);
 }
