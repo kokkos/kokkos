@@ -303,7 +303,8 @@ TEST(defaultdevicetype, test_new_test_interface) {
         return MatchDiagnostic{true};
       });
   ASSERT_TRUE(success);
-  listen_tool_events(Config::DisableAll(), Config::EnableProfiling(), Config::DisableKernels());
+  listen_tool_events(Config::DisableAll(), Config::EnableProfiling(),
+                     Config::DisableKernels());
   success = validate_event_set(
       [&]() {
         Kokkos::View<float*> left("left", 5), right("right", 5);
