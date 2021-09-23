@@ -157,11 +157,11 @@ struct TransformExclusiveScanFunctor {
   void join(volatile value_type& update,
             volatile const value_type& input) const {
     if (update.is_initial) {
-      update.val        = input.val;
-      update.is_initial = false;
+      update.val = input.val;
     } else {
       update.val = m_binary_op(update.val, input.val);
     }
+    update.is_initial = false;
   }
 };
 
