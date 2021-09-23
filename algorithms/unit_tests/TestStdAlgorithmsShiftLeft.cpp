@@ -91,7 +91,7 @@ void fill_view(ViewType dest_view, const std::string& name) {
     // no op
   }
 
-  else{
+  else {
     UnifDist<value_type> randObj;
     for (std::size_t i = 0; i < ext; ++i) {
       v_h(i) = randObj();
@@ -103,11 +103,10 @@ void fill_view(ViewType dest_view, const std::string& name) {
   Kokkos::parallel_for("copy", dest_view.extent(0), F1);
 }
 
-template<class ForwardIterator>
-ForwardIterator my_std_shift_left(ForwardIterator first,
-				  ForwardIterator last,
-				  typename std::iterator_traits<ForwardIterator>::difference_type n)
-{
+template <class ForwardIterator>
+ForwardIterator my_std_shift_left(
+    ForwardIterator first, ForwardIterator last,
+    typename std::iterator_traits<ForwardIterator>::difference_type n) {
   if (n == 0) {
     return last;
   }
@@ -122,14 +121,11 @@ ForwardIterator my_std_shift_left(ForwardIterator first,
   return std::move(m, last, first);
 }
 
-
 template <class ViewType, class ResultIt, class ViewHostType>
-void verify_data(ResultIt result_it,
-		 ViewType view,
-		 ViewHostType data_view_host,
-                 std::size_t shift_value)
-{
-  auto std_rit = my_std_shift_left(KE::begin(data_view_host), KE::end(data_view_host), shift_value);
+void verify_data(ResultIt result_it, ViewType view, ViewHostType data_view_host,
+                 std::size_t shift_value) {
+  auto std_rit = my_std_shift_left(KE::begin(data_view_host),
+                                   KE::end(data_view_host), shift_value);
 
   // make sure results match
   const auto my_diff  = result_it - KE::begin(view);
@@ -137,8 +133,8 @@ void verify_data(ResultIt result_it,
   EXPECT_TRUE(my_diff == std_diff);
 
   // check views match
-  auto view_h           = create_host_space_copy(view);
-  for (std::size_t i = 0; i < (std::size_t) my_diff; ++i) {
+  auto view_h = create_host_space_copy(view);
+  for (std::size_t i = 0; i < (std::size_t)my_diff; ++i) {
     EXPECT_TRUE(view_h(i) == data_view_host[i]);
     // std::cout << "i= " << i << " "
     // 	      << "mine: " << view_h(i) << " "
@@ -151,8 +147,7 @@ std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType>
-void print_scenario_details(const std::string& name,
-                            std::size_t shift_value) {
+void print_scenario_details(const std::string& name, std::size_t shift_value) {
   std::cout << "shift_left: "
             << " by " << shift_value << ", " << name << ", "
             << view_tag_to_string(Tag{}) << ", "
@@ -161,8 +156,7 @@ void print_scenario_details(const std::string& name,
 
 template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info,
-                         std::size_t shift_value)
-{
+                         std::size_t shift_value) {
   using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
@@ -173,7 +167,8 @@ void run_single_scenario(const InfoType& scenario_info,
     fill_view(view, name);
     // create host copy BEFORE shift_left or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit    = KE::shift_left(exespace(), KE::begin(view), KE::end(view), shift_value);
+    auto rit =
+        KE::shift_left(exespace(), KE::begin(view), KE::end(view), shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
@@ -182,7 +177,8 @@ void run_single_scenario(const InfoType& scenario_info,
     fill_view(view, name);
     // create host copy BEFORE shift_left or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit    = KE::shift_left("label", exespace(), KE::begin(view), KE::end(view), shift_value);
+    auto rit    = KE::shift_left("label", exespace(), KE::begin(view),
+                              KE::end(view), shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
@@ -209,13 +205,17 @@ void run_single_scenario(const InfoType& scenario_info,
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-  const std::map<std::string, std::size_t> scenarios = {
-    {"empty", 0},
-    {"one-element-a", 1},  {"one-element-b", 1},
-    {"two-elements-a", 2}, {"two-elements-b", 2},
-    {"three-elements-a", 3}, {"three-elements-b", 3},
-    {"small-a", 11}, {"small-b", 13},
-    {"medium", 21103},     {"large", 101513}};
+  const std::map<std::string, std::size_t> scenarios = {{"empty", 0},
+                                                        {"one-element-a", 1},
+                                                        {"one-element-b", 1},
+                                                        {"two-elements-a", 2},
+                                                        {"two-elements-b", 2},
+                                                        {"three-elements-a", 3},
+                                                        {"three-elements-b", 3},
+                                                        {"small-a", 11},
+                                                        {"small-b", 13},
+                                                        {"medium", 21103},
+                                                        {"large", 101513}};
 
   // shifts MUST be non-negative
   // it does not matter is shifts are larger than the view,
@@ -230,8 +230,7 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_mod_seq_ops, shift_left)
-{
+TEST(std_algorithms_mod_seq_ops, shift_left) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
   run_all_scenarios<DynamicTag, double>();
