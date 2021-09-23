@@ -380,7 +380,7 @@ struct BeginOperation : public EventBase {
   virtual ~BeginOperation() = default;
   virtual std::string repr() const {
     std::stringstream s;
-    s << "BeginOp { " << name << ", ";
+    s << Derived::begin_op_name() << " { " << name << ", ";
     if (deviceID == unspecified_sentinel<uint32_t>) {
       s << "(any deviceID) ";
     } else {
@@ -423,7 +423,7 @@ struct EndOperation : public EventBase {
 
   virtual std::string repr() const {
     std::stringstream s;
-    s << "EndOp { ";
+    s << Derived::end_op_name() << " { ";
     if (kID == unspecified_sentinel<uint64_t>) {
       s << "(any kernelID) ";
     } else {
@@ -441,6 +441,10 @@ struct EndOperation : public EventBase {
  * classes are empty
  */
 struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
+  static const std::string& begin_op_name() { 
+    static std::string value = "BeginParallelFor"; 
+    return value;
+  }
   BeginParallelForEvent(
       std::string n,
       const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
@@ -450,6 +454,9 @@ struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
 };
 struct BeginParallelReduceEvent
     : public BeginOperation<BeginParallelReduceEvent> {
+  static const std::string& begin_op_name() { 
+    static std::string value = "BeginParallelReduce";return value; }
+
   BeginParallelReduceEvent(
       std::string n,
       const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
@@ -458,6 +465,8 @@ struct BeginParallelReduceEvent
   virtual ~BeginParallelReduceEvent() = default;
 };
 struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
+    static const std::string& begin_op_name() { static std::string value = "BeginParallelScan";return value; }
+
   BeginParallelScanEvent(
       std::string n,
       const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
@@ -466,6 +475,8 @@ struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
   virtual ~BeginParallelScanEvent() = default;
 };
 struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
+    static const std::string& begin_op_name() { static std::string value = "BeginFence"; return value;}
+
   BeginFenceEvent(
       std::string n,
       const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
@@ -475,21 +486,29 @@ struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
 };
 
 struct EndParallelForEvent : public EndOperation<EndParallelForEvent> {
+      static const std::string& end_op_name() { static std::string value = "EndParallelFor"; return value;}
+
   EndParallelForEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
       : EndOperation<EndParallelForEvent>(k) {}
   virtual ~EndParallelForEvent() = default;
 };
 struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
+        static const std::string& end_op_name() { static std::string value = "EndParallelReduce"; return value;}
+
   EndParallelReduceEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
       : EndOperation<EndParallelReduceEvent>(k) {}
   virtual ~EndParallelReduceEvent() = default;
 };
 struct EndParallelScanEvent : public EndOperation<EndParallelScanEvent> {
+        static const std::string& end_op_name() { static std::string value = "EndParallelScan"; return value;}
+
   EndParallelScanEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
       : EndOperation<EndParallelScanEvent>(k) {}
   virtual ~EndParallelScanEvent() = default;
 };
 struct EndFenceEvent : public EndOperation<EndFenceEvent> {
+        static const std::string& end_op_name() { static std::string value = "EndFence"; return value; }
+
   EndFenceEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
       : EndOperation<EndFenceEvent>(k) {}
   virtual ~EndFenceEvent() = default;
@@ -511,7 +530,7 @@ bool compare_event_vectors(event_vector events, Matchers... matchers) {
   // On failure, print out the error messages
   if (!diagnostic.success) {
     for (const auto& message : diagnostic.messages) {
-      std::cerr << message;
+      std::cerr << "Error matching event vectors: "<<message << std::endl;
     }
   }
   return diagnostic.success;
@@ -523,21 +542,100 @@ bool compare_event_vectors(event_vector events, Matchers... matchers) {
  * but if there is an event that is hard to match in some cases, a stray
  * deep_copy or the like, this will let you ignore that event
  */
+
+
 struct ToolValidatorConfiguration {
   struct Profiling {
     bool kernels = true;
     bool fences  = true;
-    Profiling(bool k = true, bool f = true) : kernels(k), fences(f) {}
+    bool allocs = true;
+    bool copies = true;
+    bool dual_view_ops = true;
   };
-  struct Tuning {};
-  struct Infrastructure {};
-  Profiling profiling;
-  Tuning tuning;
-  Infrastructure infrastructure;
-  ToolValidatorConfiguration(Profiling p = Profiling(), Tuning t = Tuning(),
-                             Infrastructure i = Infrastructure())
-      : profiling(p), tuning(t), infrastructure(i) {}
+  struct Tuning {
+    bool contexts = true;
+    bool type_declarations = true;
+    bool request_values = true;
+  };
+  struct Infrastructure {
+    bool init = true;
+    bool finalize = true;
+    bool programming_interface = true;
+    bool request_settings = true;
+  };
+  Profiling profiling = { false, false, false, false, false};
+  Tuning tuning = Tuning();
+  Infrastructure infrastructure = Infrastructure();
+  
 };
+
+namespace Config {
+#define KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(name, value, depth) \
+template<bool target_value> \
+struct Toggle##name : public std::integral_constant<int, depth >{\
+  void operator()(ToolValidatorConfiguration& config){\
+    config. value = target_value;\
+  }\
+};\
+using Enable##name = Toggle##name<true>;\
+using Disable##name = Toggle##name<false>
+
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Kernels, profiling.kernels, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Fences, profiling.fences, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Allocs, profiling.allocs, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Copies, profiling.copies, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(DualViewOps, profiling.dual_view_ops, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Contexts, tuning.contexts, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(TypeDeclarations, tuning.type_declarations, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(RequestValues, tuning.request_values, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Init, infrastructure.init, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Finalize, infrastructure.finalize, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(ProgrammingInterface, infrastructure.programming_interface, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(RequestSettings, infrastructure.request_settings, 2);
+
+template<bool target_value>
+struct ToggleInfrastructure : public std::integral_constant<int,1> {
+  void operator()(ToolValidatorConfiguration& config) {
+    config.infrastructure = { target_value, target_value, target_value, target_value};
+  }
+};
+
+using EnableInfrastructure = ToggleInfrastructure<true>;
+using DisableInfrastructure = ToggleInfrastructure<false>;
+
+template<bool target_value>
+struct ToggleProfiling : public std::integral_constant<int,1> {
+  void operator()(ToolValidatorConfiguration& config) {
+    config.profiling = { target_value, target_value, target_value, target_value, target_value};
+  }
+};
+
+using EnableProfiling = ToggleProfiling<true>;
+using DisableProfiling = ToggleProfiling<false>;
+
+template<bool target_value>
+struct ToggleTuning : public std::integral_constant<int,1> {
+  void operator()(ToolValidatorConfiguration& config) {
+    config.tuning = { target_value, target_value, target_value};
+  }
+};
+
+using EnableTuning = ToggleTuning<true>;
+using DisableTuning = ToggleTuning<false>;
+
+template<bool target_value>
+struct ToggleAll : public std::integral_constant<int,0> {
+  void operator()(ToolValidatorConfiguration& config) {
+    ToggleProfiling<target_value>{}(config);
+    ToggleTuning<target_value>{}(config);
+    ToggleInfrastructure<target_value>{}(config);
+  }
+};
+
+using EnableAll = ToggleAll<true>;
+using DisableAll = ToggleAll<false>;
+} // namespace Config
+
 /**
  * Needs to stand outside of functions, this is the vector tool callbacks will
  * push events into
@@ -549,7 +647,7 @@ std::vector<EventBasePtr> found_events;
  */
 static uint64_t last_kid;
 /** Subscribes to all of the requested callbacks */
-void listen_tool_events(ToolValidatorConfiguration config) {
+void set_tool_events_impl(ToolValidatorConfiguration& config) {
   Kokkos::Tools::Experimental::pause_tools();  // remove all events
   if (config.profiling.kernels) {
     Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
@@ -595,14 +693,31 @@ void listen_tool_events(ToolValidatorConfiguration config) {
       found_events.push_back(std::make_shared<EndFenceEvent>(k));
     });
   }  // profiling.fences
-     /**
-   if(config.tuning) {
-     // TODO
-   } // if tuning
-   if(config.infrastructure){
-     // TODO
-   } // if infrastructure
-   */
+
+}
+template<int priority>
+void listen_tool_events_impl(std::integral_constant<int, priority>, ToolValidatorConfiguration&){}
+
+template<class Config>
+void invoke_config(ToolValidatorConfiguration& in, Config conf, std::true_type){
+  conf(in);
+}
+template<class Config>
+void invoke_config(ToolValidatorConfiguration&, Config, std::false_type){
+}
+
+template<int priority, class Config, class... Configs>
+void listen_tool_events_impl(std::integral_constant<int, priority> prio, ToolValidatorConfiguration& in, Config conf, Configs... configs){
+  invoke_config(in, conf, std::integral_constant<bool,priority==conf.value>{});
+  listen_tool_events_impl(prio, in, configs...);
+}
+template<class... Configs>
+void listen_tool_events(Configs... confs){
+  ToolValidatorConfiguration conf;
+  listen_tool_events_impl(std::integral_constant<int,0>{} ,conf, confs...);
+  listen_tool_events_impl(std::integral_constant<int,1>{}, conf, confs...);
+  listen_tool_events_impl(std::integral_constant<int,2>{}, conf, confs...);
+  set_tool_events_impl(conf);
 }
 
 /**

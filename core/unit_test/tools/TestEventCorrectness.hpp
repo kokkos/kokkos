@@ -285,7 +285,7 @@ TEST(defaultdevicetype, test_streams) {
 #endif
 TEST(defaultdevicetype, test_new_test_interface) {
   using namespace Kokkos::Test::Tools;
-  listen_tool_events({{true, false}});
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
 
   auto success = validate_event_set(
       [&]() {
@@ -303,7 +303,7 @@ TEST(defaultdevicetype, test_new_test_interface) {
         return MatchDiagnostic{true};
       });
   ASSERT_TRUE(success);
-  listen_tool_events({{false, true}});
+  listen_tool_events(Config::DisableAll(), Config::EnableProfiling(), Config::DisableKernels());
   success = validate_event_set(
       [&]() {
         Kokkos::View<float*> left("left", 5), right("right", 5);
@@ -330,7 +330,7 @@ TEST(defaultdevicetype, test_new_test_interface) {
         return diagnostic;
       });
 
-  listen_tool_events({});
+  listen_tool_events(Config::DisableAll());
 }
 
 }  // namespace Test
