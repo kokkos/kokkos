@@ -102,8 +102,7 @@ struct ExclusiveScanDefaultFunctor {
       update.val        = input.val;
       update.is_initial = false;
     } else {
-      update.val        = update.val + input.val;
-      update.is_initial = false;
+      update.val = update.val + input.val;
     }
   }
 };
@@ -161,8 +160,7 @@ struct TransformExclusiveScanFunctor {
       update.val        = input.val;
       update.is_initial = false;
     } else {
-      update.val        = m_binary_op(update.val, input.val);
-      update.is_initial = false;
+      update.val = m_binary_op(update.val, input.val);
     }
   }
 };
@@ -192,10 +190,9 @@ OutputIteratorType exclusive_scan_custom_op_impl(
 
   // run
   const auto num_elements = last_from - first_from;
-  ::Kokkos::parallel_scan(label,
-                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                          func_type(init_value, first_from, first_dest,
-                                    std::move(bop), unary_op_type()));
+  ::Kokkos::parallel_scan(
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      func_type(init_value, first_from, first_dest, bop, unary_op_type()));
   ex.fence("Kokkos::exclusive_scan_custom_op: fence after operation");
 
   // return
@@ -228,10 +225,9 @@ OutputIteratorType transform_exclusive_scan_impl(
 
   // run
   const auto num_elements = last_from - first_from;
-  ::Kokkos::parallel_scan(label,
-                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                          func_type(init_value, first_from, first_dest,
-                                    std::move(bop), std::move(uop)));
+  ::Kokkos::parallel_scan(
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      func_type(init_value, first_from, first_dest, bop, uop));
   ex.fence("Kokkos::transform_exclusive_scan: fence after operation");
 
   // return

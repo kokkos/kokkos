@@ -54,7 +54,7 @@ namespace Impl {
 template <class ValueType>
 struct StdNumericScanIdentityReferenceUnaryFunctor {
   KOKKOS_FUNCTION
-  const ValueType& operator()(const ValueType& a) const { return a; }
+  constexpr const ValueType& operator()(const ValueType& a) const { return a; }
 };
 
 }  // namespace Impl
