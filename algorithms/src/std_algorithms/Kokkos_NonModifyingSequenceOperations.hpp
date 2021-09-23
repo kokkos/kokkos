@@ -441,7 +441,8 @@ IteratorType find_if_or_not_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
-  ex.fence("Kokkos::find_if_or_not: fence after operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   // decide and return
   const auto r_h =
@@ -581,7 +582,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_for_par_reduce),
       functor_type(first1, first2, reducer, std::move(predicate)), reducer);
-  ex.fence("Kokkos::mismatch: fence after operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   // decide and return
   const auto r_h =
@@ -735,8 +737,8 @@ bool lexicographical_compare_impl(const std::string& label,
 
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, range),
                             func1_t(first1, first2, reducer, comp), reducer);
-  ex.fence(
-      "Kokkos::lexicographical_compare: fence after first reduce operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
@@ -807,7 +809,8 @@ IteratorType adjacent_find_impl(const std::string& label,
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
       func_t(first, reducer, pred), reducer);
-  ex.fence("Kokkos::adjacent_find: fence after operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   const auto r_h =
       ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
@@ -882,7 +885,8 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_reduce(
         label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
-    ex.fence("Kokkos::search: fence after operation");
+
+    // fence not needed since we call create_mirror_view_and_copy below
 
     // decide and return
     const auto r_h =
@@ -941,7 +945,8 @@ IteratorType1 find_first_of_impl(const std::string& label,
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_t(first, s_first, s_last, reducer, pred), reducer);
-  ex.fence("Kokkos::find_first_of: fence after operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   // decide and return
   const auto r_h =
@@ -1023,7 +1028,8 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_reduce(
         label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
-    ex.fence("Kokkos::find_end: fence after operation");
+
+    // fence not needed since we call create_mirror_view_and_copy below
 
     // decide and return
     const auto r_h =

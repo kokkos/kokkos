@@ -242,7 +242,8 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
-  ex.fence("Kokkos::is_partitioned: fence after operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   // decide and return
   const auto r_h =
@@ -295,7 +296,8 @@ IteratorType partition_point_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
-  ex.fence("Kokkos::partition_point: fence after operation");
+
+  // fence not needed since we call create_mirror_view_and_copy below
 
   // decide and return
   const auto r_h =
