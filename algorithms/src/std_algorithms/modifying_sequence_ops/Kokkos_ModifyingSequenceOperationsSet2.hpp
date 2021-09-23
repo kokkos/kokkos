@@ -634,11 +634,11 @@ OutputIterator rotate_copy_impl(const std::string& label,
 // rotate_impl
 // ------------------------------------------
 template <class ExecutionSpace, class IteratorType>
-IteratorType rotate_for_target_in_left_half(const std::string& label,
-                                            const ExecutionSpace& ex,
-                                            IteratorType first,
-                                            IteratorType n_first,
-                                            IteratorType last) {
+IteratorType rotate_for_pivot_in_left_half(const std::string& label,
+                                           const ExecutionSpace& ex,
+                                           IteratorType first,
+                                           IteratorType n_first,
+                                           IteratorType last) {
   /*
     This impl is specific for when the n_first iterator points to
     an element that is before or equal to the middle of the range.
@@ -669,7 +669,7 @@ IteratorType rotate_for_target_in_left_half(const std::string& label,
   // create helper tmp view
   using value_type    = typename IteratorType::value_type;
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
-  tmp_view_type tmp_view("rotate_impl_for_target_in_left_half_impl",
+  tmp_view_type tmp_view("rotate_impl_for_pivot_in_left_half_impl",
                          num_elements_on_right);
   using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
 
@@ -702,11 +702,11 @@ IteratorType rotate_for_target_in_left_half(const std::string& label,
 }
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType rotate_for_target_in_right_half(const std::string& label,
-                                             const ExecutionSpace& ex,
-                                             IteratorType first,
-                                             IteratorType n_first,
-                                             IteratorType last) {
+IteratorType rotate_for_pivot_in_right_half(const std::string& label,
+                                            const ExecutionSpace& ex,
+                                            IteratorType first,
+                                            IteratorType n_first,
+                                            IteratorType last) {
   /*
     This impl is specific for when the n_first iterator points to
     an element that is after the middle of the range.
@@ -737,7 +737,7 @@ IteratorType rotate_for_target_in_right_half(const std::string& label,
   // create helper tmp view
   using value_type    = typename IteratorType::value_type;
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
-  tmp_view_type tmp_view("rotate_impl_for_target_in_left_half_impl",
+  tmp_view_type tmp_view("rotate_impl_for_pivot_in_left_half_impl",
                          num_elements_on_left);
   using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
 
@@ -783,9 +783,9 @@ IteratorType rotate_impl(const std::string& label, const ExecutionSpace& ex,
   const auto num_elements          = KE::distance(first, last);
   const auto n_distance_from_first = KE::distance(first, n_first);
   if (n_distance_from_first <= num_elements / 2) {
-    return rotate_for_target_in_left_half(label, ex, first, n_first, last);
+    return rotate_for_pivot_in_left_half(label, ex, first, n_first, last);
   } else {
-    return rotate_for_target_in_right_half(label, ex, first, n_first, last);
+    return rotate_for_pivot_in_right_half(label, ex, first, n_first, last);
   }
 }
 
@@ -896,6 +896,77 @@ auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
       StdAlgoNegateUnaryPredicateWrapper<value_type, UnaryPredicate>;
   return ::Kokkos::Experimental::copy_if(label, ex, first_from, last_from,
                                          first_dest, pred_wrapper_type(pred));
+}
+
+template <class ExecutionSpace, class IteratorType>
+IteratorType shift_left_impl(const std::string& label, const ExecutionSpace& ex,
+                             IteratorType first, IteratorType last,
+                             typename IteratorType::difference_type n) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::expect_valid_range(first, last);
+  KOKKOS_EXPECTS(n >= 0);
+
+  // handle trivial cases
+  if (n == 0) {
+    return last;
+  }
+
+  if (n >= last - first) {
+    return first;
+  }
+
+  /*
+    Suppose that n = 5, and our [first,last) spans this data:
+
+    | 0  | 1  |  2 | 1  | 2  | 1  | 2  | 2  | 10 | -3 | 1  | -6 | *
+      ^                         				  ^
+    first							 last
+
+    shift_left modifies the range such that we have this data and return:
+    | 1  | 2  | 2  | 10  | -3 | 1  | -6 |   |    |    |    |    | *
+                                          ^
+                                   return it pointing here
+
+
+    In step 1, we create a temporary view with extent = distance(first+n, last)
+    and *move* assign the elements from [first+n, last) to tmp view, such that
+    tmp view becomes:
+
+    | 1  | 2  | 2  | 10  | -3 | 1  | -6 |
+
+    In step 2, we move the elements from tmp view back to range starting at
+    first.
+   */
+
+  namespace KE                     = ::Kokkos::Experimental;
+  const auto num_elements_on_right = KE::distance(first + n, last);
+
+  // create tmp view
+  using value_type    = typename IteratorType::value_type;
+  using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
+  tmp_view_type tmp_view("shift_left_impl", num_elements_on_right);
+  using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
+
+  using index_type = typename IteratorType::difference_type;
+
+  // step 1
+  using step1_func_type =
+      StdMoveFunctor<index_type, IteratorType, tmp_readwrite_iterator_type>;
+  ::Kokkos::parallel_for(
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_on_right),
+      step1_func_type(first + n, begin(tmp_view)));
+
+  // step 2
+  using step2_func_type =
+      StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
+  ::Kokkos::parallel_for(label,
+                         RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
+                         step2_func_type(begin(tmp_view), first));
+
+  ex.fence("Kokkos::rotate: fence after operation");
+
+  return first + (last - first - n);
 }
 
 }  // namespace Impl
@@ -1524,6 +1595,41 @@ auto remove_copy_if(const std::string& label, const ExecutionSpace& ex,
       label, ex, ::Kokkos::Experimental::cbegin(view_from),
       ::Kokkos::Experimental::cend(view_from),
       ::Kokkos::Experimental::begin(view_dest), pred);
+}
+
+// -------------------
+// shift_left
+// -------------------
+template <class ExecutionSpace, class IteratorType>
+IteratorType shift_left(const ExecutionSpace& ex, IteratorType first,
+                        IteratorType last,
+                        typename IteratorType::difference_type n) {
+  return Impl::shift_left_impl("Kokkos::shift_left_iterator_api_default", ex,
+                               first, last, n);
+}
+
+template <class ExecutionSpace, class IteratorType>
+IteratorType shift_left(const std::string& label, const ExecutionSpace& ex,
+                        IteratorType first, IteratorType last,
+                        typename IteratorType::difference_type n) {
+  return Impl::shift_left_impl(label, ex, first, last, n);
+}
+
+template <class ExecutionSpace, class DataType, class... Properties>
+auto shift_left(const ExecutionSpace& ex,
+                const ::Kokkos::View<DataType, Properties...>& view,
+                typename decltype(begin(view))::difference_type n) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  return Impl::shift_left_impl("Kokkos::shift_left_view_api_default", ex,
+                               begin(view), end(view), n);
+}
+
+template <class ExecutionSpace, class DataType, class... Properties>
+auto shift_left(const std::string& label, const ExecutionSpace& ex,
+                const ::Kokkos::View<DataType, Properties...>& view,
+                typename decltype(begin(view))::difference_type n) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  return Impl::shift_left_impl(label, ex, begin(view), end(view), n);
 }
 
 }  // namespace Experimental
