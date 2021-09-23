@@ -220,14 +220,13 @@ void run_all_scenarios() {
                                                         {"medium", 21103},
                                                         {"large", 101513}};
 
-  // shifts MUST be non-negative
-  // it does not matter is shifts are larger than the view,
-  // the algorithm is supposed to handle that case too
+  // a shift value MUST be non-negative but it does not matter
+  // if it is larger than the view, the algorithm is supposed
+  // to handle that case too
   std::vector<std::size_t> shifts = {0, 1, 2, 3, 8, 56, 101, 1003, 101501};
 
   for (const auto& it : scenarios) {
     for (const auto& it2 : shifts) {
-      // for each view case, we shift_left for multiple values
       run_single_scenario<Tag, ValueType>(it, it2);
     }
   }

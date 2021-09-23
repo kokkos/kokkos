@@ -106,10 +106,9 @@ void fill_view(ViewType dest_view, const std::string& name) {
 template <class ForwardIterator>
 ForwardIterator my_std_shift_right(
     ForwardIterator first, ForwardIterator last,
-    typename std::iterator_traits<ForwardIterator>::difference_type n)
-{
-
-  // copied from https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_right.h
+    typename std::iterator_traits<ForwardIterator>::difference_type n) {
+  // copied from
+  // https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_right.h
 
   if (n == 0) {
     return first;
@@ -127,7 +126,7 @@ template <class ViewType, class ResultIt, class ViewHostType>
 void verify_data(ResultIt result_it, ViewType view, ViewHostType data_view_host,
                  std::size_t shift_value) {
   auto std_rit = my_std_shift_right(KE::begin(data_view_host),
-                                   KE::end(data_view_host), shift_value);
+                                    KE::end(data_view_host), shift_value);
 
   // make sure results match
   const auto my_diff  = KE::end(view) - result_it;
@@ -136,11 +135,10 @@ void verify_data(ResultIt result_it, ViewType view, ViewHostType data_view_host,
 
   // check views match
   auto view_h = create_host_space_copy(view);
-  auto it1 = KE::cbegin(view_h);
-  auto it2 = KE::cbegin(data_view_host);
-  for (std::size_t i = 0; i < (std::size_t)my_diff; ++i)
-  {
-    EXPECT_TRUE( it1[i] == it2[i] );
+  auto it1    = KE::cbegin(view_h);
+  auto it2    = KE::cbegin(data_view_host);
+  for (std::size_t i = 0; i < (std::size_t)my_diff; ++i) {
+    EXPECT_TRUE(it1[i] == it2[i]);
     // std::cout << "i= " << i << " "
     // 	      << "mine: " << it1[i] << " "
     // 	      << "std:  " << it2[i]
@@ -168,26 +166,30 @@ void run_single_scenario(const InfoType& scenario_info,
   print_scenario_details<Tag, ValueType>(name, shift_value);
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
+    auto view =
+        create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
     // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit = KE::shift_right(exespace(), KE::begin(view), KE::end(view), shift_value);
+    auto rit    = KE::shift_right(exespace(), KE::begin(view), KE::end(view),
+                               shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
+    auto view =
+        create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
     // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
     auto rit    = KE::shift_right("label", exespace(), KE::begin(view),
-                              KE::end(view), shift_value);
+                               KE::end(view), shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
+    auto view =
+        create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
     // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
@@ -196,7 +198,8 @@ void run_single_scenario(const InfoType& scenario_info,
   }
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
+    auto view =
+        create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
     // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
@@ -216,19 +219,18 @@ void run_all_scenarios() {
                                                         {"two-elements-b", 2},
                                                         {"three-elements-a", 3},
                                                         {"three-elements-b", 3},
-						        {"small-a", 11},
+                                                        {"small-a", 11},
                                                         {"small-b", 13},
                                                         {"medium", 21103},
                                                         {"large", 101513}};
 
-  // shifts MUST be non-negative
-  // it does not matter is shifts are larger than the view,
-  // the algorithm is supposed to handle that case too
+  // a shift value MUST be non-negative but it does not matter
+  // if it is larger than the view, the algorithm is supposed
+  // to handle that case too
   std::vector<std::size_t> shifts = {0, 1, 2, 3, 8, 56, 101, 1003, 101501};
 
   for (const auto& it : scenarios) {
     for (const auto& it2 : shifts) {
-      // for each view case, we shift_right for multiple values
       run_single_scenario<Tag, ValueType>(it, it2);
     }
   }
