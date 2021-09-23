@@ -74,7 +74,8 @@ hipStream_t get_deep_copy_stream() {
 }  // namespace
 
 void DeepCopyHIP(void* dst, void const* src, size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
+  hipStream_t s = get_deep_copy_stream();
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
 }
 
 void DeepCopyAsyncHIP(const Kokkos::Experimental::HIP& instance, void* dst,
@@ -86,13 +87,6 @@ void DeepCopyAsyncHIP(const Kokkos::Experimental::HIP& instance, void* dst,
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
   hipStream_t s = get_deep_copy_stream();
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::HIP>(
-      "Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy "
-      "stream",
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          DeepCopyResourceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(s)); });
 }
 
 }  // namespace Impl
