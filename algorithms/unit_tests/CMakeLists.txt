@@ -39,62 +39,63 @@ SET(ALGORITHM UnitTestMain.cpp)
 LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsCommon2.cpp
 
-  # TestStdReducers.cpp
-  # TestStdAlgorithmsConstraints.cpp
-  # TestRandomAccessIterator.cpp
+  TestStdReducers.cpp
+  TestStdAlgorithmsConstraints.cpp
+  TestRandomAccessIterator.cpp
 
-  # #--- min,max ---
-  # TestStdAlgorithmsMinMaxOps.cpp
-  # TestStdAlgorithmsMinMaxElementOps.cpp
+  #--- min,max ---
+  TestStdAlgorithmsMinMaxOps.cpp
+  TestStdAlgorithmsMinMaxElementOps.cpp
 
-  # #--- non mod sequence ----
-  # TestStdAlgorithmsNonModSeqOps.cpp
-  # TestStdAlgorithmsLexicographicalCompare.cpp
-  # TestStdAlgorithmsForEach.cpp
-  # TestStdAlgorithmsFind.cpp
-  # TestStdAlgorithmsCount.cpp
-  # TestStdAlgorithmsEqual.cpp
-  # TestStdAlgorithmsAllAnyNoneOf.cpp
-  # TestStdAlgorithmsAdjacentFind.cpp
-  # TestStdAlgorithmsSearch.cpp
-  # TestStdAlgorithmsFindFirstOf.cpp
-  # TestStdAlgorithmsFindEnd.cpp
-  # TestStdAlgorithmsMismatch.cpp
+  #--- non mod sequence ----
+  TestStdAlgorithmsNonModSeqOps.cpp
+  TestStdAlgorithmsLexicographicalCompare.cpp
+  TestStdAlgorithmsForEach.cpp
+  TestStdAlgorithmsFind.cpp
+  TestStdAlgorithmsCount.cpp
+  TestStdAlgorithmsEqual.cpp
+  TestStdAlgorithmsAllAnyNoneOf.cpp
+  TestStdAlgorithmsAdjacentFind.cpp
+  TestStdAlgorithmsSearch.cpp
+  TestStdAlgorithmsFindFirstOf.cpp
+  TestStdAlgorithmsFindEnd.cpp
+  TestStdAlgorithmsMismatch.cpp
 
   #--- mod ----
-  # TestStdAlgorithmsModOps.cpp
-  # TestStdAlgorithmsModSeqOps.cpp
-  # TestStdAlgorithmsReplaceIf.cpp
-  # TestStdAlgorithmsReplace.cpp
-  # TestStdAlgorithmsReplaceCopy.cpp
-  # TestStdAlgorithmsReplaceCopyIf.cpp
-  # TestStdAlgorithmsCopyIf.cpp
-  # TestStdAlgorithmsUnique.cpp
-  # TestStdAlgorithmsUniqueCopy.cpp
-  # TestStdAlgorithmsRemoveIf.cpp
-  # TestStdAlgorithmsRemove.cpp
-  # TestStdAlgorithmsRemoveCopy.cpp
-  # TestStdAlgorithmsRemoveCopyIf.cpp
-  # TestStdAlgorithmsRotate.cpp
-  # TestStdAlgorithmsRotateCopy.cpp
-  # TestStdAlgorithmsReverse.cpp
+  TestStdAlgorithmsModOps.cpp
+  TestStdAlgorithmsModSeqOps.cpp
+  TestStdAlgorithmsReplaceIf.cpp
+  TestStdAlgorithmsReplace.cpp
+  TestStdAlgorithmsReplaceCopy.cpp
+  TestStdAlgorithmsReplaceCopyIf.cpp
+  TestStdAlgorithmsCopyIf.cpp
+  TestStdAlgorithmsUnique.cpp
+  TestStdAlgorithmsUniqueCopy.cpp
+  TestStdAlgorithmsRemoveIf.cpp
+  TestStdAlgorithmsRemove.cpp
+  TestStdAlgorithmsRemoveCopy.cpp
+  TestStdAlgorithmsRemoveCopyIf.cpp
+  TestStdAlgorithmsRotate.cpp
+  TestStdAlgorithmsRotateCopy.cpp
+  TestStdAlgorithmsReverse.cpp
   TestStdAlgorithmsShiftLeft.cpp
+  TestStdAlgorithmsShiftRight.cpp
 
-  # #--- sorting ----
-  # TestStdAlgorithmsIsSorted.cpp
-  # TestStdAlgorithmsIsSortedUntil.cpp
+  #--- sorting ----
+  TestStdAlgorithmsIsSorted.cpp
+  TestStdAlgorithmsIsSortedUntil.cpp
 
-  # #--- partitioning ----
-  # TestStdAlgorithmsPartitioningOps.cpp
-  # TestStdAlgorithmsPartitionCopy.cpp
+  #--- partitioning ----
+  TestStdAlgorithmsPartitioningOps.cpp
+  TestStdAlgorithmsPartitionCopy.cpp
 
-  # #--- numerics ----
-  # TestStdAlgorithmsNumerics.cpp
-  # TestStdAlgorithmsAdjacentDifference.cpp
-  # TestStdAlgorithmsExclusiveScan.cpp
-  # TestStdAlgorithmsTransformExclusiveScan.cpp
-  # TestStdAlgorithmsInclusiveScan.cpp
-  # TestStdAlgorithmsTransformInclusiveScan.cpp
+  #--- numerics ----
+  TestStdAlgorithmsNumerics.cpp
+  TestStdAlgorithmsAdjacentDifference.cpp
+  TestStdAlgorithmsExclusiveScan.cpp
+  TestStdAlgorithmsTransformExclusiveScan.cpp
+  TestStdAlgorithmsInclusiveScan.cpp
+  TestStdAlgorithmsTransformInclusiveScan.cpp
 )
 
 IF(Kokkos_ENABLE_OPENMP)

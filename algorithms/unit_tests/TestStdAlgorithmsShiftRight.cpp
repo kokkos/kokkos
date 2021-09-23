@@ -50,7 +50,7 @@
 
 namespace Test {
 namespace stdalgos {
-namespace ShiftLeft {
+namespace ShiftRight {
 
 namespace KE = Kokkos::Experimental;
 
@@ -104,44 +104,46 @@ void fill_view(ViewType dest_view, const std::string& name) {
 }
 
 template <class ForwardIterator>
-ForwardIterator my_std_shift_left(
+ForwardIterator my_std_shift_right(
     ForwardIterator first, ForwardIterator last,
-    typename std::iterator_traits<ForwardIterator>::difference_type n) {
-  // copied from
-  // https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_left.h
+    typename std::iterator_traits<ForwardIterator>::difference_type n)
+{
+
+  // copied from https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_right.h
 
   if (n == 0) {
-    return last;
+    return first;
   }
 
-  ForwardIterator m = first;
-  for (; n > 0; --n) {
-    if (m == last) {
-      return first;
-    }
-    ++m;
+  decltype(n) d = last - first;
+  if (n >= d) {
+    return last;
   }
-  return std::move(m, last, first);
+  ForwardIterator m = first + (d - n);
+  return std::move_backward(first, m, last);
 }
 
 template <class ViewType, class ResultIt, class ViewHostType>
 void verify_data(ResultIt result_it, ViewType view, ViewHostType data_view_host,
                  std::size_t shift_value) {
-  auto std_rit = my_std_shift_left(KE::begin(data_view_host),
+  auto std_rit = my_std_shift_right(KE::begin(data_view_host),
                                    KE::end(data_view_host), shift_value);
 
   // make sure results match
-  const auto my_diff  = result_it - KE::begin(view);
-  const auto std_diff = std_rit - KE::begin(data_view_host);
+  const auto my_diff  = KE::end(view) - result_it;
+  const auto std_diff = KE::end(data_view_host) - std_rit;
   EXPECT_TRUE(my_diff == std_diff);
 
   // check views match
   auto view_h = create_host_space_copy(view);
-  for (std::size_t i = 0; i < (std::size_t)my_diff; ++i) {
-    EXPECT_TRUE(view_h(i) == data_view_host[i]);
+  auto it1 = KE::cbegin(view_h);
+  auto it2 = KE::cbegin(data_view_host);
+  for (std::size_t i = 0; i < (std::size_t)my_diff; ++i)
+  {
+    EXPECT_TRUE( it1[i] == it2[i] );
     // std::cout << "i= " << i << " "
-    // 	      << "mine: " << view_h(i) << " "
-    // 	      << "std: " << data_view_host(i)
+    // 	      << "mine: " << it1[i] << " "
+    // 	      << "std:  " << it2[i]
     // 	      << '\n';
   }
 }
@@ -151,7 +153,7 @@ std::string value_type_to_string(double) { return "double"; }
 
 template <class Tag, class ValueType>
 void print_scenario_details(const std::string& name, std::size_t shift_value) {
-  std::cout << "shift_left: "
+  std::cout << "shift_right: "
             << " by " << shift_value << ", " << name << ", "
             << view_tag_to_string(Tag{}) << ", "
             << value_type_to_string(ValueType()) << std::endl;
@@ -166,40 +168,39 @@ void run_single_scenario(const InfoType& scenario_info,
   print_scenario_details<Tag, ValueType>(name, shift_value);
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_left_data_view");
+    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
-    // create host copy BEFORE shift_left or view will be modified
+    // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit =
-        KE::shift_left(exespace(), KE::begin(view), KE::end(view), shift_value);
+    auto rit = KE::shift_right(exespace(), KE::begin(view), KE::end(view), shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_left_data_view");
+    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
-    // create host copy BEFORE shift_left or view will be modified
+    // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit    = KE::shift_left("label", exespace(), KE::begin(view),
+    auto rit    = KE::shift_right("label", exespace(), KE::begin(view),
                               KE::end(view), shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_left_data_view");
+    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
-    // create host copy BEFORE shift_left or view will be modified
+    // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit    = KE::shift_left(exespace(), view, shift_value);
+    auto rit    = KE::shift_right(exespace(), view, shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
   {
-    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_left_data_view");
+    auto view = create_view<ValueType>(Tag{}, view_ext, "shift_right_data_view");
     fill_view(view, name);
-    // create host copy BEFORE shift_left or view will be modified
+    // create host copy BEFORE shift_right or view will be modified
     auto view_h = create_host_space_copy(view);
-    auto rit    = KE::shift_left("label", exespace(), view, shift_value);
+    auto rit    = KE::shift_right("label", exespace(), view, shift_value);
     verify_data(rit, view, view_h, shift_value);
   }
 
@@ -215,7 +216,7 @@ void run_all_scenarios() {
                                                         {"two-elements-b", 2},
                                                         {"three-elements-a", 3},
                                                         {"three-elements-b", 3},
-                                                        {"small-a", 11},
+						        {"small-a", 11},
                                                         {"small-b", 13},
                                                         {"medium", 21103},
                                                         {"large", 101513}};
@@ -227,19 +228,19 @@ void run_all_scenarios() {
 
   for (const auto& it : scenarios) {
     for (const auto& it2 : shifts) {
-      // for each view case, we shift_left for multiple values
+      // for each view case, we shift_right for multiple values
       run_single_scenario<Tag, ValueType>(it, it2);
     }
   }
 }
 
-TEST(std_algorithms_mod_seq_ops, shift_left) {
+TEST(std_algorithms_mod_seq_ops, shift_right) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace ShiftLeft
+}  // namespace ShiftRight
 }  // namespace stdalgos
 }  // namespace Test
