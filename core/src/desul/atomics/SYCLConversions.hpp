@@ -63,12 +63,35 @@ struct DesulToSYCLMemoryScope<MemoryScopeSystem> {
   static constexpr sycl_memory_scope value = sycl_memory_scope::system;
 };
 
+// NOTE valid atomic address spaces are
+//   * access::address_space::global_space
+//   * access::address_space::local_space
+//   * access::address_space::global_device_space
+// below is an attempt to map memory scope to an address space
+template <class MemoryScope>
+struct DesulMemoryScopeToSYCLAdressSpace;
+template <>
+struct DesulMemoryScopeToSYCLAdressSpace<MemoryScopeCore> {
+  static constexpr sycl::access::address_space value =
+      sycl::access::address_space::local_space;
+};
+template <>
+struct DesulMemoryScopeToSYCLAdressSpace<MemoryScopeDevice> {
+  static constexpr sycl::access::address_space value =
+      sycl::access::address_space::global_device_space;
+};
+template <>
+struct DesulMemoryScopeToSYCLAdressSpace<MemoryScopeSystem> {
+  static constexpr sycl::access::address_space value =
+      sycl::access::address_space::global_space;
+};
+
 template <class T, class MemoryOrder, class MemoryScope>
-using sycl_atomic_ref =
-    sycl_sync_and_atomics::atomic_ref<T,
-                                      DesulToSYCLMemoryOrder<MemoryOrder>::value,
-                                      DesulToSYCLMemoryScope<MemoryScope>::value,
-                                      sycl::access::address_space::global_device_space>;
+using sycl_atomic_ref = sycl_sync_and_atomics::atomic_ref<
+    T,
+    DesulToSYCLMemoryOrder<MemoryOrder>::value,
+    DesulToSYCLMemoryScope<MemoryScope>::value,
+    DesulMemoryScopeToSYCLAdressSpace<MemoryScope>::value>;
 
 }  // namespace Impl
 }  // namespace desul
