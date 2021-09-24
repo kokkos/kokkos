@@ -106,6 +106,11 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   cudaStream_t s = cuda_get_deep_copy_stream();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
+  Impl::cuda_stream_synchronize(
+      s,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          DeepCopyResourceSynchronization,
+      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync");
 }
 
 }  // namespace Impl
