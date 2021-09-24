@@ -34,11 +34,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef SYCL_LANGUAGE_VERSION
 #define DESUL_HAVE_SYCL_ATOMICS
-#ifdef __clang__
-#define DESUL_SYCL_NAMESPACE sycl::ONEAPI
-#else
-#define DESUL_SYCL_NAMESPACE sycl
-#endif
 #endif
 
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || defined(__SYCL_DEVICE_ONLY__)

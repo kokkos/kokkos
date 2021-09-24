@@ -31,25 +31,23 @@ template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_add(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
-    T, 
-    DesulToSYCLMemoryOrder<MemoryOrder>::value, 
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,  
-    sycl::access::address_space::global_device_space> 
+  Impl::sycl_atomic_ref<
+    T,
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_add(val);
 }
 
-// Atomic Sub 
+// Atomic Sub
 template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_sub(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
+  Impl::sycl_atomic_ref<
     T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,
-    sycl::access::address_space::global_device_space>
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_sub(val);
 }
@@ -73,11 +71,10 @@ template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_max(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
+  Impl::sycl_atomic_ref<
     T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,
-    sycl::access::address_space::global_device_space>
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_max(val);
 }
@@ -87,11 +84,10 @@ template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_min(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
+  Impl::sycl_atomic_ref<
     T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,
-    sycl::access::address_space::global_device_space>
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_min(val);
 }
@@ -101,11 +97,10 @@ template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_and(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
+  Impl::sycl_atomic_ref<
     T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,
-    sycl::access::address_space::global_device_space>
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_and(val);
 }
@@ -115,11 +110,10 @@ template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_xor(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
+  Impl::sycl_atomic_ref<
     T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,
-    sycl::access::address_space::global_device_space>
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_xor(val);
 }
@@ -129,11 +123,10 @@ template<class T, class MemoryOrder/*, class MemoryScope*/>
 inline
 typename std::enable_if<Impl::is_sycl_atomic_type<T>::value,T>::type
 atomic_fetch_or(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
-  DESUL_SYCL_NAMESPACE::atomic_ref<
+  Impl::sycl_atomic_ref<
     T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScopeDevice>::value,
-    sycl::access::address_space::global_device_space>
+    MemoryOrder,
+    MemoryScopeDevice>
   dest_ref(*dest);
   return dest_ref.fetch_or(val);
 }
