@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <TestStdAlgorithmsCommon2.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
 #include <algorithm>

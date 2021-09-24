@@ -37,7 +37,7 @@ ENDIF()
 SET(ALGORITHM UnitTestMain.cpp)
 
 LIST(APPEND ALGORITHM_SOURCES
-  TestStdAlgorithmsCommon2.cpp
+  TestStdAlgorithmsCommon.cpp
 
   TestStdReducers.cpp
   TestStdAlgorithmsConstraints.cpp

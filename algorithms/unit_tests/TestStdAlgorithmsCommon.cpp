@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <TestStdAlgorithmsCommon2.hpp>
+#include <TestStdAlgorithmsCommon.hpp>
 
 namespace Test {
 namespace stdalgos {

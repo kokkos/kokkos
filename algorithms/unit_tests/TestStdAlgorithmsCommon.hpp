@@ -47,40 +47,85 @@
 
 #include <gtest/gtest.h>
 #include <TestStdAlgorithmsHelperFunctors.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <numeric>
+#include <random>
 
 namespace Test {
 namespace stdalgos {
 
-using value_type = double;
-using exespace   = Kokkos::DefaultExecutionSpace;
+struct DynamicTag {};
+struct StridedTwoTag {};
+struct StridedThreeTag {};
 
-struct std_algorithms_test : public ::testing::Test {
-  static constexpr size_t extent = 10;
+const std::map<std::string, std::size_t> default_scenarios = {
+    {"empty", 0},          {"one-element", 1}, {"two-elements-a", 2},
+    {"two-elements-b", 2}, {"small-a", 9},     {"small-b", 13},
+    {"medium-a", 1003},    {"medium-b", 1003}, {"large-a", 101513},
+    {"large-b", 101513}};
 
-  using static_view_t = Kokkos::View<value_type[extent]>;
-  static_view_t m_static_view{"std-algo-test-1D-contiguous-view-static"};
+// see cpp file for these functions
+std::string view_tag_to_string(DynamicTag);
+std::string view_tag_to_string(StridedTwoTag);
+std::string view_tag_to_string(StridedThreeTag);
 
-  using dyn_view_t = Kokkos::View<value_type*>;
-  dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic", extent};
+template <class ValueType>
+auto create_view(DynamicTag, std::size_t ext, const std::string label) {
+  using view_t = Kokkos::View<ValueType*>;
+  view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext};
+  return view;
+}
 
-  using strided_view_t = Kokkos::View<value_type*, Kokkos::LayoutStride>;
-  Kokkos::LayoutStride layout{extent, 2};
-  strided_view_t m_strided_view{"std-algo-test-1D-strided-view", layout};
+template <class ValueType>
+auto create_view(StridedTwoTag, std::size_t ext, const std::string label) {
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
+  Kokkos::LayoutStride layout{ext, 2};
+  view_t view{label + "_" + view_tag_to_string(DynamicTag{}), layout};
+  return view;
+}
 
-  using view_host_space_t = Kokkos::View<value_type[10], Kokkos::HostSpace>;
+template <class ValueType>
+auto create_view(StridedThreeTag, std::size_t ext, const std::string label) {
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
+  Kokkos::LayoutStride layout{ext, 3};
+  view_t view{label + "_" + view_tag_to_string(DynamicTag{}), layout};
+  return view;
+}
 
-  template <class ViewFromType>
-  void copyInputViewToFixtureViews(ViewFromType view) {
-    CopyFunctor<ViewFromType, static_view_t> F1(view, m_static_view);
-    Kokkos::parallel_for("_std_algo_copy1", view.extent(0), F1);
+template <class ViewType>
+auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
+  const std::size_t ext      = view.extent(0);
+  using view_value_type      = typename ViewType::value_type;
+  using view_exespace        = typename ViewType::execution_space;
+  using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
+  view_deep_copyable_t view_dc("view_dc", ext);
+  return view_dc;
+}
 
-    CopyFunctor<ViewFromType, dyn_view_t> F2(view, m_dynamic_view);
-    Kokkos::parallel_for("_std_algo_copy2", view.extent(0), F2);
+template <class ViewType>
+auto create_deep_copyable_compatible_clone(ViewType view) {
+  auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
+  using view_dc_t = decltype(view_dc);
+  CopyFunctor<ViewType, view_dc_t> F1(view, view_dc);
+  Kokkos::parallel_for("copy", view.extent(0), F1);
+  return view_dc;
+}
 
-    CopyFunctor<ViewFromType, strided_view_t> F3(view, m_strided_view);
-    Kokkos::parallel_for("_std_algo_copy3", view.extent(0), F3);
-  }
-};
+template <class ViewType>
+auto create_host_space_copy(ViewType view) {
+  auto view_dc = create_deep_copyable_compatible_clone(view);
+  return create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
+}
+
+// fill the views with sequentially increasing values
+template <class ViewType, class ViewHostType>
+void fill_views_inc(ViewType view, ViewHostType host_view) {
+  namespace KE = Kokkos::Experimental;
+
+  Kokkos::parallel_for(view.extent(0), AssignIndexFunctor<ViewType>(view));
+  std::iota(KE::begin(host_view), KE::end(host_view), 0);
+  // compare_views(expected, view);
+}
 
 template <class ValueType, class ViewType>
 std::enable_if_t<!std::is_same<typename ViewType::traits::array_layout,
@@ -166,6 +211,42 @@ void fill_zero(ViewType1 a, ViewType2 b) {
   fill_zero(a);
   fill_zero(b);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// helpers for testing small views (extent = 10)
+// prefer `default_scenarios` map for creating new tests
+using value_type = double;
+using exespace   = Kokkos::DefaultExecutionSpace;
+
+struct std_algorithms_test : public ::testing::Test {
+  static constexpr size_t extent = 10;
+
+  using static_view_t = Kokkos::View<value_type[extent]>;
+  static_view_t m_static_view{"std-algo-test-1D-contiguous-view-static"};
+
+  using dyn_view_t = Kokkos::View<value_type*>;
+  dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic", extent};
+
+  using strided_view_t = Kokkos::View<value_type*, Kokkos::LayoutStride>;
+  Kokkos::LayoutStride layout{extent, 2};
+  strided_view_t m_strided_view{"std-algo-test-1D-strided-view", layout};
+
+  using view_host_space_t = Kokkos::View<value_type[10], Kokkos::HostSpace>;
+
+  template <class ViewFromType>
+  void copyInputViewToFixtureViews(ViewFromType view) {
+    CopyFunctor<ViewFromType, static_view_t> F1(view, m_static_view);
+    Kokkos::parallel_for("_std_algo_copy1", view.extent(0), F1);
+
+    CopyFunctor<ViewFromType, dyn_view_t> F2(view, m_dynamic_view);
+    Kokkos::parallel_for("_std_algo_copy2", view.extent(0), F2);
+
+    CopyFunctor<ViewFromType, strided_view_t> F3(view, m_strided_view);
+    Kokkos::parallel_for("_std_algo_copy3", view.extent(0), F3);
+  }
+};
 
 }  // namespace stdalgos
 }  // namespace Test

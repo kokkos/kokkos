@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <TestStdAlgorithmsCommon2.hpp>
+#include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_ModifyingOperations.hpp>
 
 namespace Test {
