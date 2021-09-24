@@ -335,18 +335,8 @@ struct DeepCopy<
     DeepCopyHIP(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
-                  size_t n) {
+  inline DeepCopy(const ExecutionSpace&, void* dst, const void* src, size_t n) {
     DeepCopyAsyncHIP(dst, src, n);
-  }
-
- private:
-  static const std::string& fence_string() {
-    static const std::string string =
-        std::string("Kokkos::Impl::DeepCopy<") + MemSpace1::name() + "Space, " +
-        MemSpace2::name() +
-        "Space, ExecutionSpace>::DeepCopy: fence before copy";
-    return string;
   }
 };
 
@@ -360,17 +350,8 @@ struct DeepCopy<
     DeepCopyHIP(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
-                  size_t n) {
+  inline DeepCopy(const ExecutionSpace&, void* dst, const void* src, size_t n) {
     DeepCopyAsyncHIP(dst, src, n);
-  }
-
- private:
-  static const std::string& fence_string() {
-    static const std::string string =
-        std::string("Kokkos::Impl::DeepCopy<") + MemSpace::name() +
-        "Space, HostSpace, ExecutionSpace>::DeepCopy: fence before copy";
-    return string;
   }
 };
 
@@ -384,17 +365,8 @@ struct DeepCopy<
     DeepCopyHIP(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* dst, const void* src,
-                  size_t n) {
+  inline DeepCopy(const ExecutionSpace&, void* dst, const void* src, size_t n) {
     DeepCopyAsyncHIP(dst, src, n);
-  }
-
- private:
-  static const std::string& fence_string() {
-    static const std::string string =
-        std::string("Kokkos::Impl::DeepCopy<HostSpace, ") + MemSpace::name() +
-        "Space, ExecutionSpace>::DeepCopy: fence before copy";
-    return string;
   }
 };
 }  // namespace Impl
