@@ -268,14 +268,13 @@ TEST(defaultdevicetype, test_streams) {
     found_payloads.erase(
         std::remove_if(found_payloads.begin(), found_payloads.end(),
                        [&](const auto& entry) {
-                         return (
-                             entry.name.find("Fence on space initialization") !=
-                             std::string::npos);
+                         return (entry.name.find("Unnamed Instance Fence") ==
+                                 std::string::npos);
                        }),
         found_payloads.end());
-    ASSERT_TRUE(found_payloads[0].dev_id != found_payloads[1].dev_id);
-    ASSERT_TRUE(found_payloads[2].dev_id != found_payloads[1].dev_id);
-    ASSERT_TRUE(found_payloads[2].dev_id != found_payloads[0].dev_id);
+    ASSERT_NE(found_payloads[0].dev_id, found_payloads[1].dev_id);
+    ASSERT_NE(found_payloads[2].dev_id, found_payloads[1].dev_id);
+    ASSERT_NE(found_payloads[2].dev_id, found_payloads[0].dev_id);
   });
 }
 
