@@ -28,7 +28,10 @@ jobs:
             cmake_build_type: 'Debug'
             openmp: 'ON'
     runs-on: ubuntu-latest
-    container: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
+    container:
+      image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
+      # see https://github.com/actions/virtual-environments/issues/3812
+      options: --security-opt seccomp=unconfined
     steps:
       - name: Checkout code
         uses: actions/checkout@v2.2.0
