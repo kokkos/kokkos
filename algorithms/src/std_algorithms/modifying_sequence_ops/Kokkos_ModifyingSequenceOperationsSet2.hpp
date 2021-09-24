@@ -287,7 +287,7 @@ OutputIterator unique_copy_impl(const std::string& label,
   Impl::expect_valid_range(first, last);
 
   // branch for trivial vs non trivial case
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   if (num_elements == 0) {
     return d_first;
   } else if (num_elements == 1) {
@@ -350,7 +350,7 @@ void reverse_impl(const std::string& label, const ExecutionSpace& ex,
   // run
   if (last >= first + 2) {
     // only need half
-    const auto num_elements = (last - first) / 2;
+    const auto num_elements = Kokkos::Experimental::distance(first, last) / 2;
     ::Kokkos::parallel_for(label,
                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                            func_t(first, last));
@@ -376,7 +376,7 @@ OutputIterator reverse_copy_impl(const std::string& label,
       StdReverseCopyFunctor<index_type, InputIterator, OutputIterator>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(last, d_first));
@@ -403,7 +403,7 @@ OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
   using func_t     = StdMoveFunctor<index_type, InputIterator, OutputIterator>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, d_first));
@@ -431,7 +431,7 @@ IteratorType2 move_backward_impl(const std::string& label,
       StdMoveBackwardFunctor<index_type, IteratorType1, IteratorType2>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(last, d_last));
@@ -479,7 +479,7 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   if (num_elements == 0) {
     return first;
   } else if (num_elements == 1) {
@@ -619,7 +619,7 @@ OutputIterator rotate_copy_impl(const std::string& label,
       StdRotateCopyFunctor<index_type, InputIterator, OutputIterator>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_type(first, last, n_first, d_first));
@@ -814,7 +814,8 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
     // note that the elements to remove are those that meet the predicate
     const auto remove_count =
         ::Kokkos::Experimental::count_if(ex, first, last, pred);
-    const auto keep_count = (last - first - remove_count);
+    const auto keep_count =
+        Kokkos::Experimental::distance(first, last) - remove_count;
 
     // create helper tmp view
     using value_type    = typename IteratorType::value_type;
@@ -829,7 +830,7 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
                                                 tmp_readwrite_iterator_type,
                                                 UnaryPredicateType>;
 
-    const auto scan_num_elements = last - first;
+    const auto scan_num_elements = Kokkos::Experimental::distance(first, last);
     index_type scan_count        = 0;
     ::Kokkos::parallel_scan(
         label, RangePolicy<ExecutionSpace>(ex, 0, scan_num_elements),
@@ -912,7 +913,7 @@ IteratorType shift_left_impl(const std::string& label, const ExecutionSpace& ex,
     return last;
   }
 
-  if (n >= last - first) {
+  if (n >= Kokkos::Experimental::distance(first, last)) {
     return first;
   }
 
@@ -971,7 +972,7 @@ IteratorType shift_left_impl(const std::string& label, const ExecutionSpace& ex,
 
   ex.fence("Kokkos::shift_left: fence after operation");
 
-  return first + (last - first - n);
+  return last - n;
 }
 
 template <class ExecutionSpace, class IteratorType>
@@ -989,7 +990,7 @@ IteratorType shift_right_impl(const std::string& label,
     return first;
   }
 
-  if (n >= last - first) {
+  if (n >= Kokkos::Experimental::distance(first, last)) {
     return last;
   }
 

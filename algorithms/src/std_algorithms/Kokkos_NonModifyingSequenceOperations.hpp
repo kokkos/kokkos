@@ -437,7 +437,7 @@ IteratorType find_if_or_not_impl(const std::string& label,
   // run
   result_view_type result("Kokkos::find_if_impl_result_view");
   reducer_type reducer(result);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
@@ -481,7 +481,7 @@ UnaryFunctorType for_each_impl(const std::string& label,
   Impl::expect_valid_range(first, last);
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
@@ -529,7 +529,7 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
   using func_t = StdCountIfFunctor<IteratorType, Predicate>;
 
   // run
-  const auto num_elements                      = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   typename IteratorType::difference_type count = 0;
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
@@ -789,7 +789,7 @@ IteratorType adjacent_find_impl(const std::string& label,
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
 
   if (num_elements <= 1) {
     return last;
@@ -941,7 +941,7 @@ IteratorType1 find_first_of_impl(const std::string& label,
   // run
   result_view_type result("Kokkos::find_first_of_impl_result");
   reducer_type reducer(result);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_t(first, s_first, s_last, reducer, pred), reducer);

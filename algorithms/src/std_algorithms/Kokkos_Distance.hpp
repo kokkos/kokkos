@@ -52,8 +52,8 @@ namespace Kokkos {
 namespace Experimental {
 
 template <class IteratorType>
-KOKKOS_FUNCTION constexpr typename IteratorType::difference_type distance(
-    IteratorType first, IteratorType last) {
+KOKKOS_INLINE_FUNCTION constexpr typename IteratorType::difference_type
+distance(IteratorType first, IteratorType last) {
   static_assert(
       ::Kokkos::Experimental::Impl::are_random_access_iterators<
           IteratorType>::value,

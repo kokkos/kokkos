@@ -123,7 +123,7 @@ IteratorType is_sorted_until_impl(const std::string& label,
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
 
   // trivial case
   if (num_elements <= 1) {
@@ -187,7 +187,7 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   if (num_elements <= 1) {
     return true;
   }

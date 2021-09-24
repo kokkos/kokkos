@@ -306,7 +306,7 @@ OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
   using func_t     = StdCopyFunctor<index_type, InputIterator, OutputIterator>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, d_first));
@@ -354,7 +354,7 @@ IteratorType2 copy_backward_impl(const std::string& label,
       StdCopyBackwardFunctor<index_type, IteratorType1, IteratorType2>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(last, d_last));
@@ -408,7 +408,7 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
                                        OutputIterator, PredicateType>;
 
     // run
-    const auto num_elements = last - first;
+    const auto num_elements = Kokkos::Experimental::distance(first, last);
     index_type count        = 0;
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
@@ -431,7 +431,7 @@ void fill_impl(const std::string& label, const ExecutionSpace& ex,
   Impl::expect_valid_range(first, last);
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          StdFillFunctor<IteratorType, T>(first, value));
@@ -525,7 +525,7 @@ void generate_impl(const std::string& label, const ExecutionSpace& ex,
   using func_t = StdGenerateFunctor<IteratorType, Generator>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, g));
@@ -559,7 +559,7 @@ void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
   using func_t = StdReplaceIfFunctor<IteratorType, PredicateType, ValueType>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, std::move(pred), new_value));
@@ -581,7 +581,7 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
   using func_t = StdReplaceFunctor<IteratorType, ValueType>;
 
   // run
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          func_t(first, old_value, new_value));

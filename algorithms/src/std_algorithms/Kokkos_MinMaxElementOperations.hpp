@@ -48,6 +48,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_BeginEnd.hpp"
 #include "Kokkos_Constraints.hpp"
+#include "Kokkos_Distance.hpp"
 #include "Kokkos_ModifyingOperations.hpp"
 
 namespace Kokkos {
@@ -118,7 +119,7 @@ IteratorType min_or_max_element_impl(const std::string& label,
   // run
   result_view_type result("min_or_max_elem_impl_result");
   reducer_type reducer(result, std::forward<Args>(args)...);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer), reducer);
@@ -158,7 +159,7 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
   // run
   result_view_type result("minmax_elem_impl_result");
   reducer_type reducer(result, std::forward<Args>(args)...);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer), reducer);

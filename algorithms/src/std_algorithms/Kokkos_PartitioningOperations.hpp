@@ -238,7 +238,7 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   // run
   result_view_type result("is_partitioned_impl_result_view");
   reducer_type reducer(result);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
@@ -292,7 +292,7 @@ IteratorType partition_point_impl(const std::string& label,
   // run
   result_view_type result("partition_point_impl_result_view");
   reducer_type reducer(result);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);

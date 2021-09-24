@@ -47,6 +47,7 @@
 
 #include <Kokkos_Core.hpp>
 #include "../Kokkos_Constraints.hpp"
+#include "../Kokkos_Distance.hpp"
 #include "../Kokkos_ModifyingOperations.hpp"
 #include "../Kokkos_BeginEnd.hpp"
 #include "../Kokkos_ReducerWithArbitraryJoinerNoNeutralElement.hpp"
@@ -175,7 +176,7 @@ ValueType transform_reduce_custom_functors_impl(
   // run
   result_view_type result("transform_reduce_custom_functors_impl_result");
   reducer_type reducer(result, joiner);
-  const auto num_elements = last - first;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer, transformer), reducer);
