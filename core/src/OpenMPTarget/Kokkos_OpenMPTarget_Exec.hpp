@@ -1449,8 +1449,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i += 1) {
     lambda(i, scan_val, true);
   }
 }
