@@ -429,7 +429,7 @@ IteratorType find_if_or_not_impl(const std::string& label,
 
   // aliases
   using index_type           = typename IteratorType::difference_type;
-  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
   using func_t = StdFindIfOrNotFunctor<is_find_if, index_type, IteratorType,
                                        reducer_type, PredicateType>;
@@ -565,7 +565,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 
   // aliases
   using index_type           = typename IteratorType1::difference_type;
-  using reducer_type         = StdMismatch<index_type, ExecutionSpace>;
+  using reducer_type         = StdMismatch<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
   using functor_type =
       StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
@@ -717,7 +717,7 @@ bool lexicographical_compare_impl(const std::string& label,
 
   // aliases
   using index_type           = typename IteratorType1::difference_type;
-  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
 
   // run
@@ -788,7 +788,7 @@ IteratorType adjacent_find_impl(const std::string& label,
   }
 
   using index_type           = typename IteratorType::difference_type;
-  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
   using func_t = StdAdjacentFindFunctor<index_type, IteratorType, reducer_type,
                                         PredicateType>;
@@ -856,7 +856,7 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     return (equal_result) ? first : last;
   } else {
     using index_type           = typename IteratorType1::difference_type;
-    using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+    using reducer_type         = FirstLoc<index_type>;
     using reduction_value_type = typename reducer_type::value_type;
     using func_t = StdSearchFunctor<index_type, IteratorType1, IteratorType2,
                                     reducer_type, BinaryPredicateType>;
@@ -921,7 +921,7 @@ IteratorType1 find_first_of_impl(const std::string& label,
   }
 
   using index_type           = typename IteratorType1::difference_type;
-  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
   using func_t = StdFindFirstOfFunctor<index_type, IteratorType1, IteratorType2,
                                        reducer_type, BinaryPredicateType>;
@@ -995,7 +995,7 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
     return (equal_result) ? first : last;
   } else {
     using index_type           = typename IteratorType1::difference_type;
-    using reducer_type         = LastLoc<index_type, ExecutionSpace>;
+    using reducer_type         = LastLoc<index_type>;
     using reduction_value_type = typename reducer_type::value_type;
     using func_t = StdFindEndFunctor<index_type, IteratorType1, IteratorType2,
                                      reducer_type, BinaryPredicateType>;
