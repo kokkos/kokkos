@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-//#include <TestStdAlgorithmsCommon.hpp>
 #include <gtest/gtest.h>
 #include <TestStdAlgorithmsHelperFunctors.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
@@ -110,6 +109,59 @@ TEST(scalar_vs_view_red, use_scalar) {
                           Kokkos::RangePolicy<exe_space>(exe_space(), 0, ext),
                           func_type(view, reducer), reducer);
   std::cout << " use_scalar = " << result.val << '\n';
+}
+
+template <class IteratorType, class ReducerType>
+struct StdMyMinFunctor {
+  using index_type     = typename IteratorType::difference_type;
+  using red_value_type = typename ReducerType::value_type;
+
+  IteratorType m_first;
+  ReducerType m_reducer;
+
+  KOKKOS_FUNCTION
+  void operator()(const index_type i, red_value_type& red_value) const {
+    m_reducer.join(red_value, red_value_type{m_first[i], i});
+  }
+
+  KOKKOS_FUNCTION
+  StdMyMinFunctor(IteratorType first, ReducerType reducer)
+      : m_first(std::move(first)), m_reducer(std::move(reducer)) {}
+};
+
+template <class ExecutionSpace, class IteratorType>
+IteratorType my_min_element(const std::string& label, const ExecutionSpace& ex,
+                            IteratorType first, IteratorType last) {
+  using index_type = typename IteratorType::difference_type;
+  using value_type = typename IteratorType::value_type;
+  using reducer_type =
+      Kokkos::MinFirstLoc<value_type, index_type, ExecutionSpace>;
+  using result_view_type = typename reducer_type::result_view_type;
+  using func_t           = StdMyMinFunctor<IteratorType, reducer_type>;
+
+  // run
+  result_view_type result("min_or_max_elem_impl_result");
+  reducer_type reducer(result);
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_reduce(
+      label, Kokkos::RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      func_t(first, reducer), reducer);
+  const auto result_h =
+      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
+  return first + result_h().loc;
+}
+
+TEST(scalar_vs_view_red, my_min_use_result_view) {
+  using exe_space   = Kokkos::DefaultExecutionSpace;
+  using scalar_type = int;
+  using view_type   = Kokkos::View<scalar_type*, exe_space>;
+
+  view_type view("myview", 10001);
+  fill_view(view);
+
+  auto rit =
+      my_min_element("mylab", exe_space(), KE::cbegin(view), KE::cend(view));
+  std::cout << " my_min_el = " << KE::distance(KE::cbegin(view), rit) << '\n';
 }
 
 }  // namespace stdalgos
