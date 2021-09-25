@@ -365,7 +365,7 @@ struct LastLoc;
 template <class Index, class Space = HostSpace>
 struct StdIsPartitioned;
 template <class Index, class Space = HostSpace>
-struct StdPartitionedPoint;
+struct StdPartitionPoint;
 }  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
