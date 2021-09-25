@@ -163,9 +163,9 @@ void print_scenario_details(std::size_t ext1, std::size_t ext2,
             << value_type_to_string(ValueType()) << std::endl;
 }
 
-template <class Tag, class ViewType>
+template <class Tag, class ViewType, class... Args>
 void run_single_scenario(ViewType view1, ViewType view2,
-                         const std::string& flag) {
+                         const std::string& flag, Args... args) {
   using value_type = typename ViewType::value_type;
   using exe_space  = typename ViewType::execution_space;
   using aux_view_t = Kokkos::View<value_type*, exe_space>;
@@ -216,36 +216,47 @@ void run_single_scenario(ViewType view1, ViewType view2,
   CopyFunctor<aux_view_t, ViewType> F2(aux_view2, view2);
   Kokkos::parallel_for("copy2", view2.extent(0), F2);
 
-  auto view1_h = create_host_space_copy(view1);
-  auto view2_h = create_host_space_copy(view2);
+  // run the std::mismatch on a host copy of the data
+  auto view1_h         = create_host_space_copy(view1);
+  auto view2_h         = create_host_space_copy(view2);
+  auto f1_h            = KE::cbegin(view1_h);
+  auto l1_h            = KE::cend(view1_h);
+  auto f2_h            = KE::cbegin(view2_h);
+  auto l2_h            = KE::cend(view2_h);
+  auto std_res         = std::mismatch(f1_h, l1_h, f2_h, l2_h, args...);
+  const auto std_diff1 = std_res.first - f1_h;
+  const auto std_diff2 = std_res.second - f2_h;
 
   {
-    auto first_1 = KE::cbegin(view1);
-    auto last_1  = KE::cend(view1);
-    auto first_2 = KE::cbegin(view2);
-    auto last_2  = KE::cend(view2);
-    auto my_res1 = KE::mismatch(exespace(), first_1, last_1, first_2, last_2);
-    // auto my_res2  = KE::mismatch("label", exespace(), first_1, last_1,
-    // first_2, last_2);
-    const auto my_diff11 = my_res1.first - first_1;
-    const auto my_diff12 = my_res1.second - first_2;
-    // const auto my_diff21 = my_res2.first - first_1;
-    // const auto my_diff22 = my_res2.second - first_2;
-
-    auto f1_h            = KE::cbegin(view1_h);
-    auto l1_h            = KE::cend(view1_h);
-    auto f2_h            = KE::cbegin(view2_h);
-    auto l2_h            = KE::cend(view2_h);
-    auto std_res         = std::mismatch(f1_h, l1_h, f2_h, l2_h);
-    const auto std_diff1 = std_res.first - f1_h;
-    const auto std_diff2 = std_res.second - f2_h;
-
-    std::cout << " diff1 " << my_diff11 << " " << std_diff1 << std::endl;
-    std::cout << " diff2 " << my_diff12 << " " << std_diff2 << std::endl;
+    // check our overloads with iterators
+    auto f1      = KE::cbegin(view1);
+    auto l1      = KE::cend(view1);
+    auto f2      = KE::cbegin(view2);
+    auto l2      = KE::cend(view2);
+    auto my_res1 = KE::mismatch(exespace(), f1, l1, f2, l2, args...);
+    auto my_res2 = KE::mismatch("label", exespace(), f1, l1, f2, l2, args...);
+    const auto my_diff11 = my_res1.first - f1;
+    const auto my_diff12 = my_res1.second - f2;
+    const auto my_diff21 = my_res2.first - f1;
+    const auto my_diff22 = my_res2.second - f2;
     EXPECT_TRUE(my_diff11 == std_diff1);
     EXPECT_TRUE(my_diff12 == std_diff2);
-    // EXPECT_TRUE(my_diff21 == std_diff1);
-    // EXPECT_TRUE(my_diff22 == std_diff2);
+    EXPECT_TRUE(my_diff21 == std_diff1);
+    EXPECT_TRUE(my_diff22 == std_diff2);
+  }
+
+  {
+    // check our overloads with views
+    auto my_res1 = KE::mismatch(exespace(), view1, view2, args...);
+    auto my_res2 = KE::mismatch("label", exespace(), view1, view2, args...);
+    const auto my_diff11 = my_res1.first - KE::cbegin(view1);
+    const auto my_diff12 = my_res1.second - KE::cbegin(view2);
+    const auto my_diff21 = my_res2.first - KE::cbegin(view1);
+    const auto my_diff22 = my_res2.second - KE::cbegin(view2);
+    EXPECT_TRUE(my_diff11 == std_diff1);
+    EXPECT_TRUE(my_diff12 == std_diff2);
+    EXPECT_TRUE(my_diff21 == std_diff1);
+    EXPECT_TRUE(my_diff22 == std_diff2);
   }
 }
 
@@ -264,13 +275,14 @@ void run_all_scenarios() {
 
       // for each view1 scenario, I want to test the case of a
       // second view that is smaller, equal size and greater than the view1
-      const vecs_t list = (view1_ext > 0)
-                              ? vecs_t({"smaller", "equalsize", "larger"})
-                              : vecs_t({"equalsize", "larger"});
+      const vecs_t view2cases = (view1_ext > 0)
+                                    ? vecs_t({"smaller", "equalsize", "larger"})
+                                    : vecs_t({"equalsize", "larger"});
 
-      for (auto it2 : list) {
+      for (auto it2 : view2cases) {
         std::size_t view2_ext = view1_ext;
 
+        // modify extent of view2 based on what we want
         if (std::string(it2) == "smaller") {
           view2_ext -= 1;
         } else if (std::string(it2) == "larger") {
@@ -280,10 +292,15 @@ void run_all_scenarios() {
         auto view2 =
             create_view<ValueType>(Tag{}, view2_ext, "mismatch_view_2");
 
-        // and now we want to test the case where view1 and view2 match,
+        // and now we want to test both the case view1 and view2 match,
         // as well as the case where they don't match
         for (const auto& it3 : {"fill-to-match", "fill-to-mismatch"}) {
+          // run to use default predicate
           run_single_scenario<Tag>(view1, view2, it3);
+
+          // run using an arbitrary predicate
+          using predicate_type = IsEqualFunctor<ValueType>;
+          run_single_scenario<Tag>(view1, view2, it3, predicate_type());
         }
       }
     }
@@ -292,8 +309,7 @@ void run_all_scenarios() {
 
 TEST(std_algorithms_mismatch_test, test) {
   run_all_scenarios<DynamicTag, double>();
-  // run_all_scenarios<StridedTwoTag, int>();
-  // run_all_scenarios<StridedThreeTag, unsigned>();
+  run_all_scenarios<StridedThreeTag, int>();
 }
 
 }  // namespace Mismatch

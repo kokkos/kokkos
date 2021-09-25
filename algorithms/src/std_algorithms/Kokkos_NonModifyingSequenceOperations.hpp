@@ -577,13 +577,16 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
       StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
                             reducer_type, BinaryPredicateType>;
 
-  // run
+  // trivial case: note that this is important,
+  // for OpenMPTarget, omitting special handling of
+  // the trivial case was giving all sorts of strange stuff.
   const auto num_e1 = last1 - first1;
   const auto num_e2 = last2 - first2;
   if (num_e1 == 0 || num_e2 == 0) {
     return return_type(first1, first2);
   }
 
+  // run
   const auto num_elemen_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
   reduction_value_type red_result;
   reducer_type reducer(red_result);
