@@ -428,32 +428,30 @@ IteratorType find_if_or_not_impl(const std::string& label,
   }
 
   // aliases
-  using index_type       = typename IteratorType::difference_type;
-  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType::difference_type;
+  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reduction_value_type = typename reducer_type::value_type;
   using func_t = StdFindIfOrNotFunctor<is_find_if, index_type, IteratorType,
                                        reducer_type, PredicateType>;
 
   // run
-  result_view_type result("Kokkos::find_if_impl_result_view");
-  reducer_type reducer(result);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
 
   // decide and return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
-  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+  if (red_result.min_loc_true ==
+      ::Kokkos::reduction_identity<index_type>::min()) {
     // here, it means a valid loc has not been found,
     return last;
   } else {
     // a location has been found
-    return first + r_h().min_loc_true;
+    return first + red_result.min_loc_true;
   }
 }
 
@@ -566,9 +564,9 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   Impl::expect_valid_range(first2, last2);
 
   // aliases
-  using index_type       = typename IteratorType1::difference_type;
-  using reducer_type     = StdMismatch<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType1::difference_type;
+  using reducer_type         = StdMismatch<index_type, ExecutionSpace>;
+  using reduction_value_type = typename reducer_type::value_type;
   using functor_type =
       StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
                             reducer_type, BinaryPredicateType>;
@@ -577,20 +575,17 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   const auto num_e1                = last1 - first1;
   const auto num_e2                = last2 - first2;
   auto num_elements_for_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
-  result_view_type result("mismatch_impl_result");
-  reducer_type reducer(result);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_for_par_reduce),
       functor_type(first1, first2, reducer, std::move(predicate)), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
 
   // decide and return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
   using return_type = ::Kokkos::pair<IteratorType1, IteratorType2>;
-  if (r_h().loc == ::Kokkos::reduction_identity<index_type>::min()) {
+  if (red_result.loc == ::Kokkos::reduction_identity<index_type>::min()) {
     // in here means mismatch has not been found
 
     if (num_e1 == num_e2) {
@@ -602,7 +597,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
     }
   } else {
     // in here means mismatch has been found
-    return return_type(first1 + r_h().loc, first2 + r_h().loc);
+    return return_type(first1 + red_result.loc, first2 + red_result.loc);
   }
 }
 
@@ -721,16 +716,16 @@ bool lexicographical_compare_impl(const std::string& label,
   Impl::expect_valid_range(first2, last2);
 
   // aliases
-  using index_type       = typename IteratorType1::difference_type;
-  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType1::difference_type;
+  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reduction_value_type = typename reducer_type::value_type;
 
   // run
-  auto d1    = Kokkos::Experimental::distance(first1, last1);
-  auto d2    = Kokkos::Experimental::distance(first2, last2);
-  auto range = Kokkos::Experimental::min(d1, d2);
-  result_view_type result("Kokkos::lexicographical_compare_impl_result_view");
-  reducer_type reducer(result);
+  const auto d1    = Kokkos::Experimental::distance(first1, last1);
+  const auto d2    = Kokkos::Experimental::distance(first2, last2);
+  const auto range = Kokkos::Experimental::min(d1, d2);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
   using func1_t =
       StdLexicographicalCompareFunctor<index_type, IteratorType1, IteratorType2,
                                        reducer_type, ComparatorType>;
@@ -738,13 +733,10 @@ bool lexicographical_compare_impl(const std::string& label,
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, range),
                             func1_t(first1, first2, reducer, comp), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
-
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
+  // fence not needed because reducing into scalar
   // no mismatch
-  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+  if (red_result.min_loc_true ==
+      ::Kokkos::reduction_identity<index_type>::min()) {
     auto new_last1 = first1 + range;
     auto new_last2 = first2 + range;
     bool is_prefix = (new_last1 == last1) && (new_last2 != last2);
@@ -753,8 +745,8 @@ bool lexicographical_compare_impl(const std::string& label,
 
   // check mismatched
   int less      = 0;
-  auto it1      = first1 + r_h().min_loc_true;
-  auto it2      = first2 + r_h().min_loc_true;
+  auto it1      = first1 + red_result.min_loc_true;
+  auto it2      = first2 + red_result.min_loc_true;
   using func2_t = StdCompareFunctor<index_type, IteratorType1, IteratorType2,
                                     ComparatorType>;
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, 1),
@@ -795,14 +787,14 @@ IteratorType adjacent_find_impl(const std::string& label,
     return last;
   }
 
-  using index_type       = typename IteratorType::difference_type;
-  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType::difference_type;
+  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reduction_value_type = typename reducer_type::value_type;
   using func_t = StdAdjacentFindFunctor<index_type, IteratorType, reducer_type,
                                         PredicateType>;
 
-  result_view_type result("Kokkos::adjacent_find_impl_result_view");
-  reducer_type reducer(result);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
 
   // note that we use below num_elements-1 because
   // each index i in the reduction checks i and (i+1).
@@ -810,14 +802,12 @@ IteratorType adjacent_find_impl(const std::string& label,
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
       func_t(first, reducer, pred), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
-
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+  // fence not needed because reducing into scalar
+  if (red_result.min_loc_true ==
+      ::Kokkos::reduction_identity<index_type>::min()) {
     return last;
   } else {
-    return first + r_h().min_loc_true;
+    return first + red_result.min_loc_true;
   }
 }
 
@@ -865,15 +855,15 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     const auto equal_result = equal_impl(label, ex, first, last, s_first, pred);
     return (equal_result) ? first : last;
   } else {
-    using index_type       = typename IteratorType1::difference_type;
-    using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-    using result_view_type = typename reducer_type::result_view_type;
+    using index_type           = typename IteratorType1::difference_type;
+    using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+    using reduction_value_type = typename reducer_type::value_type;
     using func_t = StdSearchFunctor<index_type, IteratorType1, IteratorType2,
                                     reducer_type, BinaryPredicateType>;
 
     // run
-    result_view_type result("Kokkos::search_impl_result");
-    reducer_type reducer(result);
+    reduction_value_type red_result;
+    reducer_type reducer(red_result);
 
     // decide the size of the range policy of the par_red:
     // note that the last feasible index to start looking is the index
@@ -886,18 +876,16 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
         label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
 
-    // fence not needed since we call create_mirror_view_and_copy below
+    // fence not needed because reducing into scalar
 
     // decide and return
-    const auto r_h =
-        ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
-    if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+    if (red_result.min_loc_true ==
+        ::Kokkos::reduction_identity<index_type>::min()) {
       // if here, a subrange has not been found
       return last;
     } else {
       // a location has been found
-      return first + r_h().min_loc_true;
+      return first + red_result.min_loc_true;
     }
   }
 }
@@ -932,32 +920,30 @@ IteratorType1 find_first_of_impl(const std::string& label,
     return last;
   }
 
-  using index_type       = typename IteratorType1::difference_type;
-  using reducer_type     = FirstLoc<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType1::difference_type;
+  using reducer_type         = FirstLoc<index_type, ExecutionSpace>;
+  using reduction_value_type = typename reducer_type::value_type;
   using func_t = StdFindFirstOfFunctor<index_type, IteratorType1, IteratorType2,
                                        reducer_type, BinaryPredicateType>;
 
   // run
-  result_view_type result("Kokkos::find_first_of_impl_result");
-  reducer_type reducer(result);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_t(first, s_first, s_last, reducer, pred), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
 
   // decide and return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
-  if (r_h().min_loc_true == ::Kokkos::reduction_identity<index_type>::min()) {
+  if (red_result.min_loc_true ==
+      ::Kokkos::reduction_identity<index_type>::min()) {
     // if here, nothing found
     return last;
   } else {
     // a location has been found
-    return first + r_h().min_loc_true;
+    return first + red_result.min_loc_true;
   }
 }
 
@@ -1008,15 +994,15 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
     const auto equal_result = equal_impl(label, ex, first, last, s_first, pred);
     return (equal_result) ? first : last;
   } else {
-    using index_type       = typename IteratorType1::difference_type;
-    using reducer_type     = LastLoc<index_type, ExecutionSpace>;
-    using result_view_type = typename reducer_type::result_view_type;
+    using index_type           = typename IteratorType1::difference_type;
+    using reducer_type         = LastLoc<index_type, ExecutionSpace>;
+    using reduction_value_type = typename reducer_type::value_type;
     using func_t = StdFindEndFunctor<index_type, IteratorType1, IteratorType2,
                                      reducer_type, BinaryPredicateType>;
 
     // run
-    result_view_type result("Kokkos::find_end_impl_result");
-    reducer_type reducer(result);
+    reduction_value_type red_result;
+    reducer_type reducer(red_result);
 
     // decide the size of the range policy of the par_red:
     // note that the last feasible index to start looking is the index
@@ -1029,18 +1015,16 @@ IteratorType1 find_end_impl(const std::string& label, const ExecutionSpace& ex,
         label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
 
-    // fence not needed since we call create_mirror_view_and_copy below
+    // fence not needed because reducing into scalar
 
     // decide and return
-    const auto r_h =
-        ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
-    if (r_h().max_loc_true == ::Kokkos::reduction_identity<index_type>::max()) {
+    if (red_result.max_loc_true ==
+        ::Kokkos::reduction_identity<index_type>::max()) {
       // if here, a subrange has not been found
       return last;
     } else {
       // a location has been found
-      return first + r_h().max_loc_true;
+      return first + red_result.max_loc_true;
     }
   }
 }
