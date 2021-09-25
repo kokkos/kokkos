@@ -42,7 +42,7 @@ template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope) {
   static_assert(sizeof(unsigned long long int) == 8,
-                "this function assumes an unsigned long long  is 64-bit");
+                "this function assumes an unsigned long long is 64-bit");
   Impl::sycl_atomic_ref<unsigned long long int, MemoryOrder, MemoryScope> dest_ref(
       *reinterpret_cast<unsigned long long int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned long long int*>(&compare),
@@ -68,7 +68,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(T* const dest,
                                                                  MemoryOrder,
                                                                  MemoryScope) {
   static_assert(sizeof(unsigned long long int) == 8,
-                "this function assumes an unsigned long long  is 64-bit");
+                "this function assumes an unsigned long long is 64-bit");
   Impl::sycl_atomic_ref<unsigned long long int, MemoryOrder, MemoryScope> dest_ref(
       *reinterpret_cast<unsigned long long int*>(dest));
   unsigned long long int return_val =
