@@ -52,13 +52,13 @@ LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsLexicographicalCompare.cpp
   TestStdAlgorithmsForEach.cpp
   TestStdAlgorithmsFind.cpp
+  TestStdAlgorithmsFindFirstOf.cpp
+  TestStdAlgorithmsFindEnd.cpp
   TestStdAlgorithmsCount.cpp
   TestStdAlgorithmsEqual.cpp
   TestStdAlgorithmsAllAnyNoneOf.cpp
   TestStdAlgorithmsAdjacentFind.cpp
   TestStdAlgorithmsSearch.cpp
-  TestStdAlgorithmsFindFirstOf.cpp
-  TestStdAlgorithmsFindEnd.cpp
   TestStdAlgorithmsMismatch.cpp
 
   #--- mod ----
