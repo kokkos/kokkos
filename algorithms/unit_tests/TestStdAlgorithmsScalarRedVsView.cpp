@@ -55,20 +55,19 @@ namespace Test {
 namespace stdalgos {
 
 template <class ViewType>
-void fill_view(ViewType dest_view)
-{
-  using value_type      = typename ViewType::value_type;
-  using exe_space       = typename ViewType::execution_space;
-  using aux_view_t      = Kokkos::View<value_type*, exe_space>;
+void fill_view(ViewType dest_view) {
+  using value_type = typename ViewType::value_type;
+  using exe_space  = typename ViewType::execution_space;
+  using aux_view_t = Kokkos::View<value_type*, exe_space>;
 
   const std::size_t ext = dest_view.extent(0);
   aux_view_t aux_view("aux_view", ext);
   auto v_h = create_mirror_view(Kokkos::HostSpace(), aux_view);
 
   for (std::size_t i = 0; i < ext; ++i) {
-    v_h(i) = (value_type) i;
+    v_h(i) = (value_type)i;
   }
-  v_h(ext/2) = (value_type) -101;
+  v_h(ext / 2) = (value_type)-101;
 
   Kokkos::deep_copy(aux_view, v_h);
   CopyFunctor<aux_view_t, ViewType> F1(aux_view, dest_view);
@@ -76,16 +75,14 @@ void fill_view(ViewType dest_view)
 }
 
 template <class ViewType, class IndexType, class ReducerType>
-struct MyFunctor
-{
+struct MyFunctor {
   using red_value_type = typename ReducerType::value_type;
 
   ViewType m_view;
   ReducerType m_reducer;
 
   KOKKOS_FUNCTION
-  void operator()(const IndexType i, red_value_type& red_value) const
-  {
+  void operator()(const IndexType i, red_value_type& red_value) const {
     m_reducer.join(red_value, red_value_type{m_view(i), i});
   }
 
@@ -94,26 +91,24 @@ struct MyFunctor
       : m_view(view), m_reducer(std::move(reducer)) {}
 };
 
-TEST(scalar_vs_view_red, use_scalar)
-{
-  using exe_space = Kokkos::DefaultExecutionSpace;
-  using index_type = int;
+TEST(scalar_vs_view_red, use_scalar) {
+  using exe_space   = Kokkos::DefaultExecutionSpace;
+  using index_type  = int;
   using scalar_type = int;
-  using view_type = Kokkos::View<scalar_type*, exe_space>;
+  using view_type   = Kokkos::View<scalar_type*, exe_space>;
 
   const auto ext = 10001;
   view_type view("myview", ext);
   fill_view(view);
 
-  using reducer_type = ::Kokkos::MinLoc<scalar_type, index_type>;
+  using reducer_type    = ::Kokkos::MinLoc<scalar_type, index_type>;
   using red_result_type = typename reducer_type::value_type;
-  using func_type = MyFunctor<view_type, index_type, reducer_type>;
+  using func_type       = MyFunctor<view_type, index_type, reducer_type>;
   red_result_type result;
   reducer_type reducer(result);
-  Kokkos::parallel_reduce( "MinLocReduce",
-			   Kokkos::RangePolicy<exe_space>(exe_space(), 0, ext),
-			   func_type(view, reducer),
-			   reducer);
+  Kokkos::parallel_reduce("MinLocReduce",
+                          Kokkos::RangePolicy<exe_space>(exe_space(), 0, ext),
+                          func_type(view, reducer), reducer);
   std::cout << " use_scalar = " << result.val << '\n';
 }
 
