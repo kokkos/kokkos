@@ -39,6 +39,7 @@ SET(ALGORITHM UnitTestMain.cpp)
 LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsCommon.cpp
 
+  #--- general ones ---
   TestStdReducers.cpp
   TestStdAlgorithmsConstraints.cpp
   TestRandomAccessIterator.cpp
@@ -63,15 +64,15 @@ LIST(APPEND ALGORITHM_SOURCES
   #--- mod ----
   TestStdAlgorithmsModOps.cpp
   TestStdAlgorithmsModSeqOps.cpp
-  TestStdAlgorithmsReplaceIf.cpp
   TestStdAlgorithmsReplace.cpp
+  TestStdAlgorithmsReplaceIf.cpp
   TestStdAlgorithmsReplaceCopy.cpp
   TestStdAlgorithmsReplaceCopyIf.cpp
   TestStdAlgorithmsCopyIf.cpp
   TestStdAlgorithmsUnique.cpp
   TestStdAlgorithmsUniqueCopy.cpp
-  TestStdAlgorithmsRemoveIf.cpp
   TestStdAlgorithmsRemove.cpp
+  TestStdAlgorithmsRemoveIf.cpp
   TestStdAlgorithmsRemoveCopy.cpp
   TestStdAlgorithmsRemoveCopyIf.cpp
   TestStdAlgorithmsRotate.cpp
