@@ -170,12 +170,11 @@ IteratorType my_min_1(const ExecutionSpace& ex, IteratorType first,
 template <class ExecutionSpace, class IteratorType>
 IteratorType my_min_2(const ExecutionSpace& ex, IteratorType first,
                       IteratorType last) {
-  using index_type = typename IteratorType::difference_type;
-  using value_type = typename IteratorType::value_type;
-  using reducer_type =
-      Kokkos::MinFirstLoc<value_type, index_type, ExecutionSpace>;
-  using result_type = typename reducer_type::value_type;
-  using func_t      = StdMyMinFunctor<IteratorType, reducer_type>;
+  using index_type   = typename IteratorType::difference_type;
+  using value_type   = typename IteratorType::value_type;
+  using reducer_type = Kokkos::MinFirstLoc<value_type, index_type>;
+  using result_type  = typename reducer_type::value_type;
+  using func_t       = StdMyMinFunctor<IteratorType, reducer_type>;
 
   result_type result;
   reducer_type reducer(result);
@@ -188,12 +187,11 @@ IteratorType my_min_2(const ExecutionSpace& ex, IteratorType first,
 
 template <class ExecutionSpace, class ViewType>
 std::size_t my_min_3(const ExecutionSpace& ex, ViewType view) {
-  using index_type = std::size_t;
-  using value_type = typename ViewType::value_type;
-  using reducer_type =
-      Kokkos::MinFirstLoc<value_type, index_type, ExecutionSpace>;
-  using result_type = typename reducer_type::value_type;
-  using func_t      = StdMyMinFunctor2<ViewType, reducer_type>;
+  using index_type   = std::size_t;
+  using value_type   = typename ViewType::value_type;
+  using reducer_type = Kokkos::MinFirstLoc<value_type, index_type>;
+  using result_type  = typename reducer_type::value_type;
+  using func_t       = StdMyMinFunctor2<ViewType, reducer_type>;
 
   result_type result;
   reducer_type reducer(result);
