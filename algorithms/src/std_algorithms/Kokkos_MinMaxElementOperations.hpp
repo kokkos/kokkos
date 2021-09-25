@@ -109,26 +109,24 @@ IteratorType min_or_max_element_impl(const std::string& label,
   }
 
   // aliases
-  using index_type = typename IteratorType::difference_type;
-  using value_type = typename IteratorType::value_type;
-  using reducer_type =
-      ReducerType<value_type, index_type, Args..., ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
-  using func_t           = StdMinOrMaxElemFunctor<IteratorType, reducer_type>;
+  using index_type           = typename IteratorType::difference_type;
+  using value_type           = typename IteratorType::value_type;
+  using reducer_type         = ReducerType<value_type, index_type, Args...>;
+  using reduction_value_type = typename reducer_type::value_type;
+  using func_t = StdMinOrMaxElemFunctor<IteratorType, reducer_type>;
 
   // run
-  result_view_type result("min_or_max_elem_impl_result");
-  reducer_type reducer(result, std::forward<Args>(args)...);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result, std::forward<Args>(args)...);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
+
   // return
-  const auto result_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-  return first + result_h().loc;
+  return first + red_result.loc;
 }
 
 // ------------------------------------------
@@ -148,27 +146,24 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
   }
 
   // aliases
-  using index_type = typename IteratorType::difference_type;
-  using value_type = typename IteratorType::value_type;
-  using reducer_type =
-      ReducerType<value_type, index_type, Args..., ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
-  using func_t           = StdMinMaxElemFunctor<IteratorType, reducer_type>;
+  using index_type           = typename IteratorType::difference_type;
+  using value_type           = typename IteratorType::value_type;
+  using reducer_type         = ReducerType<value_type, index_type, Args...>;
+  using reduction_value_type = typename reducer_type::value_type;
+  using func_t               = StdMinMaxElemFunctor<IteratorType, reducer_type>;
 
   // run
-  result_view_type result("minmax_elem_impl_result");
-  reducer_type reducer(result, std::forward<Args>(args)...);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result, std::forward<Args>(args)...);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
 
   // return
-  const auto result_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-  return {first + result_h().min_loc, first + result_h().max_loc};
+  return {first + red_result.min_loc, first + red_result.max_loc};
 }
 
 }  // end namespace Impl
