@@ -56,7 +56,7 @@ namespace Impl {
 // because it is inside Impl and also because it would not work
 // for OpenMPTarget backend. We can move this later.
 
-template <class Scalar, class JoinerType, class Space>
+template <class Scalar, class JoinerType, class Space = HostSpace>
 struct ReducerWithArbitraryJoinerNoNeutralElement {
   using scalar_type = typename std::remove_cv<Scalar>::type;
 

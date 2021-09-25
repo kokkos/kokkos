@@ -116,25 +116,20 @@ ValueType reduce_custom_functors_impl(const std::string& label,
 
   // aliases
   using reducer_type =
-      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType,
-                                                 ExecutionSpace>;
-  using functor_type     = StdReduceFunctor<IteratorType, reducer_type>;
-  using result_view_type = typename reducer_type::result_view_type;
+      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType>;
+  using functor_type         = StdReduceFunctor<IteratorType, reducer_type>;
+  using reduction_value_type = typename reducer_type::value_type;
 
   // run
-  result_view_type result("reduce_custom_functors_impl_result");
+  reduction_value_type result;
   reducer_type reducer(result, joiner);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
-
-  // return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-  return joiner(r_h().val, init_reduction_value);
+  // fence not needed since reducing into scalar
+  return joiner(result.val, init_reduction_value);
 }
 
 template <class ExecutionSpace, class IteratorType, class ValueType>

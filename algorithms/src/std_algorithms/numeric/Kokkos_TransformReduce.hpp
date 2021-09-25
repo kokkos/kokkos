@@ -166,30 +166,25 @@ ValueType transform_reduce_custom_functors_impl(
 
   // aliases
   using reducer_type =
-      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType,
-                                                 ExecutionSpace>;
+      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType>;
   using functor_type =
       StdTransformReduceSingleIntervalFunctor<IteratorType, reducer_type,
                                               UnaryTransformerType>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using reduction_value_type = typename reducer_type::value_type;
 
   // run
-  result_view_type result("transform_reduce_custom_functors_impl_result");
+  reduction_value_type result;
   reducer_type reducer(result, joiner);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             functor_type(first, reducer, transformer), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
-
-  // return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
+  // fence not needed since reducing into scalar
 
   // as per standard, transform is not applied to the init value
   // https://en.cppreference.com/w/cpp/algorithm/transform_reduce
-  return joiner(r_h().val, init_reduction_value);
+  return joiner(result.val, init_reduction_value);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
@@ -212,16 +207,15 @@ ValueType transform_reduce_custom_functors_impl(
   // aliases
   using index_type = typename IteratorType1::difference_type;
   using reducer_type =
-      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType,
-                                                 ExecutionSpace>;
+      ReducerWithArbitraryJoinerNoNeutralElement<ValueType, JoinerType>;
   using functor_type =
       StdTransformReduceTwoIntervalsFunctor<index_type, IteratorType1,
                                             IteratorType2, reducer_type,
                                             BinaryTransformerType>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using reduction_value_type = typename reducer_type::value_type;
 
   // run
-  result_view_type result("transform_reduce_custom_functors_impl_result");
+  reduction_value_type result;
   reducer_type reducer(result, joiner);
 
   const auto num_elements = last1 - first1;
@@ -229,12 +223,8 @@ ValueType transform_reduce_custom_functors_impl(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       functor_type(first1, first2, reducer, transformer), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
-
-  // return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-  return joiner(r_h().val, init_reduction_value);
+  // fence not needed since reducing into scalar
+  return joiner(result.val, init_reduction_value);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
