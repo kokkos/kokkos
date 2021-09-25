@@ -9,9 +9,12 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_SYCL_CONVERSIONS_HPP_
 #define DESUL_ATOMICS_SYCL_CONVERSIONS_HPP_
 #ifdef DESUL_HAVE_SYCL_ATOMICS
-#include <CL/sycl.hpp>
 
+// clang-format off
 #include "desul/atomics/Common.hpp"
+
+#include <CL/sycl.hpp>
+// clang-format on
 
 namespace desul {
 namespace Impl {

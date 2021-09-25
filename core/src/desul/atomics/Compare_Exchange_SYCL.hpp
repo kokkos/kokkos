@@ -9,10 +9,12 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_COMPARE_EXCHANGE_SYCL_HPP_
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_SYCL_HPP_
 
-#include <CL/sycl.hpp>
-
-#include "desul/atomics/Common.hpp"
+// clang-format off
 #include "desul/atomics/SYCLConversions.hpp"
+#include "desul/atomics/Common.hpp"
+
+#include <CL/sycl.hpp>
+// clang-format on
 
 #ifdef DESUL_HAVE_SYCL_ATOMICS
 

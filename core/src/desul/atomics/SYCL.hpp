@@ -10,7 +10,10 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef DESUL_HAVE_SYCL_ATOMICS
 
+// clang-format off
+#include "desul/atomics/SYCLConversions.hpp"
 #include "desul/atomics/Common.hpp"
+// clang-format on
 
 namespace desul {
 
