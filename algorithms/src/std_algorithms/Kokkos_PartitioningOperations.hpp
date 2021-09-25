@@ -229,34 +229,32 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
   }
 
   // aliases
-  using index_type       = typename IteratorType::difference_type;
-  using reducer_type     = StdIsPartitioned<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType::difference_type;
+  using reducer_type         = StdIsPartitioned<index_type>;
+  using reduction_value_type = typename reducer_type::value_type;
   using func_t =
       StdIsPartitionedFunctor<IteratorType, reducer_type, PredicateType>;
 
   // run
-  result_view_type result("is_partitioned_impl_result_view");
-  reducer_type reducer(result);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
 
   // decide and return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
   constexpr index_type red_id_min =
       ::Kokkos::reduction_identity<index_type>::min();
   constexpr index_type red_id_max =
       ::Kokkos::reduction_identity<index_type>::max();
 
-  if (r_h().max_loc_true != red_id_max && r_h().min_loc_false != red_id_min) {
-    return r_h().max_loc_true < r_h().min_loc_false;
-  } else if (first + r_h().max_loc_true == --last) {
+  if (red_result.max_loc_true != red_id_max &&
+      red_result.min_loc_false != red_id_min) {
+    return red_result.max_loc_true < red_result.min_loc_false;
+  } else if (first + red_result.max_loc_true == --last) {
     return true;
   } else {
     return false;
@@ -283,31 +281,29 @@ IteratorType partition_point_impl(const std::string& label,
   }
 
   // aliases
-  using index_type       = typename IteratorType::difference_type;
-  using reducer_type     = StdPartitionPoint<index_type, ExecutionSpace>;
-  using result_view_type = typename reducer_type::result_view_type;
+  using index_type           = typename IteratorType::difference_type;
+  using reducer_type         = StdPartitionPoint<index_type>;
+  using reduction_value_type = typename reducer_type::value_type;
   using func_t =
       StdPartitionPointFunctor<IteratorType, reducer_type, PredicateType>;
 
   // run
-  result_view_type result("partition_point_impl_result_view");
-  reducer_type reducer(result);
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
 
-  // fence not needed since we call create_mirror_view_and_copy below
+  // fence not needed because reducing into scalar
 
   // decide and return
-  const auto r_h =
-      ::Kokkos::create_mirror_view_and_copy(::Kokkos::HostSpace(), result);
-
-  if (r_h().min_loc_false == ::Kokkos::reduction_identity<index_type>::min()) {
+  if (red_result.min_loc_false ==
+      ::Kokkos::reduction_identity<index_type>::min()) {
     // if all elements are true, return last
     return last;
   } else {
-    return first + r_h().min_loc_false;
+    return first + red_result.min_loc_false;
   }
 }
 
