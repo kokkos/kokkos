@@ -216,6 +216,9 @@ void run_single_scenario(ViewType view1, ViewType view2,
   CopyFunctor<aux_view_t, ViewType> F2(aux_view2, view2);
   Kokkos::parallel_for("copy2", view2.extent(0), F2);
 
+  auto view1_h = create_host_space_copy(view1);
+  auto view2_h = create_host_space_copy(view2);
+
   {
     auto first_1 = KE::cbegin(view1);
     auto last_1  = KE::cend(view1);
@@ -229,12 +232,10 @@ void run_single_scenario(ViewType view1, ViewType view2,
     // const auto my_diff21 = my_res2.first - first_1;
     // const auto my_diff22 = my_res2.second - first_2;
 
-    auto view1_h         = create_host_space_copy(view1);
-    auto view2_h         = create_host_space_copy(view2);
-    auto f1_h            = KE::cbegin(view1);
-    auto l1_h            = KE::cend(view1);
-    auto f2_h            = KE::cbegin(view2);
-    auto l2_h            = KE::cend(view2);
+    auto f1_h            = KE::cbegin(view1_h);
+    auto l1_h            = KE::cend(view1_h);
+    auto f2_h            = KE::cbegin(view2_h);
+    auto l2_h            = KE::cend(view2_h);
     auto std_res         = std::mismatch(f1_h, l1_h, f2_h, l2_h);
     const auto std_diff1 = std_res.first - f1_h;
     const auto std_diff2 = std_res.second - f2_h;

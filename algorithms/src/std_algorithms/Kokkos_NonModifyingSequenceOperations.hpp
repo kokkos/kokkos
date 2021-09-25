@@ -569,6 +569,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   Impl::expect_valid_range(first2, last2);
 
   // aliases
+  using return_type          = ::Kokkos::pair<IteratorType1, IteratorType2>;
   using index_type           = typename IteratorType1::difference_type;
   using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
@@ -577,8 +578,12 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
                             reducer_type, BinaryPredicateType>;
 
   // run
-  const auto num_e1                = last1 - first1;
-  const auto num_e2                = last2 - first2;
+  const auto num_e1 = last1 - first1;
+  const auto num_e2 = last2 - first2;
+  if (num_e1 == 0 || num_e2 == 0) {
+    return return_type(first1, first2);
+  }
+
   const auto num_elemen_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
   reduction_value_type red_result;
   reducer_type reducer(red_result);
@@ -589,7 +594,6 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   // fence not needed because reducing into scalar
 
   // decide and return
-  using return_type      = ::Kokkos::pair<IteratorType1, IteratorType2>;
   constexpr auto red_min = ::Kokkos::reduction_identity<index_type>::min();
   if (red_result.min_loc_true == red_min) {
     // in here means mismatch has not been found
