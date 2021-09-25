@@ -198,11 +198,50 @@ struct test_random_functor {
           static_cast<uint64_t>(1.0 * HIST_DIM3D * tmp2 / theMax);
       const uint64_t ind3_3d =
           static_cast<uint64_t>(1.0 * HIST_DIM3D * tmp3 / theMax);
-
+// Workaround Intel 17 compiler bug which sometimes add random
+// instruction alignment which makes the lock instruction
+// illegal. Seems to be mostly just for unsigned int atomics.
+// Looking at the assembly the compiler
+// appears to insert cache line alignment for the instruction.
+// Isn't restricted to specific archs. Seen it on SNB and SKX, but for
+// different code. Another occurrence was with Desul atomics in
+// a different unit test. This one here happens without desul atomics.
+// Inserting an assembly nop instruction changes the alignment and
+// works round this.
+//
+// 17.0.4 for 64bit Random works with 1/1/1/2/1
+// 17.0.4 for 1024bit Random works with 1/1/1/1/1
+#ifdef KOKKOS_COMPILER_INTEL
+#if (KOKKOS_COMPILER_INTEL < 1800)
+      asm volatile("nop\n");
+#endif
+#endif
       atomic_fetch_add(&density_1d(ind1_1d), 1);
+#ifdef KOKKOS_COMPILER_INTEL
+#if (KOKKOS_COMPILER_INTEL < 1800)
+      asm volatile("nop\n");
+#endif
+#endif
       atomic_fetch_add(&density_1d(ind2_1d), 1);
+#ifdef KOKKOS_COMPILER_INTEL
+#if (KOKKOS_COMPILER_INTEL < 1800)
+      asm volatile("nop\n");
+#endif
+#endif
       atomic_fetch_add(&density_1d(ind3_1d), 1);
+#ifdef KOKKOS_COMPILER_INTEL
+#if (KOKKOS_COMPILER_INTEL < 1800)
+      if (std::is_same<rnd_type, Kokkos::Random_XorShift64<device_type>>::value)
+        asm volatile("nop\n");
+      asm volatile("nop\n");
+#endif
+#endif
       atomic_fetch_add(&density_3d(ind1_3d, ind2_3d, ind3_3d), 1);
+#ifdef KOKKOS_COMPILER_INTEL
+#if (KOKKOS_COMPILER_INTEL < 1800)
+      asm volatile("nop\n");
+#endif
+#endif
     }
     rand_pool.free_state(rand_gen);
   }

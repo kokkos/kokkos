@@ -106,7 +106,7 @@ class SerialInternal {
 ///
 /// A "device" represents a parallel execution model.  It tells Kokkos
 /// how to parallelize the execution of kernels in a parallel_for or
-/// parallel_reduce.  For example, the Threads device uses Pthreads or
+/// parallel_reduce.  For example, the Threads device uses
 /// C++11 threads on a CPU, the OpenMP device uses the OpenMP language
 /// extensions, and the Cuda device uses NVIDIA's CUDA programming
 /// model.  The Serial device executes "parallel" kernels
@@ -161,6 +161,7 @@ class Serial {
         Kokkos::Tools::Experimental::SpecialSynchronizationCases::
             GlobalDeviceSynchronization,
         []() {});  // TODO: correct device ID
+    Kokkos::memory_fence();
   }
 
   void fence() const { fence("Kokkos::Serial::fence: Unnamed Instance Fence"); }
@@ -168,6 +169,7 @@ class Serial {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
         name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
         []() {});  // TODO: correct device ID
+    Kokkos::memory_fence();
   }
 
   /** \brief  Return the maximum amount of concurrency.  */
@@ -222,15 +224,14 @@ struct DeviceTypeTraits<Serial> {
 
 namespace Impl {
 
-class SerialSpaceInitializer final : public ExecSpaceInitializerBase {
+class SerialSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   SerialSpaceInitializer()  = default;
   ~SerialSpaceInitializer() = default;
-  void do_initialize(const InitArguments& args) final;
-  void do_finalize(const bool) final;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
   void fence() final;
   void fence(const std::string&) final;
-  void print_exec_space_name(std::ostream& msg) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 

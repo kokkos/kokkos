@@ -28,16 +28,6 @@ KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
 # Set the Default for Desul Atomics usage.
 set(_DESUL_ATOMICS_DEFAULT ON)
-# Intel 17 has an issue where it generates illegal instructions
-# by padding instructions incorrectly, which appears to happen
-# when asking for a few relaxed atomics close to each other
-# By the time we want to delete the old atomics we also can get
-# rid of Intel 17 support
-if(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18.0)
-    set(_DESUL_ATOMICS_DEFAULT OFF)
-  endif()
-endif()
 
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")

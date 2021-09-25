@@ -189,7 +189,9 @@ class TaskQueue : public TaskQueueBase {
                                      task_root_type* const rhs) {
     if (*lhs) decrement(*lhs);
     if (rhs) {
-      Kokkos::atomic_increment(&(rhs->m_ref_count));
+      Kokkos::Impl::desul_atomic_inc(&rhs->m_ref_count,
+                                     Kokkos::Impl::MemoryOrderSeqCst(),
+                                     Kokkos::Impl::MemoryScopeDevice());
     }
 
     // Force write of *lhs
@@ -217,13 +219,7 @@ class TaskQueue : public TaskQueueBase {
 
     using task_type = Impl::Task<execution_space, value_type, FunctorType>;
 
-    enum : size_t { align = (1 << 4), align_mask = align - 1 };
-    enum : size_t { task_size = sizeof(task_type) };
-    enum : size_t { result_size = Impl::TaskResult<value_type>::size };
-    enum : size_t {
-      alloc_size = ((task_size + align_mask) & ~align_mask) +
-                   ((result_size + align_mask) & ~align_mask)
-    };
+    constexpr size_t task_size = sizeof(task_type);
 
     return m_memory.allocate_block_size(task_size);
   }

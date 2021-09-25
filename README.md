@@ -7,7 +7,7 @@ applications targeting all major HPC platforms. For that purpose it provides
 abstractions for both parallel execution of code and data management.
 Kokkos is designed to target complex node architectures with N-level memory
 hierarchies and multiple types of execution resources. It currently can use
-CUDA, HPX, OpenMP and Pthreads as backend programming models with several other
+CUDA, HPX, OpenMP and C++ threads as backend programming models with several other
 backends in development.
 
 Kokkos Core is part of the Kokkos C++ Performance Portability Programming EcoSystem,
@@ -107,7 +107,7 @@ For specifics see the LICENSE file contained in the repository or distribution.
 
 Primary tested compiler are passing in release mode
 with warnings as errors. They also are tested with a comprehensive set of
-backend combinations (i.e. OpenMP, Pthreads, Serial, OpenMP+Serial, ...).
+backend combinations (i.e. OpenMP, Threads, Serial, OpenMP+Serial, ...).
 We are using the following set of flags:
 * GCC:
    ````
@@ -236,7 +236,7 @@ The main reason is that you may otherwise need many different
 configurations of Kokkos installed depending on the required compile time
 features an application needs. For example there is only one default
 execution space, which means you need different installations to have OpenMP
-or Pthreads as the default space. Also for the CUDA backend there are certain
+or C++ threads as the default space. Also for the CUDA backend there are certain
 choices, such as allowing relocatable device code, which must be made at
 installation time. Building Kokkos inline uses largely the same process
 as compiling an application against an installed Kokkos library.

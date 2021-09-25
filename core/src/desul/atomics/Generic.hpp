@@ -45,11 +45,11 @@ struct MinOper {
   }
 };
 
-// This exit early optimization causes weird compiler errors with MSVC 2019
-#ifndef DESUL_HAVE_MSVC_ATOMICS
 template <typename Op, typename Scalar1, typename Scalar2, typename = bool>
 struct may_exit_early : std::false_type {};
 
+// This exit early optimization causes weird compiler errors with MSVC 2019
+#ifndef DESUL_HAVE_MSVC_ATOMICS
 template <typename Op, typename Scalar1, typename Scalar2>
 struct may_exit_early<Op,
                       Scalar1,
@@ -57,6 +57,7 @@ struct may_exit_early<Op,
                       decltype(Op::check_early_exit(std::declval<Scalar1 const&>(),
                                                     std::declval<Scalar2 const&>()))>
     : std::true_type {};
+#endif
 
 template <typename Op, typename Scalar1, typename Scalar2>
 constexpr DESUL_FUNCTION typename std::enable_if<may_exit_early<Op, Scalar1, Scalar2>::value, bool>::type
@@ -69,7 +70,6 @@ constexpr DESUL_FUNCTION typename std::enable_if<!may_exit_early<Op, Scalar1, Sc
 check_early_exit(Op const&, Scalar1 const&, Scalar2 const&) {
   return false;
 }
-#endif
 
 template <class Scalar1, class Scalar2>
 struct AddOper {
@@ -144,6 +144,18 @@ struct RShiftOper {
 };
 
 template <class Scalar1, class Scalar2>
+struct WrappingIncOper {
+  DESUL_FORCEINLINE_FUNCTION
+  static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return ((val1 >= val2) ? Scalar1(0) : val1 + Scalar1(1)); }
+};
+
+template <class Scalar1, class Scalar2>
+struct WrappingDecOper {
+  DESUL_FORCEINLINE_FUNCTION
+  static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return (((val1 == Scalar1(0)) | (val1 > val2)) ? val2 : (val1 - Scalar1(1))); }
+};
+
+template <class Scalar1, class Scalar2>
 struct StoreOper {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1&, const Scalar2& val2) { return val2; }
@@ -172,9 +184,7 @@ atomic_fetch_oper(const Oper& op,
   cas_t assume = oldval;
 
   do {
-#ifndef DESUL_HAVE_MSVC_ATOMICS
     if (Impl::check_early_exit(op, reinterpret_cast<T&>(oldval), val)) return reinterpret_cast<T&>(oldval);
-#endif
     assume = oldval;
     T newval = op.apply(reinterpret_cast<T&>(assume), val);
     oldval = desul::atomic_compare_exchange(
@@ -200,9 +210,7 @@ atomic_oper_fetch(const Oper& op,
   T newval = val;
   cas_t assume = oldval;
   do {
-#ifndef DESUL_HAVE_MSVC_ATOMICS
     if (Impl::check_early_exit(op, reinterpret_cast<T&>(oldval), val)) return reinterpret_cast<T&>(oldval);
-#endif
     assume = oldval;
     newval = op.apply(reinterpret_cast<T&>(assume), val);
     oldval = desul::atomic_compare_exchange(
@@ -625,11 +633,30 @@ DESUL_INLINE_FUNCTION T atomic_fetch_inc(T* const dest,
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
+DESUL_INLINE_FUNCTION T atomic_wrapping_fetch_inc(T* const dest,
+                                         T val,
+                                         MemoryOrder order,
+                                         MemoryScope scope) {
+  static_assert(std::is_unsigned<T>::value, "Signed types not supported by atomic_wrapping_fetch_inc.");
+  return Impl::atomic_fetch_oper(Impl::WrappingIncOper<T, const T>(), dest, val, order, scope);
+}
+
+template <typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T atomic_fetch_dec(T* const dest,
                                          MemoryOrder order,
                                          MemoryScope scope) {
   return atomic_fetch_sub(dest, T(1), order, scope);
 }
+
+template <typename T, class MemoryOrder, class MemoryScope>
+DESUL_INLINE_FUNCTION T atomic_wrapping_fetch_dec(T* const dest,
+                                         T val,
+                                         MemoryOrder order,
+                                         MemoryScope scope) {
+  static_assert(std::is_unsigned<T>::value, "Signed types not supported by atomic_wrapping_fetch_dec.");
+  return Impl::atomic_fetch_oper(Impl::WrappingDecOper<T, const T>(), dest, val, order, scope);
+}
+
 template <typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION void atomic_inc(T* const dest,
                                          MemoryOrder order,

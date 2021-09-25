@@ -2021,6 +2021,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
+
+    // Valid team size not provided, deduce team size
     m_team_size =
         m_team_size >= 0
             ? m_team_size
@@ -2082,8 +2084,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
-    if (int(m_team_size) >
-        arg_policy.team_size_max(m_functor, m_reducer, ParallelReduceTag())) {
+
+    size_type team_size_max =
+        Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
+            m_policy.space().impl_internal_space_instance(), attr, m_functor,
+            m_vector_size, m_policy.team_scratch_size(0),
+            m_policy.thread_scratch_size(0)) /
+        m_vector_size;
+
+    if ((int)m_team_size > (int)team_size_max) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too "
                       "large team size."));

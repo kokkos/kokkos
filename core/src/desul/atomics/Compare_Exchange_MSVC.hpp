@@ -18,10 +18,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 namespace desul {
 
-template<class T, class MemoryOrder, class MemoryScope>
-T atomic_exchange(T* const, T val, MemoryOrder, MemoryScope) { return val;}
-
-
 template<class MemoryOrder, class MemoryScope>
 void atomic_thread_fence(MemoryOrder, MemoryScope) {
   std::atomic_thread_fence(CXXMemoryOrder<MemoryOrder>::value);
@@ -89,6 +85,21 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
   __int64 return_val = _InterlockedExchange64(
       (__int64*)dest, *((__int64*)&val));
   return *(reinterpret_cast<T*>(&return_val));
+}
+
+template <typename T, class MemoryOrder, class MemoryScope>
+typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8), T>::type atomic_exchange(
+     T* const dest, T val, MemoryOrder, MemoryScope scope) {
+  while (!Impl::lock_address((void*)dest, scope)) {}
+  if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+          atomic_thread_fence(MemoryOrderRelease(), scope);
+  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  T return_val = *dest;
+  *dest = val;
+  atomic_thread_fence(MemoryOrderRelease(),scope);
+
+  Impl::unlock_address((void*)dest, scope);
+  return return_val;
 }
 
 template <typename T, class MemoryScope>
@@ -179,7 +190,7 @@ typename std::enable_if<sizeof(T) == 16, T>::type atomic_compare_exchange(
 
 
 template <typename T, class MemoryOrder, class MemoryScope>
-typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 4 && sizeof(T) != 8 && sizeof(T) != 16), T>::type atomic_compare_exchange(
+typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8 && sizeof(T) != 16), T>::type atomic_compare_exchange(
      T* const dest, T compare, T val, MemoryOrder, MemoryScope scope) {
   while (!Impl::lock_address((void*)dest, scope)) {}
   if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)

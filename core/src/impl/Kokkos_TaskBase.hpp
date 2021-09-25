@@ -211,7 +211,9 @@ class TaskBase {
     if (nullptr != dep) {
       // The future may be destroyed upon returning from this call
       // so increment reference count to track this assignment.
-      Kokkos::atomic_increment(&(dep->m_ref_count));
+      Kokkos::Impl::desul_atomic_inc(&(dep->m_ref_count),
+                                     Kokkos::Impl::MemoryOrderSeqCst(),
+                                     Kokkos::Impl::MemoryScopeDevice());
     }
   }
 

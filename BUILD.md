@@ -120,7 +120,7 @@ Device backends can be enabled by specifying `-DKokkos_ENABLE_X`.
     * Whether to build OpenMP backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_PTHREAD
-    * Whether to build Pthread backend
+    * Whether to build C++ thread backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_SERIAL
     * Whether to build serial backend

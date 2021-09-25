@@ -166,11 +166,10 @@ namespace Impl {
 
 class SYCLSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
  public:
-  void do_initialize(const InitArguments& args) final;
-  void do_finalize(const bool) final;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
   void fence() final;
   void fence(const std::string&) final;
-  void print_exec_space_name(std::ostream& msg) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
@@ -186,6 +185,41 @@ struct DeviceTypeTraits<Kokkos::Experimental::SYCL> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Experimental {
+template <class... Args>
+std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
+#ifdef __cpp_fold_expressions
+  static_assert(
+      (... && std::is_arithmetic_v<Args>),
+      "Kokkos Error: partitioning arguments must be integers or floats");
+#endif
+
+  sycl::context context = sycl_space.sycl_context();
+  sycl::default_selector device_selector;
+  std::vector<SYCL> instances;
+  instances.reserve(sizeof...(Args));
+  for (unsigned int i = 0; i < sizeof...(Args); ++i)
+    instances.emplace_back(sycl::queue(context, device_selector));
+  return instances;
+}
+
+template <class T>
+std::vector<SYCL> partition_space(const SYCL& sycl_space,
+                                  std::vector<T>& weights) {
+  static_assert(
+      std::is_arithmetic<T>::value,
+      "Kokkos Error: partitioning arguments must be integers or floats");
+
+  sycl::context context = sycl_space.sycl_context();
+  sycl::default_selector device_selector;
+  std::vector<SYCL> instances;
+  instances.reserve(weights.size());
+  for (unsigned int i = 0; i < weights.size(); ++i)
+    instances.emplace_back(sycl::queue(context, device_selector));
+  return instances;
+}
+}  // namespace Experimental
 
 }  // namespace Kokkos
 

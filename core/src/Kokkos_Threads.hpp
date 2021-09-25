@@ -72,7 +72,7 @@ enum class fence_is_static { yes, no };
 
 namespace Kokkos {
 
-/** \brief  Execution space for a pool of Pthreads or C11 threads on a CPU. */
+/** \brief  Execution space for a pool of C++11 threads on a CPU. */
 class Threads {
  public:
   //! \name Type declarations that all Kokkos devices must provide.
@@ -187,15 +187,14 @@ struct DeviceTypeTraits<Threads> {
 
 namespace Impl {
 
-class ThreadsSpaceInitializer final : public ExecSpaceInitializerBase {
+class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   ThreadsSpaceInitializer()  = default;
   ~ThreadsSpaceInitializer() = default;
-  void do_initialize(const InitArguments& args) final;
-  void do_finalize(const bool) final;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
   void fence() final;
   void fence(const std::string&) final;
-  void print_exec_space_name(std::ostream& strm) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
