@@ -17,11 +17,16 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 namespace desul {
 
-#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, TYPE)                        \
-  template <class MemoryOrder, class MemoryScope>                            \
-  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScope) { \
-    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScope> dest_ref(*dest);   \
-    return dest_ref.fetch_##OPER(val);                                       \
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, TYPE)                              \
+  template <class MemoryOrder>                                                     \
+  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
+    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
+    return dest_ref.fetch_##OPER(val);                                             \
+  }                                                                                \
+  template <class MemoryOrder>                                                     \
+  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore) {   \
+    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
+    return dest_ref.fetch_##OPER(val);                                             \
   }
 
 #define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(OPER) \
