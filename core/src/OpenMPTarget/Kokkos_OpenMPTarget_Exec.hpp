@@ -623,57 +623,6 @@ struct OpenMPTargetReducerWrapper<MinMaxFirstLastLoc<Scalar, Index, Space>> {
 };
 
 //
-// specialize for StdMismatch
-//
-template <class Index, class Space>
-struct OpenMPTargetReducerWrapper<StdMismatch<Index, Space>> {
- private:
-  using index_type = typename std::remove_cv<Index>::type;
-
- public:
-  // Required
-  using value_type = StdMismatchScalar<index_type>;
-
-// WORKAROUND OPENMPTARGET
-// This pragma omp declare target should not be necessary, but Intel compiler
-// fails without it
-#pragma omp declare target
-  // Required
-  KOKKOS_INLINE_FUNCTION
-  static void join(value_type& dest, const value_type& src) {
-    if (!dest.flag && src.flag) {
-      dest = src;
-    }
-
-    if (dest.flag && src.flag) {
-      if (src.loc < dest.loc) {
-        dest = src;
-      }
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    if (!dest.flag && src.flag) {
-      dest = src;
-    }
-
-    if (dest.flag && src.flag) {
-      if (src.loc < dest.loc) {
-        dest = src;
-      }
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void init(value_type& val) {
-    val.flag = false;
-    val.loc  = reduction_identity<index_type>::min();
-  }
-#pragma omp end declare target
-};
-
-//
 // specialize for FirstLoc
 //
 template <class Index, class Space>

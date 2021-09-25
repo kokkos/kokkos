@@ -356,9 +356,6 @@ template <class Scalar, class Index, class ComparatorType,
 struct MinMaxFirstLastLocCustomComparator;
 
 template <class Index, class Space = HostSpace>
-struct StdMismatch;
-
-template <class Index, class Space = HostSpace>
 struct FirstLoc;
 template <class Index, class Space = HostSpace>
 struct LastLoc;
