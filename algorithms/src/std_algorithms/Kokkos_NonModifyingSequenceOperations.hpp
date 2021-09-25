@@ -144,8 +144,13 @@ struct StdMismatchRedFunctor {
   void operator()(const IndexType i, red_value_type& red_value) const {
     const auto& my_value1 = m_first1[i];
     const auto& my_value2 = m_first2[i];
-    m_reducer.join(red_value,
-                   red_value_type{!m_predicate(my_value1, my_value2), i});
+
+    auto rv =
+        !m_predicate(my_value1, my_value2)
+            ? red_value_type{i}
+            : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
+
+    m_reducer.join(red_value, rv);
   }
 
   KOKKOS_FUNCTION
@@ -565,7 +570,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
 
   // aliases
   using index_type           = typename IteratorType1::difference_type;
-  using reducer_type         = StdMismatch<index_type>;
+  using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
   using functor_type =
       StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
@@ -574,30 +579,32 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   // run
   const auto num_e1                = last1 - first1;
   const auto num_e2                = last2 - first2;
-  auto num_elements_for_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
+  const auto num_elemen_par_reduce = (num_e1 <= num_e2) ? num_e1 : num_e2;
   reduction_value_type red_result;
   reducer_type reducer(red_result);
   ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_for_par_reduce),
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elemen_par_reduce),
       functor_type(first1, first2, reducer, std::move(predicate)), reducer);
 
   // fence not needed because reducing into scalar
 
   // decide and return
   using return_type = ::Kokkos::pair<IteratorType1, IteratorType2>;
-  if (red_result.loc == ::Kokkos::reduction_identity<index_type>::min()) {
+  constexpr auto red_min = ::Kokkos::reduction_identity<index_type>::min();
+  if (red_result.min_loc_true == red_min)
+  {
     // in here means mismatch has not been found
-
     if (num_e1 == num_e2) {
       return return_type(last1, last2);
     } else if (num_e1 < num_e2) {
       return return_type(last1, first2 + num_e1);
     } else {
-      return return_type(last1 + num_e2, last2);
+      return return_type(first1 + num_e2, last2);
     }
   } else {
     // in here means mismatch has been found
-    return return_type(first1 + red_result.loc, first2 + red_result.loc);
+    return return_type(first1 + red_result.min_loc_true,
+                       first2 + red_result.min_loc_true);
   }
 }
 
