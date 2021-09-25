@@ -129,9 +129,26 @@ struct StdMyMinFunctor {
       : m_first(std::move(first)), m_reducer(std::move(reducer)) {}
 };
 
+template <class ViewType, class ReducerType>
+struct StdMyMinFunctor2 {
+  using red_value_type = typename ReducerType::value_type;
+
+  ViewType m_view;
+  ReducerType m_reducer;
+
+  KOKKOS_FUNCTION
+  void operator()(const std::size_t i, red_value_type& red_value) const {
+    m_reducer.join(red_value, red_value_type{m_view(i), i});
+  }
+
+  KOKKOS_FUNCTION
+  StdMyMinFunctor2(ViewType viewIn, ReducerType reducer)
+      : m_view(viewIn), m_reducer(std::move(reducer)) {}
+};
+
 template <class ExecutionSpace, class IteratorType>
-IteratorType my_min_use_view(const ExecutionSpace& ex, IteratorType first,
-                             IteratorType last) {
+IteratorType my_min_1(const ExecutionSpace& ex, IteratorType first,
+                      IteratorType last) {
   using index_type = typename IteratorType::difference_type;
   using value_type = typename IteratorType::value_type;
   using reducer_type =
@@ -139,7 +156,6 @@ IteratorType my_min_use_view(const ExecutionSpace& ex, IteratorType first,
   using result_view_type = typename reducer_type::result_view_type;
   using func_t           = StdMyMinFunctor<IteratorType, reducer_type>;
 
-  // run
   result_view_type result("min_or_max_elem_impl_result");
   reducer_type reducer(result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
@@ -152,8 +168,8 @@ IteratorType my_min_use_view(const ExecutionSpace& ex, IteratorType first,
 }
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType my_min_use_scalar(const ExecutionSpace& ex, IteratorType first,
-                               IteratorType last) {
+IteratorType my_min_2(const ExecutionSpace& ex, IteratorType first,
+                      IteratorType last) {
   using index_type = typename IteratorType::difference_type;
   using value_type = typename IteratorType::value_type;
   using reducer_type =
@@ -170,27 +186,51 @@ IteratorType my_min_use_scalar(const ExecutionSpace& ex, IteratorType first,
   return first + result.loc;
 }
 
-TEST(scalar_vs_view_red, my_min_use_result_view) {
-  using exe_space   = Kokkos::DefaultExecutionSpace;
-  using scalar_type = int;
-  using view_type   = Kokkos::View<scalar_type*, exe_space>;
+template <class ExecutionSpace, class ViewType>
+std::size_t my_min_3(const ExecutionSpace& ex, ViewType view) {
+  using index_type = std::size_t;
+  using value_type = typename ViewType::value_type;
+  using reducer_type =
+      Kokkos::MinFirstLoc<value_type, index_type, ExecutionSpace>;
+  using result_type = typename reducer_type::value_type;
+  using func_t      = StdMyMinFunctor2<ViewType, reducer_type>;
 
+  result_type result;
+  reducer_type reducer(result);
+  const auto num_elements = view.extent(0);
+  ::Kokkos::parallel_reduce(
+      "label", Kokkos::RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      func_t(view, reducer), reducer);
+  return result.loc;
+}
+
+TEST(scalar_vs_view_red, my_min_it_use_result_view) {
+  using exe_space = Kokkos::DefaultExecutionSpace;
+  using view_type = Kokkos::View<int*, exe_space>;
   view_type view("myview", 10001);
   fill_view(view);
 
-  auto rit = my_min_use_view(exe_space(), KE::cbegin(view), KE::cend(view));
+  auto rit = my_min_1(exe_space(), KE::cbegin(view), KE::cend(view));
   std::cout << " my_min_el = " << KE::distance(KE::cbegin(view), rit) << '\n';
 }
 
-TEST(scalar_vs_view_red, my_min_use_scalar) {
-  using exe_space   = Kokkos::DefaultExecutionSpace;
-  using scalar_type = int;
-  using view_type   = Kokkos::View<scalar_type*, exe_space>;
-
+TEST(scalar_vs_view_red, my_min_no_it_use_result_scalar) {
+  using exe_space = Kokkos::DefaultExecutionSpace;
+  using view_type = Kokkos::View<int*, exe_space>;
   view_type view("myview", 10001);
   fill_view(view);
 
-  auto rit = my_min_use_scalar(exe_space(), KE::cbegin(view), KE::cend(view));
+  auto ind = my_min_3(exe_space(), view);
+  std::cout << " my_min_el = " << ind << '\n';
+}
+
+TEST(scalar_vs_view_red, my_min_it_use_result_scalar) {
+  using exe_space = Kokkos::DefaultExecutionSpace;
+  using view_type = Kokkos::View<int*, exe_space>;
+  view_type view("myview", 10001);
+  fill_view(view);
+
+  auto rit = my_min_2(exe_space(), KE::cbegin(view), KE::cend(view));
   std::cout << " my_min_el = " << KE::distance(KE::cbegin(view), rit) << '\n';
 }
 
