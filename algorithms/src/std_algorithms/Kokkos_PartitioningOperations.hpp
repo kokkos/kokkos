@@ -346,9 +346,8 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(from_first, to_first_true, to_first_false, pred), counts);
 
-  ex.fence("Kokkos::partition_copy: fence after operation");
+  // fence not needed here because of the scan into counts
 
-  // return
   return {to_first_true + counts.true_count_,
           to_first_false + counts.false_count_};
 }

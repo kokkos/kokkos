@@ -413,9 +413,8 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                             func_type(first, d_first, pred), count);
-    ex.fence("Kokkos::copy_if: fence after operation");
 
-    // return
+    // fence not needed because of the scan accumulating into count
     return d_first + count;
   }
 }

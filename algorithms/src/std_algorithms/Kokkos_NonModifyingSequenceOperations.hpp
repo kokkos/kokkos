@@ -751,9 +751,8 @@ bool lexicographical_compare_impl(const std::string& label,
                                     ComparatorType>;
   ::Kokkos::parallel_reduce(label, RangePolicy<ExecutionSpace>(ex, 0, 1),
                             func2_t(it1, it2, comp), less);
-  ex.fence(
-      "Kokkos::lexicographical_compare: fence after second reduce operation");
 
+  // fence not needed because reducing into scalar
   return static_cast<bool>(less);
 }
 
