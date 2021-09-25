@@ -55,101 +55,6 @@ namespace Mismatch {
 
 namespace KE = Kokkos::Experimental;
 
-// template <class ViewType1, class ViewType2>
-// void test_mismatch(const ViewType1 view_1, const ViewType2 view_2) {
-//   auto first_1 = KE::begin(view_1);
-//   auto last_1  = KE::end(view_1);
-//   auto first_2 = KE::begin(view_2);
-//   auto last_2  = KE::end(view_2);
-
-//   {
-//     // default comparator, pass iterators
-//     auto ret = KE::mismatch(exespace(), first_1, last_1, first_2, last_2);
-//     auto ret_with_label =
-//         KE::mismatch("label", exespace(), first_1, last_1, first_2, last_2);
-
-//     EXPECT_EQ(ret.first, KE::end(view_1));
-//     EXPECT_EQ(ret.second, KE::end(view_2));
-//     EXPECT_EQ(ret, ret_with_label);
-//   }
-//   {
-//     // default comparator, pass views
-//     auto ret            = KE::mismatch(exespace(), view_1, view_2);
-//     auto ret_with_label = KE::mismatch("label", exespace(), view_1, view_2);
-
-//     EXPECT_EQ(ret.first, KE::cend(view_1));
-//     EXPECT_EQ(ret.second, KE::cend(view_2));
-//     EXPECT_EQ(ret, ret_with_label);
-//   }
-
-//   using value_t_1 = typename ViewType1::value_type;
-//   const auto comp = CustomEqualityComparator<value_t_1>();
-//   {
-//     // custom comparator, pass iterators
-//     auto ret = KE::mismatch(exespace(), first_1, last_1, first_2, last_2,
-//     comp); auto ret_with_label = KE::mismatch("label", exespace(), first_1,
-//     last_1,
-//                                        first_2, last_2, comp);
-
-//     EXPECT_EQ(ret.first, KE::end(view_1));
-//     EXPECT_EQ(ret.second, KE::end(view_2));
-//     EXPECT_EQ(ret, ret_with_label);
-//   }
-//   {
-//     // custom comparator, pass views
-//     auto ret = KE::mismatch(exespace(), view_1, view_2, comp);
-//     auto ret_with_label =
-//         KE::mismatch("label", exespace(), view_1, view_2, comp);
-
-//     EXPECT_EQ(ret.first, KE::cend(view_1));
-//     EXPECT_EQ(ret.second, KE::cend(view_2));
-//     EXPECT_EQ(ret, ret_with_label);
-//   }
-// }
-
-// template <class InputIt1, class InputIt2, class BinaryPredicate>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
-// last1,
-//                                               InputIt2 first2,
-//                                               BinaryPredicate p) {
-//   while (first1 != last1 && p(*first1, *first2)) {
-//     ++first1, ++first2;
-//   }
-//   return std::make_pair(first1, first2);
-// }
-
-// template <class InputIt1, class InputIt2, class BinaryPredicate>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
-// last1,
-//                                               InputIt2 first2, InputIt2
-//                                               last2, BinaryPredicate p) {
-//   while (first1 != last1 && first2 != last2 && p(*first1, *first2)) {
-//     ++first1, ++first2;
-//   }
-//   return std::make_pair(first1, first2);
-// }
-
-// template <class InputIt1, class InputIt2>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
-// last1,
-//                                               InputIt2 first2) {
-//   using value_type1 = typename InputIt1::value_type;
-//   using value_type2 = typename InputIt2::value_type;
-//   using pred_t      = IsEqualFunctor<value_type1, value_type2>;
-//   return my_std_mismatch(first1, last1, first2, pred_t());
-// }
-
-// template <class InputIt1, class InputIt2>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
-// last1,
-//                                               InputIt2 first2, InputIt2
-//                                               last2) {
-//   using value_type1 = typename InputIt1::value_type;
-//   using value_type2 = typename InputIt2::value_type;
-//   using pred_t      = IsEqualFunctor<value_type1, value_type2>;
-//   return my_std_mismatch(first1, last1, first2, last2, pred_t());
-// }
-
 std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
@@ -179,13 +84,21 @@ void run_single_scenario(ViewType view1, ViewType view2,
   aux_view_t aux_view2("aux_view2", ext2);
   auto v2_h = create_mirror_view(Kokkos::HostSpace(), aux_view2);
 
-  if (flag == "fill-to-match") {
+  // note that the checks ext1>0 and ext2>0 are there
+  // otherwise we get an error for CUDA NVCC DEBUG CI
+
+  // view is is always filled with 8's
+  if (ext1 > 0) {
     for (std::size_t i = 0; i < ext1; ++i) {
       v1_h(i) = static_cast<value_type>(8);
     }
+  }
 
-    for (std::size_t i = 0; i < ext2; ++i) {
-      v2_h(i) = static_cast<value_type>(8);
+  if (flag == "fill-to-match") {
+    if (ext2 > 0) {
+      for (std::size_t i = 0; i < ext2; ++i) {
+        v2_h(i) = static_cast<value_type>(8);
+      }
     }
   }
 
@@ -194,16 +107,14 @@ void run_single_scenario(ViewType view1, ViewType view2,
     // with same value and only modifify the
     // second view arbitrarily at middle point
 
-    for (std::size_t i = 0; i < ext1; ++i) {
-      v1_h(i) = static_cast<value_type>(8);
-    }
+    if (ext2 > 0) {
+      for (std::size_t i = 0; i < ext2; ++i) {
+        v2_h(i) = static_cast<value_type>(8);
+      }
 
-    for (std::size_t i = 0; i < ext2; ++i) {
-      v2_h(i) = static_cast<value_type>(8);
+      // make them mismatch at middle
+      v2_h(ext2 / 2) = -5;
     }
-
-    // make them mismatch at middle
-    v2_h(ext2 / 2) = -5;
   } else {
     throw std::runtime_error("Kokkos: stdalgo: test: mismatch: Invalid string");
   }
@@ -275,7 +186,7 @@ void run_all_scenarios() {
 
       // for each view1 scenario, I want to test the case of a
       // second view that is smaller, equal size and greater than the view1
-      const vecs_t view2cases = (view1_ext > 0)
+      const vecs_t view2cases = (scenario.first != "empty")
                                     ? vecs_t({"smaller", "equalsize", "larger"})
                                     : vecs_t({"equalsize", "larger"});
 
@@ -286,7 +197,7 @@ void run_all_scenarios() {
         if (std::string(it2) == "smaller") {
           view2_ext -= 1;
         } else if (std::string(it2) == "larger") {
-          view2_ext += 1;
+          view2_ext += 3;
         }
 
         auto view2 =
