@@ -589,10 +589,9 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   // fence not needed because reducing into scalar
 
   // decide and return
-  using return_type = ::Kokkos::pair<IteratorType1, IteratorType2>;
+  using return_type      = ::Kokkos::pair<IteratorType1, IteratorType2>;
   constexpr auto red_min = ::Kokkos::reduction_identity<index_type>::min();
-  if (red_result.min_loc_true == red_min)
-  {
+  if (red_result.min_loc_true == red_min) {
     // in here means mismatch has not been found
     if (num_e1 == num_e2) {
       return return_type(last1, last2);

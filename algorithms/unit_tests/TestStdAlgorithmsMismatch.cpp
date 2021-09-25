@@ -108,7 +108,8 @@ namespace KE = Kokkos::Experimental;
 // }
 
 // template <class InputIt1, class InputIt2, class BinaryPredicate>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1 last1,
+// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
+// last1,
 //                                               InputIt2 first2,
 //                                               BinaryPredicate p) {
 //   while (first1 != last1 && p(*first1, *first2)) {
@@ -118,9 +119,10 @@ namespace KE = Kokkos::Experimental;
 // }
 
 // template <class InputIt1, class InputIt2, class BinaryPredicate>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1 last1,
-//                                               InputIt2 first2, InputIt2 last2,
-//                                               BinaryPredicate p) {
+// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
+// last1,
+//                                               InputIt2 first2, InputIt2
+//                                               last2, BinaryPredicate p) {
 //   while (first1 != last1 && first2 != last2 && p(*first1, *first2)) {
 //     ++first1, ++first2;
 //   }
@@ -128,7 +130,8 @@ namespace KE = Kokkos::Experimental;
 // }
 
 // template <class InputIt1, class InputIt2>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1 last1,
+// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
+// last1,
 //                                               InputIt2 first2) {
 //   using value_type1 = typename InputIt1::value_type;
 //   using value_type2 = typename InputIt2::value_type;
@@ -137,8 +140,10 @@ namespace KE = Kokkos::Experimental;
 // }
 
 // template <class InputIt1, class InputIt2>
-// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1 last1,
-//                                               InputIt2 first2, InputIt2 last2) {
+// std::pair<InputIt1, InputIt2> my_std_mismatch(InputIt1 first1, InputIt1
+// last1,
+//                                               InputIt2 first2, InputIt2
+//                                               last2) {
 //   using value_type1 = typename InputIt1::value_type;
 //   using value_type2 = typename InputIt2::value_type;
 //   using pred_t      = IsEqualFunctor<value_type1, value_type2>;
@@ -216,8 +221,9 @@ void run_single_scenario(ViewType view1, ViewType view2,
     auto last_1  = KE::cend(view1);
     auto first_2 = KE::cbegin(view2);
     auto last_2  = KE::cend(view2);
-    auto my_res1  = KE::mismatch(exespace(), first_1, last_1, first_2, last_2);
-    //auto my_res2  = KE::mismatch("label", exespace(), first_1, last_1, first_2, last_2);
+    auto my_res1 = KE::mismatch(exespace(), first_1, last_1, first_2, last_2);
+    // auto my_res2  = KE::mismatch("label", exespace(), first_1, last_1,
+    // first_2, last_2);
     const auto my_diff11 = my_res1.first - first_1;
     const auto my_diff12 = my_res1.second - first_2;
     // const auto my_diff21 = my_res2.first - first_1;
@@ -243,17 +249,12 @@ void run_single_scenario(ViewType view1, ViewType view2,
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
+void run_all_scenarios() {
   using vecs_t = std::vector<std::string>;
 
   const std::map<std::string, std::size_t> scenarios = {
-    {"empty", 0},
-    {"one-element", 1},
-    {"two-elements", 2},
-    {"small", 11},
-    {"medium", 21103},
-    {"large", 101513}};
+      {"empty", 0},  {"one-element", 1}, {"two-elements", 2},
+      {"small", 11}, {"medium", 21103},  {"large", 101513}};
 
   for (const auto& scenario : scenarios) {
     {
@@ -263,8 +264,8 @@ void run_all_scenarios()
       // for each view1 scenario, I want to test the case of a
       // second view that is smaller, equal size and greater than the view1
       const vecs_t list = (view1_ext > 0)
-	? vecs_t({"smaller", "equalsize", "larger"})
-	: vecs_t({"equalsize", "larger"});
+                              ? vecs_t({"smaller", "equalsize", "larger"})
+                              : vecs_t({"equalsize", "larger"});
 
       for (auto it2 : list) {
         std::size_t view2_ext = view1_ext;
@@ -275,7 +276,8 @@ void run_all_scenarios()
           view2_ext += 1;
         }
 
-        auto view2 = create_view<ValueType>(Tag{}, view2_ext, "mismatch_view_2");
+        auto view2 =
+            create_view<ValueType>(Tag{}, view2_ext, "mismatch_view_2");
 
         // and now we want to test the case where view1 and view2 match,
         // as well as the case where they don't match
