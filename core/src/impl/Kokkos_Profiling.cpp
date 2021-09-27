@@ -72,6 +72,8 @@ namespace Tools {
 
 InitArguments tool_arguments;
 
+const std::string InitArguments::unset_string_option = {"kokkos_tools_impl_unset_option_dogs_are_cool"};
+
 namespace Impl {
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
@@ -86,7 +88,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& tune_internals = arguments.tune_internals;
   while (iarg < narg) {
     if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
-      tune_internals = true;
+      tune_internals = InitArguments::PossiblyUnsetOption::on;
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
@@ -116,7 +118,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       // add the name of the executable to the beginning
       if (narg > 0) args = std::string(arg[0]) + " " + args;
     } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
-      help = true;
+      help = InitArguments::PossiblyUnsetOption::on;
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
@@ -150,7 +152,7 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
       c = toupper(c);
     }
     if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
-      tune_internals = true;
+      tune_internals = InitArguments::PossiblyUnsetOption::on;
     else if (tune_internals)
       return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
                   environment_argument_mismatch,
@@ -555,7 +557,12 @@ void lookup_function(void* dlopen_handle, const std::string& basename,
   // workaround the issue by casting pointer to pointers.
   void* p  = dlsym(dlopen_handle, basename.c_str());
   callback = *reinterpret_cast<Callback*>(&p);
+#else
+  (void)dlopen_handle;
+  (void)basename;
+  (void)callback;
 #endif
+
 }
 
 void initialize(const std::string& profileLibrary) {

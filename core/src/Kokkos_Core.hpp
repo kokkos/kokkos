@@ -102,7 +102,8 @@ struct InitArguments {
         ndevices{-1},
         skip_device{9999},
         disable_warnings{dw},
-        tools{ti} {}
+        tools{Tools::InitArguments::PossiblyUnsetOption::unset},
+        tune_internals{ti} {}
 };
 
 namespace Impl {

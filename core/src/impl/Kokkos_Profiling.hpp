@@ -71,10 +71,15 @@ void warn_deprecated_command_line_argument(std::string deprecated,
 namespace Tools {
 
 struct InitArguments {
-  bool tune_internals = false;
-  bool help           = false;
-  std::string lib     = {};
-  std::string args    = {};
+  // NOTE DZP: PossiblyUnsetOption was introduced
+  // before C++17, std::optional is a better choice
+  // for this long-term
+  static const std::string unset_string_option;
+  enum PossiblyUnsetOption { unset, off, on };
+  PossiblyUnsetOption tune_internals = unset;
+  PossiblyUnsetOption help           = unset;
+  std::string lib     = unset_string_option;
+  std::string args    = unset_string_option;
 };
 
 namespace Impl {
