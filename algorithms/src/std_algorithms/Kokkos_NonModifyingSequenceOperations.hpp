@@ -942,10 +942,10 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
     // decide and return
     if (red_result.min_loc_true ==
         ::Kokkos::reduction_identity<index_type>::min()) {
-      // if here, a subrange has not been found
+      // location has not been found
       return last;
     } else {
-      // a location has been found
+      // location has been found
       return first + red_result.min_loc_true;
     }
   }
@@ -1020,10 +1020,10 @@ IteratorType search_n_impl(const std::string& label, const ExecutionSpace& ex,
     // decide and return
     if (red_result.min_loc_true ==
         ::Kokkos::reduction_identity<index_type>::min()) {
-      // if here, a subrange has not been found
+      // location has not been found
       return last;
     } else {
-      // a location has been found
+      // location has been found
       return first + red_result.min_loc_true;
     }
   }
