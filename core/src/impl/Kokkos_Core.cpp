@@ -797,7 +797,10 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else
       iarg++;
   }
-  if ((arguments.tools.args == Kokkos::Tools::InitArguments::unset_string_option) && narg > 0) tool_args = arg[0];
+  if ((arguments.tools.args ==
+       Kokkos::Tools::InitArguments::unset_string_option) &&
+      narg > 0)
+    tool_args = arg[0];
 }
 
 void parse_environment_variables(InitArguments& arguments) {
