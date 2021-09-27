@@ -241,43 +241,43 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t count,
 template <class Tag, class ValueType>
 void run_all_scenarios() {
   using scenario_t = std::tuple<std::string, std::size_t, std::string>;
-  const std::vector<scenario_t> scenarios = {{"empty", 0, "none"},
+  const std::vector<scenario_t> scenarios = {{"empty", 0u, "none"},
                                              //
-                                             {"one-element-a", 1, "none"},
-                                             {"one-element-b", 1, "left"},
+                                             {"one-element-a", 1u, "none"},
+                                             {"one-element-b", 1u, "left"},
                                              //
-                                             {"two-elements-a", 2, "none"},
-                                             {"two-elements-b", 2, "left"},
-                                             {"two-elements-c", 2, "right"},
+                                             {"two-elements-a", 2u, "none"},
+                                             {"two-elements-b", 2u, "left"},
+                                             {"two-elements-c", 2u, "right"},
                                              //
-                                             {"three-elements-a", 3, "none"},
-                                             {"three-elements-b", 3, "left"},
-                                             {"three-elements-c", 3, "random"},
-                                             {"three-elements-d", 3, "right"},
+                                             {"three-elements-a", 3u, "none"},
+                                             {"three-elements-b", 3u, "left"},
+                                             {"three-elements-c", 3u, "random"},
+                                             {"three-elements-d", 3u, "right"},
                                              //
-                                             {"four-elements-a", 4, "none"},
-                                             {"four-elements-b", 4, "left"},
-                                             {"four-elements-c", 4, "random"},
-                                             {"four-elements-d", 4, "right"},
+                                             {"four-elements-a", 4u, "none"},
+                                             {"four-elements-b", 4u, "left"},
+                                             {"four-elements-c", 4u, "random"},
+                                             {"four-elements-d", 4u, "right"},
                                              //
-                                             {"small-a", 13, "none"},
-                                             {"small-b", 13, "left"},
-                                             {"small-c", 13, "random"},
-                                             {"small-d", 13, "right"},
-                                             {"small-e", 131, "none"},
-                                             {"small-f", 131, "left"},
-                                             {"small-g", 131, "random"},
-                                             {"small-h", 131, "right"},
+                                             {"small-a", 13u, "none"},
+                                             {"small-b", 13u, "left"},
+                                             {"small-c", 13u, "random"},
+                                             {"small-d", 13u, "right"},
+                                             {"small-e", 131u, "none"},
+                                             {"small-f", 131u, "left"},
+                                             {"small-g", 131u, "random"},
+                                             {"small-h", 131u, "right"},
                                              //
-                                             {"medium-a", 21103, "none"},
-                                             {"medium-b", 21103, "left"},
-                                             {"medium-c", 21103, "random"},
-                                             {"medium-d", 21103, "right"},
+                                             {"medium-a", 21103u, "none"},
+                                             {"medium-b", 21103u, "left"},
+                                             {"medium-c", 21103u, "random"},
+                                             {"medium-d", 21103u, "right"},
                                              //
-                                             {"large-a", 101333, "none"},
-                                             {"large-b", 101333, "left"},
-                                             {"large-c", 101333, "random"},
-                                             {"large-d", 101333, "right"}};
+                                             {"large-a", 101333u, "none"},
+                                             {"large-b", 101333u, "left"},
+                                             {"large-c", 101333u, "random"},
+                                             {"large-d", 101333u, "right"}};
 
   const std::vector<std::size_t> counts = {1,  2,  3,  4,   5,  8,
                                            11, 13, 31, 131, 523};
