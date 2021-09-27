@@ -128,12 +128,23 @@ void parse_command_line_arguments(int& narg, char* arg[],
 }
 
 
+InitializationStatus initialize_tools_subsystem(const Kokkos::Tools::InitArguments& args){
+Kokkos::Profiling::initialize(args.lib);
+  if (args.help) {
+    if (!Kokkos::Tools::printHelp(args.args)) {
+      std::cerr << "Tool has not provided a help message" << std::endl;
+    }
+    return {InitializationStatus::InitializationResult::help_request};
+  }
+  Kokkos::Tools::parseArgs(args.args);
+  return {InitializationStatus::InitializationResult::success};
+}
 
 } // namespace Impl
 void initialize(int argc, char* argv[]){
   InitArguments arguments;
   Impl::parse_command_line_arguments(argc, argv, arguments);
-  initialize_profiling(arguments);
+  Impl::initialize_tools_subsystem(arguments);
 }
 
 namespace Experimental {
@@ -798,8 +809,8 @@ void declareMetadata(const std::string& key, const std::string& value) {
       value.c_str());
 }
 
-}  // namespace Impl
-} // namespace Tools
+}  // namespace Tools
+
 namespace Tools {
 namespace Experimental {
 void set_init_callback(Kokkos::Tools::initFunction callback) {
@@ -996,7 +1007,6 @@ Kokkos::Tools::SpaceHandle make_space_handle(const char* space_name) {
 
 // Tuning
 
-namespace Kokkos {
 namespace Tools {
 namespace Experimental {
 static size_t& get_context_counter() {

@@ -305,20 +305,25 @@ void initialize_backends(const InitArguments& args) {
 }
 
 void initialize_profiling(const Tools::InitArguments& args) {
-  Kokkos::Profiling::initialize(args.lib);
-  if (args.help) {
-    if (!Kokkos::Tools::printHelp(args.args)) {
-      std::cerr << "Tool has not provided a help message" << std::endl;
-    }
+  auto initialization_status = Kokkos::Tools::Impl::initialize_tools_subsystem(args);
+  if (initialization_status.result == Kokkos::Tools::Impl::InitializationStatus::InitializationResult::help_request) {
     g_is_initialized = true;
     ::Kokkos::finalize();
     std::exit(EXIT_SUCCESS);
   }
+  else if (initialization_status.result == Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success){
   Kokkos::Tools::parseArgs(args.args);
   for (const auto& category_value : Kokkos::Impl::metadata_map) {
     for (const auto& key_value : category_value.second) {
       Kokkos::Tools::declareMetadata(key_value.first, key_value.second);
     }
+  }
+  }
+  else{
+    std::cerr << "Error initializing Kokkos Tools subsystem" << std::endl;
+    g_is_initialized = true;
+    ::Kokkos::finalize();
+    std::exit(EXIT_FAILURE);
   }
 }
 

@@ -84,6 +84,14 @@ struct InitArguments {
 namespace Impl {
   void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments);
+
+                                  struct InitializationStatus {
+  enum InitializationResult {
+    success, failure, help_request
+  };
+  InitializationResult result;
+};
+InitializationStatus initialize_tools_subsystem(const Kokkos::Tools::InitArguments& args);
 }
 
 bool profileLibraryLoaded();
