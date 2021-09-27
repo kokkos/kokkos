@@ -802,8 +802,7 @@ void parse_environment_variables(InitArguments& arguments) {
   auto init_result = Tools::Impl::parse_environment_variables(arguments.tools);
   if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::
                                 environment_argument_mismatch) {
-    Impl::throw_runtime_exception(
-        init_result.error_message);
+    Impl::throw_runtime_exception(init_result.error_message);
   }
 
   tool_lib = arguments.tools
