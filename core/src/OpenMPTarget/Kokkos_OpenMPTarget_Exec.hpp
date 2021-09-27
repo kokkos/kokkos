@@ -506,8 +506,9 @@ class OpenMPTargetExecTeamMember {
 
   // set_team_thread_mode routine parameters for future understanding:
   // first parameter - scratch level.
-  // second parameter - offset in the scratch buffer.
-  // third parameter - offset for next scratch view.
+  // second parameter - size multiplier for advancing scratch ptr after a
+  // request was serviced. third parameter - offset size multiplier from current
+  // scratch ptr when returning a ptr for a request.
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
@@ -538,8 +539,8 @@ class OpenMPTargetExecTeamMember {
         typename std::conditional<(sizeof(ValueType) < TEAM_REDUCE_SIZE),
                                   ValueType, void>::type;
     type* team_scratch =
-        reinterpret_cast<type*>((static_cast<char*>(m_glb_scratch) +
-                                 TEAM_REDUCE_SIZE * omp_get_team_num()));
+        reinterpret_cast<type*>(static_cast<char*>(m_glb_scratch) +
+                                TEAM_REDUCE_SIZE * omp_get_team_num());
 #pragma omp barrier
     if (team_rank() == thread_id) *team_scratch = value;
 #pragma omp barrier
@@ -566,8 +567,9 @@ class OpenMPTargetExecTeamMember {
                                     value_type, void>;
 
     const int n_values = TEAM_REDUCE_SIZE / sizeof(value_type);
-    type* team_scratch = (type*)(static_cast<char*>(m_glb_scratch) +
-                                 TEAM_REDUCE_SIZE * omp_get_team_num());
+    type* team_scratch =
+        reinterpret_cast<type*>(static_cast<char*>(m_glb_scratch) +
+                                TEAM_REDUCE_SIZE * omp_get_team_num());
     for (int i = m_team_rank; i < n_values; i += m_team_size) {
       team_scratch[i] = value_type();
     }
@@ -1449,7 +1451,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i += 1) {
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
     lambda(i, scan_val, true);
   }
 }
