@@ -66,45 +66,32 @@ struct StdAdjacentDifferenceDefaultBinaryOpFunctor {
   }
 };
 
-template <class IteratorType, class DestViewType, class BinaryOperator>
-struct StdAdjacentDiffItToViewFunctor {
-  using index_type = typename IteratorType::difference_type;
+template <class InputIteratorType, class OutputIteratorType,
+          class BinaryOperator>
+struct StdAdjacentDiffFunctor {
+  using index_type = typename InputIteratorType::difference_type;
 
-  const IteratorType m_first;
-  const DestViewType m_dest_view;
+  const InputIteratorType m_first_from;
+  const OutputIteratorType m_first_dest;
   BinaryOperator m_op;
 
   KOKKOS_FUNCTION
   void operator()(const index_type i) const {
-    const auto& my_value = m_first[i];
+    const auto& my_value = m_first_from[i];
     if (i == 0) {
-      m_dest_view(i) = my_value;
+      m_first_dest[i] = my_value;
     } else {
-      const auto& left_value = m_first[i - 1];
-      m_dest_view(i)         = m_op(my_value, left_value);
+      const auto& left_value = m_first_from[i - 1];
+      m_first_dest[i]        = m_op(my_value, left_value);
     }
   }
 
   KOKKOS_FUNCTION
-  StdAdjacentDiffItToViewFunctor(IteratorType first, DestViewType dest_view,
-                                 BinaryOperator op)
-      : m_first(std::move(first)),
-        m_dest_view(dest_view),
+  StdAdjacentDiffFunctor(InputIteratorType first_from,
+                         OutputIteratorType first_dest, BinaryOperator op)
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
         m_op(std::move(op)) {}
-};
-
-template <class ViewTypeFrom, class OutputIteratorType>
-struct StdAdjDiffCopyFunctor {
-  ViewTypeFrom m_view_from;
-  OutputIteratorType m_first_dest;
-
-  KOKKOS_FUNCTION
-  StdAdjDiffCopyFunctor(const ViewTypeFrom view_from,
-                        OutputIteratorType first_dest)
-      : m_view_from(view_from), m_first_dest(std::move(first_dest)) {}
-
-  KOKKOS_FUNCTION
-  void operator()(int i) const { m_first_dest[i] = m_view_from(i); }
 };
 
 // ------------------------------------------
@@ -128,26 +115,18 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
     return first_dest;
   }
 
-  // potentially, we could handle better the case where
-  // source interval and output interval are not the same.
-  // in that case, we don't need the auxiliary view.
-
   // aliases
   using value_type    = typename OutputIteratorType::value_type;
   using aux_view_type = ::Kokkos::View<value_type*, ExecutionSpace>;
-  using functor1_t    = StdAdjacentDiffItToViewFunctor<InputIteratorType,
-                                                    aux_view_type, BinaryOp>;
-  using functor2_t = StdAdjDiffCopyFunctor<aux_view_type, OutputIteratorType>;
+  using functor_t =
+      StdAdjacentDiffFunctor<InputIteratorType, OutputIteratorType, BinaryOp>;
 
   // run
   const auto num_elements = last_from - first_from;
   aux_view_type aux_view("aux_view", num_elements);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         functor1_t(first_from, aux_view, bin_op));
-  ::Kokkos::parallel_for("copy",
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         functor2_t(aux_view, first_dest));
+                         functor_t(first_from, first_dest, bin_op));
   ex.fence("Kokkos::adjacent_difference: fence after operation");
 
   // return

@@ -208,8 +208,8 @@ struct DefaultBinaryOpFunctor {
 };
 
 template <class Tag, class ValueType, class InfoType, class... Args>
-void run_single_scenario_dest_not_same_as_source(
-    const InfoType& scenario_info, Args... args /* copy on purpose */) {
+void run_single_scenario(const InfoType& scenario_info,
+                         Args... args /* copy on purpose */) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 
@@ -260,49 +260,6 @@ void run_single_scenario_dest_not_same_as_source(
   Kokkos::fence();
 }
 
-template <class Tag, class ValueType, class InfoType, class... Args>
-void run_single_scenario_dest_same_as_source(
-    const InfoType& scenario_info, Args... args /* copy on purpose */) {
-  const auto name            = std::get<0>(scenario_info);
-  const std::size_t view_ext = std::get<1>(scenario_info);
-
-  // std::cout << "adj-diffB: " << name << ", " << view_tag_to_string(Tag{})
-  //           << std::endl;
-
-  auto view = create_view<ValueType>(Tag{}, view_ext, "adj_diff_view");
-
-  fill_view(view, name);
-  const auto gold = compute_gold(view, name, args...);
-
-  // need to fill every time because view is overwritten
-  fill_view(view, name);
-  auto res1 = KE::adjacent_difference(exespace(), KE::cbegin(view),
-                                      KE::cend(view), KE::begin(view), args...);
-  EXPECT_TRUE(res1 == KE::end(view));
-  verify_data(view, gold);
-
-  // need to fill every time because view is overwritten
-  fill_view(view, name);
-  auto res2 = KE::adjacent_difference("label", exespace(), KE::cbegin(view),
-                                      KE::cend(view), KE::begin(view), args...);
-  EXPECT_TRUE(res2 == KE::end(view));
-  verify_data(view, gold);
-
-  // need to fill every time because view is overwritten
-  fill_view(view, name);
-  auto res3 = KE::adjacent_difference(exespace(), view, view, args...);
-  EXPECT_TRUE(res3 == KE::end(view));
-  verify_data(view, gold);
-
-  // need to fill every time because view is overwritten
-  fill_view(view, name);
-  auto res4 = KE::adjacent_difference("label", exespace(), view, view, args...);
-  EXPECT_TRUE(res4 == KE::end(view));
-  verify_data(view, gold);
-
-  Kokkos::fence();
-}
-
 template <class Tag, class ValueType, class... Args>
 void run_all_scenarios(Args... args /* copy on purpose */) {
   if (0 < sizeof...(args)) {
@@ -314,8 +271,7 @@ void run_all_scenarios(Args... args /* copy on purpose */) {
   }
 
   for (const auto& it : default_scenarios) {
-    run_single_scenario_dest_same_as_source<Tag, ValueType>(it, args...);
-    run_single_scenario_dest_not_same_as_source<Tag, ValueType>(it, args...);
+    run_single_scenario<Tag, ValueType>(it, args...);
   }
 }
 
