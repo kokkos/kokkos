@@ -220,7 +220,6 @@ struct EqualsTwoFunctor {
 
 template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   std::cout << "replace_copy_if: " << name << ", " << view_tag_to_string(Tag{})

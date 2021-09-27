@@ -267,7 +267,6 @@ void print_scenario_details(const std::string& name, BopT bop, UopT uop,
 template <class Tag, class ValueType, class InfoType, class... Args>
 void run_single_scenario(const InfoType& scenario_info,
                          Args... args /* by value on purpose*/) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   print_scenario_details<Tag>(name, args...);

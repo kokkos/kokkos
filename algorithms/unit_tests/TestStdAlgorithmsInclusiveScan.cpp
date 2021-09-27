@@ -244,7 +244,6 @@ std::string value_type_to_string(double) { return "double"; }
 template <class Tag, class ValueType, class InfoType>
 void run_single_scenario_default_op(const InfoType& scenario_info) {
   using default_op           = SumFunctor<ValueType>;
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   std::cout << "inclusive_scan default op: " << name << ", "
@@ -292,7 +291,6 @@ template <class Tag, class ValueType, class InfoType, class BinaryOp,
           class... Args>
 void run_single_scenario_custom_op(const InfoType& scenario_info, BinaryOp bop,
                                    Args... args /* copy on purpose */) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 

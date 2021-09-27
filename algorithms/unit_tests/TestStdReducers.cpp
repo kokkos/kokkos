@@ -137,9 +137,9 @@ auto run_min_or_max_test(ViewType view, StdReducersTestEnumOrder enValue) {
 }
 
 TEST(std_algorithms_reducers, max_first_loc) {
-  using exespace = Kokkos::HostSpace;
+  using hostspace = Kokkos::HostSpace;
 
-  using view_t                 = Kokkos::View<double*, exespace>;
+  using view_t                 = Kokkos::View<double*, hostspace>;
   constexpr std::size_t extent = 10;
   view_t view_h("v", extent);
   view_h(0) = 0.;
@@ -158,26 +158,26 @@ TEST(std_algorithms_reducers, max_first_loc) {
   const view_value_type gold_value = 2.;
   const index_type gold_location   = 3;
 
-  const auto pair1 = run_min_or_max_test<0, exespace, index_type>(
+  const auto pair1 = run_min_or_max_test<0, hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::LeftToRight);
   ASSERT_EQ(pair1.first, gold_value);
   ASSERT_EQ(pair1.second, gold_location);
 
-  const auto pair2 = run_min_or_max_test<0, exespace, index_type>(
+  const auto pair2 = run_min_or_max_test<0, hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::RightToLeft);
   ASSERT_EQ(pair2.first, gold_value);
   ASSERT_EQ(pair2.second, gold_location);
 
-  const auto pair3 = run_min_or_max_test<0, exespace, index_type>(
+  const auto pair3 = run_min_or_max_test<0, hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::Random);
   ASSERT_EQ(pair3.first, gold_value);
   ASSERT_EQ(pair3.second, gold_location);
 }
 
 TEST(std_algorithms_reducers, min_first_loc) {
-  using exespace = Kokkos::HostSpace;
+  using hostspace = Kokkos::HostSpace;
 
-  using view_t                 = Kokkos::View<double*, exespace>;
+  using view_t                 = Kokkos::View<double*, hostspace>;
   constexpr std::size_t extent = 10;
   view_t view_h("v", extent);
   view_h(0) = 0.;
@@ -196,17 +196,17 @@ TEST(std_algorithms_reducers, min_first_loc) {
   const view_value_type gold_value = -1.;
   const index_type gold_location   = 5;
 
-  const auto pair1 = run_min_or_max_test<1, exespace, index_type>(
+  const auto pair1 = run_min_or_max_test<1, hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::LeftToRight);
   ASSERT_EQ(pair1.first, gold_value);
   ASSERT_EQ(pair1.second, gold_location);
 
-  const auto pair2 = run_min_or_max_test<1, exespace, index_type>(
+  const auto pair2 = run_min_or_max_test<1, hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::RightToLeft);
   ASSERT_EQ(pair2.first, gold_value);
   ASSERT_EQ(pair2.second, gold_location);
 
-  const auto pair3 = run_min_or_max_test<1, exespace, index_type>(
+  const auto pair3 = run_min_or_max_test<1, hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::Random);
   ASSERT_EQ(pair3.first, gold_value);
   ASSERT_EQ(pair3.second, gold_location);
@@ -247,9 +247,9 @@ void run_min_max_test(ViewType view, StdReducersTestEnumOrder enValue,
 }
 
 TEST(std_algorithms_reducers, min_max_first_last_loc) {
-  using exespace = Kokkos::HostSpace;
+  using hostspace = Kokkos::HostSpace;
 
-  using view_t                 = Kokkos::View<double*, exespace>;
+  using view_t                 = Kokkos::View<double*, hostspace>;
   constexpr std::size_t extent = 10;
   view_t view_h("v", extent);
   view_h(0) = 0.;
@@ -268,13 +268,13 @@ TEST(std_algorithms_reducers, min_max_first_last_loc) {
   Kokkos::pair<view_value_type, view_value_type> gold_values = {-1., 2.};
   Kokkos::pair<index_type, index_type> gold_indices          = {5, 8};
 
-  run_min_max_test<exespace, index_type>(
+  run_min_max_test<hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::LeftToRight, gold_values, gold_indices);
 
-  run_min_max_test<exespace, index_type>(
+  run_min_max_test<hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::RightToLeft, gold_values, gold_indices);
 
-  run_min_max_test<exespace, index_type>(
+  run_min_max_test<hostspace, index_type>(
       view_h, StdReducersTestEnumOrder::Random, gold_values, gold_indices);
 }
 

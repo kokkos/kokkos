@@ -54,6 +54,8 @@
 namespace Test {
 namespace stdalgos {
 
+using exespace = Kokkos::DefaultExecutionSpace;
+
 struct DynamicTag {};
 struct StridedTwoTag {};
 struct StridedThreeTag {};
@@ -218,7 +220,6 @@ void fill_zero(ViewType1 a, ViewType2 b) {
 // helpers for testing small views (extent = 10)
 // prefer `default_scenarios` map for creating new tests
 using value_type = double;
-using exespace   = Kokkos::DefaultExecutionSpace;
 
 struct std_algorithms_test : public ::testing::Test {
   static constexpr size_t extent = 10;

@@ -239,7 +239,6 @@ template <class Tag, class ValueType, class InfoType, class BinaryOp,
           class UnaryOp>
 void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
                          BinaryOp bop, UnaryOp uop) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   std::cout << "transform_exclusive_scan custom op: " << name << ", "

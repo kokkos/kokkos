@@ -210,7 +210,6 @@ struct DefaultBinaryOpFunctor {
 template <class Tag, class ValueType, class InfoType, class... Args>
 void run_single_scenario_dest_not_same_as_source(
     const InfoType& scenario_info, Args... args /* copy on purpose */) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 
@@ -264,7 +263,6 @@ void run_single_scenario_dest_not_same_as_source(
 template <class Tag, class ValueType, class InfoType, class... Args>
 void run_single_scenario_dest_same_as_source(
     const InfoType& scenario_info, Args... args /* copy on purpose */) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 

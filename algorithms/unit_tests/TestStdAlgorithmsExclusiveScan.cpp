@@ -231,7 +231,6 @@ template <class Tag, class ValueType, class InfoType>
 void run_single_scenario_default_op(const InfoType& scenario_info,
                                     ValueType init_value) {
   using default_op           = SumFunctor<ValueType>;
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   std::cout << "exclusive_scan default op: " << name << ", "
@@ -282,7 +281,6 @@ void run_single_scenario_default_op(const InfoType& scenario_info,
 template <class Tag, class ValueType, class InfoType, class BinaryOp>
 void run_single_scenario_custom_op(const InfoType& scenario_info,
                                    ValueType init_value, BinaryOp bop) {
-  using exespace             = Kokkos::DefaultExecutionSpace;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
   std::cout << "exclusive_scan custom op: " << name << ", "

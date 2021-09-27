@@ -53,8 +53,6 @@ namespace ForEach {
 
 namespace KE = Kokkos::Experimental;
 
-using exespace = Kokkos::DefaultExecutionSpace;
-
 template <class ViewType>
 void test_for_each(const ViewType view) {
   using value_t           = typename ViewType::value_type;
