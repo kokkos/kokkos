@@ -42,8 +42,6 @@
 //@HEADER
 */
 
-#define KOKKOS_TOOLS_INDEPENDENT_BUILD
-
 #ifndef KOKKOS_TOOLS_INDEPENDENT_BUILD
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
@@ -130,7 +128,17 @@ void parse_command_line_arguments(int& narg, char* arg[],
     if (args.empty() && narg > 0) args = arg[0];
   }
 }
-
+Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(InitArguments& arguments) {
+  auto& tool_lib = arguments.lib;
+  auto env_tool_lib = std::getenv("KOKKOS_PROFILE_LIBRARY");
+  if (env_tool_lib != nullptr) {
+    if (!tool_lib.empty() && std::string(env_tool_lib) != tool_lib)
+      return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::environment_argument_mismatch};
+    else
+      tool_lib = env_tool_lib;
+  }
+  return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
+}
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args) {
   Kokkos::Profiling::initialize(args.lib);
@@ -145,10 +153,14 @@ InitializationStatus initialize_tools_subsystem(
 }
 
 }  // namespace Impl
+void initialize(const InitArguments& arguments){
+  Impl::initialize_tools_subsystem(arguments);
+}
 void initialize(int argc, char* argv[]) {
   InitArguments arguments;
   Impl::parse_command_line_arguments(argc, argv, arguments);
-  Impl::initialize_tools_subsystem(arguments);
+  Impl::parse_environment_variables(arguments);
+  initialize(arguments);
 }
 
 namespace Experimental {

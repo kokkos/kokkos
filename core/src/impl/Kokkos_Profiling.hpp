@@ -82,15 +82,18 @@ struct InitArguments {
 };
 
 namespace Impl {
-void parse_command_line_arguments(int& narg, char* arg[],
-                                  InitArguments& arguments);
 
 struct InitializationStatus {
-  enum InitializationResult { success, failure, help_request };
+  enum InitializationResult { success, failure, help_request, environment_argument_mismatch };
   InitializationResult result;
 };
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args);
+    
+void parse_command_line_arguments(int& narg, char* arg[],
+                                  InitArguments& arguments);
+Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(InitArguments& arguments);
+
 }  // namespace Impl
 
 bool profileLibraryLoaded();

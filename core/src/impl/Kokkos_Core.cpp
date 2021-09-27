@@ -798,6 +798,20 @@ void parse_environment_variables(InitArguments& arguments) {
   auto& tune_internals   = arguments.tune_internals;
   auto& tool_lib         = arguments.tool_lib;
   char* endptr;
+
+  auto init_result = Tools::Impl::parse_environment_variables(arguments.tools);
+  if(init_result.result == Kokkos::Tools::Impl::InitializationStatus::environment_argument_mismatch){
+    Impl::throw_runtime_exception(
+          "Error: expecting a match between --kokkos-tools-library and "
+          "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
+          "Kokkos::initialize(int narg, char* argc[]).");
+  }
+  tune_internals =
+      arguments.tools.tune_internals;  // maintain consistency between
+                                       // deprecated and current
+  tool_lib = arguments.tools
+                 .lib;  // maintain consistency between deprecated and current
+ 
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
   if (env_num_threads_str != nullptr) {
     errno                = 0;
@@ -966,16 +980,7 @@ void parse_environment_variables(InitArguments& arguments) {
           "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
           "Kokkos::initialize(int narg, char* argc[]).");
   }
-  auto env_tool_lib = std::getenv("KOKKOS_PROFILE_LIBRARY");
-  if (env_tool_lib != nullptr) {
-    if (!tool_lib.empty() && std::string(env_tool_lib) != tool_lib)
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-tools-library and "
-          "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    else
-      tool_lib = env_tool_lib;
-  }
+  
 }
 
 }  // namespace
