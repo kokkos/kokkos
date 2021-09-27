@@ -127,7 +127,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else {
       iarg++;
     }
-    if (args.empty() && narg > 0) args = arg[0];
+    if ((args == Kokkos::Tools::InitArguments::unset_string_option) && narg > 0) args = arg[0];
   }
 }
 Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
@@ -136,7 +136,7 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
   auto& tune_internals = arguments.tune_internals;
   auto env_tool_lib    = std::getenv("KOKKOS_PROFILE_LIBRARY");
   if (env_tool_lib != nullptr) {
-    if (!tool_lib.empty() && std::string(env_tool_lib) != tool_lib)
+    if ((tool_lib != Kokkos::Tools::InitArguments::unset_string_option) && std::string(env_tool_lib) != tool_lib)
       return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
                   environment_argument_mismatch,
               "Error: expecting a match between --kokkos-tools-library and "
@@ -165,14 +165,18 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
 }
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args) {
+  
+
   Kokkos::Profiling::initialize(args.lib);
+  auto final_args = (args.args != Kokkos::Tools::InitArguments::unset_string_option) ? args.args : "";
+
   if (args.help) {
-    if (!Kokkos::Tools::printHelp(args.args)) {
+    if (!Kokkos::Tools::printHelp(final_args)) {
       std::cerr << "Tool has not provided a help message" << std::endl;
     }
     return {InitializationStatus::InitializationResult::help_request};
   }
-  Kokkos::Tools::parseArgs(args.args);
+  Kokkos::Tools::parseArgs(final_args);
   return {InitializationStatus::InitializationResult::success};
 }
 
