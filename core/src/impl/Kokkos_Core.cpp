@@ -807,7 +807,7 @@ void parse_environment_variables(InitArguments& arguments) {
         "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
         "Kokkos::initialize(int narg, char* argc[]).");
   }
-  
+
   tool_lib = arguments.tools
                  .lib;  // maintain consistency between deprecated and current
 
