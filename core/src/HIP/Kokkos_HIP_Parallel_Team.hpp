@@ -189,9 +189,11 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   }
 
   static int scratch_size_max(int level) {
-    return (
-        level == 0 ? 1024 * 40 :  // FIXME_HIP arbitrarily setting this to 48kB
-            20 * 1024 * 1024);    // FIXME_HIP arbitrarily setting this to 20MB
+    // FIXME_HIP: can set actual limits once the API change discussed
+    // in https://github.com/kokkos/kokkos/issues/4338 is resolved
+    // until then, we leave these as arbitrary values that "fix" the failing
+    // test
+    return (level == 0 ? 1024 * 32 : 20 * 1024 * 1024);
   }
   inline void impl_set_vector_length(size_t size) { m_vector_length = size; }
   inline void impl_set_team_size(size_t size) { m_team_size = size; }
