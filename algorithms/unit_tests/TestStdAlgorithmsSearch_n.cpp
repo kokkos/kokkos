@@ -140,6 +140,16 @@ void fill_view(ViewType dest_view, ValueType value, std::size_t count,
     }
   }
 
+  else if (where_to_place_count_values == "left_and_1567") {
+    for (std::size_t i = 0; i < count; ++i) {
+      v_h(i) = value;
+    }
+
+    for (std::size_t i = 0; i < count; ++i) {
+      v_h(1567 + i) = value;
+    }
+  }
+
   else if (where_to_place_count_values == "random") {
     // find a random location to start filling view
     using dist_type = std::uniform_int_distribution<int>;
@@ -154,6 +164,16 @@ void fill_view(ViewType dest_view, ValueType value, std::size_t count,
 
     for (std::size_t i = 0; i < count; ++i) {
       v_h(start_at + i) = value;
+    }
+  }
+
+  else if (where_to_place_count_values == "11133_and_right") {
+    for (std::size_t i = 0; i < count; ++i) {
+      v_h(11133 + i) = value;
+    }
+
+    for (std::size_t i = 0; i < count; ++i) {
+      v_h(ext - count + i) = value;
     }
   }
 
@@ -273,6 +293,8 @@ void run_all_scenarios() {
   scenarios.push_back(std::make_tuple("medium-b", 21103u, "left"));
   scenarios.push_back(std::make_tuple("medium-c", 21103u, "random"));
   scenarios.push_back(std::make_tuple("medium-d", 21103u, "right"));
+  scenarios.push_back(std::make_tuple("medium-e", 21103u, "left_and_1567"));
+  scenarios.push_back(std::make_tuple("medium-f", 21103u, "11133_and_right"));
 
   scenarios.push_back(std::make_tuple("large-a", 101333u, "none"));
   scenarios.push_back(std::make_tuple("large-b", 101333u, "left"));
