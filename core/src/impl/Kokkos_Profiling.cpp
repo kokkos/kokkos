@@ -121,8 +121,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
         arg[k] = arg[k + 1];
       }
       narg--;
-    }
-    else{
+    } else {
       iarg++;
     }
     if (args.empty() && narg > 0) args = arg[0];
