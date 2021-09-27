@@ -98,6 +98,9 @@ struct StdUniqueCopyFunctor {
 template <class InputIterator>
 struct StdReverseFunctor {
   using index_type = typename InputIterator::difference_type;
+  static_assert(std::is_signed<index_type>::value,
+                "Kokkos: StdReverseFunctor requires signed index type");
+
   InputIterator m_first;
   InputIterator m_last;
 
@@ -112,6 +115,9 @@ struct StdReverseFunctor {
 
 template <class IndexType, class InputIterator, class OutputIterator>
 struct StdReverseCopyFunctor {
+  static_assert(std::is_signed<IndexType>::value,
+                "Kokkos: StdReverseCopyFunctor requires signed index type");
+
   InputIterator m_last;
   OutputIterator m_dest_first;
 
@@ -138,6 +144,9 @@ struct StdMoveFunctor {
 
 template <class IndexType, class IteratorType1, class IteratorType2>
 struct StdMoveBackwardFunctor {
+  static_assert(std::is_signed<IndexType>::value,
+                "Kokkos: StdMoveBackwardFunctor requires signed index type");
+
   IteratorType1 m_last;
   IteratorType2 m_dest_last;
 

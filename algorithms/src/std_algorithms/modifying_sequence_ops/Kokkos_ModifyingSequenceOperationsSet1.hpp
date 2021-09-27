@@ -75,6 +75,9 @@ struct StdCopyFunctor {
 
 template <class IndexType, class IteratorType1, class IteratorType2>
 struct StdCopyBackwardFunctor {
+  static_assert(std::is_signed<IndexType>::value,
+                "Kokkos: StdCopyBackwardFunctor requires signed index type");
+
   IteratorType1 m_last;
   IteratorType2 m_dest_last;
 
