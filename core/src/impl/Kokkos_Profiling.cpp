@@ -127,16 +127,19 @@ void parse_command_line_arguments(int& narg, char* arg[],
     if (args.empty() && narg > 0) args = arg[0];
   }
 }
-Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(InitArguments& arguments) {
-  auto& tool_lib = arguments.lib;
+Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
+    InitArguments& arguments) {
+  auto& tool_lib    = arguments.lib;
   auto env_tool_lib = std::getenv("KOKKOS_PROFILE_LIBRARY");
   if (env_tool_lib != nullptr) {
     if (!tool_lib.empty() && std::string(env_tool_lib) != tool_lib)
-      return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::environment_argument_mismatch};
+      return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
+                  environment_argument_mismatch};
     else
       tool_lib = env_tool_lib;
   }
-  return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
+  return {
+      Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
 }
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args) {
@@ -152,7 +155,7 @@ InitializationStatus initialize_tools_subsystem(
 }
 
 }  // namespace Impl
-void initialize(const InitArguments& arguments){
+void initialize(const InitArguments& arguments) {
   Impl::initialize_tools_subsystem(arguments);
 }
 void initialize(int argc, char* argv[]) {
