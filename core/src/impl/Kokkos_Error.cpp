@@ -65,7 +65,6 @@ void host_abort(const char *const message) {
   ::abort();
 }
 
-
 std::string human_memory_size(size_t arg_bytes) {
   double bytes   = arg_bytes;
   const double K = 1024;
@@ -150,10 +149,7 @@ std::string Experimental::RawMemoryAllocationFailure::get_error_message()
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
-
-
-}  // namespace Impl
+namespace Impl {}  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_CUDA
 namespace Experimental {

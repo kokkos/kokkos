@@ -292,7 +292,6 @@ bool is_unsigned_int(const char* str);
 
 namespace {
 
-
 void initialize_backends(const InitArguments& args) {
 // This is an experimental setting
 // For KNL in Flat mode this variable should be set, so that
@@ -305,21 +304,24 @@ void initialize_backends(const InitArguments& args) {
 }
 
 void initialize_profiling(const Tools::InitArguments& args) {
-  auto initialization_status = Kokkos::Tools::Impl::initialize_tools_subsystem(args);
-  if (initialization_status.result == Kokkos::Tools::Impl::InitializationStatus::InitializationResult::help_request) {
+  auto initialization_status =
+      Kokkos::Tools::Impl::initialize_tools_subsystem(args);
+  if (initialization_status.result ==
+      Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
+          help_request) {
     g_is_initialized = true;
     ::Kokkos::finalize();
     std::exit(EXIT_SUCCESS);
-  }
-  else if (initialization_status.result == Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success){
-  Kokkos::Tools::parseArgs(args.args);
-  for (const auto& category_value : Kokkos::Impl::metadata_map) {
-    for (const auto& key_value : category_value.second) {
-      Kokkos::Tools::declareMetadata(key_value.first, key_value.second);
+  } else if (initialization_status.result ==
+             Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
+                 success) {
+    Kokkos::Tools::parseArgs(args.args);
+    for (const auto& category_value : Kokkos::Impl::metadata_map) {
+      for (const auto& key_value : category_value.second) {
+        Kokkos::Tools::declareMetadata(key_value.first, key_value.second);
+      }
     }
-  }
-  }
-  else{
+  } else {
     std::cerr << "Error initializing Kokkos Tools subsystem" << std::endl;
     g_is_initialized = true;
     ::Kokkos::finalize();
@@ -600,14 +602,19 @@ void parse_command_line_arguments(int& narg, char* arg[],
   bool kokkos_ndevices_found = false;
 
   Tools::Impl::parse_command_line_arguments(narg, arg, arguments.tools);
-  
-  tune_internals = arguments.tools.tune_internals; // maintain consistency between deprecated and current
-  tool_help = arguments.tools.help; // maintain consistency between deprecated and current
-  tool_lib = arguments.tools.lib; // maintain consistency between deprecated and current
-  tool_args = arguments.tools.args; // maintain consistency between deprecated and current
+
+  tune_internals =
+      arguments.tools.tune_internals;  // maintain consistency between
+                                       // deprecated and current
+  tool_help = arguments.tools
+                  .help;  // maintain consistency between deprecated and current
+  tool_lib = arguments.tools
+                 .lib;  // maintain consistency between deprecated and current
+  tool_args = arguments.tools
+                  .args;  // maintain consistency between deprecated and current
 
   int iarg = 0;
-  
+
   while (iarg < narg) {
     if (check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
       for (int k = iarg; k < narg - 1; k++) {

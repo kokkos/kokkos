@@ -45,14 +45,12 @@
 #ifndef KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
-
 #include <impl/Kokkos_Profiling.hpp>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
-
 
 namespace Kokkos {
 
@@ -174,7 +172,7 @@ struct ComplexReducerSizeCalculator {
   }
 };
 
-} // namespace Impl
+}  // namespace Impl
 
 template <class Tuner, class Functor, class TagType,
           class TuningPermissionFunctor, class Map, class Policy>
@@ -362,11 +360,9 @@ void report_policy_results(const size_t /**tuning_context*/,
       });
 }
 
-
-
 }  // namespace Impl
 
-} // namespace Experimental
+}  // namespace Experimental
 
 namespace Impl {
 
@@ -384,7 +380,8 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::tune_policy(context_id, label, policy, functor, Kokkos::ParallelForTag{});
+    Experimental::Impl::tune_policy(context_id, label, policy, functor,
+                                    Kokkos::ParallelForTag{});
   }
 #else
   (void)functor;
@@ -400,8 +397,8 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(context_id, label, policy, functor,
-                          Kokkos::ParallelForTag{});
+    Experimental::Impl::report_policy_results(
+        context_id, label, policy, functor, Kokkos::ParallelForTag{});
   }
 #else
   (void)policy;
@@ -424,7 +421,8 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::tune_policy(context_id, label, policy, functor, Kokkos::ParallelScanTag{});
+    Experimental::Impl::tune_policy(context_id, label, policy, functor,
+                                    Kokkos::ParallelScanTag{});
   }
 #else
   (void)functor;
@@ -440,8 +438,8 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(context_id, label, policy, functor,
-                          Kokkos::ParallelScanTag{});
+    Experimental::Impl::report_policy_results(
+        context_id, label, policy, functor, Kokkos::ParallelScanTag{});
   }
 #else
   (void)policy;
@@ -463,8 +461,8 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  Experimental::Impl::ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
-                                       Kokkos::ParallelReduceTag{});
+  Experimental::Impl::ReductionSwitcher<ReducerType>::tune(
+      context_id, label, policy, functor, Kokkos::ParallelReduceTag{});
 #else
   (void)functor;
 #endif
@@ -479,8 +477,8 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(context_id, label, policy, functor,
-                          Kokkos::ParallelReduceTag{});
+    Experimental::Impl::report_policy_results(
+        context_id, label, policy, functor, Kokkos::ParallelReduceTag{});
   }
 #else
   (void)policy;
@@ -489,10 +487,10 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 #endif
 }
 
-} // end namespace Impl 
+}  // end namespace Impl
 
-} // namespace Tools
+}  // namespace Tools
 
-} // namespace Kokkos
+}  // namespace Kokkos
 
-#endif // header guard
+#endif  // header guard

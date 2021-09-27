@@ -89,10 +89,10 @@ struct InitArguments {
   int skip_device;
   bool disable_warnings;
   Tools::InitArguments tools;
-  bool tune_internals;           // deprecated
-  bool tool_help        = false; // deprecated
-  std::string tool_lib  = {};    // deprecated
-  std::string tool_args = {};    // deprecated
+  bool tune_internals;            // deprecated
+  bool tool_help        = false;  // deprecated
+  std::string tool_lib  = {};     // deprecated
+  std::string tool_args = {};     // deprecated
 
   InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
                 bool ti = false)

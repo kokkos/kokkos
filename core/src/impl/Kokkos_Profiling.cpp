@@ -127,9 +127,9 @@ void parse_command_line_arguments(int& narg, char* arg[],
   }
 }
 
-
-InitializationStatus initialize_tools_subsystem(const Kokkos::Tools::InitArguments& args){
-Kokkos::Profiling::initialize(args.lib);
+InitializationStatus initialize_tools_subsystem(
+    const Kokkos::Tools::InitArguments& args) {
+  Kokkos::Profiling::initialize(args.lib);
   if (args.help) {
     if (!Kokkos::Tools::printHelp(args.args)) {
       std::cerr << "Tool has not provided a help message" << std::endl;
@@ -140,8 +140,8 @@ Kokkos::Profiling::initialize(args.lib);
   return {InitializationStatus::InitializationResult::success};
 }
 
-} // namespace Impl
-void initialize(int argc, char* argv[]){
+}  // namespace Impl
+void initialize(int argc, char* argv[]) {
   InitArguments arguments;
   Impl::parse_command_line_arguments(argc, argv, arguments);
   Impl::initialize_tools_subsystem(arguments);
@@ -177,7 +177,8 @@ static Profiling::Experimental::EventSet current_callbacks;
 static Profiling::Experimental::EventSet backup_callbacks;
 static Profiling::Experimental::EventSet no_profiling;
 static Kokkos::Tools::Experimental::ToolSettings tool_requirements;
-bool eventSetsEqual(const Profiling::Experimental::EventSet& l, const Profiling::Experimental::EventSet& r) {
+bool eventSetsEqual(const Profiling::Experimental::EventSet& l,
+                    const Profiling::Experimental::EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
          l.parse_args == r.parse_args && l.print_help == r.print_help &&
          l.begin_parallel_for == r.begin_parallel_for &&
@@ -220,8 +221,7 @@ inline void invoke_kokkosp_callback(
     // if the tool requires global fencing (default true, but tools can
     // overwrite)
     if (may_require_global_fencing == MayRequireGlobalFencing::Yes &&
-        (tool_requirements
-             .requires_global_fencing)) {
+        (tool_requirements.requires_global_fencing)) {
 #ifndef KOKKOS_TOOLS_INDEPENDENT_BUILD
       Kokkos::fence(
           "Kokkos::Tools::invoke_kokkosp_callback: Kokkos Profile Tool Fence");
@@ -579,115 +579,85 @@ void initialize(const std::string& profileLibrary) {
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                 << std::endl;
 #endif
-      lookup_function(
-          firstProfileLibrary, "kokkosp_begin_parallel_scan",
-          Experimental::current_callbacks.begin_parallel_scan);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_begin_parallel_for",
-          Experimental::current_callbacks.begin_parallel_for);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_begin_parallel_reduce",
-          Experimental::current_callbacks.begin_parallel_reduce);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_end_parallel_scan",
-          Experimental::current_callbacks.end_parallel_scan);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_end_parallel_for",
-          Experimental::current_callbacks.end_parallel_for);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_end_parallel_reduce",
-          Experimental::current_callbacks.end_parallel_reduce);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_scan",
+                      Experimental::current_callbacks.begin_parallel_scan);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_for",
+                      Experimental::current_callbacks.begin_parallel_for);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_reduce",
+                      Experimental::current_callbacks.begin_parallel_reduce);
+      lookup_function(firstProfileLibrary, "kokkosp_end_parallel_scan",
+                      Experimental::current_callbacks.end_parallel_scan);
+      lookup_function(firstProfileLibrary, "kokkosp_end_parallel_for",
+                      Experimental::current_callbacks.end_parallel_for);
+      lookup_function(firstProfileLibrary, "kokkosp_end_parallel_reduce",
+                      Experimental::current_callbacks.end_parallel_reduce);
 
       lookup_function(firstProfileLibrary, "kokkosp_init_library",
                       Experimental::current_callbacks.init);
       lookup_function(firstProfileLibrary, "kokkosp_finalize_library",
                       Experimental::current_callbacks.finalize);
 
-      lookup_function(
-          firstProfileLibrary, "kokkosp_push_profile_region",
-          Experimental::current_callbacks.push_region);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_pop_profile_region",
-          Experimental::current_callbacks.pop_region);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_allocate_data",
-          Experimental::current_callbacks.allocate_data);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_deallocate_data",
-          Experimental::current_callbacks.deallocate_data);
+      lookup_function(firstProfileLibrary, "kokkosp_push_profile_region",
+                      Experimental::current_callbacks.push_region);
+      lookup_function(firstProfileLibrary, "kokkosp_pop_profile_region",
+                      Experimental::current_callbacks.pop_region);
+      lookup_function(firstProfileLibrary, "kokkosp_allocate_data",
+                      Experimental::current_callbacks.allocate_data);
+      lookup_function(firstProfileLibrary, "kokkosp_deallocate_data",
+                      Experimental::current_callbacks.deallocate_data);
 
-      lookup_function(
-          firstProfileLibrary, "kokkosp_begin_deep_copy",
-          Experimental::current_callbacks.begin_deep_copy);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_end_deep_copy",
-          Experimental::current_callbacks.end_deep_copy);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_begin_fence",
-          Experimental::current_callbacks.begin_fence);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_deep_copy",
+                      Experimental::current_callbacks.begin_deep_copy);
+      lookup_function(firstProfileLibrary, "kokkosp_end_deep_copy",
+                      Experimental::current_callbacks.end_deep_copy);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_fence",
+                      Experimental::current_callbacks.begin_fence);
       lookup_function(firstProfileLibrary, "kokkosp_end_fence",
                       Experimental::current_callbacks.end_fence);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_dual_view_sync",
-          Experimental::current_callbacks.sync_dual_view);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_dual_view_modify",
-          Experimental::current_callbacks.modify_dual_view);
+      lookup_function(firstProfileLibrary, "kokkosp_dual_view_sync",
+                      Experimental::current_callbacks.sync_dual_view);
+      lookup_function(firstProfileLibrary, "kokkosp_dual_view_modify",
+                      Experimental::current_callbacks.modify_dual_view);
 
-      lookup_function(
-          firstProfileLibrary, "kokkosp_declare_metadata",
-          Experimental::current_callbacks.declare_metadata);
+      lookup_function(firstProfileLibrary, "kokkosp_declare_metadata",
+                      Experimental::current_callbacks.declare_metadata);
       lookup_function(firstProfileLibrary, "kokkosp_create_profile_section",
-                      Experimental::current_callbacks
-                          .create_profile_section);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_start_profile_section",
-          Experimental::current_callbacks.start_profile_section);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_stop_profile_section",
-          Experimental::current_callbacks.stop_profile_section);
+                      Experimental::current_callbacks.create_profile_section);
+      lookup_function(firstProfileLibrary, "kokkosp_start_profile_section",
+                      Experimental::current_callbacks.start_profile_section);
+      lookup_function(firstProfileLibrary, "kokkosp_stop_profile_section",
+                      Experimental::current_callbacks.stop_profile_section);
       lookup_function(firstProfileLibrary, "kokkosp_destroy_profile_section",
-                      Experimental::current_callbacks
-                          .destroy_profile_section);
+                      Experimental::current_callbacks.destroy_profile_section);
 
-      lookup_function(
-          firstProfileLibrary, "kokkosp_profile_event",
-          Experimental::current_callbacks.profile_event);
+      lookup_function(firstProfileLibrary, "kokkosp_profile_event",
+                      Experimental::current_callbacks.profile_event);
 #ifdef KOKKOS_ENABLE_TUNING
-      lookup_function(
-          firstProfileLibrary, "kokkosp_declare_output_type",
-          Experimental::current_callbacks.declare_output_type);
+      lookup_function(firstProfileLibrary, "kokkosp_declare_output_type",
+                      Experimental::current_callbacks.declare_output_type);
 
+      lookup_function(firstProfileLibrary, "kokkosp_declare_input_type",
+                      Experimental::current_callbacks.declare_input_type);
+      lookup_function(firstProfileLibrary, "kokkosp_request_values",
+                      Experimental::current_callbacks.request_output_values);
+      lookup_function(firstProfileLibrary, "kokkosp_end_context",
+                      Experimental::current_callbacks.end_tuning_context);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_context",
+                      Experimental::current_callbacks.begin_tuning_context);
       lookup_function(
-          firstProfileLibrary, "kokkosp_declare_input_type",
-          Experimental::current_callbacks.declare_input_type);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_request_values",
-          Experimental::current_callbacks.request_output_values);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_end_context",
-          Experimental::current_callbacks.end_tuning_context);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_begin_context",
-          Experimental::current_callbacks.begin_tuning_context);
-      lookup_function(firstProfileLibrary, "kokkosp_declare_optimization_goal",
-                      Experimental::current_callbacks
-                          .declare_optimization_goal);
+          firstProfileLibrary, "kokkosp_declare_optimization_goal",
+          Experimental::current_callbacks.declare_optimization_goal);
 #endif  // KOKKOS_ENABLE_TUNING
 
+      lookup_function(firstProfileLibrary, "kokkosp_print_help",
+                      Experimental::current_callbacks.print_help);
+      lookup_function(firstProfileLibrary, "kokkosp_parse_args",
+                      Experimental::current_callbacks.parse_args);
       lookup_function(
-          firstProfileLibrary, "kokkosp_print_help",
-          Experimental::current_callbacks.print_help);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_parse_args",
-          Experimental::current_callbacks.parse_args);
-      lookup_function(firstProfileLibrary,
-                      "kokkosp_provide_tool_programming_interface",
-                      Experimental::current_callbacks
-                          .provide_tool_programming_interface);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_request_tool_settings",
-          Experimental::current_callbacks.request_tool_settings);
+          firstProfileLibrary, "kokkosp_provide_tool_programming_interface",
+          Experimental::current_callbacks.provide_tool_programming_interface);
+      lookup_function(firstProfileLibrary, "kokkosp_request_tool_settings",
+                      Experimental::current_callbacks.request_tool_settings);
     }
   }
 #else
@@ -832,7 +802,8 @@ void set_end_parallel_for_callback(Kokkos::Tools::endFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.end_parallel_for = callback;
 }
 void set_begin_parallel_reduce_callback(Kokkos::Tools::beginFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.begin_parallel_reduce = callback;
+  Kokkos::Tools::Experimental::current_callbacks.begin_parallel_reduce =
+      callback;
 }
 void set_end_parallel_reduce_callback(Kokkos::Tools::endFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce = callback;
@@ -852,27 +823,35 @@ void set_pop_region_callback(Kokkos::Tools::popFunction callback) {
 void set_allocate_data_callback(Kokkos::Tools::allocateDataFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.allocate_data = callback;
 }
-void set_deallocate_data_callback(Kokkos::Tools::deallocateDataFunction callback) {
+void set_deallocate_data_callback(
+    Kokkos::Tools::deallocateDataFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.deallocate_data = callback;
 }
 void set_create_profile_section_callback(
     Kokkos::Tools::createProfileSectionFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.create_profile_section = callback;
+  Kokkos::Tools::Experimental::current_callbacks.create_profile_section =
+      callback;
 }
-void set_start_profile_section_callback(Kokkos::Tools::startProfileSectionFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.start_profile_section = callback;
+void set_start_profile_section_callback(
+    Kokkos::Tools::startProfileSectionFunction callback) {
+  Kokkos::Tools::Experimental::current_callbacks.start_profile_section =
+      callback;
 }
-void set_stop_profile_section_callback(Kokkos::Tools::stopProfileSectionFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.stop_profile_section = callback;
+void set_stop_profile_section_callback(
+    Kokkos::Tools::stopProfileSectionFunction callback) {
+  Kokkos::Tools::Experimental::current_callbacks.stop_profile_section =
+      callback;
 }
 void set_destroy_profile_section_callback(
     Kokkos::Tools::destroyProfileSectionFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.destroy_profile_section = callback;
+  Kokkos::Tools::Experimental::current_callbacks.destroy_profile_section =
+      callback;
 }
 void set_profile_event_callback(Kokkos::Tools::profileEventFunction callback) {
- Kokkos::Tools::Experimental::current_callbacks.profile_event = callback;
+  Kokkos::Tools::Experimental::current_callbacks.profile_event = callback;
 }
-void set_begin_deep_copy_callback(Kokkos::Tools::beginDeepCopyFunction callback) {
+void set_begin_deep_copy_callback(
+    Kokkos::Tools::beginDeepCopyFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.begin_deep_copy = callback;
 }
 void set_end_deep_copy_callback(Kokkos::Tools::endDeepCopyFunction callback) {
@@ -888,42 +867,61 @@ void set_end_fence_callback(Kokkos::Tools::endFenceFunction callback) {
 void set_dual_view_sync_callback(Kokkos::Tools::dualViewSyncFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.sync_dual_view = callback;
 }
-void set_dual_view_modify_callback(Kokkos::Tools::dualViewModifyFunction callback) {
+void set_dual_view_modify_callback(
+    Kokkos::Tools::dualViewModifyFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.modify_dual_view = callback;
 }
-void set_declare_metadata_callback(Kokkos::Tools::declareMetadataFunction callback) {
+void set_declare_metadata_callback(
+    Kokkos::Tools::declareMetadataFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.declare_metadata = callback;
 }
 
-void set_declare_output_type_callback(Kokkos::Tools::Experimental::outputTypeDeclarationFunction callback) {
+void set_declare_output_type_callback(
+    Kokkos::Tools::Experimental::outputTypeDeclarationFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.declare_output_type = callback;
 }
-void set_declare_input_type_callback(Kokkos::Tools::Experimental::inputTypeDeclarationFunction callback) {
+void set_declare_input_type_callback(
+    Kokkos::Tools::Experimental::inputTypeDeclarationFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.declare_input_type = callback;
 }
-void set_request_output_values_callback(Kokkos::Tools::Experimental::requestValueFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.request_output_values = callback;
+void set_request_output_values_callback(
+    Kokkos::Tools::Experimental::requestValueFunction callback) {
+  Kokkos::Tools::Experimental::current_callbacks.request_output_values =
+      callback;
 }
-void set_end_context_callback(Kokkos::Tools::Experimental::contextEndFunction callback) {
+void set_end_context_callback(
+    Kokkos::Tools::Experimental::contextEndFunction callback) {
   Kokkos::Tools::Experimental::current_callbacks.end_tuning_context = callback;
 }
-void set_begin_context_callback(Kokkos::Tools::Experimental::contextBeginFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.begin_tuning_context = callback;
+void set_begin_context_callback(
+    Kokkos::Tools::Experimental::contextBeginFunction callback) {
+  Kokkos::Tools::Experimental::current_callbacks.begin_tuning_context =
+      callback;
 }
 void set_declare_optimization_goal_callback(
     Kokkos::Tools::Experimental::optimizationGoalDeclarationFunction callback) {
-  Kokkos::Tools::Experimental::current_callbacks.declare_optimization_goal = callback;
+  Kokkos::Tools::Experimental::current_callbacks.declare_optimization_goal =
+      callback;
 }
 
 void pause_tools() {
-  Kokkos::Tools::Experimental::backup_callbacks  = Kokkos::Tools::Experimental::current_callbacks;
-  Kokkos::Tools::Experimental::current_callbacks = Kokkos::Tools::Experimental::no_profiling;
+  Kokkos::Tools::Experimental::backup_callbacks =
+      Kokkos::Tools::Experimental::current_callbacks;
+  Kokkos::Tools::Experimental::current_callbacks =
+      Kokkos::Tools::Experimental::no_profiling;
 }
 
-void resume_tools() { Kokkos::Tools::Experimental::current_callbacks = Kokkos::Tools::Experimental::backup_callbacks; }
+void resume_tools() {
+  Kokkos::Tools::Experimental::current_callbacks =
+      Kokkos::Tools::Experimental::backup_callbacks;
+}
 
-Kokkos::Tools::Experimental::EventSet get_callbacks() { return Kokkos::Tools::Experimental::current_callbacks; }
-void set_callbacks(Kokkos::Tools::Experimental::EventSet new_events) { Kokkos::Tools::Experimental::current_callbacks = new_events; }
+Kokkos::Tools::Experimental::EventSet get_callbacks() {
+  return Kokkos::Tools::Experimental::current_callbacks;
+}
+void set_callbacks(Kokkos::Tools::Experimental::EventSet new_events) {
+  Kokkos::Tools::Experimental::current_callbacks = new_events;
+}
 }  // namespace Experimental
 }  // namespace Tools
 
@@ -969,17 +967,20 @@ void stopSection(const uint32_t secID) { Kokkos::Tools::stopSection(secID); }
 void markEvent(const std::string& eventName) {
   Kokkos::Tools::markEvent(eventName);
 }
-void allocateData(const Kokkos::Tools::SpaceHandle handle, const std::string name,
-                  const void* data, const uint64_t size) {
+void allocateData(const Kokkos::Tools::SpaceHandle handle,
+                  const std::string name, const void* data,
+                  const uint64_t size) {
   Kokkos::Tools::allocateData(handle, name, data, size);
 }
-void deallocateData(const Kokkos::Tools::SpaceHandle space, const std::string label,
-                    const void* ptr, const uint64_t size) {
+void deallocateData(const Kokkos::Tools::SpaceHandle space,
+                    const std::string label, const void* ptr,
+                    const uint64_t size) {
   Kokkos::Tools::deallocateData(space, label, ptr, size);
 }
 
-void beginDeepCopy(const Kokkos::Tools::SpaceHandle dst_space, const std::string dst_label,
-                   const void* dst_ptr, const Kokkos::Tools::SpaceHandle src_space,
+void beginDeepCopy(const Kokkos::Tools::SpaceHandle dst_space,
+                   const std::string dst_label, const void* dst_ptr,
+                   const Kokkos::Tools::SpaceHandle src_space,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size) {
   Kokkos::Tools::beginDeepCopy(dst_space, dst_label, dst_ptr, src_space,
@@ -1023,7 +1024,8 @@ size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
 size_t get_new_variable_id() { return get_variable_counter(); }
 
-size_t declare_output_type(const std::string& variableName, Kokkos::Tools::Experimental::VariableInfo info) {
+size_t declare_output_type(const std::string& variableName,
+                           Kokkos::Tools::Experimental::VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
   Experimental::invoke_kokkosp_callback(
@@ -1234,7 +1236,7 @@ bool check_arg(char const* arg, char const* expected) {
   if (arg_len < exp_len) return false;
   if (std::strncmp(arg, expected, exp_len) != 0) return false;
   if (arg_len == exp_len) return true;
-  
+
   if (std::isalnum(arg[exp_len]) || arg[exp_len] == '-' ||
       arg[exp_len] == '_') {
     return false;
@@ -1293,6 +1295,5 @@ void warn_deprecated_command_line_argument(std::string deprecated,
       << std::endl;
 }
 }  // namespace Impl
-
 
 }  // end namespace Kokkos
