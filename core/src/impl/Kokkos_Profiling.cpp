@@ -72,7 +72,8 @@ namespace Tools {
 
 InitArguments tool_arguments;
 
-const std::string InitArguments::unset_string_option = {"kokkos_tools_impl_unset_option_dogs_are_cool"};
+const std::string InitArguments::unset_string_option = {
+    "kokkos_tools_impl_unset_option_dogs_are_cool"};
 
 namespace Impl {
 void parse_command_line_arguments(int& narg, char* arg[],
@@ -561,7 +562,6 @@ void lookup_function(void* dlopen_handle, const std::string& basename,
   (void)basename;
   (void)callback;
 #endif
-
 }
 
 void initialize(const std::string& profileLibrary) {

@@ -78,8 +78,8 @@ struct InitArguments {
   enum PossiblyUnsetOption { unset, off, on };
   PossiblyUnsetOption tune_internals = unset;
   PossiblyUnsetOption help           = unset;
-  std::string lib     = unset_string_option;
-  std::string args    = unset_string_option;
+  std::string lib                    = unset_string_option;
+  std::string args                   = unset_string_option;
 };
 
 namespace Impl {
