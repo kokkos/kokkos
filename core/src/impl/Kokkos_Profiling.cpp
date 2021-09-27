@@ -131,17 +131,16 @@ void parse_command_line_arguments(int& narg, char* arg[],
 }
 Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
     InitArguments& arguments) {
-  auto& tool_lib    = arguments.lib;
+  auto& tool_lib       = arguments.lib;
   auto& tune_internals = arguments.tune_internals;
-  auto env_tool_lib = std::getenv("KOKKOS_PROFILE_LIBRARY");
+  auto env_tool_lib    = std::getenv("KOKKOS_PROFILE_LIBRARY");
   if (env_tool_lib != nullptr) {
     if (!tool_lib.empty() && std::string(env_tool_lib) != tool_lib)
       return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
                   environment_argument_mismatch,
-        "Error: expecting a match between --kokkos-tools-library and "
-        "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
-        "Kokkos::initialize(int narg, char* argc[])."
-                  };
+              "Error: expecting a match between --kokkos-tools-library and "
+              "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
+              "Kokkos::initialize(int narg, char* argc[])."};
     else
       tool_lib = env_tool_lib;
   }
@@ -156,9 +155,9 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
     else if (tune_internals)
       return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
                   environment_argument_mismatch,
-          "Error: expecting a match between --kokkos-tune-internals and "
-          "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[])."};
+              "Error: expecting a match between --kokkos-tune-internals and "
+              "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
+              "Kokkos::initialize(int narg, char* argc[])."};
   }
   return {
       Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
