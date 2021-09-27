@@ -87,6 +87,7 @@ struct InitializationStatus {
     environment_argument_mismatch
   };
   InitializationResult result;
+  std::string error_message;
 };
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args);

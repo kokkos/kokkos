@@ -803,13 +803,13 @@ void parse_environment_variables(InitArguments& arguments) {
   if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::
                                 environment_argument_mismatch) {
     Impl::throw_runtime_exception(
-        "Error: expecting a match between --kokkos-tools-library and "
-        "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
-        "Kokkos::initialize(int narg, char* argc[]).");
+        init_result.error_message);
   }
 
   tool_lib = arguments.tools
                  .lib;  // maintain consistency between deprecated and current
+
+  tune_internals = arguments.tools.tune_internals;
 
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
   if (env_num_threads_str != nullptr) {
@@ -963,20 +963,6 @@ void parse_environment_variables(InitArguments& arguments) {
       Impl::throw_runtime_exception(
           "Error: expecting a match between --kokkos-disable-warnings and "
           "KOKKOS_DISABLE_WARNINGS if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-  }
-  char* env_tuneinternals_str = std::getenv("KOKKOS_TUNE_INTERNALS");
-  if (env_tuneinternals_str != nullptr) {
-    std::string env_str(env_tuneinternals_str);  // deep-copies string
-    for (char& c : env_str) {
-      c = toupper(c);
-    }
-    if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
-      tune_internals = true;
-    else if (tune_internals)
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-tune-internals and "
-          "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
           "Kokkos::initialize(int narg, char* argc[]).");
   }
 }
