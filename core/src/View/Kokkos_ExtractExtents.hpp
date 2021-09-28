@@ -55,19 +55,19 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="ExtractExtents"> {{{1
 
-template <class T, std::ptrdiff_t... Exts>
+template <class T, std::size_t... Exts>
 struct ExtractExtents {
   using value_type   = T;
   using extents_type = std::experimental::extents<Exts...>;
 };
 
-template <class T, std::ptrdiff_t... Exts>
+template <class T, std::size_t... Exts>
 struct ExtractExtents<T*, Exts...>
     : ExtractExtents<T, std::experimental::dynamic_extent, Exts...> {};
 
-template <class T, std::size_t N, std::ptrdiff_t... Exts>
+template <class T, std::size_t N, std::size_t... Exts>
 struct ExtractExtents<T[N], Exts...>
-    : ExtractExtents<T, ptrdiff_t{N}, Exts...> {};
+    : ExtractExtents<T, size_t{N}, Exts...> {};
 
 // </editor-fold> end ExtractExtents }}}1
 //==============================================================================
@@ -78,12 +78,12 @@ struct ExtractExtents<T[N], Exts...>
 template <class T, class Extents>
 struct DataTypeFromExtents;
 
-template <class T, std::ptrdiff_t Ext, std::ptrdiff_t... Exts>
+template <class T, std::size_t Ext, std::size_t... Exts>
 struct DataTypeFromExtents<T, std::experimental::extents<Ext, Exts...>>
     : DataTypeFromExtents<T[std::size_t{Ext}],
                           std::experimental::extents<Exts...>> {};
 
-template <class T, std::ptrdiff_t... Exts>
+template <class T, std::size_t... Exts>
 struct DataTypeFromExtents<
     T, std::experimental::extents<std::experimental::dynamic_extent, Exts...>>
     : DataTypeFromExtents<T*, std::experimental::extents<Exts...>> {};
@@ -99,14 +99,14 @@ struct DataTypeFromExtents<T, std::experimental::extents<>> {
 template <class>
 struct RemoveFirstExtent;
 
-template <std::ptrdiff_t Extent, std::ptrdiff_t... Extents>
+template <std::size_t Extent, std::size_t... Extents>
 struct RemoveFirstExtent<std::experimental::extents<Extent, Extents...>>
     : identity<std::experimental::extents<Extents...>> {};
 
 template <class>
 struct FirstExtentOnly;
 
-template <std::ptrdiff_t Extent, std::ptrdiff_t... Extents>
+template <std::size_t Extent, std::size_t... Extents>
 struct FirstExtentOnly<std::experimental::extents<Extent, Extents...>>
     : identity<std::experimental::extents<Extent>> {};
 

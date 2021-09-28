@@ -237,6 +237,8 @@ struct LayoutStride {
     return !(left == right);
   }
 
+  /*
+   * I think we don't need these anymore, they were part of an intermediate step
   template <int R, ptrdiff_t... Args>
   struct get_stride_args {
     using type = typename get_stride_args<R - 1, -1, Args...>::type;
@@ -246,10 +248,11 @@ struct LayoutStride {
   struct get_stride_args<0, Args...> {
     using type = std::experimental::layout_stride<Args...>;
   };
+  */
 
   template <class Extents>
   using mapping =
-      typename get_stride_args<Extents::rank()>::type::template mapping<Extents>;
+      typename std::experimental::layout_stride::mapping<Extents>;
 };
 
 // ===================================================================================

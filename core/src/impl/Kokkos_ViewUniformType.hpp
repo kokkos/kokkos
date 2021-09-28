@@ -109,13 +109,13 @@ struct ViewUniformType {
                                        anonymous_device_type, memory_traits>;
   using const_nomemspace_type =
       Kokkos::View<const_data_type, array_layout, anonymous_device_type,
-                   memory_traits>;
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged||Traits>>;
   using runtime_nomemspace_type =
       Kokkos::View<runtime_data_type, array_layout, anonymous_device_type,
-                   memory_traits>;
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged||Traits>>;
   using runtime_const_nomemspace_type =
       Kokkos::View<runtime_const_data_type, array_layout, anonymous_device_type,
-                   memory_traits>;
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged||Traits>>;
 };
 }  // namespace Impl
 }  // namespace Kokkos

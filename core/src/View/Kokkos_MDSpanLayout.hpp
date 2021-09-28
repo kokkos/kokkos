@@ -1200,7 +1200,9 @@ struct MDSpanMappingForLayoutLeft {
   constexpr MDSpanMappingForLayoutLeft() noexcept = default;
   constexpr MDSpanMappingForLayoutLeft(
       const MDSpanMappingForLayoutLeft&) noexcept = default;
-  constexpr MDSpanMappingForLayoutLeft(const Extents& ext, ptrdiff_t stride = ext.extent(0))
+  constexpr MDSpanMappingForLayoutLeft(const Extents& ext)
+      : extents_(ext), stride_(ext.extent(0)) {}
+  constexpr MDSpanMappingForLayoutLeft(const Extents& ext, size_t stride)
       : extents_(ext), stride_(stride) {}
   constexpr MDSpanMappingForLayoutLeft(const LayoutLeft& layout) {
     int k = 0;
@@ -1263,6 +1265,12 @@ struct MDSpanMappingForLayoutLeft {
   template <class Extents_>
   struct compute_offset_layout_left<0, 1, Extents_> {
     template <class I>
+    constexpr static size_t op(const Extents_&, const size_t&, const I& i) {
+      return i;
+    }
+  };
+  template <class Extents_>
+  struct compute_offset_layout_left<0, 0, Extents_> {
     constexpr static size_t op(const Extents_&, const size_t&) {
       return 0;
     }
@@ -1334,7 +1342,7 @@ struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutStride> {
 
   template <ptrdiff_t... Args>
   struct get_stride_args<0, Args...> {
-    using type = std::experimental::layout_stride<Args...>;
+    using type = std::experimental::layout_stride;
   };
 
   template <class Extents>
@@ -1356,8 +1364,8 @@ struct is_array_layout<std::experimental::layout_right>
 template <>
 struct is_array_layout<std::experimental::layout_left> : public std::true_type {
 };
-template <ptrdiff_t... Args>
-struct is_array_layout<std::experimental::layout_stride<Args...>>
+template <>
+struct is_array_layout<std::experimental::layout_stride>
     : public std::true_type {};
 
 }  // end namespace Kokkos

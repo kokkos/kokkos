@@ -728,12 +728,24 @@ void view_copy(const DstType& dst, const SrcType& src) {
     }
   }
 }
+} // namespace Impl
+template<class ViewType, class ... Args>
+struct SubviewType {
+  using type = decltype(Kokkos::subview(ViewType(), Args{}...));
+};
+
+template<class ViewType, class ... Args>
+using Subview = typename SubviewType<ViewType,Args...>::type;
+
+namespace Impl {
 
 template <class DstType, class SrcType, int Rank, class... Args>
 struct CommonSubview;
 
 // TODO @mdspan Implement CommonSubview, if necessary?
-#if defined(KOKKOS_USE_LEGACY_VIEW)
+//#if defined(KOKKOS_USE_LEGACY_VIEW)
+
+
 template <class DstType, class SrcType, class Arg0, class... Args>
 struct CommonSubview<DstType, SrcType, 1, Arg0, Args...> {
   using dst_subview_type = typename Kokkos::Subview<DstType, Arg0>;
@@ -842,7 +854,7 @@ struct CommonSubview<DstType, SrcType, 8, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5,
   using dst_subview_type =
       typename Kokkos::Subview<DstType, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5,
                                Arg6, Arg7>;
-  using src_subview_type =
+  using src_subview_type = 
       typename Kokkos::Subview<SrcType, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5,
                                Arg6, Arg7>;
   dst_subview_type dst_sub;
@@ -854,7 +866,7 @@ struct CommonSubview<DstType, SrcType, 8, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5,
       : dst_sub(dst, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7),
         src_sub(src, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {}
 };
-#endif  // KOKKOS_USE_LEGACY_VIEW
+//#endif  // KOKKOS_USE_LEGACY_VIEW
 
 template <class DstType, class SrcType,
           class ExecSpace = typename DstType::execution_space,

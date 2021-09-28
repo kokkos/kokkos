@@ -17,7 +17,7 @@ struct SubViewTypeDeduction {
 template <class ViewType, class... Args>
 auto subview(const ViewType& v, Args... args) {
   return typename Impl::SubViewTypeDeduction<
-      ViewType, decltype(subspan(typename ViewType::mdspan_type::layout_type{},
+      ViewType, decltype(submdspan(typename ViewType::mdspan_type::layout_type{},
                                  v.get_mdspan(), args...))>::type(v, args...);
 }
 }  // namespace Kokkos

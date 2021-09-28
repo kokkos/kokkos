@@ -51,6 +51,7 @@
 
 namespace Test {
 
+namespace stdex = std::experimental;
 TEST(defaultdevicetype, development_test) {
   /*
   template <std::size_t Idx, std::ptrdiff_t Extent, class Strides, class Exts,
@@ -104,7 +105,7 @@ TEST(defaultdevicetype, development_test) {
   // -1>, std::integer_sequence<unsigned long, 0, 1, 2>> bar;
 
   std::array<ptrdiff_t, 1> array{1};
-  std::experimental::extents<-1> ext(array);
+  std::experimental::extents<stdex::dynamic_extent> ext(array);
   {
     Kokkos::BasicView<int ***, Kokkos::LayoutRight,
                       Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>>
@@ -125,40 +126,40 @@ TEST(defaultdevicetype, development_test) {
     Kokkos::BasicView<int ***, std::experimental::layout_right,
                       Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>>
         foo("A", 7, 3, 5);
-    // auto foo_sub = subspan(foo.get_mdspan(),1,std::experimental::all,
-    // std::experimental::all);
-    // std::experimental::basic_mdspan<int,std::experimental::extents<-1,-1>,std::experimental::layout_stride<-1,-1>,std::experimental::accessor_basic<int>>
+    // auto foo_sub = subspan(foo.get_mdspan(),1,stdex::full_extent,
+    // stdex::full_extent);
+    // std::experimental::mdspan<int,std::experimental::extents<-1,-1>,std::experimental::layout_stride<-1,-1>,std::experimental::accessor_basic<int>>
     // foo_sub2 = foo_sub;
 
     // printf("%s\n",typeid(decltype(foo_sub)).name());
-    Kokkos::BasicView<int **, std::experimental::layout_stride<-1, -1>,
+    Kokkos::BasicView<int **, std::experimental::layout_stride,
                       Kokkos::HostSpace>
-        foo_sub1(foo, std::experimental::all, std::experimental::all, 3);
+        foo_sub1(foo, stdex::full_extent, stdex::full_extent, 3);
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 3; j++)
         if (&foo_sub1(i, j) != &foo(i, j, 3)) printf("Error A %i %i\n", i, j);
-    // auto foo_sub = subspan(foo.get_mdspan(),3,std::experimental::all,
-    // std::experimental::all);
+    // auto foo_sub = subspan(foo.get_mdspan(),3,stdex::full_extent,
+    // stdex::full_extent);
     Kokkos::BasicView<int **, std::experimental::layout_right,
                       Kokkos::HostSpace>
-        foo_sub2(foo, 3, std::experimental::all, std::experimental::all);
+        foo_sub2(foo, 3, stdex::full_extent, stdex::full_extent);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 5; j++)
         if (&foo_sub2(i, j) != &foo(3, i, j)) printf("Error B %i %i\n", i, j);
 
     auto foo_sub3 =
-        Kokkos::subview(foo, std::experimental::all, std::experimental::all, 3);
+        Kokkos::subview(foo, stdex::full_extent, stdex::full_extent, 3);
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 3; j++)
         if (&foo_sub3(i, j) != &foo(i, j, 3)) printf("Error A %i %i\n", i, j);
 
     auto foo_sub4 =
-        Kokkos::subview(foo, 3, std::experimental::all, std::experimental::all);
+        Kokkos::subview(foo, 3, stdex::full_extent, stdex::full_extent);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 5; j++)
         if (&foo_sub4(i, j) != &foo(3, i, j)) printf("Error B %i %i\n", i, j);
 
-    // std::experimental::basic_mdspan<int,std::experimental::extents<-1,-1,-1>,std::experimental::layout_right,std::experimental::accessor_basic<int>>
+    // std::experimental::mdspan<int,std::experimental::extents<-1,-1,-1>,std::experimental::layout_right,std::experimental::accessor_basic<int>>
     //  foo(foo_v.data(),7,3,5);
     printf("%p %p %p %p %p\n", foo.data(), &foo(0, 0, 1), &foo(0, 1, 0),
            &foo(1, 0, 0), &foo(3, 2, 3));
@@ -173,42 +174,49 @@ TEST(defaultdevicetype, development_test) {
     Kokkos::BasicView<int ***, Kokkos::LayoutLeft,
                       Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>>
         foo("A", 7, 3, 5);
-    // subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),5,std::experimental::all,
-    // std::experimental::all);
-    auto foo_sub1 = subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
-                            std::experimental::all, std::experimental::all, 3);
+    // subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),5,stdex::full_extent,
+    // stdex::full_extent);
+    auto foo_sub1 = submdspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+                            stdex::full_extent, stdex::full_extent, 3);
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 3; j++)
         if (&foo_sub1(i, j) != &foo(i, j, 3)) printf("Error A %i %i\n", i, j);
-    auto foo_sub2 = subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
-                            3, std::experimental::all, std::experimental::all);
+    auto foo_sub2 = submdspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+                            3, stdex::full_extent, stdex::full_extent);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 5; j++)
         if (&foo_sub2(i, j) != &foo(3, i, j)) printf("Error B %i %i\n",i,j);
 
     auto foo_sub3 = subview(foo,
-                            std::experimental::all, std::experimental::all, 3);
+                            stdex::full_extent, stdex::full_extent, 3);
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 3; j++)
         if (&foo_sub3(i, j) != &foo(i, j, 3)) printf("Error C %i %i\n", i, j);
     auto foo_sub4 = subview(foo,
-                            3, std::experimental::all, std::experimental::all);
+                            3, stdex::full_extent, stdex::full_extent);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 5; j++)
         if (&foo_sub4(i, j) != &foo(3, i, j)) printf("Error D %i %i\n",i,j);
 
-    auto foo_sub5 = subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
-                            std::experimental::all, 2, std::experimental::all);
+    printf("Hello Here\n");
+    auto foo_sub5 = submdspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+                            stdex::full_extent, 2, stdex::full_extent);
+    printf("Hello Here Done\n");
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 5; j++)
         if (&foo_sub5(i, j) != &foo(i, 2, j)) printf("Error E %i %i\n", i, j);
-    printf("%p %p %p %p %p\n", foo.data(), &foo(0, 0, 1), &foo(0, 1, 0),
-           &foo(1, 0, 0), &foo(3, 2, 3));
+    printf("%p %p %p %p %p\n", foo.data(), &foo(1, 0, 0), &foo(0, 2, 0), &foo(0, 0, 1), &foo(3, 2, 3));
+    printf("%p %p %p %p\n", foo_sub5.data(), &foo_sub5(1, 0), &foo_sub5(0, 1), &foo_sub5(3, 3));
     printf("%p %li %li %li %li\n", foo.data(),
-           ptrdiff_t(&foo(0, 2, 3) - foo.data()),
-           ptrdiff_t(&foo(0, 1, 0) - foo.data()),
            ptrdiff_t(&foo(1, 0, 0) - foo.data()),
+           ptrdiff_t(&foo(0, 1, 0) - foo.data()),
+           ptrdiff_t(&foo(0, 0, 1) - foo.data()),
            ptrdiff_t(&foo(3, 2, 3) - foo.data()));
+    printf("%p %li %li %li %li\n", foo_sub5.data(),
+           ptrdiff_t(&foo_sub5(1, 0) - foo_sub5.data()),
+           ptrdiff_t(&foo_sub5(0, 1) - foo_sub5.data()),
+           ptrdiff_t(&foo_sub5(3, 3) - foo_sub5.data()),
+           ptrdiff_t(&foo(3, 2, 3) - &foo_sub5(3,3)));
   }
 
   Kokkos::View<int **, Kokkos::OpenMP> a("A", 5, 5);

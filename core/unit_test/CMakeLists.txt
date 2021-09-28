@@ -925,5 +925,5 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 )
 
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS)
-  add_subdirectory(headers_self_contained)
+        #  add_subdirectory(headers_self_contained)
 endif()

@@ -218,12 +218,12 @@ class BasicView
   using mdspan_mapping_type = typename mdspan_layout_type::template mapping<
       typename traits::mdspan_extents_type>;
   using mdspan_accessor_type =
-      std::experimental::accessor_basic<typename traits::value_type>;
+      std::experimental::default_accessor<typename traits::value_type>;
   // typename Impl::MDSpanAccessorFromKokkosMemoryTraits<traits,
   //                                                    MemoryTraits>::type;
 
   using mdspan_type =
-      std::experimental::basic_mdspan<typename traits::mdspan_element_type,
+      std::experimental::mdspan<typename traits::mdspan_element_type,
                                       typename traits::mdspan_extents_type,
                                       mdspan_layout_type, mdspan_accessor_type>;
 
@@ -263,10 +263,10 @@ class BasicView
 
   using runtime_data_type =
       typename Impl::ViewScalarToDataType<typename traits::value_type,
-                                          mdspan_type::rank()>;
+                                          mdspan_type::rank()>::type;
   using runtime_const_data_type =
       typename Impl::ViewScalarToDataType<typename traits::const_value_type,
-                                          mdspan_type::rank()>;
+                                          mdspan_type::rank()>::type;
 
   using uniform_runtime_type =
       Kokkos::View<runtime_data_type, typename traits::array_layout,
@@ -417,7 +417,7 @@ class BasicView
   }
 
   template <class... Args>
-  KOKKOS_FUNCTION BasicView(std::experimental::basic_mdspan<Args...> const& rhs,
+  KOKKOS_FUNCTION BasicView(std::experimental::mdspan<Args...> const& rhs,
                             const track_type& track = track_type())
       : m_data(rhs), m_track(track) {}
 
@@ -426,9 +426,9 @@ class BasicView
 
   template <class RT, class RL, class RS, class RMP, class... Args>
   KOKKOS_FUNCTION BasicView(const BasicView<RT, RL, RS, RMP>& rhs, Args... args)
-  //: m_data(subspan(rhs.get_mdspan(),args...)),m_track(rhs) {}
+  //: m_data(submdspan(rhs.get_mdspan(),args...)),m_track(rhs) {}
   {
-    m_data = Kokkos::subspan(
+    m_data = Kokkos::submdspan(
         typename BasicView<RT, RL, RS, RMP>::mdspan_type::layout_type{},
         rhs.get_mdspan(), args...);
     m_track.assign(rhs);
@@ -623,8 +623,10 @@ class BasicView
        *   && TODO @mdspan layout is constructible from dimensions only
        */
       std::enable_if_t<
-          _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
-          int> = 0
+// is_integral doesn't work for untyped enum ...
+              //          _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
+              _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value),
+      int> = 0
       //----------------------------------------
       >
   explicit inline BasicView(std::string const& arg_label,
@@ -843,7 +845,8 @@ class BasicView
   KOKKOS_FORCEINLINE_FUNCTION constexpr reference_type operator()(
       IntegralTypes... i) const {
     static_assert(
-        _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
+        //_MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
+        _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value),
         "Kokkos::View::operator() must be called with integral index types.");
     static_assert(sizeof...(IntegralTypes) == rank,
                   "Wrong number of indices given to Kokkos::View::operator() "
@@ -856,7 +859,7 @@ class BasicView
   template <class IntegralType>
   KOKKOS_FORCEINLINE_FUNCTION std::size_t operator[](IntegralType i) const
       noexcept {
-    static_assert(std::is_integral<IntegralType>::value,
+    static_assert(std::is_convertible<IntegralType,ptrdiff_t>::value,
                   "Kokkos::View::operator[] called with non-integral type.");
     static_assert(mdspan_type::rank() == 1,
                   "Only a rank 1 View can be dereferenced with operator[].");
@@ -867,7 +870,8 @@ class BasicView
   template <class... IntegralTypes>
   KOKKOS_FORCEINLINE_FUNCTION reference_type access(IntegralTypes... i) const {
     static_assert(
-        _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
+        _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value),
+        //_MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
         "Kokkos::View::access() must be called with integral index types.");
     return _access_helper(std::make_index_sequence<mdspan_type::rank()>{},
                           i...);
@@ -887,7 +891,7 @@ class BasicView
   }
 
   inline std::string label() const {
-    return m_track.m_tracker.get_label();
+    return m_track.m_tracker.template get_label<typename traits::memory_space>();
     //    return Impl::get_label_from_accessor(m_data.accessor());
   }
 
@@ -930,7 +934,7 @@ class BasicView
                   "layout is constructible from the dimensions alone (e.g., "
                   "not something like LayoutStride)");
     return BasicView::shmem_size(
-        typename traits::array_layout{std::size_t{dims}...});
+        typename traits::array_layout{dims...});
   }
 
   static constexpr size_t shmem_size(
@@ -962,9 +966,12 @@ class View : public Impl::NormalizeViewProperties<
                            typename View<Args...>::basic_view_type::mdspan_type,
                            typename basic_view_type::mdspan_type>::value,
                        int> = 0>
-  View(const View<Args...>& other_view)
-      : basic_view_type(other_view.get_mdspan(),
-                        other_view.impl_get_tracker()){};
+  View(const View<Args...>& other_view) {
+    basic_view_type::m_data  = other_view.get_mdspan();
+     basic_view_type::m_track.assign(other_view);
+  }
+   //   : basic_view_type(other_view.get_mdspan(),
+    //                    other_view.impl_get_tracker()){};
   template <
       class... Args,
       std::enable_if_t<std::is_assignable<
@@ -973,7 +980,8 @@ class View : public Impl::NormalizeViewProperties<
                        int> = 0>
   View& operator=(const View<Args...>& other_view) {
     basic_view_type::m_data  = other_view.get_mdspan();
-    basic_view_type::m_track = other_view.impl_get_tracker();
+    basic_view_type::m_track.assign(other_view);
+   // = other_view.impl_get_tracker();
   };
 
  private:

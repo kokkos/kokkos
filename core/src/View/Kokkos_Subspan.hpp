@@ -3,18 +3,18 @@
 
 namespace Kokkos {
 template <class T, class Extents, class Layout, class Accessor, class... Args>
-auto subspan(
+auto submdspan(
     Layout,
-    const std::experimental::basic_mdspan<T, Extents, Layout, Accessor>& A,
+    const std::experimental::mdspan<T, Extents, Layout, Accessor>& A,
     const Args&... args) {
-  return subspan(A, args...);
+  return submdspan(A, args...);
 }
 
 namespace Impl {
 template <class T>
 struct is_integral_extent_type {
   enum : bool {
-    value = std::is_same<T, std::experimental::all_type>::value ? 1 : 0
+    value = std::is_same<T, std::experimental::full_extent_t>::value ? 1 : 0
   };
 };
 
@@ -65,7 +65,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
               (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
              ((CurrentArg >= RankDest) && (std::is_integral<Arg>::value)) ||
              ((CurrentArg < RankDest) &&
-              (std::is_same<Arg, std::experimental::all_type>::value)) ||
+              (std::is_same<Arg, std::experimental::full_extent_t>::value)) ||
              ((CurrentArg == 0) &&
               (Kokkos::Impl::is_integral_extent_type<Arg>::value))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
@@ -96,7 +96,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
              ((CurrentArg < RankSrc - RankDest) &&
               (std::is_integral<Arg>::value)) ||
              ((CurrentArg >= RankSrc - RankDest) &&
-              (std::is_same<Arg, std::experimental::all_type>::value))) &&
+              (std::is_same<Arg, std::experimental::full_extent_t>::value))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutRight,
                                          Kokkos::LayoutRight, RankDest, RankSrc,
                                          CurrentArg + 1, SubViewArgs...>::value)
@@ -108,7 +108,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
                                    RankDest, RankSrc, CurrentArg, Arg> {
   enum {
     value = ((CurrentArg == RankSrc - 1) &&
-             (std::is_same<Arg, std::experimental::all_type>::value))
+             (std::is_same<Arg, std::experimental::full_extent_t>::value))
   };
 };
 
@@ -139,10 +139,10 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutStride,
 template <class T, class Extents, class... Args>
 struct DeduceSubSpanExtents {
   using generic_mdspan_type =
-      std::experimental::basic_mdspan<T, Extents,
+      std::experimental::mdspan<T, Extents,
                                       std::experimental::layout_left,
-                                      std::experimental::accessor_basic<T>>;
-  using generic_submdspan_type = decltype(std::experimental::subspan(
+                                      std::experimental::default_accessor<T>>;
+  using generic_submdspan_type = decltype(std::experimental::submdspan(
       std::declval<generic_mdspan_type>(), std::declval<Args>()...));
   using extents_type           = typename generic_submdspan_type::extents_type;
 };
@@ -158,9 +158,11 @@ template <class T1, class T2, class... Args>
 struct FirstArgIsRange<Kokkos::pair<T1, T2>, Args...> : std::true_type {};
 
 template <class... Args>
-struct FirstArgIsRange<std::experimental::all_type, Args...> : std::true_type {
+struct FirstArgIsRange<std::experimental::full_extent_t, Args...> : std::true_type {
 };
 
+// This converts the stride arguments into constructor arguments for the
+// the new subspan, by replacing them one by one in create call.
 template <class mdspan_type, class sub_mdspan_type, int R, int Rsub>
 struct ConstructSubSpan {
   // Overloads where the target layout only needs dynamic extents to be created
@@ -173,7 +175,7 @@ struct ConstructSubSpan {
   }
   template <class Arg, class... Args>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Arg, std::experimental::all_type>::value &&
+      std::is_same<Arg, std::experimental::full_extent_t>::value &&
           sub_mdspan_type::static_extent(Rsub) == -1,
       sub_mdspan_type>
   create(ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
@@ -183,10 +185,44 @@ struct ConstructSubSpan {
   }
   template <class Arg, class... Args>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Arg, std::experimental::all_type>::value &&
+      std::is_same<Arg, std::experimental::full_extent_t>::value &&
           sub_mdspan_type::static_extent(Rsub) != -1,
       sub_mdspan_type>
   create(ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
+    return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
+                            Rsub + 1>::create(offset, org, args...);
+  }
+
+  // Overloads where the target layout only needs dynamic extents to be created
+  template <class Arg, class... Args>
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<std::is_integral<Arg>::value,
+                                                 sub_mdspan_type>
+  create(ptrdiff_t stride, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
+    if(R<mdspan_type::rank()-1) stride *= org.extent(R);
+    printf("%i %i %li\n",R,Rsub,stride);
+    return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1, Rsub>::create(
+        stride, offset, org, args...);
+  }
+  template <class Arg, class... Args>
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+      std::is_same<Arg, std::experimental::full_extent_t>::value &&
+          sub_mdspan_type::static_extent(Rsub) == -1,
+      sub_mdspan_type>
+  create(ptrdiff_t stride, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
+  if(R<mdspan_type::rank()-1) stride=1;
+    printf("%i %i %li\n",R,Rsub,stride);
+    return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
+                            Rsub + 1>::create(stride, offset, org, args...,
+                                              org.extent(R));
+  }
+  template <class Arg, class... Args>
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+      std::is_same<Arg, std::experimental::full_extent_t>::value &&
+          sub_mdspan_type::static_extent(Rsub) != -1,
+      sub_mdspan_type>
+  create(ptrdiff_t stride, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
+  if(R<mdspan_type::rank()-1) stride=1;
+    printf("%i %i %li\n",R,Rsub,stride);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
                             Rsub + 1>::create(offset, org, args...);
   }
@@ -198,15 +234,17 @@ struct ConstructSubSpan {
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<std::is_integral<Arg>::value,
                                                  sub_mdspan_type>
   create(strides_t& strides, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
+    printf("Strides Skip: %i %i %i\n",R,Rsub,int(org.stride(R)));
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1, Rsub>::create(
         strides, offset, org, args...);
   }
   template <class Arg, class... Args>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Arg, std::experimental::all_type>::value &&
-          sub_mdspan_type::static_extent(Rsub) == -1,
+      std::is_same<Arg, std::experimental::full_extent_t>::value &&
+          sub_mdspan_type::static_extent(Rsub) == std::experimental::dynamic_extent,
       sub_mdspan_type>
   create(strides_t& strides, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
+    printf("Strides: %i %i %i\n",R,Rsub,int(org.stride(R)));
     strides[Rsub] = org.stride(R);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
                             Rsub + 1>::create(strides, offset, org, args...,
@@ -214,8 +252,8 @@ struct ConstructSubSpan {
   }
   template <class Arg, class... Args>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Arg, std::experimental::all_type>::value &&
-          sub_mdspan_type::static_extent(Rsub) != -1,
+      std::is_same<Arg, std::experimental::full_extent_t>::value &&
+          sub_mdspan_type::static_extent(Rsub) != std::experimental::dynamic_extent,
       sub_mdspan_type>
   create(strides_t& strides, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
     strides[Rsub] = org.stride(R);
@@ -228,18 +266,28 @@ template <class mdspan_type, class sub_mdspan_type>
 struct ConstructSubSpan<mdspan_type, sub_mdspan_type, int(mdspan_type::rank()),
                         int(sub_mdspan_type::rank())> {
 
+  using layout_t = typename sub_mdspan_type::layout_type;
+  using extents_t = typename sub_mdspan_type::extents_type;
+  using mapping_t = typename layout_t::template mapping<extents_t>;
+  // Overload where the target layout needs dynamic extents only (layout_left/layout_right)
   template <class... Args>
   KOKKOS_INLINE_FUNCTION static sub_mdspan_type create(ptrdiff_t offset,
                                                        mdspan_type org,
                                                        Args... args) {
-    return sub_mdspan_type(org.accessor().offset(org.data(), offset), args...);
+    return sub_mdspan_type(org.accessor().offset(org.data(), offset), mapping_t(extents_t(args...)));
   }
 
-  // Overloads where the target layout needs dynamic extents and the strides
+  // Overload where the target layout needs dynamic extents and a single stride (LayoutLeft/LayoutRight)
+  template <class... Args>
+  KOKKOS_INLINE_FUNCTION static sub_mdspan_type create(ptrdiff_t stride,
+                                                       ptrdiff_t offset,
+                                                       mdspan_type org,
+                                                       Args... args) {
+    return sub_mdspan_type(org.accessor().offset(org.data(), offset), mapping_t(extents_t(args...), size_t(stride)*org.mapping().stride(1)));
+  }
+
+  // Overloads where the target layout needs dynamic extents and the strides (LayoutStride,layout_stride)
   using strides_t = std::array<ptrdiff_t,sub_mdspan_type::rank()>;
-  using layout_t = typename sub_mdspan_type::layout_type;
-  using extents_t = typename sub_mdspan_type::extents_type;
-  using mapping_t = typename layout_t::template mapping<extents_t>;
   template <class... Args>
   KOKKOS_INLINE_FUNCTION static sub_mdspan_type create(strides_t& strides, ptrdiff_t offset,
                                                        mdspan_type org,
@@ -249,8 +297,8 @@ struct ConstructSubSpan<mdspan_type, sub_mdspan_type, int(mdspan_type::rank()),
 };
 
 template<class mdspan_type, class TSub, class ExtSub, class AccSub>
-struct ConstructSubSpan<mdspan_type, std::experimental::basic_mdspan<TSub,ExtSub,Kokkos::LayoutStride,AccSub>, -1, -1> {
-  using sub_mdspan_type = std::experimental::basic_mdspan<TSub,ExtSub,Kokkos::LayoutStride,AccSub>;
+struct ConstructSubSpan<mdspan_type, std::experimental::mdspan<TSub,ExtSub,Kokkos::LayoutStride,AccSub>, -1, -1> {
+  using sub_mdspan_type = std::experimental::mdspan<TSub,ExtSub,Kokkos::LayoutStride,AccSub>;
   template <class ... Args>
   KOKKOS_INLINE_FUNCTION static sub_mdspan_type create(
    ptrdiff_t offset,
@@ -261,6 +309,31 @@ struct ConstructSubSpan<mdspan_type, std::experimental::basic_mdspan<TSub,ExtSub
   }
 };
 
+template<class mdspan_type, class TSub, class ExtSub, class AccSub>
+struct ConstructSubSpan<mdspan_type, std::experimental::mdspan<TSub,ExtSub,Kokkos::LayoutLeft,AccSub>, -1, -1> {
+  using sub_mdspan_type = std::experimental::mdspan<TSub,ExtSub,Kokkos::LayoutLeft,AccSub>;
+  template <class ... Args>
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+    !(sub_mdspan_type::extents_type::rank() <=2 &&
+      Impl::FirstArgIsRange<Args...>::value),
+          sub_mdspan_type> create(
+   ptrdiff_t offset,
+   mdspan_type org, Args... args) {
+     return ConstructSubSpan<mdspan_type, sub_mdspan_type, 0, 0>::
+             create(offset, org, args...);
+  }
+  template <class ... Args>
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+     (sub_mdspan_type::extents_type::rank() <=2 &&
+      Impl::FirstArgIsRange<Args...>::value),
+          sub_mdspan_type> create(
+   ptrdiff_t offset,
+   mdspan_type org, Args... args) {
+     return ConstructSubSpan<mdspan_type, sub_mdspan_type, 0, 0>::
+             create(1, offset, org, args...);
+  }
+};
+
 template<class mdspan_type, class sub_mdspan_type>
 struct ConstructSubSpan<mdspan_type, sub_mdspan_type, -1, -1> {
   template <class ... Args>
@@ -268,7 +341,7 @@ struct ConstructSubSpan<mdspan_type, sub_mdspan_type, -1, -1> {
    ptrdiff_t offset,
    mdspan_type org, Args... args) {
      return ConstructSubSpan<mdspan_type, sub_mdspan_type, 0, 0>::
-             create(offset, org, args...);
+             create(1, offset, org, args...);
   }
 };
 
@@ -282,7 +355,7 @@ struct ComputeSubSpanOffset {
   }
   template <class Arg, class... Args>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Arg, std::experimental::all_type>::value, ptrdiff_t>
+      std::is_same<Arg, std::experimental::full_extent_t>::value, ptrdiff_t>
   compute(mdspan_type org, Arg, Args... args) {
     return ComputeSubSpanOffset<mdspan_type, R + 1>::compute(org, args...,
                                                              ptrdiff_t(0));
@@ -301,12 +374,13 @@ struct ComputeSubSpanOffset<mdspan_type, int(mdspan_type::rank())> {
 }  // namespace Impl
 
 template <class T, class Extents, class Accessor, class... Args>
-auto subspan(Kokkos::LayoutLeft,
-             const std::experimental::basic_mdspan<
+auto submdspan(Kokkos::LayoutLeft,
+             const std::experimental::mdspan<
                  T, Extents, Kokkos::LayoutLeft, Accessor>& A,
              const Args&... args) {
+        printf("HUCH\n");
   using mdspan_type =
-      std::experimental::basic_mdspan<T, Extents, Kokkos::LayoutLeft, Accessor>;
+      std::experimental::mdspan<T, Extents, Kokkos::LayoutLeft, Accessor>;
   using sub_extents_type =
       typename Impl::DeduceSubSpanExtents<T, Extents, Args...>::extents_type;
   using sub_array_layout = typename std::conditional<
@@ -319,7 +393,7 @@ auto subspan(Kokkos::LayoutLeft,
         Impl::FirstArgIsRange<Args...>::value)),
       Kokkos::LayoutLeft, Kokkos::LayoutStride>::type;
   using sub_mdspan_type =
-      std::experimental::basic_mdspan<T, sub_extents_type, sub_array_layout,
+      std::experimental::mdspan<T, sub_extents_type, sub_array_layout,
                                       Accessor>;
 
   return Impl::ConstructSubSpan<mdspan_type, sub_mdspan_type, -1, -1>::create(
