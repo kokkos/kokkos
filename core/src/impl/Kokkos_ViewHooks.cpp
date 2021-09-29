@@ -46,8 +46,11 @@
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 namespace Kokkos {
 namespace Experimental {
-DynamicViewHooks::callback_type DynamicViewHooks::s_callback;
-DynamicViewHooks::const_callback_type DynamicViewHooks::s_const_callback;
+DynamicViewHooks::callback_overload_set DynamicViewHooks::constructor_set;
+DynamicViewHooks::callback_overload_set DynamicViewHooks::copy_constructor_set;
+DynamicViewHooks::callback_overload_set DynamicViewHooks::copy_assignment_set;
+DynamicViewHooks::callback_overload_set DynamicViewHooks::move_constructor_set;
+DynamicViewHooks::callback_overload_set DynamicViewHooks::move_assignment_set;
 }  // namespace Experimental
 }  // namespace Kokkos
 #endif
