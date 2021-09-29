@@ -467,7 +467,8 @@ IteratorType2 swap_ranges_impl(const std::string& label,
   using func_t = StdSwapRangesFunctor<index_type, IteratorType1, IteratorType2>;
 
   // run
-  const auto num_elements_to_swap = last1 - first1;
+  const auto num_elements_to_swap =
+      Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_to_swap),
       func_t(first1, first2));
