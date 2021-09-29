@@ -48,6 +48,7 @@
 #include <Kokkos_Core.hpp>
 #include "../Kokkos_BeginEnd.hpp"
 #include "../Kokkos_Constraints.hpp"
+#include "../Kokkos_Distance.hpp"
 #include "../Kokkos_ModifyingOperations.hpp"
 #include "../Kokkos_ValueWrapperForNoNeutralElement.hpp"
 #include "Kokkos_IdentityReferenceUnaryFunctor.hpp"
@@ -223,7 +224,8 @@ OutputIteratorType inclusive_scan_default_op_impl(
                                   InputIteratorType, OutputIteratorType>;
 
   // run
-  const auto num_elements = last_from - first_from;
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(first_from, first_dest));
@@ -258,7 +260,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
       OutputIteratorType, BinaryOpType, unary_op_type>;
 
   // run
-  const auto num_elements = last_from - first_from;
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op_type()));
@@ -292,7 +295,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
       OutputIteratorType, BinaryOpType, unary_op_type>;
 
   // run
-  const auto num_elements = last_from - first_from;
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(first_from, first_dest, binary_op,
@@ -330,7 +334,8 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
       OutputIteratorType, BinaryOpType, UnaryOpType>;
 
   // run
-  const auto num_elements = last_from - first_from;
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op));
@@ -364,7 +369,8 @@ OutputIteratorType transform_inclusive_scan_impl(
       OutputIteratorType, BinaryOpType, UnaryOpType>;
 
   // run
-  const auto num_elements = last_from - first_from;
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op, init_value));
