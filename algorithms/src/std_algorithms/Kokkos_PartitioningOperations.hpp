@@ -340,7 +340,8 @@ partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
                               PredicateType>;
 
   // run
-  const auto num_elements = from_last - from_first;
+  const auto num_elements =
+      Kokkos::Experimental::distance(from_first, from_last);
   typename func_type::value_type counts{0, 0};
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),

@@ -218,7 +218,7 @@ ValueType transform_reduce_custom_functors_impl(
   reduction_value_type result;
   reducer_type reducer(result, joiner);
 
-  const auto num_elements = last1 - first1;
+  const auto num_elements = Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       functor_type(first1, first2, reducer, transformer), reducer);

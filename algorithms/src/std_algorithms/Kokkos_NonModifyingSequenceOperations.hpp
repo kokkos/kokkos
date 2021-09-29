@@ -714,7 +714,7 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
                                  BinaryPredicateType>;
 
   // run
-  const auto num_elements = last1 - first1;
+  const auto num_elements = Kokkos::Experimental::distance(first1, last1);
   std::size_t different   = 0;
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),

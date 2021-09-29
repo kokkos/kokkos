@@ -46,8 +46,9 @@
 #define KOKKOS_STD_NUMERICS_ADJACENT_DIFFERENCE_HPP
 
 #include <Kokkos_Core.hpp>
-#include "../Kokkos_Constraints.hpp"
 #include "../Kokkos_BeginEnd.hpp"
+#include "../Kokkos_Constraints.hpp"
+#include "../Kokkos_Distance.hpp"
 
 namespace Kokkos {
 namespace Experimental {
@@ -122,7 +123,8 @@ OutputIteratorType adjacent_difference_impl(const std::string& label,
       StdAdjacentDiffFunctor<InputIteratorType, OutputIteratorType, BinaryOp>;
 
   // run
-  const auto num_elements = last_from - first_from;
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   aux_view_type aux_view("aux_view", num_elements);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
