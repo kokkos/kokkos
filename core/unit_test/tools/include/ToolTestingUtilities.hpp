@@ -88,15 +88,6 @@ struct MatchDiagnostic {
   std::vector<std::string> messages = {};
 };
 
-// Originally found at https://stackoverflow.com/a/39717241
-// make_void is in C++17
-template <typename... Ts>
-struct make_void {
-  using type = void;
-};
-template <typename... Ts>
-using void_t = typename make_void<Ts...>::type;
-
 struct EventBase;  // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
 using EventSet     = std::vector<EventBasePtr>;
@@ -224,7 +215,7 @@ struct function_traits<R (C::*)(A...) const>  // const
  * @tparam T The functor type
  */
 template <typename T>
-struct function_traits<T, void_t<decltype(&T::operator())> >
+struct function_traits<T, Kokkos::Impl::void_t<decltype(&T::operator())> >
     : public function_traits<decltype(&T::operator())> {};
 
 /**
