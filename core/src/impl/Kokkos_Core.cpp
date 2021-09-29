@@ -283,7 +283,6 @@ int get_gpu(const InitArguments& args) {
   return use_gpu;
 }
 
-
 namespace {
 
 void initialize_backends(const InitArguments& args) {
