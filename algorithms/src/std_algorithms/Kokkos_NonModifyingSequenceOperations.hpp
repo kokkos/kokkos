@@ -1490,7 +1490,13 @@ auto count(const std::string& label, const ExecutionSpace& ex,
 // ----------------------------------
 // mismatch public API
 // ----------------------------------
-// FIXME: add mismatch overloads accepting 3 iterators
+// FIXME: add mismatch overloads accepting 3 iterators.
+// An overload consistent with other algorithms:
+//
+// auto mismatch(const ExecSpace& ex, It1 first1, It1 last1, It2 first2) {...}
+//
+// makes API ambiguous (with the overload accepting views).
+
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 ::Kokkos::pair<IteratorType1, IteratorType2> mismatch(const ExecutionSpace& ex,
                                                       IteratorType1 first1,
