@@ -78,8 +78,8 @@ using sycl_atomic_ref = sycl_sync_and_atomics::atomic_ref<
     // generic_space enumerator is not a valid address space (only global_space,
     // local_space, and global_space are).  Worse it is not yet defined as part of the
     // access::address_space enumerator list.
-    // Here we arbitrarily elected to use global_device_space as a temporary workaround.
-    sycl::access::address_space::global_device_space>;
+    // Here we arbitrarily elected to use global_space as a temporary workaround.
+    sycl::access::address_space::global_space>;
 
 }  // namespace Impl
 }  // namespace desul
