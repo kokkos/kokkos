@@ -2028,6 +2028,9 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto search(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& view,
             const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_impl("Kokkos::search_view_api_default", ex,
                            KE::cbegin(view), KE::cend(view), KE::cbegin(s_view),
@@ -2039,6 +2042,9 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto search(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& view,
             const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_impl(label, ex, KE::cbegin(view), KE::cend(view),
                            KE::cbegin(s_view), KE::cend(s_view));
@@ -2069,6 +2075,9 @@ auto search(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& view,
             const ::Kokkos::View<DataType2, Properties2...>& s_view,
             const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_impl("Kokkos::search_view_api_default", ex,
                            KE::cbegin(view), KE::cend(view), KE::cbegin(s_view),
@@ -2081,6 +2090,9 @@ auto search(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& view,
             const ::Kokkos::View<DataType2, Properties2...>& s_view,
             const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_impl(label, ex, KE::cbegin(view), KE::cend(view),
                            KE::cbegin(s_view), KE::cend(s_view), pred);
@@ -2110,6 +2122,9 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto find_first_of(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_impl("Kokkos::find_first_of_view_api_default", ex,
                                   KE::cbegin(view), KE::cend(view),
@@ -2121,6 +2136,9 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_impl(label, ex, KE::cbegin(view), KE::cend(view),
                                   KE::cbegin(s_view), KE::cend(s_view));
@@ -2153,6 +2171,9 @@ auto find_first_of(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view,
                    const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_impl("Kokkos::find_first_of_view_api_default", ex,
                                   KE::cbegin(view), KE::cend(view),
@@ -2165,6 +2186,9 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view,
                    const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_impl(label, ex, KE::cbegin(view), KE::cend(view),
                                   KE::cbegin(s_view), KE::cend(s_view), pred);
@@ -2196,6 +2220,8 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto search_n(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& view,
               SizeType count, const ValueType& value) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_n_impl("Kokkos::search_n_view_api_default", ex,
                              KE::cbegin(view), KE::cend(view), count, value);
@@ -2206,6 +2232,8 @@ template <class ExecutionSpace, class DataType, class... Properties,
 auto search_n(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& view,
               SizeType count, const ValueType& value) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_n_impl(label, ex, KE::cbegin(view), KE::cend(view), count,
                              value);
@@ -2235,6 +2263,8 @@ auto search_n(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& view,
               SizeType count, const ValueType& value,
               const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_n_impl("Kokkos::search_n_view_api_default", ex,
                              KE::cbegin(view), KE::cend(view), count, value,
@@ -2247,6 +2277,8 @@ auto search_n(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& view,
               SizeType count, const ValueType& value,
               const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::search_n_impl(label, ex, KE::cbegin(view), KE::cend(view), count,
                              value, pred);
@@ -2276,6 +2308,9 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto find_end(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_impl("Kokkos::find_end_view_api_default", ex,
                              KE::cbegin(view), KE::cend(view),
@@ -2287,6 +2322,9 @@ template <class ExecutionSpace, class DataType1, class... Properties1,
 auto find_end(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_impl(label, ex, KE::cbegin(view), KE::cend(view),
                              KE::cbegin(s_view), KE::cend(s_view));
@@ -2317,6 +2355,9 @@ auto find_end(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view,
               const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_impl("Kokkos::find_end_view_api_default", ex,
                              KE::cbegin(view), KE::cend(view),
@@ -2329,6 +2370,9 @@ auto find_end(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view,
               const BinaryPredicateType& pred) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_impl(label, ex, KE::cbegin(view), KE::cend(view),
                              KE::cbegin(s_view), KE::cend(s_view), pred);
