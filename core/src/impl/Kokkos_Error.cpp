@@ -149,7 +149,6 @@ std::string Experimental::RawMemoryAllocationFailure::get_error_message()
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {}  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_CUDA
 namespace Experimental {
