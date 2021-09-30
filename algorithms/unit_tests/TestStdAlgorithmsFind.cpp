@@ -70,8 +70,8 @@ void test_find(const ViewType view) {
   // pass const iterators, returns const iterator
   EXPECT_EQ(KE::cend(view),
             KE::find(exespace(), KE::cbegin(view), KE::cend(view), find_value));
-  // pass view, returns const iterator
-  EXPECT_EQ(KE::cend(view), KE::find(exespace(), view, find_value));
+  // pass view, returns iterator
+  EXPECT_EQ(KE::end(view), KE::find(exespace(), view, find_value));
 
   fill_views_inc(view, expected);
 
@@ -82,9 +82,8 @@ void test_find(const ViewType view) {
   // pass iterators, returns iterator
   EXPECT_EQ(KE::begin(view) + distance,
             KE::find(exespace(), KE::begin(view), KE::end(view), find_value));
-  // pass view, returns const iterator
-  EXPECT_EQ(KE::cbegin(view) + distance,
-            KE::find(exespace(), view, find_value));
+  // pass view, returns iterator
+  EXPECT_EQ(KE::begin(view) + distance, KE::find(exespace(), view, find_value));
 }
 
 template <class ViewType>
@@ -105,8 +104,8 @@ void test_find_if(const ViewType view) {
   // pass iterators, returns iterator
   EXPECT_EQ(KE::end(view), KE::find_if(exespace(), KE::begin(view),
                                        KE::end(view), not_equals_zero));
-  // pass view, returns const iterator
-  EXPECT_EQ(KE::cend(view), KE::find_if(exespace(), view, not_equals_zero));
+  // pass view, returns iterator
+  EXPECT_EQ(KE::end(view), KE::find_if(exespace(), view, not_equals_zero));
 
   fill_views_inc(view, expected);
 
@@ -120,8 +119,8 @@ void test_find_if(const ViewType view) {
   EXPECT_EQ(
       KE::cbegin(view) + distance,
       KE::find_if(exespace(), KE::cbegin(view), KE::cend(view), equals_val));
-  // pass view, returns const iterator
-  EXPECT_EQ(KE::cbegin(view) + distance,
+  // pass view, returns iterator
+  EXPECT_EQ(KE::begin(view) + distance,
             KE::find_if(exespace(), view, equals_val));
 }
 

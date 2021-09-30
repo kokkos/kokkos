@@ -1221,8 +1221,8 @@ auto find(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_impl("Kokkos::find_view_api_default", ex, KE::cbegin(view),
-                         KE::cend(view), value);
+  return Impl::find_impl("Kokkos::find_view_api_default", ex, KE::begin(view),
+                         KE::end(view), value);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties, class T>
@@ -1231,7 +1231,7 @@ auto find(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_impl(label, ex, KE::cbegin(view), KE::cend(view), value);
+  return Impl::find_impl(label, ex, KE::begin(view), KE::end(view), value);
 }
 
 // -------------------
@@ -1260,7 +1260,7 @@ auto find_if(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_if_or_not_impl<true>("Kokkos::find_if_view_api_default", ex,
-                                         KE::cbegin(v), KE::cend(v),
+                                         KE::begin(v), KE::end(v),
                                          std::move(predicate));
 }
 
@@ -1271,7 +1271,7 @@ auto find_if(const std::string& label, const ExecutionSpace& ex,
              Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::find_if_or_not_impl<true>(label, ex, KE::cbegin(v), KE::cend(v),
+  return Impl::find_if_or_not_impl<true>(label, ex, KE::begin(v), KE::end(v),
                                          std::move(predicate));
 }
 
