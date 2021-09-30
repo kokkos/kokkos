@@ -203,7 +203,7 @@ void std_algo_min_max_test_verify(Kokkos::pair<IndexType, ValueType> goldPair,
                                   const ItType result,
                                   TestedViewType testedView) {
   // check that iterator is pointing to right element
-  EXPECT_EQ(result - KE::cbegin(testedView), goldPair.first);
+  EXPECT_EQ(result - KE::begin(testedView), goldPair.first);
 
   // create a view for the result to copy into it the iterator's value
   using result_view_t = Kokkos::View<int>;
@@ -280,10 +280,10 @@ void std_algorithms_min_max_element_test::test_max_element_non_trivial_data(
     // API accepting iterators
     {
       const auto result =
-          KE::max_element(exespace(), KE::cbegin(view), KE::cend(view));
+          KE::max_element(exespace(), KE::begin(view), KE::end(view));
       std_algo_min_max_test_verify(gold_solution, result, view);
       const auto result2 = KE::max_element("MYCUSTOMLABEL2", exespace(),
-                                           KE::cbegin(view), KE::cend(view));
+                                           KE::begin(view), KE::end(view));
       std_algo_min_max_test_verify(gold_solution, result2, view);
     }
   }
@@ -305,10 +305,10 @@ void std_algorithms_min_max_element_test::test_min_element_non_trivial_data(
     // API accepting iterators
     {
       const auto result =
-          KE::min_element(exespace(), KE::cbegin(view), KE::cend(view));
+          KE::min_element(exespace(), KE::begin(view), KE::end(view));
       std_algo_min_max_test_verify(goldPair, result, view);
       const auto result2 = KE::min_element("MYCUSTOMLABEL2", exespace(),
-                                           KE::cbegin(view), KE::cend(view));
+                                           KE::begin(view), KE::end(view));
       std_algo_min_max_test_verify(goldPair, result2, view);
     }
   }
@@ -357,10 +357,10 @@ void std_algorithms_min_max_element_test::
     // API accepting iterators
     {
       const auto result =
-          KE::max_element(exespace(), KE::cbegin(view), KE::cend(view), comp);
+          KE::max_element(exespace(), KE::begin(view), KE::end(view), comp);
       std_algo_min_max_test_verify(goldPair, result, view);
       const auto result2 = KE::max_element(
-          "MYCUSTOMLABEL4", exespace(), KE::cbegin(view), KE::cend(view), comp);
+          "MYCUSTOMLABEL4", exespace(), KE::begin(view), KE::end(view), comp);
       std_algo_min_max_test_verify(goldPair, result2, view);
     }
   }
@@ -384,10 +384,10 @@ void std_algorithms_min_max_element_test::
     // API accepting iterators
     {
       const auto result =
-          KE::min_element(exespace(), KE::cbegin(view), KE::cend(view), comp);
+          KE::min_element(exespace(), KE::begin(view), KE::end(view), comp);
       std_algo_min_max_test_verify(goldPair, result, view);
       const auto result2 = KE::min_element(
-          "MYCUSTOMLABEL4", exespace(), KE::cbegin(view), KE::cend(view), comp);
+          "MYCUSTOMLABEL4", exespace(), KE::begin(view), KE::end(view), comp);
       std_algo_min_max_test_verify(goldPair, result2, view);
     }
   }
@@ -409,11 +409,11 @@ void std_algorithms_min_max_element_test::
                                    view);
     }
     {
-      const auto result = KE::minmax_element(exespace(), KE::cbegin(view),
-                                             KE::cend(view), comp);
+      const auto result =
+          KE::minmax_element(exespace(), KE::begin(view), KE::end(view), comp);
       std_algo_min_max_test_verify(goldPair, result.first, result.second, view);
       const auto result2 = KE::minmax_element(
-          "MYCUSTOMLABEL4", exespace(), KE::cbegin(view), KE::cend(view), comp);
+          "MYCUSTOMLABEL4", exespace(), KE::begin(view), KE::end(view), comp);
       std_algo_min_max_test_verify(goldPair, result2.first, result2.second,
                                    view);
     }
