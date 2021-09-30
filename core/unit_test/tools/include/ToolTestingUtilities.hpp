@@ -738,14 +738,14 @@ struct DeclareOutputTypeEvent
     : public TypeDeclarationEvent<DeclareOutputTypeEvent> {
   static std::string event_name() { return "DeclarateOutputTypeEvent"; }
   DeclareOutputTypeEvent(std::string n, size_t v_i,
-                             Kokkos::Tools::Experimental::VariableInfo i)
+                         Kokkos::Tools::Experimental::VariableInfo i)
       : TypeDeclarationEvent(n, v_i, i) {}
 };
 struct DeclareInputTypeEvent
     : public TypeDeclarationEvent<DeclareInputTypeEvent> {
   static std::string event_name() { return "DeclareInputTypeEvent"; }
   DeclareInputTypeEvent(std::string n, size_t v_i,
-                            Kokkos::Tools::Experimental::VariableInfo i)
+                        Kokkos::Tools::Experimental::VariableInfo i)
       : TypeDeclarationEvent(n, v_i, i) {}
 };
 
@@ -1002,11 +1002,8 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
               dst_handle, std::string(dst_name), dst_ptr, src_handle,
               std::string(src_name), src_ptr, size));
         });
-        Kokkos::Tools::Experimental::set_end_deep_copy_callback(
-        []() {
-          found_events.push_back(std::make_shared<EndDeepCopyEvent>(
-              ));
-        });
+    Kokkos::Tools::Experimental::set_end_deep_copy_callback(
+        []() { found_events.push_back(std::make_shared<EndDeepCopyEvent>()); });
   }
   if (config.profiling.dual_view_ops) {
     Kokkos::Tools::Experimental::set_dual_view_sync_callback(
@@ -1021,50 +1018,78 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
         });
   }
   if (config.tuning.contexts) {
-    Kokkos::Tools::Experimental::set_begin_context_callback([](const size_t context){
-      found_events.push_back(std::make_shared<BeginContextEvent>(context));
-    });
-    Kokkos::Tools::Experimental::set_end_context_callback([](const size_t context, Kokkos::Tools::Experimental::VariableValue value){
-      found_events.push_back(std::make_shared<EndContextEvent>(context, value));
-    });
+    Kokkos::Tools::Experimental::set_begin_context_callback(
+        [](const size_t context) {
+          found_events.push_back(std::make_shared<BeginContextEvent>(context));
+        });
+    Kokkos::Tools::Experimental::set_end_context_callback(
+        [](const size_t context,
+           Kokkos::Tools::Experimental::VariableValue value) {
+          found_events.push_back(
+              std::make_shared<EndContextEvent>(context, value));
+        });
   }
   if (config.tuning.type_declarations) {
-    Kokkos::Tools::Experimental::set_declare_input_type_callback([](const char* name, const size_t id, Kokkos::Tools::Experimental::VariableInfo* info){
-      found_events.push_back(std::make_shared<DeclareInputTypeEvent>(std::string(name),id,*info));
-    });
-    Kokkos::Tools::Experimental::set_declare_output_type_callback([](const char* name, const size_t id, Kokkos::Tools::Experimental::VariableInfo* info){
-      found_events.push_back(std::make_shared<DeclareOutputTypeEvent>(std::string(name),id,*info));
-    });
+    Kokkos::Tools::Experimental::set_declare_input_type_callback(
+        [](const char* name, const size_t id,
+           Kokkos::Tools::Experimental::VariableInfo* info) {
+          found_events.push_back(std::make_shared<DeclareInputTypeEvent>(
+              std::string(name), id, *info));
+        });
+    Kokkos::Tools::Experimental::set_declare_output_type_callback(
+        [](const char* name, const size_t id,
+           Kokkos::Tools::Experimental::VariableInfo* info) {
+          found_events.push_back(std::make_shared<DeclareOutputTypeEvent>(
+              std::string(name), id, *info));
+        });
   }
   if (config.tuning.request_values) {
-    Kokkos::Tools::Experimental::set_request_output_values_callback([](const size_t context, const size_t num_inputs, const Kokkos::Tools::Experimental::VariableValue* inputs_in, const size_t num_outputs, Kokkos::Tools::Experimental::VariableValue* outputs_in){
-      std::vector<Kokkos::Tools::Experimental::VariableValue> inputs, outputs;
-      std::copy(inputs_in,inputs_in+num_inputs,std::back_inserter(inputs));
-      std::copy(outputs_in,outputs_in+num_inputs,std::back_inserter(outputs));
+    Kokkos::Tools::Experimental::set_request_output_values_callback(
+        [](const size_t context, const size_t num_inputs,
+           const Kokkos::Tools::Experimental::VariableValue* inputs_in,
+           const size_t num_outputs,
+           Kokkos::Tools::Experimental::VariableValue* outputs_in) {
+          std::vector<Kokkos::Tools::Experimental::VariableValue> inputs,
+              outputs;
+          std::copy(inputs_in, inputs_in + num_inputs,
+                    std::back_inserter(inputs));
+          std::copy(outputs_in, outputs_in + num_inputs,
+                    std::back_inserter(outputs));
 
-    found_events.push_back(std::make_shared<RequestOutputValuesEvent>(context, num_inputs, inputs, num_outputs, outputs));
-    });
+          found_events.push_back(std::make_shared<RequestOutputValuesEvent>(
+              context, num_inputs, inputs, num_outputs, outputs));
+        });
   }
-  if (config.infrastructure.init){
-    Kokkos::Tools::Experimental::set_init_callback([](const int loadseq, const uint64_t version, const uint32_t num_infos, Kokkos::Profiling::KokkosPDeviceInfo* infos){
-      found_events.push_back(std::make_shared<InitEvent>(loadseq, version, num_infos, infos));
-    });
+  if (config.infrastructure.init) {
+    Kokkos::Tools::Experimental::set_init_callback(
+        [](const int loadseq, const uint64_t version, const uint32_t num_infos,
+           Kokkos::Profiling::KokkosPDeviceInfo* infos) {
+          found_events.push_back(
+              std::make_shared<InitEvent>(loadseq, version, num_infos, infos));
+        });
   }
-  if (config.infrastructure.finalize){
-    Kokkos::Tools::Experimental::set_finalize_callback([](){
-      found_events.push_back(std::make_shared<FinalizeEvent>());
-    });
-
+  if (config.infrastructure.finalize) {
+    Kokkos::Tools::Experimental::set_finalize_callback(
+        []() { found_events.push_back(std::make_shared<FinalizeEvent>()); });
   }
-  if (config.infrastructure.programming_interface){
-    Kokkos::Tools::Experimental::set_provide_tool_programming_interface_callback([](const uint32_t num_functions, Kokkos::Tools::Experimental::ToolProgrammingInterface interface){
-      found_events.push_back(std::make_shared<ProvideToolProgrammingInterfaceEvent>(num_functions, interface));
-    });
+  if (config.infrastructure.programming_interface) {
+    Kokkos::Tools::Experimental::
+        set_provide_tool_programming_interface_callback(
+            [](const uint32_t num_functions,
+               Kokkos::Tools::Experimental::ToolProgrammingInterface
+                   interface) {
+              found_events.push_back(
+                  std::make_shared<ProvideToolProgrammingInterfaceEvent>(
+                      num_functions, interface));
+            });
   }
-  if (config.infrastructure.request_settings){
-    Kokkos::Tools::Experimental::set_request_tool_settings_callback([](const uint32_t num_settings, Kokkos::Tools::Experimental::ToolSettings* settings){
-      found_events.push_back(std::make_shared<RequestToolSettingsEvent>(num_settings, *settings));
-    });
+  if (config.infrastructure.request_settings) {
+    Kokkos::Tools::Experimental::set_request_tool_settings_callback(
+        [](const uint32_t num_settings,
+           Kokkos::Tools::Experimental::ToolSettings* settings) {
+          found_events.push_back(std::make_shared<RequestToolSettingsEvent>(
+              num_settings, *settings));
+        });
   }
 }
 template <int priority>

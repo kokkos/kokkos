@@ -310,8 +310,8 @@ TEST(defaultdevicetype, test_new_test_interface) {
         Kokkos::View<float*> left("left", 5), right("right", 5);
         Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), left, right);
       },
-      [&](AllocateDataEvent, AllocateDataEvent){
-        return MatchDiagnostic {true};
+      [&](AllocateDataEvent, AllocateDataEvent) {
+        return MatchDiagnostic{true};
       },
       [&](BeginDeepCopyEvent, BeginFenceEvent begin, EndFenceEvent) {
         // DeepCopy: fence before copy
@@ -333,10 +333,9 @@ TEST(defaultdevicetype, test_new_test_interface) {
         }
         return diagnostic;
       },
-            [&](DeallocateDataEvent, DeallocateDataEvent){
-        return MatchDiagnostic {true};
-      }
-);
+      [&](DeallocateDataEvent, DeallocateDataEvent) {
+        return MatchDiagnostic{true};
+      });
 
   listen_tool_events(Config::DisableAll());
 }
