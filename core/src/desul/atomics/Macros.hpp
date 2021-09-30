@@ -36,7 +36,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_SYCL_ATOMICS
 #ifdef __clang__
 #define DESUL_SYCL_NAMESPACE sycl::ext::oneapi
-#elseg
+#else
 #define DESUL_SYCL_NAMESPACE sycl
 #endif
 #endif
