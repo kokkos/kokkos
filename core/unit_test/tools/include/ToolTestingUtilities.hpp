@@ -328,7 +328,7 @@ struct EventBase {
   template <typename T>
   constexpr static uint64_t unspecified_sentinel =
       std::numeric_limits<T>::max();
-  using PtrHandle = const void* const;
+  using PtrHandle                  = const void* const;
   virtual ~EventBase()             = default;
   virtual std::string repr() const = 0;
 };
@@ -564,16 +564,22 @@ struct DataEvent : public EventBase {
       << ", name: " << name << ", ptr: " << ptr << ", size: " << size;
     return s.str();
   }
-  DataEvent(SpaceHandleType h, std::string n, EventBase::PtrHandle p, uint64_t s) : handle(h), name(n), ptr(p), size(s) {}
+  DataEvent(SpaceHandleType h, std::string n, EventBase::PtrHandle p,
+            uint64_t s)
+      : handle(h), name(n), ptr(p), size(s) {}
 };
 
 struct AllocateDataEvent : public DataEvent<AllocateDataEvent> {
   static std::string event_name() { return "AllocateDataEvent"; }
-  AllocateDataEvent(DataEvent::SpaceHandleType h, std::string n,  EventBase::PtrHandle p, uint64_t s) : DataEvent<AllocateDataEvent>(h, n, p, s) {}
+  AllocateDataEvent(DataEvent::SpaceHandleType h, std::string n,
+                    EventBase::PtrHandle p, uint64_t s)
+      : DataEvent<AllocateDataEvent>(h, n, p, s) {}
 };
 struct DeallocateDataEvent : public DataEvent<DeallocateDataEvent> {
   static std::string event_name() { return "DeallocateDataEvent"; }
-  DeallocateDataEvent(DataEvent::SpaceHandleType h, std::string n,  EventBase::PtrHandle p, uint64_t s) : DataEvent<DeallocateDataEvent>(h, n, p, s) {}
+  DeallocateDataEvent(DataEvent::SpaceHandleType h, std::string n,
+                      EventBase::PtrHandle p, uint64_t s)
+      : DataEvent<DeallocateDataEvent>(h, n, p, s) {}
 };
 
 struct CreateProfileSectionEvent : public EventBase {
@@ -642,14 +648,16 @@ struct BeginDeepCopyEvent : public EventBase {
     s << "}";
     return s.str();
   }
-  BeginDeepCopyEvent(
-    SpaceHandleType s_h, std::string s_n, EventBase::PtrHandle s_p,
-    SpaceHandleType d_h, std::string d_n, EventBase::PtrHandle d_p,
-    uint64_t s
-  ) :
-  src_handle(s_h), src_name(s_n), src_ptr(s_p),
-  dst_handle(d_h), dst_name(d_n), dst_ptr(d_p),
-  size(s) {}
+  BeginDeepCopyEvent(SpaceHandleType s_h, std::string s_n,
+                     EventBase::PtrHandle s_p, SpaceHandleType d_h,
+                     std::string d_n, EventBase::PtrHandle d_p, uint64_t s)
+      : src_handle(s_h),
+        src_name(s_n),
+        src_ptr(s_p),
+        dst_handle(d_h),
+        dst_name(d_n),
+        dst_ptr(d_p),
+        size(s) {}
 };
 struct EndDeepCopyEvent : public EventBase {
   std::string repr() const override { return "EndDeepCopyEvent{}"; }
@@ -660,7 +668,8 @@ struct DualViewEvent : public EventBase {
   std::string name;
   EventBase::PtrHandle ptr;
   bool is_device;
-  DualViewEvent(std::string n, EventBase::PtrHandle p, bool i_d) : name(n), ptr(p), is_device(i_d) {}
+  DualViewEvent(std::string n, EventBase::PtrHandle p, bool i_d)
+      : name(n), ptr(p), is_device(i_d) {}
   std::string repr() const override {
     std::stringstream s;
     s << Derived::event_name() << " { " << name << ", " << std::hex << ptr
@@ -669,12 +678,14 @@ struct DualViewEvent : public EventBase {
   }
 };
 struct DualViewModifyEvent : public DualViewEvent<DualViewModifyEvent> {
-  static std::string event_name () { return "DualViewModifyEvent"; }
-  DualViewModifyEvent(std::string n, EventBase::PtrHandle p, bool i_d) : DualViewEvent(n, p, i_d) {}
+  static std::string event_name() { return "DualViewModifyEvent"; }
+  DualViewModifyEvent(std::string n, EventBase::PtrHandle p, bool i_d)
+      : DualViewEvent(n, p, i_d) {}
 };
 struct DualViewSyncEvent : public DualViewEvent<DualViewSyncEvent> {
-  static std::string event_name () { return "DualViewSyncEvent"; }
-  DualViewSyncEvent(std::string n, EventBase::PtrHandle p, bool i_d) : DualViewEvent(n, p, i_d) {}
+  static std::string event_name() { return "DualViewSyncEvent"; }
+  DualViewSyncEvent(std::string n, EventBase::PtrHandle p, bool i_d)
+      : DualViewEvent(n, p, i_d) {}
 };
 
 struct DeclareMetadataEvent : public EventBase {
@@ -969,30 +980,41 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
     });
   }  // profiling.fences
   if (config.profiling.allocs) {
-    Kokkos::Tools::Experimental::set_allocate_data_callback([](Kokkos::Tools::SpaceHandle handle, const char* name, EventBase::PtrHandle const ptr, const uint64_t size){
-      found_events.push_back(std::make_shared<AllocateDataEvent>(handle, std::string(name), ptr, size));
-    });
-    Kokkos::Tools::Experimental::set_deallocate_data_callback([](Kokkos::Tools::SpaceHandle handle, const char* name, EventBase::PtrHandle const ptr, const uint64_t size){
-      found_events.push_back(std::make_shared<DeallocateDataEvent>(handle, std::string(name), ptr, size));
-    });
+    Kokkos::Tools::Experimental::set_allocate_data_callback(
+        [](Kokkos::Tools::SpaceHandle handle, const char* name,
+           EventBase::PtrHandle const ptr, const uint64_t size) {
+          found_events.push_back(std::make_shared<AllocateDataEvent>(
+              handle, std::string(name), ptr, size));
+        });
+    Kokkos::Tools::Experimental::set_deallocate_data_callback(
+        [](Kokkos::Tools::SpaceHandle handle, const char* name,
+           EventBase::PtrHandle const ptr, const uint64_t size) {
+          found_events.push_back(std::make_shared<DeallocateDataEvent>(
+              handle, std::string(name), ptr, size));
+        });
   }
   if (config.profiling.copies) {
-    Kokkos::Tools::Experimental::set_begin_deep_copy_callback([](Kokkos::Tools::SpaceHandle dst_handle, const char* dst_name, EventBase::PtrHandle dst_ptr,
-    Kokkos::Tools::SpaceHandle src_handle, const char* src_name, EventBase::PtrHandle src_ptr,
-    uint64_t size){
-      found_events.push_back(std::make_shared<BeginDeepCopyEvent>(dst_handle, std::string(dst_name), dst_ptr,src_handle, std::string(src_name), src_ptr,size));
-    });
+    Kokkos::Tools::Experimental::set_begin_deep_copy_callback(
+        [](Kokkos::Tools::SpaceHandle dst_handle, const char* dst_name,
+           EventBase::PtrHandle dst_ptr, Kokkos::Tools::SpaceHandle src_handle,
+           const char* src_name, EventBase::PtrHandle src_ptr, uint64_t size) {
+          found_events.push_back(std::make_shared<BeginDeepCopyEvent>(
+              dst_handle, std::string(dst_name), dst_ptr, src_handle,
+              std::string(src_name), src_ptr, size));
+        });
   }
   if (config.profiling.dual_view_ops) {
-    Kokkos::Tools::Experimental::set_dual_view_sync_callback([](const char* name, EventBase::PtrHandle ptr, bool is_device){
-      found_events.push_back(std::make_shared<DualViewSyncEvent>(std::string(name),ptr,is_device));
-    });
-    Kokkos::Tools::Experimental::set_dual_view_modify_callback([](const char* name, EventBase::PtrHandle ptr, bool is_device){
-      found_events.push_back(std::make_shared<DualViewModifyEvent>(std::string(name),ptr,is_device));
-    });
+    Kokkos::Tools::Experimental::set_dual_view_sync_callback(
+        [](const char* name, EventBase::PtrHandle ptr, bool is_device) {
+          found_events.push_back(std::make_shared<DualViewSyncEvent>(
+              std::string(name), ptr, is_device));
+        });
+    Kokkos::Tools::Experimental::set_dual_view_modify_callback(
+        [](const char* name, EventBase::PtrHandle ptr, bool is_device) {
+          found_events.push_back(std::make_shared<DualViewModifyEvent>(
+              std::string(name), ptr, is_device));
+        });
   }
-
-
 }
 template <int priority>
 void listen_tool_events_impl(std::integral_constant<int, priority>,
