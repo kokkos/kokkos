@@ -325,17 +325,11 @@ auto check_match(event_vector events, Matchers... matchers) {
  * 2) You can represent yourself as a string
  */
 struct EventBase {
-  virtual bool isEqual(const EventBase&) const = 0;
   template <typename T>
   constexpr static uint64_t unspecified_sentinel =
       std::numeric_limits<T>::max();
   virtual ~EventBase()             = default;
   virtual std::string repr() const = 0;
-};
-
-// TODO
-struct InitEvent : public EventBase {
-  virtual bool isEqual(const EventBase&) const = 0;
 };
 
 /**
@@ -350,20 +344,6 @@ struct BeginOperation : public EventBase {
   const std::string name;
   const uint32_t deviceID;
   uint64_t kID;
-  virtual bool isEqual(const EventBase& other_base) const {
-    try {
-      const auto& other = dynamic_cast<const ThisType&>(other_base);
-      bool matches      = true;
-      matches &= (kID == unspecified_sentinel<uint64_t>) || (kID == other.kID);
-      matches &= (deviceID == unspecified_sentinel<uint32_t>) ||
-                 (deviceID == other.deviceID);
-      matches &= name == other.name;
-      return matches;
-    } catch (const std::bad_cast&) {
-      return false;
-    }
-    return false;
-  }
   BeginOperation(const std::string& n,
                  const uint32_t devID = unspecified_sentinel<uint32_t>,
                  uint64_t k           = unspecified_sentinel<uint64_t>)
@@ -398,17 +378,6 @@ template <class Derived>
 struct EndOperation : public EventBase {
   using ThisType = EndOperation;
   uint64_t kID;
-  virtual bool isEqual(const EventBase& other_base) const {
-    try {
-      const auto& other = dynamic_cast<const ThisType&>(other_base);
-      bool matches =
-          (kID == unspecified_sentinel<uint64_t>) || (kID == other.kID);
-      return matches;
-    } catch (const std::bad_cast&) {
-      return false;
-    }
-    return false;
-  }
   EndOperation(uint64_t k = unspecified_sentinel<uint64_t>) : kID(k) {}
   virtual ~EndOperation() = default;
 
@@ -524,6 +493,259 @@ struct EndFenceEvent : public EndOperation<EndFenceEvent> {
       : EndOperation<EndFenceEvent>(k) {}
   virtual ~EndFenceEvent() = default;
 };
+
+struct InitEvent : public EventBase {
+  int load_sequence;
+  uint64_t version_number;
+  uint32_t num_device_infos;
+  Kokkos::Profiling::KokkosPDeviceInfo* device_infos;
+  virtual std::string repr() const override {
+    std::stringstream s;
+    s << "InitEvent { load_sequence: " <<load_sequence<<", version_number "<<version_number<<", num_device_infos "<<num_device_infos<<"}";
+    return s.str();
+  }
+  InitEvent(int l, uint64_t v_n, uint32_t n_d_i, Kokkos::Profiling::KokkosPDeviceInfo* d_i) : load_sequence(l), version_number(v_n), num_device_infos(n_d_i), device_infos(d_i){}
+};
+struct FinalizeEvent : public EventBase {
+  virtual std::string repr() const override { return "FinalizeEvent{}"; }
+};
+
+struct ParseArgsEvent : public EventBase {
+  int num_args;
+  char** args;
+
+  std::string repr() const override {
+    std::stringstream s;
+    s<< "ParseArgsEvent { num_args : "<<num_args<<std::endl;
+    for(int x=0;x<num_args;++x){
+      s<<"  "<<args[x]<<std::endl;
+    }
+    s<< "}";
+    return s.str();
+  }
+  ParseArgsEvent (int n_a, char** a) : num_args(n_a), args(a) {}
+};
+struct PrintHelpEvent : public EventBase {
+  char* prog_name;
+  std::string repr() const override {
+    return "PrintHelpEvent { Program Name: "+std::string(prog_name)+"}";
+  }
+  PrintHelpEvent(char* p_n) : prog_name(p_n) {}
+};
+struct PushRegionEvent : public EventBase {
+  std::string name;
+  std::string repr() const override {
+    return "PushRegionEvent { Region Name: "+name+" }";
+  }
+  PushRegionEvent(std::string n): name(n) {}
+};
+struct PopRegionEvent : public EventBase {
+  std::string repr() const override {
+    return "PopRegionEvent{}";
+  }
+};
+
+template<class Derived>
+struct DataEvent : public EventBase {
+  using SpaceHandleType = Kokkos::Profiling::SpaceHandle;
+  SpaceHandleType handle;
+  std::string name;
+  void* const ptr;
+  uint64_t size;
+
+  std::string repr() const override {
+    std::stringstream s;
+    s << Derived::event_name() << "{ In space "<<handle.name<<", name: "<<name<<", ptr: "<<ptr<<", size: "<<size;
+    return s.str();
+  }
+  DataEvent(SpaceHandleType h, std::string n, void* const p, uint64_t s) : handle(h), name(n), ptr(p), size(s) {}
+};
+
+struct AllocateDataEvent : public DataEvent<AllocateDataEvent> {
+  static std::string event_name() { return "AllocateDataEvent"; }
+  AllocateDataEvent(SpaceHandleType h, std::string n,  void* const p, uint64_t s) : DataEvent<AllocateDataEvent>(h, n, p, s) {}
+};
+struct DeallocateDataEvent : public DataEvent<DeallocateDataEvent> {
+  static std::string event_name() { return "DeallocateDataEvent"; }
+  DeallocateDataEvent(SpaceHandleType h, std::string n,  void* const p, uint64_t s) : DataEvent<DeallocateDataEvent>(h, n, p, s) {}
+};
+
+struct CreateProfileSectionEvent : public EventBase {
+  std::string name;
+  uint32_t section_id;
+  std::string repr() const override { return "CreateProfileSectionEvent {" + name + ", "+std::to_string(section_id)+"}";}
+  CreateProfileSectionEvent(std::string n, uint32_t s_i) : name(n), section_id(s_i) {}
+};
+
+template<class Derived>
+struct ProfileSectionManipulationEvent : public EventBase {
+  uint32_t device_id;
+  std::string repr() const override {
+    std::stringstream s;
+    s << Derived::event_name() << "{ "<<device_id<<"}";
+    return s.str();
+  }
+  ProfileSectionManipulationEvent(uint32_t d_i) : device_id(d_i) {};
+};
+
+struct BeginProfileSectionEvent : public ProfileSectionManipulationEvent<BeginProfileSectionEvent> {
+  static std::string event_name() { return "BeginProfileSectionEvent"; }
+  BeginProfileSectionEvent(uint32_t d_i) : ProfileSectionManipulationEvent<BeginProfileSectionEvent>(d_i) {};
+};
+struct EndProfileSectionEvent : public ProfileSectionManipulationEvent<EndProfileSectionEvent> {
+  static std::string event_name() { return "EndProfileSectionEvent"; }
+  EndProfileSectionEvent(uint32_t d_i) : ProfileSectionManipulationEvent<EndProfileSectionEvent>(d_i) {};
+};
+struct DestroyProfileSectionEvent : public ProfileSectionManipulationEvent<DestroyProfileSectionEvent> {
+  static std::string event_name() { return "DestroyProfileSectionEvent"; }
+  DestroyProfileSectionEvent(uint32_t d_i) : ProfileSectionManipulationEvent<DestroyProfileSectionEvent>(d_i) {};
+};
+
+struct ProfileEvent : public EventBase {
+  std::string name;
+  std::string repr() const override { return "ProfileEvent {"+name+"}"; }
+  ProfileEvent(std::string n) : name(n) {}
+};
+
+struct BeginDeepCopyEvent : public EventBase {
+  using SpaceHandleType = Kokkos::Profiling::SpaceHandle;
+  SpaceHandleType src_handle;
+  std::string src_name;
+  void* const src_ptr;
+  SpaceHandleType dst_handle;
+  std::string dst_name;
+  void* const dst_ptr;
+  uint64_t size;
+  std::string repr() const override {
+    std::stringstream s;
+    s << "BeginDeepCopyEvent { size: "<<size<<std::endl;
+    s << "  dst: { "<<dst_handle.name<<", "<<dst_name<<", "<<dst_ptr<<"}\n";
+    s << "  src: { "<<src_handle.name<<", "<<src_name<<", "<<src_ptr<<"}\n";
+    s << "}";
+    return s.str();
+  }
+  BeginDeepCopyEvent(
+    SpaceHandleType s_h, std::string s_n, void* const s_p,
+    SpaceHandleType d_h, std::string d_n, void* const d_p,
+    uint64_t s
+  ) :
+  src_handle(s_h), src_name(s_n), src_ptr(s_p),
+  dst_handle(d_h), dst_name(d_n), dst_ptr(d_p),
+  size(s) {}
+};
+struct EndDeepCopyEvent : public EventBase {
+  std::string repr() const override { return "EndDeepCopyEvent{}"; }
+};
+
+template<class Derived>
+struct DualViewEvent : public EventBase {
+  std::string name;
+  void* const ptr;
+  bool is_device;
+  DualViewEvent(std::string n, void* const p, bool i_d) : name(n), ptr(p), is_device(i_d) {}
+  std::string repr() const override {
+    std::stringstream s;
+    s << Derived::event_name() << " { "<<name<<", "<<std::hex<<ptr<<", "<<std::boolalpha<<is_device<<"}";
+    return s.str();
+  }
+};
+struct DualViewModifyEvent : public DualViewEvent<DualViewModifyEvent> {
+  static std::string event_name () { return "DualViewModifyEvent"; }
+  DualViewModifyEvent(std::string n, void* const p, bool i_d) : DualViewEvent(n, p, i_d) {}
+};
+struct DualViewSyncEvent : public DualViewEvent<DualViewSyncEvent> {
+  static std::string event_name () { return "DualViewSyncEvent"; }
+  DualViewSyncEvent(std::string n, void* const p, bool i_d) : DualViewEvent(n, p, i_d) {}
+};
+
+struct DeclareMetadataEvent : public EventBase {
+  std::string key;
+  std::string value;
+  std::string repr() const override {
+    return "DeclareMetadataEvent {"+key+", "+value+"}";
+  }
+  DeclareMetadataEvent(std::string k, std::string v): key(k), value(v) {}
+};
+
+struct ProvideToolProgrammingInterfaceEvent : public EventBase {
+  using Interface =   Kokkos::Tools::Experimental::ToolProgrammingInterface;
+
+  uint32_t num_functions;
+  Interface interface;
+  ProvideToolProgrammingInterfaceEvent(uint32_t n_f, Interface i) : num_functions(n_f), interface(i) {}
+  std::string repr() const override {
+    return "ProvideToolProgrammingInterfaceEvent {"+std::to_string(num_functions)+"}";
+  }
+};
+struct RequestToolSettingsEvent : public EventBase {
+  using Settings =   Kokkos::Tools::Experimental::ToolSettings;
+
+  uint32_t num_settings;
+  Settings settings;
+  RequestToolSettingsEvent(uint32_t n_s, Settings s) : num_settings(n_s), settings(s) {}
+  std::string repr() const override {
+    return "RequestToolSettingsEvent {"+std::to_string(num_settings)+"}";
+  }
+};
+
+template<class Derived>
+struct TypeDeclarationEvent : public EventBase{
+  std::string name;
+  uint32_t device_id;
+  Kokkos::Tools::Experimental::VariableInfo info;
+  std::string repr() const override {
+    return Derived::event_name() + "{ "+name+","+std::to_string(device_id)+"}";
+  }
+  TypeDeclarationEvent(std::string n, uint32_t d_i, Kokkos::Tools::Experimental::VariableInfo i) :
+  name(n), device_id(d_i), info(i) {}
+};
+struct OutputTypeDeclarationEvent : public TypeDeclarationEvent<OutputTypeDeclarationEvent> {
+  static std::string event_name() { return "OutputTypeDeclarationEvent"; }
+  OutputTypeDeclarationEvent(std::string n, uint32_t d_i, Kokkos::Tools::Experimental::VariableInfo i) : TypeDeclarationEvent(n, d_i, i) {}
+};
+struct InputTypeDeclarationEvent : public TypeDeclarationEvent<InputTypeDeclarationEvent> {
+  static std::string event_name() { return "InputTypeDeclarationEvent"; }
+  InputTypeDeclarationEvent(std::string n, uint32_t d_i, Kokkos::Tools::Experimental::VariableInfo i) : TypeDeclarationEvent(n, d_i, i) {}
+};
+
+struct RequestOutputValuesEvent : public EventBase {
+  size_t context;
+  size_t num_inputs;
+  std::vector<Kokkos::Tools::Experimental::VariableValue> inputs;
+  size_t num_outputs;
+  std::vector<Kokkos::Tools::Experimental::VariableValue> outputs;
+  std::string repr() const override {
+    std::stringstream s;
+    s << "RequestOutputValuesEvent { ";
+    s<<num_inputs<< " inputs,";
+    s<<num_outputs<<" outputs}";
+    return s.str();
+  }
+  RequestOutputValuesEvent(size_t c, size_t n_i, std::vector<Kokkos::Tools::Experimental::VariableValue> i,
+  size_t n_o, std::vector<Kokkos::Tools::Experimental::VariableValue> o ) : context(c), num_inputs(n_i), inputs(i), num_outputs(n_o), outputs(o) {}
+};
+
+struct ContextBeginEvent : public EventBase {
+  size_t context;
+  std::string repr() const override { return "ContextBeginEvent{ "+std::to_string(context)+"}";}
+  ContextBeginEvent(size_t c) : context(c) {}
+};
+struct ContextEndEvent : public EventBase {
+  size_t context;
+  Kokkos::Tools::Experimental::VariableValue value;
+  std::string repr() const override {
+    return "ContextEndEvent {"+std::to_string(context)+"}";
+  }
+  ContextEndEvent(size_t c, Kokkos::Tools::Experimental::VariableValue v) : context(c), value(v) {}
+};
+
+struct OptimizationGoalDeclarationEvent : public EventBase {
+  size_t context;
+  Kokkos::Tools::Experimental::OptimizationGoal goal;
+  std::string repr() const override { return "OptimizationGoalDeclarationEvent{"+std::to_string(context)+"}";}
+  OptimizationGoalDeclarationEvent(size_t c, Kokkos::Tools::Experimental::OptimizationGoal g) : context(c), goal(g) {}
+};
+
 
 /**
  * @brief Takes a vector of events, a set of matchers, and checks whether
