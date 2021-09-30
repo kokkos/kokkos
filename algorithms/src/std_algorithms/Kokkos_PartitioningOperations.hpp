@@ -473,8 +473,7 @@ auto partition_point(const std::string& label, const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  return Impl::partition_point_impl(label, ex, cbegin(v), cend(v),
-                                    std::move(p));
+  return Impl::partition_point_impl(label, ex, begin(v), end(v), std::move(p));
 }
 
 template <class ExecutionSpace, class UnaryPredicate, class DataType,
@@ -484,7 +483,7 @@ auto partition_point(const ExecutionSpace& ex,
                      UnaryPredicate p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   return Impl::partition_point_impl("Kokkos::partition_point_view_api_default",
-                                    ex, cbegin(v), cend(v), std::move(p));
+                                    ex, begin(v), end(v), std::move(p));
 }
 
 }  // namespace Experimental
