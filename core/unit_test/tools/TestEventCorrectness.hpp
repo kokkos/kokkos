@@ -310,7 +310,10 @@ TEST(defaultdevicetype, test_new_test_interface) {
         Kokkos::View<float*> left("left", 5), right("right", 5);
         Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), left, right);
       },
-      [&](BeginFenceEvent begin, EndFenceEvent) {
+      [&](AllocateDataEvent, AllocateDataEvent){
+        return MatchDiagnostic {true};
+      },
+      [&](BeginDeepCopyEvent, BeginFenceEvent begin, EndFenceEvent) {
         // DeepCopy: fence before copy
         MatchDiagnostic diagnostic = {
             begin.deviceID ==
@@ -320,7 +323,7 @@ TEST(defaultdevicetype, test_new_test_interface) {
         }
         return diagnostic;
       },
-      [&](BeginFenceEvent begin, EndFenceEvent) {
+      [&](BeginFenceEvent begin, EndFenceEvent, EndDeepCopyEvent) {
         // DeepCopy: fence after copy
         MatchDiagnostic diagnostic = {
             begin.deviceID ==
@@ -329,7 +332,11 @@ TEST(defaultdevicetype, test_new_test_interface) {
           diagnostic.messages.push_back("Saw a fence on the wrong device ID");
         }
         return diagnostic;
-      });
+      },
+            [&](DeallocateDataEvent, DeallocateDataEvent){
+        return MatchDiagnostic {true};
+      }
+);
 
   listen_tool_events(Config::DisableAll());
 }

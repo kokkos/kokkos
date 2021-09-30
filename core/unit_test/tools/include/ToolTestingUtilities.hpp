@@ -1002,6 +1002,11 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
               dst_handle, std::string(dst_name), dst_ptr, src_handle,
               std::string(src_name), src_ptr, size));
         });
+        Kokkos::Tools::Experimental::set_end_deep_copy_callback(
+        []() {
+          found_events.push_back(std::make_shared<EndDeepCopyEvent>(
+              ));
+        });
   }
   if (config.profiling.dual_view_ops) {
     Kokkos::Tools::Experimental::set_dual_view_sync_callback(
