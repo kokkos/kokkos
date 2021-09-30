@@ -332,7 +332,7 @@ class BasicView
   template <std::size_t... Idxs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION constexpr reference_type _access_helper_impl(
       Impl::repeated_type<typename traits::size_type, Idxs>... idxs,
-      Args... KOKKOS_IMPL_SINK(args)) {
+      Args... KOKKOS_IMPL_SINK(args)) const {
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
     Impl::view_verify_operator_bounds<typename traits::memory_space>(
         m_data, idxs..., args...);
@@ -342,8 +342,8 @@ class BasicView
 
   template <std::size_t... Idxs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION constexpr reference_type _access_helper(
-      std::integer_sequence<std::size_t, Idxs...>, Args... args) {
-    return _access_helper_impl<Idxs...>(size_type(args)...);
+      std::integer_sequence<std::size_t, Idxs...>, Args... args) const {
+    return _access_helper_impl<Idxs...>(std::size_t(args)...);
   }
 
   // </editor-fold> end private member functions }}}2
@@ -451,8 +451,8 @@ class BasicView
             //----------------------------------------
             >
   inline BasicView(Impl::ViewConstructorDescription<P...> const& arg_desc,
-                   typename traits::array_layout const& arg_layout)
-      : m_data(arg_desc.get_pointer(), mdspan_mapping_type{arg_layout},
+                   mdspan_mapping_type const& arg_mapping)
+      : m_data(arg_desc.get_pointer(), mdspan_mapping_type{arg_mapping},
                mdspan_accessor_type{}),
         m_track() {
     using desc_type = typename Impl::ViewConstructorDescription<P...>;
@@ -607,10 +607,10 @@ class BasicView
   }
 
   // Allocate with label and layout
-  explicit inline BasicView(std::string const& arg_label,
-                            typename traits::array_layout const& arg_layout)
+  inline BasicView(std::string const& arg_label,
+                   mdspan_mapping_type const& arg_mapping)
       : BasicView(Kokkos::view_alloc(arg_label),
-                  mdspan_mapping_type{arg_layout}) {
+                  mdspan_mapping_type{arg_mapping}) {
     /* delegating constructor; body must be empty */
   }
 
@@ -625,11 +625,11 @@ class BasicView
       std::enable_if_t<
 // is_integral doesn't work for untyped enum ...
               //          _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
-              _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value),
-      int> = 0
+             _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value),
+     int> = 0
       //----------------------------------------
       >
-  explicit inline BasicView(std::string const& arg_label,
+  inline BasicView(std::string const& arg_label,
                             IntegralTypes... dimensions)
       : BasicView(Kokkos::view_alloc(arg_label),
                   mdspan_mapping_type(
@@ -660,7 +660,7 @@ class BasicView
             >
   explicit BasicView(pointer_type arg_ptr, IntegralTypes... arg_dims)
       : BasicView(Kokkos::view_wrap(arg_ptr),
-                  typename traits::array_layout(std::size_t{arg_dims}...)) {
+                  typename traits::array_layout(std::size_t(arg_dims)...)) {
     /* delegating ctor; must be empty */
   }
 
@@ -672,13 +672,13 @@ class BasicView
 
   explicit BasicView(
       typename traits::execution_space::scratch_memory_space const& arg_space,
-      typename traits::array_layout const& arg_layout)
+      mdspan_mapping_type const& arg_mapping)
       // Delegate to the view wrap constructor
       : BasicView(Kokkos::view_wrap(reinterpret_cast<pointer_type>(
                       arg_space.get_shmem_aligned(
-                          BasicView::required_allocation_size(arg_layout),
+                          BasicView::required_allocation_size(arg_mapping),
                           sizeof(typename traits::value_type)))),
-                  mdspan_mapping_type{arg_layout}) {
+                  mdspan_mapping_type{arg_mapping}) {
     /* delegating ctor; must be empty */
   }
 
@@ -785,11 +785,11 @@ class BasicView
     return int(m_data.extent(std::size_t(i)));
   }
 
-  KOKKOS_FUNCTION constexpr std::size_t static_extent(unsigned i) const
+  KOKKOS_FUNCTION static constexpr std::size_t static_extent(unsigned i)
       noexcept {
     // Note: intentionally not using {} construction here to avoid narrowing
     // warnings.
-    return m_data.extent(std::size_t(i));
+    return mdspan_type::extents_type::static_extent(std::size_t(i));
   }
 
   // </editor-fold> end extents }}}3
@@ -857,7 +857,7 @@ class BasicView
   }
 
   template <class IntegralType>
-  KOKKOS_FORCEINLINE_FUNCTION std::size_t operator[](IntegralType i) const
+  KOKKOS_FORCEINLINE_FUNCTION reference_type operator[](IntegralType i) const
       noexcept {
     static_assert(std::is_convertible<IntegralType,ptrdiff_t>::value,
                   "Kokkos::View::operator[] called with non-integral type.");
@@ -904,9 +904,10 @@ class BasicView
   //----------------------------------------------------------------------------
   // <editor-fold desc="static member functions"> {{{2
 
+  template<class ... Extents>
   static constexpr size_t required_allocation_size(
-      typename traits::array_layout const& arg_layout) {
-    return typename mdspan_type::mapping_type{arg_layout}.required_span_size();
+      typename mdspan_type::mapping_type const& arg_mapping) {
+    return typename mdspan_type::mapping_type{arg_mapping}.required_span_size();
   }
 
   template <class... IntegralTypes>
@@ -920,7 +921,7 @@ class BasicView
                   "called if the layout is constructible from the dimensions "
                   "alone (e.g., not something like LayoutStride)");
     return BasicView::required_allocation_size(
-        typename traits::array_layout{std::size_t{dims}...});
+        mdspan_mapping_type{std::size_t(dims)...});
   }
 
   template <class... IntegralTypes>
@@ -934,7 +935,7 @@ class BasicView
                   "layout is constructible from the dimensions alone (e.g., "
                   "not something like LayoutStride)");
     return BasicView::shmem_size(
-        typename traits::array_layout{dims...});
+        typename traits::array_layout{std::size_t(dims)...});
   }
 
   static constexpr size_t shmem_size(
@@ -953,6 +954,66 @@ class BasicView
 //==============================================================================
 // <editor-fold desc="View"> {{{1
 
+namespace Impl {
+//TODO: check that the args which are unused right now actually are the default constructor args
+
+
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 0> {
+  static constexpr Extents create(ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+    return Extents();
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 1> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+    return Extents(n0);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 2> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+    return Extents(n0, n1);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 3> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+    return Extents(n0, n1, n2);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 4> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+    return Extents(n0, n1, n2, n3);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 5> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+    return Extents(n0, n1, n2, n3, n4);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 6> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t n5, ptrdiff_t, ptrdiff_t) {
+    return Extents(n0, n1, n2, n3, n4, n5);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 7> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t n5, ptrdiff_t n6, ptrdiff_t) {
+    return Extents(n0, n1, n2, n3, n4, n5, n6);
+  }
+};
+template<class Extents>
+struct make_extents_from_too_many_args<Extents, 8> {
+  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t n5, ptrdiff_t n6, ptrdiff_t n7) {
+    return Extents(n0, n1, n2, n3, n4, n5, n6, n7);
+  }
+};
+}
+
 template <class DataType, class... Properties>
 class View : public Impl::NormalizeViewProperties<
                  DataType, Impl::type_list<Properties...>>::type {
@@ -970,6 +1031,19 @@ class View : public Impl::NormalizeViewProperties<
     basic_view_type::m_data  = other_view.get_mdspan();
      basic_view_type::m_track.assign(other_view);
   }
+
+  template < class ... Args, std::enable_if_t<
+          _MDSPAN_FOLD_AND(std::is_convertible<Args,ptrdiff_t>::value)
+       && ((sizeof...(Args))> basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
+  View(const std::string& label, Args... args): basic_view_type(label, 
+               typename basic_view_type::mdspan_type::mapping_type(
+                     Kokkos::Impl::make_extents_from_too_many_args<typename basic_view_type::mdspan_type::extents_type>::create(args...))) {}
+
+  template < class ... Args, std::enable_if_t<
+          _MDSPAN_FOLD_AND(std::is_convertible<Args,ptrdiff_t>::value)
+       && !((sizeof...(Args))> basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
+  View(const std::string& label, Args... args): basic_view_type(label, args...) {}
+
    //   : basic_view_type(other_view.get_mdspan(),
     //                    other_view.impl_get_tracker()){};
   template <
@@ -1003,6 +1077,73 @@ class View : public Impl::NormalizeViewProperties<
 
 // </editor-fold> end View }}}1
 //==============================================================================
+
+namespace Impl {
+template <class T1, class T2, class Enable = void>
+struct is_always_assignable_impl: std::false_type {};
+
+template<class T>
+struct is_always_assignable_impl<T,T,void>: std::true_type {};
+
+template<>
+struct is_always_assignable_impl<Kokkos::LayoutStride, Kokkos::LayoutLeft,void>: std::true_type {};
+
+template<>
+struct is_always_assignable_impl<Kokkos::LayoutStride, Kokkos::LayoutRight,void>: std::true_type {};
+
+template<size_t ... DstExtentVals, size_t ... SrcExtentVals>
+struct is_always_assignable_impl<std::experimental::extents<SrcExtentVals...>,
+                                 std::experimental::extents<DstExtentVals...>,
+                                 std::enable_if_t<!std::is_same<
+                                   std::experimental::extents<SrcExtentVals...>,
+                                   std::experimental::extents<DstExtentVals...>
+                                 >::value,void>> {
+  constexpr static bool value =
+    _MDSPAN_FOLD_AND(DstExtentVals!=std::experimental::dynamic_extent?DstExtentVals==SrcExtentVals:true);
+
+};
+
+template <class... ViewTDst, class... ViewTSrc>
+struct is_always_assignable_impl<Kokkos::BasicView<ViewTDst...>,
+                                 Kokkos::BasicView<ViewTSrc...>,
+                                 std::enable_if_t<!std::is_same<
+                                   Kokkos::BasicView<ViewTDst...>,
+                                   Kokkos::BasicView<ViewTSrc...>
+                                 >::value, void>> {
+  using dst_view_t = Kokkos::BasicView<ViewTDst...>;
+  using src_view_t = Kokkos::BasicView<ViewTSrc...>;
+
+
+  constexpr static bool value =
+    std::is_convertible<src_view_t, dst_view_t>::value &&
+    is_always_assignable_impl<typename dst_view_t::array_layout,
+                              typename src_view_t::array_layout>::value &&
+    is_always_assignable_impl<typename dst_view_t::mdspan_type::extents_type,
+                              typename src_view_t::mdspan_type::extents_type>::value;
+};
+
+}
+
+template <class View1, class View2>
+using is_always_assignable = Impl::is_always_assignable_impl<
+    typename std::remove_reference<View1>::type::basic_view_type,
+    typename std::remove_const<
+        typename std::remove_reference<View2>::type>::type::basic_view_type>;
+
+template <class ... ViewTDst, class ... ViewTSrc>
+bool is_assignable(const Kokkos::View<ViewTDst...>& dst, const Kokkos::View<ViewTSrc...>& src) {
+  // FIXME Return the correct value here
+  return std::is_convertible<Kokkos::View<ViewTSrc...>, Kokkos::View<ViewTDst...>>::value;
+  // && is_assignable(dst.mapping(), src.mapping()); // this is a runtime check
+}
+
+#ifdef KOKKOS_ENABLE_CXX17
+template <class T1, class T2>
+inline constexpr bool is_always_assignable_v =
+    is_always_assignable<T1, T2>::value;
+#endif
+
+
 
 }  // end namespace Kokkos
 #include <View/Kokkos_MDSpanView_Subview.hpp>

@@ -51,6 +51,7 @@
 #include <sstream>
 #include <iostream>
 
+#if defined(KOKKOS_USE_LEGACY_VIEW)
 #include <impl/Kokkos_ViewArray.hpp>
 
 namespace Test {
@@ -143,5 +144,5 @@ void TestViewAggregate() {
 TEST(TEST_CATEGORY, view_aggregate) { TestViewAggregate<TEST_EXECSPACE>(); }
 
 }  // namespace Test
-
+#endif
 #endif /* #ifndef TEST_AGGREGATE_HPP */

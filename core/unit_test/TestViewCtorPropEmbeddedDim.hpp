@@ -53,6 +53,7 @@
 
 namespace Test {
 
+#ifdef KOKKOS_USE_LEGACY_VIEW
 namespace {
 
 template <typename ExecSpace>
@@ -156,6 +157,7 @@ struct TestViewCtorProp_EmbeddedDim {
 TEST(TEST_CATEGORY, viewctorprop_embedded_dim) {
   TestViewCtorProp_EmbeddedDim<TEST_EXECSPACE>::test_vcpt(2, 3);
 }
+#endif
 
 TEST(TEST_CATEGORY,
      viewctorpop_view_allocate_without_initializing_backward_compatility) {

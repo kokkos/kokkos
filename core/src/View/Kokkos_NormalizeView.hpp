@@ -175,9 +175,22 @@ struct NormalizeViewProperties<DataType, type_list<Layout, Space>,
                 " the second parameter is a Layout");
 };
 
+template <class DataType>
+struct NormalizeViewProperties<DataType, type_list<void, void, void>,void>
+  : NormalizeViewProperties<DataType, type_list<Kokkos::DefaultExecutionSpace>> {};
+
+template <class DataType, class T1>
+struct NormalizeViewProperties<DataType, type_list<T1, void, void>,void>
+  : NormalizeViewProperties<DataType, type_list<T1>> {};
+
+template <class DataType, class T1, class T2>
+struct NormalizeViewProperties<DataType, type_list<T1, T2, void>,void>
+  : NormalizeViewProperties<DataType, type_list<T1,T2>> {};
+
 /// View< DataType , Layout , Space, MemoryTraits >
 template <class DataType, class Layout, class Space, class MemTraits>
 struct NormalizeViewProperties<DataType, type_list<Layout, Space, MemTraits>> {
+  /*
   // This is unambigous, so use static_assert instead of SFINAE
   static_assert(is_array_layout<Layout>::value,
                 "The second template parameter to Kokkos::View must be an "
@@ -188,6 +201,7 @@ struct NormalizeViewProperties<DataType, type_list<Layout, Space, MemTraits>> {
   static_assert(is_memory_traits<MemTraits>::value,
                 "The fourth template parameter to Kokkos::View must be memory "
                 "traits when four paramters are given");
+  */
 
  private:
   static constexpr auto rank = ExtractExtents<DataType>::extents_type::rank();

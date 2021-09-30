@@ -50,9 +50,13 @@
 // TODO @mdspan also check for mdspan availability
 #if !defined(KOKKOS_USE_LEGACY_VIEW)
 
-#include <View/Kokkos_MDSpanView.hpp>
 #include <impl/Kokkos_AllTag.hpp>
+#include <View/Kokkos_MDSpanView.hpp>
 
+namespace Kokkos {
+template<class ... Args>
+using ViewTraits = Kokkos::View<Args...>;
+}
 #else
 
 #include <type_traits>

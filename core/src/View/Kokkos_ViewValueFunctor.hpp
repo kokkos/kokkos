@@ -106,7 +106,7 @@ struct ViewValueDestroy : ViewValueFunctorStorage<Space, ValueType> {
     Kokkos::parallel_for(
         "Kokkos::View::destruction [" + this->name + "]",
         RangePolicy<typename base_t::execution_space, ViewValueDestroyTag,
-                    IndexType<int64_t>>{0, this->n},
+                    IndexType<int64_t>>(0, this->n),
         *this);
     // TODO add a view trait that makes this fence optional?
     this->space.fence();

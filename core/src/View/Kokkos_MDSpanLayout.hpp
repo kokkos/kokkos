@@ -1109,6 +1109,8 @@ struct MDSpanMappingForLayoutRight {
       const MDSpanMappingForLayoutRight&) noexcept = default;
   constexpr MDSpanMappingForLayoutRight(const Extents& ext)
       : extents_(ext), stride_(ext.extent(Extents::rank() - 1)) {}
+  constexpr MDSpanMappingForLayoutRight(const Extents& ext, index_type stride)
+      : extents_(ext), stride_(stride) {}
   constexpr MDSpanMappingForLayoutRight(const LayoutRight& layout) {
     int k = 0;
     std::array<ptrdiff_t, Extents::rank_dynamic()> dyn_exts;
@@ -1126,7 +1128,7 @@ struct MDSpanMappingForLayoutRight {
   template <class OtherExtents>
   constexpr MDSpanMappingForLayoutRight(
       const MDSpanMappingForLayoutRight<OtherExtents>& other_map)
-      : extents_(other_map.extents()), stride_(other_map.stride_) {}
+      : extents_(other_map.extents()), stride_(Extents::rank()>0?other_map.stride(Extents::rank()-1):1) {}
 
   constexpr MDSpanMappingForLayoutRight& operator  =(
       const MDSpanMappingForLayoutRight&) noexcept = default;
@@ -1182,6 +1184,13 @@ struct MDSpanMappingForLayoutRight {
     return !(*this == rhs);
   }
 
+  template<class OtherExtents>
+  operator std::experimental::layout_stride::template mapping<OtherExtents> () const {
+    std::array<typename OtherExtents::size_type, Extents::rank()> strides;
+    for(int i=0; i<Extents::rank(); i++) strides[i] = stride(i);
+    return std::experimental::layout_stride::template mapping<OtherExtents>(extents(), strides);
+  }
+
  private:
   Extents extents_;
   ptrdiff_t stride_;
@@ -1224,7 +1233,7 @@ struct MDSpanMappingForLayoutLeft {
   template <class OtherExtents>
   constexpr MDSpanMappingForLayoutLeft(
       const MDSpanMappingForLayoutLeft<OtherExtents>& other_map)
-      : extents_(other_map.extents()), stride_(other_map.stride_) {}
+      : extents_(other_map.extents()), stride_(Extents::rank()>1?other_map.stride(1):1) {}
 
   constexpr MDSpanMappingForLayoutLeft& operator  =(
       const MDSpanMappingForLayoutLeft&) noexcept = default;
@@ -1322,6 +1331,13 @@ struct MDSpanMappingForLayoutLeft {
     return !(*this == rhs);
   }
 
+  template<class OtherExtents>
+  operator std::experimental::layout_stride::template mapping<OtherExtents> () const {
+    std::array<typename OtherExtents::size_type, Extents::rank()> strides;
+    for(int i=0; i<Extents::rank(); i++) strides[i] = stride(i);
+    return std::experimental::layout_stride::template mapping<OtherExtents>(extents(), strides);
+  }
+
  private:
   Extents extents_;
   ptrdiff_t stride_;
@@ -1349,6 +1365,7 @@ struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutStride> {
   using mapping =
       typename get_stride_args<Extents::rank()>::template mapping<Extents>;
 };
+
 
 // TODO @mdspan layout stride
 

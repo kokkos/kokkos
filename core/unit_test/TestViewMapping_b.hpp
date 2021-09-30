@@ -186,6 +186,7 @@ TEST(TEST_CATEGORY, view_mapping_class_value) {
 
 namespace Test {
 
+#ifdef KOKKOS_USE_LEGACY_VIEW
 TEST(TEST_CATEGORY, view_mapping_assignable) {
   using exec_space = TEST_EXECSPACE;
 
@@ -265,5 +266,6 @@ TEST(TEST_CATEGORY, view_mapping_trivially_copyable) {
 
   static_assert(std::is_trivially_copyable<mapping>{}, "");
 }
+#endif
 
 }  // namespace Test

@@ -53,6 +53,10 @@ namespace Test {
 
 namespace stdex = std::experimental;
 TEST(defaultdevicetype, development_test) {
+  double* ptr;
+  auto foo =  Kokkos::view_wrap(ptr);
+  printf("%i\n",decltype(foo)::has_pointer?1:0);
+
   /*
   template <std::size_t Idx, std::ptrdiff_t Extent, class Strides, class Exts,
             class Idxs, bool LayoutLeftBased>
@@ -171,17 +175,18 @@ TEST(defaultdevicetype, development_test) {
     printf("UseCount: %i\n", foo.use_count());
   }
   {
-    Kokkos::BasicView<int ***, Kokkos::LayoutLeft,
+    using layout_t = Kokkos::LayoutRight;
+    Kokkos::BasicView<int ***, layout_t,
                       Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>>
         foo("A", 7, 3, 5);
     // subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),5,stdex::full_extent,
     // stdex::full_extent);
-    auto foo_sub1 = submdspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+    auto foo_sub1 = submdspan(layout_t(), foo.get_mdspan(),
                             stdex::full_extent, stdex::full_extent, 3);
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 3; j++)
         if (&foo_sub1(i, j) != &foo(i, j, 3)) printf("Error A %i %i\n", i, j);
-    auto foo_sub2 = submdspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+    auto foo_sub2 = submdspan(layout_t(), foo.get_mdspan(),
                             3, stdex::full_extent, stdex::full_extent);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 5; j++)
@@ -199,7 +204,7 @@ TEST(defaultdevicetype, development_test) {
         if (&foo_sub4(i, j) != &foo(3, i, j)) printf("Error D %i %i\n",i,j);
 
     printf("Hello Here\n");
-    auto foo_sub5 = submdspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+    auto foo_sub5 = submdspan(layout_t(), foo.get_mdspan(),
                             stdex::full_extent, 2, stdex::full_extent);
     printf("Hello Here Done\n");
     for (int i = 0; i < 7; i++)
@@ -217,10 +222,16 @@ TEST(defaultdevicetype, development_test) {
            ptrdiff_t(&foo_sub5(0, 1) - foo_sub5.data()),
            ptrdiff_t(&foo_sub5(3, 3) - foo_sub5.data()),
            ptrdiff_t(&foo(3, 2, 3) - &foo_sub5(3,3)));
+
+    //Kokkos::View<int *****, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> a("A",5,5,5,5,5);
+    //auto a_sub = Kokkos::subview(a,Kokkos::ALL, Kokkos::pair<long,long>(1,3),  Kokkos::pair<long,long>(1,3),  Kokkos::pair<long,long>(1,3) , Kokkos::ALL);
+    Kokkos::View<int ***, Kokkos::LayoutRight, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> a("A",5,5,5);
+    auto a_sub = Kokkos::subview(a,Kokkos::ALL, Kokkos::pair<long,long>(1,3),  Kokkos::pair<long,long>(1,3));
+//    Kokkos::subview<Kokkos::View<int *****, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>>, Kokkos::Impl::ALL_t, Kokkos::pair<long, long>, Kokkos::pair<long, long>, Kokkos::pair<long, long>, Kokkos::Impl::ALL_t>
   }
 
-  Kokkos::View<int **, Kokkos::OpenMP> a("A", 5, 5);
   {
+  Kokkos::View<int **, Kokkos::OpenMP> a("A", 5, 5);
     Kokkos::View<int **, Kokkos::LayoutRight> b = a;
     printf("%i\n", int(a.use_count()));
     auto c = a;
@@ -228,6 +239,10 @@ TEST(defaultdevicetype, development_test) {
     Kokkos::View<int **, Kokkos::OpenMP> d("D", 7, 7);
     d = a;
     printf("%i\n", int(a.use_count()));
+
+    Kokkos::View<int**, Kokkos::LayoutStride> s;
+    s = d;
+    bool val=Kokkos::is_always_assignable<Kokkos::View<int**>,Kokkos::View<int**>>::value;
   }
   //        printf("%i\n",int(a.use_count()));
   //        Kokkos::View<int*,Kokkos::LayoutRight> c(a,2,Kokkos::ALL);

@@ -94,6 +94,7 @@ TEST(TEST_CATEGORY, view_subview_right_3) {
   TestViewSubview::test_right_3<TEST_EXECSPACE>();
 }
 
+#ifdef KOKKOS_USE_LEGACY_VIEW
 TEST(TEST_CATEGORY, view_static_tests) {
   TestViewSubview::TestSubviewStaticSizes<TEST_EXECSPACE,
                                           Kokkos::LayoutLeft>()();
@@ -101,6 +102,7 @@ TEST(TEST_CATEGORY, view_static_tests) {
                                           Kokkos::LayoutRight>()();
   TestViewSubview::TestExtentsStaticTests<TEST_EXECSPACE>();
 }
+#endif
 
 }  // namespace Test
 #endif

@@ -53,7 +53,6 @@
 #include <typeinfo>
 
 namespace Test {
-
 namespace {
 
 template <typename ExecSpace>

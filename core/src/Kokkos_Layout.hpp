@@ -58,6 +58,9 @@ namespace Kokkos {
 // Forward declare mappings
 namespace Impl {
 
+template<class Extents, int Enable = Extents::rank_dynamic()>
+struct make_extents_from_too_many_args;
+
 template <class Extents>
 struct MDSpanMappingForLayoutLeft;
 
@@ -116,6 +119,11 @@ struct LayoutLeft {
 
   template <class Extents>
   using mapping = Kokkos::Impl::MDSpanMappingForLayoutLeft<Extents>;
+
+  template <class Extents>
+  operator mapping<Extents> () const {
+    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7],dimension[8]));
+  }
 };
 
 //----------------------------------------------------------------------------
@@ -163,6 +171,11 @@ struct LayoutRight {
 
   template <class Extents>
   using mapping = Kokkos::Impl::MDSpanMappingForLayoutRight<Extents>;
+
+  template <class Extents>
+  operator mapping<Extents> () const {
+    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7],dimension[8]));
+  }
 };
 
 //----------------------------------------------------------------------------
@@ -253,6 +266,12 @@ struct LayoutStride {
   template <class Extents>
   using mapping =
       typename std::experimental::layout_stride::mapping<Extents>;
+
+  template <class Extents>
+  operator mapping<Extents> () const {
+    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7],dimension[8]), 
+                            std::array<size_t,Extents::rank()>());
+  }
 };
 
 // ===================================================================================

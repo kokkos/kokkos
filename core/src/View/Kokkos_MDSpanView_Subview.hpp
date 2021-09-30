@@ -12,12 +12,27 @@ struct SubViewTypeDeduction {
       typename DataTypeFromExtents<value_type, extents_type>::type;
   using type = Kokkos::View<data_type, layout_type, device_type, memory_traits>;
 };
+
+
 }  // namespace Impl
 
 template <class ViewType, class... Args>
 auto subview(const ViewType& v, Args... args) {
+  using Kokkos::submdspan;
+  using std::experimental::submdspan;
   return typename Impl::SubViewTypeDeduction<
-      ViewType, decltype(submdspan(typename ViewType::mdspan_type::layout_type{},
-                                 v.get_mdspan(), args...))>::type(v, args...);
+      ViewType, decltype(submdspan(
+                              typename ViewType::mdspan_type::layout_type{},
+                                 v.get_mdspan(), Impl::convert_subview_args(args)...))>::type(v, args...);
+}
+template <class MemoryTraits, class ViewType, class... Args>
+auto subview(const ViewType& v, Args... args) {
+  using Kokkos::submdspan;
+  using std::experimental::submdspan;
+  using ViewTypeMod = Kokkos::View<typename ViewType::data_type, typename ViewType::array_layout, typename ViewType::device_type, MemoryTraits>;
+  return typename Impl::SubViewTypeDeduction<
+      ViewTypeMod, decltype(submdspan(
+                              typename ViewTypeMod::mdspan_type::layout_type{},
+                                 v.get_mdspan(), Impl::convert_subview_args(args)...))>::type(v, args...);
 }
 }  // namespace Kokkos
