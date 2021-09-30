@@ -724,29 +724,29 @@ struct RequestToolSettingsEvent : public EventBase {
 template <class Derived>
 struct TypeDeclarationEvent : public EventBase {
   std::string name;
-  uint32_t device_id;
+  size_t variable_id;
   Kokkos::Tools::Experimental::VariableInfo info;
   std::string repr() const override {
     return Derived::event_name() + "{ " + name + "," +
-           std::to_string(device_id) + "}";
+           std::to_string(variable_id) + "}";
   }
-  TypeDeclarationEvent(std::string n, uint32_t d_i,
+  TypeDeclarationEvent(std::string n, size_t v_i,
                        Kokkos::Tools::Experimental::VariableInfo i)
-      : name(n), device_id(d_i), info(i) {}
+      : name(n), variable_id(v_i), info(i) {}
 };
-struct OutputTypeDeclarationEvent
-    : public TypeDeclarationEvent<OutputTypeDeclarationEvent> {
-  static std::string event_name() { return "OutputTypeDeclarationEvent"; }
-  OutputTypeDeclarationEvent(std::string n, uint32_t d_i,
+struct DeclareOutputTypeEvent
+    : public TypeDeclarationEvent<DeclareOutputTypeEvent> {
+  static std::string event_name() { return "DeclarateOutputTypeEvent"; }
+  DeclareOutputTypeEvent(std::string n, size_t v_i,
                              Kokkos::Tools::Experimental::VariableInfo i)
-      : TypeDeclarationEvent(n, d_i, i) {}
+      : TypeDeclarationEvent(n, v_i, i) {}
 };
-struct InputTypeDeclarationEvent
-    : public TypeDeclarationEvent<InputTypeDeclarationEvent> {
-  static std::string event_name() { return "InputTypeDeclarationEvent"; }
-  InputTypeDeclarationEvent(std::string n, uint32_t d_i,
+struct DeclareInputTypeEvent
+    : public TypeDeclarationEvent<DeclareInputTypeEvent> {
+  static std::string event_name() { return "DeclareInputTypeEvent"; }
+  DeclareInputTypeEvent(std::string n, size_t v_i,
                             Kokkos::Tools::Experimental::VariableInfo i)
-      : TypeDeclarationEvent(n, d_i, i) {}
+      : TypeDeclarationEvent(n, v_i, i) {}
 };
 
 struct RequestOutputValuesEvent : public EventBase {
@@ -769,20 +769,20 @@ struct RequestOutputValuesEvent : public EventBase {
       : context(c), num_inputs(n_i), inputs(i), num_outputs(n_o), outputs(o) {}
 };
 
-struct ContextBeginEvent : public EventBase {
+struct BeginContextEvent : public EventBase {
   size_t context;
   std::string repr() const override {
     return "ContextBeginEvent{ " + std::to_string(context) + "}";
   }
-  ContextBeginEvent(size_t c) : context(c) {}
+  BeginContextEvent(size_t c) : context(c) {}
 };
-struct ContextEndEvent : public EventBase {
+struct EndContextEvent : public EventBase {
   size_t context;
   Kokkos::Tools::Experimental::VariableValue value;
   std::string repr() const override {
     return "ContextEndEvent {" + std::to_string(context) + "}";
   }
-  ContextEndEvent(size_t c, Kokkos::Tools::Experimental::VariableValue v)
+  EndContextEvent(size_t c, Kokkos::Tools::Experimental::VariableValue v)
       : context(c), value(v) {}
 };
 
@@ -1014,6 +1014,52 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
           found_events.push_back(std::make_shared<DualViewModifyEvent>(
               std::string(name), ptr, is_device));
         });
+  }
+  if (config.tuning.contexts) {
+    Kokkos::Tools::Experimental::set_begin_context_callback([](const size_t context){
+      found_events.push_back(std::make_shared<BeginContextEvent>(context));
+    });
+    Kokkos::Tools::Experimental::set_end_context_callback([](const size_t context, Kokkos::Tools::Experimental::VariableValue value){
+      found_events.push_back(std::make_shared<EndContextEvent>(context, value));
+    });
+  }
+  if (config.tuning.type_declarations) {
+    Kokkos::Tools::Experimental::set_declare_input_type_callback([](const char* name, const size_t id, Kokkos::Tools::Experimental::VariableInfo* info){
+      found_events.push_back(std::make_shared<DeclareInputTypeEvent>(std::string(name),id,*info));
+    });
+    Kokkos::Tools::Experimental::set_declare_output_type_callback([](const char* name, const size_t id, Kokkos::Tools::Experimental::VariableInfo* info){
+      found_events.push_back(std::make_shared<DeclareOutputTypeEvent>(std::string(name),id,*info));
+    });
+  }
+  if (config.tuning.request_values) {
+    Kokkos::Tools::Experimental::set_request_output_values_callback([](const size_t context, const size_t num_inputs, const Kokkos::Tools::Experimental::VariableValue* inputs_in, const size_t num_outputs, Kokkos::Tools::Experimental::VariableValue* outputs_in){
+      std::vector<Kokkos::Tools::Experimental::VariableValue> inputs, outputs;
+      std::copy(inputs_in,inputs_in+num_inputs,std::back_inserter(inputs));
+      std::copy(outputs_in,outputs_in+num_inputs,std::back_inserter(outputs));
+
+    found_events.push_back(std::make_shared<RequestOutputValuesEvent>(context, num_inputs, inputs, num_outputs, outputs));
+    });
+  }
+  if (config.infrastructure.init){
+    Kokkos::Tools::Experimental::set_init_callback([](const int loadseq, const uint64_t version, const uint32_t num_infos, Kokkos::Profiling::KokkosPDeviceInfo* infos){
+      found_events.push_back(std::make_shared<InitEvent>(loadseq, version, num_infos, infos));
+    });
+  }
+  if (config.infrastructure.finalize){
+    Kokkos::Tools::Experimental::set_finalize_callback([](){
+      found_events.push_back(std::make_shared<FinalizeEvent>());
+    });
+
+  }
+  if (config.infrastructure.programming_interface){
+    Kokkos::Tools::Experimental::set_provide_tool_programming_interface_callback([](const uint32_t num_functions, Kokkos::Tools::Experimental::ToolProgrammingInterface interface){
+      found_events.push_back(std::make_shared<ProvideToolProgrammingInterfaceEvent>(num_functions, interface));
+    });
+  }
+  if (config.infrastructure.request_settings){
+    Kokkos::Tools::Experimental::set_request_tool_settings_callback([](const uint32_t num_settings, Kokkos::Tools::Experimental::ToolSettings* settings){
+      found_events.push_back(std::make_shared<RequestToolSettingsEvent>(num_settings, *settings));
+    });
   }
 }
 template <int priority>
