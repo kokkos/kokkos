@@ -133,25 +133,25 @@ void fill_view(ViewType dest_view, const std::string& name) {
 template <class ViewType>
 auto compute_gold(ViewType view, const std::string& name) {
   if (name == "empty") {
-    return KE::cend(view);
+    return KE::end(view);
   } else if (name == "one-element") {
-    return KE::cend(view);
+    return KE::end(view);
   } else if (name == "two-elements-a") {
-    return KE::cend(view);
+    return KE::end(view);
   } else if (name == "two-elements-b") {
-    return KE::cbegin(view) + 1;
+    return KE::begin(view) + 1;
   } else if (name == "small-a") {
-    return KE::cend(view);
+    return KE::end(view);
   } else if (name == "small-b") {
-    return KE::cbegin(view) + 6;
+    return KE::begin(view) + 6;
   } else if (name == "medium-a") {
-    return KE::cend(view);
+    return KE::end(view);
   } else if (name == "medium-b") {
-    return KE::cbegin(view) + 4;
+    return KE::begin(view) + 4;
   } else if (name == "large-a") {
-    return KE::cend(view);
+    return KE::end(view);
   } else if (name == "large-b") {
-    return KE::cbegin(view) + 156;
+    return KE::begin(view) + 156;
   } else {
     throw std::runtime_error("invalid choice");
   }
@@ -170,9 +170,9 @@ void run_single_scenario(const InfoType& scenario_info) {
   fill_view(view, name);
   const auto gold = compute_gold(view, name);
 
-  auto r1 = KE::is_sorted_until(exespace(), KE::cbegin(view), KE::cend(view));
-  auto r2 = KE::is_sorted_until("label", exespace(), KE::cbegin(view),
-                                KE::cend(view));
+  auto r1 = KE::is_sorted_until(exespace(), KE::begin(view), KE::end(view));
+  auto r2 =
+      KE::is_sorted_until("label", exespace(), KE::begin(view), KE::end(view));
   auto r3 = KE::is_sorted_until(exespace(), view);
   auto r4 = KE::is_sorted_until("label", exespace(), view);
   EXPECT_TRUE(r1 == gold);
