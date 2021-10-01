@@ -693,7 +693,7 @@ struct Random_UniqueIndex<Kokkos::Experimental::SYCL> {
   using locks_view_type = View<int**, Kokkos::Experimental::SYCL>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
-#ifdef KOKKOS_ARCH_INTEL_GEN
+#ifdef KOKKOS_ARCH_INTEL_GPU
     int i = Kokkos::Impl::clock_tic() % locks_.extent(0);
 #else
     int i = 0;
