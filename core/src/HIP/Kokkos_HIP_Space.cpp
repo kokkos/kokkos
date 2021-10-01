@@ -269,7 +269,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
     Kokkos::fence(
         "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
-        "void>::~SharedAllocationRecord(): fence after obtaining label");
+        "void>::~SharedAllocationRecord(): fence after copying header");
     label = header.label();
   }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;

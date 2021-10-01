@@ -496,7 +496,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
     Kokkos::fence(
         "SharedAllocationRecord<Kokkos::CudaSpace, "
-        "void>::~SharedAllocationRecord(): fence after obtaining label");
+        "void>::~SharedAllocationRecord(): fence after copying header");
     label = header.label();
   }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
