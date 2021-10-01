@@ -58,9 +58,6 @@ inline __device__ unsigned long long atomic_fetch_inc(unsigned long long* ptr,  
 inline __device__                int atomic_fetch_dec(               int* ptr,                         MemoryOrderRelaxed, MemoryScopeDevice) { return atomicSub(ptr, 1   ); }
 inline __device__       unsigned int atomic_fetch_dec(      unsigned int* ptr,                         MemoryOrderRelaxed, MemoryScopeDevice) { return atomicSub(ptr, 1u  ); }
 inline __device__ unsigned long long atomic_fetch_dec(unsigned long long* ptr,                         MemoryOrderRelaxed, MemoryScopeDevice) { return atomicAdd(ptr, -1  ); }
-
-inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicInc(ptr, val); }
-inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicDec(ptr, val); }
 // clang-format on
 
 #define DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP(OP, TYPE)                         \
@@ -105,6 +102,11 @@ DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(dec)
 #undef DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT
 #undef DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP_INTEGRAL
 #undef DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP
+
+// clang-format off
+inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicInc(ptr, val); }
+inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicDec(ptr, val); }
+// clang-format on
 
 template <typename MemoryOrder>
 inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
