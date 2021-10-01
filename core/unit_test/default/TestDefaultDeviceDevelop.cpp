@@ -234,15 +234,36 @@ TEST(defaultdevicetype, development_test) {
   Kokkos::View<int **, Kokkos::OpenMP> a("A", 5, 5);
     Kokkos::View<int **, Kokkos::LayoutRight> b = a;
     printf("%i\n", int(a.use_count()));
+       printf("Ah 1\n");
     auto c = a;
     printf("%i\n", int(a.use_count()));
+       printf("Ah 2\n");
     Kokkos::View<int **, Kokkos::OpenMP> d("D", 7, 7);
     d = a;
     printf("%i\n", int(a.use_count()));
+       printf("Ah 3\n");
 
     Kokkos::View<int**, Kokkos::LayoutStride> s;
-    s = d;
+    //s = d;
+       printf("Ah 4 \n");
     bool val=Kokkos::is_always_assignable<Kokkos::View<int**>,Kokkos::View<int**>>::value;
+       printf("Ah 5\n");
+
+      Kokkos::View<int*****, Kokkos::LayoutRight> a_org("A", 8,8,5,7,3);
+       printf("Ah 6\n");
+
+      Kokkos::View<int***,Kokkos::LayoutStride> b_sub;
+      //Kokkos::View<int*[7][3], Kokkos::LayoutStride> a_sub;
+      auto a_sub =  Kokkos::submdspan(Kokkos::LayoutRight(),a_org.get_mdspan(),5,7,stdex::full_extent,stdex::full_extent,stdex::full_extent);//
+      Kokkos::View<int***,Kokkos::LayoutRight>(a_org,5,7,Kokkos::ALL,Kokkos::ALL,Kokkos::ALL);
+      //Kokkos::View<int***,Kokkos::LayoutRight>(a_org,5,7,stdex::full_extent,stdex::full_extent,stdex::full_extent);
+      printf("%s\n",typeid(decltype(a_sub)).name());
+//
+  //  stdex::mdspan<int,stdex::dextents<3>,stdex::layout_stride> b_sub;
+ //   stdex::mdspan<int,stdex::extents<stdex::dynamic_extent,7,3>,stdex::layout_stride> a_sub;
+ //   a_sub = b_sub;
+    
+
   }
   //        printf("%i\n",int(a.use_count()));
   //        Kokkos::View<int*,Kokkos::LayoutRight> c(a,2,Kokkos::ALL);

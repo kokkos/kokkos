@@ -1191,6 +1191,12 @@ struct MDSpanMappingForLayoutRight {
     return std::experimental::layout_stride::template mapping<OtherExtents>(extents(), strides);
   }
 
+  template<class OtherExtents>
+  operator MDSpanMappingForLayoutLeft<OtherExtents> () const {
+    static_assert(extents().rank() < 2, "Kokkos: LayoutRight to LayoutLeft conversion is only valid for rank()<2");
+    return MDSpanMappingForLayoutLeft<OtherExtents>(extents());
+  }
+
  private:
   Extents extents_;
   ptrdiff_t stride_;
@@ -1338,38 +1344,17 @@ struct MDSpanMappingForLayoutLeft {
     return std::experimental::layout_stride::template mapping<OtherExtents>(extents(), strides);
   }
 
+  template<class OtherExtents>
+  operator MDSpanMappingForLayoutRight<OtherExtents> () const {
+    static_assert(extents().rank() < 2, "Kokkos: LayoutLeft to LayoutRight conversion is only valid for rank()<2");
+    return MDSpanMappingForLayoutRight<OtherExtents>(extents());
+  }
+
  private:
   Extents extents_;
   ptrdiff_t stride_;
 };
 
-template <>
-struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutLeft> {
-  template <class Extents>
-  using mapping = MDSpanMappingForLayoutLeft<Extents>;
-};
-
-template <>
-struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutStride> {
-  template <int R, ptrdiff_t... Args>
-  struct get_stride_args {
-    using type = typename get_stride_args<R - 1, -1, Args...>::type;
-  };
-
-  template <ptrdiff_t... Args>
-  struct get_stride_args<0, Args...> {
-    using type = std::experimental::layout_stride;
-  };
-
-  template <class Extents>
-  using mapping =
-      typename get_stride_args<Extents::rank()>::template mapping<Extents>;
-};
-
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
 //==============================================================================
 
 }  // end namespace Impl

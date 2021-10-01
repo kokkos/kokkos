@@ -66,9 +66,6 @@ struct MDSpanMappingForLayoutLeft;
 
 template <class Extents>
 struct MDSpanMappingForLayoutRight;
-
-template <class Layout>
-struct MDSpanLayoutFromKokkosLayout;
 }  // namespace Impl
 
 enum { ARRAY_LAYOUT_MAX_RANK = 8 };
@@ -122,7 +119,7 @@ struct LayoutLeft {
 
   template <class Extents>
   operator mapping<Extents> () const {
-    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7],dimension[8]));
+    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7]));
   }
 };
 
@@ -174,7 +171,7 @@ struct LayoutRight {
 
   template <class Extents>
   operator mapping<Extents> () const {
-    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7],dimension[8]));
+    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7]));
   }
 };
 
@@ -269,7 +266,7 @@ struct LayoutStride {
 
   template <class Extents>
   operator mapping<Extents> () const {
-    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7],dimension[8]), 
+    return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7]), 
                             std::array<size_t,Extents::rank()>());
   }
 };

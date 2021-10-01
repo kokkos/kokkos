@@ -4,14 +4,6 @@
 
 namespace Kokkos {
 
-template <class T, class Extents, class Layout, class Accessor, class... Args>
-auto submdspan(
-    Layout,
-    const std::experimental::mdspan<T, Extents, Layout, Accessor>& A,
-    const Args&... args) {
-  return submdspan(A, args...);
-}
-
 namespace Impl {
 
 
@@ -20,6 +12,18 @@ std::pair<T1,T2> convert_subview_args(const Kokkos::pair<T1,T2>& v) { return rei
 inline std::experimental::full_extent_t convert_subview_args(const Kokkos::Impl::ALL_t&) { return std::experimental::full_extent; }
 template<class T>
 const T& convert_subview_args(const T& v) { return v; }
+} // namespace Impl
+
+template <class T, class Extents, class Layout, class Accessor, class... Args>
+auto submdspan(
+    Layout,
+    const std::experimental::mdspan<T, Extents, Layout, Accessor>& A,
+    const Args&... args) {
+        static_assert(!std::is_same<Layout,Kokkos::LayoutRight>::value);
+  return std::experimental::submdspan(A, Impl::convert_subview_args(args)...);
+}
+
+namespace Impl {
 
 template <class T>
 struct is_integral_extent_type {
@@ -118,7 +122,8 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
                                    RankDest, RankSrc, CurrentArg, Arg> {
   enum {
     value = ((CurrentArg == RankSrc - 1) &&
-             (std::is_same<Arg, std::experimental::full_extent_t>::value))
+             (std::is_same<Arg, std::experimental::full_extent_t>::value)||
+             (std::is_same<Arg, Kokkos::Impl::ALL_t>::value))
   };
 };
 
@@ -445,8 +450,18 @@ struct ComputeSubSpanOffset<mdspan_type, int(mdspan_type::rank())> {
 
 }  // namespace Impl
 
+
 template <class T, class Extents, class Accessor, class... Args>
-auto submdspan(Kokkos::LayoutLeft,
+auto submdspan(const Kokkos::LayoutStride&,
+             const std::experimental::mdspan<
+                 T, Extents, Kokkos::LayoutStride, Accessor>& A,
+             const Args&... args) {
+  return std::experimental::submdspan(std::experimental::mdspan<
+                                   T, Extents, std::experimental::layout_stride, Accessor>(A.data(),A.mapping(),A.accessor()),args...);
+}
+
+template <class T, class Extents, class Accessor, class... Args>
+auto submdspan(const Kokkos::LayoutLeft&,
              const std::experimental::mdspan<
                  T, Extents, Kokkos::LayoutLeft, Accessor>& A,
              const Args&... args) {
@@ -476,7 +491,7 @@ auto submdspan(Kokkos::LayoutLeft,
 
 
 template <class T, class Extents, class Accessor, class... Args>
-auto submdspan(Kokkos::LayoutRight,
+auto submdspan(const Kokkos::LayoutRight&,
              const std::experimental::mdspan<
                  T, Extents, Kokkos::LayoutRight, Accessor>& A,
              const Args&... args) {

@@ -429,7 +429,7 @@ class BasicView
   //: m_data(submdspan(rhs.get_mdspan(),args...)),m_track(rhs) {}
   {
     m_data = Kokkos::submdspan(
-        typename BasicView<RT, RL, RS, RMP>::mdspan_type::layout_type{},
+        typename BasicView<RT, RL, RS, RMP>::mdspan_type::layout_type(),
         rhs.get_mdspan(), args...);
     m_track.assign(rhs);
   }
@@ -1078,6 +1078,45 @@ class View : public Impl::NormalizeViewProperties<
 // </editor-fold> end View }}}1
 //==============================================================================
 
+template <class LT, class... LP, class RT, class... RP>
+KOKKOS_INLINE_FUNCTION bool operator==(const BasicView<LT, LP...>& lhs,
+                                       const BasicView<RT, RP...>& rhs) {
+  // Same data, layout, dimensions
+  using lhs_traits = ViewTypeTraits<BasicView<LT, LP...>>;
+  using rhs_traits = ViewTypeTraits<BasicView<RT, RP...>>;
+
+  return std::is_same<typename lhs_traits::const_value_type,
+                      typename rhs_traits::const_value_type>::value &&
+         std::is_same<typename lhs_traits::array_layout,
+                      typename rhs_traits::array_layout>::value &&
+         std::is_same<typename lhs_traits::memory_space,
+                      typename rhs_traits::memory_space>::value &&
+         unsigned(lhs.rank) == unsigned(rhs.rank) &&
+         lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
+         lhs.extent(0) == rhs.extent(0) && lhs.extent(1) == rhs.extent(1) &&
+         lhs.extent(2) == rhs.extent(2) && lhs.extent(3) == rhs.extent(3) &&
+         lhs.extent(4) == rhs.extent(4) && lhs.extent(5) == rhs.extent(5) &&
+         lhs.extent(6) == rhs.extent(6) && lhs.extent(7) == rhs.extent(7);
+}
+
+template <class LT, class... LP, class RT, class... RP>
+KOKKOS_INLINE_FUNCTION bool operator!=(const BasicView<LT, LP...>& lhs,
+                                       const BasicView<RT, RP...>& rhs) {
+  return !(operator==(lhs, rhs));
+}
+
+template <class LT, class... LP, class RT, class... RP>
+KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
+                                       const View<RT, RP...>& rhs) {
+  return reinterpret_cast<const typename View<LT, LP...>::basic_view_type&>(lhs) ==
+         reinterpret_cast<const typename View<RT, RP...>::basic_view_type&>(rhs);
+}
+
+template <class LT, class... LP, class RT, class... RP>
+KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
+                                       const View<RT, RP...>& rhs) {
+  return !(operator==(lhs, rhs));
+}
 namespace Impl {
 template <class T1, class T2, class Enable = void>
 struct is_always_assignable_impl: std::false_type {};
