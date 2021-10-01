@@ -58,8 +58,7 @@ namespace Kokkos {
 namespace Impl {
 
 void DeepCopySYCL(void* dst, const void* src, size_t n) {
-  auto event = Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(
-      dst, src, n);
+  Experimental::Impl::SYCLInternal::singleton().m_queue->memcpy(dst, src, n);
 }
 
 void DeepCopyAsyncSYCL(const Kokkos::Experimental::SYCL& instance, void* dst,
@@ -257,7 +256,8 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
       RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
   Kokkos::fence(
       "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
-      "void>::SharedAllocationRecord(): fence after copying header");
+      "void>::SharedAllocationRecord(): fence after copying header from "
+      "HostSpace");
 }
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
@@ -321,7 +321,8 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                                               sizeof(SharedAllocationHeader));
     Kokkos::fence(
         "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
-        "void>::~SharedAllocationRecord(): fence after copying header");
+        "void>::~SharedAllocationRecord(): fence after copying header from "
+        "HostSpace");
     label = header.label();
   }
   const auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;

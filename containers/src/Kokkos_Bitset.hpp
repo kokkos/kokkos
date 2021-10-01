@@ -146,7 +146,9 @@ class Bitset {
                              Kokkos::HostSpace>(
           m_blocks.data() + (m_blocks.extent(0) - 1u), &m_last_block_mask,
           sizeof(unsigned));
-      Kokkos::fence("Bitset::set: fence after clearing unused bits");
+      Kokkos::fence(
+          "Bitset::set: fence after clearing unused bits copying from "
+          "HostSpace");
     }
   }
 

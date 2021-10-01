@@ -133,7 +133,8 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
       RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
   Kokkos::fence(
       "SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, "
-      "void>::SharedAllocationRecord(): fence after copying header");
+      "void>::SharedAllocationRecord(): fence after copying header from "
+      "HostSpace");
 }
 
 //----------------------------------------------------------------------------

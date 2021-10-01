@@ -780,7 +780,9 @@ class UnorderedMap {
                                Kokkos::HostSpace>;
     const int true_ = true;
     raw_deep_copy(m_scalars.data() + flag, &true_, sizeof(int));
-    Kokkos::fence("Kokkos::UnorderedMap::set_flag: fence after copying flag");
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::set_flag: fence after copying flag from "
+        "HostSpace");
   }
 
   void reset_flag(int flag) const {
@@ -789,7 +791,9 @@ class UnorderedMap {
                                Kokkos::HostSpace>;
     const int false_ = false;
     raw_deep_copy(m_scalars.data() + flag, &false_, sizeof(int));
-    Kokkos::fence("Kokkos::UnorderedMap::reset_flag: fence after copying flag");
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::reset_flag: fence after copying flag from "
+        "HostSpace");
   }
 
   bool get_flag(int flag) const {
@@ -799,7 +803,8 @@ class UnorderedMap {
     int result = false;
     raw_deep_copy(&result, m_scalars.data() + flag, sizeof(int));
     Kokkos::fence(
-        "Kokkos::UnorderedMap::get_flag: fence after copy to return value");
+        "Kokkos::UnorderedMap::get_flag: fence after copy to return value in "
+        "HostSpace");
     return result;
   }
 

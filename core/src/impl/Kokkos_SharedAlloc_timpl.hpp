@@ -186,7 +186,7 @@ void HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::print_records(
             &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
         Kokkos::fence(
             "HostInaccessibleSharedAllocationRecordCommon::print_records(): "
-            "fence after copying header");
+            "fence after copying header to HostSpace");
       } else {
         head.m_label[0] = 0;
       }
@@ -221,7 +221,7 @@ void HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::print_records(
             &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
         Kokkos::fence(
             "HostInaccessibleSharedAllocationRecordCommon::print_records(): "
-            "fence after copying header");
+            "fence after copying header to HostSpace");
 
         // Formatting dependent on sizeof(uintptr_t)
         const char* format_string;
@@ -266,7 +266,7 @@ auto HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_record(
         &head, head_cuda, sizeof(SharedAllocationHeader));
     Kokkos::fence(
         "HostInaccessibleSharedAllocationRecordCommon::get_record(): fence "
-        "after copying header");
+        "after copying header to HostSpace");
   }
 
   derived_t* const record =
@@ -291,7 +291,7 @@ HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_label() const {
       &header, this->record_base_t::head(), sizeof(SharedAllocationHeader));
   Kokkos::fence(
       "HostInaccessibleSharedAllocationRecordCommon::get_label(): fence after "
-      "copying header");
+      "copying header to HostSpace");
 
   return std::string(header.m_label);
 }
