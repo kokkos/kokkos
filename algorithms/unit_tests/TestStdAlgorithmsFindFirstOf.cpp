@@ -245,14 +245,14 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
 
   {
     auto myrit         = KE::find_first_of(exespace(), view, s_view, args...);
-    const auto mydiff  = myrit - KE::cbegin(view);
+    const auto mydiff  = myrit - KE::begin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     EXPECT_TRUE(mydiff == stddiff);
   }
 
   {
     auto myrit = KE::find_first_of("label", exespace(), view, s_view, args...);
-    const auto mydiff  = myrit - KE::cbegin(view);
+    const auto mydiff  = myrit - KE::begin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     EXPECT_TRUE(mydiff == stddiff);
   }

@@ -249,15 +249,14 @@ void print_scenario_details(const std::string& name, Predicate pred) {
             << value_type_to_string(ValueType()) << '\n';
 }
 
-template <class IteratorType, class ViewType, class... Args>
-void verify(IteratorType my_result, ViewType view, Args... args) {
+template <class DiffType, class ViewType, class... Args>
+void verify(DiffType my_diff, ViewType view, Args... args) {
   auto view_dc = create_deep_copyable_compatible_clone(view);
   auto view_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
   auto std_r =
       my_std_adjacent_find(KE::cbegin(view_h), KE::cend(view_h), args...);
   const auto std_diff = std_r - KE::cbegin(view_h);
 
-  const auto my_diff = my_result - KE::cbegin(view);
   EXPECT_TRUE(my_diff == std_diff);
 }
 
@@ -271,25 +270,29 @@ void run_single_scenario(const InfoType& scenario_info, Args... args) {
   fill_view(view, name);
 
   {
-    auto res_it = KE::adjacent_find(exespace(), KE::cbegin(view),
+    auto res_it        = KE::adjacent_find(exespace(), KE::cbegin(view),
                                     KE::cend(view), args...);
-    verify(res_it, view, args...);
+    const auto my_diff = res_it - KE::cbegin(view);
+    verify(my_diff, view, args...);
   }
 
   {
     auto res_it = KE::adjacent_find("label", exespace(), KE::cbegin(view),
                                     KE::cend(view), args...);
-    verify(res_it, view, args...);
+    const auto my_diff = res_it - KE::cbegin(view);
+    verify(my_diff, view, args...);
   }
 
   {
-    auto res_it = KE::adjacent_find(exespace(), view, args...);
-    verify(res_it, view, args...);
+    auto res_it        = KE::adjacent_find(exespace(), view, args...);
+    const auto my_diff = res_it - KE::begin(view);
+    verify(my_diff, view, args...);
   }
 
   {
-    auto res_it = KE::adjacent_find("label", exespace(), view, args...);
-    verify(res_it, view, args...);
+    auto res_it        = KE::adjacent_find("label", exespace(), view, args...);
+    const auto my_diff = res_it - KE::begin(view);
+    verify(my_diff, view, args...);
   }
 
   Kokkos::fence();

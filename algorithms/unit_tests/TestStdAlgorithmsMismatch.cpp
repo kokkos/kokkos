@@ -160,10 +160,10 @@ void run_single_scenario(ViewType view1, ViewType view2,
     // check our overloads with views
     auto my_res1 = KE::mismatch(exespace(), view1, view2, args...);
     auto my_res2 = KE::mismatch("label", exespace(), view1, view2, args...);
-    const auto my_diff11 = my_res1.first - KE::cbegin(view1);
-    const auto my_diff12 = my_res1.second - KE::cbegin(view2);
-    const auto my_diff21 = my_res2.first - KE::cbegin(view1);
-    const auto my_diff22 = my_res2.second - KE::cbegin(view2);
+    const auto my_diff11 = my_res1.first - KE::begin(view1);
+    const auto my_diff12 = my_res1.second - KE::begin(view2);
+    const auto my_diff21 = my_res2.first - KE::begin(view1);
+    const auto my_diff22 = my_res2.second - KE::begin(view2);
     EXPECT_TRUE(my_diff11 == std_diff1);
     EXPECT_TRUE(my_diff12 == std_diff2);
     EXPECT_TRUE(my_diff21 == std_diff1);

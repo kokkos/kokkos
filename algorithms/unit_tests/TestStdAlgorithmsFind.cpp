@@ -142,8 +142,8 @@ void test_find_if_not(const ViewType view) {
   // pass iterators, returns iterator
   EXPECT_EQ(KE::begin(view), KE::find_if_not(exespace(), KE::begin(view),
                                              KE::end(view), not_equals_zero));
-  // pass view, returns const iterator
-  EXPECT_EQ(KE::cbegin(view),
+  // pass view, returns iterator
+  EXPECT_EQ(KE::begin(view),
             KE::find_if_not(exespace(), view, not_equals_zero));
 
   fill_views_inc(view, expected);
@@ -158,7 +158,7 @@ void test_find_if_not(const ViewType view) {
             KE::find_if_not(exespace(), KE::cbegin(view), KE::cend(view),
                             equals_zero));
   // pass view, returns const iterator
-  EXPECT_EQ(KE::cbegin(view) + distance,
+  EXPECT_EQ(KE::begin(view) + distance,
             KE::find_if_not(exespace(), view, equals_zero));
 }
 
