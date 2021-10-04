@@ -119,12 +119,12 @@ bool is_nonnull(const Head& head, const Tail&... tail) {
  * we need the ability to look at a lambda, and deduce its arguments.
  *
  * This is the base template, and will be specialized. All specializations
- * should define 
- * - a return type R, 
- * - an args pack A, 
+ * should define
+ * - a return type R,
+ * - an args pack A,
  * - a num_args, and
- * - a function "invoke_as" that takes a functor and an arg-pack, and tries to call the
- *   functor with that arg-pack.
+ * - a function "invoke_as" that takes a functor and an arg-pack, and tries to
+ * call the functor with that arg-pack.
  *
  * The main original intent here is two-fold, one to allow us to look at how
  * many args a functor takes, and two to look at the types of its args. The
@@ -153,7 +153,8 @@ struct function_traits<R (*)(A...)> {
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+    if (!is_nonnull(
+            std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -177,7 +178,8 @@ struct function_traits<R (C::*)(A...)> {
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+    if (!is_nonnull(
+            std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -202,7 +204,8 @@ struct function_traits<R (C::*)(A...) const>  // const
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+    if (!is_nonnull(
+            std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -212,7 +215,8 @@ struct function_traits<R (C::*)(A...) const>  // const
 /**
  * @brief Specialization of function traits, representing a T that has a
  * non-generic call operator, i.e. a functor/lambda whose operator() has no auto
- * or template on it. See the base template for info on what this struct is doing.
+ * or template on it. See the base template for info on what this struct is
+ * doing.
  *
  * @tparam T The functor type
  */
@@ -248,7 +252,8 @@ struct invoke_helper {
   // the entry point to the class, takes in a Traits class that knows how to
   // invoke the matcher,
   template <class Traits>
-  static auto call(int index, const event_vector& events, const Matcher& matcher) {
+  static auto call(int index, const event_vector& events,
+                   const Matcher& matcher) {
     return call<Traits>(index, events, std::make_index_sequence<num>{},
                         matcher);
   }
@@ -271,7 +276,8 @@ MatchDiagnostic check_match(event_vector::size_type index,
 }
 
 /**
- * @brief Checks that a set of matchers match the events produced by a code region
+ * @brief Checks that a set of matchers match the events produced by a code
+ * region
  *
  * @tparam Matcher a functor that accepts a set of events, and returns whether
  * they meet an expected structure
@@ -285,8 +291,9 @@ MatchDiagnostic check_match(event_vector::size_type index,
  * @return MatchDiagnostic success if the matcher matches, failure otherwise
  */
 template <class Matcher, class... Matchers>
-MatchDiagnostic check_match(event_vector::size_type index, const event_vector& events,
-                            const Matcher& matcher, const Matchers&... matchers) {
+MatchDiagnostic check_match(event_vector::size_type index,
+                            const event_vector& events, const Matcher& matcher,
+                            const Matchers&... matchers) {
   // struct that tells us what we want to know about our matcher, and helps us
   // invoke it
   using Traits = function_traits<Matcher>;
@@ -586,11 +593,10 @@ struct CreateProfileSectionEvent : public EventBase {
   std::string name;
   uint32_t id;
   std::string repr() const override {
-    return "CreateProfileSectionEvent {" + name + ", " +
-           std::to_string(id) + "}";
+    return "CreateProfileSectionEvent {" + name + ", " + std::to_string(id) +
+           "}";
   }
-  CreateProfileSectionEvent(std::string n, uint32_t s_i)
-      : name(n), id(s_i) {}
+  CreateProfileSectionEvent(std::string n, uint32_t s_i) : name(n), id(s_i) {}
 };
 
 template <class Derived>
@@ -826,13 +832,13 @@ bool compare_event_vectors(event_vector events, Matchers... matchers) {
  * Maybe you want to listen to all profiling events, no
  * infrastructure events, and only type declaration events
  * in tuning.
- * 
+ *
  * You can model this as a tree of preferences, a kind of
  * hierarchical bool. By default,
  * we listen to everything. But you can disable everything,
  * or any subcomponent (profiling/tuning/infrastructure),
  * or even a sub-subcomponent (profiling->kernels)
- *  
+ *
  */
 
 /**
@@ -845,15 +851,15 @@ bool compare_event_vectors(event_vector events, Matchers... matchers) {
 
 struct ToolValidatorConfiguration {
   struct Profiling {
-    bool kernels       = true;
-    bool regions       = true;
-    bool fences        = true;
-    bool allocs        = true;
-    bool copies        = true;
-    bool dual_view_ops = true;
-    bool sections = true;
+    bool kernels        = true;
+    bool regions        = true;
+    bool fences         = true;
+    bool allocs         = true;
+    bool copies         = true;
+    bool dual_view_ops  = true;
+    bool sections       = true;
     bool profile_events = true;
-    bool metadata = true;
+    bool metadata       = true;
   };
   struct Tuning {
     bool contexts          = true;
@@ -874,23 +880,22 @@ struct ToolValidatorConfiguration {
 namespace Config {
 /**
  * @brief A config struct has a few properties:
- * 
+ *
  * 1) What settings it toggles
  * 2) Whether it toggles that setting on or off
  * 3) What depth the setting is in the tree
- * 
+ *
  * The first two hopefully make intuitive sense. The
  * third is weird. In order to make this hierarchical
  * bool concept work, you need to be able to first
  * disable all events, then enable profiling.
- * 
+ *
  * This is done by modeling the depth of the request.
  * DisableAlls happen before EnableProfiling happen before
  * DisableKernels. The implementation of that is in listen_tool_events,
  * but needs machinery here.
- * 
+ *
  */
-
 
 #define KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(name, value, depth)    \
   template <bool target_value>                                      \
@@ -909,7 +914,8 @@ KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Allocs, profiling.allocs, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Copies, profiling.copies, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(DualViewOps, profiling.dual_view_ops, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Sections, profiling.sections, 2);
-KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(ProfileEvents, profiling.profile_events, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(ProfileEvents, profiling.profile_events,
+                                     2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Metadata, profiling.metadata, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Contexts, tuning.contexts, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(TypeDeclarations, tuning.type_declarations,
@@ -981,9 +987,9 @@ using DisableAll = ToggleAll<false>;
 /**
  * Needs to stand outside of functions, this is the vector tool callbacks will
  * push events into. It needs to be outside of functions (to be global) because
- * it needs to be used in the tools callbacks, which are function pointers, which
- * can't capture variables. Thus we need something that doesn't require capturing.
- * In short, a global variable. :(
+ * it needs to be used in the tools callbacks, which are function pointers,
+ * which can't capture variables. Thus we need something that doesn't require
+ * capturing. In short, a global variable. :(
  */
 std::vector<EventBasePtr> found_events;
 /**
@@ -992,8 +998,8 @@ std::vector<EventBasePtr> found_events;
  */
 static uint64_t last_kid;
 /**
- * Needs to stand outside of functions, this is the section ID of the last encountered
- * section id
+ * Needs to stand outside of functions, this is the section ID of the last
+ * encountered section id
  */
 static uint32_t last_sid;
 
@@ -1033,14 +1039,13 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
           found_events.push_back(std::make_shared<EndParallelScanEvent>(k));
         });
   }  // if profiling.kernels
-  if(config.profiling.regions){
-    Kokkos::Tools::Experimental::set_push_region_callback([](const char* name){
-      found_events.push_back(std::make_shared<PushRegionEvent>(std::string(name)));
+  if (config.profiling.regions) {
+    Kokkos::Tools::Experimental::set_push_region_callback([](const char* name) {
+      found_events.push_back(
+          std::make_shared<PushRegionEvent>(std::string(name)));
     });
-        Kokkos::Tools::Experimental::set_pop_region_callback([](){
-      found_events.push_back(std::make_shared<PopRegionEvent>());
-    });
-
+    Kokkos::Tools::Experimental::set_pop_region_callback(
+        []() { found_events.push_back(std::make_shared<PopRegionEvent>()); });
   }
   if (config.profiling.fences) {
     Kokkos::Tools::Experimental::set_begin_fence_callback(
@@ -1091,34 +1096,41 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
               std::string(name), ptr, is_device));
         });
   }
-  if(config.profiling.sections){
-    Kokkos::Tools::Experimental::set_create_profile_section_callback([](const char* name, uint32_t* id){
-      *id = (++last_sid);
-      found_events.push_back(std::make_shared<CreateProfileSectionEvent>(
+  if (config.profiling.sections) {
+    Kokkos::Tools::Experimental::set_create_profile_section_callback(
+        [](const char* name, uint32_t* id) {
+          *id = (++last_sid);
+          found_events.push_back(std::make_shared<CreateProfileSectionEvent>(
               std::string(name), *id));
-    });
-    Kokkos::Tools::Experimental::set_destroy_profile_section_callback([](uint32_t id){
-      found_events.push_back(std::make_shared<DestroyProfileSectionEvent>(
-              id));
-    });
-    Kokkos::Tools::Experimental::set_start_profile_section_callback([](uint32_t id){
-      found_events.push_back(std::make_shared<StartProfileSectionEvent>(
-              id));
-    });
-    Kokkos::Tools::Experimental::set_stop_profile_section_callback([](uint32_t id){
-      found_events.push_back(std::make_shared<StopProfileSectionEvent>(
-              id));
-    });
+        });
+    Kokkos::Tools::Experimental::set_destroy_profile_section_callback(
+        [](uint32_t id) {
+          found_events.push_back(
+              std::make_shared<DestroyProfileSectionEvent>(id));
+        });
+    Kokkos::Tools::Experimental::set_start_profile_section_callback(
+        [](uint32_t id) {
+          found_events.push_back(
+              std::make_shared<StartProfileSectionEvent>(id));
+        });
+    Kokkos::Tools::Experimental::set_stop_profile_section_callback(
+        [](uint32_t id) {
+          found_events.push_back(std::make_shared<StopProfileSectionEvent>(id));
+        });
   }
-  if(config.profiling.profile_events){
-    Kokkos::Tools::Experimental::set_profile_event_callback([](const char* name){
-      found_events.push_back(std::make_shared<ProfileEvent>(std::string(name)));
-    });
+  if (config.profiling.profile_events) {
+    Kokkos::Tools::Experimental::set_profile_event_callback(
+        [](const char* name) {
+          found_events.push_back(
+              std::make_shared<ProfileEvent>(std::string(name)));
+        });
   }
-  if(config.profiling.metadata){
-    Kokkos::Tools::Experimental::set_declare_metadata_callback([](const char* key, const char* value){
-      found_events.push_back(std::make_shared<DeclareMetadataEvent>(std::string(key),std::string(value)));
-    });
+  if (config.profiling.metadata) {
+    Kokkos::Tools::Experimental::set_declare_metadata_callback(
+        [](const char* key, const char* value) {
+          found_events.push_back(std::make_shared<DeclareMetadataEvent>(
+              std::string(key), std::string(value)));
+        });
   }
   if (config.tuning.contexts) {
     Kokkos::Tools::Experimental::set_begin_context_callback(

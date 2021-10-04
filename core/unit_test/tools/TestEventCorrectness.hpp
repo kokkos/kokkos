@@ -123,17 +123,16 @@ int num_instances = 1;
 struct TestFunctor {
   KOKKOS_FUNCTION void operator()(
       const Kokkos::RangePolicy<>::index_type) const {}
-  
 };
 struct TestReduceFunctor {
   using value_type = int;
-  KOKKOS_FUNCTION void operator()(
-     const Kokkos::RangePolicy<>::index_type, int&) const {}
+  KOKKOS_FUNCTION void operator()(const Kokkos::RangePolicy<>::index_type,
+                                  int&) const {}
 };
 struct TestScanFunctor {
   using value_type = int;
-  KOKKOS_FUNCTION void operator()(
-     const Kokkos::RangePolicy<>::index_type, int&, bool) const {}
+  KOKKOS_FUNCTION void operator()(const Kokkos::RangePolicy<>::index_type, int&,
+                                  bool) const {}
 };
 
 template <typename Lambda>
@@ -355,208 +354,216 @@ TEST(defaultdevicetype, exemplar_tests) {
 TEST(defaultdevicetype, parallel_for) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  auto success = validate_event_set([=](){
-    TestFunctor tf;
-    Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0,1), tf);
-  },
-  [=](BeginParallelForEvent begin_event, EndParallelForEvent end_event){
-  if (begin_event.name != "dogs") {
+  auto success = validate_event_set(
+      [=]() {
+        TestFunctor tf;
+        Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1), tf);
+      },
+      [=](BeginParallelForEvent begin_event, EndParallelForEvent end_event) {
+        if (begin_event.name != "dogs") {
           return MatchDiagnostic{false, {"No match on BeginParallelFor name"}};
         }
         if (end_event.kID != ((begin_event.kID))) {
           return MatchDiagnostic{false, {"No match on kID's"}};
         }
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, parallel_reduce) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  auto success = validate_event_set([=](){
-    TestReduceFunctor tf;
-    int result;
-    Kokkos::parallel_reduce("dogs", Kokkos::RangePolicy<>(0,1), tf, Kokkos::Sum<int>(result));
-  },
-  [=](BeginParallelReduceEvent begin_event, EndParallelReduceEvent end_event){
-  if (begin_event.name != "dogs") {
-          return MatchDiagnostic{false, {"No match on BeginParallelReduce name"}};
+  auto success = validate_event_set(
+      [=]() {
+        TestReduceFunctor tf;
+        int result;
+        Kokkos::parallel_reduce("dogs", Kokkos::RangePolicy<>(0, 1), tf,
+                                Kokkos::Sum<int>(result));
+      },
+      [=](BeginParallelReduceEvent begin_event,
+          EndParallelReduceEvent end_event) {
+        if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false,
+                                 {"No match on BeginParallelReduce name"}};
         }
         if (end_event.kID != ((begin_event.kID))) {
           return MatchDiagnostic{false, {"No match on kID's"}};
         }
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, parallel_scan) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  auto success = validate_event_set([=](){
-    TestScanFunctor tf;
-    Kokkos::parallel_scan("dogs", Kokkos::RangePolicy<>(0,1), tf);
-  },
-  [=](BeginParallelScanEvent begin_event, EndParallelScanEvent end_event){
-  if (begin_event.name != "dogs") {
+  auto success = validate_event_set(
+      [=]() {
+        TestScanFunctor tf;
+        Kokkos::parallel_scan("dogs", Kokkos::RangePolicy<>(0, 1), tf);
+      },
+      [=](BeginParallelScanEvent begin_event, EndParallelScanEvent end_event) {
+        if (begin_event.name != "dogs") {
           return MatchDiagnostic{false, {"No match on BeginParallelScan name"}};
         }
         if (end_event.kID != ((begin_event.kID))) {
           return MatchDiagnostic{false, {"No match on kID's"}};
         }
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, regions) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableRegions());
-  auto success = validate_event_set([=](){
-    Kokkos::Tools::pushRegion("dogs");
-    Kokkos::Tools::popRegion();
-  },
-  [=](PushRegionEvent push_event, PopRegionEvent){
-  if (push_event.name != "dogs") {
+  auto success = validate_event_set(
+      [=]() {
+        Kokkos::Tools::pushRegion("dogs");
+        Kokkos::Tools::popRegion();
+      },
+      [=](PushRegionEvent push_event, PopRegionEvent) {
+        if (push_event.name != "dogs") {
           return MatchDiagnostic{false, {"No match on PushRegion name"}};
         }
-        
+
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, fences) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
-  auto success = validate_event_set([=](){
-    Kokkos::DefaultExecutionSpace().fence("dogs");
-  },
-  [=](BeginFenceEvent begin_event, EndFenceEvent end_event){
-  if (begin_event.name != "dogs") {
+  auto success = validate_event_set(
+      [=]() { Kokkos::DefaultExecutionSpace().fence("dogs"); },
+      [=](BeginFenceEvent begin_event, EndFenceEvent end_event) {
+        if (begin_event.name != "dogs") {
           return MatchDiagnostic{false, {"No match on BeginFence name"}};
         }
         if (end_event.kID != ((begin_event.kID))) {
           return MatchDiagnostic{false, {"No match on kID's"}};
         }
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, raw_allocation) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
-  auto success = validate_event_set([=](){
-    void* foo =  Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>("dogs", 1000);
-    Kokkos::kokkos_free(foo);
-  },
-  [=](AllocateDataEvent alloc, DeallocateDataEvent free){
+  auto success = validate_event_set(
+      [=]() {
+        void* foo =
+            Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>(
+                "dogs", 1000);
+        Kokkos::kokkos_free(foo);
+      },
+      [=](AllocateDataEvent alloc, DeallocateDataEvent free) {
         if (alloc.name != "dogs") {
           return MatchDiagnostic{false, {"No match on alloc name"}};
         }
-        if(alloc.size != 1000){
+        if (alloc.size != 1000) {
           return MatchDiagnostic{false, {"No match on alloc size"}};
         }
-        if(alloc.ptr != free.ptr) { 
+        if (alloc.ptr != free.ptr) {
           return MatchDiagnostic{false, {"No match on pointers"}};
         }
         if (free.name != "dogs") {
           return MatchDiagnostic{false, {"No match on free name"}};
         }
-        if(free.size != 1000){
+        if (free.size != 1000) {
           return MatchDiagnostic{false, {"No match on free size"}};
         }
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, view) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
-  auto success = validate_event_set([=](){
-    Kokkos::View<float*> dogs("dogs",1000);
-  },
-  [=](AllocateDataEvent alloc, DeallocateDataEvent free){
+  auto success = validate_event_set(
+      [=]() { Kokkos::View<float*> dogs("dogs", 1000); },
+      [=](AllocateDataEvent alloc, DeallocateDataEvent free) {
         if (alloc.name != "dogs") {
           return MatchDiagnostic{false, {"No match on alloc name"}};
         }
-        if(alloc.size != 1000 * sizeof(float)){
+        if (alloc.size != 1000 * sizeof(float)) {
           return MatchDiagnostic{false, {"No match on alloc size"}};
         }
-        if(alloc.ptr != free.ptr) { 
+        if (alloc.ptr != free.ptr) {
           return MatchDiagnostic{false, {"No match on pointers"}};
         }
         if (free.name != "dogs") {
           return MatchDiagnostic{false, {"No match on free name"}};
         }
-        if(free.size != 1000* sizeof(float)){
+        if (free.size != 1000 * sizeof(float)) {
           return MatchDiagnostic{false, {"No match on free size"}};
         }
         return MatchDiagnostic{true};
-  });
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, sections) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableSections());
-  auto success = validate_event_set([=](){
-    uint32_t section_id;
-    Kokkos::Tools::createProfileSection("dogs", &section_id);
-    Kokkos::Tools::startSection(section_id);
-    Kokkos::Tools::stopSection(section_id);
-    Kokkos::Tools::destroyProfileSection(section_id);
-  },
-  [=](CreateProfileSectionEvent create, StartProfileSectionEvent start, StopProfileSectionEvent stop, DestroyProfileSectionEvent destroy){
-    if(create.name != "dogs") {
-       return MatchDiagnostic{false, {"No match on section name"}};
-    }
-    if( (create.id != start.id) || (stop.id != start.id) || (stop.id != destroy.id) ){
-             return MatchDiagnostic{false, {"No match on section IDs"}};
-
-    }
-    return MatchDiagnostic { true };
-  });
+  auto success = validate_event_set(
+      [=]() {
+        uint32_t section_id;
+        Kokkos::Tools::createProfileSection("dogs", &section_id);
+        Kokkos::Tools::startSection(section_id);
+        Kokkos::Tools::stopSection(section_id);
+        Kokkos::Tools::destroyProfileSection(section_id);
+      },
+      [=](CreateProfileSectionEvent create, StartProfileSectionEvent start,
+          StopProfileSectionEvent stop, DestroyProfileSectionEvent destroy) {
+        if (create.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on section name"}};
+        }
+        if ((create.id != start.id) || (stop.id != start.id) ||
+            (stop.id != destroy.id)) {
+          return MatchDiagnostic{false, {"No match on section IDs"}};
+        }
+        return MatchDiagnostic{true};
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, metadata) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableMetadata());
-  auto success = validate_event_set([=](){
-   /** Attempts to decrease the value of dog_goodness will be rejected on review */
-   Kokkos::Tools::declareMetadata("dog_goodness","infinity");
-  },
-  [=](DeclareMetadataEvent meta){
-    if(meta.key != "dog_goodness") {
-       return MatchDiagnostic{false, {"No match on metadata key"}};
-
-    }
-    if(meta.value != "infinity") {
-       return MatchDiagnostic{false, {"No match on metadata value"}};
-    }
-    return MatchDiagnostic { true };
-  });
+  auto success = validate_event_set(
+      [=]() {
+        /** Attempts to decrease the value of dog_goodness will be rejected on
+         * review */
+        Kokkos::Tools::declareMetadata("dog_goodness", "infinity");
+      },
+      [=](DeclareMetadataEvent meta) {
+        if (meta.key != "dog_goodness") {
+          return MatchDiagnostic{false, {"No match on metadata key"}};
+        }
+        if (meta.value != "infinity") {
+          return MatchDiagnostic{false, {"No match on metadata value"}};
+        }
+        return MatchDiagnostic{true};
+      });
   ASSERT_TRUE(success);
 }
 
 TEST(defaultdevicetype, profile_events) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableProfileEvents());
-  auto success = validate_event_set([=](){
-   Kokkos::Tools::markEvent("dog_goodness>=infinity");
-  },
-  [=](ProfileEvent event){
-    if(event.name != "dog_goodness>=infinity") {
-      return MatchDiagnostic{false, {"No match on profiled event name"}};
-
-    }
-    return MatchDiagnostic{true};
-  }
-  );
+  auto success = validate_event_set(
+      [=]() { Kokkos::Tools::markEvent("dog_goodness>=infinity"); },
+      [=](ProfileEvent event) {
+        if (event.name != "dog_goodness>=infinity") {
+          return MatchDiagnostic{false, {"No match on profiled event name"}};
+        }
+        return MatchDiagnostic{true};
+      });
   ASSERT_TRUE(success);
 }
 }  // namespace Test
