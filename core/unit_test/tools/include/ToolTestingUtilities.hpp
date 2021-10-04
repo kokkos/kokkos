@@ -44,7 +44,7 @@
 /**
  * Before digging in to the code, it's worth taking a moment to review this
  * design. Fundamentally, what we're looking to do is allow people to test that
- * a piece of code Produces some expected series of tool events. Maybe we want
+ * a piece of code produces some expected series of tool events. Maybe we want
  * to check that deep_copy on an execution space instance only causes the
  * expected types of fences, or that calls to resize(WithoutInitializing,...)
  * don't call an initialization kernel.
@@ -90,8 +90,7 @@ struct MatchDiagnostic {
 
 struct EventBase;  // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
-using EventSet     = std::vector<EventBasePtr>;
-using event_vector = EventSet;
+using event_vector = std::vector<EventBasePtr>;
 
 /**
  * @brief Base case of a recursive reduction using templates
@@ -111,7 +110,7 @@ bool is_nonnull() { return true; }
  *
  */
 template <class Head, class... Tail>
-bool is_nonnull(const Head& head, const Tail... tail) {
+bool is_nonnull(const Head& head, const Tail&... tail) {
   return (head != nullptr) && (is_nonnull(tail...));
 }
 
@@ -120,9 +119,12 @@ bool is_nonnull(const Head& head, const Tail... tail) {
  * we need the ability to look at a lambda, and deduce its arguments.
  *
  * This is the base template, and will be specialized. All specializations
- * should define A return type R, an args pack A, a num_args, and a function
- * "invoke_as" that takes a functor and an arg-pack, and tries to call the
- * functor with that arg-pack
+ * should define 
+ * - a return type R, 
+ * - an args pack A, 
+ * - a num_args, and
+ * - a function "invoke_as" that takes a functor and an arg-pack, and tries to call the
+ *   functor with that arg-pack.
  *
  * The main original intent here is two-fold, one to allow us to look at how
  * many args a functor takes, and two to look at the types of its args. The
@@ -148,13 +150,13 @@ struct function_traits<R (*)(A...)> {
   using return_type                  = R;
   using class_type                   = void;
   using args_type                    = std::tuple<A...>;
-  constexpr static int num_arguments = std::tuple_size<args_type>::value;
+  constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
-  static auto invoke_as(Call call, Args... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
-      return false;
+  static auto invoke_as(const Call& call, Args&&... args) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+      return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
-    return call(*std::dynamic_pointer_cast<A>(args)...);
+    return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
   }
 };
 
@@ -172,13 +174,13 @@ struct function_traits<R (C::*)(A...)> {
   using return_type                  = R;
   using class_type                   = void;
   using args_type                    = std::tuple<A...>;
-  constexpr static int num_arguments = std::tuple_size<args_type>::value;
+  constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
-  static auto invoke_as(Call call, Args... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
-      return false;
+  static auto invoke_as(const Call& call, Args&&... args) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+      return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
-    return call(*std::dynamic_pointer_cast<A>(args)...);
+    return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
   }
 };
 
@@ -197,20 +199,20 @@ struct function_traits<R (C::*)(A...) const>  // const
   using return_type                  = R;
   using class_type                   = C;
   using args_type                    = std::tuple<A...>;
-  constexpr static int num_arguments = std::tuple_size<args_type>::value;
+  constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
-  static auto invoke_as(Call call, const Args&... args) {
-    if (!is_nonnull(std::dynamic_pointer_cast<A>(args)...)) {
+  static auto invoke_as(const Call& call, Args&&... args) {
+    if (!is_nonnull(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
-    return call(*std::dynamic_pointer_cast<A>(args)...);
+    return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
   }
 };
 
 /**
  * @brief Specialization of function traits, representing a T that has a
  * non-generic call operator, i.e. a functor/lambda whose operator() has no auto
- * or template on it See the base template for info on what this struct is doing
+ * or template on it. See the base template for info on what this struct is doing.
  *
  * @tparam T The functor type
  */
@@ -220,14 +222,14 @@ struct function_traits<T, Kokkos::Impl::void_t<decltype(&T::operator())> >
 
 /**
  * @brief A struct to extract events from an event vector, and invoke a matcher
- * with them
+ * with them.
  *
  * This one is a bit funky, you can't do std::get's or the like with a vector.
  * So this takes in a number of arguments to pull from the vector, and a start
- * index at which to begin taking from. It then makes an index sequence of tht
+ * index at which to begin taking from. It then makes an index sequence of that
  * number of elements {0, 1, 2, ..., num}, and then uses the function_traits
  * trick above to invoke the matcher with
- * {events[index+0],events[index+1],...,events[num-1]}
+ * {events[index+0],events[index+1],...,events[num-1]}.
  *
  * @tparam num number of arguments to the functor
  * @tparam Matcher the lambda we want to call with events from our event vector
@@ -237,8 +239,8 @@ struct invoke_helper {
  private:
   // private helper with an index_sequence, invokes the matcher
   template <class Traits, size_t... Indices>
-  static auto call(int index, event_vector events,
-                   std::index_sequence<Indices...>, Matcher matcher) {
+  static auto call(int index, const event_vector& events,
+                   std::index_sequence<Indices...>, const Matcher& matcher) {
     return Traits::invoke_as(matcher, events[index + Indices]...);
   }
 
@@ -246,7 +248,7 @@ struct invoke_helper {
   // the entry point to the class, takes in a Traits class that knows how to
   // invoke the matcher,
   template <class Traits>
-  static auto call(int index, event_vector events, Matcher matcher) {
+  static auto call(int index, const event_vector& events, const Matcher& matcher) {
     return call<Traits>(index, events, std::make_index_sequence<num>{},
                         matcher);
   }
@@ -255,7 +257,7 @@ struct invoke_helper {
 /**
  * @brief This is the base case of a recursive check of matchers, meaning no
  * more matchers exist. The only check now should be that we made it all the way
- * through the list of events captured by our lambda
+ * through the list of events captured by our lambda.
  *
  * @param index how many events we scanned
  * @param events the vector containing our events
@@ -269,7 +271,7 @@ MatchDiagnostic check_match(event_vector::size_type index,
 }
 
 /**
- * @brief
+ * @brief Checks that a set of matchers match the events produced by a code region
  *
  * @tparam Matcher a functor that accepts a set of events, and returns whether
  * they meet an expected structure
@@ -283,8 +285,8 @@ MatchDiagnostic check_match(event_vector::size_type index,
  * @return MatchDiagnostic success if the matcher matches, failure otherwise
  */
 template <class Matcher, class... Matchers>
-MatchDiagnostic check_match(event_vector::size_type index, event_vector events,
-                            Matcher matcher, Matchers... matchers) {
+MatchDiagnostic check_match(event_vector::size_type index, const event_vector& events,
+                            const Matcher& matcher, const Matchers&... matchers) {
   // struct that tells us what we want to know about our matcher, and helps us
   // invoke it
   using Traits = function_traits<Matcher>;
@@ -309,7 +311,7 @@ MatchDiagnostic check_match(event_vector::size_type index, event_vector events,
 /**
  * @brief Small utility helper, an entry point into "check_match."
  * The real "check_match" needs an index at which to start checking,
- * this just tells it "hey, start at 0"
+ * this just tells it "hey, start at 0."
  *
  */
 template <class... Matchers>
@@ -319,10 +321,8 @@ auto check_match(event_vector events, Matchers... matchers) {
 
 /**
  * @brief Base class of representing everything you can do with an Event
- * checked by this system. Not much is required, just
- *
- * 1) You can compare to some other EventBase
- * 2) You can represent yourself as a string
+ * checked by this system. Not much is required, just the ability to
+ * represent yourself as a string for debugging purposes
  */
 struct EventBase {
   template <typename T>
@@ -335,7 +335,7 @@ struct EventBase {
 
 /**
  * @brief There are an unholy number of begin events in Kokkos, this is a base
- * class for them (BeginParallel[For/Reduce/Scan], BeginFence)
+ * class for them (BeginParallel[For/Reduce/Scan], BeginFence).
  *
  * @tparam Derived CRTP, intended for use with dynamic_casts
  */
@@ -370,7 +370,7 @@ struct BeginOperation : public EventBase {
 };
 /**
  * @brief Analogous to BeginOperation, there are a lot of things in Kokkos
- * of roughly this structure
+ * of roughly this structure.
  *
  * @tparam Derived CRTP, used for comparing that EventBase's are of the same
  * type
@@ -820,10 +820,27 @@ bool compare_event_vectors(event_vector events, Matchers... matchers) {
 }
 
 /**
+ * This section is odd, and needs explanation. Imagine that
+ * you're writing a test. Maybe you want to listen to all
+ * events. Maybe you want to listen to all profiling events.
+ * Maybe you want to listen to all profiling events, no
+ * infrastructure events, and only type declaration events
+ * in tuning.
+ * 
+ * You can model this as a tree of preferences, a kind of
+ * hierarchical bool. By default,
+ * we listen to everything. But you can disable everything,
+ * or any subcomponent (profiling/tuning/infrastructure),
+ * or even a sub-subcomponent (profiling->kernels)
+ *  
+ */
+
+/**
  * @brief This tells the testing tool which events to listen to.
  * My strong recommendation is to make this "all events" in most cases,
  * but if there is an event that is hard to match in some cases, a stray
- * deep_copy or the like, this will let you ignore that event
+ * deep_copy or the like, this will let you ignore that event. Users will
+ * not directly instantiate these.
  */
 
 struct ToolValidatorConfiguration {
@@ -845,12 +862,32 @@ struct ToolValidatorConfiguration {
     bool programming_interface = true;
     bool request_settings      = true;
   };
-  Profiling profiling           = {false, false, false, false, false};
+  Profiling profiling           = Profiling();
   Tuning tuning                 = Tuning();
   Infrastructure infrastructure = Infrastructure();
 };
 
 namespace Config {
+/**
+ * @brief A config struct has a few properties:
+ * 
+ * 1) What settings it toggles
+ * 2) Whether it toggles that setting on or off
+ * 3) What depth the setting is in the tree
+ * 
+ * The first two hopefully make intuitive sense. The
+ * third is weird. In order to make this hierarchical
+ * bool concept work, you need to be able to first
+ * disable all events, then enable profiling.
+ * 
+ * This is done by modeling the depth of the request.
+ * DisableAlls happen before EnableProfiling happen before
+ * DisableKernels. The implementation of that is in listen_tool_events,
+ * but needs machinery here.
+ * 
+ */
+
+
 #define KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(name, value, depth)    \
   template <bool target_value>                                      \
   struct Toggle##name : public std::integral_constant<int, depth> { \
@@ -880,8 +917,10 @@ KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(RequestSettings,
 template <bool target_value>
 struct ToggleInfrastructure : public std::integral_constant<int, 1> {
   void operator()(ToolValidatorConfiguration& config) {
-    config.infrastructure = {target_value, target_value, target_value,
-                             target_value};
+    ToggleInit<target_value>{}(config);
+    ToggleFinalize<target_value>{}(config);
+    ToggleProgrammingInterface<target_value>{}(config);
+    ToggleRequestSettings<target_value>{}(config);
   }
 };
 
@@ -891,8 +930,11 @@ using DisableInfrastructure = ToggleInfrastructure<false>;
 template <bool target_value>
 struct ToggleProfiling : public std::integral_constant<int, 1> {
   void operator()(ToolValidatorConfiguration& config) {
-    config.profiling = {target_value, target_value, target_value, target_value,
-                        target_value};
+    ToggleKernels<target_value>{}(config);
+    ToggleFences<target_value>{}(config);
+    ToggleAllocs<target_value>{}(config);
+    ToggleCopies<target_value>{}(config);
+    ToggleDualViewOps<target_value>{}(config);
   }
 };
 
@@ -902,7 +944,9 @@ using DisableProfiling = ToggleProfiling<false>;
 template <bool target_value>
 struct ToggleTuning : public std::integral_constant<int, 1> {
   void operator()(ToolValidatorConfiguration& config) {
-    config.tuning = {target_value, target_value, target_value};
+    ToggleContexts<target_value>{}(config);
+    ToggleTypeDeclarations<target_value>{}(config);
+    ToggleRequestValues<target_value>{}(config);
   }
 };
 
@@ -924,7 +968,10 @@ using DisableAll = ToggleAll<false>;
 
 /**
  * Needs to stand outside of functions, this is the vector tool callbacks will
- * push events into
+ * push events into. It needs to be outside of functions (to be global) because
+ * it needs to be used in the tools callbacks, which are function pointers, which
+ * can't capture variables. Thus we need something that doesn't require capturing.
+ * In short, a global variable. :(
  */
 std::vector<EventBasePtr> found_events;
 /**
