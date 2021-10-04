@@ -584,24 +584,24 @@ struct DeallocateDataEvent : public DataEvent<DeallocateDataEvent> {
 
 struct CreateProfileSectionEvent : public EventBase {
   std::string name;
-  uint32_t section_id;
+  uint32_t id;
   std::string repr() const override {
     return "CreateProfileSectionEvent {" + name + ", " +
-           std::to_string(section_id) + "}";
+           std::to_string(id) + "}";
   }
   CreateProfileSectionEvent(std::string n, uint32_t s_i)
-      : name(n), section_id(s_i) {}
+      : name(n), id(s_i) {}
 };
 
 template <class Derived>
 struct ProfileSectionManipulationEvent : public EventBase {
-  uint32_t device_id;
+  uint32_t id;
   std::string repr() const override {
     std::stringstream s;
-    s << Derived::event_name() << "{ " << device_id << "}";
+    s << Derived::event_name() << "{ " << id << "}";
     return s.str();
   }
-  ProfileSectionManipulationEvent(uint32_t d_i) : device_id(d_i){};
+  ProfileSectionManipulationEvent(uint32_t d_i) : id(d_i){};
 };
 
 struct StartProfileSectionEvent

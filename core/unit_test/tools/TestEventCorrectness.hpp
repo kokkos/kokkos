@@ -500,4 +500,63 @@ TEST(defaultdevicetype, view) {
   ASSERT_TRUE(success);
 }
 
+TEST(defaultdevicetype, sections) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableSections());
+  auto success = validate_event_set([=](){
+    uint32_t section_id;
+    Kokkos::Tools::createProfileSection("dogs", &section_id);
+    Kokkos::Tools::startSection(section_id);
+    Kokkos::Tools::stopSection(section_id);
+    Kokkos::Tools::destroyProfileSection(section_id);
+  },
+  [=](CreateProfileSectionEvent create, StartProfileSectionEvent start, StopProfileSectionEvent stop, DestroyProfileSectionEvent destroy){
+    if(create.name != "dogs") {
+       return MatchDiagnostic{false, {"No match on section name"}};
+    }
+    if( (create.id != start.id) || (stop.id != start.id) || (stop.id != destroy.id) ){
+             return MatchDiagnostic{false, {"No match on section IDs"}};
+
+    }
+    return MatchDiagnostic { true };
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, metadata) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableMetadata());
+  auto success = validate_event_set([=](){
+   /** Attempts to decrease the value of dog_goodness will be rejected on review */
+   Kokkos::Tools::declareMetadata("dog_goodness","infinity");
+  },
+  [=](DeclareMetadataEvent meta){
+    if(meta.key != "dog_goodness") {
+       return MatchDiagnostic{false, {"No match on metadata key"}};
+
+    }
+    if(meta.value != "infinity") {
+       return MatchDiagnostic{false, {"No match on metadata value"}};
+    }
+    return MatchDiagnostic { true };
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, profile_events) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableProfileEvents());
+  auto success = validate_event_set([=](){
+   Kokkos::Tools::markEvent("dog_goodness>=infinity");
+  },
+  [=](ProfileEvent event){
+    if(event.name != "dog_goodness>=infinity") {
+      return MatchDiagnostic{false, {"No match on profiled event name"}};
+
+    }
+    return MatchDiagnostic{true};
+  }
+  );
+  ASSERT_TRUE(success);
+}
 }  // namespace Test
