@@ -14,6 +14,7 @@ jobs:
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
         openmp: ['ON']
+        sycl: ['OFF']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
@@ -31,6 +32,7 @@ jobs:
             cxx: 'icpx'
             cmake_build_type: 'Debug'
             openmp: 'ON'
+            sycl: 'ON'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -56,6 +58,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
+            -DKokkos_ENABLE_SYCL=${{ matrix.sycl }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
