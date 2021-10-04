@@ -123,7 +123,19 @@ int num_instances = 1;
 struct TestFunctor {
   KOKKOS_FUNCTION void operator()(
       const Kokkos::RangePolicy<>::index_type) const {}
+  
 };
+struct TestReduceFunctor {
+  using value_type = int;
+  KOKKOS_FUNCTION void operator()(
+     const Kokkos::RangePolicy<>::index_type, int&) const {}
+};
+struct TestScanFunctor {
+  using value_type = int;
+  KOKKOS_FUNCTION void operator()(
+     const Kokkos::RangePolicy<>::index_type, int&, bool) const {}
+};
+
 template <typename Lambda>
 void test_wrapper(const Lambda& lambda) {
   if (!std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Serial>::value) {
@@ -283,7 +295,7 @@ TEST(defaultdevicetype, test_streams) {
 }
 
 #endif
-TEST(defaultdevicetype, test_new_test_interface) {
+TEST(defaultdevicetype, exemplar_tests) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
 
@@ -338,6 +350,81 @@ TEST(defaultdevicetype, test_new_test_interface) {
       });
 
   listen_tool_events(Config::DisableAll());
+}
+
+TEST(defaultdevicetype, parallel_for) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  auto success = validate_event_set([=](){
+    TestFunctor tf;
+    Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0,1), tf);
+  },
+  [=](BeginParallelForEvent begin_event, EndParallelForEvent end_event){
+  if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on BeginParallelFor name"}};
+        }
+        if (end_event.kID != ((begin_event.kID))) {
+          return MatchDiagnostic{false, {"No match on kID's"}};
+        }
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, parallel_reduce) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  auto success = validate_event_set([=](){
+    TestReduceFunctor tf;
+    int result;
+    Kokkos::parallel_reduce("dogs", Kokkos::RangePolicy<>(0,1), tf, Kokkos::Sum<int>(result));
+  },
+  [=](BeginParallelReduceEvent begin_event, EndParallelReduceEvent end_event){
+  if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on BeginParallelReduce name"}};
+        }
+        if (end_event.kID != ((begin_event.kID))) {
+          return MatchDiagnostic{false, {"No match on kID's"}};
+        }
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, parallel_scan) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  auto success = validate_event_set([=](){
+    TestScanFunctor tf;
+    Kokkos::parallel_scan("dogs", Kokkos::RangePolicy<>(0,1), tf);
+  },
+  [=](BeginParallelScanEvent begin_event, EndParallelScanEvent end_event){
+  if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on BeginParallelScan name"}};
+        }
+        if (end_event.kID != ((begin_event.kID))) {
+          return MatchDiagnostic{false, {"No match on kID's"}};
+        }
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, regions) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableRegions());
+  auto success = validate_event_set([=](){
+    Kokkos::Tools::pushRegion("dogs");
+    Kokkos::Tools::popRegion();
+  },
+  [=](PushRegionEvent push_event, PopRegionEvent){
+  if (push_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on PushRegion name"}};
+        }
+        
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
 }
 
 }  // namespace Test

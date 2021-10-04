@@ -846,6 +846,7 @@ bool compare_event_vectors(event_vector events, Matchers... matchers) {
 struct ToolValidatorConfiguration {
   struct Profiling {
     bool kernels       = true;
+    bool regions       = true;
     bool fences        = true;
     bool allocs        = true;
     bool copies        = true;
@@ -899,6 +900,7 @@ namespace Config {
   using Disable##name = Toggle##name<false>
 
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Kernels, profiling.kernels, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Regions, profiling.regions, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Fences, profiling.fences, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Allocs, profiling.allocs, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Copies, profiling.copies, 2);
@@ -931,6 +933,7 @@ template <bool target_value>
 struct ToggleProfiling : public std::integral_constant<int, 1> {
   void operator()(ToolValidatorConfiguration& config) {
     ToggleKernels<target_value>{}(config);
+    ToggleRegions<target_value>{}(config);
     ToggleFences<target_value>{}(config);
     ToggleAllocs<target_value>{}(config);
     ToggleCopies<target_value>{}(config);
@@ -1015,6 +1018,15 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
           found_events.push_back(std::make_shared<EndParallelScanEvent>(k));
         });
   }  // if profiling.kernels
+  if(config.profiling.regions){
+    Kokkos::Tools::Experimental::set_push_region_callback([](const char* name){
+      found_events.push_back(std::make_shared<PushRegionEvent>(std::string(name)));
+    });
+        Kokkos::Tools::Experimental::set_pop_region_callback([](){
+      found_events.push_back(std::make_shared<PopRegionEvent>());
+    });
+
+  }
   if (config.profiling.fences) {
     Kokkos::Tools::Experimental::set_begin_fence_callback(
         [](const char* n, const uint32_t d, uint64_t* k) {
