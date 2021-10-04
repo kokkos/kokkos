@@ -427,4 +427,77 @@ TEST(defaultdevicetype, regions) {
   ASSERT_TRUE(success);
 }
 
+TEST(defaultdevicetype, fences) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  auto success = validate_event_set([=](){
+    Kokkos::DefaultExecutionSpace().fence("dogs");
+  },
+  [=](BeginFenceEvent begin_event, EndFenceEvent end_event){
+  if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on BeginFence name"}};
+        }
+        if (end_event.kID != ((begin_event.kID))) {
+          return MatchDiagnostic{false, {"No match on kID's"}};
+        }
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, raw_allocation) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
+  auto success = validate_event_set([=](){
+    void* foo =  Kokkos::kokkos_malloc<Kokkos::DefaultExecutionSpace::memory_space>("dogs", 1000);
+    Kokkos::kokkos_free(foo);
+  },
+  [=](AllocateDataEvent alloc, DeallocateDataEvent free){
+        if (alloc.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on alloc name"}};
+        }
+        if(alloc.size != 1000){
+          return MatchDiagnostic{false, {"No match on alloc size"}};
+        }
+        if(alloc.ptr != free.ptr) { 
+          return MatchDiagnostic{false, {"No match on pointers"}};
+        }
+        if (free.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on free name"}};
+        }
+        if(free.size != 1000){
+          return MatchDiagnostic{false, {"No match on free size"}};
+        }
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
+}
+
+TEST(defaultdevicetype, view) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
+  auto success = validate_event_set([=](){
+    Kokkos::View<float*> dogs("dogs",1000);
+  },
+  [=](AllocateDataEvent alloc, DeallocateDataEvent free){
+        if (alloc.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on alloc name"}};
+        }
+        if(alloc.size != 1000 * sizeof(float)){
+          return MatchDiagnostic{false, {"No match on alloc size"}};
+        }
+        if(alloc.ptr != free.ptr) { 
+          return MatchDiagnostic{false, {"No match on pointers"}};
+        }
+        if (free.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on free name"}};
+        }
+        if(free.size != 1000* sizeof(float)){
+          return MatchDiagnostic{false, {"No match on free size"}};
+        }
+        return MatchDiagnostic{true};
+  });
+  ASSERT_TRUE(success);
+}
+
 }  // namespace Test

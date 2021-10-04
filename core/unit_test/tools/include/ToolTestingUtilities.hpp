@@ -561,7 +561,7 @@ struct DataEvent : public EventBase {
   std::string repr() const override {
     std::stringstream s;
     s << Derived::event_name() << "{ In space " << handle.name
-      << ", name: " << name << ", ptr: " << ptr << ", size: " << size;
+      << ", name: " << name << ", ptr: " << ptr << ", size: " << size << "}";
     return s.str();
   }
   DataEvent(SpaceHandleType h, std::string n, EventBase::PtrHandle p,
@@ -604,17 +604,17 @@ struct ProfileSectionManipulationEvent : public EventBase {
   ProfileSectionManipulationEvent(uint32_t d_i) : device_id(d_i){};
 };
 
-struct BeginProfileSectionEvent
-    : public ProfileSectionManipulationEvent<BeginProfileSectionEvent> {
-  static std::string event_name() { return "BeginProfileSectionEvent"; }
-  BeginProfileSectionEvent(uint32_t d_i)
-      : ProfileSectionManipulationEvent<BeginProfileSectionEvent>(d_i){};
+struct StartProfileSectionEvent
+    : public ProfileSectionManipulationEvent<StartProfileSectionEvent> {
+  static std::string event_name() { return "StartProfileSectionEvent"; }
+  StartProfileSectionEvent(uint32_t d_i)
+      : ProfileSectionManipulationEvent<StartProfileSectionEvent>(d_i){};
 };
-struct EndProfileSectionEvent
-    : public ProfileSectionManipulationEvent<EndProfileSectionEvent> {
-  static std::string event_name() { return "EndProfileSectionEvent"; }
-  EndProfileSectionEvent(uint32_t d_i)
-      : ProfileSectionManipulationEvent<EndProfileSectionEvent>(d_i){};
+struct StopProfileSectionEvent
+    : public ProfileSectionManipulationEvent<StopProfileSectionEvent> {
+  static std::string event_name() { return "StopProfileSectionEvent"; }
+  StopProfileSectionEvent(uint32_t d_i)
+      : ProfileSectionManipulationEvent<StopProfileSectionEvent>(d_i){};
 };
 struct DestroyProfileSectionEvent
     : public ProfileSectionManipulationEvent<DestroyProfileSectionEvent> {
@@ -851,6 +851,9 @@ struct ToolValidatorConfiguration {
     bool allocs        = true;
     bool copies        = true;
     bool dual_view_ops = true;
+    bool sections = true;
+    bool profile_events = true;
+    bool metadata = true;
   };
   struct Tuning {
     bool contexts          = true;
@@ -905,6 +908,9 @@ KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Fences, profiling.fences, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Allocs, profiling.allocs, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Copies, profiling.copies, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(DualViewOps, profiling.dual_view_ops, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Sections, profiling.sections, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(ProfileEvents, profiling.profile_events, 2);
+KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Metadata, profiling.metadata, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(Contexts, tuning.contexts, 2);
 KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(TypeDeclarations, tuning.type_declarations,
                                      2);
@@ -938,6 +944,9 @@ struct ToggleProfiling : public std::integral_constant<int, 1> {
     ToggleAllocs<target_value>{}(config);
     ToggleCopies<target_value>{}(config);
     ToggleDualViewOps<target_value>{}(config);
+    ToggleSections<target_value>{}(config);
+    ToggleProfileEvents<target_value>{}(config);
+    ToggleMetadata<target_value>{}(config);
   }
 };
 
@@ -982,6 +991,12 @@ std::vector<EventBasePtr> found_events;
  * begin event
  */
 static uint64_t last_kid;
+/**
+ * Needs to stand outside of functions, this is the section ID of the last encountered
+ * section id
+ */
+static uint32_t last_sid;
+
 /** Subscribes to all of the requested callbacks */
 void set_tool_events_impl(ToolValidatorConfiguration& config) {
   Kokkos::Tools::Experimental::pause_tools();  // remove all events
@@ -1075,6 +1090,35 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
           found_events.push_back(std::make_shared<DualViewModifyEvent>(
               std::string(name), ptr, is_device));
         });
+  }
+  if(config.profiling.sections){
+    Kokkos::Tools::Experimental::set_create_profile_section_callback([](const char* name, uint32_t* id){
+      *id = (++last_sid);
+      found_events.push_back(std::make_shared<CreateProfileSectionEvent>(
+              std::string(name), *id));
+    });
+    Kokkos::Tools::Experimental::set_destroy_profile_section_callback([](uint32_t id){
+      found_events.push_back(std::make_shared<DestroyProfileSectionEvent>(
+              id));
+    });
+    Kokkos::Tools::Experimental::set_start_profile_section_callback([](uint32_t id){
+      found_events.push_back(std::make_shared<StartProfileSectionEvent>(
+              id));
+    });
+    Kokkos::Tools::Experimental::set_stop_profile_section_callback([](uint32_t id){
+      found_events.push_back(std::make_shared<StopProfileSectionEvent>(
+              id));
+    });
+  }
+  if(config.profiling.profile_events){
+    Kokkos::Tools::Experimental::set_profile_event_callback([](const char* name){
+      found_events.push_back(std::make_shared<ProfileEvent>(std::string(name)));
+    });
+  }
+  if(config.profiling.metadata){
+    Kokkos::Tools::Experimental::set_declare_metadata_callback([](const char* key, const char* value){
+      found_events.push_back(std::make_shared<DeclareMetadataEvent>(std::string(key),std::string(value)));
+    });
   }
   if (config.tuning.contexts) {
     Kokkos::Tools::Experimental::set_begin_context_callback(
