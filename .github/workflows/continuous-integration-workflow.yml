@@ -16,6 +16,7 @@ jobs:
         openmp: ['ON']
         sycl: ['OFF']
         cxxstandard: ['14']
+        deprecated_code: ['ON']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
@@ -35,6 +36,7 @@ jobs:
             openmp: 'ON'
             sycl: 'ON'
             cxxstandard: '17'
+            deprecated_code: 'OFF'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -57,14 +59,14 @@ jobs:
       - name: CMake
         run: |
           cmake -B builddir \
-            -DCMAKE_INSTALL_PiREFIX=/usr \
+            -DCMAKE_INSTALL_PREFIX=/usr \
             -DKokkos_CXX_STANDARD=${{ matrix.cxxstandard }} \
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=${{ matrix.deprecated_code }} \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_SYCL=${{ matrix.sycl }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
