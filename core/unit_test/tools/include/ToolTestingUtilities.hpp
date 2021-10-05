@@ -337,7 +337,7 @@ struct EventBase {
       std::numeric_limits<T>::max();
   using PtrHandle                  = const void* const;
   virtual ~EventBase()             = default;
-  virtual std::string repr() const = 0;
+  virtual std::string descriptor() const = 0;
 };
 
 /**
@@ -357,7 +357,7 @@ struct BeginOperation : public EventBase {
                  uint64_t k           = unspecified_sentinel<uint64_t>)
       : name(n), deviceID(devID), kID(k) {}
   virtual ~BeginOperation() = default;
-  virtual std::string repr() const {
+  virtual std::string descriptor() const {
     std::stringstream s;
     s << Derived::begin_op_name() << " { \"" << name << "\", ";
     if (deviceID == unspecified_sentinel<uint32_t>) {
@@ -389,7 +389,7 @@ struct EndOperation : public EventBase {
   EndOperation(uint64_t k = unspecified_sentinel<uint64_t>) : kID(k) {}
   virtual ~EndOperation() = default;
 
-  virtual std::string repr() const {
+  virtual std::string descriptor() const {
     std::stringstream s;
     s << Derived::end_op_name() << " { ";
     if (kID == unspecified_sentinel<uint64_t>) {
@@ -507,7 +507,7 @@ struct InitEvent : public EventBase {
   uint64_t version_number;
   uint32_t num_device_infos;
   Kokkos::Profiling::KokkosPDeviceInfo* device_infos;
-  virtual std::string repr() const override {
+  virtual std::string descriptor() const override {
     std::stringstream s;
     s << "InitEvent { load_sequence: " << load_sequence << ", version_number "
       << version_number << ", num_device_infos " << num_device_infos << "}";
@@ -521,14 +521,14 @@ struct InitEvent : public EventBase {
         device_infos(d_i) {}
 };
 struct FinalizeEvent : public EventBase {
-  virtual std::string repr() const override { return "FinalizeEvent{}"; }
+  virtual std::string descriptor() const override { return "FinalizeEvent{}"; }
 };
 
 struct ParseArgsEvent : public EventBase {
   int num_args;
   char** args;
 
-  std::string repr() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << "ParseArgsEvent { num_args : " << num_args << std::endl;
     for (int x = 0; x < num_args; ++x) {
@@ -541,20 +541,20 @@ struct ParseArgsEvent : public EventBase {
 };
 struct PrintHelpEvent : public EventBase {
   char* prog_name;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "PrintHelpEvent { Program Name: \"" + std::string(prog_name) + "\"}";
   }
   PrintHelpEvent(char* p_n) : prog_name(p_n) {}
 };
 struct PushRegionEvent : public EventBase {
   std::string name;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "PushRegionEvent { Region Name: \"" + name + "\" }";
   }
   PushRegionEvent(std::string n) : name(n) {}
 };
 struct PopRegionEvent : public EventBase {
-  std::string repr() const override { return "PopRegionEvent{}"; }
+  std::string descriptor() const override { return "PopRegionEvent{}"; }
 };
 
 template <class Derived>
@@ -565,7 +565,7 @@ struct DataEvent : public EventBase {
   EventBase::PtrHandle ptr;
   uint64_t size;
 
-  std::string repr() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << Derived::event_name() << "{ In space \"" << handle.name
       << "\", name: \"" << name << "\", ptr: " << ptr << ", size: " << size
@@ -593,7 +593,7 @@ struct DeallocateDataEvent : public DataEvent<DeallocateDataEvent> {
 struct CreateProfileSectionEvent : public EventBase {
   std::string name;
   uint32_t id;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "CreateProfileSectionEvent {\"" + name + "\", " +
            std::to_string(id) + "}";
   }
@@ -603,7 +603,7 @@ struct CreateProfileSectionEvent : public EventBase {
 template <class Derived>
 struct ProfileSectionManipulationEvent : public EventBase {
   uint32_t id;
-  std::string repr() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << Derived::event_name() << "{ " << id << "}";
     return s.str();
@@ -632,7 +632,7 @@ struct DestroyProfileSectionEvent
 
 struct ProfileEvent : public EventBase {
   std::string name;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "ProfileEvent {\"" + name + "\"}";
   }
   ProfileEvent(std::string n) : name(n) {}
@@ -647,7 +647,7 @@ struct BeginDeepCopyEvent : public EventBase {
   std::string dst_name;
   EventBase::PtrHandle dst_ptr;
   uint64_t size;
-  std::string repr() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << "BeginDeepCopyEvent { size: " << size << std::endl;
     s << "  dst: { \"" << dst_handle.name << "\", \"" << dst_name << "\", "
@@ -669,7 +669,7 @@ struct BeginDeepCopyEvent : public EventBase {
         size(s) {}
 };
 struct EndDeepCopyEvent : public EventBase {
-  std::string repr() const override { return "EndDeepCopyEvent{}"; }
+  std::string descriptor() const override { return "EndDeepCopyEvent{}"; }
 };
 
 template <class Derived>
@@ -679,7 +679,7 @@ struct DualViewEvent : public EventBase {
   bool is_device;
   DualViewEvent(std::string n, EventBase::PtrHandle p, bool i_d)
       : name(n), ptr(p), is_device(i_d) {}
-  std::string repr() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << Derived::event_name() << " { \"" << name << "\", " << std::hex << ptr
       << ", " << std::boolalpha << is_device << "}";
@@ -700,7 +700,7 @@ struct DualViewSyncEvent : public DualViewEvent<DualViewSyncEvent> {
 struct DeclareMetadataEvent : public EventBase {
   std::string key;
   std::string value;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "DeclareMetadataEvent {\"" + key + "\", \"" + value + "\"}";
   }
   DeclareMetadataEvent(std::string k, std::string v) : key(k), value(v) {}
@@ -713,7 +713,7 @@ struct ProvideToolProgrammingInterfaceEvent : public EventBase {
   Interface interface;
   ProvideToolProgrammingInterfaceEvent(uint32_t n_f, Interface i)
       : num_functions(n_f), interface(i) {}
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "ProvideToolProgrammingInterfaceEvent {" +
            std::to_string(num_functions) + "}";
   }
@@ -725,7 +725,7 @@ struct RequestToolSettingsEvent : public EventBase {
   Settings settings;
   RequestToolSettingsEvent(uint32_t n_s, Settings s)
       : num_settings(n_s), settings(s) {}
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "RequestToolSettingsEvent {" + std::to_string(num_settings) + "}";
   }
 };
@@ -735,7 +735,7 @@ struct TypeDeclarationEvent : public EventBase {
   std::string name;
   size_t variable_id;
   Kokkos::Tools::Experimental::VariableInfo info;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return Derived::event_name() + "{ \"" + name + "\"," +
            std::to_string(variable_id) + "}";
   }
@@ -764,7 +764,7 @@ struct RequestOutputValuesEvent : public EventBase {
   std::vector<Kokkos::Tools::Experimental::VariableValue> inputs;
   size_t num_outputs;
   std::vector<Kokkos::Tools::Experimental::VariableValue> outputs;
-  std::string repr() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << "RequestOutputValuesEvent { ";
     s << num_inputs << " inputs,";
@@ -780,7 +780,7 @@ struct RequestOutputValuesEvent : public EventBase {
 
 struct BeginContextEvent : public EventBase {
   size_t context;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "ContextBeginEvent{ " + std::to_string(context) + "}";
   }
   BeginContextEvent(size_t c) : context(c) {}
@@ -788,7 +788,7 @@ struct BeginContextEvent : public EventBase {
 struct EndContextEvent : public EventBase {
   size_t context;
   Kokkos::Tools::Experimental::VariableValue value;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "ContextEndEvent {" + std::to_string(context) + "}";
   }
   EndContextEvent(size_t c, Kokkos::Tools::Experimental::VariableValue v)
@@ -798,7 +798,7 @@ struct EndContextEvent : public EventBase {
 struct OptimizationGoalDeclarationEvent : public EventBase {
   size_t context;
   Kokkos::Tools::Experimental::OptimizationGoal goal;
-  std::string repr() const override {
+  std::string descriptor() const override {
     return "OptimizationGoalDeclarationEvent{" + std::to_string(context) + "}";
   }
   OptimizationGoalDeclarationEvent(
@@ -1277,7 +1277,7 @@ bool validate_event_set(const Lambda& lam, const Matchers... matchers) {
   if (!success) {
     // on failure, print out the events we found
     for (const auto& event : found_events) {
-      std::cout << event->repr() << std::endl;
+      std::cout << event->descriptor() << std::endl;
     }
   }
   return success;
@@ -1328,7 +1328,7 @@ bool validate_absence(const Lambda& lam, const Matchers... matchers) {
       }
       // on success, print out the events we found
       for (const auto& p_event : found_events) {
-        std::cout << p_event->repr() << std::endl;
+        std::cout << p_event->descriptor() << std::endl;
       }
       return false;
     }
