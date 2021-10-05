@@ -416,7 +416,7 @@ TEST(defaultdevicetype, parallel_scan) {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   ASSERT_TRUE(success);
 #else
-  (void)success
+  (void)success;
 #endif
 }
 
@@ -491,7 +491,7 @@ TEST(defaultdevicetype, raw_allocation) {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   ASSERT_TRUE(success);
 #else
-  (void)success
+  (void)success;
 #endif
 }
 
@@ -527,7 +527,7 @@ TEST(defaultdevicetype, view) {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   ASSERT_TRUE(success);
 #else
-  (void)success
+  (void)success;
 #endif
 }
 
