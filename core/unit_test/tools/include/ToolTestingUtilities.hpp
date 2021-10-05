@@ -332,9 +332,6 @@ auto check_match(event_vector events, Matchers... matchers) {
  * represent yourself as a string for debugging purposes
  */
 struct EventBase {
-  template <typename T>
-  constexpr static uint64_t unspecified_sentinel =
-      std::numeric_limits<T>::max();
   using PtrHandle                  = const void* const;
   virtual ~EventBase()             = default;
   virtual std::string descriptor() const = 0;
@@ -353,24 +350,16 @@ struct BeginOperation : public EventBase {
   const uint32_t deviceID;
   uint64_t kID;
   BeginOperation(const std::string& n,
-                 const uint32_t devID = unspecified_sentinel<uint32_t>,
-                 uint64_t k           = unspecified_sentinel<uint64_t>)
+                 const uint32_t devID,
+                 uint64_t k)
       : name(n), deviceID(devID), kID(k) {}
   virtual ~BeginOperation() = default;
   virtual std::string descriptor() const {
     std::stringstream s;
     s << Derived::begin_op_name() << " { \"" << name << "\", ";
-    if (deviceID == unspecified_sentinel<uint32_t>) {
-      s << "(any deviceID) ";
-    } else {
-      s << deviceID;
-    }
+    s << deviceID;
     s << ",";
-    if (kID == unspecified_sentinel<uint64_t>) {
-      s << "(any kernelID) ";
-    } else {
-      s << kID;
-    }
+    s << kID;
     s << "}";
     return s.str();
   }
@@ -386,17 +375,13 @@ template <class Derived>
 struct EndOperation : public EventBase {
   using ThisType = EndOperation;
   uint64_t kID;
-  EndOperation(uint64_t k = unspecified_sentinel<uint64_t>) : kID(k) {}
+  EndOperation(uint64_t k) : kID(k) {}
   virtual ~EndOperation() = default;
 
   virtual std::string descriptor() const {
     std::stringstream s;
     s << Derived::end_op_name() << " { ";
-    if (kID == unspecified_sentinel<uint64_t>) {
-      s << "(any kernelID) ";
-    } else {
-      s << kID;
-    }
+    s << kID;
     s << "}";
     return s.str();
   }
@@ -415,8 +400,8 @@ struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
   }
   BeginParallelForEvent(
       std::string n,
-      const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
-      uint64_t k           = EventBase::unspecified_sentinel<uint64_t>)
+      const uint32_t devID ,
+      uint64_t k)
       : BeginOperation<BeginParallelForEvent>(n, devID, k) {}
   virtual ~BeginParallelForEvent() = default;
 };
@@ -429,8 +414,8 @@ struct BeginParallelReduceEvent
 
   BeginParallelReduceEvent(
       std::string n,
-      const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
-      uint64_t k           = EventBase::unspecified_sentinel<uint64_t>)
+      const uint32_t devID ,
+      uint64_t k           )
       : BeginOperation<BeginParallelReduceEvent>(n, devID, k) {}
   virtual ~BeginParallelReduceEvent() = default;
 };
@@ -442,8 +427,8 @@ struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
 
   BeginParallelScanEvent(
       std::string n,
-      const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
-      uint64_t k           = EventBase::unspecified_sentinel<uint64_t>)
+      const uint32_t devID ,
+      uint64_t k           )
       : BeginOperation<BeginParallelScanEvent>(n, devID, k) {}
   virtual ~BeginParallelScanEvent() = default;
 };
@@ -455,8 +440,8 @@ struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
 
   BeginFenceEvent(
       std::string n,
-      const uint32_t devID = EventBase::unspecified_sentinel<uint32_t>,
-      uint64_t k           = EventBase::unspecified_sentinel<uint64_t>)
+      const uint32_t devID ,
+      uint64_t k           )
       : BeginOperation<BeginFenceEvent>(n, devID, k) {}
   virtual ~BeginFenceEvent() = default;
 };
@@ -467,7 +452,7 @@ struct EndParallelForEvent : public EndOperation<EndParallelForEvent> {
     return value;
   }
 
-  EndParallelForEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
+  EndParallelForEvent(uint64_t k )
       : EndOperation<EndParallelForEvent>(k) {}
   virtual ~EndParallelForEvent() = default;
 };
@@ -477,7 +462,7 @@ struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
     return value;
   }
 
-  EndParallelReduceEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
+  EndParallelReduceEvent(uint64_t k )
       : EndOperation<EndParallelReduceEvent>(k) {}
   virtual ~EndParallelReduceEvent() = default;
 };
@@ -487,7 +472,7 @@ struct EndParallelScanEvent : public EndOperation<EndParallelScanEvent> {
     return value;
   }
 
-  EndParallelScanEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
+  EndParallelScanEvent(uint64_t k)
       : EndOperation<EndParallelScanEvent>(k) {}
   virtual ~EndParallelScanEvent() = default;
 };
@@ -497,7 +482,7 @@ struct EndFenceEvent : public EndOperation<EndFenceEvent> {
     return value;
   }
 
-  EndFenceEvent(uint64_t k = EventBase::unspecified_sentinel<uint64_t>)
+  EndFenceEvent(uint64_t k )
       : EndOperation<EndFenceEvent>(k) {}
   virtual ~EndFenceEvent() = default;
 };
