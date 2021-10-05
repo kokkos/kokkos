@@ -415,6 +415,8 @@ TEST(defaultdevicetype, parallel_scan) {
 // Currently, this test is known to fail with OpenMPTarget
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   ASSERT_TRUE(success);
+#else
+  (void)success
 #endif
 }
 
@@ -488,6 +490,8 @@ TEST(defaultdevicetype, raw_allocation) {
 // Currently, this test is known to fail with OpenMPTarget
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   ASSERT_TRUE(success);
+#else
+  (void)success
 #endif
 }
 
@@ -522,6 +526,8 @@ TEST(defaultdevicetype, view) {
 // Currently, this test is known to fail with OpenMPTarget
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   ASSERT_TRUE(success);
+#else
+  (void)success
 #endif
 }
 
