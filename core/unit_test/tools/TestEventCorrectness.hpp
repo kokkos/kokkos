@@ -649,5 +649,17 @@ TEST(defaultdevicetype, tuning_sequence) {
   ASSERT_TRUE(success);
 }
 #endif
-
+TEST(defaultdevicetype, no_init_kernel) {
+  using namespace Kokkos::Test::Tools;
+  
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  auto success = validate_absence([=](){
+    Kokkos::View<float*> not_inited(Kokkos::ViewAllocateWithoutInitializing("no_inits_here_dog"),100);
+     Kokkos::View<float*> inited("inits_here_dog",100);
+  },[=](BeginParallelForEvent){return MatchDiagnostic{true, {"Found begin event"}};},
+  [=](EndParallelForEvent){
+    std::cout << "Hit an end event"<<std::endl;
+    return MatchDiagnostic{true,{"Found end event"}};});
+  ASSERT_TRUE(success);
+}
 }  // namespace Test

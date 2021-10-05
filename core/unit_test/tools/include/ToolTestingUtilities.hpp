@@ -1285,6 +1285,44 @@ auto get_event_set(const Lambda& lam) {
   return events;
 }
 
+MatchDiagnostic none_of(const EventBasePtr&) { return {false}; }
+template<class Matcher, class... Matchers>
+MatchDiagnostic none_of(const EventBasePtr& event, const Matcher& m, Matchers&&... args) { 
+  auto tail = none_of(event, args...);
+  auto match = function_traits<Matcher>::invoke_as(m, event);
+  match.success |= tail.success; 
+  return match; 
+}
+
+
+
+template <class Lambda, class... Matchers>
+bool validate_absence(const Lambda& lam, const Matchers... matchers) {
+  // First, erase events from previous invocations
+  found_events.clear();
+  // Invoke the lambda (this will populate found_events, via tooling)
+  lam();
+  // compare the found events against the expected ones
+  for(const auto& event: found_events) {
+  MatchDiagnostic match = none_of(event, matchers...);
+   
+  if (match.success) {
+    std::cout << "Test failure: encountered unwanted events" << std::endl;
+    for(const auto & message: match.messages){
+      std::cout << "  " << message << std::endl;
+    }
+    // on success, print out the events we found
+    for (const auto& p_event : found_events) {
+      std::cout << p_event->repr() << std::endl;
+    }
+  return false;
+  
+  }
+  }
+  return true;
+}
+
+
 }  // namespace Tools
 }  // namespace Test
 }  // namespace Kokkos
