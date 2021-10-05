@@ -51,8 +51,13 @@
 namespace Kokkos {
 namespace Impl {
 
-inline void sycl_abort(char const *msg) {
+inline void sycl_abort(char const* msg) {
+#ifdef NDEBUG
   KOKKOS_IMPL_DO_NOT_USE_PRINTF("Aborting with message %s.\n", msg);
+#else
+  const char* empty = " ";
+  __assert_fail(msg, empty, 0, empty);
+#endif
 }
 
 }  // namespace Impl
