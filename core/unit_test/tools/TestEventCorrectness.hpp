@@ -412,10 +412,10 @@ TEST(defaultdevicetype, parallel_scan) {
         }
         return MatchDiagnostic{true};
       });
- // Currently, this test is known to fail with OpenMPTarget
- #ifndef KOKKOS_ENABLE_OPENMPTARGET
- ASSERT_TRUE(success);
- #endif
+// Currently, this test is known to fail with OpenMPTarget
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
+  ASSERT_TRUE(success);
+#endif
 }
 
 TEST(defaultdevicetype, regions) {
@@ -521,7 +521,7 @@ TEST(defaultdevicetype, view) {
       });
 // Currently, this test is known to fail with OpenMPTarget
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
-ASSERT_TRUE(success);
+  ASSERT_TRUE(success);
 #endif
 }
 
@@ -651,13 +651,19 @@ TEST(defaultdevicetype, tuning_sequence) {
 #endif
 TEST(defaultdevicetype, no_init_kernel) {
   using namespace Kokkos::Test::Tools;
-  
+
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  auto success = validate_absence([=](){
-    Kokkos::View<float*> not_inited(Kokkos::ViewAllocateWithoutInitializing("no_inits_here_dog"),100);
-  },[=](BeginParallelForEvent){return MatchDiagnostic{true, {"Found begin event"}};},
-  [=](EndParallelForEvent){
-    return MatchDiagnostic{true,{"Found end event"}};});
+  auto success = validate_absence(
+      [=]() {
+        Kokkos::View<float*> not_inited(
+            Kokkos::ViewAllocateWithoutInitializing("no_inits_here_dog"), 100);
+      },
+      [=](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [=](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      });
   ASSERT_TRUE(success);
 }
 }  // namespace Test

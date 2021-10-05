@@ -532,7 +532,7 @@ struct ParseArgsEvent : public EventBase {
     std::stringstream s;
     s << "ParseArgsEvent { num_args : " << num_args << std::endl;
     for (int x = 0; x < num_args; ++x) {
-      s << "  \"" << args[x] << "\"" <<std::endl;
+      s << "  \"" << args[x] << "\"" << std::endl;
     }
     s << "}";
     return s.str();
@@ -568,7 +568,8 @@ struct DataEvent : public EventBase {
   std::string repr() const override {
     std::stringstream s;
     s << Derived::event_name() << "{ In space \"" << handle.name
-      << "\", name: \"" << name << "\", ptr: " << ptr << ", size: " << size << "}";
+      << "\", name: \"" << name << "\", ptr: " << ptr << ", size: " << size
+      << "}";
     return s.str();
   }
   DataEvent(SpaceHandleType h, std::string n, EventBase::PtrHandle p,
@@ -593,8 +594,8 @@ struct CreateProfileSectionEvent : public EventBase {
   std::string name;
   uint32_t id;
   std::string repr() const override {
-    return "CreateProfileSectionEvent {\"" + name + "\", " + std::to_string(id) +
-           "}";
+    return "CreateProfileSectionEvent {\"" + name + "\", " +
+           std::to_string(id) + "}";
   }
   CreateProfileSectionEvent(std::string n, uint32_t s_i) : name(n), id(s_i) {}
 };
@@ -631,7 +632,9 @@ struct DestroyProfileSectionEvent
 
 struct ProfileEvent : public EventBase {
   std::string name;
-  std::string repr() const override { return "ProfileEvent {\"" + name + "\"}"; }
+  std::string repr() const override {
+    return "ProfileEvent {\"" + name + "\"}";
+  }
   ProfileEvent(std::string n) : name(n) {}
 };
 
@@ -647,10 +650,10 @@ struct BeginDeepCopyEvent : public EventBase {
   std::string repr() const override {
     std::stringstream s;
     s << "BeginDeepCopyEvent { size: " << size << std::endl;
-    s << "  dst: { \"" << dst_handle.name << "\", \"" << dst_name << "\", " << dst_ptr
-      << "}\n";
-    s << "  src: { \"" << src_handle.name << "\", \"" << src_name << "\", " << src_ptr
-      << "}\n";
+    s << "  dst: { \"" << dst_handle.name << "\", \"" << dst_name << "\", "
+      << dst_ptr << "}\n";
+    s << "  src: { \"" << src_handle.name << "\", \"" << src_name << "\", "
+      << src_ptr << "}\n";
     s << "}";
     return s.str();
   }
@@ -1286,15 +1289,14 @@ auto get_event_set(const Lambda& lam) {
 }
 
 MatchDiagnostic none_of(const EventBasePtr&) { return {false}; }
-template<class Matcher, class... Matchers>
-MatchDiagnostic none_of(const EventBasePtr& event, const Matcher& m, Matchers&&... args) { 
-  auto tail = none_of(event, args...);
+template <class Matcher, class... Matchers>
+MatchDiagnostic none_of(const EventBasePtr& event, const Matcher& m,
+                        Matchers&&... args) {
+  auto tail  = none_of(event, args...);
   auto match = function_traits<Matcher>::invoke_as(m, event);
-  match.success |= tail.success; 
-  return match; 
+  match.success |= tail.success;
+  return match;
 }
-
-
 
 template <class Lambda, class... Matchers>
 bool validate_absence(const Lambda& lam, const Matchers... matchers) {
@@ -1303,25 +1305,23 @@ bool validate_absence(const Lambda& lam, const Matchers... matchers) {
   // Invoke the lambda (this will populate found_events, via tooling)
   lam();
   // compare the found events against the expected ones
-  for(const auto& event: found_events) {
-  MatchDiagnostic match = none_of(event, matchers...);
-   
-  if (match.success) {
-    std::cout << "Test failure: encountered unwanted events" << std::endl;
-    for(const auto & message: match.messages){
-      std::cout << "  " << message << std::endl;
+  for (const auto& event : found_events) {
+    MatchDiagnostic match = none_of(event, matchers...);
+
+    if (match.success) {
+      std::cout << "Test failure: encountered unwanted events" << std::endl;
+      for (const auto& message : match.messages) {
+        std::cout << "  " << message << std::endl;
+      }
+      // on success, print out the events we found
+      for (const auto& p_event : found_events) {
+        std::cout << p_event->repr() << std::endl;
+      }
+      return false;
     }
-    // on success, print out the events we found
-    for (const auto& p_event : found_events) {
-      std::cout << p_event->repr() << std::endl;
-    }
-  return false;
-  
-  }
   }
   return true;
 }
-
 
 }  // namespace Tools
 }  // namespace Test
