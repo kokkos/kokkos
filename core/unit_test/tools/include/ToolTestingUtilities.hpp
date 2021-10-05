@@ -359,7 +359,7 @@ struct BeginOperation : public EventBase {
   virtual ~BeginOperation() = default;
   virtual std::string repr() const {
     std::stringstream s;
-    s << Derived::begin_op_name() << " { " << name << ", ";
+    s << Derived::begin_op_name() << " { \"" << name << "\", ";
     if (deviceID == unspecified_sentinel<uint32_t>) {
       s << "(any deviceID) ";
     } else {
@@ -532,7 +532,7 @@ struct ParseArgsEvent : public EventBase {
     std::stringstream s;
     s << "ParseArgsEvent { num_args : " << num_args << std::endl;
     for (int x = 0; x < num_args; ++x) {
-      s << "  " << args[x] << std::endl;
+      s << "  \"" << args[x] << "\"" <<std::endl;
     }
     s << "}";
     return s.str();
@@ -542,14 +542,14 @@ struct ParseArgsEvent : public EventBase {
 struct PrintHelpEvent : public EventBase {
   char* prog_name;
   std::string repr() const override {
-    return "PrintHelpEvent { Program Name: " + std::string(prog_name) + "}";
+    return "PrintHelpEvent { Program Name: \"" + std::string(prog_name) + "\"}";
   }
   PrintHelpEvent(char* p_n) : prog_name(p_n) {}
 };
 struct PushRegionEvent : public EventBase {
   std::string name;
   std::string repr() const override {
-    return "PushRegionEvent { Region Name: " + name + " }";
+    return "PushRegionEvent { Region Name: \"" + name + "\" }";
   }
   PushRegionEvent(std::string n) : name(n) {}
 };
@@ -567,8 +567,8 @@ struct DataEvent : public EventBase {
 
   std::string repr() const override {
     std::stringstream s;
-    s << Derived::event_name() << "{ In space " << handle.name
-      << ", name: " << name << ", ptr: " << ptr << ", size: " << size << "}";
+    s << Derived::event_name() << "{ In space \"" << handle.name
+      << "\", name: \"" << name << "\", ptr: " << ptr << ", size: " << size << "}";
     return s.str();
   }
   DataEvent(SpaceHandleType h, std::string n, EventBase::PtrHandle p,
@@ -593,7 +593,7 @@ struct CreateProfileSectionEvent : public EventBase {
   std::string name;
   uint32_t id;
   std::string repr() const override {
-    return "CreateProfileSectionEvent {" + name + ", " + std::to_string(id) +
+    return "CreateProfileSectionEvent {\"" + name + "\", " + std::to_string(id) +
            "}";
   }
   CreateProfileSectionEvent(std::string n, uint32_t s_i) : name(n), id(s_i) {}
@@ -631,7 +631,7 @@ struct DestroyProfileSectionEvent
 
 struct ProfileEvent : public EventBase {
   std::string name;
-  std::string repr() const override { return "ProfileEvent {" + name + "}"; }
+  std::string repr() const override { return "ProfileEvent {\"" + name + "\"}"; }
   ProfileEvent(std::string n) : name(n) {}
 };
 
@@ -647,9 +647,9 @@ struct BeginDeepCopyEvent : public EventBase {
   std::string repr() const override {
     std::stringstream s;
     s << "BeginDeepCopyEvent { size: " << size << std::endl;
-    s << "  dst: { " << dst_handle.name << ", " << dst_name << ", " << dst_ptr
+    s << "  dst: { \"" << dst_handle.name << "\", \"" << dst_name << "\", " << dst_ptr
       << "}\n";
-    s << "  src: { " << src_handle.name << ", " << src_name << ", " << src_ptr
+    s << "  src: { \"" << src_handle.name << "\", \"" << src_name << "\", " << src_ptr
       << "}\n";
     s << "}";
     return s.str();
@@ -678,7 +678,7 @@ struct DualViewEvent : public EventBase {
       : name(n), ptr(p), is_device(i_d) {}
   std::string repr() const override {
     std::stringstream s;
-    s << Derived::event_name() << " { " << name << ", " << std::hex << ptr
+    s << Derived::event_name() << " { \"" << name << "\", " << std::hex << ptr
       << ", " << std::boolalpha << is_device << "}";
     return s.str();
   }
@@ -698,7 +698,7 @@ struct DeclareMetadataEvent : public EventBase {
   std::string key;
   std::string value;
   std::string repr() const override {
-    return "DeclareMetadataEvent {" + key + ", " + value + "}";
+    return "DeclareMetadataEvent {\"" + key + "\", \"" + value + "\"}";
   }
   DeclareMetadataEvent(std::string k, std::string v) : key(k), value(v) {}
 };
@@ -733,7 +733,7 @@ struct TypeDeclarationEvent : public EventBase {
   size_t variable_id;
   Kokkos::Tools::Experimental::VariableInfo info;
   std::string repr() const override {
-    return Derived::event_name() + "{ " + name + "," +
+    return Derived::event_name() + "{ \"" + name + "\"," +
            std::to_string(variable_id) + "}";
   }
   TypeDeclarationEvent(std::string n, size_t v_i,
