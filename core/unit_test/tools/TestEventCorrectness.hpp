@@ -655,7 +655,6 @@ TEST(defaultdevicetype, no_init_kernel) {
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   auto success = validate_absence([=](){
     Kokkos::View<float*> not_inited(Kokkos::ViewAllocateWithoutInitializing("no_inits_here_dog"),100);
-     Kokkos::View<float*> inited("inits_here_dog",100);
   },[=](BeginParallelForEvent){return MatchDiagnostic{true, {"Found begin event"}};},
   [=](EndParallelForEvent){
     return MatchDiagnostic{true,{"Found end event"}};});
