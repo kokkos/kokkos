@@ -900,6 +900,19 @@ namespace Config {
  *
  */
 
+
+/**
+ * @brief Macro to make defining a configuration struct easier.
+ * Given a name, what value to override in the ToolConfiguration.
+ * and the depth of that configuration option, produces an
+ * EnableName struct to enable that option, and a DisableName
+ * struct to disable that option
+ * 
+ * @param name : the name of the struct
+ * @param value: the value in ToolConfiguration to override
+ * @param depth: how deep in the configuration tree an option is
+ *               (0 is root, Profiling/Tuning/Infrastructure 1, 2 for sub-options)
+ */
 #define KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(name, value, depth)    \
   template <bool target_value>                                      \
   struct Toggle##name : public std::integral_constant<int, depth> { \
