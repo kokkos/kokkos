@@ -332,8 +332,8 @@ auto check_match(event_vector events, Matchers&&... matchers) {
  * represent yourself as a string for debugging purposes
  */
 struct EventBase {
-  using PtrHandle                  = const void* const;
-  virtual ~EventBase()             = default;
+  using PtrHandle                        = const void* const;
+  virtual ~EventBase()                   = default;
   virtual std::string descriptor() const = 0;
 };
 
@@ -349,9 +349,7 @@ struct BeginOperation : public EventBase {
   const std::string name;
   const uint32_t deviceID;
   uint64_t kID;
-  BeginOperation(const std::string& n,
-                 const uint32_t devID,
-                 uint64_t k)
+  BeginOperation(const std::string& n, const uint32_t devID, uint64_t k)
       : name(n), deviceID(devID), kID(k) {}
   virtual ~BeginOperation() = default;
   virtual std::string descriptor() const {
@@ -398,10 +396,7 @@ struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
     static std::string value = "BeginParallelFor";
     return value;
   }
-  BeginParallelForEvent(
-      std::string n,
-      const uint32_t devID ,
-      uint64_t k)
+  BeginParallelForEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelForEvent>(n, devID, k) {}
   virtual ~BeginParallelForEvent() = default;
 };
@@ -412,10 +407,7 @@ struct BeginParallelReduceEvent
     return value;
   }
 
-  BeginParallelReduceEvent(
-      std::string n,
-      const uint32_t devID ,
-      uint64_t k           )
+  BeginParallelReduceEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelReduceEvent>(n, devID, k) {}
   virtual ~BeginParallelReduceEvent() = default;
 };
@@ -425,10 +417,7 @@ struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
     return value;
   }
 
-  BeginParallelScanEvent(
-      std::string n,
-      const uint32_t devID ,
-      uint64_t k           )
+  BeginParallelScanEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelScanEvent>(n, devID, k) {}
   virtual ~BeginParallelScanEvent() = default;
 };
@@ -438,10 +427,7 @@ struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
     return value;
   }
 
-  BeginFenceEvent(
-      std::string n,
-      const uint32_t devID ,
-      uint64_t k           )
+  BeginFenceEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginFenceEvent>(n, devID, k) {}
   virtual ~BeginFenceEvent() = default;
 };
@@ -452,8 +438,7 @@ struct EndParallelForEvent : public EndOperation<EndParallelForEvent> {
     return value;
   }
 
-  EndParallelForEvent(uint64_t k )
-      : EndOperation<EndParallelForEvent>(k) {}
+  EndParallelForEvent(uint64_t k) : EndOperation<EndParallelForEvent>(k) {}
   virtual ~EndParallelForEvent() = default;
 };
 struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
@@ -462,7 +447,7 @@ struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
     return value;
   }
 
-  EndParallelReduceEvent(uint64_t k )
+  EndParallelReduceEvent(uint64_t k)
       : EndOperation<EndParallelReduceEvent>(k) {}
   virtual ~EndParallelReduceEvent() = default;
 };
@@ -472,8 +457,7 @@ struct EndParallelScanEvent : public EndOperation<EndParallelScanEvent> {
     return value;
   }
 
-  EndParallelScanEvent(uint64_t k)
-      : EndOperation<EndParallelScanEvent>(k) {}
+  EndParallelScanEvent(uint64_t k) : EndOperation<EndParallelScanEvent>(k) {}
   virtual ~EndParallelScanEvent() = default;
 };
 struct EndFenceEvent : public EndOperation<EndFenceEvent> {
@@ -482,8 +466,7 @@ struct EndFenceEvent : public EndOperation<EndFenceEvent> {
     return value;
   }
 
-  EndFenceEvent(uint64_t k )
-      : EndOperation<EndFenceEvent>(k) {}
+  EndFenceEvent(uint64_t k) : EndOperation<EndFenceEvent>(k) {}
   virtual ~EndFenceEvent() = default;
 };
 
@@ -885,18 +868,18 @@ namespace Config {
  *
  */
 
-
 /**
  * @brief Macro to make defining a configuration struct easier.
  * Given a name, what value to override in the ToolConfiguration.
  * and the depth of that configuration option, produces an
  * EnableName struct to enable that option, and a DisableName
  * struct to disable that option
- * 
+ *
  * @param name : the name of the struct
  * @param value: the value in ToolConfiguration to override
  * @param depth: how deep in the configuration tree an option is
- *               (0 is root, Profiling/Tuning/Infrastructure 1, 2 for sub-options)
+ *               (0 is root, Profiling/Tuning/Infrastructure 1, 2 for
+ * sub-options)
  */
 #define KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(name, value, depth)    \
   template <bool target_value>                                      \

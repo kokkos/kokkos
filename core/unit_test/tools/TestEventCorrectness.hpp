@@ -674,14 +674,14 @@ TEST(defaultdevicetype, no_init_kernel) {
 }
 
 TEST(default_device_type, get_events) {
-    using namespace Kokkos::Test::Tools;
-    auto event_vector = get_event_set([=](){
-      Kokkos::Tools::pushRegion("dogs");
-      Kokkos::Tools::popRegion();
-    });
-    for(const auto& ptr: event_vector){
-      auto ptr_as_begin = std::dynamic_pointer_cast<BeginParallelForEvent>(ptr);
-      ASSERT_TRUE(ptr_as_begin == nullptr);
-    }
+  using namespace Kokkos::Test::Tools;
+  auto event_vector = get_event_set([=]() {
+    Kokkos::Tools::pushRegion("dogs");
+    Kokkos::Tools::popRegion();
+  });
+  for (const auto& ptr : event_vector) {
+    auto ptr_as_begin = std::dynamic_pointer_cast<BeginParallelForEvent>(ptr);
+    ASSERT_TRUE(ptr_as_begin == nullptr);
+  }
 }
 }  // namespace Test
