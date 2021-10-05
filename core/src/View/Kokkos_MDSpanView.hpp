@@ -424,13 +424,16 @@ class BasicView
   // </editor-fold> end compatible View conversion }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  template <class RT, class RL, class RS, class RMP, class... Args>
-  KOKKOS_FUNCTION BasicView(const BasicView<RT, RL, RS, RMP>& rhs, Args... args)
+  template <class RT, class RL, class RS, class RMP, class Arg, class... Args>
+  KOKKOS_FUNCTION BasicView(const BasicView<RT, RL, RS, RMP>& rhs, Arg first_arg, Args... args)
   //: m_data(submdspan(rhs.get_mdspan(),args...)),m_track(rhs) {}
   {
     m_data = Kokkos::submdspan(
         typename BasicView<RT, RL, RS, RMP>::mdspan_type::layout_type(),
-        rhs.get_mdspan(), args...);
+        // TODO: why do I need to conver here for
+        // Kokkos::View<int***,Kokkos::LayoutRight>(a_org,5,7,Kokkos::ALL,Kokkos::ALL,Kokkos::ALL);
+        // This works without it: Kokkos::View<int***,Kokkos::LayoutRight>(a_org,5,7,stdex::full_extent,stdex::full_extent,stdex::full_extent);
+        rhs.get_mdspan(), Kokkos::Impl::convert_subview_args(first_arg), Kokkos::Impl::convert_subview_args(args)...);
     m_track.assign(rhs);
   }
 
@@ -588,18 +591,19 @@ class BasicView
   }
 
   // Properties and dimensions: just forward to prop/layout ctor
-  template <class... P, class... Integral,
+  template <class... P, class... IntegralTypes,
             //----------------------------------------
             /* requires
              *   (std::is_integral_v<Integral> && ...)
              */
             std::enable_if_t<_MDSPAN_FOLD_AND(std::is_integral<
-                                              Integral>::value /* && ... */),
+                                              IntegralTypes>::value /* && ... */) &&
+                              sizeof...(IntegralTypes) == mdspan_type::rank_dynamic(),
                              int> = 0
             //----------------------------------------
             >
   explicit inline BasicView(
-      const Impl::ViewConstructorDescription<P...>& arg_prop, Integral... dims)
+      const Impl::ViewConstructorDescription<P...>& arg_prop, IntegralTypes... dims)
       : BasicView(arg_prop,
                   mdspan_mapping_type(
                       typename traits::mdspan_extents_type(dims...))) {
@@ -625,7 +629,8 @@ class BasicView
       std::enable_if_t<
 // is_integral doesn't work for untyped enum ...
               //          _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
-             _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value),
+             _MDSPAN_FOLD_AND(std::is_convertible<IntegralTypes,ptrdiff_t>::value) &&
+             sizeof...(IntegralTypes) == mdspan_type::rank_dynamic(),
      int> = 0
       //----------------------------------------
       >
@@ -757,6 +762,10 @@ class BasicView
   }
 
   KOKKOS_FUNCTION constexpr pointer_type data() const { return m_data.data(); }
+  KOKKOS_FUNCTION void assign_data(const pointer_type& ptr) {
+    m_track.m_tracker.clear();
+    m_data = mdspan_type(ptr, m_data.mapping(), m_data.accessor());
+  }
   KOKKOS_FUNCTION constexpr mdspan_type get_mdspan() const { return m_data; }
   KOKKOS_FUNCTION constexpr track_type impl_get_tracker() const {
     return m_track;
@@ -960,55 +969,55 @@ namespace Impl {
 
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 0> {
-  static constexpr Extents create(ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents();
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 1> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 2> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 3> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1, n2);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 4> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1, n2, n3);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 5> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1, n2, n3, n4);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 6> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t n5, ptrdiff_t, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1, n2, n3, n4, n5);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 7> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t n5, ptrdiff_t n6, ptrdiff_t) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1, n2, n3, n4, n5, n6);
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 8> {
-  static constexpr Extents create(ptrdiff_t n0, ptrdiff_t n1, ptrdiff_t n2, ptrdiff_t n3, ptrdiff_t n4, ptrdiff_t n5, ptrdiff_t n6, ptrdiff_t n7) {
+  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
     return Extents(n0, n1, n2, n3, n4, n5, n6, n7);
   }
 };
@@ -1034,15 +1043,53 @@ class View : public Impl::NormalizeViewProperties<
 
   template < class ... Args, std::enable_if_t<
           _MDSPAN_FOLD_AND(std::is_convertible<Args,ptrdiff_t>::value)
-       && ((sizeof...(Args))> basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
+       && ((sizeof...(Args))!= basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
   View(const std::string& label, Args... args): basic_view_type(label, 
                typename basic_view_type::mdspan_type::mapping_type(
                      Kokkos::Impl::make_extents_from_too_many_args<typename basic_view_type::mdspan_type::extents_type>::create(args...))) {}
 
   template < class ... Args, std::enable_if_t<
           _MDSPAN_FOLD_AND(std::is_convertible<Args,ptrdiff_t>::value)
-       && !((sizeof...(Args))> basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
+       && !((sizeof...(Args))!= basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
   View(const std::string& label, Args... args): basic_view_type(label, args...) {}
+
+  template <class... P, class... IntegralTypes,
+            //----------------------------------------
+            /* requires
+             *   (std::is_integral_v<Integral> && ...)
+             */
+            std::enable_if_t<_MDSPAN_FOLD_AND(std::is_integral<
+                                              IntegralTypes>::value /* && ... */) &&
+                              sizeof...(IntegralTypes) != basic_view_type::mdspan_type::rank_dynamic(),
+                             int> = 0
+            //----------------------------------------
+            >
+  explicit inline View(
+      const Impl::ViewConstructorDescription<P...>& arg_prop, IntegralTypes... dims)
+      : basic_view_type(arg_prop,
+               typename basic_view_type::mdspan_type::mapping_type(
+                     Kokkos::Impl::make_extents_from_too_many_args<typename basic_view_type::mdspan_type::extents_type>::create(dims...))) {
+    /* delegating constructor; body must be empty */
+  }
+
+  template <class... P, class... IntegralTypes,
+            //----------------------------------------
+            /* requires
+             *   (std::is_integral_v<Integral> && ...)
+             */
+            std::enable_if_t<_MDSPAN_FOLD_AND(std::is_integral<
+                                              IntegralTypes>::value /* && ... */) &&
+                              sizeof...(IntegralTypes) == basic_view_type::mdspan_type::rank_dynamic(),
+                             int> = 0
+            //----------------------------------------
+            >
+  explicit inline View(
+      const Impl::ViewConstructorDescription<P...>& arg_prop, IntegralTypes... dims)
+      : basic_view_type(arg_prop,
+                  typename basic_view_type::mdspan_mapping_type(
+                      typename basic_view_type::traits::mdspan_extents_type(dims...))) {
+    /* delegating constructor; body must be empty */
+  }
 
    //   : basic_view_type(other_view.get_mdspan(),
     //                    other_view.impl_get_tracker()){};
@@ -1056,6 +1103,7 @@ class View : public Impl::NormalizeViewProperties<
     basic_view_type::m_data  = other_view.get_mdspan();
     basic_view_type::m_track.assign(other_view);
    // = other_view.impl_get_tracker();
+    return *this;
   };
 
  private:

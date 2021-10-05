@@ -457,7 +457,7 @@ auto submdspan(const Kokkos::LayoutStride&,
                  T, Extents, Kokkos::LayoutStride, Accessor>& A,
              const Args&... args) {
   return std::experimental::submdspan(std::experimental::mdspan<
-                                   T, Extents, std::experimental::layout_stride, Accessor>(A.data(),A.mapping(),A.accessor()),args...);
+                                   T, Extents, std::experimental::layout_stride, Accessor>(A.data(),A.mapping(),A.accessor()),Kokkos::Impl::convert_subview_args(args)...);
 }
 
 template <class T, class Extents, class Accessor, class... Args>

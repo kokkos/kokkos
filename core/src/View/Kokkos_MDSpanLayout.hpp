@@ -1121,7 +1121,7 @@ struct MDSpanMappingForLayoutRight {
     stride_  = extents_.rank() > 0 ? extents_.extent(Extents::rank() - 1) : 1;
   }
 
-  template <class... IndexTypes>
+  template <class... IndexTypes, std::enable_if_t<_MDSPAN_FOLD_AND(std::is_integral<IndexTypes>::value),void>* = nullptr>
   constexpr MDSpanMappingForLayoutRight(const IndexTypes... idxs)
       : MDSpanMappingForLayoutRight(Extents(idxs...)) {}
 
@@ -1184,6 +1184,29 @@ struct MDSpanMappingForLayoutRight {
     return !(*this == rhs);
   }
 
+  // Layout Conversions, to convert to std layout mappings we need operators, need constructors to convert from std layout mappings
+  template<class OtherExtents>
+  constexpr MDSpanMappingForLayoutRight(
+      const std::experimental::layout_stride::template mapping<OtherExtents>& other_map)
+      : extents_(other_map.extents()), stride_(Extents::rank()>0?other_map.stride(Extents::rank()-1):1) {
+/*    std::size_t s = 1;
+    bool incompatible_stride = Extents::rank()>0 ?
+            (other_map.stride(Extents::rank()-1)!=1) :
+            false;
+    for (int k = Extents::rank() - 2; k >=0; k--) {
+      s *= extents_.extent(k+1);
+      incompatible_stride != other_map.stride(k)!=s;
+    }
+    if(incompatible_stride) Kokkos::abort("Error: Assignment of layout_stride to LayoutRight with incompatible strides");*/
+  }
+
+  template<class OtherExtents>
+  MDSpanMappingForLayoutRight& operator= (const std::experimental::layout_stride::template mapping<OtherExtents>& other_map) {
+    extents_ = other_map.extents();
+    stride_ = Extents::Rank()>1?other_map.stride(Extents::Rank()-2):1;
+    return *this;
+  }
+
   template<class OtherExtents>
   operator std::experimental::layout_stride::template mapping<OtherExtents> () const {
     std::array<typename OtherExtents::size_type, Extents::rank()> strides;
@@ -1193,7 +1216,7 @@ struct MDSpanMappingForLayoutRight {
 
   template<class OtherExtents>
   operator MDSpanMappingForLayoutLeft<OtherExtents> () const {
-    static_assert(extents().rank() < 2, "Kokkos: LayoutRight to LayoutLeft conversion is only valid for rank()<2");
+    static_assert(Extents::rank() < 2, "Kokkos: LayoutRight to LayoutLeft conversion is only valid for rank()<2");
     return MDSpanMappingForLayoutLeft<OtherExtents>(extents());
   }
 
@@ -1229,7 +1252,7 @@ struct MDSpanMappingForLayoutLeft {
     stride_  = Extents::rank() > 0 ? extents_.extent(0) : 1;
   }
 
-  template <class... IndexTypes>
+  template <class... IndexTypes, std::enable_if_t<_MDSPAN_FOLD_AND(std::is_integral<IndexTypes>::value),void>* = nullptr>
   constexpr MDSpanMappingForLayoutLeft(const IndexTypes... idxs)
       : MDSpanMappingForLayoutLeft(
             Extents(idxs...)) { /*Extents ex(idxs...); for(int r=0; r<ex.rank();
@@ -1335,6 +1358,28 @@ struct MDSpanMappingForLayoutLeft {
   constexpr bool operator!=(
       const MDSpanMappingForLayoutLeft<OtherExtents>& rhs) const noexcept {
     return !(*this == rhs);
+  }
+
+  template<class OtherExtents>
+  constexpr MDSpanMappingForLayoutLeft(
+      const std::experimental::layout_stride::template mapping<OtherExtents>& other_map)
+      : extents_(other_map.extents()), stride_(Extents::rank()>0?other_map.stride(0):1) {
+/*    std::size_t s = 1;
+    bool incompatible_stride = Extents::rank()>0 ?
+            (other_map.stride(Extents::rank()-1)!=1) :
+            false;
+    for (int k = Extents::rank() - 2; k >=0; k--) {
+      s *= extents_.extent(k+1);
+      incompatible_stride != other_map.stride(k)!=s;
+    }
+    if(incompatible_stride) Kokkos::abort("Error: Assignment of layout_stride to LayoutRight with incompatible strides");*/
+  }
+
+  template<class OtherExtents>
+  MDSpanMappingForLayoutLeft& operator= (const std::experimental::layout_stride::template mapping<OtherExtents>& other_map) {
+    extents_ = other_map.extents();
+    stride_ = Extents::Rank()>1?other_map.stride(Extents::Rank()-2):1;
+    return *this;
   }
 
   template<class OtherExtents>
