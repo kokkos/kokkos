@@ -67,7 +67,7 @@ struct ExtractExtents<T*, Exts...>
 
 template <class T, std::size_t N, std::size_t... Exts>
 struct ExtractExtents<T[N], Exts...>
-    : ExtractExtents<T, size_t{N}, Exts...> {};
+    : ExtractExtents<T, Exts..., size_t{N}> {};
 
 // </editor-fold> end ExtractExtents }}}1
 //==============================================================================
@@ -79,14 +79,15 @@ template <class T, class Extents>
 struct DataTypeFromExtents;
 
 template <class T, std::size_t Ext, std::size_t... Exts>
-struct DataTypeFromExtents<T, std::experimental::extents<Ext, Exts...>>
-    : DataTypeFromExtents<T[std::size_t{Ext}],
-                          std::experimental::extents<Exts...>> {};
+struct DataTypeFromExtents<T, std::experimental::extents<Ext, Exts...>> {
+  using type = typename DataTypeFromExtents<T,std::experimental::extents<Exts...>>::type[Ext];
+};
 
 template <class T, std::size_t... Exts>
 struct DataTypeFromExtents<
-    T, std::experimental::extents<std::experimental::dynamic_extent, Exts...>>
-    : DataTypeFromExtents<T*, std::experimental::extents<Exts...>> {};
+    T, std::experimental::extents<std::experimental::dynamic_extent, Exts...>> {
+    using type = typename DataTypeFromExtents<T, std::experimental::extents<Exts...>>::type*;
+};
 
 template <class T>
 struct DataTypeFromExtents<T, std::experimental::extents<>> {
