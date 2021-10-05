@@ -301,7 +301,7 @@ MatchDiagnostic check_match(event_vector::size_type index,
   constexpr static event_vector::size_type num_args = Traits::num_arguments;
   // make sure that we don't have insufficient events in our event vector
   if (index + num_args > events.size()) {
-    return {false, {"Too many events encounted"}};
+    return {false, {"Not enough events encountered to fill the matchers"}};
   }
   // Call the lambda, if it's callable with our args. Store the resulting
   // MatchDiagnostic
