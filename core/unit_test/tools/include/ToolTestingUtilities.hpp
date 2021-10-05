@@ -140,7 +140,7 @@ struct function_traits;
 
 /**
  * @brief Specialization of function traits, representing a free function.
- * See the base template for info on what this struct is doing
+ * See the base template for info on what this struct is doing.
  *
  * @tparam R return type of the function
  * @tparam A arg pack
@@ -269,7 +269,7 @@ struct invoke_helper {
  * @return MatchDiagnostic success if we scanned all events, failure otherwise
  */
 MatchDiagnostic check_match(event_vector::size_type index,
-                            event_vector events) {
+                            const event_vector& events) {
   return (index == events.size())
              ? MatchDiagnostic{true}
              : MatchDiagnostic{false, {"Wrong number of events encountered"}};
@@ -322,7 +322,7 @@ MatchDiagnostic check_match(event_vector::size_type index,
  *
  */
 template <class... Matchers>
-auto check_match(event_vector events, Matchers... matchers) {
+auto check_match(event_vector events, Matchers&&... matchers) {
   return check_match(0, events, matchers...);
 }
 
@@ -801,7 +801,7 @@ struct OptimizationGoalDeclarationEvent : public EventBase {
  * @return true on successful match, false otherwise
  */
 template <class... Matchers>
-bool compare_event_vectors(event_vector events, Matchers... matchers) {
+bool compare_event_vectors(event_vector events, Matchers&&... matchers) {
   // leans on check_match to do the bulk of the work
   auto diagnostic = check_match(events, matchers...);
   // On failure, print out the error messages
