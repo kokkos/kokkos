@@ -2110,6 +2110,24 @@ create_mirror_view_and_copy(
 namespace Kokkos {
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
+template <class... I, class T, class... P>
+inline void impl_resize(DynRankView<T, P...>& v, const size_t n0,
+                        const size_t n1, const size_t n2, const size_t n3,
+                        const size_t n4, const size_t n5, const size_t n6,
+                        const size_t n7, const I&... arg_prop) {
+  using drview_type = DynRankView<T, P...>;
+
+  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
+                "Can only resize managed views");
+
+  drview_type v_resized(view_alloc(v.label(), arg_prop...), n0, n1, n2, n3, n4,
+                        n5, n6, n7);
+
+  Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
+
+  v = v_resized;
+}
+
 template <class T, class... P>
 inline void resize(DynRankView<T, P...>& v,
                    const size_t n0 = KOKKOS_INVALID_INDEX,
@@ -2120,20 +2138,42 @@ inline void resize(DynRankView<T, P...>& v,
                    const size_t n5 = KOKKOS_INVALID_INDEX,
                    const size_t n6 = KOKKOS_INVALID_INDEX,
                    const size_t n7 = KOKKOS_INVALID_INDEX) {
-  using drview_type = DynRankView<T, P...>;
+  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7);
+}
 
-  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
-                "Can only resize managed views");
-
-  drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
-
-  Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
-
-  v = v_resized;
+template <class I, class T, class... P>
+inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> resize(
+    const I& arg_prop, DynRankView<T, P...>& v,
+    const size_t n0 = KOKKOS_INVALID_INDEX,
+    const size_t n1 = KOKKOS_INVALID_INDEX,
+    const size_t n2 = KOKKOS_INVALID_INDEX,
+    const size_t n3 = KOKKOS_INVALID_INDEX,
+    const size_t n4 = KOKKOS_INVALID_INDEX,
+    const size_t n5 = KOKKOS_INVALID_INDEX,
+    const size_t n6 = KOKKOS_INVALID_INDEX,
+    const size_t n7 = KOKKOS_INVALID_INDEX) {
+  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
 }
 
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
+template <class... I, class T, class... P>
+inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
+                         const size_t n1, const size_t n2, const size_t n3,
+                         const size_t n4, const size_t n5, const size_t n6,
+                         const size_t n7, const I&... arg_prop) {
+  using drview_type = DynRankView<T, P...>;
+
+  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
+                "Can only realloc managed views");
+
+  const std::string label = v.label();
+
+  v = drview_type();  // Deallocate first, if the only view to allocation
+  v = drview_type(view_alloc(label, arg_prop...), n0, n1, n2, n3, n4, n5, n6,
+                  n7);
+}
+
 template <class T, class... P>
 inline void realloc(DynRankView<T, P...>& v,
                     const size_t n0 = KOKKOS_INVALID_INDEX,
@@ -2144,15 +2184,21 @@ inline void realloc(DynRankView<T, P...>& v,
                     const size_t n5 = KOKKOS_INVALID_INDEX,
                     const size_t n6 = KOKKOS_INVALID_INDEX,
                     const size_t n7 = KOKKOS_INVALID_INDEX) {
-  using drview_type = DynRankView<T, P...>;
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7);
+}
 
-  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
-                "Can only realloc managed views");
-
-  const std::string label = v.label();
-
-  v = drview_type();  // Deallocate first, if the only view to allocation
-  v = drview_type(label, n0, n1, n2, n3, n4, n5, n6, n7);
+template <class I, class T, class... P>
+inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
+    const I& arg_prop, DynRankView<T, P...>& v,
+    const size_t n0 = KOKKOS_INVALID_INDEX,
+    const size_t n1 = KOKKOS_INVALID_INDEX,
+    const size_t n2 = KOKKOS_INVALID_INDEX,
+    const size_t n3 = KOKKOS_INVALID_INDEX,
+    const size_t n4 = KOKKOS_INVALID_INDEX,
+    const size_t n5 = KOKKOS_INVALID_INDEX,
+    const size_t n6 = KOKKOS_INVALID_INDEX,
+    const size_t n7 = KOKKOS_INVALID_INDEX) {
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
 }
 
 }  // namespace Kokkos
