@@ -454,6 +454,14 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if (Kokkos_ENABLE_OPENMP)
+  # FIXME_OPENMP doesn't work because kernels can only be launch from the master
+  # thread
+  list(REMOVE_ITEM OpenMP_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_MultiThreadsRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_MultiThreadsMDRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_MultiThreadsTeam.cpp
+  )
+
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
   )
