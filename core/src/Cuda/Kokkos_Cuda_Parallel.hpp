@@ -854,6 +854,33 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 namespace Kokkos {
 namespace Impl {
 
+template <typename T>
+struct alignas(T) volatile_wrapper {
+  T t;
+
+  __device__ __host__ inline volatile_wrapper(const T& rhs) { set(rhs.get()); }
+
+  __device__ __host__ inline T get() const {
+    T ret;
+    auto vpt   = reinterpret_cast<const volatile char*>(&t);
+    auto p_ret = reinterpret_cast<char*>(&ret);
+    for (size_t i = 0; i < sizeof(T); ++i) {
+      p_ret[i] = vpt[i];
+    }
+    return ret;
+  }
+
+  operator T() const { return get(); }
+
+  __device__ __host__ inline void set(const T& s) {
+    auto vps = reinterpret_cast<const volatile char*>(&s);
+    auto pt  = reinterpret_cast<char*>(&t);
+    for (size_t i = 0; i < sizeof(T); ++i) {
+      pt[i] = vps[i];
+    }
+  }
+};
+
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Cuda> {
@@ -880,10 +907,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
 
  public:
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using value_type     = typename ValueTraits::value_type;
-  using reference_type = typename ValueTraits::reference_type;
-  using functor_type   = FunctorType;
+  using value_type     = volatile_wrapper<typename ValueTraits::value_type>;
+  using pointer_type   = value_type*;
+  using reference_type = std::conditional_t<
+      static_cast<bool>(
+          std::is_reference<typename ValueTraits::reference_type>::value),
+      value_type&, value_type*>;
+
+  using functor_type = FunctorType;
   // Conditionally set word_size_type to int16_t or int8_t if value_type is
   // smaller than int32_t (Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
@@ -937,14 +968,18 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   __device__ inline
       typename std::enable_if<std::is_same<TagType, void>::value>::type
       exec_range(const Member& i, reference_type update) const {
-    m_functor(i, update);
+    auto t = update.get();
+    m_functor(i, t);
+    update.set(t);
   }
 
   template <class TagType>
   __device__ inline
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
       exec_range(const Member& i, reference_type update) const {
-    m_functor(TagType(), i, update);
+    auto t = update.get();
+    m_functor(TagType(), i, t);
+    update.set(t);
   }
 
   __device__ inline void operator()() const {
@@ -962,15 +997,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                    sizeof(word_size_type));
 
     {
-      reference_type value =
+      reference_type value = reinterpret_cast<reference_type>(
           ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                           kokkos_impl_cuda_shared_memory<word_size_type>() +
-                              threadIdx.y * word_count.value);
+                              threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
       // work to perform. Accumulate the values for this block. The accumulation
-      // ordering does not match the final pass, but is arithmatically
+      // ordering does not match the final pass, but is arithmetically
       // equivalent.
 
       const WorkRange range(m_policy, blockIdx.x, gridDim.x);
@@ -1212,7 +1247,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
-        m_result_ptr(arg_result.data()),
+        m_result_ptr(reinterpret_cast<pointer_type>(arg_result.data())),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
@@ -1228,7 +1263,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
+        m_result_ptr(reinterpret_cast<pointer_type>(reducer.view().data())),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ReducerType::result_view_type::
