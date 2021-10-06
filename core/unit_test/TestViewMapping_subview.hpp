@@ -92,7 +92,7 @@ struct TestViewMappingSubview {
   using DRT  = Kokkos::View<int** * [13][14], Kokkos::LayoutRight, ExecSpace>;
   using DRS1 = Kokkos::Subview<DRT, int, int, int, int, range>;
 
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 1000
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 1000 && defined(KOKKOS_USE_LEGACY_VIEW)
   static_assert(
       DRS1::rank == 1 &&
           std::is_same<typename DRS1::array_layout, Kokkos::LayoutRight>::value,

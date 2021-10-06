@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
+#ifdef KOKKOS_USE_LEGACY_VIEW
 #include <impl/Kokkos_ViewLayoutTiled.hpp>
 
 #include <type_traits>
@@ -1775,3 +1776,4 @@ TEST(TEST_CATEGORY, view_layouttiled_subtile) {
       4, 12, 16, 12);
 }
 }  // namespace Test
+#endif // KOKKOS_USE_LEGACY_VIEW

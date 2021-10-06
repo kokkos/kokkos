@@ -548,10 +548,13 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION layout_stride_general_impl<
     return this->first_stride_storage_t::_is_always_contiguous();
   }
   KOKKOS_FUNCTION constexpr auto required_span_size() const noexcept {
-    return _MDSPAN_FOLD_PLUS_RIGHT(
+    if(Extents::rank()==0) return 1;
+    else {
+      return _MDSPAN_FOLD_PLUS_RIGHT(
         (this->stride_storage_base_for_idx<Idxs>::_get_element_stride() *
          this->extents().template __extent<Idxs>()),
         /* + ... + */ 0);
+    }
   }
 
   //----------------------------------------------------------------------------
@@ -1141,10 +1144,13 @@ struct MDSpanMappingForLayoutRight {
   constexpr Extents extents() const noexcept { return extents_; }
 
   constexpr index_type required_span_size() const noexcept {
-    index_type size = stride_;
-    for (int r = 0; r < int(Extents::rank()) - 1; r++)
-      size *= extents_.extent(r);
-    return size;
+    if(Extents::rank()==0) return 1;
+    else {
+      index_type size = stride_;
+      for (int r = 0; r < int(Extents::rank()) - 1; r++)
+        size *= extents_.extent(r);
+      return size;
+    }
   };
 
   template <class... Indices>
@@ -1275,9 +1281,12 @@ struct MDSpanMappingForLayoutLeft {
   constexpr Extents extents() const noexcept { return extents_; }
 
   constexpr index_type required_span_size() const noexcept {
-    index_type size = stride_;
-    for (int r = 1; r < int(Extents::rank()); ++r) size *= extents_.extent(r);
-    return size;
+    if(Extents::rank()==0) return 1;
+    else {
+      index_type size = stride_;
+      for (int r = 1; r < int(Extents::rank()); ++r) size *= extents_.extent(r);
+      return size;
+    }
   };
 
   // i0+stride*(i1 + E(1)*(i2 + E(2)*i3))

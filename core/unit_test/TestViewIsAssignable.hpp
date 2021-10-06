@@ -4,6 +4,7 @@ namespace Test {
 namespace Impl {
 template <class ViewTypeDst, class ViewTypeSrc>
 struct TestAssignability {
+  #ifdef KOKKOS_USE_LEGACY_VIEW
   using mapping_type =
       Kokkos::Impl::ViewMapping<typename ViewTypeDst::traits,
                                 typename ViewTypeSrc::traits,
@@ -23,7 +24,23 @@ struct TestAssignability {
     Kokkos::Impl::throw_runtime_exception(
         "TestAssignability::try_assign: Unexpected call path");
   }
+#else
+  template<class TypeDst>
+  static void try_assign(
+      TypeDst& dst, ViewTypeSrc& src,
+      typename std::enable_if<Kokkos::is_always_assignable<TypeDst,ViewTypeSrc>::value>::type* = nullptr) {
+    dst = src;
+  }
 
+  template<class TypeDst>
+  static void try_assign(
+      TypeDst&, ViewTypeSrc&,
+      typename std::enable_if<!Kokkos::is_always_assignable<TypeDst,ViewTypeSrc>::value>::type* = nullptr) {
+    Kokkos::Impl::throw_runtime_exception(
+        "TestAssignability::try_assign: Unexpected call path");
+  }
+
+#endif
   template <class... Dimensions>
   static void test(bool always, bool sometimes, Dimensions... dims) {
     ViewTypeDst dst;
@@ -43,7 +60,11 @@ struct TestAssignability {
           sometimes ? 1 : 0, typeid(ViewTypeSrc).name(),
           typeid(ViewTypeDst).name());
     if (sometimes) {
+#ifdef KOKKOS_USE_LEGACY_VIEW
       ASSERT_NO_THROW(try_assign<mapping_type>(dst, src));
+#else
+      ASSERT_NO_THROW(try_assign(dst, src));
+#endif
     }
     ASSERT_EQ(always, is_always_assignable);
     ASSERT_EQ(sometimes, is_assignable);

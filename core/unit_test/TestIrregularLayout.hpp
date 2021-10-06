@@ -105,8 +105,53 @@ struct LayoutSelective {
     KOKKOS_ASSERT(ndx < list_size);
     return offset_list[ndx];
   }
-};
 
+#ifndef KOKKOS_USE_LEGACY_VIEW
+  template<class Extents>
+  struct mapping {
+      size_t offset_list[OFFSET_LIST_MAX_SIZE];
+      size_t list_size;
+      Extents extents_;
+      constexpr mapping() = default;
+      constexpr mapping(const mapping&) noexcept = default;
+      constexpr mapping(const Extents&) noexcept;
+      template<class OtherExtents>
+      constexpr mapping(const mapping<OtherExtents>& other_map) {
+        for(int i=0; i<OFFSET_LIST_MAX_SIZE; i++) offset_list = other_map.offset_list[i];
+        list_size = other_map.list_size;
+        extents_ = other_map.extents();
+      }
+      constexpr mapping(const LayoutSelective& layout) {
+        for(int i=0; i<OFFSET_LIST_MAX_SIZE; i++) offset_list[i] = layout.offset_list[i];
+        list_size = layout.list_size;
+        extents_ = Extents(list_size);
+      }
+
+      constexpr mapping& operator=(const mapping&) noexcept = default;
+      template<class OtherExtents>
+      constexpr mapping& operator=(const mapping<OtherExtents>& other_map) {
+        for(int i=0; i<OFFSET_LIST_MAX_SIZE; i++) offset_list = other_map.offset_list[i];
+        list_size = other_map.list_size;
+        extents_ = other_map.extents();
+      }
+
+      constexpr Extents extents() const noexcept { return extents_; }
+      constexpr size_t required_span_size() const { return extents_.extent(0); }
+      KOKKOS_INLINE_FUNCTION
+      size_t operator()(size_t ndx) const {
+        KOKKOS_ASSERT(ndx < list_size);
+        return offset_list[ndx];
+      }
+      static constexpr bool is_always_unique() noexcept { return true; }
+      static constexpr bool is_always_contiguous() noexcept { return false; }
+      static constexpr bool is_always_strided() noexcept { return false; }
+      constexpr bool is_unique() const noexcept { return true; }
+      constexpr bool is_contiguous() const noexcept { return false; }
+      constexpr bool is_strided() const noexcept { return false; }
+  };
+#endif
+};
+#ifdef KOKKOS_USE_LEGACY_VIEW
 namespace Impl {
 template <class Dimension>
 struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
@@ -175,8 +220,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
              Kokkos::LayoutSelective const& rhs)
       : m_dim(rhs.list_size, 0, 0, 0, 0, 0, 0, 0), m_selective(rhs) {}
 };
-
 }  // namespace Impl
+#endif
 }  // namespace Kokkos
 
 namespace Test {
