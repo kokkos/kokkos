@@ -671,7 +671,9 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
 
 // FIXME_OPENMPTARGET FIXME_AMD
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && \
-    (defined(KOKKOS_ARCH_VEGA906) || defined(KOKKOS_ARCH_VEGA908))
+    (defined(KOKKOS_ARCH_VEGA906) || defined(KOKKOS_ARCH_VEGA908) || \
+		 defined(KOKKOS_ARCH_VEGA90A))
+
   TEST_MATH_FUNCTION(log2)({1, 23, 456, 7890});
 #endif
   TEST_MATH_FUNCTION(log2)({1l, 23l, 456l, 7890l});
