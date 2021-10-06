@@ -330,6 +330,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MultiThreadsTeam.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
@@ -446,6 +447,14 @@ if(Kokkos_ENABLE_SERIAL)
 endif()
 
 if(Kokkos_ENABLE_THREADS)
+  # FIXME_THREAD doesn't work because kernels can only be launch from the master
+  # thread
+  list(REMOVE_ITEM Threads_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/threads/TestThreads_MultiThreadsRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/threads/TestThreads_MultiThreadsMDRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/threads/TestThreads_MultiThreadsTeam.cpp
+  )
+
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES ${Threads_SOURCES}
