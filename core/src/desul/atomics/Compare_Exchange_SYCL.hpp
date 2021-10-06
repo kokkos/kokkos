@@ -22,7 +22,7 @@ namespace desul {
 
 template <class MemoryOrder, class MemoryScope>
 inline void atomic_thread_fence(MemoryOrder, MemoryScope) {
-  Impl::sycl_sync_and_atomics::atomic_fence(
+  sycl::atomic_fence(
       Impl::DesulToSYCLMemoryOrder<MemoryOrder>::value,
       Impl::DesulToSYCLMemoryScope<MemoryScope>::value);
 }

@@ -465,8 +465,15 @@ class TestScanTeam {
     functor_type functor;
 
     policy_type team_exec(nteam, 1);
-    team_exec = policy_type(
-        nteam, team_exec.team_size_max(functor, Kokkos::ParallelReduceTag()));
+// FIXME_SYCL avoid using too many registers on CUDA devices
+#ifdef KOKKOS_ENABLE_SYCL
+    const auto team_size = std::min<int>(
+        team_exec.team_size_max(functor, Kokkos::ParallelReduceTag()), 512);
+#else
+    const auto team_size =
+        team_exec.team_size_max(functor, Kokkos::ParallelReduceTag());
+#endif
+    team_exec = policy_type(nteam, team_size);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       int64_t accum = 0;

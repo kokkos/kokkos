@@ -20,7 +20,7 @@ namespace desul {
 namespace Impl {
 
 #ifdef __clang__
-namespace sycl_sync_and_atomics = ::sycl::ONEAPI;
+namespace sycl_sync_and_atomics = ::sycl::ext::oneapi;
 #else
 namespace sycl_sync_and_atomics = ::sycl;
 #endif
