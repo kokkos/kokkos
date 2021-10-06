@@ -46,6 +46,7 @@
 #define KOKKOS_SYCL_PARALLEL_RANGE_HPP_
 
 #include <impl/KokkosExp_IterateTileGPU.hpp>
+#include <SYCL/Kokkos_SYCL_BlockSize_Deduction.hpp>
 
 #include <vector>
 
@@ -55,8 +56,34 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
- private:
-  using Member       = typename Policy::member_type;
+ private :
+
+  // TODO should this be defined elsewhere for others to use it?
+  // if so, WorkTag needs to be a member
+  template <typename Functor>
+  class RangeRoundedFunctor {
+   public:
+    void operator() (sycl::nd_item<1> item) const {
+      const typename Policy::index_type id =
+          item.get_global_linear_id() + begin;
+      if (id < end) {
+        if constexpr (std::is_same<WorkTag, void>::value)
+          functor(id);
+        else
+          functor(WorkTag(), id);
+      }
+    }
+
+    RangeRoundedFunctor(int begin_in, int end_in, Functor functor_in)
+      :  begin(begin_in), end(end_in), functor(functor_in) {}
+
+   private:
+    const typename Policy::index_type begin;
+    const typename Policy::index_type end;
+    const Functor functor;
+  };
+
+  using Member = typename Policy::member_type;
   using WorkTag      = typename Policy::work_tag;
   using LaunchBounds = typename Policy::launch_bounds;
 
@@ -72,6 +99,26 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
+#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_AMPERE80)
+    // TODO  don't pass queue to itself...
+    auto parallel_for_event = q.submit([functor, policy, q](sycl::handler& cgh) {
+
+      auto group_size =
+          sycl_get_opt_block_size<Functor, LaunchBounds, RangeRoundedFunctor>(
+              q, functor, 1/*vector_length*/, 0/*shmem_block*/, 0/*shmem_thread*/);
+
+      auto global_size = policy.end() - policy.begin();
+      auto infl_global_size =
+          global_size - (global_size % group_size) + group_size;
+
+      const sycl::nd_range<1>
+          range{sycl::range<1>(infl_global_size), sycl::range<1>(group_size)};
+
+      RangeRoundedFunctor<Functor> fn(policy.begin(), policy.end(), functor);
+      cgh.parallel_for(range, fn);
+
+    });
+#else
     auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
       const auto begin = policy.begin();
@@ -84,6 +131,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
           functor(WorkTag(), id);
       });
     });
+#endif // defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_AMPERE80)
     q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
