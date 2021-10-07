@@ -105,6 +105,60 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
                     long>::test_teambroadcast(1000, 1);
 }
 
+struct long_wrapper {
+  long value;
+  long_wrapper() : value(0) {}
+  long_wrapper(int val) : value(val) {}
+  long_wrapper operator+(const long_wrapper& other) const {
+    return value + other.value;
+  }
+
+  volatile long_wrapper& operator+=(
+      const volatile long_wrapper& other) volatile {
+    value += other.value;
+    return *this;
+  }
+
+  long_wrapper operator*(const long_wrapper& other) const {
+    return value * other.value;
+  }
+
+  operator double() const { return value; }
+};
+}  // namespace Test
+
+namespace Kokkos {
+template <>
+class reduction_identity<Test::long_wrapper> : public reduction_identity<long> {
+};
+}  // namespace Kokkos
+
+namespace Test {
+
+// Test for non-arithmetic type
+TEST(TEST_CATEGORY, team_broadcast_long_wrapper) {
+  static_assert(!std::is_arithmetic<long_wrapper>::value, "");
+
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    long_wrapper>::test_teambroadcast(0, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    long_wrapper>::test_teambroadcast(0, 1);
+
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    long_wrapper>::test_teambroadcast(2, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    long_wrapper>::test_teambroadcast(2, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    long_wrapper>::test_teambroadcast(16, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    long_wrapper>::test_teambroadcast(16, 1);
+
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    long_wrapper>::test_teambroadcast(1000, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    long_wrapper>::test_teambroadcast(1000, 1);
+}
+
 TEST(TEST_CATEGORY, team_broadcast_char) {
   {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
