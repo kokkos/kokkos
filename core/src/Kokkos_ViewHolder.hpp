@@ -59,7 +59,10 @@ class View;
 template <class DataType, class... Properties>
 struct ViewTraits;
 
+
+namespace Experimental {
 namespace Impl {
+
 template <class DataType, class... Properties>
 View<typename ViewTraits<DataType, Properties...>::non_const_data_type,
      typename std::conditional<
@@ -217,8 +220,6 @@ class ViewHolderImpl<View, typename std::enable_if<std::is_const<
   View m_view;
 };
 }  // namespace Impl
-
-namespace Experimental {
 
 class ConstViewHolder {
  public:
