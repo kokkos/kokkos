@@ -1439,9 +1439,7 @@ class View : public ViewTraits<DataType, Properties...> {
   View() = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View(const View &other)
-   : m_map(other.m_map),
-     m_track(other.m_track) {
+  View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
     hooks_policy::copy_construct(*this, other);
   }
 
