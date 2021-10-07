@@ -135,6 +135,12 @@ struct long_wrapper {
   }
 
   KOKKOS_FUNCTION
+  volatile long_wrapper& operator=(const long_wrapper& other) volatile {
+    value = other.value;
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
   operator double() const { return value; }
 };
 }  // namespace Test
