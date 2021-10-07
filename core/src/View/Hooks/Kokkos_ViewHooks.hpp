@@ -82,8 +82,6 @@ struct DefaultViewHooks
   using hooks_policy = DefaultViewHooks;
 
   template< typename View >
-  static void construct( View &view ) {}
-  template< typename View >
   static void copy_construct( View &self, const View &other ) {}
   template< typename View >
   static void copy_assign( View &self, const View &other ) {}
@@ -100,8 +98,6 @@ struct SubscribableViewHooks
 {
   using hooks_policy = SubscribableViewHooks< Subscribers... >;
 
-  template< typename View >
-  static void construct( View &view ) {}
   template< typename View >
   static void copy_construct( View &self, const View &other ) {
     Detail::invoke_subscriber_impl< Detail::copy_constructor_invoker, Subscribers... >::invoke( self, other );
@@ -122,8 +118,8 @@ struct SubscribableViewHooks
 
 
 struct DynamicViewHooks {
-  using callback_type       = std::function<void(ViewHolderBase &)>;
-  using const_callback_type = std::function<void(ConstViewHolderBase &)>;
+  using callback_type       = std::function<void(const ViewHolder &)>;
+  using const_callback_type = std::function<void(const ConstViewHolder &)>;
 
   class callback_overload_set
   {
@@ -133,15 +129,11 @@ struct DynamicViewHooks {
     void call(View<DataType, Properties...> &view) {
       std::lock_guard< std::mutex > lock( m_mutex );
 
-      if ( m_reentrant || !any_set() )
+      if ( !any_set() )
         return;
 
-      m_reentrant = true;
-
-      auto holder = ViewHolder<View<DataType, Properties...> >(view);
+      auto holder = make_view_holder(view);
       do_call(std::move(holder));
-
-      m_reentrant = false;
     }
 
     template< typename F >
@@ -170,15 +162,22 @@ struct DynamicViewHooks {
       m_const_callback = {};
     }
 
+    void reset()
+    {
+      std::lock_guard< std::mutex > lock( m_mutex );
+      m_callback = {};
+      m_const_callback = {};
+    }
+
    private:
 
     // Not thread safe, don't call outside of mutex lock
-    void do_call(ViewHolderBase &&view) {
+    void do_call(const ViewHolder &view) {
       if (m_callback) m_callback(view);
     }
 
     // Not thread safe, don't call outside of mutex lock
-    void do_call(ConstViewHolderBase &&view) {
+    void do_call(const ConstViewHolder &view) {
       if (m_const_callback) m_const_callback(view);
     }
 
@@ -190,15 +189,22 @@ struct DynamicViewHooks {
 
     callback_type m_callback;
     const_callback_type m_const_callback;
-    bool m_reentrant = false;
     std::mutex m_mutex;
   };
 
-  static callback_overload_set constructor_set;
+  static void reset()
+  {
+    copy_constructor_set.reset();
+    copy_assignment_set.reset();
+    move_constructor_set.reset();
+    move_assignment_set.reset();
+  }
+
   static callback_overload_set copy_constructor_set;
   static callback_overload_set copy_assignment_set;
   static callback_overload_set move_constructor_set;
   static callback_overload_set move_assignment_set;
+  static thread_local bool reentrant; // don't enter *any* callback while in a callback on this thread
 };
 
 
@@ -218,24 +224,37 @@ struct DynamicViewHooksCaller<
     ViewType, Traits,
     typename std::enable_if<!std::is_same<typename Traits::memory_space,
         AnonymousSpace>::value>::type> {
-  static void call_construct_hooks(ViewType &view) {
-    DynamicViewHooks::constructor_set.call(view);
-  }
-
   static void call_copy_construct_hooks(ViewType &view) {
-    DynamicViewHooks::copy_constructor_set.call(view);
+    static thread_local bool reentrant = false;
+    if ( !reentrant ) {
+      reentrant = true;
+      DynamicViewHooks::copy_constructor_set.call(view);
+      reentrant = false;
+    }
   }
 
   static void call_copy_assign_hooks(ViewType &view) {
-    DynamicViewHooks::copy_assignment_set.call(view);
+    if ( !DynamicViewHooks::reentrant ) {
+      DynamicViewHooks::reentrant = true;
+      DynamicViewHooks::copy_assignment_set.call(view);
+      DynamicViewHooks::reentrant = false;
+    }
   }
 
   static void call_move_construct_hooks(ViewType &view) {
-    DynamicViewHooks::move_constructor_set.call(view);
+    if ( !DynamicViewHooks::reentrant ) {
+      DynamicViewHooks::reentrant = true;
+      DynamicViewHooks::move_constructor_set.call(view);
+      DynamicViewHooks::reentrant = false;
+    }
   }
 
   static void call_move_assign_hooks(ViewType &view) {
-    DynamicViewHooks::move_assignment_set.call(view);
+    if ( !DynamicViewHooks::reentrant ) {
+      DynamicViewHooks::reentrant = true;
+      DynamicViewHooks::move_assignment_set.call(view);
+      DynamicViewHooks::reentrant = false;
+    }
   }
 };
 }  // namespace Impl
@@ -243,24 +262,20 @@ struct DynamicViewHooksCaller<
 struct DynamicViewHooksSubscriber
 {
   template< typename View >
-  static void construct( View &view ) {
-    Impl::DynamicViewHooksCaller< View >::call_construct_hooks( view );
-  }
-  template< typename View >
-  static void copy_construct( View &self, const View &other ) {
+  static void copy_constructed( View &self, const View &other ) {
     Impl::DynamicViewHooksCaller< View >::call_copy_construct_hooks( self );
   }
   template< typename View >
-  static void copy_assign( View &self, const View &other ) {
+  static void copy_assigned( View &self, const View &other ) {
     Impl::DynamicViewHooksCaller< View >::call_copy_assign_hooks( self );
   }
 
   template< typename View >
-  static void move_construct( View &self, const View &other ) {
+  static void move_constructed( View &self, const View &other ) {
     Impl::DynamicViewHooksCaller< View >::call_move_construct_hooks( self );
   }
   template< typename View >
-  static void move_assign( View &self, const View &other ) {
+  static void move_assigned( View &self, const View &other ) {
     Impl::DynamicViewHooksCaller< View >::call_move_assign_hooks( self );
   }
 };
