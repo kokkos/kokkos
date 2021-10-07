@@ -262,20 +262,20 @@ struct DynamicViewHooksCaller<
 struct DynamicViewHooksSubscriber
 {
   template< typename View >
-  static void copy_constructed( View &self, const View &other ) {
+  static void copy_constructed( View &self, const View & ) {
     Impl::DynamicViewHooksCaller< View >::call_copy_construct_hooks( self );
   }
   template< typename View >
-  static void copy_assigned( View &self, const View &other ) {
+  static void copy_assigned( View &self, const View & ) {
     Impl::DynamicViewHooksCaller< View >::call_copy_assign_hooks( self );
   }
 
   template< typename View >
-  static void move_constructed( View &self, const View &other ) {
+  static void move_constructed( View &self, const View & ) {
     Impl::DynamicViewHooksCaller< View >::call_move_construct_hooks( self );
   }
   template< typename View >
-  static void move_assigned( View &self, const View &other ) {
+  static void move_assigned( View &self, const View & ) {
     Impl::DynamicViewHooksCaller< View >::call_move_assign_hooks( self );
   }
 };
