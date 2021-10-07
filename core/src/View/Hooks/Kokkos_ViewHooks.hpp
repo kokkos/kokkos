@@ -82,13 +82,13 @@ struct DefaultViewHooks
   using hooks_policy = DefaultViewHooks;
 
   template< typename View >
-  static void copy_construct( View &self, const View &other ) {}
+  static void copy_construct( View &, const View & ) {}
   template< typename View >
-  static void copy_assign( View &self, const View &other ) {}
+  static void copy_assign( View &, const View & ) {}
   template< typename View >
-  static void move_construct( View &self, const View &other ) {}
+  static void move_construct( View &, const View & ) {}
   template< typename View >
-  static void move_assign( View &self, const View &other ) {}
+  static void move_assign( View &, const View & ) {}
 };
 
 /* Will be some sort of mixin, not with a flag but with a type */
@@ -212,11 +212,11 @@ namespace Impl {
 template <class ViewType, class Traits = typename ViewType::traits,
     class Enabled = void>
 struct DynamicViewHooksCaller {
-  static void call_construct_hooks(ViewType &view) {}
-  static void call_copy_construct_hooks(ViewType &view) {}
-  static void call_copy_assign_hooks(ViewType &view) {}
-  static void call_move_construct_hooks(ViewType &view) {}
-  static void call_move_assign_hooks(ViewType &view) {}
+  static void call_construct_hooks(ViewType &) {}
+  static void call_copy_construct_hooks(ViewType &) {}
+  static void call_copy_assign_hooks(ViewType &) {}
+  static void call_move_construct_hooks(ViewType &) {}
+  static void call_move_assign_hooks(ViewType &) {}
 };
 
 template <class ViewType, class Traits>
