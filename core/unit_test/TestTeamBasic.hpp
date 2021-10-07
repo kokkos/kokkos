@@ -107,22 +107,34 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
 
 struct long_wrapper {
   long value;
+  KOKKOS_FUNCTION
   long_wrapper() : value(0) {}
+  KOKKOS_FUNCTION
   long_wrapper(int val) : value(val) {}
+  KOKKOS_FUNCTION
   long_wrapper operator+(const long_wrapper& other) const {
     return value + other.value;
   }
 
+  KOKKOS_FUNCTION
   volatile long_wrapper& operator+=(
       const volatile long_wrapper& other) volatile {
     value += other.value;
     return *this;
   }
 
+  KOKKOS_FUNCTION
+  long_wrapper& operator+=(const long_wrapper& other) {
+    value += other.value;
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
   long_wrapper operator*(const long_wrapper& other) const {
     return value * other.value;
   }
 
+  KOKKOS_FUNCTION
   operator double() const { return value; }
 };
 }  // namespace Test
