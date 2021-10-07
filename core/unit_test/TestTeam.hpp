@@ -1412,7 +1412,7 @@ struct TestTeamBroadcast<
     // above because the functor switches it back.
     bool setValue = ((lid % ts) != tid);
 
-    teamMember.team_broadcast([&](value_type &var) { var *= 2; }, value,
+    teamMember.team_broadcast([&](value_type &var) { var += var; }, value,
                               lid % ts);
     teamMember.team_broadcast([&](bool &bVar) { bVar = !bVar; }, setValue,
                               lid % ts);
@@ -1477,7 +1477,7 @@ struct TestTeamBroadcast<
     value_type expected_result = 0;
     for (unsigned int i = 0; i < league_size; i++) {
       value_type val =
-          (value_type((i % team_size) * 3) + off) * (value_type)team_size;
+          (value_type((i % team_size) * 3) + off) * value_type(team_size);
       expected_result += val;
     }
     // For comparison purposes treat the reduction as a random walk in the
