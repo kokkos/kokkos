@@ -129,8 +129,8 @@ struct long_wrapper {
 
 namespace Kokkos {
 template <>
-class reduction_identity<Test::long_wrapper> : public reduction_identity<long> {
-};
+struct reduction_identity<Test::long_wrapper>
+    : public reduction_identity<long> {};
 }  // namespace Kokkos
 
 namespace Test {
