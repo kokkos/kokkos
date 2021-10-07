@@ -319,8 +319,14 @@ struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
     hostspace_parallel_deepcopy(dst, src, n);
   }
 
-  DeepCopy(const ExecutionSpace&, void* dst, const void* src, size_t n) {
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     hostspace_parallel_deepcopy(dst, src, n);
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
+        "ExecutionSpace>::DeepCopy: fence after copy");
   }
 };
 
