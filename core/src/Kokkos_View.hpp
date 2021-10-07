@@ -191,8 +191,8 @@ struct ViewTraits<void, void, Prop...> {
 };
 
 template <class HooksPolicy, class... Prop>
-struct ViewTraits<typename std::enable_if<
-                      Kokkos::Experimental::is_hooks_policy<HooksPolicy>::value>::type,
+struct ViewTraits<typename std::enable_if<Kokkos::Experimental::is_hooks_policy<
+                      HooksPolicy>::value>::type,
                   HooksPolicy, Prop...> {
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
@@ -260,7 +260,7 @@ struct ViewTraits<typename std::enable_if<
           std::is_same<typename ViewTraits<void, Prop...>::memory_traits,
                        void>::value &&
           std::is_same<typename ViewTraits<void, Prop...>::hooks_policy,
-              void>::value,
+                       void>::value,
       "MemoryTrait is the final optional template argument for a View");
 
   using execution_space = void;
@@ -301,7 +301,8 @@ struct ViewTraits {
 
   using HooksPolicy = typename std::conditional<
       !std::is_same<typename prop::hooks_policy, void>::value,
-      typename prop::hooks_policy, typename Kokkos::Experimental::DefaultViewHooks>::type;
+      typename prop::hooks_policy,
+      typename Kokkos::Experimental::DefaultViewHooks>::type;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
@@ -1444,7 +1445,7 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  View(View &&other) {
+  View(View&& other) {
     using namespace std;
     swap(m_map, other.m_map);
     swap(m_track, other.m_track);
@@ -1452,8 +1453,8 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(const View &other) {
-    m_map = other.m_map;
+  View& operator=(const View& other) {
+    m_map   = other.m_map;
     m_track = other.m_track;
     hooks_policy::copy_assign(*this, other);
 
@@ -1461,7 +1462,7 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(View &&other) {
+  View& operator=(View&& other) {
     using namespace std;
     swap(m_map, other.m_map);
     swap(m_track, other.m_track);

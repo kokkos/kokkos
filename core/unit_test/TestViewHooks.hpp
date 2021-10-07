@@ -53,57 +53,55 @@
 namespace TestViewHooks {
 struct TestSubscriber;
 
-static_assert( Kokkos::Experimental::is_hooks_policy< Kokkos::Experimental::SubscribableViewHooks< TestSubscriber > >::value, "Must be a hooks policy" );
+static_assert(
+    Kokkos::Experimental::is_hooks_policy<
+        Kokkos::Experimental::SubscribableViewHooks<TestSubscriber> >::value,
+    "Must be a hooks policy");
 
-using test_view_type = Kokkos::View< double **, Kokkos::Experimental::SubscribableViewHooks< TestSubscriber > >;
+using test_view_type =
+    Kokkos::View<double **,
+                 Kokkos::Experimental::SubscribableViewHooks<TestSubscriber> >;
 
-struct TestSubscriber
-{
+struct TestSubscriber {
   static test_view_type *self_ptr;
   static const test_view_type *other_ptr;
 
-  template< typename View >
-  static void constructed( View &self )
-  {
+  template <typename View>
+  static void constructed(View &self) {
     self_ptr = &self;
   }
 
-  template< typename View >
-  static void copy_constructed( View &self, const View &other )
-  {
-    self_ptr = &self;
+  template <typename View>
+  static void copy_constructed(View &self, const View &other) {
+    self_ptr  = &self;
     other_ptr = &other;
   }
 
-  template< typename View >
-  static void move_constructed( View &self, const View &other )
-  {
-    self_ptr = &self;
+  template <typename View>
+  static void move_constructed(View &self, const View &other) {
+    self_ptr  = &self;
     other_ptr = &other;
   }
 
-  template< typename View >
-  static void copy_assigned( View &self, const View &other )
-  {
-    self_ptr = &self;
+  template <typename View>
+  static void copy_assigned(View &self, const View &other) {
+    self_ptr  = &self;
     other_ptr = &other;
   }
 
-  template< typename View >
-  static void move_assigned( View &self, const View &other )
-  {
-    self_ptr = &self;
+  template <typename View>
+  static void move_assigned(View &self, const View &other) {
+    self_ptr  = &self;
     other_ptr = &other;
   }
 
-  static void reset()
-  {
-    self_ptr = nullptr;
+  static void reset() {
+    self_ptr  = nullptr;
     other_ptr = nullptr;
   }
 };
 
-test_view_type *TestSubscriber::self_ptr = nullptr;
+test_view_type *TestSubscriber::self_ptr        = nullptr;
 const test_view_type *TestSubscriber::other_ptr = nullptr;
 
 template <class DeviceType>
@@ -111,9 +109,9 @@ void testViewHooksCopyConstruct() {
   TestSubscriber::reset();
   test_view_type testa;
 
-  test_view_type testb( testa );
-  EXPECT_EQ( TestSubscriber::self_ptr, &testb );
-  EXPECT_EQ( TestSubscriber::other_ptr, &testa );
+  test_view_type testb(testa);
+  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
+  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
 }
 
 template <class DeviceType>
@@ -121,11 +119,11 @@ void testViewHooksMoveConstruct() {
   TestSubscriber::reset();
   test_view_type testa;
 
-  test_view_type testb( std::move( testa ) );
-  EXPECT_EQ( TestSubscriber::self_ptr, &testb );
+  test_view_type testb(std::move(testa));
+  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
 
   // This is valid, even if the view is moved-from
-  EXPECT_EQ( TestSubscriber::other_ptr, &testa );
+  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
 }
 
 template <class DeviceType>
@@ -135,8 +133,8 @@ void testViewHooksCopyAssign() {
 
   test_view_type testb;
   testb = testa;
-  EXPECT_EQ( TestSubscriber::self_ptr, &testb );
-  EXPECT_EQ( TestSubscriber::other_ptr, &testa );
+  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
+  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
 }
 
 template <class DeviceType>
@@ -145,18 +143,24 @@ void testViewHooksMoveAssign() {
   test_view_type testa;
 
   test_view_type testb;
-  testb = std::move( testa );
-  EXPECT_EQ( TestSubscriber::self_ptr, &testb );
+  testb = std::move(testa);
+  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
 
   // This is valid, even if the view is moved-from
-  EXPECT_EQ( TestSubscriber::other_ptr, &testa );
+  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
 }
-}
+}  // namespace TestViewHooks
 
 namespace TestDynamicViewHooks {
 
-using test_view_type = Kokkos::View< double **, Kokkos::Experimental::SubscribableViewHooks< Kokkos::Experimental::DynamicViewHooksSubscriber > >;
-using const_test_view_type = Kokkos::View< const double **, Kokkos::Experimental::SubscribableViewHooks< Kokkos::Experimental::DynamicViewHooksSubscriber > >;
+using test_view_type =
+    Kokkos::View<double **,
+                 Kokkos::Experimental::SubscribableViewHooks<
+                     Kokkos::Experimental::DynamicViewHooksSubscriber> >;
+using const_test_view_type =
+    Kokkos::View<const double **,
+                 Kokkos::Experimental::SubscribableViewHooks<
+                     Kokkos::Experimental::DynamicViewHooksSubscriber> >;
 
 template <class DeviceType>
 void testDynamicViewHooksCopyConstruct() {
@@ -165,21 +169,28 @@ void testDynamicViewHooksCopyConstruct() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::copy_constructor_set.template set_callback( [&holder]( const Kokkos::Experimental::ViewHolder &vh ) mutable {
-    holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::copy_constructor_set
+      .template set_callback(
+          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+            holder = vh;
+          });
 
-  Kokkos::Experimental::DynamicViewHooks::copy_constructor_set.template set_const_callback( [&const_holder]( const Kokkos::Experimental::ConstViewHolder &vh ) mutable {
-    const_holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::copy_constructor_set
+      .template set_const_callback(
+          [&const_holder](
+              const Kokkos::Experimental::ConstViewHolder &vh) mutable {
+            const_holder = vh;
+          });
 
-  test_view_type testa( "testa", 10, 10 );
-  test_view_type testb( testa );
-  EXPECT_EQ( testa.data(), holder.data() );
-  EXPECT_EQ( const_holder.data(), nullptr );
-  const_test_view_type testa_const( testa );  // Won't trigger the callback since this is not a copy constructor call
-  const_test_view_type testb_const( testa_const );
-  EXPECT_EQ( testa_const.data(), const_holder.data() );
+  test_view_type testa("testa", 10, 10);
+  test_view_type testb(testa);
+  EXPECT_EQ(testa.data(), holder.data());
+  EXPECT_EQ(const_holder.data(), nullptr);
+  const_test_view_type testa_const(
+      testa);  // Won't trigger the callback since this is not a copy
+               // constructor call
+  const_test_view_type testb_const(testa_const);
+  EXPECT_EQ(testa_const.data(), const_holder.data());
 }
 
 template <class DeviceType>
@@ -189,22 +200,29 @@ void testDynamicViewHooksMoveConstruct() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::move_constructor_set.template set_callback( [&holder]( const Kokkos::Experimental::ViewHolder &vh ) mutable {
-    holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::move_constructor_set
+      .template set_callback(
+          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+            holder = vh;
+          });
 
-  Kokkos::Experimental::DynamicViewHooks::move_constructor_set.template set_const_callback( [&const_holder]( const Kokkos::Experimental::ConstViewHolder &vh ) mutable {
-    const_holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::move_constructor_set
+      .template set_const_callback(
+          [&const_holder](
+              const Kokkos::Experimental::ConstViewHolder &vh) mutable {
+            const_holder = vh;
+          });
 
-  test_view_type testa( "testa", 10, 10 );
+  test_view_type testa("testa", 10, 10);
   void *cmp = testa.data();
-  test_view_type testb( std::move( testa ) );
-  EXPECT_EQ( cmp, holder.data() );
-  EXPECT_EQ( const_holder.data(), nullptr );
-  const_test_view_type testa_const( testb );  // Won't trigger the callback since this is not a copy constructor call
-  const_test_view_type testb_const( std::move( testa_const ) );
-  EXPECT_EQ( cmp, const_holder.data() );
+  test_view_type testb(std::move(testa));
+  EXPECT_EQ(cmp, holder.data());
+  EXPECT_EQ(const_holder.data(), nullptr);
+  const_test_view_type testa_const(
+      testb);  // Won't trigger the callback since this is not a copy
+               // constructor call
+  const_test_view_type testb_const(std::move(testa_const));
+  EXPECT_EQ(cmp, const_holder.data());
 }
 
 template <class DeviceType>
@@ -214,25 +232,31 @@ void testDynamicViewHooksCopyAssign() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::copy_assignment_set.template set_callback( [&holder]( const Kokkos::Experimental::ViewHolder &vh ) mutable {
-    holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::copy_assignment_set
+      .template set_callback(
+          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+            holder = vh;
+          });
 
-  Kokkos::Experimental::DynamicViewHooks::copy_assignment_set.template set_const_callback( [&const_holder]( const Kokkos::Experimental::ConstViewHolder &vh ) mutable {
-    const_holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::copy_assignment_set
+      .template set_const_callback(
+          [&const_holder](
+              const Kokkos::Experimental::ConstViewHolder &vh) mutable {
+            const_holder = vh;
+          });
 
-  test_view_type testa( "testa", 10, 10 );
+  test_view_type testa("testa", 10, 10);
   test_view_type testb;
   testb = testa;
-  EXPECT_EQ( testa.data(), holder.data() );
-  EXPECT_EQ( const_holder.data(), nullptr );
-  const_test_view_type testa_const( testa );  // Won't trigger the callback since this is not a copy constructor call
+  EXPECT_EQ(testa.data(), holder.data());
+  EXPECT_EQ(const_holder.data(), nullptr);
+  const_test_view_type testa_const(
+      testa);  // Won't trigger the callback since this is not a copy
+               // constructor call
   const_test_view_type testb_const;
   testb_const = testa_const;
-  EXPECT_EQ( testa_const.data(), const_holder.data() );
+  EXPECT_EQ(testa_const.data(), const_holder.data());
 }
-
 
 template <class DeviceType>
 void testDynamicViewHooksMoveAssign() {
@@ -241,23 +265,30 @@ void testDynamicViewHooksMoveAssign() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::move_assignment_set.template set_callback( [&holder]( const Kokkos::Experimental::ViewHolder &vh ) mutable {
-    holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::move_assignment_set
+      .template set_callback(
+          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+            holder = vh;
+          });
 
-  Kokkos::Experimental::DynamicViewHooks::move_assignment_set.template set_const_callback( [&const_holder]( const Kokkos::Experimental::ConstViewHolder &vh ) mutable {
-    const_holder = vh;
-  } );
+  Kokkos::Experimental::DynamicViewHooks::move_assignment_set
+      .template set_const_callback(
+          [&const_holder](
+              const Kokkos::Experimental::ConstViewHolder &vh) mutable {
+            const_holder = vh;
+          });
 
-  test_view_type testa( "testa", 10, 10 );
-  test_view_type testb = std::move( testa );
-  EXPECT_EQ( testa.data(), holder.data() );
-  EXPECT_EQ( const_holder.data(), nullptr );
-  const_test_view_type testa_const( testa );  // Won't trigger the callback since this is not a copy constructor call
-  const_test_view_type testb_const = std::move( testa_const );
-  EXPECT_EQ( testa_const.data(), const_holder.data() );
+  test_view_type testa("testa", 10, 10);
+  test_view_type testb = std::move(testa);
+  EXPECT_EQ(testa.data(), holder.data());
+  EXPECT_EQ(const_holder.data(), nullptr);
+  const_test_view_type testa_const(
+      testa);  // Won't trigger the callback since this is not a copy
+               // constructor call
+  const_test_view_type testb_const = std::move(testa_const);
+  EXPECT_EQ(testa_const.data(), const_holder.data());
 }
-}
+}  // namespace TestDynamicViewHooks
 
 namespace Test {
 TEST(TEST_CATEGORY, view_hooks) {
@@ -267,7 +298,6 @@ TEST(TEST_CATEGORY, view_hooks) {
   TestViewHooks::testViewHooksCopyAssign<ExecSpace>();
   TestViewHooks::testViewHooksMoveAssign<ExecSpace>();
 }
-
 
 TEST(TEST_CATEGORY, dynamic_view_hooks) {
   using ExecSpace = TEST_EXECSPACE;

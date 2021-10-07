@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -59,7 +60,6 @@ class View;
 template <class DataType, class... Properties>
 struct ViewTraits;
 
-
 namespace Experimental {
 namespace Impl {
 
@@ -69,7 +69,7 @@ View<typename ViewTraits<DataType, Properties...>::non_const_data_type,
          std::is_same<LayoutLeft, typename ViewTraits<DataType, Properties...>::
                                       array_layout>::value,
          LayoutLeft, LayoutRight>::type,
-     HostSpace, MemoryTraits<Unmanaged> >
+     HostSpace, MemoryTraits<Unmanaged>>
 make_unmanaged_view_like(View<DataType, Properties...> view,
                          unsigned char *buff) {
   using traits_type   = ViewTraits<DataType, Properties...>;
@@ -82,7 +82,7 @@ make_unmanaged_view_like(View<DataType, Properties...> view,
       LayoutLeft, LayoutRight>::type;
 
   using new_view_type =
-      View<new_data_type, layout_type, HostSpace, MemoryTraits<Unmanaged> >;
+      View<new_data_type, layout_type, HostSpace, MemoryTraits<Unmanaged>>;
 
   return new_view_type(
       reinterpret_cast<typename new_view_type::pointer_type>(buff),
@@ -109,26 +109,26 @@ class ConstViewHolderImplBase {
   bool is_hostspace() const noexcept { return m_is_hostspace; }
 
   virtual void deep_copy_to_buffer(unsigned char *buff) = 0;
-  virtual ConstViewHolderImplBase *clone() const             = 0;
+  virtual ConstViewHolderImplBase *clone() const        = 0;
 
  protected:
-
-    ConstViewHolderImplBase( std::size_t span, bool span_is_contiguous,
-                      const void *data, std::string label, std::size_t data_type_size,
-                      bool is_hostspace )
-                      : m_span( span ), m_span_is_contiguous( span_is_contiguous ),
-                      m_data( data ), m_label( std::move( label ) ),
-                      m_data_type_size( data_type_size ), m_is_hostspace( is_hostspace )
-                      {}
+  ConstViewHolderImplBase(std::size_t span, bool span_is_contiguous,
+                          const void *data, std::string label,
+                          std::size_t data_type_size, bool is_hostspace)
+      : m_span(span),
+        m_span_is_contiguous(span_is_contiguous),
+        m_data(data),
+        m_label(std::move(label)),
+        m_data_type_size(data_type_size),
+        m_is_hostspace(is_hostspace) {}
 
  private:
-
-  size_t m_span = 0;
+  size_t m_span             = 0;
   bool m_span_is_contiguous = false;
-  const void *m_data = nullptr;
+  const void *m_data        = nullptr;
   std::string m_label;
   size_t m_data_type_size = 0;
-  bool m_is_hostspace = false;
+  bool m_is_hostspace     = false;
 };
 
 class ViewHolderImplBase {
@@ -143,28 +143,28 @@ class ViewHolderImplBase {
   size_t data_type_size() const { return m_data_type_size; }
   bool is_hostspace() const noexcept { return m_is_hostspace; }
 
-  virtual void deep_copy_to_buffer(unsigned char *buff) = 0;
+  virtual void deep_copy_to_buffer(unsigned char *buff)   = 0;
   virtual void deep_copy_from_buffer(unsigned char *buff) = 0;
-  virtual ViewHolderImplBase *clone() const                    = 0;
+  virtual ViewHolderImplBase *clone() const               = 0;
 
  protected:
-
-  ViewHolderImplBase( std::size_t span, bool span_is_contiguous,
-                     void *data, std::string label, std::size_t data_type_size,
-                     bool is_hostspace )
-      : m_span( span ), m_span_is_contiguous( span_is_contiguous ),
-        m_data( data ), m_label( std::move( label ) ),
-        m_data_type_size( data_type_size ), m_is_hostspace( is_hostspace )
-  {}
+  ViewHolderImplBase(std::size_t span, bool span_is_contiguous, void *data,
+                     std::string label, std::size_t data_type_size,
+                     bool is_hostspace)
+      : m_span(span),
+        m_span_is_contiguous(span_is_contiguous),
+        m_data(data),
+        m_label(std::move(label)),
+        m_data_type_size(data_type_size),
+        m_is_hostspace(is_hostspace) {}
 
  private:
-
-  size_t m_span = 0;
+  size_t m_span             = 0;
   bool m_span_is_contiguous = false;
-  void *m_data = nullptr;
+  void *m_data              = nullptr;
   std::string m_label;
   size_t m_data_type_size = 0;
-  bool m_is_hostspace = false;
+  bool m_is_hostspace     = false;
 };
 
 template <typename View, typename Enable = void>
@@ -174,8 +174,8 @@ class ViewHolderImpl : public ViewHolderImplBase {
 
   explicit ViewHolderImpl(const View &view)
       : ViewHolderImplBase(
-        view.span(), view.span_is_contiguous(), view.data(),
-        view.label(), sizeof(typename View::value_type),
+            view.span(), view.span_is_contiguous(), view.data(), view.label(),
+            sizeof(typename View::value_type),
             std::is_same<typename View::memory_space, HostSpace>::value),
         m_view(view) {}
 
@@ -204,8 +204,8 @@ class ViewHolderImpl<View, typename std::enable_if<std::is_const<
 
   explicit ViewHolderImpl(const View &view)
       : ConstViewHolderImplBase(
-          view.span(), view.span_is_contiguous(), view.data(),
-          view.label(), sizeof(typename View::value_type),
+            view.span(), view.span_is_contiguous(), view.data(), view.label(),
+            sizeof(typename View::value_type),
             std::is_same<typename View::memory_space, HostSpace>::value),
         m_view(view) {}
 
@@ -223,24 +223,20 @@ class ViewHolderImpl<View, typename std::enable_if<std::is_const<
 
 class ConstViewHolder {
  public:
-
   ConstViewHolder() = default;
 
-  ConstViewHolder( const ConstViewHolder &other )
-  : m_impl( other.m_impl ? other.m_impl->clone() : nullptr )
-  {}
+  ConstViewHolder(const ConstViewHolder &other)
+      : m_impl(other.m_impl ? other.m_impl->clone() : nullptr) {}
 
-  ConstViewHolder( ConstViewHolder &&other ) {
-    std::swap(m_impl, other.m_impl);
-  }
+  ConstViewHolder(ConstViewHolder &&other) { std::swap(m_impl, other.m_impl); }
 
-  ConstViewHolder &operator=( const ConstViewHolder &other )
-  {
-    m_impl = std::unique_ptr<Impl::ConstViewHolderImplBase>(other.m_impl ? other.m_impl->clone() : nullptr);
+  ConstViewHolder &operator=(const ConstViewHolder &other) {
+    m_impl = std::unique_ptr<Impl::ConstViewHolderImplBase>(
+        other.m_impl ? other.m_impl->clone() : nullptr);
     return *this;
   }
 
-  ConstViewHolder &operator=( ConstViewHolder &&other ) {
+  ConstViewHolder &operator=(ConstViewHolder &&other) {
     std::swap(m_impl, other.m_impl);
     return *this;
   }
@@ -248,38 +244,32 @@ class ConstViewHolder {
   const void *data() const { return m_impl ? m_impl->data() : nullptr; }
 
  private:
-
-  template< typename V >
+  template <typename V>
   friend auto make_view_holder(const V &view);
 
   template <typename... Args>
   explicit ConstViewHolder(const View<Args...> &view)
-    : m_impl(std::make_unique<Impl::ViewHolderImpl<View<Args...>>>(view)) {
-  }
+      : m_impl(std::make_unique<Impl::ViewHolderImpl<View<Args...>>>(view)) {}
 
   std::unique_ptr<Impl::ConstViewHolderImplBase> m_impl;
 };
 
 class ViewHolder {
  public:
-
   ViewHolder() = default;
 
-  ViewHolder( const ViewHolder &other )
-    : m_impl( other.m_impl ? other.m_impl->clone() : nullptr )
-  {}
+  ViewHolder(const ViewHolder &other)
+      : m_impl(other.m_impl ? other.m_impl->clone() : nullptr) {}
 
-  ViewHolder( ViewHolder &&other ) {
-    std::swap(m_impl, other.m_impl);
-  }
+  ViewHolder(ViewHolder &&other) { std::swap(m_impl, other.m_impl); }
 
-  ViewHolder &operator=( const ViewHolder &other )
-  {
-    m_impl = std::unique_ptr<Impl::ViewHolderImplBase>(other.m_impl ? other.m_impl->clone() : nullptr);
+  ViewHolder &operator=(const ViewHolder &other) {
+    m_impl = std::unique_ptr<Impl::ViewHolderImplBase>(
+        other.m_impl ? other.m_impl->clone() : nullptr);
     return *this;
   }
 
-  ViewHolder &operator=( ViewHolder &&other ) {
+  ViewHolder &operator=(ViewHolder &&other) {
     std::swap(m_impl, other.m_impl);
     return *this;
   }
@@ -287,26 +277,23 @@ class ViewHolder {
   void *data() const { return m_impl ? m_impl->data() : nullptr; }
 
  private:
-
-  template< typename V >
+  template <typename V>
   friend auto make_view_holder(const V &view);
 
   template <typename... Args>
   explicit ViewHolder(const View<Args...> &view)
-  : m_impl(std::make_unique<Impl::ViewHolderImpl<View<Args...>>>(view)) {
-
-  }
+      : m_impl(std::make_unique<Impl::ViewHolderImpl<View<Args...>>>(view)) {}
 
   std::unique_ptr<Impl::ViewHolderImplBase> m_impl;
 };
 
-template< typename V >
-auto make_view_holder( const V &view ) {
-  using holder_type = typename std::conditional<std::is_const<
-      typename V::value_type >::value, ConstViewHolder, ViewHolder >::type;
-  return holder_type( view );
+template <typename V>
+auto make_view_holder(const V &view) {
+  using holder_type =
+      typename std::conditional<std::is_const<typename V::value_type>::value,
+                                ConstViewHolder, ViewHolder>::type;
+  return holder_type(view);
 }
-
 
 }  // namespace Experimental
 
