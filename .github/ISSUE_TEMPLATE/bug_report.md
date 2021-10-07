@@ -16,6 +16,6 @@ Please provide a concise, clear description of the bug, as well as any available
 5. output from cmake command
 6. code needed to reproduce the bug
 7. command line needed to reproduce the bug
-5. please also attach the "kokksCore_config.h" header file (generated during the build);
+7. please also attach the `KokkosCore_config.h` header file (generated during the build);
 **Any additional info**
 Please provide any additional context about the issue here.
