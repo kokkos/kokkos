@@ -25,10 +25,10 @@ template <template <typename> class Invoker, typename Subscriber,
           typename... RemSubscribers>
 struct invoke_subscriber_impl<Invoker, Subscriber, RemSubscribers...> {
   template <typename... Args>
-  static void invoke(Args &&..._args) {
-    Invoker<Subscriber>::call(std::forward<Args>(_args)...);
+  static void invoke(Args &&... args) {
+    Invoker<Subscriber>::call(std::forward<Args>(args)...);
     invoke_subscriber_impl<Invoker, RemSubscribers...>::invoke(
-        std::forward<Args>(_args)...);
+        std::forward<Args>(args)...);
   }
 };
 
