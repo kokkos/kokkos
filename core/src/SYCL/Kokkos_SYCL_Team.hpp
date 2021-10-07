@@ -113,8 +113,8 @@ class SYCLTeamMember {
                                 sycl::id<2>(thread_id, 0));
   }
 
-  // FIXME_SYCL Remove this branch once the Intel oneAPI implementation is
-  // conforming to the SYCL2020 standard
+  // FIXME_SYCL remove/adapt this overload once the Intel oneAPI implementation
+  // is conforming to the SYCL2020 standard (allowing trivially-copyable types)
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<!std::is_arithmetic_v<ValueType>>
   team_broadcast(ValueType& val, const int thread_id) const {
