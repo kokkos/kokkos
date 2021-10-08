@@ -135,9 +135,11 @@ struct long_wrapper {
   }
 
   KOKKOS_FUNCTION
-  volatile long_wrapper& operator=(const long_wrapper& other) volatile {
+  void operator=(const long_wrapper& other) { value = other.value; }
+
+  KOKKOS_FUNCTION
+  void operator=(const volatile long_wrapper& other) volatile {
     value = other.value;
-    return *this;
   }
 
   KOKKOS_FUNCTION
