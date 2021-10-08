@@ -105,6 +105,8 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
                     long>::test_teambroadcast(1000, 1);
 }
 
+// FIXME_OPENMPTARGET Libomptarget error: Copying data from device failed.
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 struct long_wrapper {
   long value;
   KOKKOS_FUNCTION
@@ -173,6 +175,7 @@ TEST(TEST_CATEGORY, team_broadcast_long_wrapper) {
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                     long_wrapper>::test_teambroadcast(1000, 1);
 }
+#endif
 
 TEST(TEST_CATEGORY, team_broadcast_char) {
   {
