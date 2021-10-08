@@ -99,7 +99,7 @@ TEST(defaultdevicetype, profiling_section) {
 
   {
     Kokkos::Profiling::ProfilingSection profile_1("one");
-    ASSERT_EQ(kokkosp_test_section_vector.size(), 1);
+    ASSERT_EQ(kokkosp_test_section_vector.size(), 1u);
     ASSERT_EQ(kokkosp_test_section_vector[0], (Section{"one", 0, 0, 0}));
 
     // NOTE: ProfilingSection is a wrapper that manages the lifetime of the
@@ -116,14 +116,14 @@ TEST(defaultdevicetype, profiling_section) {
       Kokkos::Profiling::ProfilingSection profile_2("two");
       profile_2.start();
     }
-    ASSERT_EQ(kokkosp_test_section_vector.size(), 2);
+    ASSERT_EQ(kokkosp_test_section_vector.size(), 2u);
     ASSERT_EQ(kokkosp_test_section_vector[1], (Section{"two", 1, 0, 1}));
 
     profile_1.start();
     profile_1.start();
   }
 
-  ASSERT_EQ(kokkosp_test_section_vector.size(), 2);
+  ASSERT_EQ(kokkosp_test_section_vector.size(), 2u);
   ASSERT_EQ(kokkosp_test_section_vector[0], (Section{"one", 5, 2, 1}));
   ASSERT_EQ(kokkosp_test_section_vector[1], (Section{"two", 1, 0, 1}));
 
