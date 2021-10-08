@@ -109,26 +109,22 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 struct long_wrapper {
   long value;
+
   KOKKOS_FUNCTION
   long_wrapper() : value(0) {}
+
   KOKKOS_FUNCTION
-  long_wrapper(int val) : value(val) {}
+  long_wrapper(long val) : value(val) {}
+
   KOKKOS_FUNCTION
-  long_wrapper operator+(const long_wrapper& other) const {
-    return value + other.value;
+  friend void operator+=(long_wrapper& lhs, const long_wrapper& rhs) {
+    lhs.value += rhs.value;
   }
 
   KOKKOS_FUNCTION
-  void operator+=(const long_wrapper& other) { value += other.value; }
-
-  KOKKOS_FUNCTION
-  void operator+=(const volatile long_wrapper& other) volatile {
-    value += other.value;
-  }
-
-  KOKKOS_FUNCTION
-  long_wrapper operator*(const long_wrapper& other) const {
-    return value * other.value;
+  friend void operator+=(volatile long_wrapper& lhs,
+                         const volatile long_wrapper& rhs) {
+    lhs.value += rhs.value;
   }
 
   KOKKOS_FUNCTION
@@ -138,9 +134,8 @@ struct long_wrapper {
   void operator=(const volatile long_wrapper& other) volatile {
     value = other.value;
   }
-
   KOKKOS_FUNCTION
-  operator double() const { return value; }
+  operator long() const { return value; }
 };
 }  // namespace Test
 
