@@ -60,8 +60,9 @@ __device__ inline void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeNode) {
 // Compare Exchange for PRE Volta, not supported with CLANG as CUDA compiler, since we do NOT have a way
 // of having the code included for clang only when the CC is smaller than 700
 // But on Clang the device side symbol list must be independent of __CUDA_ARCH__
+// FIXME temporary fix for https://github.com/kokkos/kokkos/issues/4390
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700) || \
-(!defined(__NVCC__) && defined(DESUL_CUDA_ARCH_IS_PRE_VOLTA))
+(!defined(__NVCC__) && defined(DESUL_CUDA_ARCH_IS_PRE_VOLTA) && 0)
 namespace desul {
 template <typename T, class MemoryScope>
 __device__ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
