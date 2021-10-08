@@ -815,8 +815,8 @@ void parse_environment_variables(InitArguments& arguments) {
     Impl::throw_runtime_exception(init_result.error_message);
   }
 
-  tool_lib = arguments.tools
-                 .lib;  // maintain consistency between deprecated and current
+  // maintain consistency between deprecated and current
+  tool_lib = arguments.tools.lib;  
   if (arguments.tools.tune_internals !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
     tune_internals = (arguments.tools.tune_internals ==
