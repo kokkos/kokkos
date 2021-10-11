@@ -1447,7 +1447,8 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  View(View&& other) : m_map{ std::move( other.m_map ) }, m_track{ std::move( other.m_track ) } {
+  View(View&& other)
+      : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::move_construct(*this, other);
 #endif
@@ -1467,8 +1468,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   KOKKOS_INLINE_FUNCTION
   View& operator=(View&& other) {
-    m_map = std::move( other.m_map );
-    m_track = std::move( other.m_track );
+    m_map   = std::move(other.m_map);
+    m_track = std::move(other.m_track);
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::move_assign(*this, other);
