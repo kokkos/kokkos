@@ -279,14 +279,17 @@ void testDynamicViewHooksMoveAssign() {
           });
 
   test_view_type testa("testa", 10, 10);
-  test_view_type testb = std::move(testa);
-  EXPECT_EQ(testa.data(), holder.data());
+  void *cmp = testa.data();
+  test_view_type testb;
+  testb = std::move(testa);
+  EXPECT_EQ(cmp, holder.data());
   EXPECT_EQ(const_holder.data(), nullptr);
   const_test_view_type testa_const(
       testa);  // Won't trigger the callback since this is not a copy
                // constructor call
-  const_test_view_type testb_const = std::move(testa_const);
-  EXPECT_EQ(testa_const.data(), const_holder.data());
+  const_test_view_type testb_const;
+  testb_const = std::move(testa_const);
+  EXPECT_EQ(cmp, const_holder.data());
 }
 }  // namespace TestDynamicViewHooks
 
