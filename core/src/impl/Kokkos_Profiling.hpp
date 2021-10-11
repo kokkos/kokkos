@@ -155,6 +155,9 @@ void parseArgs(const std::string&);
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
 namespace Experimental {
+size_t declare_input_type(const std::string& typeName, Kokkos::Tools::Experimental::VariableInfo info);
+
+void set_input_values(size_t contextId, size_t count, Kokkos::Tools::Experimental::VariableValue* values);
 
 namespace Impl {
 struct DirectFenceIDHandle {
@@ -557,11 +560,34 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       });
 }
 
+static size_t range_id;
+static size_t range_context;
+static bool range_tuning_init;
+
+void init_range_tuning(int64_t range_size){
+  if(!range_tuning_init){
+    Kokkos::Tools::Experimental::VariableInfo info;
+    info.category = Kokkos::Tools::Experimental::StatisticalCategory::kokkos_value_ratio;
+    info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
+    info.valueQuantity = Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_unbounded;
+    range_id = Kokkos::Tools::Experimental::declare_input_type("kokkos.rangepolicy.range_size", info);
+  }
+  range_context = Kokkos::Tools::Experimental::get_new_context_id();
+  Kokkos::Tools::Experimental::begin_context(range_context);
+  Kokkos::Tools::Experimental::VariableValue value = Kokkos::Tools::Experimental::make_variable_value(range_id, range_size);
+  Kokkos::Tools::Experimental::set_input_values(range_context, 1, &value);
+}
+
+void finalize_range_tuning(){
+  Kokkos::Tools::Experimental::end_context(range_context);
+}
+
 // tune a RangePolicy, with reducer
 template <class ReducerType, class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
+  init_range_tuning(policy.end() - policy.begin());
   generic_tune_policy<Experimental::BlockSizeTuner, ReducerType>(
       label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
       [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
@@ -572,6 +598,7 @@ template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
+  init_range_tuning(policy.end() - policy.begin());
   generic_tune_policy<Experimental::BlockSizeTuner>(
       label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
       [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
@@ -673,6 +700,7 @@ void report_results(const size_t /**tuning_context*/,
                     const std::string& label_in,
                     Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
                     const Functor& functor, const TagType& tag) {
+  finalize_range_tuning();
   generic_report_results<Experimental::BlockSizeTuner, ReducerType>(
       label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
       [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
@@ -684,6 +712,7 @@ void report_results(const size_t /**tuning_context*/,
                     const std::string& label_in,
                     Kokkos::RangePolicy<Kokkos::Cuda, Properties...>& policy,
                     const Functor& functor, const TagType& tag) {
+  finalize_range_tuning();
   generic_report_results<Experimental::BlockSizeTuner>(
       label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
       [](const Kokkos::RangePolicy<Kokkos::Cuda, Properties...>&
