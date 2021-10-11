@@ -665,15 +665,20 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
         void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
+        sycl::range<2> global =
+            first_run
+                ? sycl::range<2>(m_team_size, m_league_size * m_vector_size)
+                : sycl::range<2>(1, n_wgroups * wgroup_size);
+        sycl::range<2> local = first_run
+                                   ? sycl::range<2>(m_team_size, m_vector_size)
+                                   : sycl::range<2>(1, wgroup_size);
+
         cgh.parallel_for(
-            sycl::nd_range<2>(
-                sycl::range<2>(m_team_size, m_league_size * m_vector_size),
-                sycl::range<2>(m_team_size, m_vector_size)),
-            [=](sycl::nd_item<2> item) {
+            sycl::nd_range<2>(global, local), [=](sycl::nd_item<2> item) {
 #ifdef KOKKOS_ENABLE_DEBUG
-              if (item.get_sub_group().get_local_range() %
-                      item.get_local_range(1) !=
-                  0)
+              if (first_run && item.get_sub_group().get_local_range() %
+                                       item.get_local_range(1) !=
+                                   0)
                 Kokkos::abort(
                     "The sub_group size is not divisible by the vector_size. "
                     "Choose a smaller vector_size!");
@@ -718,6 +723,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   device_accessible_result_ptr, value_count, selected_reducer,
                   static_cast<const FunctorType&>(functor),
                   n_wgroups <= 1 && item.get_group_linear_id() == 0);
+
+              // FIXME_SYCL not quite sure why this is necessary
+              item.barrier(sycl::access::fence_space::global_space);
             });
       });
       q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
