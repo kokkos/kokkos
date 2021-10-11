@@ -566,6 +566,7 @@ static bool range_tuning_init;
 
 inline void init_range_tuning(int64_t range_size){
   if(!range_tuning_init){
+    range_tuning_init = true;
     Kokkos::Tools::Experimental::VariableInfo info;
     info.category = Kokkos::Tools::Experimental::StatisticalCategory::kokkos_value_ratio;
     info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
