@@ -564,7 +564,7 @@ static size_t range_id;
 static size_t range_context;
 static bool range_tuning_init;
 
-void init_range_tuning(int64_t range_size){
+inline void init_range_tuning(int64_t range_size){
   if(!range_tuning_init){
     Kokkos::Tools::Experimental::VariableInfo info;
     info.category = Kokkos::Tools::Experimental::StatisticalCategory::kokkos_value_ratio;
@@ -578,7 +578,7 @@ void init_range_tuning(int64_t range_size){
   Kokkos::Tools::Experimental::set_input_values(range_context, 1, &value);
 }
 
-void finalize_range_tuning(){
+inline void finalize_range_tuning(){
   Kokkos::Tools::Experimental::end_context(range_context);
 }
 
