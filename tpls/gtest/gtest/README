@@ -1,4 +1,4 @@
-This is a fused source version of gtest (47f819c3). All that should be necessary
+This is a fused source version of gtest (v1.11.0). All that should be necessary
 to start using gtest in your package is to declare the dependency and include
 gtest/gtest.h.
 

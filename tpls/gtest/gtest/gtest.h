@@ -47,6 +47,8 @@
 // registration from Barthelemy Dagenais' (barthelemy@prologique.com)
 // easyUnit framework.
 
+// GOOGLETEST_CM0001 DO NOT DELETE
+
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_H_
 
@@ -91,6 +93,8 @@
 // This header file declares functions and macros used internally by
 // Google Test.  They are subject to change without notice.
 
+// GOOGLETEST_CM0001 DO NOT DELETE
+
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_INTERNAL_H_
 
@@ -133,6 +137,8 @@
 // This file is fundamental to Google Test.  All other Google Test source
 // files are expected to #include this.  Therefore, it cannot #include
 // any other Google Test header.
+
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_PORT_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_PORT_H_
@@ -210,7 +216,6 @@
 //   GTEST_OS_DRAGONFLY - DragonFlyBSD
 //   GTEST_OS_FREEBSD  - FreeBSD
 //   GTEST_OS_FUCHSIA  - Fuchsia
-//   GTEST_OS_GNU_HURD - GNU/Hurd
 //   GTEST_OS_GNU_KFREEBSD - GNU/kFreeBSD
 //   GTEST_OS_HAIKU    - Haiku
 //   GTEST_OS_HPUX     - HP-UX
@@ -262,6 +267,7 @@
 //   GTEST_HAS_TYPED_TEST   - typed tests
 //   GTEST_HAS_TYPED_TEST_P - type-parameterized tests
 //   GTEST_IS_THREADSAFE    - Google Test is thread-safe.
+//   GOOGLETEST_CM0007 DO NOT DELETE
 //   GTEST_USES_POSIX_RE    - enhanced POSIX regex is used. Do not confuse with
 //                            GTEST_HAS_POSIX_RE (see above) which users can
 //                            define themselves.
@@ -313,6 +319,7 @@
 // Regular expressions:
 //   RE             - a simple regular expression class using the POSIX
 //                    Extended Regular Expression syntax on UNIX-like platforms
+//                    GOOGLETEST_CM0008 DO NOT DELETE
 //                    or a reduced regular exception syntax on other
 //                    platforms, including Windows.
 // Logging:
@@ -494,8 +501,6 @@
 # define GTEST_OS_FREEBSD 1
 #elif defined __Fuchsia__
 # define GTEST_OS_FUCHSIA 1
-#elif defined(__GNU__)
-# define GTEST_OS_GNU_HURD 1
 #elif defined(__GLIBC__) && defined(__FreeBSD_kernel__)
 # define GTEST_OS_GNU_KFREEBSD 1
 #elif defined __linux__
@@ -791,7 +796,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
   (GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_HPUX || GTEST_OS_QNX ||          \
    GTEST_OS_FREEBSD || GTEST_OS_NACL || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA || \
    GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_OPENBSD ||          \
-   GTEST_OS_HAIKU || GTEST_OS_GNU_HURD)
+   GTEST_OS_HAIKU)
 #endif  // GTEST_HAS_PTHREAD
 
 #if GTEST_HAS_PTHREAD
@@ -851,8 +856,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
      (GTEST_OS_WINDOWS_DESKTOP && _MSC_VER) || GTEST_OS_WINDOWS_MINGW ||  \
      GTEST_OS_AIX || GTEST_OS_HPUX || GTEST_OS_OPENBSD || GTEST_OS_QNX || \
      GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_FUCHSIA ||           \
-     GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU ||     \
-     GTEST_OS_GNU_HURD)
+     GTEST_OS_DRAGONFLY || GTEST_OS_GNU_KFREEBSD || GTEST_OS_HAIKU)
 # define GTEST_HAS_DEATH_TEST 1
 #endif
 
@@ -872,8 +876,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 
 // Determines whether test results can be streamed to a socket.
 #if GTEST_OS_LINUX || GTEST_OS_GNU_KFREEBSD || GTEST_OS_DRAGONFLY || \
-    GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_OPENBSD ||       \
-    GTEST_OS_GNU_HURD
+    GTEST_OS_FREEBSD || GTEST_OS_NETBSD || GTEST_OS_OPENBSD
 # define GTEST_CAN_STREAM_RESULTS_ 1
 #endif
 
@@ -2459,39 +2462,21 @@ using TimeInMillis = int64_t;  // Represents time in milliseconds.
 # define GTEST_FLAG_SAVER_ ::testing::internal::GTestFlagSaver
 
 // Macros for declaring flags.
-#define GTEST_DECLARE_bool_(name)          \
-  namespace testing {                      \
-  GTEST_API_ extern bool GTEST_FLAG(name); \
-  } static_assert(true, "no-op to require trailing semicolon")
-#define GTEST_DECLARE_int32_(name)                 \
-  namespace testing {                              \
-  GTEST_API_ extern std::int32_t GTEST_FLAG(name); \
-  } static_assert(true, "no-op to require trailing semicolon")
-#define GTEST_DECLARE_string_(name)                 \
-  namespace testing {                               \
-  GTEST_API_ extern ::std::string GTEST_FLAG(name); \
-  } static_assert(true, "no-op to require trailing semicolon")
+# define GTEST_DECLARE_bool_(name) GTEST_API_ extern bool GTEST_FLAG(name)
+# define GTEST_DECLARE_int32_(name) \
+    GTEST_API_ extern std::int32_t GTEST_FLAG(name)
+# define GTEST_DECLARE_string_(name) \
+    GTEST_API_ extern ::std::string GTEST_FLAG(name)
 
 // Macros for defining flags.
-#define GTEST_DEFINE_bool_(name, default_val, doc)  \
-  namespace testing {                               \
-  GTEST_API_ bool GTEST_FLAG(name) = (default_val); \
-  } static_assert(true, "no-op to require trailing semicolon")
-#define GTEST_DEFINE_int32_(name, default_val, doc)         \
-  namespace testing {                                       \
-  GTEST_API_ std::int32_t GTEST_FLAG(name) = (default_val); \
-  } static_assert(true, "no-op to require trailing semicolon")
-#define GTEST_DEFINE_string_(name, default_val, doc)         \
-  namespace testing {                                        \
-  GTEST_API_ ::std::string GTEST_FLAG(name) = (default_val); \
-  } static_assert(true, "no-op to require trailing semicolon")
+# define GTEST_DEFINE_bool_(name, default_val, doc) \
+    GTEST_API_ bool GTEST_FLAG(name) = (default_val)
+# define GTEST_DEFINE_int32_(name, default_val, doc) \
+    GTEST_API_ std::int32_t GTEST_FLAG(name) = (default_val)
+# define GTEST_DEFINE_string_(name, default_val, doc) \
+    GTEST_API_ ::std::string GTEST_FLAG(name) = (default_val)
 
 #endif  // !defined(GTEST_DECLARE_bool_)
-
-#if !defined(GTEST_FLAG_GET)
-#define GTEST_FLAG_GET(name) ::testing::GTEST_FLAG(name)
-#define GTEST_FLAG_SET(name, value) (void)(::testing::GTEST_FLAG(name) = value)
-#endif  // !defined(GTEST_FLAG_GET)
 
 // Thread annotations
 #if !defined(GTEST_EXCLUSIVE_LOCK_REQUIRED_)
@@ -2719,6 +2704,8 @@ using Variant = ::std::variant<T...>;
 // to CHANGE WITHOUT NOTICE.  Therefore DO NOT DEPEND ON IT in a user
 // program!
 
+// GOOGLETEST_CM0001 DO NOT DELETE
+
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_MESSAGE_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_MESSAGE_H_
 
@@ -2928,6 +2915,8 @@ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 // This file is #included in gtest/internal/gtest-internal.h.
 // Do not include this header file separately!
 
+// GOOGLETEST_CM0001 DO NOT DELETE
+
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
 
@@ -2968,6 +2957,8 @@ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 //
 // This header file is #included by gtest-internal.h.
 // It should not be #included by other files.
+
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
@@ -3302,6 +3293,8 @@ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 
 // Type utilities needed for implementing typed and type-parameterized
 // tests.
+
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_TYPE_UTIL_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_TYPE_UTIL_H_
@@ -4978,6 +4971,7 @@ class NeverThrown {
 // This header file defines the public API for death tests.  It is
 // #included by gtest.h so a user doesn't need to include this
 // directly.
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_DEATH_TEST_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_DEATH_TEST_H_
@@ -5015,6 +5009,7 @@ class NeverThrown {
 //
 // This header file defines internal utilities needed for implementing
 // death tests.  They are subject to change without notice.
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_DEATH_TEST_INTERNAL_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_DEATH_TEST_INTERNAL_H_
@@ -5158,6 +5153,8 @@ class NeverThrown {
 // actual need for it.  Note that this fix cannot rely on value_type
 // being defined as many user-defined container types don't have
 // value_type.
+
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_PRINTERS_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_PRINTERS_H_
@@ -5420,7 +5417,7 @@ GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(char);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const char);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(wchar_t);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const wchar_t);
-#ifdef __cpp_lib_char8_t
+#ifdef __cpp_char8_t
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(char8_t);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const char8_t);
 #endif
@@ -7016,10 +7013,10 @@ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251 5046
 #include <stdio.h>
 #include <memory>
 
-GTEST_DECLARE_string_(internal_run_death_test);
-
 namespace testing {
 namespace internal {
+
+GTEST_DECLARE_string_(internal_run_death_test);
 
 // Names of the flags (needed for parsing Google Test flags).
 const char kDeathTestStyleFlag[] = "death_test_style";
@@ -7210,6 +7207,8 @@ inline Matcher<const ::std::string&> MakeDeathTestMatcher(
           gtest_dt->Abort(::testing::internal::DeathTest::TEST_DID_NOT_DIE);   \
           break;                                                               \
         }                                                                      \
+        default:                                                               \
+          break;                                                               \
       }                                                                        \
     }                                                                          \
   } else                                                                       \
@@ -7275,14 +7274,14 @@ InternalRunDeathTestFlag* ParseInternalRunDeathTestFlag();
 
 #endif  // GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_DEATH_TEST_INTERNAL_H_
 
+namespace testing {
+
 // This flag controls the style of death tests.  Valid values are "threadsafe",
 // meaning that the death test child process will re-execute the test binary
 // from the start, running only a single death test, or "fast",
 // meaning that the child process will execute the test logic immediately
 // after forking.
 GTEST_DECLARE_string_(death_test_style);
-
-namespace testing {
 
 #if GTEST_HAS_DEATH_TEST
 
@@ -7338,6 +7337,7 @@ GTEST_API_ bool InDeathTestChild();
 //
 // On the regular expressions used in death tests:
 //
+//   GOOGLETEST_CM0005 DO NOT DELETE
 //   On POSIX-compliant systems (*nix), we use the <regex.h> library,
 //   which uses the POSIX extended regex syntax.
 //
@@ -7438,6 +7438,7 @@ class GTEST_API_ ExitedWithCode {
 # if !GTEST_OS_WINDOWS && !GTEST_OS_FUCHSIA
 // Tests that an exit code describes an exit due to termination by a
 // given signal.
+// GOOGLETEST_CM0006 DO NOT DELETE
 class GTEST_API_ KilledBySignal {
  public:
   explicit KilledBySignal(int signum);
@@ -7608,6 +7609,8 @@ class GTEST_API_ KilledBySignal {
 //
 // Macros and functions for implementing parameterized tests
 // in Google C++ Testing and Mocking Framework (Google Test)
+//
+// GOOGLETEST_CM0001 DO NOT DELETE
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_PARAM_TEST_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_PARAM_TEST_H_
 
@@ -7783,6 +7786,8 @@ TEST_P(DerivedTest, DoesBlah) {
 
 // Type and function utilities for implementing parameterized tests.
 
+// GOOGLETEST_CM0001 DO NOT DELETE
+
 #ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_PARAM_UTIL_H_
 #define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_PARAM_UTIL_H_
 
@@ -7825,6 +7830,8 @@ TEST_P(DerivedTest, DoesBlah) {
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_TEST_PART_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_TEST_PART_H_
@@ -9231,6 +9238,7 @@ internal::CartesianProductHolder<Generator...> Combine(const Generator&... g) {
 
 //
 // Google C++ Testing and Mocking Framework definitions useful in production code.
+// GOOGLETEST_CM0003 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_PROD_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_PROD_H_
@@ -9288,6 +9296,8 @@ friend class test_case_name##_##test_name##_Test
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_TYPED_TEST_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_TYPED_TEST_H_
@@ -9588,6 +9598,17 @@ INSTANTIATE_TYPED_TEST_SUITE_P(My, FooTest, MyTypes);
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
 /* class A needs to have dll-interface to be used by clients of class B */)
 
+namespace testing {
+
+// Silence C4100 (unreferenced formal parameter) and 4805
+// unsafe mix of type 'const int' and type 'const bool'
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable:4805)
+# pragma warning(disable:4100)
+#endif
+
+
 // Declares the flags.
 
 // This flag temporary enables the disabled tests.
@@ -9642,12 +9663,6 @@ GTEST_DECLARE_int32_(random_seed);
 // is 1. If the value is -1 the tests are repeating forever.
 GTEST_DECLARE_int32_(repeat);
 
-// This flag controls whether Google Test Environments are recreated for each
-// repeat of the tests. The default value is true. If set to false the global
-// test Environment objects are only set up once, for the first iteration, and
-// only torn down once, for the last.
-GTEST_DECLARE_bool_(recreate_environments_when_repeating);
-
 // This flag controls whether Google Test includes Google Test internal
 // stack frames in failure stack traces.
 GTEST_DECLARE_bool_(show_internal_stack_frames);
@@ -9672,16 +9687,6 @@ GTEST_DECLARE_string_(stream_result_to);
 #if GTEST_USE_OWN_FLAGFILE_FLAG_
 GTEST_DECLARE_string_(flagfile);
 #endif  // GTEST_USE_OWN_FLAGFILE_FLAG_
-
-namespace testing {
-
-// Silence C4100 (unreferenced formal parameter) and 4805
-// unsafe mix of type 'const int' and type 'const bool'
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4805)
-#pragma warning(disable : 4100)
-#endif
 
 // The upper limit for valid stack trace depths.
 const int kMaxStackTraceDepth = 100;
@@ -9933,10 +9938,11 @@ GTEST_API_ AssertionResult AssertionFailure(const Message& msg);
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// This file is AUTOMATICALLY GENERATED on 07/21/2021 by command
+// This file is AUTOMATICALLY GENERATED on 01/02/2019 by command
 // 'gen_gtest_pred_impl.py 5'.  DO NOT EDIT BY HAND!
 //
 // Implements a family of generic predicate assertion macros.
+// GOOGLETEST_CM0001 DO NOT DELETE
 
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_PRED_IMPL_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_PRED_IMPL_H_
@@ -12254,12 +12260,13 @@ constexpr bool StaticAssertTypeEq() noexcept {
 //     EXPECT_EQ(a_.size(), 0);
 //     EXPECT_EQ(b_.size(), 1);
 //   }
-#define GTEST_TEST_F(test_fixture, test_name)\
+//
+// GOOGLETEST_CM0011 DO NOT DELETE
+#if !GTEST_DONT_DEFINE_TEST
+#define TEST_F(test_fixture, test_name)\
   GTEST_TEST_(test_fixture, test_name, test_fixture, \
               ::testing::internal::GetTypeId<test_fixture>())
-#if !GTEST_DONT_DEFINE_TEST_F
-#define TEST_F(test_fixture, test_name) GTEST_TEST_F(test_fixture, test_name)
-#endif
+#endif  // !GTEST_DONT_DEFINE_TEST
 
 // Returns a path to temporary directory.
 // Tries to determine an appropriate directory for the platform.
