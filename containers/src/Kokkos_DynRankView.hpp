@@ -1740,8 +1740,9 @@ struct DynRankViewRemap {
 namespace Kokkos {
 
 /** \brief  Deep copy a value from Host memory into a view.  */
-template <class DT, class... DP>
+template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
+    ExecSpace e,
     const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
@@ -1752,33 +1753,46 @@ inline void deep_copy(
                    typename ViewTraits<DT, DP...>::value_type>::value,
       "deep_copy requires non-const type");
 
-  Kokkos::fence(
-      "Kokkos::deep_copy(DynRankView, value_type): fence before filling view");
-  Kokkos::Impl::DynRankViewFill<DynRankView<DT, DP...> >(dst, value);
-  Kokkos::fence(
-      "Kokkos::deep_copy(DynRankView, value_type): fence after filling view");
+  switch(dst.rank()) {
+  case 0: deep_copy(e, dst.as_view_0(), value); break;
+  case 1: deep_copy(e, dst.as_view_1(), value); break;
+  case 2: deep_copy(e, dst.as_view_2(), value); break;
+  case 3: deep_copy(e, dst.as_view_3(), value); break;
+  case 4: deep_copy(e, dst.as_view_4(), value); break;
+  case 5: deep_copy(e, dst.as_view_5(), value); break;
+  case 6: deep_copy(e, dst.as_view_6(), value); break;
+  case 7: deep_copy(e, dst.as_view_7(), value); break;
+  }
+}
+
+template <class DT, class... DP>
+inline void deep_copy(
+    const DynRankView<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
+    typename std::enable_if<std::is_same<
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
+  deep_copy(DefaultExecutionSpace{}, dst, value);
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
+template <class ExecSpace, class ST, class... SP>
+inline void deep_copy(
+    ExecSpace e,
+    typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+    const DynRankView<ST, SP...>& src,
+    typename std::enable_if<std::is_same<
+        typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
+  deep_copy(e, dst, src.as_view_0());
+}
+
 template <class ST, class... SP>
 inline void deep_copy(
     typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
-  if (src.rank() != 0) {
-    Kokkos::abort("");
-  }
-
-  using src_traits       = ViewTraits<ST, SP...>;
-  using src_memory_space = typename src_traits::memory_space;
-  Kokkos::fence(
-      "Kokkos::deep_copy(value_type, DynRankView): fence before copying "
-      "value");
-  Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
-                                                      sizeof(ST));
-  Kokkos::fence(
-      "Kokkos::deep_copy(value_type, DynRankView): fence after copying value");
+  deep_copy(dst, src.as_view_0());
 }
 
 //----------------------------------------------------------------------------
