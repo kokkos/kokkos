@@ -436,63 +436,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION
   const view_type& ConstDownCast() const { return (const view_type&)(*this); }
 
-  Kokkos::View<DataType, Properties...> as_view_0() const {
-    if (rank() != 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType*, Properties...> as_view_1() const {
-    if (rank() != 1) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType*, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType**, Properties...> as_view_2() const {
-    if (rank() != 2) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType**, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType***, Properties...> as_view_3() const {
-    if (rank() != 3) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType***, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType****, Properties...> as_view_4() const {
-    if (rank() != 4) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType****, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType*****, Properties...> as_view_5() const {
-    if (rank() != 5) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType*****, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType******, Properties...> as_view_6() const {
-    if (rank() != 6) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType******, Properties...>(data(), layout());
-  }
-  Kokkos::View<DataType*******, Properties...> as_view_7() const {
-    if (rank() != 7) {
-      Kokkos::Impl::throw_runtime_exception(
-          "Converting DynRankView to a View of mis-matched rank");
-    }
-    return Kokkos::View<DataType*******, Properties...>(data(), layout());
-  }
-
   // Types below - at least the HostMirror requires the value_type, NOT the rank
   // 7 data_type of the traits
 
@@ -1739,11 +1682,26 @@ struct DynRankViewRemap {
 
 namespace Kokkos {
 
+namespace Impl {
+template <unsigned N, template <typename...> class V, typename T,
+          typename... Args>
+std::enable_if_t<std::is_same<V<T, Args...>, DynRankView<T, Args...> >::value,
+                 View<typename RankDataType<T, N>::type, Args...> >
+as_view(V<T, Args...> v) {
+  if (v.rank() != N)
+    Kokkos::Impl::throw_runtime_exception(
+        "Converting DynRankView " + std::to_string(v.rank()) +
+        " to a View of mis-matched rank " + std::to_string(N));
+
+  return View<typename RankDataType<T, N>::type, Args...>(v.data(), v.layout());
+}
+
+}  // namespace Impl
+
 /** \brief  Deep copy a value from Host memory into a view.  */
 template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
-    ExecSpace e,
-    const DynRankView<DT, DP...>& dst,
+    ExecSpace e, const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
@@ -1753,15 +1711,15 @@ inline void deep_copy(
                    typename ViewTraits<DT, DP...>::value_type>::value,
       "deep_copy requires non-const type");
 
-  switch(dst.rank()) {
-  case 0: deep_copy(e, dst.as_view_0(), value); break;
-  case 1: deep_copy(e, dst.as_view_1(), value); break;
-  case 2: deep_copy(e, dst.as_view_2(), value); break;
-  case 3: deep_copy(e, dst.as_view_3(), value); break;
-  case 4: deep_copy(e, dst.as_view_4(), value); break;
-  case 5: deep_copy(e, dst.as_view_5(), value); break;
-  case 6: deep_copy(e, dst.as_view_6(), value); break;
-  case 7: deep_copy(e, dst.as_view_7(), value); break;
+  switch (dst.rank()) {
+    case 0: deep_copy(e, Impl::as_view<0>(dst), value); break;
+    case 1: deep_copy(e, Impl::as_view<1>(dst), value); break;
+    case 2: deep_copy(e, Impl::as_view<2>(dst), value); break;
+    case 3: deep_copy(e, Impl::as_view<3>(dst), value); break;
+    case 4: deep_copy(e, Impl::as_view<4>(dst), value); break;
+    case 5: deep_copy(e, Impl::as_view<5>(dst), value); break;
+    case 6: deep_copy(e, Impl::as_view<6>(dst), value); break;
+    case 7: deep_copy(e, Impl::as_view<7>(dst), value); break;
   }
 }
 
@@ -1778,12 +1736,11 @@ inline void deep_copy(
 /** \brief  Deep copy into a value in Host memory from a view.  */
 template <class ExecSpace, class ST, class... SP>
 inline void deep_copy(
-    ExecSpace e,
-    typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+    ExecSpace e, typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
-  deep_copy(e, dst, src.as_view_0());
+  deep_copy(e, dst, Impl::as_view<0>(src));
 }
 
 template <class ST, class... SP>
@@ -1792,13 +1749,54 @@ inline void deep_copy(
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
-  deep_copy(dst, src.as_view_0());
+  deep_copy(dst, Impl::as_view<0>(src));
 }
 
 //----------------------------------------------------------------------------
 /** \brief  A deep copy between views of the default specialization, compatible
  * type, same rank, same contiguous layout.
  */
+template <class ExecSpace, class DstType, class SrcType>
+inline void deep_copy(
+    ExecSpace exec_space, const DstType& dst, const SrcType& src,
+    typename std::enable_if<
+        (std::is_same<typename DstType::traits::specialize, void>::value &&
+         std::is_same<typename SrcType::traits::specialize, void>::value &&
+         (Kokkos::is_dyn_rank_view<DstType>::value ||
+          Kokkos::is_dyn_rank_view<SrcType>::value))>::type* = nullptr) {
+  static_assert(
+      std::is_same<typename DstType::traits::value_type,
+                   typename DstType::traits::non_const_value_type>::value,
+      "deep_copy requires non-const destination type");
+
+  switch (rank(dst)) {
+    case 0:
+      deep_copy(exec_space, Impl::as_view<0>(dst), Impl::as_view<0>(src));
+      break;
+    case 1:
+      deep_copy(exec_space, Impl::as_view<1>(dst), Impl::as_view<1>(src));
+      break;
+    case 2:
+      deep_copy(exec_space, Impl::as_view<2>(dst), Impl::as_view<2>(src));
+      break;
+    case 3:
+      deep_copy(exec_space, Impl::as_view<3>(dst), Impl::as_view<3>(src));
+      break;
+    case 4:
+      deep_copy(exec_space, Impl::as_view<4>(dst), Impl::as_view<4>(src));
+      break;
+    case 5:
+      deep_copy(exec_space, Impl::as_view<5>(dst), Impl::as_view<5>(src));
+      break;
+    case 6:
+      deep_copy(exec_space, Impl::as_view<6>(dst), Impl::as_view<6>(src));
+      break;
+    case 7:
+      deep_copy(exec_space, Impl::as_view<7>(dst), Impl::as_view<7>(src));
+      break;
+  }
+}
+
 template <class DstType, class SrcType>
 inline void deep_copy(
     const DstType& dst, const SrcType& src,
@@ -1811,6 +1809,19 @@ inline void deep_copy(
       std::is_same<typename DstType::traits::value_type,
                    typename DstType::traits::non_const_value_type>::value,
       "deep_copy requires non-const destination type");
+
+  switch (rank(dst)) {
+    case 0: deep_copy(Impl::as_view<0>(dst), Impl::as_view<0>(src)); break;
+    case 1: deep_copy(Impl::as_view<1>(dst), Impl::as_view<1>(src)); break;
+    case 2: deep_copy(Impl::as_view<2>(dst), Impl::as_view<2>(src)); break;
+    case 3: deep_copy(Impl::as_view<3>(dst), Impl::as_view<3>(src)); break;
+    case 4: deep_copy(Impl::as_view<4>(dst), Impl::as_view<4>(src)); break;
+    case 5: deep_copy(Impl::as_view<5>(dst), Impl::as_view<5>(src)); break;
+    case 6: deep_copy(Impl::as_view<6>(dst), Impl::as_view<6>(src)); break;
+    case 7: deep_copy(Impl::as_view<7>(dst), Impl::as_view<7>(src)); break;
+  }
+
+  return;
 
   using dst_type = DstType;
   using src_type = SrcType;
@@ -1836,8 +1847,8 @@ inline void deep_copy(
     // Concern: If overlapping views then a parallel copy will be erroneous.
     // ...
 
-    // If same type, equal layout, equal dimensions, equal span, and contiguous
-    // memory then can byte-wise copy
+    // If same type, equal layout, equal dimensions, equal span, and
+    // contiguous memory then can byte-wise copy
     if (rank(src) == 0 && rank(dst) == 0) {
       using value_type = typename dst_type::value_type;
       Kokkos::fence(

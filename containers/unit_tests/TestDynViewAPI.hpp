@@ -985,8 +985,8 @@ class TestDynViewAPI {
 
     auto policy0 = Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, 1);
 
-    View0 v0 = d.as_view_0();
-    // Assign values after calling as_view_0() function under test to ensure
+    View0 v0 = Kokkos::Impl::as_view<0>(d);
+    // Assign values after calling as_view() function under test to ensure
     // aliasing
     Kokkos::parallel_for(
         policy0, KOKKOS_LAMBDA(int) { d() = 13; });
@@ -1005,7 +1005,7 @@ class TestDynViewAPI {
     auto policy1 =
         Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, d.extent(0));
 
-    View1 v1 = d.as_view_1();
+    View1 v1 = Kokkos::Impl::as_view<1>(d);
     Kokkos::parallel_for(
         policy1, KOKKOS_LAMBDA(int i0) { d(i0) = i0; });
     for (unsigned int rank = 0; rank < d.rank(); ++rank)
@@ -1024,7 +1024,7 @@ class TestDynViewAPI {
     auto policy2 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<2>>(
         {0, 0}, {d.extent(0), d.extent(1)});
 
-    View2 v2 = d.as_view_2();
+    View2 v2 = Kokkos::Impl::as_view<2>(d);
     Kokkos::parallel_for(
         policy2, KOKKOS_LAMBDA(int i0, int i1) { d(i0, i1) = i0 + 10 * i1; });
     for (unsigned int rank = 0; rank < d.rank(); ++rank)
@@ -1043,7 +1043,7 @@ class TestDynViewAPI {
     auto policy3 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<3>>(
         {0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2)});
 
-    View3 v3 = d.as_view_3();
+    View3 v3 = Kokkos::Impl::as_view<3>(d);
     Kokkos::parallel_for(
         policy3, KOKKOS_LAMBDA(int i0, int i1, int i2) {
           d(i0, i1, i2) = i0 + 10 * i1 + 100 * i2;
@@ -1064,7 +1064,7 @@ class TestDynViewAPI {
     auto policy4 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<4>>(
         {0, 0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2), d.extent(3)});
 
-    View4 v4 = d.as_view_4();
+    View4 v4 = Kokkos::Impl::as_view<4>(d);
     Kokkos::parallel_for(
         policy4, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3) {
           d(i0, i1, i2, i3) = i0 + 10 * i1 + 100 * i2 + 1000 * i3;
@@ -1086,7 +1086,7 @@ class TestDynViewAPI {
         {0, 0, 0, 0, 0},
         {d.extent(0), d.extent(1), d.extent(2), d.extent(3), d.extent(4)});
 
-    View5 v5 = d.as_view_5();
+    View5 v5 = Kokkos::Impl::as_view<5>(d);
     Kokkos::parallel_for(
         policy5, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4) {
           d(i0, i1, i2, i3, i4) =
@@ -1109,7 +1109,7 @@ class TestDynViewAPI {
         {0, 0, 0, 0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2), d.extent(3),
                              d.extent(4), d.extent(5)});
 
-    View6 v6 = d.as_view_6();
+    View6 v6 = Kokkos::Impl::as_view<6>(d);
     Kokkos::parallel_for(
         policy6, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4, int i5) {
           d(i0, i1, i2, i3, i4, i5) =
@@ -1136,7 +1136,7 @@ class TestDynViewAPI {
         {d.extent(0), d.extent(1), d.extent(2), d.extent(3), d.extent(4),
          d.extent(5), d.extent(6)});
 
-    View7 v7 = d.as_view_7();
+    View7 v7 = Kokkos::Impl::as_view<7>(d);
     Kokkos::parallel_for(
         policy7,
         KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4, int i5, int i6) {
@@ -1162,7 +1162,7 @@ class TestDynViewAPI {
     // Error checking test
     bool mismatch_throws = false;
     try {
-      auto v_copy = d.as_view_2();
+      auto v_copy = Kokkos::Impl::as_view<2>(d);
     } catch (...) {
       mismatch_throws = true;
     }

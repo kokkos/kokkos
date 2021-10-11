@@ -1899,6 +1899,42 @@ KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>& V) {
   return V.Rank;
 }  // Temporary until added to view
 
+namespace Impl {
+
+template <typename ValueType, unsigned int Rank>
+struct RankDataType {
+  using type = typename RankDataType<ValueType, Rank - 1>::type*;
+};
+
+template <typename ValueType>
+struct RankDataType<ValueType, 0> {
+  using type = std::remove_pointer_t<ValueType>;
+};
+
+template <unsigned N, template <typename...> class V, typename T,
+          typename... Args>
+std::enable_if_t<(std::is_same<V<T, Args...>, View<T, Args...>>::value &&
+                  N == V<T, Args...>::Rank),
+                 V<T, Args...>>
+as_view(V<T, Args...> v) {
+  return v;
+}
+
+// Placeholder implementation to compile generic code for DynRankView; should
+// never be called
+template <unsigned N, template <typename...> class V, typename T,
+          typename... Args>
+typename std::enable_if_t<
+    (std::is_same<V<T, Args...>, View<T, Args...>>::value &&
+     N != V<T, Args...>::Rank),
+    V<typename RankDataType<T, N>::type, Args...>>
+as_view(V<T, Args...> v) {
+  Kokkos::Impl::throw_runtime_exception(
+      "Trying to get at a View of the wrong rank");
+  return {};
+}
+
+}  // namespace Impl
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
