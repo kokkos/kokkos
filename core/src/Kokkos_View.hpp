@@ -1439,34 +1439,40 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
-  KOKKOS_DEFAULTED_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::copy_construct(*this, other);
+#endif
   }
 
-  KOKKOS_DEFAULTED_FUNCTION
-  View(View&& other) {
-    using namespace std;
-    swap(m_map, other.m_map);
-    swap(m_track, other.m_track);
+  KOKKOS_INLINE_FUNCTION
+  View(View&& other) : m_map{ std::move( other.m_map ) }, m_track{ std::move( other.m_track ) } {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::move_construct(*this, other);
+#endif
   }
 
-  KOKKOS_DEFAULTED_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   View& operator=(const View& other) {
     m_map   = other.m_map;
     m_track = other.m_track;
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::copy_assign(*this, other);
+#endif
 
     return *this;
   }
 
-  KOKKOS_DEFAULTED_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   View& operator=(View&& other) {
-    using namespace std;
-    swap(m_map, other.m_map);
-    swap(m_track, other.m_track);
+    m_map = std::move( other.m_map );
+    m_track = std::move( other.m_track );
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::move_assign(*this, other);
+#endif
 
     return *this;
   }
