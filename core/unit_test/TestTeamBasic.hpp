@@ -105,7 +105,9 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
                     long>::test_teambroadcast(1000, 1);
 }
 
-// FIXME_OPENMPTARGET Libomptarget error: Copying data from device failed.
+// FIXME_OPENMPTARGET CI fails with
+// Libomptarget error: Copying data from device failed.
+// Possibly, because long_wrapper is not trivially-copyable.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 struct long_wrapper {
   long value;
