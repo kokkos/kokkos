@@ -285,7 +285,6 @@ struct ConstructSubSpan {
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<std::is_integral<Arg>::value,
                                                  sub_mdspan_type>
   create(strides_t& strides, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
-    printf("Strides Skip: %i %i %i\n",R,Rsub,int(org.stride(R)));
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1, Rsub>::create(
         strides, offset, org, args...);
   }
@@ -295,7 +294,6 @@ struct ConstructSubSpan {
           sub_mdspan_type::static_extent(Rsub) == std::experimental::dynamic_extent,
       sub_mdspan_type>
   create(strides_t& strides, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
-    printf("Strides: %i %i %i\n",R,Rsub,int(org.stride(R)));
     strides[Rsub] = org.stride(R);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
                             Rsub + 1>::create(strides, offset, org, args...,
@@ -314,7 +312,6 @@ struct ConstructSubSpan {
   template <class T1, class T2, class... Args>
   KOKKOS_INLINE_FUNCTION static sub_mdspan_type
   create(strides_t& strides, ptrdiff_t offset, mdspan_type org, std::pair<T1,T2> arg, Args... args) {
-    printf("Strides: %i %i %i\n",R,Rsub,int(org.stride(R)));
     strides[Rsub] = org.stride(R);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
                             Rsub + 1>::create(strides, offset, org, args...,
@@ -465,7 +462,6 @@ auto submdspan(const Kokkos::LayoutLeft&,
              const std::experimental::mdspan<
                  T, Extents, Kokkos::LayoutLeft, Accessor>& A,
              const Args&... args) {
-        printf("HUCH\n");
   using mdspan_type =
       std::experimental::mdspan<T, Extents, Kokkos::LayoutLeft, Accessor>;
   using sub_extents_type =
@@ -495,7 +491,6 @@ auto submdspan(const Kokkos::LayoutRight&,
              const std::experimental::mdspan<
                  T, Extents, Kokkos::LayoutRight, Accessor>& A,
              const Args&... args) {
-        printf("HUCH\n");
   using mdspan_type =
       std::experimental::mdspan<T, Extents, Kokkos::LayoutRight, Accessor>;
   using sub_extents_type =
