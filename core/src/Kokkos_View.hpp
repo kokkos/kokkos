@@ -1901,31 +1901,6 @@ KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>& V) {
 
 namespace Impl {
 
-template <typename T>
-struct remove_all_pointers {
-  using type = T;
-};
-
-template <typename T>
-struct remove_all_pointers<T*> {
-  using type = typename remove_all_pointers<T>::type;
-};
-
-template <typename T>
-struct remove_all_pointers<T* const> {
-  using type = typename remove_all_pointers<T>::type;
-};
-
-template <typename T>
-struct remove_all_pointers<T* volatile> {
-  using type = typename remove_all_pointers<T>::type;
-};
-
-template <typename T>
-struct remove_all_pointers<T* const volatile> {
-  using type = typename remove_all_pointers<T>::type;
-};
-
 template <typename ValueType, unsigned int Rank>
 struct RankDataType {
   using type = typename RankDataType<ValueType, Rank - 1>::type*;
@@ -1933,20 +1908,22 @@ struct RankDataType {
 
 template <typename ValueType>
 struct RankDataType<ValueType, 0> {
-  using type = typename remove_all_pointers<ValueType>::type;
+  using type = ValueType;
 };
 
 template <unsigned N, typename... Args>
-std::enable_if_t<N == View<Args...>::Rank, View<Args...>>
-as_view(View<Args...> v) {
+std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view(
+    View<Args...> v) {
   return v;
 }
 
 // Placeholder implementation to compile generic code for DynRankView; should
 // never be called
 template <unsigned N, typename T, typename... Args>
-typename std::enable_if_t<N != View<T, Args...>::Rank,
-                          View<typename RankDataType<T, N>::type, Args...>>
+typename std::enable_if_t<
+    N != View<T, Args...>::Rank,
+    View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
+         Args...>>
 as_view(View<T, Args...>) {
   Kokkos::Impl::throw_runtime_exception(
       "Trying to get at a View of the wrong rank");

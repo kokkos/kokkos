@@ -1684,8 +1684,8 @@ namespace Kokkos {
 
 namespace Impl {
 template <unsigned N, typename T, typename... Args>
-View<typename RankDataType<T, N>::type, Args...>
-as_view(DynRankView<T, Args...> v) {
+View<typename RankDataType<T, N>::type, Args...> as_view(
+    DynRankView<T, Args...> v) {
   if (v.rank() != N)
     Kokkos::Impl::throw_runtime_exception(
         "Converting DynRankView " + std::to_string(v.rank()) +
@@ -1743,7 +1743,8 @@ inline void deep_copy(
 /** \brief  Deep copy into a value in Host memory from a view.  */
 template <class ExecSpace, class ST, class... SP>
 inline void deep_copy(
-    const ExecSpace& e, typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+    const ExecSpace& e,
+    typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
