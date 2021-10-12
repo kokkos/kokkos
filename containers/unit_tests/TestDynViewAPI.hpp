@@ -723,7 +723,7 @@ class TestDynViewAPI {
     run_test_subview();
     run_test_subview_strided();
     run_test_vector();
-    run_test_as_view();
+    run_test_as_view_of_rank_n();
   }
 
   static void run_operator_test_rank12345() {
@@ -970,7 +970,7 @@ class TestDynViewAPI {
     }
   }
 
-  static void run_test_as_view() {
+  static void run_test_as_view_of_rank_n() {
     Kokkos::View<int, Kokkos::HostSpace> error_flag_host("error_flag");
     error_flag_host() = 0;
     auto error_flag =
@@ -985,9 +985,9 @@ class TestDynViewAPI {
 
     auto policy0 = Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, 1);
 
-    View0 v0 = Kokkos::Impl::as_view<0>(d);
-    // Assign values after calling as_view() function under test to ensure
-    // aliasing
+    View0 v0 = Kokkos::Impl::as_view_of_rank_n<0>(d);
+    // Assign values after calling as_view_of_rank_n() function under
+    // test to ensure aliasing
     Kokkos::parallel_for(
         policy0, KOKKOS_LAMBDA(int) { d() = 13; });
     ASSERT_EQ(v0.size(), d.size());
@@ -1005,7 +1005,7 @@ class TestDynViewAPI {
     auto policy1 =
         Kokkos::RangePolicy<DeviceType>(DeviceType(), 0, d.extent(0));
 
-    View1 v1 = Kokkos::Impl::as_view<1>(d);
+    View1 v1 = Kokkos::Impl::as_view_of_rank_n<1>(d);
     Kokkos::parallel_for(
         policy1, KOKKOS_LAMBDA(int i0) { d(i0) = i0; });
     for (unsigned int rank = 0; rank < d.rank(); ++rank)
@@ -1024,7 +1024,7 @@ class TestDynViewAPI {
     auto policy2 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<2>>(
         {0, 0}, {d.extent(0), d.extent(1)});
 
-    View2 v2 = Kokkos::Impl::as_view<2>(d);
+    View2 v2 = Kokkos::Impl::as_view_of_rank_n<2>(d);
     Kokkos::parallel_for(
         policy2, KOKKOS_LAMBDA(int i0, int i1) { d(i0, i1) = i0 + 10 * i1; });
     for (unsigned int rank = 0; rank < d.rank(); ++rank)
@@ -1043,7 +1043,7 @@ class TestDynViewAPI {
     auto policy3 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<3>>(
         {0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2)});
 
-    View3 v3 = Kokkos::Impl::as_view<3>(d);
+    View3 v3 = Kokkos::Impl::as_view_of_rank_n<3>(d);
     Kokkos::parallel_for(
         policy3, KOKKOS_LAMBDA(int i0, int i1, int i2) {
           d(i0, i1, i2) = i0 + 10 * i1 + 100 * i2;
@@ -1064,7 +1064,7 @@ class TestDynViewAPI {
     auto policy4 = Kokkos::MDRangePolicy<DeviceType, Kokkos::Rank<4>>(
         {0, 0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2), d.extent(3)});
 
-    View4 v4 = Kokkos::Impl::as_view<4>(d);
+    View4 v4 = Kokkos::Impl::as_view_of_rank_n<4>(d);
     Kokkos::parallel_for(
         policy4, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3) {
           d(i0, i1, i2, i3) = i0 + 10 * i1 + 100 * i2 + 1000 * i3;
@@ -1086,7 +1086,7 @@ class TestDynViewAPI {
         {0, 0, 0, 0, 0},
         {d.extent(0), d.extent(1), d.extent(2), d.extent(3), d.extent(4)});
 
-    View5 v5 = Kokkos::Impl::as_view<5>(d);
+    View5 v5 = Kokkos::Impl::as_view_of_rank_n<5>(d);
     Kokkos::parallel_for(
         policy5, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4) {
           d(i0, i1, i2, i3, i4) =
@@ -1109,7 +1109,7 @@ class TestDynViewAPI {
         {0, 0, 0, 0, 0, 0}, {d.extent(0), d.extent(1), d.extent(2), d.extent(3),
                              d.extent(4), d.extent(5)});
 
-    View6 v6 = Kokkos::Impl::as_view<6>(d);
+    View6 v6 = Kokkos::Impl::as_view_of_rank_n<6>(d);
     Kokkos::parallel_for(
         policy6, KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4, int i5) {
           d(i0, i1, i2, i3, i4, i5) =
@@ -1136,7 +1136,7 @@ class TestDynViewAPI {
         {d.extent(0), d.extent(1), d.extent(2), d.extent(3), d.extent(4),
          d.extent(5), d.extent(6)});
 
-    View7 v7 = Kokkos::Impl::as_view<7>(d);
+    View7 v7 = Kokkos::Impl::as_view_of_rank_n<7>(d);
     Kokkos::parallel_for(
         policy7,
         KOKKOS_LAMBDA(int i0, int i1, int i2, int i3, int i4, int i5, int i6) {
@@ -1162,7 +1162,7 @@ class TestDynViewAPI {
     // Error checking test
     bool mismatch_throws = false;
     try {
-      auto v_copy = Kokkos::Impl::as_view<2>(d);
+      auto v_copy = Kokkos::Impl::as_view_of_rank_n<2>(d);
     } catch (...) {
       mismatch_throws = true;
     }

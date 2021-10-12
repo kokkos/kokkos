@@ -1684,7 +1684,7 @@ namespace Kokkos {
 
 namespace Impl {
 template <unsigned N, typename T, typename... Args>
-View<typename RankDataType<T, N>::type, Args...> as_view(
+View<typename RankDataType<T, N>::type, Args...> as_view_of_rank_n(
     DynRankView<T, Args...> v) {
   if (v.rank() != N)
     Kokkos::Impl::throw_runtime_exception(
@@ -1710,14 +1710,14 @@ inline void deep_copy(
       "deep_copy requires non-const type");
 
   switch (dst.rank()) {
-    case 0: deep_copy(e, Impl::as_view<0>(dst), value); break;
-    case 1: deep_copy(e, Impl::as_view<1>(dst), value); break;
-    case 2: deep_copy(e, Impl::as_view<2>(dst), value); break;
-    case 3: deep_copy(e, Impl::as_view<3>(dst), value); break;
-    case 4: deep_copy(e, Impl::as_view<4>(dst), value); break;
-    case 5: deep_copy(e, Impl::as_view<5>(dst), value); break;
-    case 6: deep_copy(e, Impl::as_view<6>(dst), value); break;
-    case 7: deep_copy(e, Impl::as_view<7>(dst), value); break;
+    case 0: deep_copy(e, Impl::as_view_of_rank_n<0>(dst), value); break;
+    case 1: deep_copy(e, Impl::as_view_of_rank_n<1>(dst), value); break;
+    case 2: deep_copy(e, Impl::as_view_of_rank_n<2>(dst), value); break;
+    case 3: deep_copy(e, Impl::as_view_of_rank_n<3>(dst), value); break;
+    case 4: deep_copy(e, Impl::as_view_of_rank_n<4>(dst), value); break;
+    case 5: deep_copy(e, Impl::as_view_of_rank_n<5>(dst), value); break;
+    case 6: deep_copy(e, Impl::as_view_of_rank_n<6>(dst), value); break;
+    case 7: deep_copy(e, Impl::as_view_of_rank_n<7>(dst), value); break;
   }
 }
 
@@ -1729,14 +1729,14 @@ inline void deep_copy(
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
   switch (dst.rank()) {
-    case 0: deep_copy(Impl::as_view<0>(dst), value); break;
-    case 1: deep_copy(Impl::as_view<1>(dst), value); break;
-    case 2: deep_copy(Impl::as_view<2>(dst), value); break;
-    case 3: deep_copy(Impl::as_view<3>(dst), value); break;
-    case 4: deep_copy(Impl::as_view<4>(dst), value); break;
-    case 5: deep_copy(Impl::as_view<5>(dst), value); break;
-    case 6: deep_copy(Impl::as_view<6>(dst), value); break;
-    case 7: deep_copy(Impl::as_view<7>(dst), value); break;
+    case 0: deep_copy(Impl::as_view_of_rank_n<0>(dst), value); break;
+    case 1: deep_copy(Impl::as_view_of_rank_n<1>(dst), value); break;
+    case 2: deep_copy(Impl::as_view_of_rank_n<2>(dst), value); break;
+    case 3: deep_copy(Impl::as_view_of_rank_n<3>(dst), value); break;
+    case 4: deep_copy(Impl::as_view_of_rank_n<4>(dst), value); break;
+    case 5: deep_copy(Impl::as_view_of_rank_n<5>(dst), value); break;
+    case 6: deep_copy(Impl::as_view_of_rank_n<6>(dst), value); break;
+    case 7: deep_copy(Impl::as_view_of_rank_n<7>(dst), value); break;
   }
 }
 
@@ -1748,7 +1748,7 @@ inline void deep_copy(
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
-  deep_copy(e, dst, Impl::as_view<0>(src));
+  deep_copy(e, dst, Impl::as_view_of_rank_n<0>(src));
 }
 
 template <class ST, class... SP>
@@ -1757,7 +1757,7 @@ inline void deep_copy(
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
-  deep_copy(dst, Impl::as_view<0>(src));
+  deep_copy(dst, Impl::as_view_of_rank_n<0>(src));
 }
 
 //----------------------------------------------------------------------------
@@ -1779,28 +1779,28 @@ inline void deep_copy(
 
   switch (rank(dst)) {
     case 0:
-      deep_copy(exec_space, Impl::as_view<0>(dst), Impl::as_view<0>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<0>(dst), Impl::as_view_of_rank_n<0>(src));
       break;
     case 1:
-      deep_copy(exec_space, Impl::as_view<1>(dst), Impl::as_view<1>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<1>(dst), Impl::as_view_of_rank_n<1>(src));
       break;
     case 2:
-      deep_copy(exec_space, Impl::as_view<2>(dst), Impl::as_view<2>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<2>(dst), Impl::as_view_of_rank_n<2>(src));
       break;
     case 3:
-      deep_copy(exec_space, Impl::as_view<3>(dst), Impl::as_view<3>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<3>(dst), Impl::as_view_of_rank_n<3>(src));
       break;
     case 4:
-      deep_copy(exec_space, Impl::as_view<4>(dst), Impl::as_view<4>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<4>(dst), Impl::as_view_of_rank_n<4>(src));
       break;
     case 5:
-      deep_copy(exec_space, Impl::as_view<5>(dst), Impl::as_view<5>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<5>(dst), Impl::as_view_of_rank_n<5>(src));
       break;
     case 6:
-      deep_copy(exec_space, Impl::as_view<6>(dst), Impl::as_view<6>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<6>(dst), Impl::as_view_of_rank_n<6>(src));
       break;
     case 7:
-      deep_copy(exec_space, Impl::as_view<7>(dst), Impl::as_view<7>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<7>(dst), Impl::as_view_of_rank_n<7>(src));
       break;
   }
 }
@@ -1819,14 +1819,14 @@ inline void deep_copy(
       "deep_copy requires non-const destination type");
 
   switch (rank(dst)) {
-    case 0: deep_copy(Impl::as_view<0>(dst), Impl::as_view<0>(src)); break;
-    case 1: deep_copy(Impl::as_view<1>(dst), Impl::as_view<1>(src)); break;
-    case 2: deep_copy(Impl::as_view<2>(dst), Impl::as_view<2>(src)); break;
-    case 3: deep_copy(Impl::as_view<3>(dst), Impl::as_view<3>(src)); break;
-    case 4: deep_copy(Impl::as_view<4>(dst), Impl::as_view<4>(src)); break;
-    case 5: deep_copy(Impl::as_view<5>(dst), Impl::as_view<5>(src)); break;
-    case 6: deep_copy(Impl::as_view<6>(dst), Impl::as_view<6>(src)); break;
-    case 7: deep_copy(Impl::as_view<7>(dst), Impl::as_view<7>(src)); break;
+    case 0: deep_copy(Impl::as_view_of_rank_n<0>(dst), Impl::as_view_of_rank_n<0>(src)); break;
+    case 1: deep_copy(Impl::as_view_of_rank_n<1>(dst), Impl::as_view_of_rank_n<1>(src)); break;
+    case 2: deep_copy(Impl::as_view_of_rank_n<2>(dst), Impl::as_view_of_rank_n<2>(src)); break;
+    case 3: deep_copy(Impl::as_view_of_rank_n<3>(dst), Impl::as_view_of_rank_n<3>(src)); break;
+    case 4: deep_copy(Impl::as_view_of_rank_n<4>(dst), Impl::as_view_of_rank_n<4>(src)); break;
+    case 5: deep_copy(Impl::as_view_of_rank_n<5>(dst), Impl::as_view_of_rank_n<5>(src)); break;
+    case 6: deep_copy(Impl::as_view_of_rank_n<6>(dst), Impl::as_view_of_rank_n<6>(src)); break;
+    case 7: deep_copy(Impl::as_view_of_rank_n<7>(dst), Impl::as_view_of_rank_n<7>(src)); break;
   }
 
   return;

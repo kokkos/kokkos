@@ -1912,7 +1912,7 @@ struct RankDataType<ValueType, 0> {
 };
 
 template <unsigned N, typename... Args>
-std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view(
+std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view_of_rank_n(
     View<Args...> v) {
   return v;
 }
@@ -1924,7 +1924,7 @@ typename std::enable_if_t<
     N != View<T, Args...>::Rank,
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
          Args...>>
-as_view(View<T, Args...>) {
+as_view_of_rank_n(View<T, Args...>) {
   Kokkos::Impl::throw_runtime_exception(
       "Trying to get at a View of the wrong rank");
   return {};
