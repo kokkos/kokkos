@@ -1683,11 +1683,9 @@ struct DynRankViewRemap {
 namespace Kokkos {
 
 namespace Impl {
-template <unsigned N, template <typename...> class V, typename T,
-          typename... Args>
-std::enable_if_t<std::is_same<V<T, Args...>, DynRankView<T, Args...> >::value,
-                 View<typename RankDataType<T, N>::type, Args...> >
-as_view(V<T, Args...> v) {
+template <unsigned N, typename T, typename... Args>
+View<typename RankDataType<T, N>::type, Args...>
+as_view(DynRankView<T, Args...> v) {
   if (v.rank() != N)
     Kokkos::Impl::throw_runtime_exception(
         "Converting DynRankView " + std::to_string(v.rank()) +
