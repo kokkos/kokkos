@@ -517,7 +517,7 @@ void pre_initialize_internal(const InitArguments& args) {
 }
 
 void post_initialize_internal(const InitArguments& args) {
-  initialize_profiling(args.tools);
+initialize_profiling(args.get_tools_init_arguments());
   g_is_initialized = true;
 }
 
@@ -593,29 +593,29 @@ void parse_command_line_arguments(int& narg, char* arg[],
   bool kokkos_numa_found     = false;
   bool kokkos_device_found   = false;
   bool kokkos_ndevices_found = false;
-
-  Tools::Impl::parse_command_line_arguments(narg, arg, arguments.tools);
-  if (arguments.tools.tune_internals !=
+  auto tools_init_arguments = arguments.get_tools_init_arguments();
+  Tools::Impl::parse_command_line_arguments(narg, arg, tools_init_arguments);
+  if (tools_init_arguments.tune_internals !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
-    tune_internals = (arguments.tools.tune_internals ==
+    tune_internals = (tools_init_arguments.tune_internals ==
                       Kokkos::Tools::InitArguments::PossiblyUnsetOption::on)
                          ? true
                          : false;
   }
-  if (arguments.tools.help !=
+  if (tools_init_arguments.help !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
-    tool_help = (arguments.tools.help ==
+    tool_help = (tools_init_arguments.help ==
                  Kokkos::Tools::InitArguments::PossiblyUnsetOption::on)
                     ? true
                     : false;
   }
-  if (arguments.tools.lib !=
+  if (tools_init_arguments.lib !=
       Kokkos::Tools::InitArguments::unset_string_option) {
-    tool_lib = arguments.tools.lib;
+    tool_lib = tools_init_arguments.lib;
   }
-  if (arguments.tools.args !=
+  if (tools_init_arguments.args !=
       Kokkos::Tools::InitArguments::unset_string_option) {
-    tool_args = arguments.tools.args;
+    tool_args = tools_init_arguments.args;
   }
 
   int iarg = 0;
@@ -790,7 +790,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else
       iarg++;
   }
-  if ((arguments.tools.args ==
+  if ((tools_init_arguments.args ==
        Kokkos::Tools::InitArguments::unset_string_option) &&
       narg > 0)
     tool_args = arg[0];
@@ -809,35 +809,37 @@ void parse_environment_variables(InitArguments& arguments) {
   auto& tool_help        = arguments.tool_help;
   char* endptr;
 
-  auto init_result = Tools::Impl::parse_environment_variables(arguments.tools);
-  if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::
+  auto tools_init_arguments = arguments.get_tools_init_arguments();
+ auto init_result =
+      Tools::Impl::parse_environment_variables(tools_init_arguments);
+      if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::
                                 environment_argument_mismatch) {
     Impl::throw_runtime_exception(init_result.error_message);
   }
 
-  tool_lib = arguments.tools
-                 .lib;  // maintain consistency between deprecated and current
-  if (arguments.tools.tune_internals !=
+  tool_lib = tools_init_arguments.lib;
+
+  if (tools_init_arguments.tune_internals !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
-    tune_internals = (arguments.tools.tune_internals ==
+    tune_internals = (tools_init_arguments.tune_internals ==
                       Kokkos::Tools::InitArguments::PossiblyUnsetOption::on)
                          ? true
                          : false;
   }
-  if (arguments.tools.help !=
+  if (tools_init_arguments.help !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
-    tool_help = (arguments.tools.help ==
+    tool_help = (tools_init_arguments.help ==
                  Kokkos::Tools::InitArguments::PossiblyUnsetOption::on)
                     ? true
                     : false;
   }
-  if (arguments.tools.lib !=
+  if (tools_init_arguments.lib !=
       Kokkos::Tools::InitArguments::unset_string_option) {
-    tool_lib = arguments.tools.lib;
+    tool_lib = tools_init_arguments.lib;
   }
-  if (arguments.tools.args !=
+  if (tools_init_arguments.args !=
       Kokkos::Tools::InitArguments::unset_string_option) {
-    tool_args = arguments.tools.args;
+    tool_args = tools_init_arguments.args;
   }
 
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
