@@ -242,7 +242,6 @@ struct ConstructSubSpan {
                                                  sub_mdspan_type>
   create(ptrdiff_t stride, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
     if(R<mdspan_type::rank()-1) stride *= org.extent(R);
-    printf("%i %i %li\n",R,Rsub,stride);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1, Rsub>::create(
         stride, offset, org, args...);
   }
@@ -253,7 +252,6 @@ struct ConstructSubSpan {
       sub_mdspan_type>
   create(ptrdiff_t stride, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
   if(R<mdspan_type::rank()-1) stride=1;
-    printf("%i %i %li\n",R,Rsub,stride);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
                             Rsub + 1>::create(stride, offset, org, args...,
                                               org.extent(R));
@@ -265,7 +263,6 @@ struct ConstructSubSpan {
       sub_mdspan_type>
   create(ptrdiff_t stride, ptrdiff_t offset, mdspan_type org, Arg, Args... args) {
   if(R<mdspan_type::rank()-1) stride=1;
-    printf("%i %i %li\n",R,Rsub,stride);
     return ConstructSubSpan<mdspan_type, sub_mdspan_type, R + 1,
                             Rsub + 1>::create(stride, offset, org, args...);
   }
@@ -340,7 +337,9 @@ struct ConstructSubSpan<mdspan_type, sub_mdspan_type, int(mdspan_type::rank()),
                                                        ptrdiff_t offset,
                                                        mdspan_type org,
                                                        Args... args) {
-    return sub_mdspan_type(org.accessor().offset(org.data(), offset), mapping_t(extents_t(args...), size_t(stride)*org.mapping().stride(1)));
+    constexpr int stride_rank = std::is_same<typename mdspan_type::layout_type, Kokkos::LayoutLeft>::value? 1:
+                                  (mdspan_type::extents_type::rank()>1?mdspan_type::extents_type::rank()-2:0);
+    return sub_mdspan_type(org.accessor().offset(org.data(), offset), mapping_t(extents_t(args...), size_t(stride)*org.mapping().stride(stride_rank)));
   }
 
   // Overloads where the target layout needs dynamic extents and the strides (LayoutStride,layout_stride)
