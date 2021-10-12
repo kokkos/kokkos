@@ -174,7 +174,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
 
 template <class Space,
           bool =
-              MemorySpaceAccess<Space, ActiveExecutionMemorySpace>::accessible>
+              MemorySpaceAccess<ActiveExecutionMemorySpace, Space>::accessible>
 struct ViewVerifySpace {
   KOKKOS_FORCEINLINE_FUNCTION static void check() {}
 };
