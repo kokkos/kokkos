@@ -557,8 +557,6 @@ class BasicView
     if (mapping.required_span_size() > 0 && desc_with_defaults_t::initialize) {
       // a better name for m_destroy might be m_construct_and_destroy
       // or something like that
-      printf("Foo %i %p %s\n", (int)mapping.required_span_size(),
-             record->data(), record->get_label().c_str());
       record->m_destroy = construct_destroy_functor_type{
           desc_with_defaults.get_execution_space(),
           static_cast<typename traits::value_type*>(record->data()),
@@ -782,7 +780,7 @@ class BasicView
     // warnings.
     static_assert(std::is_integral<IntegralType>::value,
                   "Kokkos::View::extent() called with non-integral type.");
-    return m_data.extent(std::size_t(i));
+    return i<mdspan_type::extents_type::rank()?m_data.extent(std::size_t(i)):1;
   }
 
   template <class IntegralType>
@@ -791,7 +789,7 @@ class BasicView
     // warnings.
     static_assert(std::is_integral<IntegralType>::value,
                   "Kokkos::View::extent_int() called with non-integral type.");
-    return int(m_data.extent(std::size_t(i)));
+    return i<mdspan_type::extents_type::rank()?int(m_data.extent(std::size_t(i))):1;
   }
 
   KOKKOS_FUNCTION static constexpr std::size_t static_extent(unsigned i)
@@ -916,7 +914,7 @@ class BasicView
   template<class ... Extents>
   static constexpr size_t required_allocation_size(
       typename mdspan_type::mapping_type const& arg_mapping) {
-    return typename mdspan_type::mapping_type{arg_mapping}.required_span_size();
+    return typename mdspan_type::mapping_type{arg_mapping}.required_span_size()*sizeof(typename traits::value_type);
   }
 
   template <class... IntegralTypes>
@@ -949,7 +947,7 @@ class BasicView
 
   static constexpr size_t shmem_size(
       typename traits::array_layout const& arg_layout) {
-    return typename mdspan_type::mapping_type{arg_layout}.required_span_size() +
+    return (typename mdspan_type::mapping_type{arg_layout}.required_span_size() + 1) * 
            sizeof(typename traits::value_type);
   }
 
