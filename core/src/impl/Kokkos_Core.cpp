@@ -517,7 +517,7 @@ void pre_initialize_internal(const InitArguments& args) {
 }
 
 void post_initialize_internal(const InitArguments& args) {
-initialize_profiling(args.get_tools_init_arguments());
+  initialize_profiling(args.get_tools_init_arguments());
   g_is_initialized = true;
 }
 
@@ -593,7 +593,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
   bool kokkos_numa_found     = false;
   bool kokkos_device_found   = false;
   bool kokkos_ndevices_found = false;
-  auto tools_init_arguments = arguments.get_tools_init_arguments();
+  auto tools_init_arguments  = arguments.get_tools_init_arguments();
   Tools::Impl::parse_command_line_arguments(narg, arg, tools_init_arguments);
   if (tools_init_arguments.tune_internals !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
@@ -810,9 +810,9 @@ void parse_environment_variables(InitArguments& arguments) {
   char* endptr;
 
   auto tools_init_arguments = arguments.get_tools_init_arguments();
- auto init_result =
+  auto init_result =
       Tools::Impl::parse_environment_variables(tools_init_arguments);
-      if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::
+  if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::
                                 environment_argument_mismatch) {
     Impl::throw_runtime_exception(init_result.error_message);
   }

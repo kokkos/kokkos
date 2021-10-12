@@ -102,11 +102,15 @@ struct InitArguments {
         skip_device{9999},
         disable_warnings{dw},
         tune_internals{ti} {}
-        Tools::InitArguments get_tools_init_arguments() const {
+  Tools::InitArguments get_tools_init_arguments() const {
     Tools::InitArguments init_tools;
-    init_tools.tune_internals = tune_internals?Tools::InitArguments::PossiblyUnsetOption::on:Tools::InitArguments::PossiblyUnsetOption::off;
-    init_tools.help = tool_help?Tools::InitArguments::PossiblyUnsetOption::on:Tools::InitArguments::PossiblyUnsetOption::off;
-    init_tools.lib = tool_lib;
+    init_tools.tune_internals =
+        tune_internals ? Tools::InitArguments::PossiblyUnsetOption::on
+                       : Tools::InitArguments::PossiblyUnsetOption::off;
+    init_tools.help = tool_help
+                          ? Tools::InitArguments::PossiblyUnsetOption::on
+                          : Tools::InitArguments::PossiblyUnsetOption::off;
+    init_tools.lib  = tool_lib;
     init_tools.args = tool_args;
     return init_tools;
   }
