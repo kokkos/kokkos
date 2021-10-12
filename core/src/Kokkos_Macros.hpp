@@ -287,6 +287,9 @@
 #if !defined(KOKKOS_ENABLE_ASM)
 #define KOKKOS_ENABLE_ASM 1
 #endif
+#define KOKKOS_IMPL_IBM_WORKAROUND_NOEXCEPT_SPEC_CONSTRUCTOR
+#else
+#define KOKKOS_IMPL_IBM_WORKAROUND_NOEXCEPT_SPEC_CONSTRUCTOR noexcept
 #endif
 
 //----------------------------------------------------------------------------

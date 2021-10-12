@@ -77,7 +77,7 @@ class
 
   //! Default constructor (initializes both real and imaginary parts to zero).
   KOKKOS_DEFAULTED_FUNCTION
-  complex() noexcept = default;
+  complex() KOKKOS_IMPL_IBM_WORKAROUND_NOEXCEPT_SPEC_CONSTRUCTOR = default;
 
   //! Copy constructor.
   KOKKOS_DEFAULTED_FUNCTION
