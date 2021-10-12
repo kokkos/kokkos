@@ -77,7 +77,7 @@ class
 
   //! Default constructor (initializes both real and imaginary parts to zero).
   KOKKOS_DEFAULTED_FUNCTION
-  complex() noexcept = default;
+  complex() = default;
 
   //! Copy constructor.
   KOKKOS_DEFAULTED_FUNCTION
