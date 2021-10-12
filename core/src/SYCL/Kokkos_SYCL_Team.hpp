@@ -107,10 +107,26 @@ class SYCLTeamMember {
   //--------------------------------------------------------------------------
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
-                                             const int thread_id) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_arithmetic_v<ValueType>>
+  team_broadcast(ValueType& val, const int thread_id) const {
     val = sycl::group_broadcast(m_item.get_group(), val,
                                 sycl::id<2>(thread_id, 0));
+  }
+
+  // FIXME_SYCL remove/adapt this overload once the Intel oneAPI implementation
+  // is conforming to the SYCL2020 standard (allowing trivially-copyable types)
+  template <class ValueType>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<!std::is_arithmetic_v<ValueType>>
+  team_broadcast(ValueType& val, const int thread_id) const {
+    // Wait for shared data write until all threads arrive here
+    m_item.barrier(sycl::access::fence_space::local_space);
+    if (m_item.get_local_id(1) == 0 &&
+        static_cast<int>(m_item.get_local_id(0)) == thread_id) {
+      *static_cast<ValueType*>(m_team_reduce) = val;
+    }
+    // Wait for shared data read until root thread writes
+    m_item.barrier(sycl::access::fence_space::local_space);
+    val = *(static_cast<ValueType*>(m_team_reduce));
   }
 
   template <class Closure, class ValueType>
