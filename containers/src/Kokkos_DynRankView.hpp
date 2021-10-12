@@ -1779,28 +1779,36 @@ inline void deep_copy(
 
   switch (rank(dst)) {
     case 0:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<0>(dst), Impl::as_view_of_rank_n<0>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<0>(dst),
+                Impl::as_view_of_rank_n<0>(src));
       break;
     case 1:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<1>(dst), Impl::as_view_of_rank_n<1>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<1>(dst),
+                Impl::as_view_of_rank_n<1>(src));
       break;
     case 2:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<2>(dst), Impl::as_view_of_rank_n<2>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<2>(dst),
+                Impl::as_view_of_rank_n<2>(src));
       break;
     case 3:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<3>(dst), Impl::as_view_of_rank_n<3>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<3>(dst),
+                Impl::as_view_of_rank_n<3>(src));
       break;
     case 4:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<4>(dst), Impl::as_view_of_rank_n<4>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<4>(dst),
+                Impl::as_view_of_rank_n<4>(src));
       break;
     case 5:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<5>(dst), Impl::as_view_of_rank_n<5>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<5>(dst),
+                Impl::as_view_of_rank_n<5>(src));
       break;
     case 6:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<6>(dst), Impl::as_view_of_rank_n<6>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<6>(dst),
+                Impl::as_view_of_rank_n<6>(src));
       break;
     case 7:
-      deep_copy(exec_space, Impl::as_view_of_rank_n<7>(dst), Impl::as_view_of_rank_n<7>(src));
+      deep_copy(exec_space, Impl::as_view_of_rank_n<7>(dst),
+                Impl::as_view_of_rank_n<7>(src));
       break;
   }
 }
@@ -1819,14 +1827,38 @@ inline void deep_copy(
       "deep_copy requires non-const destination type");
 
   switch (rank(dst)) {
-    case 0: deep_copy(Impl::as_view_of_rank_n<0>(dst), Impl::as_view_of_rank_n<0>(src)); break;
-    case 1: deep_copy(Impl::as_view_of_rank_n<1>(dst), Impl::as_view_of_rank_n<1>(src)); break;
-    case 2: deep_copy(Impl::as_view_of_rank_n<2>(dst), Impl::as_view_of_rank_n<2>(src)); break;
-    case 3: deep_copy(Impl::as_view_of_rank_n<3>(dst), Impl::as_view_of_rank_n<3>(src)); break;
-    case 4: deep_copy(Impl::as_view_of_rank_n<4>(dst), Impl::as_view_of_rank_n<4>(src)); break;
-    case 5: deep_copy(Impl::as_view_of_rank_n<5>(dst), Impl::as_view_of_rank_n<5>(src)); break;
-    case 6: deep_copy(Impl::as_view_of_rank_n<6>(dst), Impl::as_view_of_rank_n<6>(src)); break;
-    case 7: deep_copy(Impl::as_view_of_rank_n<7>(dst), Impl::as_view_of_rank_n<7>(src)); break;
+    case 0:
+      deep_copy(Impl::as_view_of_rank_n<0>(dst),
+                Impl::as_view_of_rank_n<0>(src));
+      break;
+    case 1:
+      deep_copy(Impl::as_view_of_rank_n<1>(dst),
+                Impl::as_view_of_rank_n<1>(src));
+      break;
+    case 2:
+      deep_copy(Impl::as_view_of_rank_n<2>(dst),
+                Impl::as_view_of_rank_n<2>(src));
+      break;
+    case 3:
+      deep_copy(Impl::as_view_of_rank_n<3>(dst),
+                Impl::as_view_of_rank_n<3>(src));
+      break;
+    case 4:
+      deep_copy(Impl::as_view_of_rank_n<4>(dst),
+                Impl::as_view_of_rank_n<4>(src));
+      break;
+    case 5:
+      deep_copy(Impl::as_view_of_rank_n<5>(dst),
+                Impl::as_view_of_rank_n<5>(src));
+      break;
+    case 6:
+      deep_copy(Impl::as_view_of_rank_n<6>(dst),
+                Impl::as_view_of_rank_n<6>(src));
+      break;
+    case 7:
+      deep_copy(Impl::as_view_of_rank_n<7>(dst),
+                Impl::as_view_of_rank_n<7>(src));
+      break;
   }
 
   return;
