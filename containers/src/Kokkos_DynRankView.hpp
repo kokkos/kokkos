@@ -1730,7 +1730,16 @@ inline void deep_copy(
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
-  deep_copy(DefaultExecutionSpace{}, dst, value);
+  switch (dst.rank()) {
+    case 0: deep_copy(Impl::as_view<0>(dst), value); break;
+    case 1: deep_copy(Impl::as_view<1>(dst), value); break;
+    case 2: deep_copy(Impl::as_view<2>(dst), value); break;
+    case 3: deep_copy(Impl::as_view<3>(dst), value); break;
+    case 4: deep_copy(Impl::as_view<4>(dst), value); break;
+    case 5: deep_copy(Impl::as_view<5>(dst), value); break;
+    case 6: deep_copy(Impl::as_view<6>(dst), value); break;
+    case 7: deep_copy(Impl::as_view<7>(dst), value); break;
+  }
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
