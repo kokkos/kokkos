@@ -1928,7 +1928,7 @@ typename std::enable_if_t<
     (std::is_same<V<T, Args...>, View<T, Args...>>::value &&
      N != V<T, Args...>::Rank),
     V<typename RankDataType<T, N>::type, Args...>>
-as_view(V<T, Args...> v) {
+as_view(V<T, Args...>) {
   Kokkos::Impl::throw_runtime_exception(
       "Trying to get at a View of the wrong rank");
   return {};
