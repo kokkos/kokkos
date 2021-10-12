@@ -1901,6 +1901,31 @@ KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>& V) {
 
 namespace Impl {
 
+template <typename T>
+struct remove_all_pointers {
+  using type = T;
+};
+
+template <typename T>
+struct remove_all_pointers<T*> {
+  using type = typename remove_all_pointers<T>::type;
+};
+
+template <typename T>
+struct remove_all_pointers<T* const> {
+  using type = typename remove_all_pointers<T>::type;
+};
+
+template <typename T>
+struct remove_all_pointers<T* volatile> {
+  using type = typename remove_all_pointers<T>::type;
+};
+
+template <typename T>
+struct remove_all_pointers<T* const volatile> {
+  using type = typename remove_all_pointers<T>::type;
+};
+
 template <typename ValueType, unsigned int Rank>
 struct RankDataType {
   using type = typename RankDataType<ValueType, Rank - 1>::type*;
@@ -1908,7 +1933,7 @@ struct RankDataType {
 
 template <typename ValueType>
 struct RankDataType<ValueType, 0> {
-  using type = std::remove_pointer_t<ValueType>;
+  using type = typename remove_all_pointers<ValueType>::type;
 };
 
 template <unsigned N, template <typename...> class V, typename T,
