@@ -1699,7 +1699,7 @@ as_view(DynRankView<T, Args...> v) {
 /** \brief  Deep copy a value from Host memory into a view.  */
 template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
-    ExecSpace e, const DynRankView<DT, DP...>& dst,
+    const ExecSpace& e, const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
@@ -1743,7 +1743,7 @@ inline void deep_copy(
 /** \brief  Deep copy into a value in Host memory from a view.  */
 template <class ExecSpace, class ST, class... SP>
 inline void deep_copy(
-    ExecSpace e, typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+    const ExecSpace& e, typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const DynRankView<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
@@ -1765,7 +1765,7 @@ inline void deep_copy(
  */
 template <class ExecSpace, class DstType, class SrcType>
 inline void deep_copy(
-    ExecSpace exec_space, const DstType& dst, const SrcType& src,
+    const ExecSpace& exec_space, const DstType& dst, const SrcType& src,
     typename std::enable_if<
         (std::is_same<typename DstType::traits::specialize, void>::value &&
          std::is_same<typename SrcType::traits::specialize, void>::value &&
