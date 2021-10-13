@@ -91,8 +91,8 @@ void test_offsetview_construction() {
   ASSERT_EQ(ov.begin(1), -2);
   ASSERT_EQ(ov.end(1), 3);
 
-  ASSERT_EQ(ov.extent(0), 5);
-  ASSERT_EQ(ov.extent(1), 5);
+  ASSERT_EQ(ov.extent(0), 5u);
+  ASSERT_EQ(ov.extent(1), 5u);
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
   {

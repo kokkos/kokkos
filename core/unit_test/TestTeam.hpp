@@ -465,8 +465,15 @@ class TestScanTeam {
     functor_type functor;
 
     policy_type team_exec(nteam, 1);
-    team_exec = policy_type(
-        nteam, team_exec.team_size_max(functor, Kokkos::ParallelReduceTag()));
+// FIXME_SYCL avoid using too many registers on CUDA devices
+#ifdef KOKKOS_ENABLE_SYCL
+    const auto team_size = std::min<int>(
+        team_exec.team_size_max(functor, Kokkos::ParallelReduceTag()), 512);
+#else
+    const auto team_size =
+        team_exec.team_size_max(functor, Kokkos::ParallelReduceTag());
+#endif
+    team_exec = policy_type(nteam, team_size);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       int64_t accum = 0;
@@ -1412,7 +1419,7 @@ struct TestTeamBroadcast<
     // above because the functor switches it back.
     bool setValue = ((lid % ts) != tid);
 
-    teamMember.team_broadcast([&](value_type &var) { var *= 2; }, value,
+    teamMember.team_broadcast([&](value_type &var) { var += var; }, value,
                               lid % ts);
     teamMember.team_broadcast([&](bool &bVar) { bVar = !bVar; }, setValue,
                               lid % ts);
@@ -1477,7 +1484,7 @@ struct TestTeamBroadcast<
     value_type expected_result = 0;
     for (unsigned int i = 0; i < league_size; i++) {
       value_type val =
-          (value_type((i % team_size) * 3) + off) * (value_type)team_size;
+          (value_type((i % team_size) * 3) + off) * value_type(team_size);
       expected_result += val;
     }
     // For comparison purposes treat the reduction as a random walk in the

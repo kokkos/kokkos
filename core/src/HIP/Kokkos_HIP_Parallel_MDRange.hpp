@@ -185,20 +185,18 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       : m_functor(arg_functor), m_policy(arg_policy) {}
 
   template <typename Policy, typename Functor>
-  static int max_tile_size_product(const Policy&, const Functor& f) {
+  static int max_tile_size_product(const Policy&, const Functor&) {
     using closure_type =
         ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                     Kokkos::Experimental::HIP>;
     unsigned block_size =
         Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
-                                                          LaunchBounds>(f);
-    if (block_size > 0) {
-      return block_size;
-    } else {
+                                                          LaunchBounds>();
+    if (block_size == 0)
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelFor< HIP > could not find a valid "
                       "tile size."));
-    }
+    return block_size;
   }
 };
 
@@ -433,13 +431,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                  ->m_mutexSharedMemory) {}
 
   template <typename Policy, typename Functor>
-  static int max_tile_size_product(const Policy&, const Functor& f) {
+  static int max_tile_size_product(const Policy&, const Functor&) {
     using closure_type =
         ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                        ReducerType, Kokkos::Experimental::HIP>;
     unsigned block_size =
         Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
-                                                          LaunchBounds>(f);
+                                                          LaunchBounds>();
     if (block_size == 0) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "

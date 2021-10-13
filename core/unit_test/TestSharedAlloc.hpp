@@ -91,16 +91,16 @@ void test_shared_alloc() {
 
   {
     // Since always executed on host space, leave [=]
-    Kokkos::parallel_for(range, [=](size_t i) {
+    Kokkos::parallel_for(range, [=](int i) {
       char name[64];
-      sprintf(name, "test_%.2d", int(i));
+      sprintf(name, "test_%.2d", i);
 
       r[i] = RecordMemS::allocate(s, name, size * (i + 1));
       h[i] = Header::get_header(r[i]->data());
 
       ASSERT_EQ(r[i]->use_count(), 0);
 
-      for (size_t j = 0; j < (i / 10) + 1; ++j) RecordBase::increment(r[i]);
+      for (int j = 0; j < (i / 10) + 1; ++j) RecordBase::increment(r[i]);
 
       ASSERT_EQ(r[i]->use_count(), (i / 10) + 1);
       ASSERT_EQ(r[i], RecordMemS::get_record(r[i]->data()));
@@ -146,7 +146,7 @@ void test_shared_alloc() {
 
       for (size_t j = 0; j < (i / 10) + 1; ++j) RecordBase::increment(r[i]);
 
-      ASSERT_EQ(r[i]->use_count(), (i / 10) + 1);
+      ASSERT_EQ(r[i]->use_count(), int((i / 10) + 1));
       ASSERT_EQ(r[i], RecordMemS::get_record(r[i]->data()));
     });
 

@@ -52,6 +52,15 @@ Lock_Array_CUDA.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/desul/src/Lock_
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_CUDA.cpp
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+Kokkos_SYCL.o : $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL.cpp
+Kokkos_SYCL_Space.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Space.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Space.cpp
+Kokkos_SYCL_Instance.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Instance.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Instance.cpp
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 Kokkos_HIP_Space.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Space.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Space.cpp

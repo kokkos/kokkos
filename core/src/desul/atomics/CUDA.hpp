@@ -13,16 +13,13 @@ SPDX-License-Identifier: (BSD-3-Clause)
 // since clang must see a consistent overload set in both device and host compilation
 // but that means we need to know on the host what to make visible, i.e. we need
 // a host side compile knowledge of architecture.
-// We simply can say DESUL proper doesn't support clang CUDA build pre Volta,
-// Kokkos has that knowledge and so I use it here, allowing in Kokkos to use
-// clang with pre Volta as CUDA compiler
-#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__>=700)) || \
-    (!defined(__NVCC__) && !defined(KOKKOS_ARCH_KEPLER) && !defined(KOKKOS_ARCH_MAXWELL) && !defined(KOKKOS_ARCH_PASCAL))
+#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)) || \
+    (!defined(__NVCC__) && !defined(DESUL_CUDA_ARCH_IS_PRE_VOLTA))
 #define DESUL_HAVE_CUDA_ATOMICS_ASM
 #include <desul/atomics/cuda/CUDA_asm.hpp>
 #endif
 
-#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__<700)) || \
+#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700)) || \
     (!defined(__NVCC__) && !defined(DESUL_HAVE_CUDA_ATOMICS_ASM))
 namespace desul {
 namespace Impl {
@@ -364,7 +361,15 @@ namespace desul {
   }
   DESUL_IMPL_CUDA_HOST_ATOMIC_INC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice); // only for ASM?
 
-  #define DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_INC(TYPE,ORDER,SCOPE) \
+  #define DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(TYPE,ORDER,SCOPE) \
+    inline void atomic_dec(TYPE* const dest, ORDER order, SCOPE scope) { \
+    (void) atomic_fetch_dec(dest, order, scope); \
+  }
+  DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(unsigned,MemoryOrderRelaxed,MemoryScopeDevice); // only for ASM?
+
+#endif // DESUL_HAVE_CUDA_ATOMICS_ASM
+
+#define DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_INC(TYPE,ORDER,SCOPE) \
     inline TYPE atomic_wrapping_fetch_inc(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
     using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
     cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
@@ -376,29 +381,21 @@ namespace desul {
     } while (assume != oldval); \
     return reinterpret_cast<TYPE&>(oldval); \
   }
-  DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_INC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
+DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_INC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
 
-  #define DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(TYPE,ORDER,SCOPE) \
-    inline void atomic_dec(TYPE* const dest, ORDER order, SCOPE scope) { \
-    (void) atomic_fetch_dec(dest, order, scope); \
-  }
-  DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(unsigned,MemoryOrderRelaxed,MemoryScopeDevice); // only for ASM?
-
-  #define DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_DEC(TYPE,ORDER,SCOPE) \
-    inline TYPE atomic_wrapping_fetch_dec(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
-    using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
-    cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
-    cas_t assume = oldval; \
-    do { \
-      assume = oldval; \
-      TYPE newval = ((reinterpret_cast<TYPE&>(assume) == static_cast<TYPE>(0)) | (reinterpret_cast<TYPE&>(assume) > val)) ? val : reinterpret_cast<TYPE&>(assume) - static_cast<TYPE>(1); \
-      oldval = desul::atomic_compare_exchange(reinterpret_cast<cas_t*>(dest), assume, reinterpret_cast<cas_t&>(newval), order, scope); \
-    } while (assume != oldval); \
-    return reinterpret_cast<TYPE&>(oldval); \
-  }
-  DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_DEC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
-
-#endif // DESUL_HAVE_CUDA_ATOMICS_ASM
+#define DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_DEC(TYPE,ORDER,SCOPE) \
+      inline TYPE atomic_wrapping_fetch_dec(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
+      using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
+      cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
+      cas_t assume = oldval; \
+      do { \
+        assume = oldval; \
+        TYPE newval = ((reinterpret_cast<TYPE&>(assume) == static_cast<TYPE>(0)) | (reinterpret_cast<TYPE&>(assume) > val)) ? val : reinterpret_cast<TYPE&>(assume) - static_cast<TYPE>(1); \
+        oldval = desul::atomic_compare_exchange(reinterpret_cast<cas_t*>(dest), assume, reinterpret_cast<cas_t&>(newval), order, scope); \
+      } while (assume != oldval); \
+      return reinterpret_cast<TYPE&>(oldval); \
+    }
+DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_DEC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
 
   #define DESUL_IMPL_CUDA_HOST_ATOMIC_FETCH_ADD(TYPE,ORDER,SCOPE) \
     inline TYPE atomic_fetch_add(TYPE* const dest, TYPE val, ORDER order, SCOPE scope) { \
