@@ -267,7 +267,8 @@ struct LayoutStride {
   template <class Extents>
   operator mapping<Extents> () const {
     return mapping<Extents>(Kokkos::Impl::make_extents_from_too_many_args<Extents>::create(dimension[0],dimension[1],dimension[2],dimension[3],dimension[4],dimension[5],dimension[6],dimension[7]), 
-                            std::array<size_t,Extents::rank()>());
+                            std::array<size_t,Extents::rank()>(
+                            Kokkos::Impl::make_extents_from_too_many_args<std::array<size_t,Extents::rank()>,Extents::rank()>::create(stride[0],stride[1],stride[2],stride[3],stride[4],stride[5],stride[6],stride[7])));
   }
 };
 

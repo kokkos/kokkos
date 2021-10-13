@@ -752,7 +752,7 @@ class BasicView
   }
 
   KOKKOS_FUNCTION constexpr bool span_is_contiguous() const {
-    return span() == size();
+    return m_data.mapping().is_contiguous();
   }
 
   KOKKOS_FUNCTION constexpr bool is_allocated() const {
@@ -967,56 +967,56 @@ namespace Impl {
 
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 0> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
     return Extents();
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 1> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 2> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 3> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1, n2);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1, n2};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 4> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1, n2, n3);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1, n2, n3};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 5> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1, n2, n3, n4);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1, n2, n3, n4};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 6> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1, n2, n3, n4, n5);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1, n2, n3, n4, n5};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 7> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1, n2, n3, n4, n5, n6);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1, n2, n3, n4, n5, n6};
   }
 };
 template<class Extents>
 struct make_extents_from_too_many_args<Extents, 8> {
-  static constexpr Extents create(ptrdiff_t n0 = -1, ptrdiff_t n1 = -1, ptrdiff_t n2 = -1, ptrdiff_t n3 = -1, ptrdiff_t n4 = -1, ptrdiff_t n5 = -1, ptrdiff_t n6 = -1, ptrdiff_t n7 = -1) {
-    return Extents(n0, n1, n2, n3, n4, n5, n6, n7);
+  static constexpr Extents create(size_t n0 = -1, size_t n1 = -1, size_t n2 = -1, size_t n3 = -1, size_t n4 = -1, size_t n5 = -1, size_t n6 = -1, size_t n7 = -1) {
+    return Extents{n0, n1, n2, n3, n4, n5, n6, n7};
   }
 };
 }
@@ -1044,12 +1044,14 @@ class View : public Impl::NormalizeViewProperties<
        && ((sizeof...(Args))!= basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
   View(const std::string& label, Args... args): basic_view_type(label, 
                typename basic_view_type::mdspan_type::mapping_type(
-                     Kokkos::Impl::make_extents_from_too_many_args<typename basic_view_type::mdspan_type::extents_type>::create(args...))) {}
+                     Kokkos::Impl::make_extents_from_too_many_args<typename basic_view_type::mdspan_type::extents_type>::create(args...))) {
+  }
 
   template < class ... Args, std::enable_if_t<
           _MDSPAN_FOLD_AND(std::is_convertible<Args,ptrdiff_t>::value)
        && !((sizeof...(Args))!= basic_view_type::mdspan_type::extents_type::rank_dynamic()), int> = 0>
-  View(const std::string& label, Args... args): basic_view_type(label, args...) {}
+  View(const std::string& label, Args... args): basic_view_type(label, args...) {
+  }
 
   template <class... P, class... IntegralTypes,
             //----------------------------------------
