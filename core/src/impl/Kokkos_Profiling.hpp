@@ -46,6 +46,7 @@
 #define KOKKOS_IMPL_KOKKOS_PROFILING_HPP
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <memory>
 #include <iosfwd>
 #include <unordered_map>
@@ -57,16 +58,6 @@ namespace Kokkos {
 
 // forward declaration
 bool tune_internals() noexcept;
-namespace Impl {
-void traceback_callstack(std::ostream& msg);
-bool is_unsigned_int(const char* str);
-bool check_arg(char const* arg, char const* expected);
-void throw_runtime_exception(const std::string& msg);
-bool check_int_arg(char const* arg, char const* expected, int* value);
-bool check_str_arg(char const* arg, char const* expected, std::string& value);
-void warn_deprecated_command_line_argument(std::string deprecated,
-                                           std::string valid);
-}  // namespace Impl
 
 namespace Tools {
 

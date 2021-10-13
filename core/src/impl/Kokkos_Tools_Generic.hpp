@@ -54,9 +54,6 @@
 
 namespace Kokkos {
 
-// forward declaration
-bool tune_internals() noexcept;
-
 namespace Tools {
 
 namespace Experimental {
