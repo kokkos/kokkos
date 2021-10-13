@@ -92,14 +92,16 @@ struct EventBase;  // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
 using event_vector = std::vector<EventBasePtr>;
 
-template<class... Args>
+template <class... Args>
 
 /**
  * @brief Base case of a recursive reduction using templates
  * Should be replaced with a fold in C++17
  */
 
-bool is_nonnull() { return true; }
+bool is_nonnull() {
+  return true;
+}
 
 /**
  * @brief Recursive reduction to check whether any pointer in a set is null
@@ -352,7 +354,7 @@ struct BeginOperation : public EventBase {
   uint64_t kID;
   BeginOperation(const std::string& n, const uint32_t devID, uint64_t k)
       : name(n), deviceID(devID), kID(k) {}
-   std::string descriptor() const {
+  std::string descriptor() const {
     std::stringstream s;
     s << Derived::begin_op_name() << " { \"" << name << "\", ";
     s << deviceID;
@@ -374,7 +376,7 @@ struct EndOperation : public EventBase {
   uint64_t kID;
   EndOperation(uint64_t k) : kID(k) {}
 
-   std::string descriptor() const {
+  std::string descriptor() const {
     std::stringstream s;
     s << Derived::end_op_name() << " { ";
     s << kID;
@@ -465,7 +467,7 @@ struct InitEvent : public EventBase {
   uint64_t version_number;
   uint32_t num_device_infos;
   Kokkos::Profiling::KokkosPDeviceInfo* device_infos;
-   std::string descriptor() const override {
+  std::string descriptor() const override {
     std::stringstream s;
     s << "InitEvent { load_sequence: " << load_sequence << ", version_number "
       << version_number << ", num_device_infos " << num_device_infos << "}";
@@ -479,7 +481,7 @@ struct InitEvent : public EventBase {
         device_infos(d_i) {}
 };
 struct FinalizeEvent : public EventBase {
-   std::string descriptor() const override { return "FinalizeEvent{}"; }
+  std::string descriptor() const override { return "FinalizeEvent{}"; }
 };
 
 struct ParseArgsEvent : public EventBase {

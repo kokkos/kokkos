@@ -120,20 +120,17 @@ struct increment {
   constexpr static const int size = 0;
 };
 int num_instances = 1;
-using index_type = Kokkos::RangePolicy<>::index_type;
+using index_type  = Kokkos::RangePolicy<>::index_type;
 struct TestFunctor {
-  KOKKOS_FUNCTION void operator()(
-      const index_type) const {}
+  KOKKOS_FUNCTION void operator()(const index_type) const {}
 };
 struct TestReduceFunctor {
   using value_type = int;
-  KOKKOS_FUNCTION void operator()(const index_type,
-                                  int&) const {}
+  KOKKOS_FUNCTION void operator()(const index_type, int&) const {}
 };
 struct TestScanFunctor {
   using value_type = int;
-  KOKKOS_FUNCTION void operator()(const index_type, int&,
-                                  bool) const {}
+  KOKKOS_FUNCTION void operator()(const index_type, int&, bool) const {}
 };
 
 template <typename Lambda>
