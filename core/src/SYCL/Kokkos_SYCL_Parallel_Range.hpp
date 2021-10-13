@@ -72,17 +72,42 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
-      sycl::range<1> range(policy.end() - policy.begin());
-      const auto begin = policy.begin();
+    const auto begin = policy.begin();
+    const auto end   = policy.end();
 
-      cgh.parallel_for(range, [=](sycl::item<1> item) {
-        const typename Policy::index_type id = item.get_linear_id() + begin;
+    auto lambda = [=](sycl::item<1> item) {
+      const typename Policy::index_type id = item.get_linear_id() + begin;
+      if (id < end) {
         if constexpr (std::is_same<WorkTag, void>::value)
           functor(id);
         else
           functor(WorkTag(), id);
-      });
+      }
+    };
+
+    sycl::kernel_id functor_kernel_id = sycl::get_kernel_id<decltype(lambda)>();
+    auto context                      = q.get_context();
+    auto device                       = q.get_device();
+    auto kernel_bundle =
+        sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+            context, std::vector{functor_kernel_id});
+    auto kernel = kernel_bundle.get_kernel(functor_kernel_id);
+    auto max_wg_size =
+        kernel.get_info<sycl::info::kernel_device_specific::work_group_size>(
+            device);
+    auto preferred_wg_size = kernel.get_info<
+        sycl::info::kernel_device_specific::preferred_work_group_size_multiple>(
+        device);
+    auto wg_size_multiple = max_wg_size - max_wg_size % preferred_wg_size;
+
+    sycl::nd_range<1> range((end - begin + wg_size_multiple - 1) /
+                                wg_size_multiple * wg_size_multiple,
+                            wg_size_multiple);
+
+    auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+      cgh.use_kernel_bundle(kernel_bundle);
+
+      cgh.parallel_for(range, lambda);
     });
     q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
