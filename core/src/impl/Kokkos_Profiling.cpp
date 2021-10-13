@@ -224,8 +224,7 @@ static EventSet current_callbacks;
 static EventSet backup_callbacks;
 static EventSet no_profiling;
 static ToolSettings tool_requirements;
-bool eventSetsEqual(const EventSet& l,
-                    const EventSet& r) {
+bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
          l.parse_args == r.parse_args && l.print_help == r.print_help &&
          l.begin_parallel_for == r.begin_parallel_for &&
@@ -853,8 +852,7 @@ void set_end_parallel_for_callback(endFunction callback) {
   current_callbacks.end_parallel_for = callback;
 }
 void set_begin_parallel_reduce_callback(beginFunction callback) {
-  current_callbacks.begin_parallel_reduce =
-      callback;
+  current_callbacks.begin_parallel_reduce = callback;
 }
 void set_end_parallel_reduce_callback(endFunction callback) {
   current_callbacks.end_parallel_reduce = callback;
@@ -874,35 +872,27 @@ void set_pop_region_callback(popFunction callback) {
 void set_allocate_data_callback(allocateDataFunction callback) {
   current_callbacks.allocate_data = callback;
 }
-void set_deallocate_data_callback(
-    deallocateDataFunction callback) {
+void set_deallocate_data_callback(deallocateDataFunction callback) {
   current_callbacks.deallocate_data = callback;
 }
 void set_create_profile_section_callback(
     createProfileSectionFunction callback) {
-  current_callbacks.create_profile_section =
-      callback;
+  current_callbacks.create_profile_section = callback;
 }
-void set_start_profile_section_callback(
-    startProfileSectionFunction callback) {
-  current_callbacks.start_profile_section =
-      callback;
+void set_start_profile_section_callback(startProfileSectionFunction callback) {
+  current_callbacks.start_profile_section = callback;
 }
-void set_stop_profile_section_callback(
-    stopProfileSectionFunction callback) {
-  current_callbacks.stop_profile_section =
-      callback;
+void set_stop_profile_section_callback(stopProfileSectionFunction callback) {
+  current_callbacks.stop_profile_section = callback;
 }
 void set_destroy_profile_section_callback(
     destroyProfileSectionFunction callback) {
-  current_callbacks.destroy_profile_section =
-      callback;
+  current_callbacks.destroy_profile_section = callback;
 }
 void set_profile_event_callback(profileEventFunction callback) {
   current_callbacks.profile_event = callback;
 }
-void set_begin_deep_copy_callback(
-    beginDeepCopyFunction callback) {
+void set_begin_deep_copy_callback(beginDeepCopyFunction callback) {
   current_callbacks.begin_deep_copy = callback;
 }
 void set_end_deep_copy_callback(endDeepCopyFunction callback) {
@@ -918,12 +908,10 @@ void set_end_fence_callback(endFenceFunction callback) {
 void set_dual_view_sync_callback(dualViewSyncFunction callback) {
   current_callbacks.sync_dual_view = callback;
 }
-void set_dual_view_modify_callback(
-    dualViewModifyFunction callback) {
+void set_dual_view_modify_callback(dualViewModifyFunction callback) {
   current_callbacks.modify_dual_view = callback;
 }
-void set_declare_metadata_callback(
-    declareMetadataFunction callback) {
+void set_declare_metadata_callback(declareMetadataFunction callback) {
   current_callbacks.declare_metadata = callback;
 }
 
@@ -937,35 +925,25 @@ void set_declare_input_type_callback(
 }
 void set_request_output_values_callback(
     Experimental::requestValueFunction callback) {
-  current_callbacks.request_output_values =
-      callback;
+  current_callbacks.request_output_values = callback;
 }
-void set_end_context_callback(
-    Experimental::contextEndFunction callback) {
+void set_end_context_callback(Experimental::contextEndFunction callback) {
   current_callbacks.end_tuning_context = callback;
 }
-void set_begin_context_callback(
-    Experimental::contextBeginFunction callback) {
-  current_callbacks.begin_tuning_context =
-      callback;
+void set_begin_context_callback(Experimental::contextBeginFunction callback) {
+  current_callbacks.begin_tuning_context = callback;
 }
 void set_declare_optimization_goal_callback(
     Experimental::optimizationGoalDeclarationFunction callback) {
-  current_callbacks.declare_optimization_goal =
-      callback;
+  current_callbacks.declare_optimization_goal = callback;
 }
 
 void pause_tools() {
-  backup_callbacks =
-      current_callbacks;
-  current_callbacks =
-      no_profiling;
+  backup_callbacks  = current_callbacks;
+  current_callbacks = no_profiling;
 }
 
-void resume_tools() {
-  current_callbacks =
-      backup_callbacks;
-}
+void resume_tools() { current_callbacks = backup_callbacks; }
 
 Kokkos::Tools::Experimental::EventSet get_callbacks() {
   return current_callbacks;
@@ -1018,20 +996,17 @@ void stopSection(const uint32_t secID) { Kokkos::Tools::stopSection(secID); }
 void markEvent(const std::string& eventName) {
   Kokkos::Tools::markEvent(eventName);
 }
-void allocateData(const SpaceHandle handle,
-                  const std::string name, const void* data,
-                  const uint64_t size) {
+void allocateData(const SpaceHandle handle, const std::string name,
+                  const void* data, const uint64_t size) {
   Kokkos::Tools::allocateData(handle, name, data, size);
 }
-void deallocateData(const SpaceHandle space,
-                    const std::string label, const void* ptr,
-                    const uint64_t size) {
+void deallocateData(const SpaceHandle space, const std::string label,
+                    const void* ptr, const uint64_t size) {
   Kokkos::Tools::deallocateData(space, label, ptr, size);
 }
 
-void beginDeepCopy(const SpaceHandle dst_space,
-                   const std::string dst_label, const void* dst_ptr,
-                   const SpaceHandle src_space,
+void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
+                   const void* dst_ptr, const SpaceHandle src_space,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size) {
   Kokkos::Tools::beginDeepCopy(dst_space, dst_label, dst_ptr, src_space,
@@ -1075,8 +1050,7 @@ size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
 size_t get_new_variable_id() { return get_variable_counter(); }
 
-size_t declare_output_type(const std::string& variableName,
-                           VariableInfo info) {
+size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
   Experimental::invoke_kokkosp_callback(
@@ -1264,7 +1238,5 @@ void declare_optimization_goal(const size_t context,
 }
 }  // end namespace Experimental
 }  // end namespace Tools
-
-
 
 }  // end namespace Kokkos

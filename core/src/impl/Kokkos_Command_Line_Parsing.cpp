@@ -83,5 +83,5 @@ void warn_deprecated_command_line_argument(std::string deprecated,
       << std::endl;
 }
 }  // namespace Impl
-    
-}
+
+}  // namespace Kokkos
