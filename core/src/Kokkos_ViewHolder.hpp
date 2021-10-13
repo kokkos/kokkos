@@ -72,8 +72,11 @@ View<typename ViewTraits<DataType, Properties...>::non_const_data_type,
      HostSpace, MemoryTraits<Unmanaged>>
 make_unmanaged_view_like(View<DataType, Properties...> view,
                          unsigned char *buff) {
-  static_assert( !std::is_same<typename View<DataType, Properties...>::traits::memory_space,
-      AnonymousSpace>::value, "make_unmanaged_view_like can't create an anonymous space view" );
+  static_assert(
+      !std::is_same<
+          typename View<DataType, Properties...>::traits::memory_space,
+          AnonymousSpace>::value,
+      "make_unmanaged_view_like can't create an anonymous space view");
   using traits_type   = ViewTraits<DataType, Properties...>;
   using new_data_type = typename traits_type::non_const_data_type;
 
@@ -171,8 +174,9 @@ class ViewHolderImplBase {
 
 template <typename View, typename Enable = void>
 class ViewHolderImpl : public ViewHolderImplBase {
-  static_assert( !std::is_same<typename View::traits::memory_space,
-      AnonymousSpace>::value, "ViewHolder can't hold anonymous space view" );
+  static_assert(
+      !std::is_same<typename View::traits::memory_space, AnonymousSpace>::value,
+      "ViewHolder can't hold anonymous space view");
 
  public:
   virtual ~ViewHolderImpl() = default;
@@ -204,8 +208,10 @@ template <class View>
 class ViewHolderImpl<View, typename std::enable_if<std::is_const<
                                typename View::value_type>::value>::type>
     : public ConstViewHolderImplBase {
-  static_assert( !std::is_same<typename View::traits::memory_space,
-      AnonymousSpace>::value, "ViewHolder can't hold anonymous space view" );
+  static_assert(
+      !std::is_same<typename View::traits::memory_space, AnonymousSpace>::value,
+      "ViewHolder can't hold anonymous space view");
+
  public:
   virtual ~ViewHolderImpl() = default;
 
