@@ -391,7 +391,8 @@ struct EndOperation : public EventBase {
  */
 struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
   static const std::string& begin_op_name() {
-    return "BeginParallelFor";
+    static std::string value = "BeginParallelFor";
+    return value;
   }
   BeginParallelForEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelForEvent>(n, devID, k) {}
@@ -399,7 +400,8 @@ struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
 struct BeginParallelReduceEvent
     : public BeginOperation<BeginParallelReduceEvent> {
   static const std::string& begin_op_name() {
-    return "BeginParallelReduce";
+    static std::string value = "BeginParallelReduce";
+    return value;
   }
 
   BeginParallelReduceEvent(std::string n, const uint32_t devID, uint64_t k)
@@ -407,7 +409,8 @@ struct BeginParallelReduceEvent
 };
 struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
   static const std::string& begin_op_name() {
-    return "BeginParallelScan";
+    static std::string value = "BeginParallelScan";
+    return value;
   }
 
   BeginParallelScanEvent(std::string n, const uint32_t devID, uint64_t k)
@@ -415,7 +418,8 @@ struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
 };
 struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
   static const std::string& begin_op_name() {
-    return "BeginFence";
+    static std::string value = "BeginFence";
+    return value;
   }
 
   BeginFenceEvent(std::string n, const uint32_t devID, uint64_t k)
@@ -424,14 +428,16 @@ struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
 
 struct EndParallelForEvent : public EndOperation<EndParallelForEvent> {
   static const std::string& end_op_name() {
-    return "EndParallelFor";
+    static std::string value = "EndParallelFor";
+    return value;
   }
 
   EndParallelForEvent(uint64_t k) : EndOperation<EndParallelForEvent>(k) {}
 };
 struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
   static const std::string& end_op_name() {
-    return "EndParallelReduce";
+    static std::string value = "EndParallelReduce";
+    return value;
   }
 
   EndParallelReduceEvent(uint64_t k)
@@ -439,14 +445,16 @@ struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
 };
 struct EndParallelScanEvent : public EndOperation<EndParallelScanEvent> {
   static const std::string& end_op_name() {
-    return "EndParallelScan";
+    static std::string value = "EndParallelScan";
+    return value;
   }
 
   EndParallelScanEvent(uint64_t k) : EndOperation<EndParallelScanEvent>(k) {}
 };
 struct EndFenceEvent : public EndOperation<EndFenceEvent> {
   static const std::string& end_op_name() {
-    return "EndFence";
+    static std::string value = "EndFence";
+    return value;
   }
 
   EndFenceEvent(uint64_t k) : EndOperation<EndFenceEvent>(k) {}

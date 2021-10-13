@@ -146,7 +146,7 @@ void test_wrapper(const Lambda& lambda) {
  * Test that fencing an instance with a name yields a fence
  * event of that name, and the correct device ID
  */
-TEST(defaultdevicetype, test_named_instance_fence) {
+TEST(kokkosp, test_named_instance_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
         Kokkos::DefaultExecutionSpace>();
@@ -165,7 +165,7 @@ TEST(defaultdevicetype, test_named_instance_fence) {
  * Test that fencing an instance without a name yields a fence
  * event of a correct name, and the correct device ID
  */
-TEST(defaultdevicetype, test_unnamed_instance_fence) {
+TEST(kokkosp, test_unnamed_instance_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
         Kokkos::DefaultExecutionSpace>();
@@ -185,7 +185,7 @@ TEST(defaultdevicetype, test_unnamed_instance_fence) {
  * Test that invoking a global fence with a name yields a fence
  * event of a correct name, and fences the root of the default device
  */
-TEST(defaultdevicetype, test_named_global_fence) {
+TEST(kokkosp, test_named_global_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
         Kokkos::DefaultExecutionSpace>();
@@ -202,7 +202,7 @@ TEST(defaultdevicetype, test_named_global_fence) {
  * Test that invoking a global fence with no name yields a fence
  * event of a correct name, and fences the root of the default device
  */
-TEST(defaultdevicetype, test_unnamed_global_fence) {
+TEST(kokkosp, test_unnamed_global_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
         Kokkos::DefaultExecutionSpace>();
@@ -219,7 +219,7 @@ TEST(defaultdevicetype, test_unnamed_global_fence) {
  * Test that creating two default instances and fencing both yields
  * fence on the same device ID, as these should yield the same instance
  */
-TEST(defaultdevicetype, test_multiple_default_instances) {
+TEST(kokkosp, test_multiple_default_instances) {
   test_wrapper([&]() {
     std::vector<FencePayload> expected{};
     expect_fence_events(expected, [=]() {
@@ -235,7 +235,7 @@ TEST(defaultdevicetype, test_multiple_default_instances) {
 /**
  * Test that fencing and kernels yield events on the correct device ID's
  */
-TEST(defaultdevicetype, test_kernel_sequence) {
+TEST(kokkosp, test_kernel_sequence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
         Kokkos::DefaultExecutionSpace>();
@@ -263,7 +263,7 @@ TEST(defaultdevicetype, test_kernel_sequence) {
  * CUDA ONLY: test that creating instances from streams leads to events
  * on different device ID's
  */
-TEST(defaultdevicetype, test_streams) {
+TEST(kokkosp, test_streams) {
   test_wrapper([&]() {
     // auto root = Kokkos::Tools::Experimental::device_id_root<
     //    Kokkos::DefaultExecutionSpace>();
@@ -295,7 +295,7 @@ TEST(defaultdevicetype, test_streams) {
 }
 
 #endif
-TEST(defaultdevicetype, exemplar_tests) {
+TEST(kokkosp, exemplar_tests) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
 
@@ -352,7 +352,7 @@ TEST(defaultdevicetype, exemplar_tests) {
   listen_tool_events(Config::DisableAll());
 }
 
-TEST(defaultdevicetype, parallel_for) {
+TEST(kokkosp, parallel_for) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   auto success = validate_event_set(
@@ -372,7 +372,7 @@ TEST(defaultdevicetype, parallel_for) {
   ASSERT_TRUE(success);
 }
 
-TEST(defaultdevicetype, parallel_reduce) {
+TEST(kokkosp, parallel_reduce) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   auto success = validate_event_set(
@@ -396,7 +396,7 @@ TEST(defaultdevicetype, parallel_reduce) {
   ASSERT_TRUE(success);
 }
 
-TEST(defaultdevicetype, parallel_scan) {
+TEST(kokkosp, parallel_scan) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   auto success = validate_event_set(
@@ -421,7 +421,7 @@ TEST(defaultdevicetype, parallel_scan) {
 #endif
 }
 
-TEST(defaultdevicetype, regions) {
+TEST(kokkosp, regions) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableRegions());
   auto success = validate_event_set(
@@ -439,7 +439,7 @@ TEST(defaultdevicetype, regions) {
   ASSERT_TRUE(success);
 }
 
-TEST(defaultdevicetype, fences) {
+TEST(kokkosp, fences) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   auto success = validate_event_set(
@@ -456,7 +456,7 @@ TEST(defaultdevicetype, fences) {
   ASSERT_TRUE(success);
 }
 
-TEST(defaultdevicetype, raw_allocation) {
+TEST(kokkosp, raw_allocation) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
   auto success = validate_event_set(
@@ -496,7 +496,7 @@ TEST(defaultdevicetype, raw_allocation) {
 #endif
 }
 
-TEST(defaultdevicetype, view) {
+TEST(kokkosp, view) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
   auto success = validate_event_set(
@@ -532,7 +532,7 @@ TEST(defaultdevicetype, view) {
 #endif
 }
 
-TEST(defaultdevicetype, sections) {
+TEST(kokkosp, sections) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableSections());
   auto success = validate_event_set(
@@ -557,7 +557,7 @@ TEST(defaultdevicetype, sections) {
   ASSERT_TRUE(success);
 }
 
-TEST(defaultdevicetype, metadata) {
+TEST(kokkosp, metadata) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableMetadata());
   auto success = validate_event_set(
@@ -578,7 +578,7 @@ TEST(defaultdevicetype, metadata) {
   ASSERT_TRUE(success);
 }
 
-TEST(defaultdevicetype, profile_events) {
+TEST(kokkosp, profile_events) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableProfileEvents());
   auto success = validate_event_set(
@@ -592,7 +592,7 @@ TEST(defaultdevicetype, profile_events) {
   ASSERT_TRUE(success);
 }
 #if defined(KOKKOS_ENABLE_TUNING)
-TEST(defaultdevicetype, tuning_sequence) {
+TEST(kokkosp, tuning_sequence) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableTuning());
   size_t input_id, output_id;
@@ -656,7 +656,7 @@ TEST(defaultdevicetype, tuning_sequence) {
   ASSERT_TRUE(success);
 }
 #endif
-TEST(defaultdevicetype, no_init_kernel) {
+TEST(kokkosp, no_init_kernel) {
   using namespace Kokkos::Test::Tools;
 
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -674,7 +674,7 @@ TEST(defaultdevicetype, no_init_kernel) {
   ASSERT_TRUE(success);
 }
 
-TEST(default_device_type, get_events) {
+TEST(kokkosp, get_events) {
   using namespace Kokkos::Test::Tools;
   auto event_vector = get_event_set([=]() {
     Kokkos::Tools::pushRegion("dogs");
