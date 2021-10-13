@@ -28,14 +28,14 @@ struct TestAssignability {
   template<class TypeDst>
   static void try_assign(
       TypeDst& dst, ViewTypeSrc& src,
-      typename std::enable_if<Kokkos::is_always_assignable<TypeDst,ViewTypeSrc>::value>::type* = nullptr) {
+      typename std::enable_if<std::is_convertible<ViewTypeSrc,TypeDst>::value>::type* = nullptr) {
     dst = src;
   }
 
   template<class TypeDst>
   static void try_assign(
       TypeDst&, ViewTypeSrc&,
-      typename std::enable_if<!Kokkos::is_always_assignable<TypeDst,ViewTypeSrc>::value>::type* = nullptr) {
+      typename std::enable_if<!std::is_convertible<ViewTypeSrc,TypeDst>::value>::type* = nullptr) {
     Kokkos::Impl::throw_runtime_exception(
         "TestAssignability::try_assign: Unexpected call path");
   }

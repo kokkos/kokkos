@@ -1199,15 +1199,15 @@ struct MDSpanMappingForLayoutRight {
       const std::experimental::layout_stride::template mapping<OtherExtents>& other_map)
       : extents_(other_map.extents()), stride_(Extents::rank()>1?other_map.stride(Extents::rank()-2):
                                                Extents::rank()>0?other_map.extents().extent(Extents::rank()-1):1) {
-/*    std::size_t s = 1;
-    bool incompatible_stride = Extents::rank()>0 ?
-            (other_map.stride(Extents::rank()-1)!=1) :
-            false;
-    for (int k = Extents::rank() - 2; k >=0; k--) {
-      s *= extents_.extent(k+1);
-      incompatible_stride != other_map.stride(k)!=s;
-    }
-    if(incompatible_stride) Kokkos::abort("Error: Assignment of layout_stride to LayoutRight with incompatible strides");*/
+    bool strides_are_compatible = true;
+    for(int r=0; r<Extents::rank(); r++) if(stride(r) != other_map.stride(r)) strides_are_compatible = false;
+    if(!strides_are_compatible) Kokkos::abort("View assignment must have compatible layouts");
+  }
+
+  template<class OtherExtents>
+  constexpr MDSpanMappingForLayoutRight(const MDSpanMappingForLayoutLeft<OtherExtents>& other_map,  std::enable_if_t<OtherExtents::rank()<2>* = 0) {
+    extents_ = other_map.extents();
+    stride_ = Extents::rank()==1?extents_.extent(0):1;
   }
 
   template<class OtherExtents>
@@ -1225,11 +1225,12 @@ struct MDSpanMappingForLayoutRight {
     return std::experimental::layout_stride::template mapping<OtherExtents>(extents(), strides);
   }
 
-  template<class OtherExtents>
+  /*
+  template<class OtherExtents, std::enable_if_t<OtherExtents::rank()<2>* = 0>
   operator MDSpanMappingForLayoutLeft<OtherExtents> () const {
     static_assert(Extents::rank() < 2, "Kokkos: LayoutRight to LayoutLeft conversion is only valid for rank()<2");
     return MDSpanMappingForLayoutLeft<OtherExtents>(extents());
-  }
+  }*/
 
  private:
   Extents extents_;
@@ -1374,10 +1375,19 @@ struct MDSpanMappingForLayoutLeft {
   }
 
   template<class OtherExtents>
+  constexpr MDSpanMappingForLayoutLeft(const MDSpanMappingForLayoutRight<OtherExtents>& other_map, std::enable_if_t<OtherExtents::rank()<2>* = 0) {
+    extents_ = other_map.extents();
+    stride_ = Extents::rank()==1?extents_.extent(0):1;
+  }
+
+  template<class OtherExtents>
   constexpr MDSpanMappingForLayoutLeft(
       const std::experimental::layout_stride::template mapping<OtherExtents>& other_map)
       : extents_(other_map.extents()), stride_(Extents::rank()>1?other_map.stride(1):
                                                Extents::rank()>0?other_map.extents().extent(0):1) {
+    bool strides_are_compatible = true;
+    for(int r=0; r<Extents::rank(); r++) if(stride(r) != other_map.stride(r)) strides_are_compatible = false;
+    if(!strides_are_compatible) Kokkos::abort("View assignment must have compatible layouts");
 /*    std::size_t s = 1;
     bool incompatible_stride = Extents::rank()>0 ?
             (other_map.stride(Extents::rank()-1)!=1) :

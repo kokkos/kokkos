@@ -50,7 +50,7 @@
 #include <View/Kokkos_NormalizeView.hpp>
 #include <View/Kokkos_ExtractExtents.hpp>
 #include <View/Kokkos_MDSpanLayout.hpp>
-//#include <View/Kokkos_MDSpanAccessor.hpp>
+#include <View/Accessor/Kokkos_MDSpanAccessor.hpp>
 #include <View/Kokkos_ViewVerify.hpp>
 #include <View/Kokkos_IsView.hpp>
 #include <View/Kokkos_ViewValueFunctor.hpp>
@@ -218,9 +218,7 @@ class BasicView
   using mdspan_mapping_type = typename mdspan_layout_type::template mapping<
       typename traits::mdspan_extents_type>;
   using mdspan_accessor_type =
-      std::experimental::default_accessor<typename traits::value_type>;
-  // typename Impl::MDSpanAccessorFromKokkosMemoryTraits<traits,
-  //                                                    MemoryTraits>::type;
+    typename Impl::KokkosAccessorFromMemTraits<MemoryTraits,typename traits::value_type>::accessor_type;
 
   using mdspan_type =
       std::experimental::mdspan<typename traits::mdspan_element_type,
@@ -485,6 +483,8 @@ class BasicView
                    mdspan_mapping_type const& mapping)
       : m_data(), m_track() {
     //------------------------------------------------------------
+    // FIXME: This looses the label? Maybe other stuff??
+    //
     // add default memory and execution spaces in
     using desc_with_defaults_t = typename Impl::ViewConstructorDescription<
         P...>::template with_default_traits<typename traits::execution_space,
@@ -507,12 +507,14 @@ class BasicView
     }
 
     //------------------------------------------------------------
+    // TODO: This probably shouldn't be here, but if at all be inside allocator
 #if defined(KOKKOS_ENABLE_CUDA)
     // If allocating in CudaUVMSpace must fence before and after
     // the allocation to protect against possible concurrent access
     // on the CPU and the GPU.
     // Fence using the trait's execution space (which will be Kokkos::Cuda)
     // to avoid incomplete type errors from using Kokkos::Cuda directly.
+    
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
       // TODO @mdspan should this actually translate into device synchronize
@@ -548,7 +550,7 @@ class BasicView
         Impl::SharedAllocationRecord<typename traits::memory_space,
                                      construct_destroy_functor_type>::
             allocate(typename traits::memory_space{},
-                     desc_with_defaults.get_label(),
+                     arg_desc.get_label(),
                      mapping.required_span_size() *
                          sizeof(typename traits::value_type));
     // TODO @mdspan decide whether thish should depend on the required span size
@@ -561,7 +563,7 @@ class BasicView
           desc_with_defaults.get_execution_space(),
           static_cast<typename traits::value_type*>(record->data()),
           typename traits::size_type(mapping.required_span_size()),
-          desc_with_defaults.get_label()};
+          arg_desc.get_label()};
       record->m_destroy.construct_shared_allocation();
     }
     m_track.m_tracker.assign_allocated_record_to_uninitialized(record);
@@ -1179,11 +1181,11 @@ template<>
 struct is_always_assignable_impl<Kokkos::LayoutStride, Kokkos::LayoutRight,void>: std::true_type {};
 
 template<size_t ... DstExtentVals, size_t ... SrcExtentVals>
-struct is_always_assignable_impl<std::experimental::extents<SrcExtentVals...>,
-                                 std::experimental::extents<DstExtentVals...>,
+struct is_always_assignable_impl<std::experimental::extents<DstExtentVals...>,
+                                 std::experimental::extents<SrcExtentVals...>,
                                  std::enable_if_t<!std::is_same<
-                                   std::experimental::extents<SrcExtentVals...>,
-                                   std::experimental::extents<DstExtentVals...>
+                                   std::experimental::extents<DstExtentVals...>,
+                                   std::experimental::extents<SrcExtentVals...>
                                  >::value,void>> {
   constexpr static bool value =
     _MDSPAN_FOLD_AND(DstExtentVals!=std::experimental::dynamic_extent?DstExtentVals==SrcExtentVals:true);
@@ -1220,7 +1222,12 @@ using is_always_assignable = Impl::is_always_assignable_impl<
 template <class ... ViewTDst, class ... ViewTSrc>
 bool is_assignable(const Kokkos::View<ViewTDst...>& dst, const Kokkos::View<ViewTSrc...>& src) {
   // FIXME Return the correct value here
-  return std::is_convertible<Kokkos::View<ViewTSrc...>, Kokkos::View<ViewTDst...>>::value;
+  bool runtime_assignable = true;
+  for(int i=0; i<dst.rank; i++) {
+    if(dst.static_extent(i)!=std::experimental::dynamic_extent &&
+       dst.static_extent(i)!=src.extent(i)) runtime_assignable = false;
+  }
+  return std::is_convertible<Kokkos::View<ViewTSrc...>, Kokkos::View<ViewTDst...>>::value && runtime_assignable;
   // && is_assignable(dst.mapping(), src.mapping()); // this is a runtime check
 }
 
