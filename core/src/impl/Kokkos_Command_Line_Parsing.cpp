@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <cstring>
 namespace Kokkos {
 namespace Impl {
 
