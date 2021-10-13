@@ -3,6 +3,7 @@
 #include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+#include <Kokkos_Atomics_Desul_Config.hpp>
 #include <desul/atomics.hpp>
 
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>

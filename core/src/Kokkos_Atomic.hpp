@@ -71,14 +71,6 @@
 #include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-#define DESUL_HAVE_OPENMP_ATOMICS
-#endif
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL)
-#define DESUL_CUDA_ARCH_IS_PRE_VOLTA
-#endif
-
 #include <Kokkos_Atomics_Desul_Wrapper.hpp>
 #include <Kokkos_Atomics_Desul_Volatile_Wrapper.hpp>
 #include <impl/Kokkos_Utilities.hpp>
