@@ -169,11 +169,10 @@ void testDynamicViewHooksCopyConstruct() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::copy_constructor_set
-      .set_callback(
-          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
-            holder = vh;
-          });
+  Kokkos::Experimental::DynamicViewHooks::copy_constructor_set.set_callback(
+      [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+        holder = vh;
+      });
 
   Kokkos::Experimental::DynamicViewHooks::copy_constructor_set
       .set_const_callback(
@@ -232,11 +231,10 @@ void testDynamicViewHooksCopyAssign() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::copy_assignment_set
-      .set_callback(
-          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
-            holder = vh;
-          });
+  Kokkos::Experimental::DynamicViewHooks::copy_assignment_set.set_callback(
+      [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+        holder = vh;
+      });
 
   Kokkos::Experimental::DynamicViewHooks::copy_assignment_set
       .set_const_callback(
@@ -265,11 +263,10 @@ void testDynamicViewHooksMoveAssign() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::move_assignment_set
-      .set_callback(
-          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
-            holder = vh;
-          });
+  Kokkos::Experimental::DynamicViewHooks::move_assignment_set.set_callback(
+      [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+        holder = vh;
+      });
 
   Kokkos::Experimental::DynamicViewHooks::move_assignment_set
       .set_const_callback(
