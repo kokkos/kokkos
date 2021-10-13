@@ -199,14 +199,13 @@ void testDynamicViewHooksMoveConstruct() {
 
   Kokkos::Experimental::DynamicViewHooks::reset();
 
-  Kokkos::Experimental::DynamicViewHooks::move_constructor_set
-      .template set_callback(
-          [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
-            holder = vh;
-          });
+  Kokkos::Experimental::DynamicViewHooks::move_constructor_set.set_callback(
+      [&holder](const Kokkos::Experimental::ViewHolder &vh) mutable {
+        holder = vh;
+      });
 
   Kokkos::Experimental::DynamicViewHooks::move_constructor_set
-      .template set_const_callback(
+      .set_const_callback(
           [&const_holder](
               const Kokkos::Experimental::ConstViewHolder &vh) mutable {
             const_holder = vh;
