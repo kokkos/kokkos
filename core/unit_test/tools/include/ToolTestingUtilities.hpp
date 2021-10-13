@@ -92,6 +92,8 @@ struct EventBase;  // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
 using event_vector = std::vector<EventBasePtr>;
 
+template<class... Args>
+
 /**
  * @brief Base case of a recursive reduction using templates
  * Should be replaced with a fold in C++17
@@ -264,13 +266,13 @@ struct invoke_helper {
  * more matchers exist. The only check now should be that we made it all the way
  * through the list of events captured by our lambda.
  *
- * @param index how many events we scanned
+ * @param events_scanned how many events we scanned
  * @param events the vector containing our events
  * @return MatchDiagnostic success if we scanned all events, failure otherwise
  */
-MatchDiagnostic check_match(event_vector::size_type index,
+MatchDiagnostic check_match(event_vector::size_type events_scanned,
                             const event_vector& events) {
-  return (index == events.size())
+  return (events_scanned == events.size())
              ? MatchDiagnostic{true}
              : MatchDiagnostic{false, {"Wrong number of events encountered"}};
 }
@@ -345,14 +347,12 @@ struct EventBase {
  */
 template <class Derived>
 struct BeginOperation : public EventBase {
-  using ThisType = BeginOperation;
   const std::string name;
   const uint32_t deviceID;
   uint64_t kID;
   BeginOperation(const std::string& n, const uint32_t devID, uint64_t k)
       : name(n), deviceID(devID), kID(k) {}
-  virtual ~BeginOperation() = default;
-  virtual std::string descriptor() const {
+   std::string descriptor() const {
     std::stringstream s;
     s << Derived::begin_op_name() << " { \"" << name << "\", ";
     s << deviceID;
@@ -371,12 +371,10 @@ struct BeginOperation : public EventBase {
  */
 template <class Derived>
 struct EndOperation : public EventBase {
-  using ThisType = EndOperation;
   uint64_t kID;
   EndOperation(uint64_t k) : kID(k) {}
-  virtual ~EndOperation() = default;
 
-  virtual std::string descriptor() const {
+   std::string descriptor() const {
     std::stringstream s;
     s << Derived::end_op_name() << " { ";
     s << kID;
@@ -393,81 +391,65 @@ struct EndOperation : public EventBase {
  */
 struct BeginParallelForEvent : public BeginOperation<BeginParallelForEvent> {
   static const std::string& begin_op_name() {
-    static std::string value = "BeginParallelFor";
-    return value;
+    return "BeginParallelFor";
   }
   BeginParallelForEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelForEvent>(n, devID, k) {}
-  virtual ~BeginParallelForEvent() = default;
 };
 struct BeginParallelReduceEvent
     : public BeginOperation<BeginParallelReduceEvent> {
   static const std::string& begin_op_name() {
-    static std::string value = "BeginParallelReduce";
-    return value;
+    return "BeginParallelReduce";
   }
 
   BeginParallelReduceEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelReduceEvent>(n, devID, k) {}
-  virtual ~BeginParallelReduceEvent() = default;
 };
 struct BeginParallelScanEvent : public BeginOperation<BeginParallelScanEvent> {
   static const std::string& begin_op_name() {
-    static std::string value = "BeginParallelScan";
-    return value;
+    return "BeginParallelScan";
   }
 
   BeginParallelScanEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelScanEvent>(n, devID, k) {}
-  virtual ~BeginParallelScanEvent() = default;
 };
 struct BeginFenceEvent : public BeginOperation<BeginFenceEvent> {
   static const std::string& begin_op_name() {
-    static std::string value = "BeginFence";
-    return value;
+    return "BeginFence";
   }
 
   BeginFenceEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginFenceEvent>(n, devID, k) {}
-  virtual ~BeginFenceEvent() = default;
 };
 
 struct EndParallelForEvent : public EndOperation<EndParallelForEvent> {
   static const std::string& end_op_name() {
-    static std::string value = "EndParallelFor";
-    return value;
+    return "EndParallelFor";
   }
 
   EndParallelForEvent(uint64_t k) : EndOperation<EndParallelForEvent>(k) {}
-  virtual ~EndParallelForEvent() = default;
 };
 struct EndParallelReduceEvent : public EndOperation<EndParallelReduceEvent> {
   static const std::string& end_op_name() {
-    static std::string value = "EndParallelReduce";
-    return value;
+    return "EndParallelReduce";
   }
 
   EndParallelReduceEvent(uint64_t k)
       : EndOperation<EndParallelReduceEvent>(k) {}
-  virtual ~EndParallelReduceEvent() = default;
 };
 struct EndParallelScanEvent : public EndOperation<EndParallelScanEvent> {
   static const std::string& end_op_name() {
-    static std::string value = "EndParallelScan";
-    return value;
+    return "EndParallelScan";
   }
 
   EndParallelScanEvent(uint64_t k) : EndOperation<EndParallelScanEvent>(k) {}
-  virtual ~EndParallelScanEvent() = default;
 };
 struct EndFenceEvent : public EndOperation<EndFenceEvent> {
   static const std::string& end_op_name() {
-    static std::string value = "EndFence";
-    return value;
+    return "EndFence";
   }
 
   EndFenceEvent(uint64_t k) : EndOperation<EndFenceEvent>(k) {}
-  virtual ~EndFenceEvent() = default;
 };
 
 struct InitEvent : public EventBase {
@@ -475,7 +457,7 @@ struct InitEvent : public EventBase {
   uint64_t version_number;
   uint32_t num_device_infos;
   Kokkos::Profiling::KokkosPDeviceInfo* device_infos;
-  virtual std::string descriptor() const override {
+   std::string descriptor() const override {
     std::stringstream s;
     s << "InitEvent { load_sequence: " << load_sequence << ", version_number "
       << version_number << ", num_device_infos " << num_device_infos << "}";
@@ -489,7 +471,7 @@ struct InitEvent : public EventBase {
         device_infos(d_i) {}
 };
 struct FinalizeEvent : public EventBase {
-  virtual std::string descriptor() const override { return "FinalizeEvent{}"; }
+   std::string descriptor() const override { return "FinalizeEvent{}"; }
 };
 
 struct ParseArgsEvent : public EventBase {
@@ -975,37 +957,37 @@ using DisableAll = ToggleAll<false>;
  * which can't capture variables. Thus we need something that doesn't require
  * capturing. In short, a global variable. :(
  */
-std::vector<EventBasePtr> found_events;
+static std::vector<EventBasePtr> found_events;
 /**
  * Needs to stand outside of functions, this is the kID of the last encountered
  * begin event
  */
-static uint64_t last_kid;
+static uint64_t last_kernel_id;
 /**
  * Needs to stand outside of functions, this is the section ID of the last
  * encountered section id
  */
-static uint32_t last_sid;
+static uint32_t last_section_id;
 
 /** Subscribes to all of the requested callbacks */
-void set_tool_events_impl(ToolValidatorConfiguration& config) {
+void set_tool_events_impl(const ToolValidatorConfiguration& config) {
   Kokkos::Tools::Experimental::pause_tools();  // remove all events
   if (config.profiling.kernels) {
     Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
         [](const char* n, const uint32_t d, uint64_t* k) {
-          *k = ++last_kid;
+          *k = ++last_kernel_id;
           found_events.push_back(
               std::make_shared<BeginParallelForEvent>(std::string(n), d, *k));
         });
     Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback(
         [](const char* n, const uint32_t d, uint64_t* k) {
-          *k = ++last_kid;
+          *k = ++last_kernel_id;
           found_events.push_back(std::make_shared<BeginParallelReduceEvent>(
               std::string(n), d, *k));
         });
     Kokkos::Tools::Experimental::set_begin_parallel_scan_callback(
         [](const char* n, const uint32_t d, uint64_t* k) {
-          *k = ++last_kid;
+          *k = ++last_kernel_id;
 
           found_events.push_back(
               std::make_shared<BeginParallelScanEvent>(std::string(n), d, *k));
@@ -1034,6 +1016,7 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
   if (config.profiling.fences) {
     Kokkos::Tools::Experimental::set_begin_fence_callback(
         [](const char* n, const uint32_t d, uint64_t* k) {
+          *k = ++last_kernel_id;
           found_events.push_back(
               std::make_shared<BeginFenceEvent>(std::string(n), d, *k));
         });
@@ -1083,7 +1066,7 @@ void set_tool_events_impl(ToolValidatorConfiguration& config) {
   if (config.profiling.sections) {
     Kokkos::Tools::Experimental::set_create_profile_section_callback(
         [](const char* name, uint32_t* id) {
-          *id = (++last_sid);
+          *id = (++last_section_id);
           found_events.push_back(std::make_shared<CreateProfileSectionEvent>(
               std::string(name), *id));
         });
