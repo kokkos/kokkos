@@ -106,12 +106,16 @@ struct InitArguments {
     Tools::InitArguments init_tools;
     init_tools.tune_internals =
         tune_internals ? Tools::InitArguments::PossiblyUnsetOption::on
-                       : Tools::InitArguments::PossiblyUnsetOption::off;
+                       : Tools::InitArguments::PossiblyUnsetOption::unset;
     init_tools.help = tool_help
                           ? Tools::InitArguments::PossiblyUnsetOption::on
-                          : Tools::InitArguments::PossiblyUnsetOption::off;
-    init_tools.lib  = tool_lib;
-    init_tools.args = tool_args;
+                          : Tools::InitArguments::PossiblyUnsetOption::unset;
+    init_tools.lib = tool_lib.empty()
+                         ? Kokkos::Tools::InitArguments::unset_string_option
+                         : tool_lib;
+    init_tools.args = tool_args.empty()
+                          ? Kokkos::Tools::InitArguments::unset_string_option
+                          : tool_args;
     return init_tools;
   }
 };
