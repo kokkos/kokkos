@@ -1262,11 +1262,11 @@ auto get_event_set(const Lambda& lam) {
   return events;
 }
 
-MatchDiagnostic none_of(const EventBasePtr&) { return {false}; }
+MatchDiagnostic check_presence_of(const EventBasePtr&) { return {false}; }
 template <class Matcher, class... Matchers>
-MatchDiagnostic none_of(const EventBasePtr& event, const Matcher& m,
+MatchDiagnostic check_presence_of(const EventBasePtr& event, const Matcher& m,
                         Matchers&&... args) {
-  auto tail  = none_of(event, args...);
+  auto tail  = check_presence_of(event, args...);
   auto match = function_traits<Matcher>::invoke_as(m, event);
   match.success |= tail.success;
   return match;
@@ -1280,7 +1280,7 @@ bool validate_absence(const Lambda& lam, const Matchers... matchers) {
   lam();
   // compare the found events against the expected ones
   for (const auto& event : found_events) {
-    MatchDiagnostic match = none_of(event, matchers...);
+    MatchDiagnostic match = check_presence_of(event, matchers...);
 
     if (match.success) {
       std::cout << "Test failure: encountered unwanted events" << std::endl;
