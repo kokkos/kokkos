@@ -83,6 +83,8 @@ class SYCLInternal {
   size_type* m_scratchSpace           = nullptr;
   size_type m_scratchFlagsCount       = 0;
   size_type* m_scratchFlags           = nullptr;
+  // mutex to access shared memory
+  mutable std::mutex m_mutexScratchSpace;
 
   int64_t m_team_scratch_current_size = 0;
   void* m_team_scratch_ptr            = nullptr;

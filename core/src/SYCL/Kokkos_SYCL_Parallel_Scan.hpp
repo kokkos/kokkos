@@ -82,6 +82,10 @@ class ParallelScanSYCLBase {
   const Policy m_policy;
   pointer_type m_scratch_space = nullptr;
 
+  // Only let one Parallel/Scan modify the shared memory. The
+  // constructor acquires the mutex which is released in the destructor.
+  std::unique_lock<std::mutex> m_shared_memory_lock;
+
  private:
   template <typename Functor>
   void scan_internal(sycl::queue& q, const Functor& functor,
@@ -269,7 +273,11 @@ class ParallelScanSYCLBase {
   }
 
   ParallelScanSYCLBase(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_shared_memory_lock(m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->m_mutexScratchSpace) {}
 };
 
 template <class FunctorType, class... Traits>

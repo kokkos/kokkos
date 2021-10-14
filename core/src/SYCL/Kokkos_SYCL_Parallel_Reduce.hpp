@@ -166,7 +166,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr(v.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                              typename V::memory_space>::accessible) {}
+                              typename V::memory_space>::accessible),
+        m_shared_memory_lock(
+            p.space().impl_internal_space_instance()->m_mutexScratchSpace) {}
 
   ParallelReduce(const FunctorType& f, const Policy& p,
                  const ReducerType& reducer)
@@ -177,7 +179,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename ReducerType::result_view_type::
-                                  memory_space>::accessible) {}
+                                  memory_space>::accessible),
+        m_shared_memory_lock(
+            p.space().impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
@@ -372,6 +376,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
+
+  // Only let one Parallel/Scan modify the shared memory. The
+  // constructor acquires the mutex which is released in the destructor.
+  std::unique_lock<std::mutex> m_shared_memory_lock;
 };
 
 template <class FunctorType, class ReducerType, class... Traits>
@@ -425,7 +433,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_result_ptr(v.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                              typename V::memory_space>::accessible) {}
+                              typename V::memory_space>::accessible),
+        m_shared_memory_lock(
+            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
 
   ParallelReduce(const FunctorType& f, const Policy& p,
                  const ReducerType& reducer)
@@ -437,7 +447,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename ReducerType::result_view_type::
-                                  memory_space>::accessible) {}
+                                  memory_space>::accessible),
+        m_shared_memory_lock(
+            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
@@ -657,6 +669,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
+
+  // Only let one Parallel/Scan modify the shared memory. The
+  // constructor acquires the mutex which is released in the destructor.
+  std::unique_lock<std::mutex> m_shared_memory_lock;
 };
 
 }  // namespace Impl
