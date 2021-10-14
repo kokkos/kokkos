@@ -30,6 +30,9 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
   ENDIF()
 ENDIF()
 
+find_package(Threads REQUIRED)
+target_link_libraries(kokkos_gtest Threads::Threads)
+
 #
 # Define Incremental Testing Feature Levels
 # Define Device name mappings (i.e. what comes after Kokkos:: for the ExecSpace)
