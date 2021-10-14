@@ -1265,11 +1265,13 @@ auto get_event_set(const Lambda& lam) {
 MatchDiagnostic check_presence_of(const EventBasePtr&) { return {false}; }
 template <class Matcher, class... Matchers>
 MatchDiagnostic check_presence_of(const EventBasePtr& event, const Matcher& m,
-                        Matchers&&... args) {
+                                  Matchers&&... args) {
   auto tail  = check_presence_of(event, args...);
   auto match = function_traits<Matcher>::invoke_as(m, event);
-  if(tail.success){
-    for(const auto& entry: tail.messages) { match.messages.push_back(entry); }
+  if (tail.success) {
+    for (const auto& entry : tail.messages) {
+      match.messages.push_back(entry);
+    }
   }
   match.success |= tail.success;
   return match;
