@@ -182,6 +182,34 @@ DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_FLOATING_POINT(sub, Sub)
 #undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_INTEGRAL
 #undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN
 
+#define DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(TYPE) \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_inc(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeDevice scope) {        \
+    return atomic_fetch_add(ptr, static_cast<TYPE>(1), order, scope); \
+  }                                                                   \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_inc(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeCore scope) {          \
+    return atomic_fetch_add(ptr, static_cast<TYPE>(1), order, scope); \
+  }                                                                   \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_dec(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeDevice scope) {        \
+    return atomic_fetch_sub(ptr, static_cast<TYPE>(1), order, scope); \
+  }                                                                   \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_dec(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeCore scope) {          \
+    return atomic_fetch_sub(ptr, static_cast<TYPE>(1), order, scope); \
+  }
+
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(int)
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(unsigned int)
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(unsigned long long)
+
+#undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT
+
 template <class MemoryOrder>
 inline __host__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
                                                        unsigned int val,
