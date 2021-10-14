@@ -145,6 +145,7 @@ class SYCLInternal {
     // (otherwise) and returns a reference to the copied object.
     template <typename T>
     T& copy_from(const T& t) {
+      m_mutex.lock();
       fence();
       reserve(sizeof(T));
       if constexpr (sycl::usm::alloc::device == Kind) {
@@ -172,6 +173,7 @@ class SYCLInternal {
                  .get_info<sycl::info::event::command_execution_status>() ==
              sycl::info::event_command_status::complete);
       m_last_event = event;
+      m_mutex.unlock();
     }
 
    private:
@@ -191,6 +193,9 @@ class SYCLInternal {
     sycl::event m_last_event;
 
     uint32_t m_instance_id;
+
+    // mutex to access the underlying memory
+    mutable std::mutex m_mutex;
   };
 
   // An indirect kernel is one where the functor to be executed is explicitly
