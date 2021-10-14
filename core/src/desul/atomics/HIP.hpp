@@ -265,25 +265,21 @@ inline __host__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
 // 3/ device-side fallback implementation for atomic functions defined in GCC overload
 // set
 
-#define DESUL_IMPL_HIP_DEVICE_FALLBACK_ATOMIC_FUN_ORDER_SCOPE(                   \
-    OP_LOWERCASE, OP_PASCAL_CASE, MEMORY_ORDER, MEMORY_SCOPE)                    \
-  template <class T>                                                             \
-  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>              \
-      atomic_##OP_LOWERCASE##_fetch(T* ptr, T val, MEMORY_ORDER, MEMORY_SCOPE) { \
-    return Impl::atomic_oper_fetch(Impl::OP_PASCAL_CASE##Oper<T, const T>(),     \
-                                   ptr,                                          \
-                                   val,                                          \
-                                   MEMORY_ORDER(),                               \
-                                   MEMORY_SCOPE());                              \
-  }                                                                              \
-  template <class T>                                                             \
-  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>              \
-      atomic_fetch_##OP_LOWERCASE(T* ptr, T val, MEMORY_ORDER, MEMORY_SCOPE) {   \
-    return Impl::atomic_fetch_oper(Impl::OP_PASCAL_CASE##Oper<T, const T>(),     \
-                                   ptr,                                          \
-                                   val,                                          \
-                                   MEMORY_ORDER(),                               \
-                                   MEMORY_SCOPE());                              \
+#define DESUL_IMPL_HIP_DEVICE_FALLBACK_ATOMIC_FUN_ORDER_SCOPE(             \
+    OP_LOWERCASE, OP_PASCAL_CASE, MEMORY_ORDER, MEMORY_SCOPE)              \
+  template <class T>                                                       \
+  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>        \
+      atomic_##OP_LOWERCASE##_fetch(                                       \
+          T* ptr, T val, MEMORY_ORDER order, MEMORY_SCOPE scope) {         \
+    return Impl::atomic_oper_fetch(                                        \
+        Impl::OP_PASCAL_CASE##Oper<T, const T>(), ptr, val, order, scope); \
+  }                                                                        \
+  template <class T>                                                       \
+  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>        \
+      atomic_fetch_##OP_LOWERCASE(                                         \
+          T* ptr, T val, MEMORY_ORDER order, MEMORY_SCOPE scope) {         \
+    return Impl::atomic_fetch_oper(                                        \
+        Impl::OP_PASCAL_CASE##Oper<T, const T>(), ptr, val, order, scope); \
   }
 
 // clang-format off
