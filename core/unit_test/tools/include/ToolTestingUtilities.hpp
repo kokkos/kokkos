@@ -1268,6 +1268,9 @@ MatchDiagnostic check_presence_of(const EventBasePtr& event, const Matcher& m,
                         Matchers&&... args) {
   auto tail  = check_presence_of(event, args...);
   auto match = function_traits<Matcher>::invoke_as(m, event);
+  if(tail.success){
+    for(const auto& entry: tail.messages) { match.messages.push_back(entry); }
+  }
   match.success |= tail.success;
   return match;
 }
