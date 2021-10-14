@@ -4292,7 +4292,10 @@ class TestNameIs {
   // TestNameIs has NO default constructor.
   explicit TestNameIs(const char* name)
       : name_(name) {}
-
+// Workaround: suppress unused-function with intel compilers
+#if defined(__INTEL_COMPILER)
+#pragma warning disable 177
+#endif
   // Returns true if and only if the test name of test_info matches name_.
   bool operator()(const TestInfo * test_info) const {
     return test_info && test_info->name() == name_;
