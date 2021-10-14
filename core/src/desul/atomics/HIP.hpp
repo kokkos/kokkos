@@ -152,13 +152,13 @@ inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
   template <class MemoryOrder>                                                      \
   inline __host__ TYPE atomic_fetch_##OP_LOWERCASE(                                 \
       TYPE* ptr, TYPE val, MemoryOrder order, MemoryScopeDevice scope) {            \
-    return Impl::atomic_oper_fetch(                                                 \
+    return Impl::atomic_fetch_oper(                                                 \
         Impl::OP_PASCAL_CASE##Oper<TYPE, const TYPE>(), ptr, val, order, scope);    \
   }                                                                                 \
   template <class MemoryOrder>                                                      \
   inline __host__ TYPE atomic_fetch_##OP_LOWERCASE(                                 \
       TYPE* ptr, TYPE val, MemoryOrder order, MemoryScopeCore scope) {              \
-    return Impl::atomic_oper_fetch(                                                 \
+    return Impl::atomic_fetch_oper(                                                 \
         Impl::OP_PASCAL_CASE##Oper<TYPE, const TYPE>(), ptr, val, order, scope);    \
   }
 
