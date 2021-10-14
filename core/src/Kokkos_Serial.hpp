@@ -205,11 +205,19 @@ class Serial {
   static const char* name();
 
   Impl::SerialInternal* impl_internal_space_instance() const {
+#if defined(KOKKOS_COMPILER_INTEL)
+    return m_space_instance;
+#else
     return m_space_instance.get();
+#endif
   }
 
  private:
+#if defined(KOKKOS_COMPILER_INTEL)
+  Impl::SerialInternal* m_space_instance;
+#else
   Kokkos::Impl::HostSharedPtr<Impl::SerialInternal> m_space_instance;
+#endif
   //--------------------------------------------------------------------------
 };
 

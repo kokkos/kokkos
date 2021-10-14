@@ -169,8 +169,14 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
 }  // namespace Impl
 
 Serial::Serial()
+#if defined(KOKKOS_COMPILER_INTEL)
+    : m_space_instance(&Impl::SerialInternal::singleton()) {
+}
+#else
     : m_space_instance(&Impl::SerialInternal::singleton(),
-                       [](Impl::SerialInternal*) {}) {}
+                       [](Impl::SerialInternal*) {}) {
+}
+#endif
 
 bool Serial::impl_is_initialized() {
   return Impl::SerialInternal::singleton().is_initialized();
