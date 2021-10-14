@@ -245,7 +245,7 @@ TEST_F(random_access_iterator_test, distance) {
 
   EXPECT_EQ(0, KE::distance(first, first));
   EXPECT_EQ(1, KE::distance(first, first + 1));
-  EXPECT_EQ(m_dynamic_view.extent(0), KE::distance(first, last));
+  EXPECT_EQ(m_dynamic_view.extent(0), size_t(KE::distance(first, last)));
 }
 
 }  // namespace stdalgos

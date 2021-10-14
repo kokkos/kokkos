@@ -595,8 +595,8 @@ typename IteratorType::difference_type count_if_impl(const std::string& label,
 // count_impl
 // ------------------------------------------
 template <class ExecutionSpace, class IteratorType, class T>
-std::size_t count_impl(const std::string& label, const ExecutionSpace& ex,
-                       IteratorType first, IteratorType last, const T& value) {
+auto count_impl(const std::string& label, const ExecutionSpace& ex,
+                IteratorType first, IteratorType last, const T& value) {
   return count_if_impl(
       label, ex, first, last,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));

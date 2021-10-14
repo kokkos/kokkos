@@ -65,7 +65,7 @@ void test_count(const ViewType view) {
     const value_t count_value = 0;
     const auto std_result =
         std::count(KE::cbegin(expected), KE::cend(expected), count_value);
-    EXPECT_EQ(view.extent(0), std_result);
+    EXPECT_EQ(view.extent(0), size_t(std_result));
 
     // pass const iterators
     EXPECT_EQ(std_result, KE::count(exespace(), KE::cbegin(view),
