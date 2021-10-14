@@ -169,7 +169,9 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
 }  // namespace Impl
 
 Serial::Serial()
-#if defined(KOKKOS_COMPILER_INTEL)
+#if defined(KOKKOS_COMPILER_INTEL) && \
+    (KOKKOS_COMPILER_INTEL <=         \
+     1900)  // FIXME Workaround for ICE with intel 17,18,19 in Trilinos
     : m_space_instance(&Impl::SerialInternal::singleton()) {
 }
 #else

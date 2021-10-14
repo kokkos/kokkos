@@ -205,7 +205,9 @@ class Serial {
   static const char* name();
 
   Impl::SerialInternal* impl_internal_space_instance() const {
-#if defined(KOKKOS_COMPILER_INTEL)
+#if defined(KOKKOS_COMPILER_INTEL) && \
+    (KOKKOS_COMPILER_INTEL <=         \
+     1900)  // FIXME Workaround for ICE with intel 17,18,19 in Trilinos
     return m_space_instance;
 #else
     return m_space_instance.get();
@@ -213,7 +215,9 @@ class Serial {
   }
 
  private:
-#if defined(KOKKOS_COMPILER_INTEL)
+#if defined(KOKKOS_COMPILER_INTEL) && \
+    (KOKKOS_COMPILER_INTEL <=         \
+     1900)  // FIXME Workaround for ICE with intel 17,18,19 in Trilinos
   Impl::SerialInternal* m_space_instance;
 #else
   Kokkos::Impl::HostSharedPtr<Impl::SerialInternal> m_space_instance;
