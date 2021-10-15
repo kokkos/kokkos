@@ -84,7 +84,7 @@ class ParallelScanSYCLBase {
 
   // Only let one Parallel/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_shared_memory_lock;
+  std::scoped_lock<std::mutex> m_shared_memory_lock;
 
  private:
   template <typename Functor>
