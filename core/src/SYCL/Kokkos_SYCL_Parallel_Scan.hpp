@@ -130,18 +130,29 @@ class ParallelScanSYCLBase {
             // scan subgroup results using the first subgroup
             if (sg_group_id == 0) {
               const int n_subgroups = sg.get_group_range()[0];
-              if (local_range < n_subgroups) Kokkos::abort("Not implemented!");
 
-              for (int stride = n_subgroups / 2; stride > 0; stride >>= 1) {
-                auto tmp =
-                    sg.shuffle_up(global_mem[id_in_sg + global_offset], stride);
-                if (id_in_sg >= stride) {
-                  if (id_in_sg < n_subgroups)
-                    ValueJoin::join(
-                        functor, &global_mem[id_in_sg + global_offset], &tmp);
-                  else
-                    global_mem[id_in_sg + global_offset] = tmp;
+              const auto n_rounds =
+                  (n_subgroups + local_range - 1) / local_range;
+              for (int round = 0; round < n_rounds; ++round) {
+                const int idx = id_in_sg + round * local_range;
+                const auto upper_bound =
+                    std::min(local_range, n_subgroups - round * local_range);
+                auto local_value = global_mem[idx + global_offset];
+                for (int stride = 1; stride < upper_bound; stride <<= 1) {
+                  auto tmp = sg.shuffle_up(local_value, stride);
+                  if (id_in_sg >= stride) {
+                    if (idx < n_subgroups)
+                      ValueJoin::join(functor, &local_value, &tmp);
+                    else
+                      local_value = tmp;
+                  }
                 }
+                global_mem[idx + global_offset] = local_value;
+                if (round > 0)
+                  ValueJoin::join(
+                      functor, &global_mem[idx + global_offset],
+                      &global_mem[round * local_range - 1 + global_offset]);
+                if (round + 1 < n_rounds) sg.barrier();
               }
             }
             item.barrier(sycl::access::fence_space::local_space);
