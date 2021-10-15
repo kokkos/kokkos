@@ -180,7 +180,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   size_type* m_scratch_flags = nullptr;
   // Only let one ParallelReduce/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_shared_memory_lock;
+  std::lock_guard<std::mutex> m_shared_memory_lock;
 
   static bool constexpr UseShflReduction =
       static_cast<bool>(ValueTraits::StaticValueSize);
@@ -484,7 +484,7 @@ class ParallelScanHIPBase {
   int m_grid_x               = 0;
   // Only let one ParallelReduce/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_shared_memory_lock;
+  std::lock_guard<std::mutex> m_shared_memory_lock;
 
  private:
   template <class TagType>

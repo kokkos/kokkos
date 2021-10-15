@@ -247,7 +247,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   size_type* m_scratch_flags;
   // Only let one Parallel/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_shared_memory_lock;
+  std::lock_guard<std::mutex> m_shared_memory_lock;
 
   using DeviceIteratePattern = typename Kokkos::Impl::Reduce::DeviceIterateTile<
       Policy::rank, Policy, FunctorType, WorkTag, reference_type>;

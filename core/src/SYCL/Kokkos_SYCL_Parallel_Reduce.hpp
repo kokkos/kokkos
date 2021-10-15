@@ -379,7 +379,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Only let one Parallel/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_shared_memory_lock;
+  std::lock_guard<std::mutex> m_shared_memory_lock;
 };
 
 template <class FunctorType, class ReducerType, class... Traits>
@@ -672,7 +672,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   // Only let one Parallel/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_shared_memory_lock;
+  std::lock_guard<std::mutex> m_shared_memory_lock;
 };
 
 }  // namespace Impl

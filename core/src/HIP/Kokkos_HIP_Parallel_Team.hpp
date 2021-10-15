@@ -479,7 +479,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_scratch_size[2];
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_scratch_lock;
+  std::lock_guard<std::mutex> m_scratch_lock;
 
   template <typename TagType>
   __device__ inline
@@ -677,7 +677,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const size_type m_vector_size;
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::unique_lock<std::mutex> m_scratch_lock;
+  std::lock_guard<std::mutex> m_scratch_lock;
 
   template <class TagType>
   __device__ inline
