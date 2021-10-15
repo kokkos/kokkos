@@ -129,16 +129,6 @@ int cuda_kernel_arch() {
   return arch;
 }
 
-#ifdef KOKKOS_ENABLE_CUDA_UVM
-bool cuda_launch_blocking() {
-  const char *env = getenv("CUDA_LAUNCH_BLOCKING");
-
-  if (env == nullptr) return false;
-
-  return std::stoi(env);
-}
-#endif
-
 }  // namespace
 
 void cuda_device_synchronize(const std::string &name) {
