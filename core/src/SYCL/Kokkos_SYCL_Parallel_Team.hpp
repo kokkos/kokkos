@@ -665,16 +665,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
         void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
-        sycl::range<2> global =
-            first_run
-                ? sycl::range<2>(m_team_size, m_league_size * m_vector_size)
-                : sycl::range<2>(1, n_wgroups * wgroup_size);
-        sycl::range<2> local = first_run
-                                   ? sycl::range<2>(m_team_size, m_vector_size)
-                                   : sycl::range<2>(1, wgroup_size);
-
         cgh.parallel_for(
-            sycl::nd_range<2>(global, local), [=](sycl::nd_item<2> item) {
+            sycl::nd_range<2>(
+                sycl::range<2>(m_team_size, m_league_size * m_vector_size),
+                sycl::range<2>(m_team_size, m_vector_size)),
+            [=](sycl::nd_item<2> item) {
 #ifdef KOKKOS_ENABLE_DEBUG
               if (first_run && item.get_sub_group().get_local_range() %
                                        item.get_local_range(1) !=
