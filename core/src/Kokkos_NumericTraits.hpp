@@ -219,15 +219,15 @@ template <> struct max_exponent10_helper<long double> { static constexpr int val
 }  // namespace Impl
 
 #if defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT)      \
-  template <class T>                         \
-  struct TRAIT : Impl::TRAIT##_helper<T> {}; \
-  template <class T>                         \
+#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT)                        \
+  template <class T>                                           \
+  struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {}; \
+  template <class T>                                           \
   inline constexpr auto TRAIT##_v = TRAIT<T>::value;
 #else
 #define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT) \
   template <class T>                    \
-  struct TRAIT : Impl::TRAIT##_helper<T> {};
+  struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {};
 #endif
 
 // Numeric distinguished value traits
