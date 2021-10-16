@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -17,32 +17,29 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 namespace desul {
 
-#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, TYPE)                              \
-  template <class MemoryOrder>                                                     \
-  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
-    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
-    return dest_ref.fetch_##OPER(val);                                             \
-  }                                                                                \
-  template <class MemoryOrder>                                                     \
-  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore) {   \
-    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
-    return dest_ref.fetch_##OPER(val);                                             \
-  }
-
-#define DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, TYPE)                              \
-  template <class MemoryOrder>                                                     \
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, TYPE)                                \
+  template <class MemoryOrder>                                                       \
+  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) {   \
+    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);     \
+    return dest_ref.fetch_##OPER(val);                                               \
+  }                                                                                  \
+  template <class MemoryOrder>                                                       \
+  TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore) {     \
+    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);       \
+    return dest_ref.fetch_##OPER(val);                                               \
+  }                                                                                  \
+  template <class MemoryOrder>                                                       \
   TYPE atomic_##OPER##_fetch(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
-    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
-    dest_ref.fetch_##OPER(val);                                             \
-    return val; \
-  }                                                                                \
-  template <class MemoryOrder>                                                     \
+    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);     \
+    dest_ref.fetch_##OPER(val);                                                      \
+    return val;                                                                      \
+  }                                                                                  \
+  template <class MemoryOrder>                                                       \
   TYPE atomic_##OPER##_fetch(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore) {   \
-    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
-    dest_ref.fetch_##OPER(val);                                             \
-    return val;\
+    Impl::sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);       \
+    dest_ref.fetch_##OPER(val);                                                      \
+    return val;                                                                      \
   }
-
 
 #define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(OPER) \
   DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, int)           \
@@ -52,21 +49,9 @@ namespace desul {
   DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, long long)     \
   DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, unsigned long long)
 
-#define DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(OPER) \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, int)           \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, unsigned int)  \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, long)          \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, unsigned long) \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, long long)     \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, unsigned long long)	
-
 #define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(OPER) \
   DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, float)               \
   DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, double)
-
-#define DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_FLOATING_POINT(OPER) \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, float)               \
-  DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH(OPER, double)
 
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(add)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(sub)
@@ -76,30 +61,14 @@ DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(xor)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(min)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(max)
 
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(add)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(sub)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(and)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(or)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(xor)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(min)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL(max)
-
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(add)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(sub)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(min)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(max)
 
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_FLOATING_POINT(add)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_FLOATING_POINT(sub)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_FLOATING_POINT(min)
-DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_FLOATING_POINT(max)
-
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT
-#undef DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_FLOATING_POINT
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL
-#undef DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH_INTEGRAL
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER
-#undef DESUL_IMPL_SYCL_ATOMIC_OPER_FETCH
 
 }  // namespace desul
 
