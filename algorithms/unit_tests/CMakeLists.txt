@@ -36,6 +36,69 @@ ENDIF()
 
 SET(ALGORITHM UnitTestMain.cpp)
 
+LIST(APPEND ALGORITHM_SOURCES
+  TestStdAlgorithmsCommon.cpp
+
+  #--- general ones ---
+  TestStdReducers.cpp
+  TestStdAlgorithmsConstraints.cpp
+  TestRandomAccessIterator.cpp
+
+  #--- min,max ---
+  TestStdAlgorithmsMinMaxOps.cpp
+  TestStdAlgorithmsMinMaxElementOps.cpp
+
+  #--- non mod sequence ----
+  TestStdAlgorithmsLexicographicalCompare.cpp
+  TestStdAlgorithmsForEach.cpp
+  TestStdAlgorithmsFind.cpp
+  TestStdAlgorithmsFindFirstOf.cpp
+  TestStdAlgorithmsFindEnd.cpp
+  TestStdAlgorithmsCount.cpp
+  TestStdAlgorithmsEqual.cpp
+  TestStdAlgorithmsAllAnyNoneOf.cpp
+  TestStdAlgorithmsAdjacentFind.cpp
+  TestStdAlgorithmsSearch.cpp
+  TestStdAlgorithmsSearch_n.cpp
+  TestStdAlgorithmsMismatch.cpp
+
+  #--- mod ----
+  TestStdAlgorithmsModOps.cpp
+  TestStdAlgorithmsModSeqOps.cpp
+  TestStdAlgorithmsReplace.cpp
+  TestStdAlgorithmsReplaceIf.cpp
+  TestStdAlgorithmsReplaceCopy.cpp
+  TestStdAlgorithmsReplaceCopyIf.cpp
+  TestStdAlgorithmsCopyIf.cpp
+  TestStdAlgorithmsUnique.cpp
+  TestStdAlgorithmsUniqueCopy.cpp
+  TestStdAlgorithmsRemove.cpp
+  TestStdAlgorithmsRemoveIf.cpp
+  TestStdAlgorithmsRemoveCopy.cpp
+  TestStdAlgorithmsRemoveCopyIf.cpp
+  TestStdAlgorithmsRotate.cpp
+  TestStdAlgorithmsRotateCopy.cpp
+  TestStdAlgorithmsReverse.cpp
+  TestStdAlgorithmsShiftLeft.cpp
+  TestStdAlgorithmsShiftRight.cpp
+
+  #--- sorting ----
+  TestStdAlgorithmsIsSorted.cpp
+  TestStdAlgorithmsIsSortedUntil.cpp
+
+  #--- partitioning ----
+  TestStdAlgorithmsPartitioningOps.cpp
+  TestStdAlgorithmsPartitionCopy.cpp
+
+  #--- numerics ----
+  TestStdAlgorithmsNumerics.cpp
+  TestStdAlgorithmsAdjacentDifference.cpp
+  TestStdAlgorithmsExclusiveScan.cpp
+  TestStdAlgorithmsTransformExclusiveScan.cpp
+  TestStdAlgorithmsInclusiveScan.cpp
+  TestStdAlgorithmsTransformInclusiveScan.cpp
+)
+
 IF(Kokkos_ENABLE_OPENMP)
   LIST(APPEND ALGORITHM_SOURCES
     TestOpenMP_Sort1D.cpp
