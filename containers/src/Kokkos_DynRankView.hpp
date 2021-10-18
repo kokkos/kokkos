@@ -1684,12 +1684,12 @@ namespace Kokkos {
 
 namespace Impl {
 template <unsigned N, typename T, typename... Args>
-View<typename RankDataType<T, N>::type, Args...> as_view_of_rank_n(
-    DynRankView<T, Args...> v) {
-  if (v.rank() != N)
+auto as_view_of_rank_n(DynRankView<T, Args...> v) {
+  if (v.rank() != N) {
     Kokkos::Impl::throw_runtime_exception(
-        "Converting DynRankView " + std::to_string(v.rank()) +
+        "Converting DynRankView of rank " + std::to_string(v.rank()) +
         " to a View of mis-matched rank " + std::to_string(N));
+  }
 
   return View<typename RankDataType<T, N>::type, Args...>(v.data(), v.layout());
 }

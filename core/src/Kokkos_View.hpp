@@ -1920,7 +1920,7 @@ std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view_of_rank_n(
 // Placeholder implementation to compile generic code for DynRankView; should
 // never be called
 template <unsigned N, typename T, typename... Args>
-typename std::enable_if_t<
+std::enable_if_t<
     N != View<T, Args...>::Rank,
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
          Args...>>
