@@ -112,24 +112,7 @@ class HostSpace {
   /// Every memory space has a default execution space.  This is
   /// useful for things like initializing a View (which happens in
   /// parallel using the View's default execution space).
-#if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-  using execution_space = Kokkos::OpenMP;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-  using execution_space = Kokkos::Threads;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-  using execution_space = Kokkos::Experimental::HPX;
-#elif defined(KOKKOS_ENABLE_OPENMP)
-  using execution_space = Kokkos::OpenMP;
-#elif defined(KOKKOS_ENABLE_THREADS)
-  using execution_space = Kokkos::Threads;
-#elif defined(KOKKOS_ENABLE_HPX)
-  using execution_space = Kokkos::Experimental::HPX;
-#elif defined(KOKKOS_ENABLE_SERIAL)
-  using execution_space = Kokkos::Serial;
-#else
-#error \
-    "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
-#endif
+  using execution_space = DefaultHostExecutionSpace;
 
   //! This memory space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
@@ -313,6 +296,18 @@ struct ZeroMemset<typename HostSpace::execution_space, DT, DP...> {
   }
 };
 
+template <>
+struct DeepCopy<HostSpace, HostSpace, DefaultHostExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    hostspace_parallel_deepcopy(dst, src, n);
+  }
+
+  DeepCopy(const DefaultHostExecutionSpace& exec, void* dst, const void* src,
+           size_t n) {
+    hostspace_parallel_deepcopy_async(exec, dst, src, n);
+  }
+};
+
 template <class ExecutionSpace>
 struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
@@ -323,10 +318,7 @@ struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
     exec.fence(
         "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
         "ExecutionSpace>::DeepCopy: fence before copy");
-    hostspace_parallel_deepcopy(dst, src, n);
-    exec.fence(
-        "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
-        "ExecutionSpace>::DeepCopy: fence after copy");
+    hostspace_parallel_deepcopy_async(dst, src, n);
   }
 };
 
