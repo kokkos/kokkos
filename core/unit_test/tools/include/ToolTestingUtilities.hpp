@@ -99,7 +99,7 @@ template <class... Args>
  * Should be replaced with a fold in C++17
  */
 
-bool is_nonnull() {
+bool are_valid() {
   return true;
 }
 
@@ -114,8 +114,8 @@ bool is_nonnull() {
  *
  */
 template <class Head, class... Tail>
-bool is_nonnull(const Head& head, const Tail&... tail) {
-  return (head != nullptr) && (is_nonnull(tail...));
+bool are_valid(const Head& head, const Tail&... tail) {
+  return (head != nullptr) && (are_valid(tail...));
 }
 
 /**
@@ -157,8 +157,7 @@ struct function_traits<R (*)(A...)> {
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if (!is_nonnull(
-            std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+    if (!are_valid(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -182,8 +181,7 @@ struct function_traits<R (C::*)(A...)> {
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if (!is_nonnull(
-            std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+    if (!are_valid(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -208,8 +206,7 @@ struct function_traits<R (C::*)(A...) const>  // const
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if (!is_nonnull(
-            std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
+    if (!are_valid(std::dynamic_pointer_cast<A>(std::forward<Args>(args))...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -326,8 +323,8 @@ MatchDiagnostic check_match(event_vector::size_type index,
  *
  */
 template <class... Matchers>
-auto check_match(event_vector events, Matchers&&... matchers) {
-  return check_match(0, events, matchers...);
+auto check_match(const event_vector& events, Matchers&&... matchers) {
+  return check_match(0, events, std::forward<Matchers>(matchers)...);
 }
 
 /**
@@ -354,7 +351,7 @@ struct BeginOperation : public EventBase {
   uint64_t kID;
   BeginOperation(const std::string& n, const uint32_t devID, uint64_t k)
       : name(n), deviceID(devID), kID(k) {}
-  std::string descriptor() const {
+  std::string descriptor() const override {
     std::stringstream s;
     s << Derived::begin_op_name() << " { \"" << name << "\", ";
     s << deviceID;
@@ -376,7 +373,7 @@ struct EndOperation : public EventBase {
   uint64_t kID;
   EndOperation(uint64_t k) : kID(k) {}
 
-  std::string descriptor() const {
+  std::string descriptor() const override {
     std::stringstream s;
     s << Derived::end_op_name() << " { ";
     s << kID;
@@ -776,9 +773,9 @@ struct OptimizationGoalDeclarationEvent : public EventBase {
  * @return true on successful match, false otherwise
  */
 template <class... Matchers>
-bool compare_event_vectors(event_vector events, Matchers&&... matchers) {
+bool compare_event_vectors(const event_vector& events, Matchers&&... matchers) {
   // leans on check_match to do the bulk of the work
-  auto diagnostic = check_match(events, matchers...);
+  auto diagnostic = check_match(events, std::forward<Matchers>(matchers)...);
   // On failure, print out the error messages
   if (!diagnostic.success) {
     for (const auto& message : diagnostic.messages) {
@@ -862,7 +859,7 @@ namespace Config {
 
 /**
  * @brief Macro to make defining a configuration struct easier.
- * Given a name, what value to override in the ToolConfiguration.
+ * Given a name, what value to override in the ToolConfiguration,
  * and the depth of that configuration option, produces an
  * EnableName struct to enable that option, and a DisableName
  * struct to disable that option
@@ -871,7 +868,7 @@ namespace Config {
  * @param value: the value in ToolConfiguration to override
  * @param depth: how deep in the configuration tree an option is
  *               (0 is root, Profiling/Tuning/Infrastructure 1, 2 for
- * sub-options)
+ *                sub-options)
  */
 #define KOKKOS_IMPL_TOOLS_TEST_CONFIG_OPTION(name, value, depth)    \
   template <bool target_value>                                      \
@@ -961,8 +958,8 @@ using DisableAll = ToggleAll<false>;
 }  // namespace Config
 
 /**
- * Needs to stand outside of functions, this is the vector tool callbacks will
- * push events into. It needs to be outside of functions (to be global) because
+ * This is the vector tool callbacks will push events into.
+ * It needs to be outside of functions (to be global) because
  * it needs to be used in the tools callbacks, which are function pointers,
  * which can't capture variables. Thus we need something that doesn't require
  * capturing. In short, a global variable. :(
@@ -1228,13 +1225,14 @@ void listen_tool_events(Configs... confs) {
  * matchers success, false otherwise
  */
 template <class Lambda, class... Matchers>
-bool validate_event_set(const Lambda& lam, const Matchers... matchers) {
+bool validate_event_set(const Lambda& lam, Matchers&&... matchers) {
   // First, erase events from previous invocations
   found_events.clear();
   // Invoke the lambda (this will populate found_events, via tooling)
   lam();
   // compare the found events against the expected ones
-  auto success = compare_event_vectors(found_events, matchers...);
+  auto success =
+      compare_event_vectors(found_events, std::forward<Matchers>(matchers)...);
   if (!success) {
     // on failure, print out the events we found
     for (const auto& event : found_events) {

@@ -292,29 +292,11 @@ TEST(kokkosp, test_streams) {
 }
 
 #endif
-TEST(kokkosp, exemplar_tests) {
+TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
-  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-
-  auto success = validate_event_set(
-      [&]() {
-        TestFunctor tf;
-        Kokkos::parallel_for("dogs", Kokkos::RangePolicy<>(0, 1), tf);
-      },
-      [&](const BeginParallelForEvent begin_event,
-          const EndParallelForEvent end_event) {
-        if (begin_event.name != "dogs") {
-          return MatchDiagnostic{false, {"No match on BeginParallelFor name"}};
-        }
-        if (end_event.kID != ((begin_event.kID))) {
-          return MatchDiagnostic{false, {"No match on kID's"}};
-        }
-        return MatchDiagnostic{true};
-      });
-  ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll(), Config::EnableProfiling(),
                      Config::DisableKernels());
-  success = validate_event_set(
+  auto success = validate_event_set(
       [&]() {
         Kokkos::View<float*> left("left", 5), right("right", 5);
         Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), left, right);
@@ -322,31 +304,13 @@ TEST(kokkosp, exemplar_tests) {
       [&](AllocateDataEvent, AllocateDataEvent) {
         return MatchDiagnostic{true};
       },
-      [&](BeginDeepCopyEvent, BeginFenceEvent begin, EndFenceEvent) {
-        // DeepCopy: fence before copy
-        MatchDiagnostic diagnostic = {
-            begin.deviceID ==
-            Kokkos::DefaultExecutionSpace().impl_instance_id()};
-        if (!diagnostic.success) {
-          diagnostic.messages.push_back("Saw a fence on the wrong device ID");
-        }
-        return diagnostic;
-      },
-      [&](BeginFenceEvent begin, EndFenceEvent, EndDeepCopyEvent) {
-        // DeepCopy: fence after copy
-        MatchDiagnostic diagnostic = {
-            begin.deviceID ==
-            Kokkos::DefaultExecutionSpace().impl_instance_id()};
-        if (!diagnostic.success) {
-          diagnostic.messages.push_back("Saw a fence on the wrong device ID");
-        }
-        return diagnostic;
+      [&](BeginDeepCopyEvent, EndDeepCopyEvent) {
+        return MatchDiagnostic{true};
       },
       [&](DeallocateDataEvent, DeallocateDataEvent) {
         return MatchDiagnostic{true};
       });
-
-  listen_tool_events(Config::DisableAll());
+  ASSERT_TRUE(success);
 }
 
 TEST(kokkosp, parallel_for) {
