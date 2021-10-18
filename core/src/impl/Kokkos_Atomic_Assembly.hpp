@@ -76,11 +76,9 @@ struct cas128_t {
     return (lower != a.lower) || upper != a.upper;
   }
 
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const cas128_t& a) {
-    lower = a.lower;
-    upper = a.upper;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  cas128_t& operator=(const cas128_t& a) = default;
+
   KOKKOS_INLINE_FUNCTION
   void operator=(const cas128_t& a) volatile {
     lower = a.lower;
