@@ -14,40 +14,51 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifdef DESUL_HAVE_HIP_ATOMICS
 namespace desul {
 #if defined(__HIP_DEVICE_COMPILE__)
-__device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeDevice) {
+inline __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeDevice) {
   __threadfence();
 }
-__device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeDevice) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeDevice) {
   __threadfence();
 }
-__device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeDevice) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeDevice) {
   __threadfence();
 }
-__device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeDevice) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeDevice) {
   __threadfence();
 }
-__device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeCore) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeCore) {
   __threadfence_block();
 }
-__device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeCore) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeCore) {
   __threadfence_block();
 }
-__device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeCore) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeCore) {
   __threadfence_block();
 }
-__device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeCore) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeCore) {
   __threadfence_block();
 }
-__device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeNode) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeNode) {
   __threadfence_system();
 }
-__device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeNode) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeNode) {
   __threadfence_system();
 }
-__device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeNode) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeNode) {
   __threadfence_system();
 }
-__device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeNode) {
+
+inline __device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeNode) {
   __threadfence_system();
 }
 

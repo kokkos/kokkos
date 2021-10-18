@@ -152,26 +152,63 @@ inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
   template <class MemoryOrder>                                                      \
   inline __host__ TYPE atomic_fetch_##OP_LOWERCASE(                                 \
       TYPE* ptr, TYPE val, MemoryOrder order, MemoryScopeDevice scope) {            \
-    return Impl::atomic_oper_fetch(                                                 \
+    return Impl::atomic_fetch_oper(                                                 \
         Impl::OP_PASCAL_CASE##Oper<TYPE, const TYPE>(), ptr, val, order, scope);    \
   }                                                                                 \
   template <class MemoryOrder>                                                      \
   inline __host__ TYPE atomic_fetch_##OP_LOWERCASE(                                 \
       TYPE* ptr, TYPE val, MemoryOrder order, MemoryScopeCore scope) {              \
-    return Impl::atomic_oper_fetch(                                                 \
+    return Impl::atomic_fetch_oper(                                                 \
         Impl::OP_PASCAL_CASE##Oper<TYPE, const TYPE>(), ptr, val, order, scope);    \
   }
+
+#define DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_INTEGRAL(OP_LOWERCASE, OP_PASCAL_CASE) \
+  DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN(OP_LOWERCASE, OP_PASCAL_CASE, int)           \
+  DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN(OP_LOWERCASE, OP_PASCAL_CASE, unsigned int)  \
+  DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN(                                             \
+      OP_LOWERCASE, OP_PASCAL_CASE, unsigned long long)
 
 #define DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_FLOATING_POINT(OP_LOWERCASE,   \
                                                                OP_PASCAL_CASE) \
   DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN(OP_LOWERCASE, OP_PASCAL_CASE, float) \
   DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN(OP_LOWERCASE, OP_PASCAL_CASE, double)
 
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_INTEGRAL(min, Min)
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_INTEGRAL(max, Max)
 DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_FLOATING_POINT(add, Add)
 DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_FLOATING_POINT(sub, Sub)
 
 #undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_FLOATING_POINT
+#undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN_INTEGRAL
 #undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN
+
+#define DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(TYPE) \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_inc(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeDevice scope) {        \
+    return atomic_fetch_add(ptr, static_cast<TYPE>(1), order, scope); \
+  }                                                                   \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_inc(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeCore scope) {          \
+    return atomic_fetch_add(ptr, static_cast<TYPE>(1), order, scope); \
+  }                                                                   \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_dec(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeDevice scope) {        \
+    return atomic_fetch_sub(ptr, static_cast<TYPE>(1), order, scope); \
+  }                                                                   \
+  template <class MemoryOrder>                                        \
+  inline __host__ TYPE atomic_fetch_dec(                              \
+      TYPE* ptr, MemoryOrder order, MemoryScopeCore scope) {          \
+    return atomic_fetch_sub(ptr, static_cast<TYPE>(1), order, scope); \
+  }
+
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(int)
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(unsigned int)
+DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(unsigned long long)
+
+#undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT
 
 template <class MemoryOrder>
 inline __host__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
@@ -228,25 +265,21 @@ inline __host__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
 // 3/ device-side fallback implementation for atomic functions defined in GCC overload
 // set
 
-#define DESUL_IMPL_HIP_DEVICE_FALLBACK_ATOMIC_FUN_ORDER_SCOPE(                   \
-    OP_LOWERCASE, OP_PASCAL_CASE, MEMORY_ORDER, MEMORY_SCOPE)                    \
-  template <class T>                                                             \
-  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>              \
-      atomic_##OP_LOWERCASE##_fetch(T* ptr, T val, MEMORY_ORDER, MEMORY_SCOPE) { \
-    return Impl::atomic_oper_fetch(Impl::OP_PASCAL_CASE##Oper<T, const T>(),     \
-                                   ptr,                                          \
-                                   val,                                          \
-                                   MEMORY_ORDER(),                               \
-                                   MEMORY_SCOPE());                              \
-  }                                                                              \
-  template <class T>                                                             \
-  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>              \
-      atomic_fetch_##OP_LOWERCASE(T* ptr, T val, MEMORY_ORDER, MEMORY_SCOPE) {   \
-    return Impl::atomic_fetch_oper(Impl::OP_PASCAL_CASE##Oper<T, const T>(),     \
-                                   ptr,                                          \
-                                   val,                                          \
-                                   MEMORY_ORDER(),                               \
-                                   MEMORY_SCOPE());                              \
+#define DESUL_IMPL_HIP_DEVICE_FALLBACK_ATOMIC_FUN_ORDER_SCOPE(             \
+    OP_LOWERCASE, OP_PASCAL_CASE, MEMORY_ORDER, MEMORY_SCOPE)              \
+  template <class T>                                                       \
+  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>        \
+      atomic_##OP_LOWERCASE##_fetch(                                       \
+          T* ptr, T val, MEMORY_ORDER order, MEMORY_SCOPE scope) {         \
+    return Impl::atomic_oper_fetch(                                        \
+        Impl::OP_PASCAL_CASE##Oper<T, const T>(), ptr, val, order, scope); \
+  }                                                                        \
+  template <class T>                                                       \
+  inline __device__ std::enable_if_t<std::is_integral<T>::value, T>        \
+      atomic_fetch_##OP_LOWERCASE(                                         \
+          T* ptr, T val, MEMORY_ORDER order, MEMORY_SCOPE scope) {         \
+    return Impl::atomic_fetch_oper(                                        \
+        Impl::OP_PASCAL_CASE##Oper<T, const T>(), ptr, val, order, scope); \
   }
 
 // clang-format off
