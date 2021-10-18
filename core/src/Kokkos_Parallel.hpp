@@ -127,9 +127,9 @@ namespace Kokkos {
 template <class ExecPolicy, class FunctorType>
 inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
-    const std::string& str = "",
+    const std::string& str,
     typename std::enable_if<
-        Kokkos::is_execution_policy<ExecPolicy>::value>::type* = nullptr) {
+        Kokkos::is_execution_policy<ExecPolicy>::value>::type*) {
   uint64_t kpID = 0;
 
   ExecPolicy inner_policy = policy;

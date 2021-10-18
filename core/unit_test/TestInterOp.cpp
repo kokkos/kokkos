@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#ifdef KOKKOS_USE_LEGACY_VIEW
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynRankView.hpp>
 #include <KokkosExp_InterOp.hpp>
@@ -160,3 +161,4 @@ static_assert(
             Kokkos::MemoryTraits<Kokkos::Atomic>>>::value,
     "Error! Unexpected python_view_type for: DynRankView + Layout + Execution "
     "space  + Memory trait");
+#endif

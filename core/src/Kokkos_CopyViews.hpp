@@ -56,6 +56,22 @@ namespace Kokkos {
 
 namespace Impl {
 
+template <typename T>
+inline bool is_zero_byte(const T& t) {
+  using comparison_type = std::conditional_t<
+      sizeof(T) % sizeof(long long int) == 0, long long int,
+      std::conditional_t<
+          sizeof(T) % sizeof(long int) == 0, long int,
+          std::conditional_t<
+              sizeof(T) % sizeof(int) == 0, int,
+              std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
+                                 char>>>>;
+  const auto* const ptr = reinterpret_cast<const comparison_type*>(&t);
+  for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
+    if (ptr[i] != 0) return false;
+  return true;
+}
+
 template <class Layout>
 struct ViewFillLayoutSelector {};
 

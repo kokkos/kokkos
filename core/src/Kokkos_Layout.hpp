@@ -50,7 +50,6 @@
 
 #include <cstddef>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Tags.hpp>
 #include <experimental/mdspan>
 
 namespace Kokkos {
