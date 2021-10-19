@@ -294,8 +294,7 @@ TEST(kokkosp, test_streams) {
 #endif
 TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
-  listen_tool_events(Config::DisableAll(), Config::EnableProfiling(),
-                     Config::DisableKernels());
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
   Kokkos::View<float*> left("left", 5), right("right", 5);
 
   auto success = validate_absence(
