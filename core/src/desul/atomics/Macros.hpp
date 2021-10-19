@@ -14,7 +14,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #if defined(__GNUC__) && \
     (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) && \
     (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
-    !defined(SYCL_LANGUAGE_VERSION) && \
+    !defined(__SYCL_DEVICE_ONLY__) && \
     !defined(DESUL_HAVE_OPENMP_ATOMICS) && \
     !defined(DESUL_HAVE_SERIAL_ATOMICS)
 #define DESUL_HAVE_GCC_ATOMICS
@@ -32,7 +32,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_HIP_ATOMICS
 #endif
 
-#ifdef SYCL_LANGUAGE_VERSION
+#ifdef __SYCL_DEVICE_ONLY__
 #define DESUL_HAVE_SYCL_ATOMICS
 #ifdef __clang__
 #define DESUL_SYCL_NAMESPACE sycl::ONEAPI
