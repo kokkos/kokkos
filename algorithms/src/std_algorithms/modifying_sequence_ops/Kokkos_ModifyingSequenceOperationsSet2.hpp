@@ -166,7 +166,16 @@ struct StdSwapRangesFunctor {
 
   KOKKOS_FUNCTION
   void operator()(IndexType i) const {
+    // the swap below is doing the same thing, but
+    // for Intel 18.0.5 does not work.
+    // But putting the impl directly here, it works.
+#if (1900 > KOKKOS_COMPILER_INTEL)
+    typename IteratorType1::value_type tmp = std::move(m_first1[i]);
+    m_first1[i]                            = std::move(m_first2[i]);
+    m_first2[i]                            = std::move(tmp);
+#else
     ::Kokkos::Experimental::swap(m_first1[i], m_first2[i]);
+#endif
   }
 
   KOKKOS_FUNCTION

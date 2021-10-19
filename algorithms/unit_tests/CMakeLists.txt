@@ -65,6 +65,7 @@ LIST(APPEND ALGORITHM_SOURCES
   #--- mod ----
   TestStdAlgorithmsModOps.cpp
   TestStdAlgorithmsModSeqOps.cpp
+  TestStdAlgorithmsTransformUnaryOp.cpp
   TestStdAlgorithmsReplace.cpp
   TestStdAlgorithmsReplaceIf.cpp
   TestStdAlgorithmsReplaceCopy.cpp

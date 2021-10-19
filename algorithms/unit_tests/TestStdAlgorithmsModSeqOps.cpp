@@ -219,49 +219,46 @@ TEST_F(std_algorithms_mod_seq_ops_test, fill_n) {
 
 struct TransformFunctor {
   KOKKOS_INLINE_FUNCTION
-  value_type operator()(value_type& val) const {
-    auto result = val;
-    val         = transform_val;
-    return result;
+  value_type operator()(const value_type& val) const {
+    (void)val;
+    return static_cast<value_type>(-1);
   }
-
-  static constexpr double transform_val = -1.0;
 };
 
-TEST_F(std_algorithms_mod_seq_ops_test, transform) {
-  view_host_space_t expected("transform_expected");
-  expected(0) = 0;
-  expected(1) = 1;
-  expected(2) = 2;
-  expected(3) = 3;
-  expected(4) = 4;
-  expected(5) = 5;
-  expected(6) = 6;
-  expected(7) = 7;
-  expected(8) = 8;
-  expected(9) = 9;
+TEST_F(std_algorithms_mod_seq_ops_test, transform_from_fixture_unary_op) {
+  view_host_space_t gold_source("transform_expected");
+  gold_source(0) = 0;
+  gold_source(1) = 1;
+  gold_source(2) = 2;
+  gold_source(3) = 3;
+  gold_source(4) = 4;
+  gold_source(5) = 5;
+  gold_source(6) = 6;
+  gold_source(7) = 7;
+  gold_source(8) = 8;
+  gold_source(9) = 9;
 
   // transform static view, store results in dynamic view
-  EXPECT_EQ(KE::end(m_dynamic_view),
-            KE::transform(exespace(), KE::begin(m_static_view),
+  auto r1 = KE::transform(exespace(), KE::begin(m_static_view),
                           KE::end(m_static_view), KE::begin(m_dynamic_view),
-                          TransformFunctor()));
-  verify_values(TransformFunctor::transform_val, m_static_view);
-  compare_views(expected, m_dynamic_view);
+                          TransformFunctor());
+  EXPECT_EQ(r1, KE::end(m_dynamic_view));
+  compare_views(gold_source, m_static_view);
+  verify_values(-1., m_dynamic_view);
 
   // transform dynamic view, store results in strided view
-  EXPECT_EQ(KE::end(m_strided_view),
-            KE::transform(exespace(), m_dynamic_view, m_strided_view,
-                          TransformFunctor()));
-  verify_values(TransformFunctor::transform_val, m_dynamic_view);
-  compare_views(expected, m_strided_view);
+  auto r2 = KE::transform(exespace(), m_dynamic_view, m_strided_view,
+                          TransformFunctor());
+  EXPECT_EQ(r2, KE::end(m_strided_view));
+  verify_values(-1., m_dynamic_view);
+  verify_values(-1., m_strided_view);
 
   // transform strided view, store results in static view
-  EXPECT_EQ(KE::end(m_static_view),
-            KE::transform(exespace(), m_strided_view, m_static_view,
-                          TransformFunctor()));
-  compare_views(expected, m_static_view);
-  verify_values(TransformFunctor::transform_val, m_strided_view);
+  auto r3 = KE::transform(exespace(), m_strided_view, m_static_view,
+                          TransformFunctor());
+  EXPECT_EQ(r3, KE::end(m_static_view));
+  verify_values(-1., m_static_view);
+  verify_values(-1., m_strided_view);
 }
 
 struct TransformBinaryFunctor {
@@ -271,7 +268,7 @@ struct TransformBinaryFunctor {
   }
 };
 
-TEST_F(std_algorithms_mod_seq_ops_test, transform_binary_op) {
+TEST_F(std_algorithms_mod_seq_ops_test, transform_from_fixture_binary_op) {
   view_host_space_t expected("transform_expected");
   expected(0) = 0;
   expected(1) = 1;
@@ -284,10 +281,10 @@ TEST_F(std_algorithms_mod_seq_ops_test, transform_binary_op) {
   expected(8) = 8;
   expected(9) = 9;
 
-  EXPECT_EQ(KE::end(m_strided_view),
-            KE::transform(exespace(), KE::begin(m_static_view),
+  auto r1 = KE::transform(exespace(), KE::begin(m_static_view),
                           KE::end(m_static_view), KE::begin(m_dynamic_view),
-                          KE::begin(m_strided_view), TransformBinaryFunctor()));
+                          KE::begin(m_strided_view), TransformBinaryFunctor());
+  EXPECT_EQ(r1, KE::end(m_strided_view));
   compare_views(expected, m_strided_view);
 
   expected(0) = 0;
@@ -300,9 +297,9 @@ TEST_F(std_algorithms_mod_seq_ops_test, transform_binary_op) {
   expected(7) = 14;
   expected(8) = 16;
   expected(9) = 18;
-  EXPECT_EQ(KE::end(m_dynamic_view),
-            KE::transform("label", exespace(), m_static_view, m_strided_view,
-                          m_dynamic_view, TransformBinaryFunctor()));
+  auto r2 = KE::transform("label", exespace(), m_static_view, m_strided_view,
+                          m_dynamic_view, TransformBinaryFunctor());
+  EXPECT_EQ(r2, KE::end(m_dynamic_view));
   compare_views(expected, m_dynamic_view);
 }
 
@@ -422,50 +419,10 @@ void test_swap_ranges(ViewType view) {
   EXPECT_TRUE(cvB_h(9) == 91);
 }
 
-template <class ViewType>
-void test_swap_ranges_self_mod_test(ViewType view) {
-  const auto ext = view.extent(0);
-
-  /* fill view_a */
-  auto FA = StdModOpsSwapRangesFillFunctorA<ViewType>(view);
-  Kokkos::parallel_for(ext, std::move(FA));
-
-  /* call swap_ranges */
-  auto first1 = KE::begin(view) + 2;
-  auto last1  = first1 + 2;
-  auto first2 = KE::begin(view) + 6;
-  auto r      = KE::swap_ranges(exespace(), first1, last1, first2);
-  EXPECT_EQ(r, first2 + 2);
-
-  /* check */
-  std_algorithms_test::static_view_t checkView("tmp");
-  Kokkos::parallel_for(
-      ext, CopyFunctor<ViewType, std_algorithms_test::static_view_t>(
-               view, checkView));
-  auto cv_h =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), checkView);
-  EXPECT_TRUE(cv_h(0) == 0);
-  EXPECT_TRUE(cv_h(1) == 1);
-  EXPECT_TRUE(cv_h(2) == 6);
-  EXPECT_TRUE(cv_h(3) == 7);
-  EXPECT_TRUE(cv_h(4) == 4);
-  EXPECT_TRUE(cv_h(5) == 5);
-  EXPECT_TRUE(cv_h(6) == 2);
-  EXPECT_TRUE(cv_h(7) == 3);
-  EXPECT_TRUE(cv_h(8) == 8);
-  EXPECT_TRUE(cv_h(9) == 9);
-}
-
 TEST_F(std_algorithms_mod_seq_ops_test, swap_ranges) {
   test_swap_ranges(m_static_view);
   test_swap_ranges(m_dynamic_view);
   test_swap_ranges(m_strided_view);
-}
-
-TEST_F(std_algorithms_mod_seq_ops_test, swap_ranges_within_self) {
-  test_swap_ranges_self_mod_test(m_static_view);
-  test_swap_ranges_self_mod_test(m_dynamic_view);
-  test_swap_ranges_self_mod_test(m_strided_view);
 }
 
 }  // namespace stdalgos
