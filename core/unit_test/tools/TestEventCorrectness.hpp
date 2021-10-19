@@ -296,20 +296,19 @@ TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableProfiling(),
                      Config::DisableKernels());
-  auto success = validate_event_set(
+  Kokkos::View<float*> left("left", 5), right("right", 5);
+
+  auto success = validate_absence(
       [&]() {
-        Kokkos::View<float*> left("left", 5), right("right", 5);
         Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), left, right);
       },
-      [&](AllocateDataEvent, AllocateDataEvent) {
-        return MatchDiagnostic{true};
-      },
-      [&](BeginDeepCopyEvent, EndDeepCopyEvent) {
-        return MatchDiagnostic{true};
-      },
-      [&](DeallocateDataEvent, DeallocateDataEvent) {
-        return MatchDiagnostic{true};
-      });
+      [&](BeginFenceEvent begin) {
+        if(begin.deviceID != Kokkos::DefaultExecutionSpace().impl_instance_id()){
+          return MatchDiagnostic{true, {"Fence encountered outsid of the default instance"}};
+        }
+        return MatchDiagnostic{false};
+      }
+      );
   ASSERT_TRUE(success);
 }
 
