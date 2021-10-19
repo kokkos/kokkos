@@ -69,7 +69,11 @@ KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906")
 KOKKOS_ARCH_OPTION(VEGA908         GPU  "AMD GPU MI100 GFX908")
 KOKKOS_ARCH_OPTION(VEGA90A         GPU  "" )
 KOKKOS_ARCH_OPTION(INTEL_GEN       GPU  "Intel GPUs Gen9+")
-
+KOKKOS_ARCH_OPTION(INTEL_DG1       GPU  "Intel Iris XeMAX GPU")
+KOKKOS_ARCH_OPTION(INTEL_GEN9      GPU  "Intel GPU Gen9")
+KOKKOS_ARCH_OPTION(INTEL_GEN11     GPU  "Intel GPU Gen11")
+KOKKOS_ARCH_OPTION(INTEL_GEN12LP   GPU  "Intel GPU Gen12LP")
+KOKKOS_ARCH_OPTION(INTEL_XEHP      GPU  "Intel GPU Xe-HP")
 
 
 IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
@@ -488,6 +492,32 @@ IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
   ENDIF()
 ENDIF()
 
+MACRO(CHECK_MULTIPLE_INTEL_ARCH)
+  IF(KOKKOS_ARCH_INTEL_GPU)
+    MESSAGE(FATAL_ERROR "Specifying multiple Intel GPU architectures is not allowed!")
+  ENDIF()
+  SET(KOKKOS_ARCH_INTEL_GPU ON)
+ENDMACRO()
+
+IF(KOKKOS_ARCH_INTEL_GEN)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
+IF(KOKKOS_ARCH_INTEL_DG1)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
+IF(KOKKOS_ARCH_INTEL_GEN9)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
+IF(KOKKOS_ARCH_INTEL_GEN11)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
+IF(KOKKOS_ARCH_INTEL_GEN12LP)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
+IF(KOKKOS_ARCH_INTEL_XEHP)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
+
 IF (KOKKOS_ENABLE_OPENMPTARGET)
   SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
   IF (CLANG_CUDA_ARCH)
@@ -504,7 +534,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${CLANG_AMDGPU_ARCH} -fopenmp-targets=amdgcn-amd-amdhsa
     )
   ENDIF()
-  IF (KOKKOS_ARCH_INTEL_GEN)
+  IF (KOKKOS_ARCH_INTEL_GPU)
     COMPILER_SPECIFIC_FLAGS(
       IntelLLVM -fopenmp-targets=spir64 -D__STRICT_ANSI__
     )
@@ -524,7 +554,27 @@ IF (KOKKOS_ENABLE_SYCL)
     ENDIF()
   ELSEIF(KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device skl"
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen9-"
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen9"
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen11"
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen12lp"
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_DG1)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device dg1"
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device xehp"
     )
   ENDIF()
 ENDIF()

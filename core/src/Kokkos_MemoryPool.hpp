@@ -524,7 +524,7 @@ class MemoryPool {
     // Fast query clock register 'tic' to pseudo-randomize
     // the guess for which block within a superblock should
     // be claimed.  If not available then a search occurs.
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GEN)
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
     const uint32_t block_id_hint = alloc_size;
 #else
     const uint32_t block_id_hint =
