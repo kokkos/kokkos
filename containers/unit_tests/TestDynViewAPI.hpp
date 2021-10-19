@@ -1160,13 +1160,7 @@ class TestDynViewAPI {
 #endif  // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 
     // Error checking test
-    bool mismatch_throws = false;
-    try {
-      auto v_copy = Kokkos::Impl::as_view_of_rank_n<2>(d);
-    } catch (...) {
-      mismatch_throws = true;
-    }
-    ASSERT_TRUE(mismatch_throws);
+    EXPECT_ANY_THROW({ auto v_copy = Kokkos::Impl::as_view_of_rank_n<2>(d); });
   }
 
   static void run_test_scalar() {
