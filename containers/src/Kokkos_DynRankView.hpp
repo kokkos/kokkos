@@ -1763,6 +1763,8 @@ inline void deep_copy(
 //----------------------------------------------------------------------------
 /** \brief  A deep copy between views of the default specialization, compatible
  * type, same rank, same contiguous layout.
+ *
+ * A rank mismatch will error out in the attempt to convert to a View
  */
 template <class ExecSpace, class DstType, class SrcType>
 inline void deep_copy(
