@@ -292,6 +292,7 @@ TEST(kokkosp, test_streams) {
 }
 
 #endif
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
@@ -316,7 +317,7 @@ TEST(kokkosp, async_deep_copy) {
       });
   ASSERT_TRUE(success);
 }
-
+#endif
 TEST(kokkosp, parallel_for) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
