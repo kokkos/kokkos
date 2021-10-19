@@ -309,7 +309,7 @@ TEST(kokkosp, async_deep_copy) {
           error_message
               << "Fence encountered outside of the default instance, default: "
               << Kokkos::DefaultExecutionSpace().impl_instance_id()
-              << ", encountered " << begin.deviceID << std::endl;
+              << ", encountered " << begin.deviceID <<" , fence name "<<begin.name;
           return MatchDiagnostic{true, {error_message.str()}};
         }
         return MatchDiagnostic{false};
