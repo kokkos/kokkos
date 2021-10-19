@@ -303,12 +303,13 @@ TEST(kokkosp, async_deep_copy) {
         Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), left, right);
       },
       [&](BeginFenceEvent begin) {
-        if(begin.deviceID != Kokkos::DefaultExecutionSpace().impl_instance_id()){
-          return MatchDiagnostic{true, {"Fence encountered outsid of the default instance"}};
+        if (begin.deviceID !=
+            Kokkos::DefaultExecutionSpace().impl_instance_id()) {
+          return MatchDiagnostic{
+              true, {"Fence encountered outsid of the default instance"}};
         }
         return MatchDiagnostic{false};
-      }
-      );
+      });
   ASSERT_TRUE(success);
 }
 
