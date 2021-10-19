@@ -77,7 +77,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
   # What language are we compiling Kokkos as
-  # Downstream dependencies need to match this!
+  # downstream dependencies need to match this!
   SET(KOKKOS_COMPILE_LANGUAGE CXX)
   IF (Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
     SET(KOKKOS_INTERNAL_EXTRA_COMPILE_LANGUAGE CXX)
@@ -87,15 +87,19 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     IF (Kokkos_ENABLE_HIP)
       SET(KOKKOS_COMPILE_LANGUAGE HIP)
     ENDIF()
-  ELSE()
-    IF (Spack_WORKAROUND)
-      #if we are explicitly using Spack for development,
-      #nuke the Spack compiler
-      SET(SPACK_CXX $ENV{SPACK_CXX})
-      IF(SPACK_CXX)
-        SET(CMAKE_CXX_COMPILER ${SPACK_CXX} CACHE STRING "the C++ compiler" FORCE)
-        SET(ENV{CXX} ${SPACK_CXX})
-      ENDIF()
+  ENDIF()
+
+  IF (Spack_WORKAROUND)
+    IF (Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+      MESSAGE(FATAL_ERROR "Can't currently use Kokkos_ENABLE_COMPILER_AS_CMAKE_LANGUAGE in a spack installation!")
+    ENDIF()
+
+    #if we are explicitly using Spack for development,
+    #nuke the Spack compiler
+    SET(SPACK_CXX $ENV{SPACK_CXX})
+    IF(SPACK_CXX)
+      SET(CMAKE_CXX_COMPILER ${SPACK_CXX} CACHE STRING "the C++ compiler" FORCE)
+      SET(ENV{CXX} ${SPACK_CXX})
     ENDIF()
   ENDIF()
   # Always call the project command to define Kokkos_ variables

@@ -55,7 +55,7 @@ struct CountEvenIntegers {
 };
 
 int main(int argc, char* argv[]) {
-  Kokkos::ScopeGuard(argc, argv);
+  Kokkos::ScopeGuard guard(argc, argv);
   Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
 
   const long n = argc > 1 ? atoi(argv[1]) : 10;

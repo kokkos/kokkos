@@ -352,21 +352,19 @@ FUNCTION(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     ""
     ${ARGN})
 
-  IF(NOT Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
-    IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18")
-      #I can use link options
-      #check for CXX linkage using the simple 3.18 way
-      TARGET_LINK_OPTIONS(
-        ${LIBRARY_NAME} PUBLIC
-        $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>
-      )
-    ELSE()
-      #I can use link options
-      #just assume CXX linkage
-      TARGET_LINK_OPTIONS(
-        ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
-      )
-    ENDIF()
+  IF((NOT Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18"))
+    #I can use link options
+    #check for CXX linkage using the simple 3.18 way
+    TARGET_LINK_OPTIONS(
+      ${LIBRARY_NAME} PUBLIC
+      $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>
+    )
+  ELSE()
+    #I can use link options
+    #just assume CXX linkage
+    TARGET_LINK_OPTIONS(
+      ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
+    )
   ENDIF()
 
   TARGET_COMPILE_OPTIONS(
