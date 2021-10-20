@@ -942,3 +942,62 @@ struct TestAbsoluteValueFunction {
 TEST(TEST_CATEGORY, mathematical_functions_absolute_value) {
   TestAbsoluteValueFunction<TEST_EXECSPACE>();
 }
+
+template <class Space>
+struct TestIsNaN {
+  TestIsNaN() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using Kokkos::Experimental::isnan;
+    using Kokkos::Experimental::quiet_NaN;
+    using Kokkos::Experimental::signaling_NaN;
+    if (isnan(1) || isnan(INT_MAX)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(integral)\n");
+    }
+    if (isnan(2.f) || !isnan(quiet_NaN<float>::value) ||
+        !isnan(signaling_NaN<float>::value)
+
+    ) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(float)\n");
+    }
+    if (isnan(3.) || !isnan(quiet_NaN<double>::value) ||
+        !isnan(signaling_NaN<double>::value)
+
+    ) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (isnan(4.l) || !isnan(quiet_NaN<long double>::value) ||
+        !isnan(signaling_NaN<long double>::value)
+
+    ) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(long double)\n");
+    }
+#endif
+    // special values
+    if (isnan(INFINITY) || !isnan(NAN)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "failed isnan(floating_point) special values\n");
+    }
+
+    static_assert(std::is_same<decltype(isnan(1)), bool>::value, "");
+    static_assert(std::is_same<decltype(isnan(2.f)), bool>::value, "");
+    static_assert(std::is_same<decltype(isnan(3.)), bool>::value, "");
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same<decltype(isnan(4.l)), bool>::value, "");
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_isnan) {
+  TestIsNaN<TEST_EXECSPACE>();
+}
