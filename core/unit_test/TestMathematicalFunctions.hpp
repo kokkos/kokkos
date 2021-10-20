@@ -59,6 +59,12 @@
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
 
+// WORKAROUND icpx changing default FP model when optimization level is >= 1
+// using -fp-model=precise works too
+#if defined(__INTEL_LLVM_COMPILER)
+#define KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+#endif
+
 // clang-format off
 template <class>
 struct math_unary_function_return_type;
@@ -917,9 +923,7 @@ struct TestAbsoluteValueFunction {
     using Kokkos::Experimental::isinf;
     using Kokkos::Experimental::isnan;
     if (abs(-0.) != 0.
-    // WORKAROUND icpx changing default FP model when optimization level is >= 1
-    // using -fp-model=precise works too
-#ifndef __INTEL_LLVM_COMPILER
+#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
         || !isinf(abs(-INFINITY)) || !isnan(abs(-NAN))
 #endif
     ) {
