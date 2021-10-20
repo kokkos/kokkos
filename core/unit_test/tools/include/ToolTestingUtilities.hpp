@@ -133,8 +133,8 @@ bool are_valid(const Head& head, const Tail&... tail) {
  * The main original intent here is two-fold, one to allow us to look at how
  * many args a functor takes, and two to look at the types of its args. The
  * second of these is used to do a series of dynamic_casts, making sure that the
- * EventBase instances captured in our event vectors are of the types being looked for
- * by our matchers
+ * EventBase instances captured in our event vectors are of the types being
+ * looked for by our matchers
  *
  * @tparam T a functor-like object
  * @tparam typename used for specialization shenanigans
@@ -365,8 +365,8 @@ struct BeginOperation : public EventBase {
  * @brief Analogous to BeginOperation, there are a lot of things in Kokkos
  * of roughly this structure.
  *
- * @tparam Derived CRTP, used for comparing that EventBase instances are of the same
- * type
+ * @tparam Derived CRTP, used for comparing that EventBase instances are of the
+ * same type
  */
 template <class Derived>
 struct EndOperation : public EventBase {
