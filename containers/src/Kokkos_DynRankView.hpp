@@ -1683,6 +1683,10 @@ struct DynRankViewRemap {
 namespace Kokkos {
 
 namespace Impl {
+
+/* \brief Returns a View of the requested rank, aliasing the
+   underlying memory, to facilitate implementation of deep_copy() and
+   other routines that are defined on View */
 template <unsigned N, typename T, typename... Args>
 auto as_view_of_rank_n(DynRankView<T, Args...> v) {
   if (v.rank() != N) {
