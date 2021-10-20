@@ -352,12 +352,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       m_scratch_space =
           ::Kokkos::Experimental::Impl::hip_internal_scratch_space(
+              m_policy.space(),
               ValueTraits::value_size(
                   ReducerConditional::select(m_functor, m_reducer)) *
-              block_size /* block_size == max block_count */);
+                  block_size /* block_size == max block_count */);
       m_scratch_flags =
           ::Kokkos::Experimental::Impl::hip_internal_scratch_flags(
-              sizeof(size_type));
+              m_policy.space(), sizeof(size_type));
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
