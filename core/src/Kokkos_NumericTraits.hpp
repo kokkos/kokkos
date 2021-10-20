@@ -126,11 +126,19 @@ template <> struct norm_min_helper<long double> { static constexpr long double v
 template <class> struct quiet_NaN_helper {};
 template <> struct quiet_NaN_helper<float> { static constexpr float value = __builtin_nanf(""); };
 template <> struct quiet_NaN_helper<double> { static constexpr double value = __builtin_nan(""); };
+#if defined(_MSC_VER)
+template <> struct quiet_NaN_helper<long double> { static constexpr long double value = __builtin_nan(""); };
+#else
 template <> struct quiet_NaN_helper<long double> { static constexpr long double value = __builtin_nanl(""); };
+#endif
 template <class> struct signaling_NaN_helper {};
 template <> struct signaling_NaN_helper<float> { static constexpr float value = __builtin_nansf(""); };
 template <> struct signaling_NaN_helper<double> { static constexpr double value = __builtin_nans(""); };
+#if defined(_MSC_VER)
+template <> struct signaling_NaN_helper<long double> { static constexpr long double value = __builtin_nans(""); };
+#else
 template <> struct signaling_NaN_helper<long double> { static constexpr long double value = __builtin_nansl(""); };
+#endif
 template <class> struct digits_helper {};
 template <> struct digits_helper<bool> { static constexpr int value = 1; };
 template <> struct digits_helper<char> { static constexpr int value = CHAR_BIT - std::is_signed<char>::value; };
