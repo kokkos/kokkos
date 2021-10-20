@@ -123,6 +123,14 @@ template <class> struct norm_min_helper {};
 template <> struct norm_min_helper<float> { static constexpr float value = FLT_MIN; };
 template <> struct norm_min_helper<double> { static constexpr double value = DBL_MIN; };
 template <> struct norm_min_helper<long double> { static constexpr long double value = LDBL_MIN; };
+template <class> struct quiet_NaN_helper {};
+template <> struct quiet_NaN_helper<float> { static constexpr float value = __builtin_nanf(""); };
+template <> struct quiet_NaN_helper<double> { static constexpr double value = __builtin_nan(""); };
+template <> struct quiet_NaN_helper<long double> { static constexpr long double value = __builtin_nanl(""); };
+template <class> struct signaling_NaN_helper {};
+template <> struct signaling_NaN_helper<float> { static constexpr float value = __builtin_nansf(""); };
+template <> struct signaling_NaN_helper<double> { static constexpr double value = __builtin_nans(""); };
+template <> struct signaling_NaN_helper<long double> { static constexpr long double value = __builtin_nansl(""); };
 template <class> struct digits_helper {};
 template <> struct digits_helper<bool> { static constexpr int value = 1; };
 template <> struct digits_helper<char> { static constexpr int value = CHAR_BIT - std::is_signed<char>::value; };
@@ -237,6 +245,8 @@ KOKKOS_IMPL_DEFINE_TRAIT(finite_max)
 KOKKOS_IMPL_DEFINE_TRAIT(epsilon)
 KOKKOS_IMPL_DEFINE_TRAIT(round_error)
 KOKKOS_IMPL_DEFINE_TRAIT(norm_min)
+KOKKOS_IMPL_DEFINE_TRAIT(quiet_NaN)
+KOKKOS_IMPL_DEFINE_TRAIT(signaling_NaN)
 
 // Numeric characteristics traits
 KOKKOS_IMPL_DEFINE_TRAIT(digits)
