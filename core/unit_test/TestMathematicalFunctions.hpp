@@ -963,31 +963,42 @@ struct TestIsNaN {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(integral)\n");
     }
-    if (isnan(2.f) || !isnan(quiet_NaN<float>::value) ||
+    if (isnan(2.f)
+#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+        || !isnan(quiet_NaN<float>::value) ||
         !isnan(signaling_NaN<float>::value)
+#endif
 
     ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(float)\n");
     }
-    if (isnan(3.) || !isnan(quiet_NaN<double>::value) ||
+    if (isnan(3.)
+#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+        || !isnan(quiet_NaN<double>::value) ||
         !isnan(signaling_NaN<double>::value)
-
+#endif
     ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(double)\n");
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-    if (isnan(4.l) || !isnan(quiet_NaN<long double>::value) ||
+    if (isnan(4.l)
+#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+        || !isnan(quiet_NaN<long double>::value) ||
         !isnan(signaling_NaN<long double>::value)
-
+#endif
     ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(long double)\n");
     }
 #endif
     // special values
-    if (isnan(INFINITY) || !isnan(NAN)) {
+    if (isnan(INFINITY)
+#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+        || !isnan(NAN)
+#endif
+    ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF(
           "failed isnan(floating_point) special values\n");
