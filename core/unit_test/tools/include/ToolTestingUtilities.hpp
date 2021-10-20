@@ -133,7 +133,7 @@ bool are_valid(const Head& head, const Tail&... tail) {
  * The main original intent here is two-fold, one to allow us to look at how
  * many args a functor takes, and two to look at the types of its args. The
  * second of these is used to do a series of dynamic_casts, making sure that the
- * EventBase's captured in our event vectors are of the types being looked for
+ * EventBase instances captured in our event vectors are of the types being looked for
  * by our matchers
  *
  * @tparam T a functor-like object
@@ -234,7 +234,7 @@ struct function_traits<T, Kokkos::Impl::void_t<decltype(&T::operator())> >
  * index at which to begin taking from. It then makes an index sequence of that
  * number of elements {0, 1, 2, ..., num}, and then uses the function_traits
  * trick above to invoke the matcher with
- * {events[index+0],events[index+1],...,events[num-1]}.
+ * {events[index+0],events[index+1],...,events[index+num-1]}.
  *
  * @tparam num number of arguments to the functor
  * @tparam Matcher the lambda we want to call with events from our event vector
@@ -365,7 +365,7 @@ struct BeginOperation : public EventBase {
  * @brief Analogous to BeginOperation, there are a lot of things in Kokkos
  * of roughly this structure.
  *
- * @tparam Derived CRTP, used for comparing that EventBase's are of the same
+ * @tparam Derived CRTP, used for comparing that EventBase instances are of the same
  * type
  */
 template <class Derived>
