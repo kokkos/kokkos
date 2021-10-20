@@ -246,43 +246,52 @@ class SYCLTeamMember {
       if (id_in_sg >= vector_range * stride) value += tmp;
     }
 
-    // We need to chunk up the whole reduction because we might not have
-    // allocated enough memory.
-    const auto n_subgroups = sg.get_group_range()[0];
-
+    const auto n_active_subgroups = sg.get_group_range()[0];
     const auto base_data = static_cast<Type*>(m_team_reduce);
+    if (n_active_subgroups*sizeof(Type) > m_team_reduce_size) Kokkos::abort("Not implemented!");
 
-    // Load values into the first entries of the reduction array in chunks. This
-    // means that only threads with an id in the corresponding chunk load values
-    // and the reduction is always done by the first not_greater_power_of_two
-    // threads.
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;
     m_item.barrier(sycl::access::fence_space::local_space);
 
-    if (group_id == 0) {
-      if (n_subgroups > sub_group_range) Kokkos::abort("Not implemented!");
-
-      Type sg_value = base_data[std::min<int>(id_in_sg, n_subgroups)];
-      for (unsigned int stride = 1; stride < n_subgroups; stride <<= 1) {
-        auto tmp = sg.shuffle_up(sg_value, stride);
-        if (id_in_sg >= stride) sg_value += tmp;
+    // scan subgroup results using the first subgroup
+    if (n_active_subgroups > 1) {
+      if(group_id == 0) {
+        const auto n_rounds = (n_active_subgroups + sub_group_range - 1) / sub_group_range;
+        for (int round = 0; round < n_rounds; ++round) {
+          const int idx = id_in_sg + round * sub_group_range;
+          const auto upper_bound =
+            std::min(sub_group_range, n_active_subgroups - round * sub_group_range);
+          auto local_value = base_data[idx];
+          for (int stride = 1; stride < n_active_subgroups; stride <<= 1) {
+            auto tmp = sg.shuffle_up(local_value, stride);
+            if (id_in_sg >= stride) {
+              if (idx < n_active_subgroups)
+                local_value += tmp;
+              else
+                local_value = tmp;
+            }
+          }
+          base_data[idx] = local_value;
+          if (round > 0)
+            base_data[idx]+=base_data[round * sub_group_range - 1];
+          if (round + 1 < n_rounds) sg.barrier();
+        }
       }
-      base_data[id_in_sg + 1] = sg_value;
+      m_item.barrier(sycl::access::fence_space::local_space);
     }
-    m_item.barrier(sycl::access::fence_space::local_space);
-    auto total = base_data[n_subgroups];
+    auto total = base_data[n_active_subgroups-1];
 
     const auto update = sg.shuffle_up(value, vector_range);
-    Type intermediate = (group_id > 0 ? base_data[group_id] : 0) +
+    Type intermediate = (group_id > 0 ? base_data[group_id-1] : 0) +
                         (id_in_sg >= vector_range ? update : 0);
 
     if (global_accum) {
-      if (id_in_sg == sub_group_range - 1 && group_id == n_subgroups - 1) {
-        base_data[n_subgroups] = atomic_fetch_add(global_accum, total);
+      if (id_in_sg == sub_group_range - 1 && group_id == n_active_subgroups - 1) {
+        base_data[n_active_subgroups-1] = atomic_fetch_add(global_accum, total);
       }
       m_item.barrier();  // Wait for atomic
-      intermediate += base_data[n_subgroups];
+      intermediate += base_data[n_active_subgroups-1];
     }
 
     return intermediate;

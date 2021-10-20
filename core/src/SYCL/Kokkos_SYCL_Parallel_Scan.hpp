@@ -90,7 +90,7 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
         const int idx = id_in_sg + round * local_range;
         const auto upper_bound =
           std::min(local_range, n_active_subgroups - round * local_range);
-        auto local_value = global_mem[idx + global_offset];
+        auto local_value = local_mem[idx];
         for (int stride = 1; stride < upper_bound; stride <<= 1) {
           auto tmp = sg.shuffle_up(local_value, stride);
           if (id_in_sg >= stride) {
@@ -100,11 +100,11 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
               local_value = tmp;
           }
         }
-        global_mem[idx + global_offset] = local_value;
+        local_mem[idx] = local_value;
         if (round > 0)
           ValueJoin::join(
-            functor, &global_mem[idx + global_offset],
-            &global_mem[round * local_range - 1 + global_offset]);
+            functor, &local_mem[idx],
+            &local_mem[round * local_range - 1]);
         if (round + 1 < n_rounds) sg.barrier();
       }
     }
