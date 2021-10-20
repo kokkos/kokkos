@@ -964,6 +964,21 @@ IteratorType1 search_impl(const std::string& label, const ExecutionSpace& ex,
 // ------------------------------------------
 // search_n_impl
 // ------------------------------------------
+template <class IntegerType>
+std::enable_if_t< std::is_signed<IntegerType>::value >
+expect_nonneg_count_for_search_n(IntegerType count) 
+{
+  // this is noop for release
+  KOKKOS_EXPECTS(count >= 0);
+  // avoid compiler complaining when KOKKOS_EXPECTS is no-op
+  (void)count;
+}
+
+template <class IntegerType>
+std::enable_if_t< std::is_unsigned<IntegerType>::value >
+expect_nonneg_count_for_search_n(IntegerType /*count*/) 
+{}
+
 template <class ExecutionSpace, class IteratorType, class SizeType,
           class ValueType, class BinaryPredicateType>
 IteratorType search_n_impl(const std::string& label, const ExecutionSpace& ex,
@@ -971,9 +986,9 @@ IteratorType search_n_impl(const std::string& label, const ExecutionSpace& ex,
                            SizeType count, const ValueType& value,
                            const BinaryPredicateType& pred) {
   // checks
-  Impl::static_assert_random_access_and_accessible(ex, first);
-  Impl::expect_valid_range(first, last);
-  KOKKOS_EXPECTS(count >= 0);
+  static_assert_random_access_and_accessible(ex, first);
+  expect_valid_range(first, last);
+  expect_nonneg_count_for_search_n(count);
 
   // count should not be larger than the range [first, last)
   namespace KE            = ::Kokkos::Experimental;
