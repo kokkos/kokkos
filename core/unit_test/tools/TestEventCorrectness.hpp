@@ -600,7 +600,7 @@ TEST(kokkosp, tuning_sequence) {
           return MatchDiagnostic{false, {"No match on input id"}};
         }
         if (output.variable_id != output_id) {
-          return MatchDiagnostic{false, {"No match on input id"}};
+          return MatchDiagnostic{false, {"No match on output id"}};
         }
         if (output.info.candidates.set.size != 5) {
           return MatchDiagnostic{
