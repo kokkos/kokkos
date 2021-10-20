@@ -57,8 +57,7 @@ std::string value_type_to_string(int) { return "int"; }
 std::string value_type_to_string(double) { return "double"; }
 
 template <class ViewType>
-void fill_view(ViewType dest_view) 
-{
+void fill_view(ViewType dest_view) {
   using value_type      = typename ViewType::value_type;
   using exe_space       = typename ViewType::execution_space;
   const std::size_t ext = dest_view.extent(0);
@@ -76,9 +75,7 @@ void fill_view(ViewType dest_view)
 }
 
 template <class ViewTypeFrom, class ViewTypeTest>
-void verify_data(ViewTypeFrom view_from,
-                 ViewTypeTest view_test) 
-{
+void verify_data(ViewTypeFrom view_from, ViewTypeTest view_test) {
   using value_type = typename ViewTypeFrom::value_type;
 
   //! always careful because views might not be deep copyable
@@ -95,9 +92,8 @@ void verify_data(ViewTypeFrom view_from,
   }
 }
 
-template<class ValueType>
-struct TransformFunctor 
-{
+template <class ValueType>
+struct TransformFunctor {
   KOKKOS_INLINE_FUNCTION
   ValueType operator()(const ValueType& val) const {
     return val + ValueType(1);
@@ -105,44 +101,47 @@ struct TransformFunctor
 };
 
 template <class Tag, class ValueType, class InfoType>
-void run_single_scenario(const InfoType& scenario_info) 
-{
+void run_single_scenario(const InfoType& scenario_info) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "transform_unary_op: " << name << ", " 
-	    << view_tag_to_string(Tag{})
-            << ", " << value_type_to_string(ValueType()) << std::endl;
+  std::cout << "transform_unary_op: " << name << ", "
+            << view_tag_to_string(Tag{}) << ", "
+            << value_type_to_string(ValueType()) << std::endl;
 
-  auto view_from = create_view<ValueType>(Tag{}, view_ext, "transform_uop_from");
+  auto view_from =
+      create_view<ValueType>(Tag{}, view_ext, "transform_uop_from");
   fill_view(view_from);
   TransformFunctor<ValueType> unOp;
 
   {
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
-    auto r1 = KE::transform(exespace(), KE::begin(view_from), KE::end(view_from), 
-			    KE::begin(view_dest), unOp);
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
+    auto r1 = KE::transform(exespace(), KE::begin(view_from),
+                            KE::end(view_from), KE::begin(view_dest), unOp);
     verify_data(view_from, view_dest);
     EXPECT_EQ(r1, KE::end(view_dest));
   }
 
   {
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
-    auto r1 = KE::transform("label", 
-			    exespace(), KE::begin(view_from), KE::end(view_from), 
-			    KE::begin(view_dest), unOp);
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
+    auto r1 = KE::transform("label", exespace(), KE::begin(view_from),
+                            KE::end(view_from), KE::begin(view_dest), unOp);
     verify_data(view_from, view_dest);
     EXPECT_EQ(r1, KE::end(view_dest));
   }
 
   {
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
     auto r1 = KE::transform(exespace(), view_from, view_dest, unOp);
     verify_data(view_from, view_dest);
     EXPECT_EQ(r1, KE::end(view_dest));
   }
 
   {
-    auto view_dest = create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
+    auto view_dest =
+        create_view<ValueType>(Tag{}, view_ext, "transform_uop_dest");
     auto r1 = KE::transform("label", exespace(), view_from, view_dest, unOp);
     verify_data(view_from, view_dest);
     EXPECT_EQ(r1, KE::end(view_dest));
