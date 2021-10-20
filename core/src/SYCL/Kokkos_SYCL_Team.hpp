@@ -247,8 +247,9 @@ class SYCLTeamMember {
     }
 
     const auto n_active_subgroups = sg.get_group_range()[0];
-    const auto base_data = static_cast<Type*>(m_team_reduce);
-    if (n_active_subgroups*sizeof(Type) > m_team_reduce_size) Kokkos::abort("Not implemented!");
+    const auto base_data          = static_cast<Type*>(m_team_reduce);
+    if (n_active_subgroups * sizeof(Type) > m_team_reduce_size)
+      Kokkos::abort("Not implemented!");
 
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;
@@ -256,12 +257,13 @@ class SYCLTeamMember {
 
     // scan subgroup results using the first subgroup
     if (n_active_subgroups > 1) {
-      if(group_id == 0) {
-        const auto n_rounds = (n_active_subgroups + sub_group_range - 1) / sub_group_range;
+      if (group_id == 0) {
+        const auto n_rounds =
+            (n_active_subgroups + sub_group_range - 1) / sub_group_range;
         for (int round = 0; round < n_rounds; ++round) {
-          const int idx = id_in_sg + round * sub_group_range;
-          const auto upper_bound =
-            std::min(sub_group_range, n_active_subgroups - round * sub_group_range);
+          const int idx          = id_in_sg + round * sub_group_range;
+          const auto upper_bound = std::min(
+              sub_group_range, n_active_subgroups - round * sub_group_range);
           auto local_value = base_data[idx];
           for (int stride = 1; stride < n_active_subgroups; stride <<= 1) {
             auto tmp = sg.shuffle_up(local_value, stride);
@@ -274,24 +276,26 @@ class SYCLTeamMember {
           }
           base_data[idx] = local_value;
           if (round > 0)
-            base_data[idx]+=base_data[round * sub_group_range - 1];
+            base_data[idx] += base_data[round * sub_group_range - 1];
           if (round + 1 < n_rounds) sg.barrier();
         }
       }
       m_item.barrier(sycl::access::fence_space::local_space);
     }
-    auto total = base_data[n_active_subgroups-1];
+    auto total = base_data[n_active_subgroups - 1];
 
     const auto update = sg.shuffle_up(value, vector_range);
-    Type intermediate = (group_id > 0 ? base_data[group_id-1] : 0) +
+    Type intermediate = (group_id > 0 ? base_data[group_id - 1] : 0) +
                         (id_in_sg >= vector_range ? update : 0);
 
     if (global_accum) {
-      if (id_in_sg == sub_group_range - 1 && group_id == n_active_subgroups - 1) {
-        base_data[n_active_subgroups-1] = atomic_fetch_add(global_accum, total);
+      if (id_in_sg == sub_group_range - 1 &&
+          group_id == n_active_subgroups - 1) {
+        base_data[n_active_subgroups - 1] =
+            atomic_fetch_add(global_accum, total);
       }
       m_item.barrier();  // Wait for atomic
-      intermediate += base_data[n_active_subgroups-1];
+      intermediate += base_data[n_active_subgroups - 1];
     }
 
     return intermediate;
