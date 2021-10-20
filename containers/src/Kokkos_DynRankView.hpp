@@ -1722,6 +1722,11 @@ inline void deep_copy(
     case 5: deep_copy(e, Impl::as_view_of_rank_n<5>(dst), value); break;
     case 6: deep_copy(e, Impl::as_view_of_rank_n<6>(dst), value); break;
     case 7: deep_copy(e, Impl::as_view_of_rank_n<7>(dst), value); break;
+    default:
+      Kokkos::Impl::throw_runtime_exception(
+          "Calling deep_copy with a destination DynRankView of unexpected "
+          "rank " +
+          std::to_string(dst.rank()));
   }
 }
 
@@ -1741,6 +1746,11 @@ inline void deep_copy(
     case 5: deep_copy(Impl::as_view_of_rank_n<5>(dst), value); break;
     case 6: deep_copy(Impl::as_view_of_rank_n<6>(dst), value); break;
     case 7: deep_copy(Impl::as_view_of_rank_n<7>(dst), value); break;
+    default:
+      Kokkos::Impl::throw_runtime_exception(
+          "Calling deep_copy with a destination DynRankView of unexpected "
+          "rank " +
+          std::to_string(dst.rank()));
   }
 }
 
@@ -1816,6 +1826,10 @@ inline void deep_copy(
       deep_copy(exec_space, Impl::as_view_of_rank_n<7>(dst),
                 Impl::as_view_of_rank_n<7>(src));
       break;
+    default:
+      Kokkos::Impl::throw_runtime_exception(
+          "Calling DynRankView deep_copy with a view of unexpected rank " +
+          std::to_string(rank(dst)));
   }
 }
 
@@ -1865,6 +1879,10 @@ inline void deep_copy(
       deep_copy(Impl::as_view_of_rank_n<7>(dst),
                 Impl::as_view_of_rank_n<7>(src));
       break;
+    default:
+      Kokkos::Impl::throw_runtime_exception(
+          "Calling DynRankView deep_copy with a view of unexpected rank " +
+          std::to_string(rank(dst)));
   }
 }
 
