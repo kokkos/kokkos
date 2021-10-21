@@ -170,11 +170,9 @@ struct StdSwapRangesFunctor {
     // for Intel 18.0.5 does not work.
     // But putting the impl directly here, it works.
 #ifdef KOKKOS_COMPILER_INTEL
-    //#if (KOKKOS_COMPILER_INTEL < 1900)
     typename IteratorType1::value_type tmp = std::move(m_first1[i]);
     m_first1[i]                            = std::move(m_first2[i]);
     m_first2[i]                            = std::move(tmp);
-    //#endif
 #else
     ::Kokkos::Experimental::swap(m_first1[i], m_first2[i]);
 #endif
