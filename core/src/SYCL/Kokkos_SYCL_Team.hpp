@@ -248,7 +248,8 @@ class SYCLTeamMember {
 
     const auto n_active_subgroups = sg.get_group_range()[0];
     const auto base_data          = static_cast<Type*>(m_team_reduce);
-    if (static_cast<int>(n_active_subgroups * sizeof(Type)) > m_team_reduce_size)
+    if (static_cast<int>(n_active_subgroups * sizeof(Type)) >
+        m_team_reduce_size)
       Kokkos::abort("Not implemented!");
 
     const auto group_id = sg.get_group_id()[0];
@@ -261,7 +262,7 @@ class SYCLTeamMember {
         const auto n_rounds =
             (n_active_subgroups + sub_group_range - 1) / sub_group_range;
         for (unsigned int round = 0; round < n_rounds; ++round) {
-          const auto idx          = id_in_sg + round * sub_group_range;
+          const auto idx         = id_in_sg + round * sub_group_range;
           const auto upper_bound = std::min(
               sub_group_range, n_active_subgroups - round * sub_group_range);
           auto local_value = base_data[idx];
