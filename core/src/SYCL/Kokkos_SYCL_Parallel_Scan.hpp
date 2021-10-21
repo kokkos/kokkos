@@ -87,21 +87,21 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
     if (sg_group_id == 0) {
       const auto n_rounds =
           (n_active_subgroups + local_range - 1) / local_range;
-      for (int round = 0; round < n_rounds; ++round) {
-        const int idx = id_in_sg + round * local_range;
+      for (unsigned int round = 0; round < n_rounds; ++round) {
+        const unsigned int idx = id_in_sg + round * local_range;
         const auto upper_bound =
             std::min(local_range, n_active_subgroups - round * local_range);
-        auto local_value = local_mem[idx];
-        for (int stride = 1; stride < upper_bound; stride <<= 1) {
-          auto tmp = sg.shuffle_up(local_value, stride);
+        auto local_sg_value = local_mem[idx];
+        for (unsigned int stride = 1; stride < upper_bound; stride <<= 1) {
+          auto tmp = sg.shuffle_up(local_sg_value, stride);
           if (id_in_sg >= stride) {
             if (idx < n_active_subgroups)
-              ValueJoin::join(functor, &local_value, &tmp);
+              ValueJoin::join(functor, &local_sg_value, &tmp);
             else
-              local_value = tmp;
+              local_sg_value = tmp;
           }
         }
-        local_mem[idx] = local_value;
+        local_mem[idx] = local_sg_value;
         if (round > 0)
           ValueJoin::join(functor, &local_mem[idx],
                           &local_mem[round * local_range - 1]);
