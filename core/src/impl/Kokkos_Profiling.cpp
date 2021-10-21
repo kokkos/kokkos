@@ -601,7 +601,7 @@ void initialize(const std::string& profileLibrary) {
 #ifdef KOKKOS_TOOLS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  if (profileLibrary.empty()) {
+  if ((profileLibrary.empty()) || (profileLibrary == InitArguments::unset_string_option)) {
     invoke_init_callbacks();
     return;
   }
