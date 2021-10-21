@@ -738,17 +738,12 @@ struct HPXTeamMember {
   void team_barrier() const {}
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType &, const int &) const {
-    static_assert(std::is_trivially_default_constructible<ValueType>(),
-                  "Only trivial constructible types can be broadcasted");
-  }
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType &, const int &) const {}
 
   template <class Closure, class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure &closure,
                                              ValueType &value,
                                              const int &) const {
-    static_assert(std::is_trivially_default_constructible<ValueType>(),
-                  "Only trivial constructible types can be broadcasted");
     closure(value);
   }
 
