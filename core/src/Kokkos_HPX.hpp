@@ -347,6 +347,9 @@ class HPX {
         [&]() {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
           impl_get_future().wait();
+          // Reset the future to free variables that may have been captured in
+          // parallel regions.
+          impl_get_future() = hpx::make_ready_future<void>();
 #endif
         });
   }
@@ -365,6 +368,11 @@ class HPX {
               m_active_parallel_region_count_mutex);
           m_active_parallel_region_count_cond.wait(
               l, [&]() { return m_active_parallel_region_count == 0; });
+          // Reset the future to free variables that may have been captured in
+          // parallel regions (however, we don't have access to futures from
+          // instances other than the default instances, they will only be
+          // released by impl_fence_instance).
+          HPX().impl_get_future() = hpx::make_ready_future<void>();
 #endif
         });
   }
