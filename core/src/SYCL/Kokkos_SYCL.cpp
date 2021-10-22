@@ -131,7 +131,7 @@ void SYCL::impl_static_fence(const std::string& name) {
           GlobalDeviceSynchronization,
       [&]() {
         // guard accessing all_queues
-        std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+        std::scoped_lock lock(Impl::SYCLInternal::mutex);
         for (auto& queue : Impl::SYCLInternal::all_queues) {
           try {
             (*queue)->wait_and_throw();
