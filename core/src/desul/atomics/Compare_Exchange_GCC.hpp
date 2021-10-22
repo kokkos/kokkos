@@ -22,11 +22,11 @@ template<class T>
 struct atomic_exchange_available_gcc {
   constexpr static bool value =
 #ifndef DESUL_HAVE_LIBATOMIC
-    (sizeof(T)==4 ||
+    ((sizeof(T)==4 && alignof(T)==4) ||
 #ifdef DESUL_HAVE_16BYTE_COMPARE_AND_SWAP
-     sizeof(T)==16 ||
+     (sizeof(T)==16 && alignof(T)==16) ||
 #endif
-     sizeof(T)==8 ) &&
+     (sizeof(T)==8 && alignof(T)==8)) &&
 #endif
     std::is_trivially_copyable<T>::value;
 };
