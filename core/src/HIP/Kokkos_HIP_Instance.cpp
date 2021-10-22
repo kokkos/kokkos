@@ -485,13 +485,13 @@ Kokkos::Experimental::HIP::size_type hip_internal_maximum_grid_count() {
 }
 
 Kokkos::Experimental::HIP::size_type *hip_internal_scratch_space(
-    const Kokkos::Experimental::HIP::size_type size) {
-  return HIPInternal::singleton().scratch_space(size);
+    const HIP &instance, const HIP::size_type size) {
+  return instance.impl_internal_space_instance()->scratch_space(size);
 }
 
 Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
-    const Kokkos::Experimental::HIP::size_type size) {
-  return HIPInternal::singleton().scratch_flags(size);
+    const HIP &instance, const HIP::size_type size) {
+  return instance.impl_internal_space_instance()->scratch_flags(size);
 }
 
 }  // namespace Impl

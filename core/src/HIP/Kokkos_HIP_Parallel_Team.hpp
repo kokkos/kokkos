@@ -854,11 +854,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               : std::min(static_cast<int>(m_league_size), m_team_size);
 
       m_scratch_space = Kokkos::Experimental::Impl::hip_internal_scratch_space(
+          m_policy.space(),
           value_traits::value_size(
               reducer_conditional::select(m_functor, m_reducer)) *
-          block_count);
+              block_count);
       m_scratch_flags = Kokkos::Experimental::Impl::hip_internal_scratch_flags(
-          sizeof(size_type));
+          m_policy.space(), sizeof(size_type));
 
       dim3 block(m_vector_size, m_team_size, 1);
       dim3 grid(block_count, 1, 1);
