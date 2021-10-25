@@ -197,7 +197,7 @@ void run_single_scenario(const InfoType& scenario_info,
                          std::size_t rotation_point) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  print_scenario_details<Tag, ValueType>(name, rotation_point);
+  // print_scenario_details<Tag, ValueType>(name, rotation_point);
 
   {
     auto view = create_view<ValueType>(Tag{}, view_ext, "rotate_data_view");

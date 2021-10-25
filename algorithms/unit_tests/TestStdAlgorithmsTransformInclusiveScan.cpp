@@ -269,7 +269,7 @@ void run_single_scenario(const InfoType& scenario_info,
                          Args... args /* by value on purpose*/) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  print_scenario_details<Tag>(name, args...);
+  // print_scenario_details<Tag>(name, args...);
 
   auto view_dest =
       create_view<ValueType>(Tag{}, view_ext, "transform_inclusive_scan");

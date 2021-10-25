@@ -246,9 +246,9 @@ void run_single_scenario_default_op(const InfoType& scenario_info) {
   using default_op           = SumFunctor<ValueType>;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "inclusive_scan default op: " << name << ", "
-            << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType()) << std::endl;
+  // std::cout << "inclusive_scan default op: " << name << ", "
+  //           << view_tag_to_string(Tag{}) << ", "
+  //           << value_type_to_string(ValueType()) << std::endl;
 
   auto view_dest = create_view<ValueType>(Tag{}, view_ext, "inclusive_scan");
   auto view_from = create_view<ValueType>(Tag{}, view_ext, "inclusive_scan");
@@ -294,15 +294,15 @@ void run_single_scenario_custom_op(const InfoType& scenario_info, BinaryOp bop,
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 
-  if (1 == sizeof...(Args)) {
-    std::cout << "inclusive_scan custom op and init value: " << name << ", "
-              << view_tag_to_string(Tag{}) << ", "
-              << value_type_to_string(ValueType()) << ", " << std::endl;
-  } else {
-    std::cout << "inclusive_scan custom op: " << name << ", "
-              << view_tag_to_string(Tag{}) << ", "
-              << value_type_to_string(ValueType()) << ", " << std::endl;
-  }
+  // if (1 == sizeof...(Args)) {
+  //   std::cout << "inclusive_scan custom op and init value: " << name << ", "
+  //             << view_tag_to_string(Tag{}) << ", "
+  //             << value_type_to_string(ValueType()) << ", " << std::endl;
+  // } else {
+  //   std::cout << "inclusive_scan custom op: " << name << ", "
+  //             << view_tag_to_string(Tag{}) << ", "
+  //             << value_type_to_string(ValueType()) << ", " << std::endl;
+  // }
 
   auto view_dest = create_view<ValueType>(Tag{}, view_ext, "inclusive_scan");
   auto view_from = create_view<ValueType>(Tag{}, view_ext, "inclusive_scan");
