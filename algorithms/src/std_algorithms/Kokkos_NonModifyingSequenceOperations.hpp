@@ -973,7 +973,7 @@ IteratorType search_n_impl(const std::string& label, const ExecutionSpace& ex,
   // checks
   static_assert_random_access_and_accessible(ex, first);
   expect_valid_range(first, last);
-  KOKKOS_EXPECTS((std::ptrdiff_t) count >= 0);
+  KOKKOS_EXPECTS((std::ptrdiff_t)count >= 0);
 
   // count should not be larger than the range [first, last)
   namespace KE            = ::Kokkos::Experimental;
