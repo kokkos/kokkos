@@ -84,16 +84,12 @@ class AtomicDataElement {
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator++() const {
-    const_value_type tmp =
-        Kokkos::atomic_fetch_add(ptr, non_const_value_type(1));
-    return tmp + 1;
+    return Kokkos::atomic_fetch_add(ptr, non_const_value_type(1)) + 1;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator--() const {
-    const_value_type tmp =
-        Kokkos::atomic_fetch_sub(ptr, non_const_value_type(1));
-    return tmp - 1;
+    return Kokkos::atomic_fetch_sub(ptr, non_const_value_type(1)) - 1;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -108,96 +104,92 @@ class AtomicDataElement {
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator+=(const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr, val);
-    return tmp + val;
+    return Kokkos::atomic_fetch_add(ptr, val) + val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator+=(volatile const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr, val);
-    return tmp + val;
+    return Kokkos::atomic_fetch_add(ptr, val) + val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator-=(const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_sub(ptr, val);
-    return tmp - val;
+    return Kokkos::atomic_fetch_sub(ptr, val) - val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator-=(volatile const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_sub(ptr, val);
-    return tmp - val;
+    return Kokkos::atomic_fetch_sub(ptr, val) - val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator*=(const_value_type& val) const {
-    return Kokkos::atomic_mul_fetch(ptr, val);
+    return Kokkos::atomic_fetch_mul(ptr, val) * val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator*=(volatile const_value_type& val) const {
-    return Kokkos::atomic_mul_fetch(ptr, val);
+    return Kokkos::atomic_fetch_mul(ptr, val) * val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator/=(const_value_type& val) const {
-    return Kokkos::atomic_div_fetch(ptr, val);
+    return Kokkos::atomic_fetch_div(ptr, val) / val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator/=(volatile const_value_type& val) const {
-    return Kokkos::atomic_div_fetch(ptr, val);
+    return Kokkos::atomic_fetch_div(ptr, val) / val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator%=(const_value_type& val) const {
-    return Kokkos::atomic_mod_fetch(ptr, val);
+    return Kokkos::atomic_fetch_mod(ptr, val) % val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator%=(volatile const_value_type& val) const {
-    return Kokkos::atomic_mod_fetch(ptr, val);
+    return Kokkos::atomic_fetch_mod(ptr, val) % val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator&=(const_value_type& val) const {
-    return Kokkos::atomic_and_fetch(ptr, val);
+    return Kokkos::atomic_fetch_and(ptr, val) & val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator&=(volatile const_value_type& val) const {
-    return Kokkos::atomic_and_fetch(ptr, val);
+    return Kokkos::atomic_fetch_and(ptr, val) & val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator^=(const_value_type& val) const {
-    return Kokkos::atomic_xor_fetch(ptr, val);
+    return Kokkos::atomic_fetch_xor(ptr, val) ^ val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator^=(volatile const_value_type& val) const {
-    return Kokkos::atomic_xor_fetch(ptr, val);
+    return Kokkos::atomic_fetch_xor(ptr, val) ^ val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator|=(const_value_type& val) const {
-    return Kokkos::atomic_or_fetch(ptr, val);
+    return Kokkos::atomic_fetch_or(ptr, val) | val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator|=(volatile const_value_type& val) const {
-    return Kokkos::atomic_or_fetch(ptr, val);
+    return Kokkos::atomic_fetch_or(ptr, val) | val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator<<=(const_value_type& val) const {
-    return Kokkos::atomic_lshift_fetch(ptr, val);
+    return Kokkos::atomic_fetch_lshift(ptr, val) << val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator<<=(volatile const_value_type& val) const {
-    return Kokkos::atomic_lshift_fetch(ptr, val);
+    return Kokkos::atomic_fetch_lshift(ptr, val) << val;
   }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator>>=(const_value_type& val) const {
-    return Kokkos::atomic_rshift_fetch(ptr, val);
+    return Kokkos::atomic_fetch_rshift(ptr, val) >> val;
   }
   KOKKOS_INLINE_FUNCTION
   const_value_type operator>>=(volatile const_value_type& val) const {
-    return Kokkos::atomic_rshift_fetch(ptr, val);
+    return Kokkos::atomic_fetch_rshift(ptr, val) >> val;
   }
 
   KOKKOS_INLINE_FUNCTION
