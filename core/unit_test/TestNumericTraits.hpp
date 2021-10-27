@@ -82,6 +82,7 @@ struct FiniteMax { template <class T> using trait = Kokkos::Experimental::finite
 struct RoundError { template <class T> using trait = Kokkos::Experimental::round_error<T>; };
 struct NormMin { template <class T> using trait = Kokkos::Experimental::norm_min<T>; };
 struct DenormMin { template <class T> using trait = Kokkos::Experimental::denorm_min<T>; };
+struct ReciprocalOverflowThreshold { template <class T> using trait = Kokkos::Experimental::reciprocal_overflow_threshold<T>; };
 struct Digits { template <class T> using trait = Kokkos::Experimental::digits<T>; };
 struct Digits10 { template <class T> using trait = Kokkos::Experimental::digits10<T>; };
 struct MaxDigits10 { template <class T> using trait = Kokkos::Experimental::max_digits10<T>; };
@@ -149,6 +150,17 @@ struct TestNumericTraits {
     auto const max = finite_max<T>::value;
     e += (int)!(min == extrema::min(T{}));
     e += (int)!(max == extrema::max(T{}));
+    use_on_device();
+  }
+
+  KOKKOS_FUNCTION void operator()(ReciprocalOverflowThreshold, int,
+                                  int& e) const {
+    using Kokkos::Experimental::reciprocal_overflow_threshold;
+    auto const inv = 1 / reciprocal_overflow_threshold<T>::value;
+    if (inv + inv == inv && inv != 0) {
+      printf("inverse of reciprocal overflow threshold is inf\n");
+      ++e;
+    }
     use_on_device();
   }
 
@@ -248,6 +260,12 @@ TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
   TestNumericTraits<TEST_EXECSPACE, float, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, long double, DenormMin>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_reciprocal_overflow_threshold) {
+  TestNumericTraits<TEST_EXECSPACE, float, ReciprocalOverflowThreshold>();
+  TestNumericTraits<TEST_EXECSPACE, double, ReciprocalOverflowThreshold>();
+  TestNumericTraits<TEST_EXECSPACE, long double, ReciprocalOverflowThreshold>();
 }
 
 TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
@@ -458,6 +476,7 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, round_error);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, denorm_min);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, denorm_min);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, denorm_min);
+// NOTE reciprocal_overflow_threshold purposefully omitted since it does not exist in std::numeric_limits
 // clang-format off
 static_assert(Kokkos::Experimental::norm_min<float      >::value == std::numeric_limits<      float>::min(), "");
 static_assert(Kokkos::Experimental::norm_min<double     >::value == std::numeric_limits<     double>::min(), "");
@@ -615,6 +634,7 @@ CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_INTEGRAL(finite_max);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(epsilon);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(round_error);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(norm_min);
+CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(reciprocal_overflow_threshold);
 
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(digits);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_INTEGRAL(digits);
