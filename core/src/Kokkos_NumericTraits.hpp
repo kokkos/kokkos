@@ -135,6 +135,20 @@ template <> struct denorm_min_helper<float> { static constexpr float value = __F
 template <> struct denorm_min_helper<double> { static constexpr double value = __DBL_DENORM_MIN__; };
 template <> struct denorm_min_helper<long double> { static constexpr long double value = __LDBL_DENORM_MIN__; };
 #endif
+// NOTE see ?lamch routine from LAPACK that determines machine parameters for floating-point arithmetic
+template <class T>
+constexpr T safe_minimum(T /*ignored*/) {
+  constexpr auto one   = static_cast<T>(1);
+  constexpr auto eps   = epsilon_helper<T>::value;
+  constexpr auto tiny  = norm_min_helper<T>::value;
+  constexpr auto huge  = finite_max_helper<T>::value;
+  constexpr auto small = one / huge;
+  return small >= tiny ? small * (one + eps) : tiny;
+}
+template <class> struct reciprocal_overflow_threshold_helper {};
+template <> struct reciprocal_overflow_threshold_helper<float> { static constexpr float value = safe_minimum(0.f); };
+template <> struct reciprocal_overflow_threshold_helper<double> { static constexpr double value = safe_minimum(0.); };
+template <> struct reciprocal_overflow_threshold_helper<long double> { static constexpr long double value = safe_minimum(0.l); };
 template <class> struct quiet_NaN_helper {};
 template <> struct quiet_NaN_helper<float> { static constexpr float value = __builtin_nanf(""); };
 template <> struct quiet_NaN_helper<double> { static constexpr double value = __builtin_nan(""); };
@@ -266,6 +280,7 @@ KOKKOS_IMPL_DEFINE_TRAIT(epsilon)
 KOKKOS_IMPL_DEFINE_TRAIT(round_error)
 KOKKOS_IMPL_DEFINE_TRAIT(norm_min)
 KOKKOS_IMPL_DEFINE_TRAIT(denorm_min)
+KOKKOS_IMPL_DEFINE_TRAIT(reciprocal_overflow_threshold)
 KOKKOS_IMPL_DEFINE_TRAIT(quiet_NaN)
 KOKKOS_IMPL_DEFINE_TRAIT(signaling_NaN)
 
