@@ -123,6 +123,16 @@ template <class> struct norm_min_helper {};
 template <> struct norm_min_helper<float> { static constexpr float value = FLT_MIN; };
 template <> struct norm_min_helper<double> { static constexpr double value = DBL_MIN; };
 template <> struct norm_min_helper<long double> { static constexpr long double value = LDBL_MIN; };
+template <class> struct denorm_min_helper {};
+#if defined(KOKKOS_ENABLE_CXX17) || defined(_MSC_VER)
+template <> struct denorm_min_helper<float> { static constexpr float value = FLT_TRUE_MIN; };
+template <> struct denorm_min_helper<double> { static constexpr double value = DBL_TRUE_MIN; };
+template <> struct denorm_min_helper<long double> { static constexpr long double value = LDBL_TRUE_MIN; };
+#else
+template <> struct denorm_min_helper<float> { static constexpr float value = __FLT_DENORM_MIN__; };
+template <> struct denorm_min_helper<double> { static constexpr double value = __DBL_DENORM_MIN__; };
+template <> struct denorm_min_helper<long double> { static constexpr long double value = __LDBL_DENORM_MIN__; };
+#endif
 template <class> struct quiet_NaN_helper {};
 template <> struct quiet_NaN_helper<float> { static constexpr float value = __builtin_nanf(""); };
 template <> struct quiet_NaN_helper<double> { static constexpr double value = __builtin_nan(""); };
@@ -253,6 +263,7 @@ KOKKOS_IMPL_DEFINE_TRAIT(finite_max)
 KOKKOS_IMPL_DEFINE_TRAIT(epsilon)
 KOKKOS_IMPL_DEFINE_TRAIT(round_error)
 KOKKOS_IMPL_DEFINE_TRAIT(norm_min)
+KOKKOS_IMPL_DEFINE_TRAIT(denorm_min)
 KOKKOS_IMPL_DEFINE_TRAIT(quiet_NaN)
 KOKKOS_IMPL_DEFINE_TRAIT(signaling_NaN)
 
