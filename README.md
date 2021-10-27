@@ -22,7 +22,7 @@ of lecture videos and hands-on exercises covering all the important Kokkos Ecosy
 capabilities.
 
 A programming guide and API reference can be found on the Wiki
-(https://github.com/kokkos/kokkos/wiki). 
+(https://github.com/kokkos/kokkos/wiki).
 
 For questions find us on Slack: https://kokkosteam.slack.com or open a github issue.
 
@@ -56,7 +56,7 @@ we are unaware off.
 * NVCC: 9.2.88
 * NVC++: 21.5
 * ROCM: 4.3
-* MSVC: 19.29 
+* MSVC: 19.29
 * IBM XL: 16.1.1
 * Fujitsu: 4.5.0
 * ARM/Clang 20.1
@@ -228,8 +228,8 @@ If you publish work which mentions Kokkos, please cite the following paper:
 ````BibTex
 @ARTICLE{9485033,
   author={Trott, Christian R. and Lebrun-Grandié, Damien and Arndt, Daniel and Ciesko, Jan and Dang, Vinh and Ellingwood, Nathan and Gayatri, Rahulkumar and Harvey, Evan and Hollman, Daisy S. and Ibanez, Dan and Liber, Nevin and Madsen, Jonathan and Miles, Jeff and Poliakoff, David and Powell, Amy and Rajamanickam, Sivasankaran and Simberg, Mikael and Sunderland, Dan and Turcksin, Bruno and Wilke, Jeremiah},
-  journal={IEEE Transactions on Parallel and Distributed Systems}, 
-  title={Kokkos 3: Programming Model Extensions for the Exascale Era}, 
+  journal={IEEE Transactions on Parallel and Distributed Systems},
+  title={Kokkos 3: Programming Model Extensions for the Exascale Era},
   year={2022},
   volume={33},
   number={4},
@@ -242,8 +242,8 @@ If you use more than one Kokkos EcoSystem package, please also cite:
 ````BibTex
 @ARTICLE{9502936,
   author={Trott, Christian and Berger-Vergiat, Luc and Poliakoff, David and Rajamanickam, Sivasankaran and Lebrun-Grandie, Damien and Madsen, Jonathan and Al Awar, Nader and Gligoric, Milos and Shipman, Galen and Womeldorff, Geoff},
-  journal={Computing in Science   Engineering}, 
-  title={The Kokkos EcoSystem: Comprehensive Performance Portability for High Performance Computing}, 
+  journal={Computing in Science   Engineering},
+  title={The Kokkos EcoSystem: Comprehensive Performance Portability for High Performance Computing},
   year={2021},
   volume={23},
   number={5},
