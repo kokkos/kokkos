@@ -89,6 +89,8 @@ struct MinExponent { template <class T> using trait = Kokkos::Experimental::min_
 struct MaxExponent { template <class T> using trait = Kokkos::Experimental::max_exponent<T>; };
 struct MinExponent10 { template <class T> using trait = Kokkos::Experimental::min_exponent10<T>; };
 struct MaxExponent10 { template <class T> using trait = Kokkos::Experimental::max_exponent10<T>; };
+struct QuietNaN { template <class T> using trait = Kokkos::Experimental::quiet_NaN<T>; };
+struct SignalingNaN { template <class T> using trait = Kokkos::Experimental::signaling_NaN<T>; };
 // clang-format on
 
 template <class T>
@@ -162,6 +164,22 @@ struct TestNumericTraits {
   KOKKOS_FUNCTION void operator()(MinExponent10, int, int&) const { use_on_device(); }
   KOKKOS_FUNCTION void operator()(MaxExponent10, int, int&) const { use_on_device(); }
   // clang-format on
+  KOKKOS_FUNCTION void operator()(QuietNaN, int, int& e) const {
+    using Kokkos::Experimental::quiet_NaN;
+    constexpr auto nan  = quiet_NaN<T>::value;
+    constexpr auto zero = T(0);
+    e += (int)!(nan != nan);
+    e += (int)!(nan != zero);
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(SignalingNaN, int, int& e) const {
+    using Kokkos::Experimental::signaling_NaN;
+    constexpr auto nan  = signaling_NaN<T>::value;
+    constexpr auto zero = T(0);
+    e += (int)!(nan != nan);
+    e += (int)!(nan != zero);
+    use_on_device();
+  }
 
   KOKKOS_FUNCTION void use_on_device() const {
 #if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -338,6 +356,15 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
   TestNumericTraits<TEST_EXECSPACE, long double, MaxExponent10>();
 }
 
+TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
+  TestNumericTraits<TEST_EXECSPACE, float, QuietNaN>();
+  TestNumericTraits<TEST_EXECSPACE, float, SignalingNaN>();
+  TestNumericTraits<TEST_EXECSPACE, double, QuietNaN>();
+  TestNumericTraits<TEST_EXECSPACE, double, SignalingNaN>();
+  TestNumericTraits<TEST_EXECSPACE, long double, QuietNaN>();
+  TestNumericTraits<TEST_EXECSPACE, long double, SignalingNaN>();
+}
+
 namespace NumericTraitsSFINAE {
 
 struct HasNoSpecialization {};
@@ -355,6 +382,8 @@ CHECK_TRAIT_IS_SFINAE_FRIENDLY(finite_max)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(epsilon)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(round_error)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(norm_min)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(quiet_NaN)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(signaling_NaN)
 
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(digits)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(digits10)
@@ -517,6 +546,25 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(long double, max_exponent10);
 #undef CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION
 #undef CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT
 
+#define CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(T, TRAIT)             \
+  static_assert(Kokkos::Experimental::TRAIT<T>::value !=                       \
+                    Kokkos::Experimental::TRAIT<T>::value,                     \
+                "");                                                           \
+  static_assert(                                                               \
+      std::numeric_limits<T>::TRAIT() != std::numeric_limits<T>::TRAIT(), ""); \
+  static_assert(Kokkos::Experimental::TRAIT<T>::value !=                       \
+                    std::numeric_limits<T>::TRAIT(),                           \
+                "")
+
+CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, quiet_NaN);
+CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, quiet_NaN);
+CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, quiet_NaN);
+CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, signaling_NaN);
+CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, signaling_NaN);
+CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, signaling_NaN);
+
+#undef CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION
+
 #define CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES(T, TRAIT)              \
   static_assert(Kokkos::Experimental::TRAIT<T const>::value ==          \
                     Kokkos::Experimental::TRAIT<T>::value,              \
@@ -571,3 +619,28 @@ CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(max_exponent10);
 #undef CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_INTEGRAL
 #undef CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT
 #undef CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES
+
+#define CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES(T, TRAIT)          \
+  static_assert(Kokkos::Experimental::TRAIT<T>::value !=                \
+                    Kokkos::Experimental::TRAIT<T>::value,              \
+                "");                                                    \
+  static_assert(Kokkos::Experimental::TRAIT<T const>::value !=          \
+                    Kokkos::Experimental::TRAIT<T>::value,              \
+                "");                                                    \
+  static_assert(Kokkos::Experimental::TRAIT<T volatile>::value !=       \
+                    Kokkos::Experimental::TRAIT<T>::value,              \
+                "");                                                    \
+  static_assert(Kokkos::Experimental::TRAIT<T const volatile>::value != \
+                    Kokkos::Experimental::TRAIT<T>::value,              \
+                "")
+
+#define CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(TRAIT) \
+  CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES(float, TRAIT);              \
+  CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES(double, TRAIT);             \
+  CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES(long double, TRAIT)
+
+CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(quiet_NaN);
+CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(signaling_NaN);
+
+#undef CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT
+#undef CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES
