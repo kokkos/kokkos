@@ -424,9 +424,6 @@ class UnorderedMap {
           "Kokkos::UnorderedMap::begin_erase: fence before setting erasable "
           "flag");
       set_flag(erasable_idx);
-      execution_space().fence(
-          "Kokkos::UnorderedMap::begin_erase: fence after setting erasable "
-          "flag");
     }
     return result;
   }
@@ -766,6 +763,9 @@ class UnorderedMap {
       raw_deep_copy(tmp.m_scalars.data(), src.m_scalars.data(),
                     sizeof(int) * num_scalars);
 
+      Kokkos::fence(
+          "Kokkos::UnorderedMap::create_copy_view: fence after copy to tmp");
+
       *this = tmp;
     }
   }
@@ -780,6 +780,9 @@ class UnorderedMap {
                                Kokkos::HostSpace>;
     const int true_ = true;
     raw_deep_copy(m_scalars.data() + flag, &true_, sizeof(int));
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::set_flag: fence after copying flag from "
+        "HostSpace");
   }
 
   void reset_flag(int flag) const {
@@ -788,6 +791,9 @@ class UnorderedMap {
                                Kokkos::HostSpace>;
     const int false_ = false;
     raw_deep_copy(m_scalars.data() + flag, &false_, sizeof(int));
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::reset_flag: fence after copying flag from "
+        "HostSpace");
   }
 
   bool get_flag(int flag) const {
@@ -796,6 +802,9 @@ class UnorderedMap {
                                typename device_type::memory_space>;
     int result = false;
     raw_deep_copy(&result, m_scalars.data() + flag, sizeof(int));
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::get_flag: fence after copy to return value in "
+        "HostSpace");
     return result;
   }
 

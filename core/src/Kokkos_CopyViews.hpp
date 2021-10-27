@@ -1470,14 +1470,13 @@ inline void deep_copy(
 
   if (src.data() == nullptr) {
     Kokkos::fence("Kokkos::deep_copy: copy into scalar, src is null");
-    if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
-      Kokkos::Profiling::endDeepCopy();
-    }
-    return;
+  } else {
+    Kokkos::fence("Kokkos::deep_copy: copy into scalar, pre copy fence");
+    Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
+                                                        sizeof(ST));
+    Kokkos::fence("Kokkos::deep_copy: copy into scalar, post copy fence");
   }
 
-  Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
-                                                      sizeof(ST));
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();
   }

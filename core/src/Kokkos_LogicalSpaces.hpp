@@ -310,6 +310,9 @@ class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
 
     Kokkos::Impl::DeepCopy<SpaceType, SpaceType>(
         r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
+    Kokkos::fence(
+        "SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace, "
+        "void>::reallocate_tracked: fence after copying data");
 
     RecordBase::increment(r_new);
     RecordBase::decrement(r_old);

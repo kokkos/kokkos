@@ -131,6 +131,10 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
   // DeepCopy
   Kokkos::Impl::DeepCopy<Experimental::OpenMPTargetSpace, HostSpace>(
       RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  Kokkos::fence(
+      "SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, "
+      "void>::SharedAllocationRecord(): fence after copying header from "
+      "HostSpace");
 }
 
 //----------------------------------------------------------------------------

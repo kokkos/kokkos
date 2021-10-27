@@ -192,6 +192,9 @@ class MemoryPool {
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
           sb_state_array, m_sb_state_array, alloc_size);
+      Kokkos::fence(
+          "MemoryPool::get_usage_statistics(): fence after copying state "
+          "array to HostSpace");
     }
 
     stats.superblock_bytes     = (1LU << m_sb_size_lg2);
@@ -240,6 +243,9 @@ class MemoryPool {
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
           sb_state_array, m_sb_state_array, alloc_size);
+      Kokkos::fence(
+          "MemoryPool::print_state(): fence after copying state array to "
+          "HostSpace");
     }
 
     Impl::_print_memory_pool_state(s, sb_state_array, m_sb_count, m_sb_size_lg2,
@@ -449,6 +455,9 @@ class MemoryPool {
     if (!accessible) {
       Kokkos::Impl::DeepCopy<base_memory_space, Kokkos::HostSpace>(
           m_sb_state_array, sb_state_array, header_size);
+      Kokkos::fence(
+          "MemoryPool::MemoryPool(): fence after copying state array from "
+          "HostSpace");
 
       host.deallocate(sb_state_array, header_size);
     } else {
