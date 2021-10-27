@@ -196,9 +196,8 @@ struct StdReplaceIfFunctor {
 
   KOKKOS_FUNCTION
   void operator()(index_type i) const {
-    auto& myvalue = m_first[i];
-    if (m_predicate(myvalue)) {
-      myvalue = m_new_value;
+    if (m_predicate(m_first[i])) {
+      m_first[i] = m_new_value;
     }
   }
 
@@ -219,9 +218,8 @@ struct StdReplaceFunctor {
 
   KOKKOS_FUNCTION
   void operator()(index_type i) const {
-    auto& myvalue = m_first[i];
-    if (myvalue == m_old_value) {
-      myvalue = m_new_value;
+    if (m_first[i] == m_old_value) {
+      m_first[i] = m_new_value;
     }
   }
 
@@ -245,12 +243,11 @@ struct StdReplaceCopyFunctor {
   KOKKOS_FUNCTION
   void operator()(index_type i) const {
     const auto& myvalue_from = m_first_from[i];
-    auto& myvalue_dest       = m_first_dest[i];
 
     if (myvalue_from == m_old_value) {
-      myvalue_dest = m_new_value;
+      m_first_dest[i] = m_new_value;
     } else {
-      myvalue_dest = myvalue_from;
+      m_first_dest[i] = myvalue_from;
     }
   }
 
@@ -274,12 +271,11 @@ struct StdReplaceIfCopyFunctor {
   KOKKOS_FUNCTION
   void operator()(IndexType i) const {
     const auto& myvalue_from = m_first_from[i];
-    auto& myvalue_dest       = m_first_dest[i];
 
     if (m_pred(myvalue_from)) {
-      myvalue_dest = m_new_value;
+      m_first_dest[i] = m_new_value;
     } else {
-      myvalue_dest = myvalue_from;
+      m_first_dest[i] = myvalue_from;
     }
   }
 
