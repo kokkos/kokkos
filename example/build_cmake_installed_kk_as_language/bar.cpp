@@ -43,8 +43,4 @@
 */
 
 #include <cstdio>
-
-int main() {
-  puts("hello world!");
-  return 0;
-}
+void print_cxx() { printf("Hello From C++\n"); }

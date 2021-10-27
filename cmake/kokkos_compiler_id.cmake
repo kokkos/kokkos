@@ -20,31 +20,35 @@ MACRO(kokkos_internal_have_compiler_nvcc)
 ENDMACRO()
 
 IF(Kokkos_ENABLE_CUDA)
-  # find kokkos_launch_compiler
-  FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
-      NAMES           kokkos_launch_compiler
-      HINTS           ${PROJECT_SOURCE_DIR}
-      PATHS           ${PROJECT_SOURCE_DIR}
-      PATH_SUFFIXES   bin)
+  IF(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+    kokkos_internal_have_compiler_nvcc(${CMAKE_CUDA_COMPILER})
+  ELSE()
+    # find kokkos_launch_compiler
+    FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
+        NAMES           kokkos_launch_compiler
+        HINTS           ${PROJECT_SOURCE_DIR}
+        PATHS           ${PROJECT_SOURCE_DIR}
+        PATH_SUFFIXES   bin)
 
-  FIND_PROGRAM(Kokkos_NVCC_WRAPPER
-      NAMES           nvcc_wrapper
-      HINTS           ${PROJECT_SOURCE_DIR}
-      PATHS           ${PROJECT_SOURCE_DIR}
-      PATH_SUFFIXES   bin)
+    FIND_PROGRAM(Kokkos_NVCC_WRAPPER
+        NAMES           nvcc_wrapper
+        HINTS           ${PROJECT_SOURCE_DIR}
+        PATHS           ${PROJECT_SOURCE_DIR}
+        PATH_SUFFIXES   bin)
 
-  # check if compiler was set to nvcc_wrapper
-  kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
-  # if launcher was found and nvcc_wrapper was not specified as
-  # compiler, set to use launcher. Will ensure CMAKE_CXX_COMPILER
-  # is replaced by nvcc_wrapper
-  IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-    # the first argument to launcher is always the C++ compiler defined by cmake
-    # if the second argument matches the C++ compiler, it forwards the rest of the
-    # args to nvcc_wrapper
-    kokkos_internal_have_compiler_nvcc(
-      ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER} -DKOKKOS_DEPENDENCE)
-    SET(INTERNAL_USE_COMPILER_LAUNCHER true)
+    # check if compiler was set to nvcc_wrapper
+    kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
+    # if launcher was found and nvcc_wrapper was not specified as
+    # compiler, set to use launcher. Will ensure CMAKE_CXX_COMPILER
+    # is replaced by nvcc_wrapper
+    IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+      # the first argument to launcher is always the C++ compiler defined by cmake
+      # if the second argument matches the C++ compiler, it forwards the rest of the
+      # args to nvcc_wrapper
+      kokkos_internal_have_compiler_nvcc(
+        ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER} -DKOKKOS_DEPENDENCE)
+      SET(INTERNAL_USE_COMPILER_LAUNCHER true)
+    ENDIF()
   ENDIF()
 ENDIF()
 
