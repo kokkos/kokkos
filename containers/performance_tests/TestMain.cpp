@@ -60,7 +60,7 @@ class MinimalistPrinter : public testing::EmptyTestEventListener {
       const testing::TestPartResult& test_part_result) override {
     switch (test_part_result.type()) {
       // If the test part succeeded, we don't need to do anything.
-      case TestPartResult::kSuccess: break;
+      case testing::TestPartResult::kSuccess: break;
       default: std::cout.rdbuf(sbuf); std::cout << buffer.str() << std::endl;
     }
     buffer.str(std::string());  // clears the buffer.
