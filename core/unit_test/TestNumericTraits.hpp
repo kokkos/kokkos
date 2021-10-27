@@ -476,7 +476,8 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, round_error);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, denorm_min);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, denorm_min);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, denorm_min);
-// NOTE reciprocal_overflow_threshold purposefully omitted since it does not exist in std::numeric_limits
+// NOTE reciprocal_overflow_threshold purposefully omitted since it does not
+// exist in std::numeric_limits
 // clang-format off
 static_assert(Kokkos::Experimental::norm_min<float      >::value == std::numeric_limits<      float>::min(), "");
 static_assert(Kokkos::Experimental::norm_min<double     >::value == std::numeric_limits<     double>::min(), "");
@@ -634,7 +635,8 @@ CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_INTEGRAL(finite_max);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(epsilon);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(round_error);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(norm_min);
-CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(reciprocal_overflow_threshold);
+CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(
+    reciprocal_overflow_threshold);
 
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(digits);
 CHECK_INSTANTIATED_ON_CV_QUALIFIED_TYPES_INTEGRAL(digits);
