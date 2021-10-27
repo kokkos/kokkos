@@ -535,7 +535,11 @@
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 #endif
 
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__)
+// Guard intel compiler version <= 1900
+// intel error #2651: attribute does not apply to any entity
+// using <deprecated_type> KOKKOS_DEPRECATED = ...
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__) && \
+    (KOKKOS_COMPILER_INTEL <= 1900)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
