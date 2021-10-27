@@ -81,6 +81,7 @@ struct FiniteMin { template <class T> using trait = Kokkos::Experimental::finite
 struct FiniteMax { template <class T> using trait = Kokkos::Experimental::finite_max<T>; };
 struct RoundError { template <class T> using trait = Kokkos::Experimental::round_error<T>; };
 struct NormMin { template <class T> using trait = Kokkos::Experimental::norm_min<T>; };
+struct DenormMin { template <class T> using trait = Kokkos::Experimental::denorm_min<T>; };
 struct Digits { template <class T> using trait = Kokkos::Experimental::digits<T>; };
 struct Digits10 { template <class T> using trait = Kokkos::Experimental::digits10<T>; };
 struct MaxDigits10 { template <class T> using trait = Kokkos::Experimental::max_digits10<T>; };
@@ -155,6 +156,7 @@ struct TestNumericTraits {
   KOKKOS_FUNCTION void operator()(FiniteMax, int, int&) const { use_on_device(); }
   KOKKOS_FUNCTION void operator()(RoundError, int, int&) const { use_on_device(); }
   KOKKOS_FUNCTION void operator()(NormMin, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(DenormMin, int, int&) const { use_on_device(); }
   KOKKOS_FUNCTION void operator()(Digits, int, int&) const { use_on_device(); }
   KOKKOS_FUNCTION void operator()(Digits10, int, int&) const { use_on_device(); }
   KOKKOS_FUNCTION void operator()(MaxDigits10, int, int&) const { use_on_device(); }
@@ -240,6 +242,12 @@ TEST(TEST_CATEGORY, numeric_traits_norm_min) {
   TestNumericTraits<TEST_EXECSPACE, float, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, long double, NormMin>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
+  TestNumericTraits<TEST_EXECSPACE, float, DenormMin>();
+  TestNumericTraits<TEST_EXECSPACE, double, DenormMin>();
+  TestNumericTraits<TEST_EXECSPACE, long double, DenormMin>();
 }
 
 TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
@@ -382,6 +390,7 @@ CHECK_TRAIT_IS_SFINAE_FRIENDLY(finite_max)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(epsilon)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(round_error)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(norm_min)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(denorm_min)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(quiet_NaN)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(signaling_NaN)
 
@@ -446,6 +455,9 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, epsilon);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, round_error);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, round_error);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, round_error);
+CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, denorm_min);
+CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, denorm_min);
+CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, denorm_min);
 // clang-format off
 static_assert(Kokkos::Experimental::norm_min<float      >::value == std::numeric_limits<      float>::min(), "");
 static_assert(Kokkos::Experimental::norm_min<double     >::value == std::numeric_limits<     double>::min(), "");
