@@ -45,9 +45,44 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-int main(int argc, char *argv[]) {
+class MinimalistPrinter : public testing::EmptyTestEventListener {
+  // Called before a test starts.
+  void OnTestStart(const testing::TestInfo&) override {
+    buffer.str(std::string());  // clears the buffer.
+    sbuf = std::cout.rdbuf();
+    std::cout.rdbuf(buffer.rdbuf());
+  }
+
+  // Called after a failed assertion or a SUCCESS().
+  void OnTestPartResult(
+      const testing::TestPartResult& test_part_result) override {
+    switch (test_part_result.type()) {
+      // If the test part succeeded, we don't need to do anything.
+      case TestPartResult::kSuccess: break;
+      default: std::cout.rdbuf(sbuf); std::cout << buffer.str() << std::endl;
+    }
+    buffer.str(std::string());  // clears the buffer.
+    sbuf = std::cout.rdbuf();
+    std::cout.rdbuf(buffer.rdbuf());
+  }
+
+  // Called after a test ends.
+  void OnTestEnd(const testing::TestInfo&) override { std::cout.rdbuf(sbuf); }
+
+  std::stringstream buffer;
+  std::streambuf* sbuf;
+};
+
+int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
+
+  ::testing::TestEventListeners& listeners =
+      ::testing::UnitTest::GetInstance()->listeners();
+  auto default_listener = listeners.Release(listeners.default_result_printer());
+  listeners.Append(new MinimalistPrinter);
+  listeners.Append(default_listener);
+
   int result = RUN_ALL_TESTS();
   Kokkos::finalize();
   return result;
