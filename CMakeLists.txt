@@ -79,6 +79,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   # What language are we compiling Kokkos as
   # downstream dependencies need to match this!
   SET(KOKKOS_COMPILE_LANGUAGE CXX)
+  # use lower case here since we didn't parse options yet
   IF (Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
 
     # Without this as a language for the package we would get a C++ compiler enabled.

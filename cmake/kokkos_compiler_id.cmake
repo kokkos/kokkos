@@ -20,7 +20,7 @@ MACRO(kokkos_internal_have_compiler_nvcc)
 ENDMACRO()
 
 IF(Kokkos_ENABLE_CUDA)
-  IF(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+  IF(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
     kokkos_internal_have_compiler_nvcc(${CMAKE_CUDA_COMPILER})
   ELSE()
     # find kokkos_launch_compiler
