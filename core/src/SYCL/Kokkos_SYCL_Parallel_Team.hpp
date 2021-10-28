@@ -113,7 +113,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <typename FunctorType>
   int team_size_recommended(FunctorType const& f, ParallelForTag const&) const {
-    return internal_team_size_max_for(f);
+    return internal_team_size_recommended_for(f);
   }
 
   template <typename FunctorType>
@@ -364,13 +364,19 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <class FunctorType>
   int internal_team_size_recommended_for(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max_for(f);
+    const int max_team_size_half = internal_team_size_max_for(f) / 2;
+    int power_of_two             = 1;
+    while (power_of_two <= max_team_size_half) power_of_two <<= 1;
+    return power_of_two;
   }
 
   template <class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max_reduce(f);
+    const int max_team_size_half = internal_team_size_max_reduce(f) / 2;
+    int power_of_two             = 1;
+    while (power_of_two <= max_team_size_half) power_of_two <<= 1;
+    return power_of_two;
   }
 };
 
@@ -497,7 +503,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                            .impl_internal_space_instance()
                            ->m_team_scratch_mutex) {
     // FIXME_SYCL optimize
-    if (m_team_size < 0) m_team_size = m_policy.team_size_recommended(arg_functor, ParallelForTag{});
+    if (m_team_size < 0)
+      m_team_size =
+          m_policy.team_size_recommended(arg_functor, ParallelForTag{});
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
@@ -813,7 +821,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   void initialize() {
     // FIXME_SYCL optimize
-    if (m_team_size < 0) m_team_size = m_policy.team_size_recommended(m_functor, ParallelReduceTag{});
+    if (m_team_size < 0)
+      m_team_size =
+          m_policy.team_size_recommended(m_functor, ParallelReduceTag{});
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {
