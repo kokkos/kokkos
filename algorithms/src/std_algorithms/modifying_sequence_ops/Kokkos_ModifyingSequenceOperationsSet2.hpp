@@ -111,8 +111,8 @@ struct StdReverseFunctor {
     // But putting the impl directly here, it works.
 #ifdef KOKKOS_COMPILER_INTEL
     typename InputIterator::value_type tmp = std::move(m_first[i]);
-    m_first[i]                            = std::move(m_last[-i - 1]);
-    m_last[-i - 1]			  = std::move(tmp);
+    m_first[i]                             = std::move(m_last[-i - 1]);
+    m_last[-i - 1]                         = std::move(tmp);
 #else
     ::Kokkos::Experimental::swap(m_first[i], m_last[-i - 1]);
 #endif
