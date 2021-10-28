@@ -265,9 +265,10 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
   const char* label = nullptr;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
+    Kokkos::Experimental::HIP exec;
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
-        &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
-    Kokkos::fence(
+        exec, &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    exec.fence(
         "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
         "void>::~SharedAllocationRecord(): fence after copying header from "
         "HostSpace");
@@ -307,9 +308,10 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
+  Kokkos::Experimental::HIP exec;
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
-      RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-  Kokkos::fence(
+      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  exec.fence(
       "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");

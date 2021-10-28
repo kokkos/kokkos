@@ -252,9 +252,10 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   this->base_t::_fill_host_accessible_header_info(header, label);
 
   // Copy to device memory
+  Kokkos::Experimental::SYCL exec;
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
-      RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-  Kokkos::fence(
+      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  exec.fence(
       "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");
@@ -316,10 +317,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
   const char* label = nullptr;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
+    Kokkos::Experimental::SYCL exec;
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                           Kokkos::HostSpace>(&header, RecordBase::m_alloc_ptr,
-                                              sizeof(SharedAllocationHeader));
-    Kokkos::fence(
+                           Kokkos::HostSpace>(
+        exec, &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    exec.fence(
         "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
         "void>::~SharedAllocationRecord(): fence after copying header from "
         "HostSpace");
