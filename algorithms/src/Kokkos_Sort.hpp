@@ -411,7 +411,15 @@ struct BinOp1D {
       : max_bins_(max_bins__ + 1),
         mul_(1.0 * max_bins__ / (max - min)),
         range_(max - min),
-        min_(min) {}
+        min_(min) {
+    // For integral types the number of bins may be larger than the range
+    // in which case we can exactly have one unique value per bin
+    // and then don't need to sort bins.
+    if (std::is_integral<typename KeyViewType::const_value_type>::value &&
+        static_cast<uint64_t>(range_) <= static_cast<uint64_t>(max_bins__)) {
+      mul_ = 1.;
+    }
+  }
 
   // Determine bin index from key value
   template <class ViewType>
@@ -533,8 +541,23 @@ void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
                       0, view.extent(0)),
                   Impl::min_max_functor<ViewType>(view), reducer);
   if (result.min_val == result.max_val) return;
+  // For integral types the number of bins may be larger than the range
+  // in which case we can exactly have one unique value per bin
+  // and then don't need to sort bins.
+  bool sort_in_bins = true;
+  // TODO: figure out better max_bins then this ...
+  int64_t max_bins = view.extent(0) / 2;
+  if (std::is_integral<typename ViewType::non_const_value_type>::value) {
+    // using 10M as the cutoff for special behavior (roughly 40MB for the count
+    // array)
+    if ((result.max_val - result.min_val) < 10000000) {
+      max_bins     = result.max_val - result.min_val + 1;
+      sort_in_bins = false;
+    }
+  }
+
   BinSort<ViewType, CompType> bin_sort(
-      view, CompType(view.extent(0) / 2, result.min_val, result.max_val), true);
+      view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
   bin_sort.create_permute_vector();
   bin_sort.sort(view);
 }
