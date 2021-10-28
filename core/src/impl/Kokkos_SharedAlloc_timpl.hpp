@@ -262,9 +262,10 @@ auto HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_record(
       alloc_ptr ? SharedAllocationHeader::get_header(alloc_ptr) : nullptr;
 
   if (alloc_ptr) {
-    Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
-        &head, head_cuda, sizeof(SharedAllocationHeader));
-    Kokkos::fence(
+    typename MemorySpace::execution_space exec_space;
+    Kokkos::Impl::DeepCopy<HostSpace, MemorySpace, decltype(exec_space)>(
+        exec_space, &head, head_cuda, sizeof(SharedAllocationHeader));
+    exec_space.fence(
         "HostInaccessibleSharedAllocationRecordCommon::get_record(): fence "
         "after copying header to HostSpace");
   }

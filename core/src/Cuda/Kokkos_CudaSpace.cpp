@@ -492,9 +492,10 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
   const char *label = nullptr;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
+    Kokkos::Cuda exec;
     Kokkos::Impl::DeepCopy<Kokkos::CudaSpace, HostSpace>(
-        &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
-    Kokkos::fence(
+        exec, &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    exec.fence(
         "SharedAllocationRecord<Kokkos::CudaSpace, "
         "void>::~SharedAllocationRecord(): fence after copying header from "
         "HostSpace");
@@ -552,9 +553,10 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(RecordBase::m_alloc_ptr, &header,
-                                               sizeof(SharedAllocationHeader));
-  Kokkos::fence(
+  Kokkos::Cuda exec;
+  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
+      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  exec.fence(
       "SharedAllocationRecord<Kokkos::CudaSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");
