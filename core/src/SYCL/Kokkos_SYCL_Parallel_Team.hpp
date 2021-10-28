@@ -497,7 +497,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                            .impl_internal_space_instance()
                            ->m_team_scratch_mutex) {
     // FIXME_SYCL optimize
-    if (m_team_size < 0) m_team_size = 32;
+    if (m_team_size < 0) m_team_size = m_policy.team_size_recommended(arg_functor, ParallelForTag{});
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
@@ -813,7 +813,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   void initialize() {
     // FIXME_SYCL optimize
-    if (m_team_size < 0) m_team_size = 32;
+    if (m_team_size < 0) m_team_size = m_policy.team_size_recommended(m_functor, ParallelReduceTag{});
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {
@@ -847,7 +847,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
-    if (m_team_size > m_policy.team_size_max(m_functor, ParallelForTag{}))
+    if (m_team_size > m_policy.team_size_max(m_functor, ParallelReduceTag{}))
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
   }
