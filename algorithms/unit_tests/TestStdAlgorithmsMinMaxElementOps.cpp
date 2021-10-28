@@ -329,10 +329,10 @@ void std_algorithms_min_max_element_test::test_minmax_element_non_trivial_data(
     }
     {
       const auto result =
-          KE::minmax_element(exespace(), KE::cbegin(view), KE::cend(view));
+          KE::minmax_element(exespace(), KE::begin(view), KE::end(view));
       std_algo_min_max_test_verify(gold, result.first, result.second, view);
       const auto result2 = KE::minmax_element("MYCUSTOMLABEL2", exespace(),
-                                              KE::cbegin(view), KE::cend(view));
+                                              KE::begin(view), KE::end(view));
       std_algo_min_max_test_verify(gold, result2.first, result2.second, view);
     }
   }
