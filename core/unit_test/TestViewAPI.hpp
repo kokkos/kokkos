@@ -892,8 +892,8 @@ struct TestViewMirror {
     for (int i = 0; i < 10; i++) {
       a_h(i) = (double)i;
     }
-    auto a_d = Kokkos::create_mirror_view(DeviceType(), a_h,
-                                          Kokkos::WithoutInitializing);
+    auto a_d = Kokkos::create_mirror_view(Kokkos::WithoutInitializing,
+                                          DeviceType(), a_h);
 
     int equal_ptr_h_d = (a_h.data() == a_d.data()) ? 1 : 0;
     constexpr int is_same_memspace =

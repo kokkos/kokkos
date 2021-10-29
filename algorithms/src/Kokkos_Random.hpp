@@ -923,8 +923,10 @@ class Random_XorShift64_Pool {
     state_ = state_data_type("Kokkos::Random_XorShift64::state", num_states_,
                              padding_);
 
-    typename state_data_type::HostMirror h_state = create_mirror_view(state_);
-    typename locks_type::HostMirror h_lock       = create_mirror_view(locks_);
+    typename state_data_type::HostMirror h_state =
+        Kokkos::create_mirror_view(Kokkos::WithoutInitializing, state_);
+    typename locks_type::HostMirror h_lock =
+        Kokkos::create_mirror_view(Kokkos::WithoutInitializing, locks_);
 
     // Execute on the HostMirror's default execution space.
     Random_XorShift64<typename state_data_type::HostMirror::execution_space>
@@ -1175,9 +1177,12 @@ class Random_XorShift1024_Pool {
     state_ = state_data_type("Kokkos::Random_XorShift1024::state", num_states_);
     p_ = int_view_type("Kokkos::Random_XorShift1024::p", num_states_, padding_);
 
-    typename state_data_type::HostMirror h_state = create_mirror_view(state_);
-    typename locks_type::HostMirror h_lock       = create_mirror_view(locks_);
-    typename int_view_type::HostMirror h_p       = create_mirror_view(p_);
+    typename state_data_type::HostMirror h_state =
+        Kokkos::create_mirror_view(Kokkos::WithoutInitializing, state_);
+    typename locks_type::HostMirror h_lock =
+        Kokkos::create_mirror_view(Kokkos::WithoutInitializing, locks_);
+    typename int_view_type::HostMirror h_p =
+        Kokkos::create_mirror_view(Kokkos::WithoutInitializing, p_);
 
     // Execute on the HostMirror's default execution space.
     Random_XorShift64<typename state_data_type::HostMirror::execution_space>
