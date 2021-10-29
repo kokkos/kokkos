@@ -3056,8 +3056,7 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
     v = view_type();  // Deallocate first, if the only view to allocation
     v = view_type(view_alloc(label, arg_prop...), n0, n1, n2, n3, n4, n5, n6,
                   n7);
-  } else if (!Kokkos::Impl::has_condition<
-                 void, Kokkos::Impl::is_without_initializing, I...>::value)
+  } else if (!Kokkos::Impl::has_type<Impl::WithoutInitializing_t, I...>::value)
     Kokkos::deep_copy(v, typename view_type::value_type{});
 }
 
