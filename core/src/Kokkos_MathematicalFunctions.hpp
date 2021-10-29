@@ -204,10 +204,12 @@ namespace Experimental {
   }
 
 // isinf isnan and isinfinite don't work on windows with cuda with std::
+// getting warnings about calling host function in device function then
+// runtime test fails
 #if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                              \
-  KOKKOS_INLINE_FUNCTION bool FUNC(float x) { return ::FUNC(x); }           \                                                                         \
-  KOKKOS_INLINE_FUNCTION bool FUNC(double x) { return ::FUNC(x); }          \                                                                         \
+  KOKKOS_INLINE_FUNCTION bool FUNC(float x) { return ::FUNC(x); }           \
+  KOKKOS_INLINE_FUNCTION bool FUNC(double x) { return ::FUNC(x); }          \
   template <class T>                                                        \
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, bool> \
   FUNC(T x) {                                                               \
