@@ -42,6 +42,11 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND UnitTestSources ${file})
     endforeach()
+    #fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj
+    if(Kokkos_ENABLE_CUDA AND WIN32)
+     LIST(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_DynViewAPI_generic.cpp)
+    endif()
+
     KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
   endif()
 endforeach()
