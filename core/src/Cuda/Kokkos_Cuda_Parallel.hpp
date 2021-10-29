@@ -874,7 +874,7 @@ struct alignas(T) volatile_wrapper {
 
   __device__ __host__ inline void set(const T& s) {
     auto vps = reinterpret_cast<const volatile char*>(&s);
-    auto pt  = reinterpret_cast<char*>(&t);
+    auto pt  = reinterpret_cast<volatile char*>(&t);
     for (size_t i = 0; i < sizeof(T); ++i) {
       pt[i] = vps[i];
     }
