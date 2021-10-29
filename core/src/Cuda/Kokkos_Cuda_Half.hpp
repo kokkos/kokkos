@@ -141,7 +141,6 @@ class alignas(2) half_t {
   KOKKOS_FUNCTION
   half_t() : val(0.0F) {}
 
-
   // Copy constructors
   KOKKOS_FUNCTION
   half_t(const half_t& rhs) : val(rhs.val){};

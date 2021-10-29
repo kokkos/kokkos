@@ -13,7 +13,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
   endif()
   string(TOLOWER ${Tag} dir)
   # Add test for that backend if it is enabled
-  if(Kokkos_ENABLE_${DEVICE})
+  if(KOKKOS_ENABLE_${DEVICE})
     set(UnitTestSources UnitTestMain.cpp)
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
@@ -43,7 +43,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       list(APPEND UnitTestSources ${file})
     endforeach()
     #fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj
-    if(Kokkos_ENABLE_CUDA AND WIN32)
+    if(KOKKOS_ENABLE_CUDA AND WIN32)
      LIST(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_DynViewAPI_generic.cpp)
     endif()
 

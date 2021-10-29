@@ -206,16 +206,12 @@ namespace Experimental {
 // isinf isnan and isinfinite don't work on windows with cuda with std::
 #if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                              \
-  KOKKOS_INLINE_FUNCTION bool FUNC(float x) {                               \
-    return ::FUNC(x);                                                         \
-  }                                                                         \
-  KOKKOS_INLINE_FUNCTION bool FUNC(double x) {                              \
-    return ::FUNC(x);                                                         \
-  }                                                                         \
+  KOKKOS_INLINE_FUNCTION bool FUNC(float x) { return ::FUNC(x); }           \                                                                         \
+  KOKKOS_INLINE_FUNCTION bool FUNC(double x) { return ::FUNC(x); }          \                                                                         \
   template <class T>                                                        \
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, bool> \
   FUNC(T x) {                                                               \
-    return ::FUNC(static_cast<double>(x));                                    \
+    return ::FUNC(static_cast<double>(x));                                  \
   }
 #else
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                              \
