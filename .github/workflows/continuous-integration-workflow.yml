@@ -40,29 +40,29 @@ jobs:
           path: ~/.ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${github.ref}-${{ github.sha }}
           restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{github.ref}}
-      - name: Get trial license
-        if: ${{ matrix.cxx == 'icpc' }}
-        run: |
-          mkdir ~/Licenses
-          curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
-      - name: build-and-test
+      - name: CMake
         run: |
-          ccache -z
-          cmake \
+          cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }} \
-            -DBUILD_JOBS=2 -DBINARY_DIR=builddir -DSITE=GitHub-Linux \
-            -P cmake/KokkosCI.cmake
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
+      - name: Build
+        run: |
+          ccache -z
+          cmake --build builddir --parallel 2
           ccache -s
+      - name: Tests
+        working-directory: builddir
+        run: ctest --output-on-failure
       - name: Test DESTDIR Install
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install

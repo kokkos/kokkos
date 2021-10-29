@@ -21,15 +21,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: build-and-test
+      - name: configure
         run:
-          cmake
+          cmake -B build .
             -DKokkos_ENABLE_${{ matrix.backend }}=On
             -DCMAKE_CXX_FLAGS="-Werror"
             -DCMAKE_CXX_STANDARD=14
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF
             -DKokkos_ENABLE_TESTS=On
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
-            -DBUILD_NAME=macOS-${{ matrix.backend }}
-            -DTARGET=install -DBUILD_JOBS=2 -DSITE=GitHub-OSX
-            -P cmake/KokkosCI.cmake
+      - name: build
+        run:
+          cmake --build build --parallel 2
+      - name: test
+        working-directory: build
+        run: ctest --output-on-failure

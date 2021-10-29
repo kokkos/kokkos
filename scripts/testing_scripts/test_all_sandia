@@ -108,6 +108,10 @@ if [[ "$HOSTNAME" == cn* ]]; then # Warning: very generic name
   MACHINE=mayer
 fi
 
+if [[ "$HOSTNAME" == caraway* ]]; then
+  MACHINE=caraway
+fi
+
 if [[ "$HOSTNAME" == kokkos-dev\.sandia\.gov* ]]; then
   MACHINE=kokkos-dev
 fi
@@ -302,6 +306,7 @@ if [ "$MACHINE" = "sems" ]; then
                "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/9.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/10.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/18.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/19.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -430,8 +435,8 @@ elif [ "$MACHINE" = "weaver" ]; then
 
   BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
   IBM_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
-  CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.1"
+  CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,ibm/xl/16.1.1,gcc/7.2.0"
+  CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,ibm/xl/16.1.1,gcc/7.4.0"
 
   # Don't do pthread with Power
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -492,6 +497,23 @@ elif [ "$MACHINE" = "mayer" ]; then
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMV8_THUNDERX2"
+  fi
+
+elif [ "$MACHINE" = "caraway" ]; then
+  SKIP_HWLOC=True
+
+  BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+
+  HIPCLANG_BUILD_LIST="Hip_Serial,Hip_OpenMP"
+  HIPCLANG_WARNING_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG"
+
+  # Format: (compiler module-list build-list exe-name warning-flag)
+  COMPILERS=("rocm/4.2.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
+             "rocm/4.3.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
+  )
+
+  if [ -z "$ARCH_FLAG" ]; then
+    ARCH_FLAG="--arch=VEGA906"
   fi
 
 elif [ "$MACHINE" = "blake" ]; then
@@ -597,8 +619,9 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
 
   BASE_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
   GCC91_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>"
-  NVCC9_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
+  NVCC9_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
   NVCC_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
+  NVCC_SEMSMODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
   NVCC11_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/9.2.0"
 
   CLANG8_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
@@ -620,13 +643,16 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("cuda/10.0 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/10.1 $NVCC_SEMSMODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/11.0 $NVCC11_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/11.1 $NVCC_SEMSMODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/11.2 $NVCC11_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/9.2 $NVCC9_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/8.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/9.1 $GCC91_MODULE_LIST "$GCC_BUILD_LIST" g++ $GCC_WARNING_FLAGS"

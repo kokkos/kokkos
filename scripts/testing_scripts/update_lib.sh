@@ -20,7 +20,7 @@ check_sems_clang() {
   CLANGVER=$(clang --version | grep "clang version" | cut -d " " -f 3)
   if [[ "${CLANGVER}" = 9.* ]] || [[ "${CLANGVER}" = 10.* ]]; then
     # Newer gcc needed for c++ standard beyond c++14
-    module swap sems-gcc/5.3.0 sems-gcc/6.4.0
+    module swap sems-gcc/5.3.0 sems-gcc/8.3.0
     module list
   fi
 }
