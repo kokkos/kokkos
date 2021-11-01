@@ -88,10 +88,10 @@ struct InitArguments {
   int ndevices;
   int skip_device;
   bool disable_warnings;
-  bool tune_internals;
-  bool tool_help        = false;
-  std::string tool_lib  = {};
-  std::string tool_args = {};
+  bool tune_internals;            // deprecated
+  bool tool_help        = false;  // deprecated
+  std::string tool_lib  = {};     // deprecated
+  std::string tool_args = {};     // deprecated
 
   InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
                 bool ti = false)
@@ -102,6 +102,22 @@ struct InitArguments {
         skip_device{9999},
         disable_warnings{dw},
         tune_internals{ti} {}
+  Tools::InitArguments get_tools_init_arguments() const {
+    Tools::InitArguments init_tools;
+    init_tools.tune_internals =
+        tune_internals ? Tools::InitArguments::PossiblyUnsetOption::on
+                       : Tools::InitArguments::PossiblyUnsetOption::unset;
+    init_tools.help = tool_help
+                          ? Tools::InitArguments::PossiblyUnsetOption::on
+                          : Tools::InitArguments::PossiblyUnsetOption::unset;
+    init_tools.lib = tool_lib.empty()
+                         ? Kokkos::Tools::InitArguments::unset_string_option
+                         : tool_lib;
+    init_tools.args = tool_args.empty()
+                          ? Kokkos::Tools::InitArguments::unset_string_option
+                          : tool_args;
+    return init_tools;
+  }
 };
 
 namespace Impl {

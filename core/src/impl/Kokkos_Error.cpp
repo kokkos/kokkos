@@ -65,13 +65,6 @@ void host_abort(const char *const message) {
   ::abort();
 }
 
-void throw_runtime_exception(const std::string &msg) {
-  std::ostringstream o;
-  o << msg;
-  traceback_callstack(o);
-  throw std::runtime_error(o.str());
-}
-
 std::string human_memory_size(size_t arg_bytes) {
   double bytes   = arg_bytes;
   const double K = 1024;
@@ -159,13 +152,6 @@ std::string Experimental::RawMemoryAllocationFailure::get_error_message()
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
-
-void traceback_callstack(std::ostream &msg) {
-  msg << std::endl << "Traceback functionality not available" << std::endl;
-}
-
-}  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_CUDA
 namespace Experimental {
