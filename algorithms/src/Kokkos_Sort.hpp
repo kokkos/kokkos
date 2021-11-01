@@ -238,34 +238,41 @@ class BinSort {
   //----------------------------------------
   // Create the permutation vector, the bin_offset array and the bin_count
   // array. Can be called again if keys changed
-  void create_permute_vector() {
+  template <class ExecutionSpace>
+  void create_permute_vector(const ExecutionSpace& exec) {
     const size_t len = range_end - range_begin;
     Kokkos::parallel_for(
         "Kokkos::Sort::BinCount",
-        Kokkos::RangePolicy<execution_space, bin_count_tag>(0, len), *this);
+        Kokkos::RangePolicy<ExecutionSpace, bin_count_tag>(exec, 0, len),
+        *this);
     Kokkos::parallel_scan("Kokkos::Sort::BinOffset",
-                          Kokkos::RangePolicy<execution_space, bin_offset_tag>(
-                              0, bin_op.max_bins()),
+                          Kokkos::RangePolicy<ExecutionSpace, bin_offset_tag>(
+                              exec, 0, bin_op.max_bins()),
                           *this);
 
     Kokkos::deep_copy(bin_count_atomic, 0);
     Kokkos::parallel_for(
         "Kokkos::Sort::BinBinning",
-        Kokkos::RangePolicy<execution_space, bin_binning_tag>(0, len), *this);
+        Kokkos::RangePolicy<ExecutionSpace, bin_binning_tag>(exec, 0, len),
+        *this);
 
     if (sort_within_bins)
       Kokkos::parallel_for(
           "Kokkos::Sort::BinSort",
-          Kokkos::RangePolicy<execution_space, bin_sort_bins_tag>(
-              0, bin_op.max_bins()),
+          Kokkos::RangePolicy<ExecutionSpace, bin_sort_bins_tag>(
+              exec, 0, bin_op.max_bins()),
           *this);
+  }
+
+  void create_permute_vector() {
+    create_permute_vector(Kokkos::DefaultExecutionSpace{});
   }
 
   // Sort a subset of a view with respect to the first dimension using the
   // permutation array
-  template <class ValuesViewType>
-  void sort(ValuesViewType const& values, int values_range_begin,
-            int values_range_end) const {
+  template <class ExecutionSpace, class ValuesViewType>
+  void sort(const ExecutionSpace& exec, ValuesViewType const& values,
+            int values_range_begin, int values_range_end) const {
     using scratch_view_type =
         Kokkos::View<typename ValuesViewType::data_type,
                      typename ValuesViewType::array_layout,
@@ -308,7 +315,7 @@ class BinSort {
                   values_range_begin - range_begin);
 
       parallel_for("Kokkos::Sort::CopyPermute",
-                   Kokkos::RangePolicy<execution_space>(0, len), functor);
+                   Kokkos::RangePolicy<ExecutionSpace>(exec, 0, len), functor);
     }
 
     {
@@ -316,10 +323,24 @@ class BinSort {
           values, range_begin, sorted_values);
 
       parallel_for("Kokkos::Sort::Copy",
-                   Kokkos::RangePolicy<execution_space>(0, len), functor);
+                   Kokkos::RangePolicy<ExecutionSpace>(exec, 0, len), functor);
     }
 
-    execution_space().fence("Kokkos::Sort: fence after sorting");
+    exec.fence("Kokkos::Sort: fence after sorting");
+  }
+
+  // Sort a subset of a view with respect to the first dimension using the
+  // permutation array
+  template <class ValuesViewType>
+  void sort(ValuesViewType const& values, int values_range_begin,
+            int values_range_end) const {
+    sort(typename ValuesViewType::execution_space{}, values, values_range_begin,
+         values_range_end);
+  }
+
+  template <class ExecutionSpace, class ValuesViewType>
+  void sort(ExecutionSpace const& exec, ValuesViewType const& values) const {
+    this->sort(exec, values, 0, /*values.extent(0)*/ range_end - range_begin);
   }
 
   template <class ValuesViewType>
@@ -527,8 +548,10 @@ struct min_max_functor {
 
 }  // namespace Impl
 
-template <class ViewType>
-void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
+template <class ExecutionSpace, class ViewType>
+std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
+    const ExecutionSpace& exec, ViewType const& view,
+    bool const always_use_kokkos_sort = false) {
   if (!always_use_kokkos_sort) {
     if (Impl::try_std_sort(view)) return;
   }
@@ -538,7 +561,7 @@ void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
   Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
   parallel_reduce("Kokkos::Sort::FindExtent",
                   Kokkos::RangePolicy<typename ViewType::execution_space>(
-                      0, view.extent(0)),
+                      exec, 0, view.extent(0)),
                   Impl::min_max_functor<ViewType>(view), reducer);
   if (result.min_val == result.max_val) return;
   // For integral types the number of bins may be larger than the range
@@ -558,19 +581,26 @@ void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
 
   BinSort<ViewType, CompType> bin_sort(
       view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
-  bin_sort.create_permute_vector();
-  bin_sort.sort(view);
+  bin_sort.create_permute_vector(exec);
+  bin_sort.sort(exec, view);
 }
 
 template <class ViewType>
-void sort(ViewType view, size_t const begin, size_t const end) {
+void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
+  sort(typename ViewType::execution_space{}, view, always_use_kokkos_sort);
+}
+
+template <class ExecutionSpace, class ViewType>
+std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
+    const ExecutionSpace& exec, ViewType view, size_t const begin,
+    size_t const end) {
   using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space>;
   using CompType     = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
   Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
 
-  parallel_reduce("Kokkos::Sort::FindExtent", range_policy(begin, end),
+  parallel_reduce("Kokkos::Sort::FindExtent", range_policy(exec, begin, end),
                   Impl::min_max_functor<ViewType>(view), reducer);
 
   if (result.min_val == result.max_val) return;
@@ -579,8 +609,13 @@ void sort(ViewType view, size_t const begin, size_t const end) {
       view, begin, end,
       CompType((end - begin) / 2, result.min_val, result.max_val), true);
 
-  bin_sort.create_permute_vector();
-  bin_sort.sort(view, begin, end);
+  bin_sort.create_permute_vector(exec);
+  bin_sort.sort(exec, view, begin, end);
+}
+
+template <class ViewType>
+void sort(ViewType view, size_t const begin, size_t const end) {
+  sort(typename ViewType::execution_space{}, view, begin, end);
 }
 
 }  // namespace Kokkos
