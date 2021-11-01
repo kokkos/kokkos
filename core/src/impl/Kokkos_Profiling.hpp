@@ -230,7 +230,9 @@ void set_end_fence_callback(endFenceFunction callback);
 void set_dual_view_sync_callback(dualViewSyncFunction callback);
 void set_dual_view_modify_callback(dualViewModifyFunction callback);
 void set_declare_metadata_callback(declareMetadataFunction callback);
-
+void set_request_tool_settings_callback(requestToolSettingsFunction callback);
+void set_provide_tool_programming_interface_callback(
+    provideToolProgrammingInterfaceFunction callback);
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback);
 void set_declare_input_type_callback(inputTypeDeclarationFunction callback);
 void set_request_output_values_callback(requestValueFunction callback);
