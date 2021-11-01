@@ -59,6 +59,25 @@ namespace Kokkos {
 // forward declaration
 bool tune_internals() noexcept;
 
+#ifdef KOKKOS_ENABLE_CUDA
+namespace Impl {
+class CudaInternal;
+template <class FunctorType, class LaunchBounds>
+int cuda_get_max_block_size(const CudaInternal*, const cudaFuncAttributes& attr,
+                            const FunctorType& functor, const size_t,
+                            const size_t, const size_t);
+template <class FunctorType, class LaunchBounds>
+int cuda_get_opt_block_size(const CudaInternal*, const cudaFuncAttributes& attr,
+                            const FunctorType& functor, const size_t,
+                            const size_t, const size_t);
+}  // namespace Impl
+namespace Tools {
+namespace Impl {
+template <class Tag, class LaunchBounds>
+cudaFuncAttributes get_cuda_func_attributes();
+}  // namespace Impl
+}  // namespace Tools
+#endif
 namespace Tools {
 
 struct InitArguments {
@@ -172,6 +191,9 @@ void parseArgs(const std::string&);
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
 namespace Experimental {
+size_t declare_input_type(const std::string& typeName, Kokkos::Tools::Experimental::VariableInfo info);
+
+void set_input_values(size_t contextId, size_t count, Kokkos::Tools::Experimental::VariableValue* values);
 
 namespace Impl {
 struct DirectFenceIDHandle {
