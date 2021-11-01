@@ -896,8 +896,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                                      shmem_size_L0, shmem_size_L1);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
-    ValueType result = ValueType();
-
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
     const auto nteams =
@@ -905,6 +903,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     // Case where the number of reduction items is 1.
     if constexpr (NumReductions == 1) {
+      ValueType result = ValueType();
+
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
@@ -958,7 +958,12 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
             Kokkos::abort("`num_teams` clause was not respected.\n");
         }
       }
+
+      // Copy results back to device if `parallel_reduce` is on a device view.
+      ParReduceCommon::memcpy_result(result_ptr, &result, sizeof(ValueType),
+                                     ptr_on_device);
     } else {
+      ValueType result[NumReductions] = {};
       // Case where the reduction is on an array.
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
@@ -983,11 +988,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         } else
           Kokkos::abort("`num_teams` clause was not respected.\n");
       }
-    }
 
-    // Copy results back to device if `parallel_reduce` is on a device view.
-    ParReduceCommon::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                   ptr_on_device);
+      // Copy results back to device if `parallel_reduce` is on a device view.
+      ParReduceCommon::memcpy_result(
+          result_ptr, result, NumReductions * sizeof(ValueType), ptr_on_device);
+    }
   }
 
   // FIXME_OPENMPTARGET : This routine is a copy from `parallel_reduce` over
