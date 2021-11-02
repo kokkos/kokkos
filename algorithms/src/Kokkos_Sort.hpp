@@ -250,7 +250,7 @@ class BinSort {
                               exec, 0, bin_op.max_bins()),
                           *this);
 
-    Kokkos::deep_copy(bin_count_atomic, 0);
+    Kokkos::deep_copy(exec, bin_count_atomic, 0);
     Kokkos::parallel_for(
         "Kokkos::Sort::BinBinning",
         Kokkos::RangePolicy<ExecutionSpace, bin_binning_tag>(exec, 0, len),
