@@ -659,7 +659,7 @@ struct DirectlyTunableType<double> {
     return in.value.double_value;
   }
   template <class Choice>
-  static std::vector<Choice>& pick_vector(std::vector<int64_t>& indices,
+  static std::vector<Choice>& pick_vector(std::vector<int64_t>&,
                                           std::vector<Choice>& choices) {
     return choices;
   }
