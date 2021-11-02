@@ -202,7 +202,7 @@ struct SimpleTeamSizeCalculator {
             policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
             0);
     return block_size;
-#elif KOKKOS_ENABLE_HIP
+#elif defined(KOKKOS_ENABLE_HIP)
     (void)policy;
     (void)functor;
     return 1;
@@ -227,7 +227,7 @@ struct SimpleTeamSizeCalculator {
             policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
             0);
     return block_size;
-#elif KOKKOS_ENABLE_HIP
+#elif defined(KOKKOS_ENABLE_HIP)
     (void)policy;
     (void)functor;
     return 1;
@@ -288,7 +288,7 @@ struct ComplexReducerSizeCalculator {
             policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
             0);
     return block_size;
-#elif KOKKOS_ENABLE_HIP
+#elif defined(KOKKOS_ENABLE_HIP)
     (void)policy;
     (void)functor;
     return 1;  // TODO better
@@ -314,7 +314,7 @@ struct ComplexReducerSizeCalculator {
             policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
             0);
     return block_size;
-#elif KOKKOS_ENABLE_HIP
+#elif defined(KOKKOS_ENABLE_HIP)
     (void)policy;
     (void)functor;
     return 1;  // TODO better
