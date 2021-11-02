@@ -194,7 +194,8 @@ struct SimpleTeamSizeCalculator {
     using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
     cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda>,
+        typename DriverFor<Tag>::template type<Functor, Policy<Traits...>,
+                                               Kokkos::Cuda>,
         typename Policy<Traits...>::launch_bounds>();
     const int block_size =
         Kokkos::Impl::cuda_get_max_block_size<Functor,
@@ -219,7 +220,8 @@ struct SimpleTeamSizeCalculator {
     using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
     cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda>,
+        typename DriverFor<Tag>::template type<Functor, Policy<Traits...>,
+                                               Kokkos::Cuda>,
         typename Policy<Traits...>::launch_bounds>();
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<Functor,
@@ -279,8 +281,8 @@ struct ComplexReducerSizeCalculator {
     using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
     cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda,
-                                      ReducerType>,
+        typename DriverFor<Tag>::template type<Functor, Policy<Traits...>,
+                                               Kokkos::Cuda, ReducerType>,
         typename Policy<Traits...>::launch_bounds>();
     const int block_size =
         Kokkos::Impl::cuda_get_max_block_size<Functor,
@@ -305,8 +307,8 @@ struct ComplexReducerSizeCalculator {
     using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
     cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda,
-                                      ReducerType>,
+        typename DriverFor<Tag>::template type<Functor, Policy<Traits...>,
+                                               Kokkos::Cuda, ReducerType>,
         typename Policy<Traits...>::launch_bounds>();
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<Functor,
