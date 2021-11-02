@@ -264,9 +264,7 @@ class BinSort {
           *this);
   }
 
-  void create_permute_vector() {
-    create_permute_vector(Kokkos::DefaultExecutionSpace{});
-  }
+  void create_permute_vector() { create_permute_vector(execution_space{}); }
 
   // Sort a subset of a view with respect to the first dimension using the
   // permutation array
