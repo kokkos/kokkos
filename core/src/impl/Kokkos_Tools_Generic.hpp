@@ -204,6 +204,8 @@ struct SimpleTeamSizeCalculator {
     return block_size;
 #elif KOKKOS_ENABLE_HIP
 #endif
+    (void)policy;
+    (void)functor;
     return 1;
   }
   template <typename Functor, typename Tag, template <class...> class Policy,
@@ -224,6 +226,8 @@ struct SimpleTeamSizeCalculator {
     return block_size;
 #elif KOKKOS_ENABLE_HIP
 #endif
+    (void)policy;
+    (void)functor;
     return 1;
   }
 };
@@ -280,6 +284,8 @@ struct ComplexReducerSizeCalculator {
     return block_size;
 #elif KOKKOS_ENABLE_HIP
 #endif
+    (void)policy;
+    (void)functor;
     return 1;
   }
   template <typename Functor, typename Tag, template <class...> class Policy,
@@ -301,6 +307,8 @@ struct ComplexReducerSizeCalculator {
     return block_size;
 #elif KOKKOS_ENABLE_HIP
 #endif
+    (void)policy;
+    (void)functor;
     return 1;
   }
 };
