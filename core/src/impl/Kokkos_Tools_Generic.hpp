@@ -45,20 +45,63 @@
 #ifndef KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
+#ifdef KOKKOS_ENABLE_CUDA
+#include <Kokkos_Cuda.hpp>
+/** Note DZP
+ * Why am I including this decl file? Every other way I tried
+ * to include files from the CUDA subdirectory, I got
+ * "Incomplete type not allowed" style errors,
+ * I think CUDA is weird to include. Feel free
+ * to remove if you have a better mechanism
+ */
+#include <decl/Kokkos_Declare_CUDA.hpp>
+#endif
+
 #include <impl/Kokkos_Profiling.hpp>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
-
 namespace Kokkos {
 
+class Cuda; // forward declaration
+
+namespace Experimental {
+class HIP; // forward declaration
+class SYCL;
+} // namespace Experimental
+
 namespace Tools {
+
+
+
+
 
 namespace Experimental {
 
 namespace Impl {
+
+template<class, class = void>
+struct IsTunableRangePolicy : public std::false_type {};
+
+template<class... Properties>
+class IsTunableRangePolicy<
+  Kokkos::RangePolicy<Properties...>, 
+  typename std::enable_if<
+    std::is_same<typename Kokkos::RangePolicy<Properties...>::execution_space, Kokkos::Cuda>::value
+    , void 
+	  >::type
+> : public std::true_type{};
+
+template<class... Properties>
+class IsTunableRangePolicy<
+  Kokkos::RangePolicy<Properties...>, 
+  typename std::enable_if<
+    std::is_same<typename Kokkos::RangePolicy<Properties...>::execution_space, Kokkos::Experimental::HIP>::value
+    , void 
+	  >::type
+> : public std::false_type{}; // TODO: change to true when HIP supported
 
 static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
@@ -69,7 +112,13 @@ using MDRangeTuningMap =
 
 template <int Rank>
 static MDRangeTuningMap<Rank> mdrange_tuners;
+using BlockSizeTuner = Kokkos::Tools::Experimental::BlockSizeTuner;
 
+template <class>
+	using BlockSizeTunerMap = std::map<std::string, BlockSizeTuner>;
+
+template <class Space>
+	static BlockSizeTunerMap<Space> block_size_tuners;
 // For any policies without a tuning implementation, with a reducer
 template <class ReducerType, class ExecPolicy, class Functor, typename TagType>
 void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
@@ -100,7 +149,23 @@ void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
  */
 
 namespace Impl {
-
+template <class Tag>
+	struct DriverFor;
+template <>
+	struct DriverFor<Kokkos::ParallelForTag> {
+		  template <class A, class B, class C>
+			    using type = Kokkos::Impl::ParallelFor<A, B, C>;
+	};
+template <>
+	struct DriverFor<Kokkos::ParallelScanTag> {
+		  template <class A, class B, class C>
+			    using type = Kokkos::Impl::ParallelScan<A, B, C>;
+	};
+template <>
+	struct DriverFor<Kokkos::ParallelReduceTag> {
+		  template <class A, class B, class C, class D = Kokkos::InvalidType>
+			    using type = Kokkos::Impl::ParallelReduce<A, B, D, C>;
+	};
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
@@ -132,6 +197,47 @@ struct SimpleTeamSizeCalculator {
                                      exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
+  template <typename Functor, typename Tag, template<class...> class Policy, class... Traits>
+  int64_t range_max_block_size(const Policy<Traits...>& policy,
+                                        const Functor& functor,
+                                        const Tag&) const {
+    #ifdef KOKKOS_ENABLE_CUDA
+    using traits            = Kokkos::Impl::PolicyTraits<Traits...>;
+
+    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+	            typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda>,
+			             typename Policy<Traits...>::launch_bounds>();
+    const int block_size =
+        Kokkos::Impl::cuda_get_max_block_size<Functor,
+                                              typename traits::launch_bounds>(
+            policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
+            0);
+    return block_size;
+    #elif KOKKOS_ENABLE_HIP
+    #endif 
+    return 1;
+  }
+  template <typename Functor, typename Tag, template<class...> class Policy, class... Traits>
+  int64_t range_opt_block_size(const Policy<Traits...>& policy,
+                                        const Functor& functor,
+                                        const Tag&) const {
+    #ifdef KOKKOS_ENABLE_CUDA
+    using traits            = Kokkos::Impl::PolicyTraits<Traits...>;
+
+    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+	            typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda>,
+			             typename Policy<Traits...>::launch_bounds>();
+    const int block_size =
+        Kokkos::Impl::cuda_get_opt_block_size<Functor,
+                                              typename traits::launch_bounds>(
+            policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
+            0);
+    return block_size;
+    #elif KOKKOS_ENABLE_HIP
+    #endif 
+    return 1;
+  }
+
 };
 
 // when we have a complex reducer, we need to pass an
@@ -252,6 +358,54 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       });
 }
 
+template <class ReducerType, class Functor, class TagType, class ... Properties>
+void tune_range_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::true_type) {
+  generic_tune_policy<Experimental::BlockSizeTuner, ReducerType>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Properties...>&
+             ) { 
+        return true;
+      });
+}
+template <class Functor, class TagType, class ... Properties>
+void tune_range_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::true_type) {
+  generic_tune_policy<Experimental::BlockSizeTuner>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Properties...>&
+             ) { 
+        return true;
+      });
+}
+template <class ReducerType, class Functor, class TagType, class ... Properties>
+void tune_range_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::false_type) { }
+template <class Functor, class TagType, class ... Properties>
+void tune_range_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::false_type) { }
+// tune a RangePolicy, with reducer
+template <class ReducerType, class Functor, class TagType, class ... Properties>
+void tune_policy(const size_t tuning_context, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag) {
+     using is_tunable = typename IsTunableRangePolicy<Kokkos::RangePolicy<Properties...>>::type;
+     tune_range_policy<ReducerType>(tuning_context, label_in, policy, functor, tag, is_tunable{});
+}
+// RangePolicy, without reducer
+template <class Functor, class TagType, class ... Properties>
+void tune_policy(const size_t tuning_context, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag 
+		 
+		 ) {
+     using is_tunable = typename IsTunableRangePolicy<Kokkos::RangePolicy<Properties...>>::type;
+     tune_range_policy(tuning_context, label_in, policy, functor, tag, is_tunable{});
+}
 // tune a MDRangePolicy, without reducer
 template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
@@ -341,7 +495,54 @@ void report_policy_results(const size_t /**tuning_context*/,
                 candidate_policy.impl_auto_vector_length());
       });
 }
-
+template <class ReducerType, class Functor, class TagType, class ... Properties>
+void report_range_results(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::true_type) {
+  generic_report_results<Experimental::BlockSizeTuner, ReducerType>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Properties...>&
+             ) { 
+        return true;
+      });
+}
+template <class Functor, class TagType, class ... Properties>
+void report_range_results(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::true_type) {
+  generic_report_results<Experimental::BlockSizeTuner>(
+      label_in, block_size_tuners<Kokkos::Cuda>, policy, functor, tag,
+      [](const Kokkos::RangePolicy<Properties...>&
+             ) { 
+        return true;
+      });
+}
+template <class ReducerType, class Functor, class TagType, class ... Properties>
+void report_range_results(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::false_type) { }
+template <class Functor, class TagType, class ... Properties>
+void report_range_results(const size_t /**tuning_context*/, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag, std::false_type) { }
+// tune a RangePolicy, with reducer
+template <class ReducerType, class Functor, class TagType, class ... Properties>
+void report_policy_results(const size_t tuning_context, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag) {
+     using is_tunable = typename IsTunableRangePolicy<Kokkos::RangePolicy<Properties...>>::type;
+     report_range_results<ReducerType>(tuning_context, label_in, policy, functor, tag, is_tunable{});
+}
+// RangePolicy, without reducer
+template <class Functor, class TagType, class ... Properties>
+void report_policy_results(const size_t tuning_context, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag 
+		 
+		 ) {
+     using is_tunable = typename IsTunableRangePolicy<Kokkos::RangePolicy<Properties...>>::type;
+     report_range_results(tuning_context, label_in, policy, functor, tag, is_tunable{});
+}
 // report results for an MDRangePolicy
 template <class Functor, class TagType, class... Properties>
 void report_policy_results(const size_t /**tuning_context*/,

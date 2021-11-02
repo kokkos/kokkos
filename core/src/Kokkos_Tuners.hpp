@@ -693,6 +693,10 @@ struct CategoricalTuner {
   size_t context;
   size_t tuning_variable_id;
   Choice default_value;
+  /** Note DZP: needed, but unfortunate, due to BlockSizeTuner. Code refactoring to avoid need for this
+   * would be good
+   */
+  CategoricalTuner() = default;
   CategoricalTuner(std::string name, choice_list m_choices, const Choice& def)
       : choices(m_choices) {
     std::vector<int64_t> indices;
@@ -753,6 +757,10 @@ struct BlockSizeTuner {
   }
 
  public:
+  /** Note DZP: needed, but unfortunate. Code refactoring to avoid need for this
+   * would be good
+   */
+  BlockSizeTuner() = default;
   template <class Policy, class Functor, class Tag, class Calculator>
   BlockSizeTuner(const std::string& name, const Policy& policy,
                  const Functor& functor, Tag tag, const Calculator& calc)
