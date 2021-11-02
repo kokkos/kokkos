@@ -627,7 +627,7 @@ struct DirectlyTunableType {
       Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
   template <class Choice>
   static std::vector<int64_t>& pick_vector(std::vector<int64_t>& indices,
-                                           std::vector<Choice>& choices) {
+                                           std::vector<Choice>&) {
     return indices;
   }
 };
@@ -643,7 +643,7 @@ struct DirectlyTunableType<int64_t> {
     return in.value.int_value;
   }
   template <class Choice>
-  static std::vector<Choice>& pick_vector(std::vector<int64_t>& indices,
+  static std::vector<Choice>& pick_vector(std::vector<int64_t>&,
                                           std::vector<Choice>& choices) {
     return choices;
   }
@@ -668,7 +668,7 @@ struct DirectlyTunableType<double> {
 template <typename Choice>
 const Choice& tuning_select(std::false_type, size_t context,
                             size_t tuning_variable_id,
-                            const Choice& default_value,
+                            const Choice&,
                             const std::vector<Choice>& choices) {
   VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));
   request_output_values(context, 1, &value);
@@ -678,7 +678,7 @@ template <typename Choice>
 const Choice tuning_select(std::true_type, size_t context,
                            size_t tuning_variable_id,
                            const Choice& default_value,
-                           const std::vector<Choice>& choices) {
+                           const std::vector<Choice>&) {
   VariableValue value = make_variable_value(tuning_variable_id, default_value);
   request_output_values(context, 1, &value);
   return Impl::DirectlyTunableType<Choice>::translate(value);
