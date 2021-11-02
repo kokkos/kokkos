@@ -557,27 +557,27 @@ IF (KOKKOS_ENABLE_SYCL)
     ENDIF()
   ELSEIF(KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen9-"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9-"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen9"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen11"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device gen12lp"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_DG1)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device dg1"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device xehp"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device xehp"
     )
   ENDIF()
 ENDIF()
