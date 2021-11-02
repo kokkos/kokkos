@@ -283,6 +283,7 @@ struct ComplexReducerSizeCalculator {
             0);
     return block_size;
 #elif KOKKOS_ENABLE_HIP
+    return 1;  // TODO better
 #endif
     (void)policy;
     (void)functor;
@@ -306,6 +307,9 @@ struct ComplexReducerSizeCalculator {
             0);
     return block_size;
 #elif KOKKOS_ENABLE_HIP
+    (void)policy;
+    (void)functor;
+    return 1;  // TODO better
 #endif
     (void)policy;
     (void)functor;
