@@ -44,10 +44,8 @@
 
 #ifndef KOKKOS_CUDA_HPP
 #define KOKKOS_CUDA_HPP
-
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
-
 #include <Kokkos_Core_fwd.hpp>
 
 #include <iosfwd>
@@ -57,7 +55,7 @@
 #include <Kokkos_CudaSpace.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>  // CUDA_SAFE_CALL
 
-#include <Kokkos_Parallel.hpp>
+//#include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>

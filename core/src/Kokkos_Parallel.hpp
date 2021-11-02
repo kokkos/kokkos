@@ -462,38 +462,6 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType,
-          bool HasTeamShmemSize =
-              has_member_team_shmem_size<FunctorType>::value,
-          bool HasShmemSize = has_member_shmem_size<FunctorType>::value>
-struct FunctorTeamShmemSize {
-  KOKKOS_INLINE_FUNCTION static size_t value(const FunctorType&, int) {
-    return 0;
-  }
-};
-
-template <class FunctorType>
-struct FunctorTeamShmemSize<FunctorType, true, false> {
-  static inline size_t value(const FunctorType& f, int team_size) {
-    return f.team_shmem_size(team_size);
-  }
-};
-
-template <class FunctorType>
-struct FunctorTeamShmemSize<FunctorType, false, true> {
-  static inline size_t value(const FunctorType& f, int team_size) {
-    return f.shmem_size(team_size);
-  }
-};
-template <class FunctorType>
-struct FunctorTeamShmemSize<FunctorType, true, true> {
-  static inline size_t value(const FunctorType& /*f*/, int /*team_size*/) {
-    Kokkos::abort(
-        "Functor with both team_shmem_size and shmem_size defined is "
-        "not allowed");
-    return 0;
-  }
-};
 
 }  // namespace Impl
 }  // namespace Kokkos

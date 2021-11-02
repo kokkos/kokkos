@@ -46,15 +46,9 @@
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
 #ifdef KOKKOS_ENABLE_CUDA
+
 #include <Kokkos_Cuda.hpp>
-/** Note DZP
- * Why am I including this decl file? Every other way I tried
- * to include files from the CUDA subdirectory, I got
- * "Incomplete type not allowed" style errors,
- * I think CUDA is weird to include. Feel free
- * to remove if you have a better mechanism
- */
-#include <decl/Kokkos_Declare_CUDA.hpp>
+#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #endif
 
 #include <impl/Kokkos_Profiling.hpp>
@@ -275,7 +269,8 @@ struct ComplexReducerSizeCalculator {
     using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
     cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda>,
+        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda,
+                                      ReducerType>,
         typename Policy<Traits...>::launch_bounds>();
     const int block_size =
         Kokkos::Impl::cuda_get_max_block_size<Functor,
@@ -295,7 +290,8 @@ struct ComplexReducerSizeCalculator {
     using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
     cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda>,
+        typename DriverFor<Tag>::type<Functor, Policy<Traits...>, Kokkos::Cuda,
+                                      ReducerType>,
         typename Policy<Traits...>::launch_bounds>();
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<Functor,

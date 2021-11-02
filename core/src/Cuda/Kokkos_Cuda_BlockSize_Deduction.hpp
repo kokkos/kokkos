@@ -47,7 +47,8 @@
 
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
-
+//#error BLSDDHPP
+#include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 namespace Kokkos {
