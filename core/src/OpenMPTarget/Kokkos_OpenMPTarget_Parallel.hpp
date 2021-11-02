@@ -205,10 +205,9 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     if (end <= begin) return;
 
-    ValueType result = ValueType();
-
     // Enter the loop if the reduction is on a scalar type.
     if constexpr (NumReductions == 1) {
+      ValueType result = ValueType();
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp target teams distribute parallel for \
@@ -233,7 +232,11 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
             f(TagType(), i, result);
           }
       }
+
+      ParReduceCommon::memcpy_result(result_ptr, &result, sizeof(ValueType),
+                                     ptr_on_device);
     } else {
+      ValueType result[NumReductions] = {};
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
         if constexpr (std::is_same<TagType, void>::value) {
@@ -242,10 +245,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
           f(TagType(), i, result);
         }
       }
-    }
 
-    ParReduceCommon::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                   ptr_on_device);
+      ParReduceCommon::memcpy_result(
+          result_ptr, result, NumReductions * sizeof(ValueType), ptr_on_device);
+    }
   }
 
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
