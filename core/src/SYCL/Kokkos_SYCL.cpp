@@ -268,9 +268,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << "\nVendor: " << device.get_info<device::vendor>()
             << "\nProfile: " << device.get_info<device::profile>()
             << "\nVersion: " << device.get_info<device::version>()
-            << "\nExtensions: "
-            << Container<std::vector<std::string>>(
-                   device.get_info<device::extensions>())
             << "\nPrintf Buffer Size: "
             << device.get_info<device::printf_buffer_size>()
             << "\nPreferred Interop User Sync: "
