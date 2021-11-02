@@ -667,8 +667,7 @@ struct DirectlyTunableType<double> {
 
 template <typename Choice>
 const Choice& tuning_select(std::false_type, size_t context,
-                            size_t tuning_variable_id,
-                            const Choice&,
+                            size_t tuning_variable_id, const Choice&,
                             const std::vector<Choice>& choices) {
   VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));
   request_output_values(context, 1, &value);

@@ -409,17 +409,13 @@ void tune_range_policy(const size_t /**tuning_context*/,
       [](const Kokkos::RangePolicy<Properties...>&) { return true; });
 }
 template <class ReducerType, class Functor, class TagType, class... Properties>
-void tune_range_policy(const size_t,
-                       const std::string&,
-                       Kokkos::RangePolicy<Properties...>&,
-                       const Functor&, const TagType&,
-                       std::false_type) {}
+void tune_range_policy(const size_t, const std::string&,
+                       Kokkos::RangePolicy<Properties...>&, const Functor&,
+                       const TagType&, std::false_type) {}
 template <class Functor, class TagType, class... Properties>
-void tune_range_policy(const size_t,
-                       const std::string&,
-                       Kokkos::RangePolicy<Properties...>&,
-                       const Functor&, const TagType&,
-                       std::false_type) {}
+void tune_range_policy(const size_t, const std::string&,
+                       Kokkos::RangePolicy<Properties...>&, const Functor&,
+                       const TagType&, std::false_type) {}
 // tune a RangePolicy, with reducer
 template <class ReducerType, class Functor, class TagType, class... Properties>
 void tune_policy(const size_t tuning_context, const std::string& label_in,
@@ -552,17 +548,13 @@ void report_range_results(const size_t /**tuning_context*/,
       [](const Kokkos::RangePolicy<Properties...>&) { return true; });
 }
 template <class ReducerType, class Functor, class TagType, class... Properties>
-void report_range_results(const size_t,
-                          const std::string&,
-                          Kokkos::RangePolicy<Properties...>&,
-                          const Functor&, const TagType&,
-                          std::false_type) {}
+void report_range_results(const size_t, const std::string&,
+                          Kokkos::RangePolicy<Properties...>&, const Functor&,
+                          const TagType&, std::false_type) {}
 template <class Functor, class TagType, class... Properties>
-void report_range_results(const size_t,
-                          const std::string&,
-                          Kokkos::RangePolicy<Properties...>&,
-                          const Functor&, const TagType&,
-                          std::false_type) {}
+void report_range_results(const size_t, const std::string&,
+                          Kokkos::RangePolicy<Properties...>&, const Functor&,
+                          const TagType&, std::false_type) {}
 // tune a RangePolicy, with reducer
 template <class ReducerType, class Functor, class TagType, class... Properties>
 void report_policy_results(const size_t tuning_context,

@@ -460,10 +460,7 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
-
-
-}  // namespace Impl
+namespace Impl {}  // namespace Impl
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
