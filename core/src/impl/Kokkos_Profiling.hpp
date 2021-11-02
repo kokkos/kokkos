@@ -191,9 +191,11 @@ void parseArgs(const std::string&);
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
 namespace Experimental {
-size_t declare_input_type(const std::string& typeName, Kokkos::Tools::Experimental::VariableInfo info);
+size_t declare_input_type(const std::string& typeName,
+                          Kokkos::Tools::Experimental::VariableInfo info);
 
-void set_input_values(size_t contextId, size_t count, Kokkos::Tools::Experimental::VariableValue* values);
+void set_input_values(size_t contextId, size_t count,
+                      Kokkos::Tools::Experimental::VariableValue* values);
 
 namespace Impl {
 struct DirectFenceIDHandle {

@@ -693,8 +693,8 @@ struct CategoricalTuner {
   size_t context;
   size_t tuning_variable_id;
   Choice default_value;
-  /** Note DZP: needed, but unfortunate, due to BlockSizeTuner. Code refactoring to avoid need for this
-   * would be good
+  /** Note DZP: needed, but unfortunate, due to BlockSizeTuner. Code refactoring
+   * to avoid need for this would be good
    */
   CategoricalTuner() = default;
   CategoricalTuner(std::string name, choice_list m_choices, const Choice& def)
