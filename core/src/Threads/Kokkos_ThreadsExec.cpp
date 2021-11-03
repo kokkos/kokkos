@@ -399,38 +399,6 @@ bool ThreadsExec::wake() {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::execute_serial(void (*func)(ThreadsExec &, const void *)) {
-  s_current_function     = func;
-  s_current_function_arg = &s_threads_process;
-
-  // Make sure function and arguments are written before activating threads.
-  memory_fence();
-
-  const unsigned begin = s_threads_process.m_pool_base ? 1 : 0;
-
-  for (unsigned i = s_thread_pool_size[0]; begin < i;) {
-    ThreadsExec &th = *s_threads_exec[--i];
-
-    th.m_pool_state = ThreadsExec::Active;
-
-    wait_yield(th.m_pool_state, ThreadsExec::Active);
-  }
-
-  if (s_threads_process.m_pool_base) {
-    s_threads_process.m_pool_state = ThreadsExec::Active;
-    (*func)(s_threads_process, nullptr);
-    s_threads_process.m_pool_state = ThreadsExec::Inactive;
-  }
-
-  s_current_function_arg = nullptr;
-  s_current_function     = nullptr;
-
-  // Make sure function and arguments are cleared before proceeding.
-  memory_fence();
-}
-
-//----------------------------------------------------------------------------
-
 void *ThreadsExec::root_reduce_scratch() {
   return s_threads_process.reduce_memory();
 }
@@ -493,7 +461,7 @@ void *ThreadsExec::resize_scratch(size_t reduce_size, size_t thread_size) {
     s_threads_process.m_scratch_reduce_end = reduce_size;
     s_threads_process.m_scratch_thread_end = reduce_size + thread_size;
 
-    execute_serial(&execute_resize_scratch);
+    execute_resize_scratch(s_threads_process, nullptr);
 
     s_threads_process.m_scratch = s_threads_exec[0]->m_scratch;
   }
