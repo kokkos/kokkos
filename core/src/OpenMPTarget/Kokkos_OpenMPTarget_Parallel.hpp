@@ -168,7 +168,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    if (end <= begin) return;
+    if (end < begin) return;
 
     ValueType result = ValueType();
 
@@ -203,7 +203,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    if (end <= begin) return;
+    if (end < begin) return;
 
     // Enter the loop if the reduction is on a scalar type.
     if constexpr (NumReductions == 1) {
