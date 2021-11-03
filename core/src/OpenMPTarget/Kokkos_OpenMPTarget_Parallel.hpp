@@ -168,8 +168,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    if (end < begin) return;
-
     ValueType result = ValueType();
 
 #pragma omp declare reduction(                                         \
@@ -178,6 +176,14 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
+
+    // Initialize and copy back the result even if it is a zero length
+    // reduction.
+    if (end <= begin) {
+      ParReduceCommon::memcpy_result(result_ptr, &result, sizeof(ValueType),
+                                     ptr_on_device);
+      return;
+    }
 #pragma omp target teams distribute parallel for map(to                    \
                                                      : f) reduction(custom \
                                                                     : result)
@@ -203,11 +209,17 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    if (end < begin) return;
-
     // Enter the loop if the reduction is on a scalar type.
     if constexpr (NumReductions == 1) {
       ValueType result = ValueType();
+
+      // Initialize and copy back the result even if it is a zero length
+      // reduction.
+      if (end <= begin) {
+        ParReduceCommon::memcpy_result(result_ptr, &result, sizeof(ValueType),
+                                       ptr_on_device);
+        return;
+      }
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp target teams distribute parallel for \
@@ -237,6 +249,15 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                      ptr_on_device);
     } else {
       ValueType result[NumReductions] = {};
+
+      // Initialize and copy back the result even if it is a zero length
+      // reduction.
+      if (end <= begin) {
+        ParReduceCommon::memcpy_result(result_ptr, result,
+                                       NumReductions * sizeof(ValueType),
+                                       ptr_on_device);
+        return;
+      }
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
         if constexpr (std::is_same<TagType, void>::value) {
