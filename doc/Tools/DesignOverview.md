@@ -22,7 +22,25 @@ The final goal is simplest, but extremely important. If an app developer sees a 
 
 ## Implementation
 
-The fundamental design in Kokkos Tools is a function-pointer based callback interface. This arises largely out of the low-overhead goal, 
+The fundamental design in Kokkos Tools is a function-pointer based callback interface. This arises largely out of the low-overhead goal. Consider the following implementation sketch:
+
+```c++
+begin_function_ptr begin;
+end_function_ptr end;
+void parallel_for(const std::string& label, boring_parallelism_stuff stuff) {
+  if(begin != nullptr){
+      fence();
+      (*begin)(label);
+  }
+  // do boring parallelism things
+  if(end != nullptr){
+      fence();
+      (*end)();
+  }
+}
+```
+
+The 
 
 ## A Tool's Perspective: What do Tools Get From Kokkos, What Comes from Other Sources?
 
