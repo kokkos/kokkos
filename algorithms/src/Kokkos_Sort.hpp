@@ -323,8 +323,6 @@ class BinSort {
       parallel_for("Kokkos::Sort::Copy",
                    Kokkos::RangePolicy<ExecutionSpace>(exec, 0, len), functor);
     }
-
-    exec.fence("Kokkos::Sort: fence after sorting");
   }
 
   // Sort a subset of a view with respect to the first dimension using the
@@ -332,8 +330,9 @@ class BinSort {
   template <class ValuesViewType>
   void sort(ValuesViewType const& values, int values_range_begin,
             int values_range_end) const {
-    sort(typename ValuesViewType::execution_space{}, values, values_range_begin,
-         values_range_end);
+    typename ValuesViewType::execution_space exec;
+    sort(exec, values, values_range_begin, values_range_end);
+    exec.fence("Kokkos::Sort: fence after sorting");
   }
 
   template <class ExecutionSpace, class ValuesViewType>
@@ -585,7 +584,9 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 
 template <class ViewType>
 void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
-  sort(typename ViewType::execution_space{}, view, always_use_kokkos_sort);
+  typename ViewType::execution_space exec;
+  sort(exec, view, always_use_kokkos_sort);
+  exec.fence("Kokkos::Sort: fence after sorting");
 }
 
 template <class ExecutionSpace, class ViewType>
@@ -613,7 +614,9 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 
 template <class ViewType>
 void sort(ViewType view, size_t const begin, size_t const end) {
-  sort(typename ViewType::execution_space{}, view, begin, end);
+  typename ViewType::execution_space exec;
+  sort(exec, view, begin, end);
+  exec.fence("Kokkos::Sort: fence after sorting");
 }
 
 }  // namespace Kokkos
