@@ -88,10 +88,10 @@ struct InitArguments {
   int ndevices;
   int skip_device;
   bool disable_warnings;
-  bool tune_internals;            
-  bool tool_help        = false;  
-  std::string tool_lib  = {};     
-  std::string tool_args = {};     
+  bool tune_internals;
+  bool tool_help        = false;
+  std::string tool_lib  = {};
+  std::string tool_args = {};
 
   InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
                 bool ti = false)
