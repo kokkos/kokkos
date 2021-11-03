@@ -206,8 +206,10 @@ class BinSort {
   //----------------------------------------
   // Constructor: takes the keys, the binning_operator and optionally whether to
   // sort within bins (default false)
-  BinSort(const_key_view_type keys_, int range_begin_, int range_end_,
-          BinSortOp bin_op_, bool sort_within_bins_ = false)
+  template <typename ExecutionSpace>
+  BinSort(const ExecutionSpace& exec, const_key_view_type keys_,
+          int range_begin_, int range_end_, BinSortOp bin_op_,
+          bool sort_within_bins_ = false)
       : keys(keys_),
         keys_rnd(keys_),
         bin_op(bin_op_),
@@ -222,18 +224,28 @@ class BinSort {
         "Kokkos::SortImpl::BinSortFunctor::bin_count", bin_op.max_bins());
     bin_count_const = bin_count_atomic;
     bin_offsets =
-        offset_type(view_alloc(WithoutInitializing,
+        offset_type(view_alloc(exec, WithoutInitializing,
                                "Kokkos::SortImpl::BinSortFunctor::bin_offsets"),
                     bin_op.max_bins());
     sort_order =
-        offset_type(view_alloc(WithoutInitializing,
+        offset_type(view_alloc(exec, WithoutInitializing,
                                "Kokkos::SortImpl::BinSortFunctor::sort_order"),
                     range_end - range_begin);
   }
 
+  BinSort(const_key_view_type keys_, int range_begin_, int range_end_,
+          BinSortOp bin_op_, bool sort_within_bins_ = false)
+      : BinSort(execution_space{}, keys_, range_begin_, range_end_, bin_op_,
+                sort_within_bins_) {}
+
+  template <typename ExecutionSpace>
+  BinSort(const ExecutionSpace& exec, const_key_view_type keys_,
+          BinSortOp bin_op_, bool sort_within_bins_ = false)
+      : BinSort(exec, keys_, 0, keys_.extent(0), bin_op_, sort_within_bins_) {}
+
   BinSort(const_key_view_type keys_, BinSortOp bin_op_,
           bool sort_within_bins_ = false)
-      : BinSort(keys_, 0, keys_.extent(0), bin_op_, sort_within_bins_) {}
+      : BinSort(execution_space{}, keys_, bin_op_, sort_within_bins_) {}
 
   //----------------------------------------
   // Create the permutation vector, the bin_offset array and the bin_count
@@ -284,7 +296,7 @@ class BinSort {
     }
 
     scratch_view_type sorted_values(
-        view_alloc(WithoutInitializing,
+        view_alloc(exec, WithoutInitializing,
                    "Kokkos::SortImpl::BinSortFunctor::sorted_values"),
         values.rank_dynamic > 0 ? len : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         values.rank_dynamic > 1 ? values.extent(1)
@@ -605,7 +617,7 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   if (result.min_val == result.max_val) return;
 
   BinSort<ViewType, CompType> bin_sort(
-      view, begin, end,
+      exec, view, begin, end,
       CompType((end - begin) / 2, result.min_val, result.max_val), true);
 
   bin_sort.create_permute_vector(exec);
