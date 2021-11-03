@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -25,49 +25,63 @@ namespace sycl_sync_and_atomics = ::sycl::ext::oneapi;
 namespace sycl_sync_and_atomics = ::sycl;
 #endif
 
-using sycl_memory_order = sycl_sync_and_atomics::memory_order;
-using sycl_memory_scope = sycl_sync_and_atomics::memory_scope;
+template <bool extended_namespace>
+using sycl_memory_order = std::conditional_t<extended_namespace,
+                                             sycl_sync_and_atomics::memory_order,
+                                             sycl::memory_order>;
+template <bool extended_namespace>
+using sycl_memory_scope = std::conditional_t<extended_namespace,
+                                             sycl_sync_and_atomics::memory_scope,
+                                             sycl::memory_scope>;
 
-template <class MemoryOrder>
+template <class MemoryOrder, bool extended_namespace = true>
 struct DesulToSYCLMemoryOrder;
-template <>
-struct DesulToSYCLMemoryOrder<MemoryOrderSeqCst> {
-  static constexpr sycl_memory_order value = sycl_memory_order::seq_cst;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryOrder<MemoryOrderSeqCst, extended_namespace> {
+  static constexpr sycl_memory_order<extended_namespace> value =
+      sycl_memory_order<extended_namespace>::seq_cst;
 };
-template <>
-struct DesulToSYCLMemoryOrder<MemoryOrderAcquire> {
-  static constexpr sycl_memory_order value = sycl_memory_order::acquire;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryOrder<MemoryOrderAcquire, extended_namespace> {
+  static constexpr sycl_memory_order<extended_namespace> value =
+      sycl_memory_order<extended_namespace>::acquire;
 };
-template <>
-struct DesulToSYCLMemoryOrder<MemoryOrderRelease> {
-  static constexpr sycl_memory_order value = sycl_memory_order::release;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryOrder<MemoryOrderRelease, extended_namespace> {
+  static constexpr sycl_memory_order<extended_namespace> value =
+      sycl_memory_order<extended_namespace>::release;
 };
-template <>
-struct DesulToSYCLMemoryOrder<MemoryOrderAcqRel> {
-  static constexpr sycl_memory_order value = sycl_memory_order::acq_rel;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryOrder<MemoryOrderAcqRel, extended_namespace> {
+  static constexpr sycl_memory_order<extended_namespace> value =
+      sycl_memory_order<extended_namespace>::acq_rel;
 };
-template <>
-struct DesulToSYCLMemoryOrder<MemoryOrderRelaxed> {
-  static constexpr sycl_memory_order value = sycl_memory_order::relaxed;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryOrder<MemoryOrderRelaxed, extended_namespace> {
+  static constexpr sycl_memory_order<extended_namespace> value =
+      sycl_memory_order<extended_namespace>::relaxed;
 };
 
-template <class MemoryScope>
+template <class MemoryScope, bool extended_namespace = true>
 struct DesulToSYCLMemoryScope;
-template <>
-struct DesulToSYCLMemoryScope<MemoryScopeCore> {
-  static constexpr sycl_memory_scope value = sycl_memory_scope::work_group;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryScope<MemoryScopeCore, extended_namespace> {
+  static constexpr sycl_memory_scope<extended_namespace> value =
+      sycl_memory_scope<extended_namespace>::work_group;
 };
-template <>
-struct DesulToSYCLMemoryScope<MemoryScopeDevice> {
-  static constexpr sycl_memory_scope value = sycl_memory_scope::device;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryScope<MemoryScopeDevice, extended_namespace> {
+  static constexpr sycl_memory_scope<extended_namespace> value =
+      sycl_memory_scope<extended_namespace>::device;
 };
-template <>
-struct DesulToSYCLMemoryScope<MemoryScopeSystem> {
-  static constexpr sycl_memory_scope value = sycl_memory_scope::system;
+template <bool extended_namespace>
+struct DesulToSYCLMemoryScope<MemoryScopeSystem, extended_namespace> {
+  static constexpr sycl_memory_scope<extended_namespace> value =
+      sycl_memory_scope<extended_namespace>::system;
 };
 
 template <class T, class MemoryOrder, class MemoryScope>
-using sycl_atomic_ref = sycl_sync_and_atomics::atomic_ref<
+using sycl_atomic_ref = sycl::ext::oneapi::atomic_ref<
     T,
     DesulToSYCLMemoryOrder<MemoryOrder>::value,
     DesulToSYCLMemoryScope<MemoryScope>::value,
