@@ -1,4 +1,4 @@
-#Kokkos Tools
+# Kokkos Tools
 
 This is documentation intended to help developers of the Kokkos Tools
 subsystem within Kokkos. It was written in November of 2021, concepts
