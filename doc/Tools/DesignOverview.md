@@ -40,8 +40,50 @@ void parallel_for(const std::string& label, boring_parallelism_stuff stuff) {
 }
 ```
 
-The 
+What's neat about this design is that if the begin and end function pointers are null, this amounts to
+
+```console
+(compare ptr to zero, super fast)
+run the code
+(compare ptr to zero, super fast)
+```
+
+And a branch predictor on CPUs from the 1900s forward should be able to pick up the pattern of that "compare to zero" always being true. This is the rough mechanism we use to ensure low overheads when tools aren't in use.
+
+But what about not requiring recompilation to swap out tools? For this we primarily use the dlopen/dlsym tricks on a standard Linux system. Unfortunately, I don't know good docs on dlsym and dlopen, here's the [man page](https://pubs.opengroup.org/onlinepubs/009695399/functions/dlsym.html), but just look for people at a national lab or university with a haunted look in their eyes and you've probably found the people who have to wrestle with shared linkers, they'll know dlsym. The TL;DR is that dlopen opens a shared library and gives you a handle you can pass to dlsym along with a function name to retrieve a function pointer _from_ that shared library. Expanding on our earlier example, this looks roughly like:
+
+```c++
+begin_function_ptr begin;
+end_function_ptr end;
+void initialize(){
+    std::string profile_library = getenv("KOKKOS_PROFILE_LIBRARY");
+    void* lookup_handle = dlopen(profile_library);
+    begin = dlsym(lookup_handle, "kokkosp_begin_parallel_for");
+    end   = dlsym(lookup_handle, "kokkosp_end_parallel_for");
+}
+void parallel_for(const std::string& label, boring_parallelism_stuff stuff) {
+  if(begin != nullptr){
+      fence();
+      (*begin)(label);
+  }
+  // do boring parallelism things
+  if(end != nullptr){
+      fence();
+      (*end)();
+  }
+}
+```
+
+Now, if a user sets `KOKKOS_PROFILE_LIBRARY` before running their application, we will open up that library, fill out the begin and end function pointers, and do clever tooling things. If they don't set the environment variable, those function pointers will remain `NULL` and we will fall back on the super fast comparisons to nullptr. Critically, this `dlsym` mechanism strongly encourages that all callback signatures you look up with dlsym should be compatible with the `C` language, having a callback with `C++` types in their signature is dangerous in 2021 due to concerns about C++ ABI (look for people at labs and unis who have given up on life for an in-depth treatment of C++ ABI). If it's 2030 and Clang is the only C++ compiler, and machines have exactly one libstdc++ installed, and we all ride unicorns to work, it _might_ be safe to revisit C++ in callback signatures.
+
+Note: in addition to the `dlsym` mechanism, we also allow users to call functions to set these function pointers, for those barbarous places (Windows modulo WSL) where dlsym is not supported.
+
+The first goal, not requiring versioned tool headers, is actually simpler. Originally, we just made sure that the function signatures we support used simple types, `uint64_t`, stuff you don't need Kokkos headers for. Since then we've loosened the requirement, and developed headers for complex tasks in the Kokkos Tools system (think autotuning). For an exploration of that work, see the [code organization guide](CodeOrganization)
+
+### Reference: list of events
+
+For an exhaustive and _definitely_ up-to-date listing of supported events, see the [Profiling Hooks](https://github.com/kokkos/kokkos-tools/wiki/Profiling-Hooks) wiki page
 
 ## A Tool's Perspective: What do Tools Get From Kokkos, What Comes from Other Sources?
 
-Request from Bill Williams, currently a stub section
+TODO: Request from Bill Williams, currently a stub section
