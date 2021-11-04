@@ -6,10 +6,10 @@ may have drifted between writing and when you're reading this.
 
 The following topics will be covered:
 
-- Overview of the design
-- Code organization
+- [Overview of the design](DesignOverview)
+- [Code organization](CodeOrganization)
 - Tuning
-  - Basic concepts
+  - [Basic concepts](../TuningDesign)
   - MultidimensionalSparseTuningProblem
   - parallel\_for -> begin\_parallel\_for -> tune\_policy -> generic\_tune\_policy
 - ToolSettings / ToolProgrammingInterface
