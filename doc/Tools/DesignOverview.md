@@ -78,7 +78,7 @@ Now, if a user sets `KOKKOS_PROFILE_LIBRARY` before running their application, w
 
 Note: in addition to the `dlsym` mechanism, we also allow users to call functions to set these function pointers, for those barbarous places (Windows modulo WSL) where dlsym is not supported.
 
-The first goal, not requiring versioned tool headers, is actually simpler. Originally, we just made sure that the function signatures we support used simple types, `uint64_t`, stuff you don't need Kokkos headers for. Since then we've loosened the requirement, and developed headers for complex tasks in the Kokkos Tools system (think autotuning). For an exploration of that work, see the [code organization guide](CodeOrganization)
+The first goal, not requiring versioned tool headers, is actually simpler. Originally, we just made sure that the function signatures we support used simple types, `uint64_t`, stuff you don't need Kokkos headers for. Since then we've loosened the requirement, and developed headers for complex tasks in the Kokkos Tools system (think autotuning). For an exploration of that work, see the [code organization guide](CodeOrganization.md)
 
 ### Reference: list of events
 
