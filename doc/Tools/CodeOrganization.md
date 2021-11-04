@@ -21,7 +21,7 @@ Note that `Kokkos_Tools_Generic` also directly includes `Kokkos_Profiling.hpp.` 
 
 ## Kokkos_Profiling_C_Interface.h
 
-In [Design Overview](DesignOverview) I talk about the need for C in the callback signatures this interface supports. To guarantee that, Kokkos has exactly one `.h` file rather than `.hpp`, and we test compiling it with `gcc` (not `g++`). In this file are all the base-level definitions of Kokkos structures. Everything will look weird, because C is weird. I imagine you'll be able to eventually grok the syntax, if only through repetition (or knowledge of C), but remember that things like "oh, I'll add a helpful class method to this struct" is strictly verboten. Also forbidden: namespaces, so the structs being named `Kokkos_Profiling_TheRealName` is a convention we should stick to.
+In [Design Overview](DesignOverview.md) I talk about the need for C in the callback signatures this interface supports. To guarantee that, Kokkos has exactly one `.h` file rather than `.hpp`, and we test compiling it with `gcc` (not `g++`). In this file are all the base-level definitions of Kokkos structures. Everything will look weird, because C is weird. I imagine you'll be able to eventually grok the syntax, if only through repetition (or knowledge of C), but remember that things like "oh, I'll add a helpful class method to this struct" is strictly verboten. Also forbidden: namespaces, so the structs being named `Kokkos_Profiling_TheRealName` is a convention we should stick to.
 
 ## Kokkos_Profiling_Interface.hpp
 
