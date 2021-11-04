@@ -9,7 +9,7 @@ and likely to be great resources if this walkthrough doesn't do what you need.
 
 The following topics will be covered:
 
-- [Overview of the design](DesignOverview)
+- [Overview of the design](DesignOverview.md)
 - [Code organization](CodeOrganization)
 - [Tuning](Tuning)
   - [Basic concepts](../TuningDesign)
