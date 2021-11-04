@@ -92,15 +92,12 @@ struct EventBase;  // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
 using event_vector = std::vector<EventBasePtr>;
 
-
 /**
  * @brief Base case of a recursive reduction using templates
  * Should be replaced with a fold in C++17
  */
 
-bool are_valid() {
-  return true;
-}
+bool are_valid() { return true; }
 
 /**
  * @brief Recursive reduction to check whether any pointer in a set is null
