@@ -1,0 +1,47 @@
+# MultidimensionalSparseTuningProblem
+
+```
+What water is there for us to clean ourselves? What festivals of atonement, what sacred games shall we have to invent?
+```
+
+\- Nietsche and also Chidi Anagonye, foreseeing this godawful hack
+
+Okay, so MultidimensionalSparseTuningProblem is a _monster_. What I'd like to do, is talk it through first as a concept, and then as code.
+
+## Motivation/Why on earth...
+
+One critical part of any autotuning system is in how you describe constraints. Maybe the team size times the vector length on a TeamPolicy must be less than 1024. Maybe the product of all tile dimensions have to be less than 4096. Kokkos solves this by... not having a system for that at all. Oops. Snark aside, the tools we were looking to support did not all support constraint systems, and those that did had wildly different ideas of how to express constraints, and exposing a system to users that was portable across tools looked really difficult. So I made the call not to support constraints in the callback layer. This is one of the most questionable decisions in the Tools design, if you're looking for something flashy to make an impact with, adding a constraint system that doesn't exclude any of our existing tools (Apollo/CConfigSpace/APEX) would be neat. That said, MultidimensionalSparseTuningProblem is a hack to support constraints _above_ the level of the callback layer.
+
+## Modeled constraints
+
+So the overwhelming majority of constraints for tuning on our accelerators take the form "the product of some N dimensional set of choices must be less than X." But in general, MultidimensionalSparseTuningProblem can model any constraint where the first N choices you have made yields some finite set of valid values for the next choice, and all paths through the system involve the same number of choices. Different choices in earlier decisions might lead to different options in later ones, for example in the MDRange case (dimensions must multiply to less than 4096), a choice of 1 for the first tile size will yield many options for the second one, but a choice of 4096 will yield only 1 as an option. What's hard about this, though, is that you can't just say "my outer value is 256, my inner value is 16," because without spelling out constraints we don't knwo that 16 is a valid second option for 256.
+
+In my design for this, there's a beautiful way to map a point from unconstrained reals less than 1 to the constrained space described above. Take the first real value, and multiply it by the number of options you have in the first dimension. This will yield some choice. But now that we have _that_ choice, we know the options available to us in the next dimension of this problem. Multiply your second real by the number of options, and you get a choice. You repeat this process until you have a full configuration (you run out of dimensions).
+
+Thus, any problem with this structure can be posed to a tuning tool that doesn't support constraints, we simply ask them to guess an n-dimensional point in that unconstrained space, and then map it as described above into our constrained set of choices. It turns out that most of what we need to express in Kokkos is one of these sparse multidimensional tuning problems, and so far this has been sufficient for our goals.
+
+A weakness in the system, however (originally pointed out by, well, everybody who has seen it) is that tools that _do_ have clever searches for constrained spaces are suddenly at a disadvantage. The search space presented to them is really strange and jagged.
+
+## Implementation
+
+One good thing (perhaps the only good thing) about the implementation is that the layout of classes actually follows the train of thought in the design. If you start in Kokkos_Tuners.hpp at ValueHierarchyNode, this walks you through both the train of thought and the classes.
+
+We need to be able to efficiently store the space described above, and map points from R^N into it. To do this, I use a tree structure in a class named `ValueHierarchyNode`. In non-leaf nodes, this data structure contains a vector representing the options at this level, as well as vectors representing the child nodes in the tree, which will likely be ValueHierarchyNodes themselves. The exception is at the leaves, where there are no children, just a vector of options. The `ValueHierarchyNode` has two template arguments, the first representing the types of choices at this level, the second representing the types of child nodes. Leaf nodes are signified by that second argument being `void`.
+
+This data structure is of course a profound pain to deal with. It's easier to write code containing std::maps to maps to maps to maps to ... vectors, with the outermost maps being the outermost dimension, and the vectors being the leaves, so I always construct MultidimensionalSparseTuningProblems from such structures. At the same time, `ValueHierarchyNode` is blazingly fast, no `std::map` lookups to map points into it.
+
+To assist in this, I have a `MapTypeConverter` struct, to say that some nested set of maps should be represented in `ValueHierarchyNode` in a specific way. Recall that a vector represents a leaf node, so the `type` in a `MapTypeConverter` for a vector is just a `ValueHierarchyNode<T, void>`. A `MapTypeConverter` of some `std::map` is a `ValueHierarcyNode<[The key type in that map], [The MapConverterType of the value type of that map]>`. In this way, we recursively build the `ValueHierarchyNode` type used in a problem. This pattern happens all throughout the code, call it the "UGH" pattern.
+
+In fact, the next three concepts, `ValueHierarchyConstructor`, `get_space_dimensionality`, and `n_dimensional_sparse_structure`, all play the same game for different purposes. ValueHierarchyConstructor takes in `std::map` and `std::vector` instances and builds a `ValueHierarchyNode`. `get_space_dimensionality` takes in a std::map and pops out the dimensionality of the search problem it represents. And `n_dimensional_sparse_structure` does the reverse, taking in a dimsension and telling you the structure of `maps` and `vectors` you need to represent it.
+
+`DimensionValueExtractor` is a helper for `GetMultidimensionalPoint`. To build a multidimensional point, you need to be able to extract the value in any single dimension. Recall that we're mapping a real less than `1.0` into the options held in a vector. This is as simple as multiplying size of the vector by that double, and returning the element at that position.
+
+With the assistance of `DimensionValueExtractor`, now `GetMultidimensionalPoint` plays a very familiar game, using the UGH pattern to map our N-dimensional unconstrained point into our space. At the leaf level, it just returns a 1-item tuple containing the appropriate element given by `DimensionValueExtractor`. At non-leaf levels, it concatenates the value at the current level to the tuple produced by its children. The code for this is a bit hairy, but that's what's happening.
+
+We're one gross helper away from "ready to play." Note that this one was a bit of defensive engineering, you may be able to do away with it. Every part of GetMuldimensionalPoint expects to be called with a set of doubles as indices. That is, `GetMultidimensionalPoint::do_your_thing(SomeValueHierarchy, 0.5, 0.3, 0.1)`. But often the values `0.5,0.3,0.1` will be in some array. `get_point_helper` will take in such an array, and the indices of points to grab from that array, and invoke `GetMultidimensionalPoint` appropriately. `GetPoint` takes in that `array`, and generates the indices to use in `get_point_helper`. Finally, `get_point` is what we directly use, and it invokes everything underneath in the correct way. Note that this was written at a time I was just good enough at metaprogramming to get the job done, but not good enough to write it well, feel free to rewrite.
+
+All that done, we're ready to move on to the actual `MultidimensionalSparseTuningProblem` class. This is templated on a templated container type, the max size of any dimension of the problem, and the template arguments of our container type. For the moment, ignore everything up til just after `extend`, that's some frilly stuff to allow you to compose these tuning problems. The good news is that the rest is comparatively simple, it just uses the stuff above. The constructor takes in a map of maps (blah blah blah) and a set of names, and declares output variables for every dimension. `get_point` uses the `get_point` above to map coordinates into this constrained space. `begin` is where we finally see tuning, we start a tuning context, ask the tool for an unconstrained point in that real space, and return the point the tool picks in our constrained space. `end` just ends the tuning context we start in `begin`.
+
+Skipping more `extend` stuff, finally we have `make_multidimensional_sparse_tuning_problem`, a helper with which to construct our MSTP's. Much of the rest of the file just shows classes which make maps of maps of maps, pop out an MSTP, and use that. TeamSizeTuner is pretty well commented, but it just maps valid team sizes to the associated vector lengths, generates an MSTP from that map, and uses it. MDRangeTuner is the same, mapping outer dimensions to their valid sets of inner dimensions in an MSTP.
+
+I'm so, so, sorry.
