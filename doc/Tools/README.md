@@ -14,7 +14,7 @@ The following topics will be covered:
 - [Tuning](Tuning)
   - [Basic concepts](../TuningDesign)
   - [MultidimensionalSparseTuningProblem](MultidimensionalSparseTuningProblem)
-  - parallel\_for -> begin\_parallel\_for -> tune\_policy -> generic\_tune\_policy
+  - [parallel\_for -> begin\_parallel\_for -> tune\_policy -> generic\_tune\_policy](PolicyTuningWorkflow)
 - ToolSettings / ToolProgrammingInterface
 - Fenceless Profiling Mechanics
 - Testing Subsystem
