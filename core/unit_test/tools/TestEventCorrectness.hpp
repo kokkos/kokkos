@@ -126,11 +126,11 @@ struct TestFunctor {
 };
 struct TestReduceFunctor {
   using value_type = int;
-  KOKKOS_FUNCTION void operator()(const index_type, int&) const {}
+  KOKKOS_FUNCTION void operator()(const index_type, value_type&) const {}
 };
 struct TestScanFunctor {
   using value_type = int;
-  KOKKOS_FUNCTION void operator()(const index_type, int&, bool) const {}
+  KOKKOS_FUNCTION void operator()(const index_type, value_type&, bool) const {}
 };
 
 template <typename Lambda>
@@ -292,6 +292,7 @@ TEST(kokkosp, test_streams) {
 }
 
 #endif
+/** FIXME: OpenMPTarget currently has unexpected fences */
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;

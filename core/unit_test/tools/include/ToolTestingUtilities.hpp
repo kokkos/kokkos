@@ -92,7 +92,6 @@ struct EventBase;  // forward declaration
 using EventBasePtr = std::shared_ptr<EventBase>;
 using event_vector = std::vector<EventBasePtr>;
 
-template <class... Args>
 
 /**
  * @brief Base case of a recursive reduction using templates
