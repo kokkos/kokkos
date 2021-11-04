@@ -1,0 +1,11 @@
+# Policy Tuning Workflow
+
+This section ~~uses music to describe how a bill becomes a law~~ examines how a policy passed to parallel_x winds up getting tuned. For purposes of this doc, I'm going to use parallel_for, but reduce and scan work the same. There was a pretty big code reorganization, where now parallel_for passes a policy, functor, name (not filled out), and kernel ID to `Kokkos::Tools::begin_parallel_for`. Notably, the policy is passed as a non-constant reference, so we can play with it however we want.
+
+This first calls `beginParallelFor`, which as mentioned in [the overview](Tuning) declares the name of the kernel as a feature, and also calls `kokkosp_begin_parallel_for` on the tool side. Then, if tuning is enable at compile time, and the program is run with `--kokkos-tune-internals` (or the environment variable KOKKOS_TUNE_INTERNALS is 1), it calls in to `tune_policy`.
+
+For policies that don't support tuning, this is an empty function. For ones that support tuning, I eventually noticed that there was a consistent pattern to how they were tuned, and so I wrote `generic_tune_policy` to encapsulate the pattern. `generic_tune_policy` takes in the name of the kernel, a map of kernel names to appropriate tuners, the policy to possibly tune, the functor, the tag (ParallelForTag) , and a unary functor to determine whether the policy instance should be tuned. On this last one, TeamPolicy supports tuning, but only a TeamPolicy whose team size or vector length was specified as auto _should be tuned_, this functor basically checks that the given policy instance even wants to be tuned.
+
+`generic_tune_policy` then generates the name of the functor, if one was not provided. It then sees if we have an existing tuner using the name of the functor to search. If not it makes one. Then we just call tune on the underlying tuner, which will modify the policy. That policy is a reference, so the modifications we made here will be used in the execution of the policy in `parallel_for`.
+
+Then in `end_parallel_for`, something very similar happens, except instead of _tuning_ a policy, you're just telling the tuner "hey, we're done checking the answers," this is in `generic_report_results` and `report_policy_results`. You could probably refactor this a decent amount in Kokkos_Parallel.hpp to avoid code repetition.

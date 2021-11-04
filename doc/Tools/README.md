@@ -13,7 +13,7 @@ The following topics will be covered:
 - [Code organization](CodeOrganization)
 - [Tuning](Tuning)
   - [Basic concepts](../TuningDesign)
-  - MultidimensionalSparseTuningProblem
+  - [MultidimensionalSparseTuningProblem](MultidimensionalSparseTuningProblem)
   - parallel\_for -> begin\_parallel\_for -> tune\_policy -> generic\_tune\_policy
 - ToolSettings / ToolProgrammingInterface
 - Fenceless Profiling Mechanics
