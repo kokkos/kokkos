@@ -261,45 +261,45 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t count,
 template <class Tag, class ValueType>
 void run_all_scenarios() {
   using scenario_t = std::tuple<std::string, std::size_t, std::string>;
-  std::vector<scenario_t> scenarios;
-  scenarios.push_back(std::make_tuple("empty", 0u, "none"));
-  scenarios.push_back(std::make_tuple("one-element-a", 1u, "none"));
-  scenarios.push_back(std::make_tuple("one-element-b", 1u, "left"));
+  std::vector<scenario_t> scenarios(31);
+  scenarios[0] = scenario_t("empty", 0u, "none");
+  scenarios[1] = scenario_t("one-element-a", 1u, "none");
+  scenarios[2] = scenario_t("one-element-b", 1u, "left");
 
-  scenarios.push_back(std::make_tuple("two-elements-a", 2u, "none"));
-  scenarios.push_back(std::make_tuple("two-elements-b", 2u, "left"));
-  scenarios.push_back(std::make_tuple("two-elements-c", 2u, "right"));
+  scenarios[3] = scenario_t("two-elements-a", 2u, "none");
+  scenarios[4] = scenario_t("two-elements-b", 2u, "left");
+  scenarios[5] = scenario_t("two-elements-c", 2u, "right");
 
-  scenarios.push_back(std::make_tuple("three-elements-a", 3u, "none"));
-  scenarios.push_back(std::make_tuple("three-elements-b", 3u, "left"));
-  scenarios.push_back(std::make_tuple("three-elements-c", 3u, "random"));
-  scenarios.push_back(std::make_tuple("three-elements-d", 3u, "right"));
+  scenarios[6] = scenario_t("three-elements-a", 3u, "none");
+  scenarios[7] = scenario_t("three-elements-b", 3u, "left");
+  scenarios[8] = scenario_t("three-elements-c", 3u, "random");
+  scenarios[9] = scenario_t("three-elements-d", 3u, "right");
 
-  scenarios.push_back(std::make_tuple("four-elements-a", 4u, "none"));
-  scenarios.push_back(std::make_tuple("four-elements-b", 4u, "left"));
-  scenarios.push_back(std::make_tuple("four-elements-c", 4u, "random"));
-  scenarios.push_back(std::make_tuple("four-elements-d", 4u, "right"));
+  scenarios[10] = scenario_t("four-elements-a", 4u, "none");
+  scenarios[11] = scenario_t("four-elements-b", 4u, "left");
+  scenarios[12] = scenario_t("four-elements-c", 4u, "random");
+  scenarios[13] = scenario_t("four-elements-d", 4u, "right");
 
-  scenarios.push_back(std::make_tuple("small-a", 13u, "none"));
-  scenarios.push_back(std::make_tuple("small-b", 13u, "left"));
-  scenarios.push_back(std::make_tuple("small-c", 13u, "random"));
-  scenarios.push_back(std::make_tuple("small-d", 13u, "right"));
-  scenarios.push_back(std::make_tuple("small-e", 131u, "none"));
-  scenarios.push_back(std::make_tuple("small-f", 131u, "left"));
-  scenarios.push_back(std::make_tuple("small-g", 131u, "random"));
-  scenarios.push_back(std::make_tuple("small-h", 131u, "right"));
+  scenarios[14] = scenario_t("small-a", 13u, "none");
+  scenarios[15] = scenario_t("small-b", 13u, "left");
+  scenarios[16] = scenario_t("small-c", 13u, "random");
+  scenarios[17] = scenario_t("small-d", 13u, "right");
+  scenarios[18] = scenario_t("small-e", 131u, "none");
+  scenarios[19] = scenario_t("small-f", 131u, "left");
+  scenarios[20] = scenario_t("small-g", 131u, "random");
+  scenarios[21] = scenario_t("small-h", 131u, "right");
 
-  scenarios.push_back(std::make_tuple("medium-a", 21103u, "none"));
-  scenarios.push_back(std::make_tuple("medium-b", 21103u, "left"));
-  scenarios.push_back(std::make_tuple("medium-c", 21103u, "random"));
-  scenarios.push_back(std::make_tuple("medium-d", 21103u, "right"));
-  scenarios.push_back(std::make_tuple("medium-e", 21103u, "left_and_1567"));
-  scenarios.push_back(std::make_tuple("medium-f", 21103u, "11133_and_right"));
+  scenarios[22] = scenario_t("medium-a", 21103u, "none");
+  scenarios[22] = scenario_t("medium-b", 21103u, "left");
+  scenarios[23] = scenario_t("medium-c", 21103u, "random");
+  scenarios[24] = scenario_t("medium-d", 21103u, "right");
+  scenarios[25] = scenario_t("medium-e", 21103u, "left_and_1567");
+  scenarios[26] = scenario_t("medium-f", 21103u, "11133_and_right");
 
-  scenarios.push_back(std::make_tuple("large-a", 101333u, "none"));
-  scenarios.push_back(std::make_tuple("large-b", 101333u, "left"));
-  scenarios.push_back(std::make_tuple("large-c", 101333u, "random"));
-  scenarios.push_back(std::make_tuple("large-d", 101333u, "right"));
+  scenarios[27] = scenario_t("large-a", 101333u, "none");
+  scenarios[28] = scenario_t("large-b", 101333u, "left");
+  scenarios[29] = scenario_t("large-c", 101333u, "random");
+  scenarios[30] = scenario_t("large-d", 101333u, "right");
 
   const std::vector<std::size_t> counts = {1,  2,  3,  4,   5,  8,
                                            11, 13, 31, 131, 523};
