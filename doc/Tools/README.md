@@ -12,7 +12,7 @@ The following topics will be covered:
 - [Overview of the design](DesignOverview.md)
 - [Code organization](CodeOrganization.md)
 - [Tuning](Tuning.md)
-  - [Basic concepts](../TuningDesign.md)
+  - [Basic concepts](TuningDesign.md)
   - [MultidimensionalSparseTuningProblem](MultidimensionalSparseTuningProblem.md)
   - [parallel\_for -> begin\_parallel\_for -> tune\_policy -> generic\_tune\_policy](PolicyTuningWorkflow)
 - ToolSettings / ToolProgrammingInterface
