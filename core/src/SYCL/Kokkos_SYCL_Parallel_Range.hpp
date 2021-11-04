@@ -75,8 +75,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     const auto begin = policy.begin();
     const auto end   = policy.end();
 
-    auto lambda = [=](sycl::item<1> item) {
-      const typename Policy::index_type id = item.get_linear_id() + begin;
+#if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
+    auto lambda = [=](sycl::nd_item<1> item) {
+      const typename Policy::index_type id = item.get_local_id() + begin;
       if (id < end) {
         if constexpr (std::is_same<WorkTag, void>::value)
           functor(id);
@@ -109,6 +110,20 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
       cgh.parallel_for(range, lambda);
     });
+#else
+    auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
+      sycl::range<1> range(policy.end() - policy.begin());
+      const auto begin = policy.begin();
+
+      cgh.parallel_for(range, [=](sycl::item<1> item) {
+        const typename Policy::index_type id = item.get_linear_id() + begin;
+        if constexpr (std::is_same<WorkTag, void>::value)
+          functor(id);
+        else
+          functor(WorkTag(), id);
+      });
+    });
+#endif
     q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
