@@ -333,14 +333,14 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   // Deep Copy
-  Kokkos::parallel_for(
+  auto team_size = Kokkos::AUTO;
   // FIXME_SYCL improve default team_size
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-      team_policy(N, 512),
-#else
-      team_policy(N, Kokkos::AUTO),
+  if (std::is_same<ExecSpace, Kokkos::Experimental::SYCL>::value)
+    team_policy = 512;
 #endif
-      KOKKOS_LAMBDA(const member_type& teamMember) {
+  Kokkos::parallel_for(
+      team_policy(N, team_size), KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
         auto subSrc =
             Kokkos::subview(A, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(),
@@ -407,14 +407,14 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   // Deep Copy
-  Kokkos::parallel_for(
+  auto team_size = Kokkos::AUTO;
   // FIXME_SYCL improve default team_size
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-      team_policy(N, 512),
-#else
-      team_policy(N, Kokkos::AUTO),
+  if (std::is_same<ExecSpace, Kokkos::Experimental::SYCL>::value)
+    team_policy = 512;
 #endif
-      KOKKOS_LAMBDA(const member_type& teamMember) {
+  Kokkos::parallel_for(
+      team_policy(N, team_size), KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
         auto subSrc = Kokkos::subview(A, 1, lid, Kokkos::ALL(), Kokkos::ALL(),
                                       Kokkos::ALL(), Kokkos::ALL(),
@@ -478,14 +478,14 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   // Deep Copy
-  Kokkos::parallel_for(
+  auto team_size = Kokkos::AUTO;
   // FIXME_SYCL improve default team_size
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-      team_policy(N, 512),
-#else
-      team_policy(N, Kokkos::AUTO),
+  if (std::is_same<ExecSpace, Kokkos::Experimental::SYCL>::value)
+    team_policy = 512;
 #endif
-      KOKKOS_LAMBDA(const member_type& teamMember) {
+  Kokkos::parallel_for(
+      team_policy(N, team_size), KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
         auto subSrc = Kokkos::subview(
             A, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
