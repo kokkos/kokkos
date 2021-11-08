@@ -97,7 +97,7 @@ using event_vector = std::vector<EventBasePtr>;
  * Should be replaced with a fold in C++17
  */
 
-bool are_valid() { return true; }
+inline bool are_valid() { return true; }
 
 /**
  * @brief Recursive reduction to check whether any pointer in a set is null
@@ -265,8 +265,8 @@ struct invoke_helper {
  * @param events the vector containing our events
  * @return MatchDiagnostic success if we scanned all events, failure otherwise
  */
-MatchDiagnostic check_match(event_vector::size_type events_scanned,
-                            const event_vector& events) {
+inline MatchDiagnostic check_match(event_vector::size_type events_scanned,
+                                   const event_vector& events) {
   return (events_scanned == events.size())
              ? MatchDiagnostic{true}
              : MatchDiagnostic{false, {"Wrong number of events encountered"}};
@@ -973,7 +973,7 @@ static uint64_t last_kernel_id;
 static uint32_t last_section_id;
 
 /** Subscribes to all of the requested callbacks */
-void set_tool_events_impl(const ToolValidatorConfiguration& config) {
+static void set_tool_events_impl(const ToolValidatorConfiguration& config) {
   Kokkos::Tools::Experimental::pause_tools();  // remove all events
   if (config.profiling.kernels) {
     Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
@@ -1256,7 +1256,9 @@ auto get_event_set(const Lambda& lam) {
   return events;
 }
 
-MatchDiagnostic check_presence_of(const EventBasePtr&) { return {false}; }
+inline MatchDiagnostic check_presence_of(const EventBasePtr&) {
+  return {false};
+}
 template <class Matcher, class... Matchers>
 MatchDiagnostic check_presence_of(const EventBasePtr& event, const Matcher& m,
                                   Matchers&&... args) {
