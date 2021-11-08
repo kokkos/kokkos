@@ -42,7 +42,52 @@
 //@HEADER
 */
 
-#include <iostream>
-#include "Kokkos_Core.hpp"
+#include <gtest/gtest.h>
+#include <Kokkos_Core.hpp>
 
-#include <tools/TestEventCorrectness.hpp>
+#include "include/ToolTestingUtilities.hpp"
+
+TEST(kokkosp, resize_realloc_no_init) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  Kokkos::View<int*** * [1][2][3][4]> bla("bla", 5, 6, 7, 8);
+
+  auto success = validate_absence(
+      [&]() {
+        Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+      },
+      [&](BeginParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
+      });
+  ASSERT_TRUE(success);
+
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
+                     Config::EnableAllocs());
+
+  success = validate_absence(
+      [&]() {
+        Kokkos::resize(bla, 8, 7, 6, 5);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      },
+      [&](AllocateDataEvent) {
+        return MatchDiagnostic{true, {"Found alloc event"}};
+      },
+      [&](DeallocateDataEvent) {
+        return MatchDiagnostic{true, {"Found dealloc event"}};
+      });
+  ASSERT_TRUE(success);
+}
