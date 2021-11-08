@@ -42,7 +42,36 @@
 //@HEADER
 */
 
-#include <iostream>
-#include "Kokkos_Core.hpp"
+#include <gtest/gtest.h>
+#include <Kokkos_Core.hpp>
 
-#include <tools/TestEventCorrectness.hpp>
+#include "include/ToolTestingUtilities.hpp"
+
+TEST(kokkosp, create_mirror_no_init) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  Kokkos::View<int*, Kokkos::DefaultExecutionSpace> device_view("device view",
+                                                                10);
+  Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
+
+  auto success = validate_absence(
+      [&]() {
+        auto mirror_device =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
+        auto mirror_host =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing,
+                                  Kokkos::DefaultExecutionSpace{}, host_view);
+        auto mirror_device_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, device_view);
+        auto mirror_host_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, Kokkos::DefaultExecutionSpace{},
+            host_view);
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      });
+  ASSERT_TRUE(success);
+}
