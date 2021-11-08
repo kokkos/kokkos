@@ -804,6 +804,13 @@ void set_dual_view_modify_callback(dualViewModifyFunction callback) {
 void set_declare_metadata_callback(declareMetadataFunction callback) {
   current_callbacks.declare_metadata = callback;
 }
+void set_request_tool_settings_callback(requestToolSettingsFunction callback) {
+  current_callbacks.request_tool_settings = callback;
+}
+void set_provide_tool_programming_interface_callback(
+    provideToolProgrammingInterfaceFunction callback) {
+  current_callbacks.provide_tool_programming_interface = callback;
+}
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {
   current_callbacks.declare_output_type = callback;
