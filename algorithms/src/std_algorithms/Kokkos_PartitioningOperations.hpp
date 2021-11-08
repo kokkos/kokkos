@@ -48,7 +48,6 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_BeginEnd.hpp"
 #include "Kokkos_Constraints.hpp"
-#include "Kokkos_MinMaxOperations.hpp"
 #include "Kokkos_ModifyingOperations.hpp"
 #include "Kokkos_NonModifyingSequenceOperations.hpp"
 
