@@ -46,15 +46,9 @@
 #define KOKKOS_MIN_MAX_CLAMP_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Pair.hpp>
 
 namespace Kokkos {
-
-// this fwd declaration is here because paid
-// is needed below and if we don't do this,
-// the compiler does not find it
-template <class T1, class T2>
-struct pair;
-
 namespace Experimental {
 
 // clamp
