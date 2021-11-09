@@ -42,15 +42,14 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-#include "include/ToolTestingUtilities.hpp"
+#include "tools/include/ToolTestingUtilities.hpp"
 
-TEST(kokkosp, resize_realloc_no_init) {
+TEST(TEST_CATEGORY, resize_realloc_no_init) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  Kokkos::View<int*** * [1][2][3][4]> bla("bla", 5, 6, 7, 8);
+  Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 5, 6, 7, 8);
 
   auto success = validate_absence(
       [&]() {
