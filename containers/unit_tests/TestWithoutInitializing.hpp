@@ -122,15 +122,14 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
 TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  Kokkos::Experimental::ScatterView<int*** * [1][2][3][4],
-                                    typename TEST_EXECSPACE::array_layout,
-                                    TEST_EXECSPACE>
-      bla("bla", 5, 6, 7, 8);
+  Kokkos::Experimental::ScatterView<
+      int*** * [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      bla("bla", 4, 5, 6, 7);
 
   auto success = validate_absence(
       [&]() {
-        Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::resize(Kokkos::WithoutInitializing, bla, 4, 5, 6, 8);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 7, 6, 5, 4);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -149,8 +148,8 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
 
   success = validate_absence(
       [&]() {
-        Kokkos::resize(bla, 8, 7, 6, 5);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::resize(bla, 7, 6, 5, 4);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 7, 6, 5, 4);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
