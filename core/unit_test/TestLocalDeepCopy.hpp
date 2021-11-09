@@ -337,7 +337,7 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   // FIXME_SYCL improve default team_size
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same<ExecSpace, Kokkos::Experimental::SYCL>::value)
-    team_policy = 512;
+    team_size = 512;
 #endif
   Kokkos::parallel_for(
       team_policy(N, team_size), KOKKOS_LAMBDA(const member_type& teamMember) {
@@ -411,7 +411,7 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   // FIXME_SYCL improve default team_size
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same<ExecSpace, Kokkos::Experimental::SYCL>::value)
-    team_policy = 512;
+    team_size = 512;
 #endif
   Kokkos::parallel_for(
       team_policy(N, team_size), KOKKOS_LAMBDA(const member_type& teamMember) {
@@ -482,7 +482,7 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   // FIXME_SYCL improve default team_size
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same<ExecSpace, Kokkos::Experimental::SYCL>::value)
-    team_policy = 512;
+    team_size = 512;
 #endif
   Kokkos::parallel_for(
       team_policy(N, team_size), KOKKOS_LAMBDA(const member_type& teamMember) {
