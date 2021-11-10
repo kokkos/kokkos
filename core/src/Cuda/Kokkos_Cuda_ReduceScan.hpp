@@ -506,8 +506,12 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     if (warp_id == 0) {
       ValueInit::init(functor, &value);
       for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
-           i < blockDim.y * blockDim.x / 32; i += 32)
-        ValueJoin::join(functor, &value, &shared_team_buffer_element[i]);
+           i < blockDim.y * blockDim.x / 32; i += 32) {
+        Scalar tmp = reinterpret_cast<volatile_wrapper<Scalar>*>(
+                         &shared_team_buffer_element[i])
+                         ->get();
+        ValueJoin::join(functor, &value, &tmp);
+      }
       scalar_intra_warp_reduction(functor, value, false, 32,
                                   *my_global_team_buffer_element);
     }
