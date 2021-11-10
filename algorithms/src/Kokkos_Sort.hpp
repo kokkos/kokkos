@@ -340,7 +340,7 @@ class BinSort {
   template <class ValuesViewType>
   void sort(ValuesViewType const& values, int values_range_begin,
             int values_range_end) const {
-    typename ValuesViewType::execution_space exec;
+    execution_space exec;
     sort(exec, values, values_range_begin, values_range_end);
     exec.fence("Kokkos::Sort: fence after sorting");
   }
