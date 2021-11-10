@@ -149,11 +149,16 @@ do
   *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu)
     cpp_files="$cpp_files $1"
     ;;
-   # Ensure we only have one optimization flag because NVCC doesn't allow muliple
+   # Ensure we only have one optimization flag because NVCC doesn't allow multiple
   -O*)
     if [ -n "$optimization_flag" ]; then
-       echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-O*), only the last is used because nvcc can only accept a single optimization setting."
-       shared_args=${shared_args/ $optimization_flag/}
+        if [ "$1" = "$optimization_flag" ]; then
+            # Silently consume duplicates of the same argument
+            shift
+            continue
+        fi
+        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-O*), only the last is used because nvcc can only accept a single optimization setting."
+        shared_args=${shared_args/ $optimization_flag/}
     fi
     if [ "$1" = "-O" ]; then
       optimization_flag="-O2"
