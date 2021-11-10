@@ -81,7 +81,8 @@ void Kokkos::Impl::throw_runtime_exception(const std::string& msg) {
   throw std::runtime_error(o.str());
 }
 
-bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected, int* value) {
+bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected,
+                                 int* value) {
   if (!check_arg(arg, expected)) return false;
   std::size_t arg_len = std::strlen(arg);
   std::size_t exp_len = std::strlen(expected);
@@ -100,7 +101,8 @@ bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected, int* val
   }
   return true;
 }
-bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected, std::string& value) {
+bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected,
+                                 std::string& value) {
   if (!check_arg(arg, expected)) return false;
   std::size_t arg_len = std::strlen(arg);
   std::size_t exp_len = std::strlen(expected);
@@ -118,7 +120,7 @@ bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected, std::str
   return true;
 }
 void Kokkos::Impl::warn_deprecated_command_line_argument(std::string deprecated,
-                                           std::string valid) {
+                                                         std::string valid) {
   std::cerr
       << "Warning: command line argument '" << deprecated
       << "' is deprecated. Use '" << valid
