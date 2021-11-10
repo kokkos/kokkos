@@ -46,9 +46,17 @@
 #include <sstream>
 #include <cstring>
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
-
+/** Duplicates of Kokkos_Error.cpp/hpp, reproduced here
+ * for use in non-Kokkos applications
+ */
 void traceback_callstack(std::ostream& msg) {
   msg << std::endl << "Traceback functionality not available" << std::endl;
+}
+void throw_runtime_exception(const std::string& msg) {
+  std::ostringstream o;
+  o << msg;
+  traceback_callstack(o);
+  throw std::runtime_error(o.str());
 }
 
 bool Kokkos::Impl::is_unsigned_int(const char* str) {
@@ -74,12 +82,6 @@ bool Kokkos::Impl::check_arg(char const* arg, char const* expected) {
   }
   return true;
 }
-void Kokkos::Impl::throw_runtime_exception(const std::string& msg) {
-  std::ostringstream o;
-  o << msg;
-  traceback_callstack(o);
-  throw std::runtime_error(o.str());
-}
 
 bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected,
                                  int* value) {
@@ -97,7 +99,7 @@ bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected,
     ss << "Error: expecting an '=INT' after command line argument '" << expected
        << "'";
     ss << ". Raised by Kokkos::initialize(int narg, char* argc[]).";
-    Impl::throw_runtime_exception(ss.str());
+    throw_runtime_exception(ss.str());
   }
   return true;
 }
@@ -115,7 +117,7 @@ bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected,
     ss << "Error: expecting an '=STRING' after command line argument '"
        << expected << "'";
     ss << ". Raised by Kokkos::initialize(int narg, char* argc[]).";
-    Impl::throw_runtime_exception(ss.str());
+    throw_runtime_exception(ss.str());
   }
   return true;
 }

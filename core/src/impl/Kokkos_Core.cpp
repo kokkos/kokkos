@@ -599,16 +599,12 @@ void parse_command_line_arguments(int& narg, char* arg[],
   if (tools_init_arguments.tune_internals !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
     tune_internals = (tools_init_arguments.tune_internals ==
-                      Kokkos::Tools::InitArguments::PossiblyUnsetOption::on)
-                         ? true
-                         : false;
+                      Kokkos::Tools::InitArguments::PossiblyUnsetOption::on);
   }
   if (tools_init_arguments.help !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
     tool_help = (tools_init_arguments.help ==
-                 Kokkos::Tools::InitArguments::PossiblyUnsetOption::on)
-                    ? true
-                    : false;
+                 Kokkos::Tools::InitArguments::PossiblyUnsetOption::on);
   }
   if (tools_init_arguments.lib !=
       Kokkos::Tools::InitArguments::unset_string_option) {

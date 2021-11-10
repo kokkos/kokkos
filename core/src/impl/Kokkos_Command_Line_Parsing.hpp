@@ -52,7 +52,7 @@ namespace Kokkos {
 namespace Impl {
 bool is_unsigned_int(const char* str);
 bool check_arg(char const* arg, char const* expected);
-void throw_runtime_exception(const std::string& msg);
+//void throw_runtime_exception(const std::string& msg);
 bool check_int_arg(char const* arg, char const* expected, int* value);
 bool check_str_arg(char const* arg, char const* expected, std::string& value);
 void warn_deprecated_command_line_argument(std::string deprecated,

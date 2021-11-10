@@ -46,7 +46,6 @@
 #define KOKKOS_IMPL_KOKKOS_PROFILING_HPP
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <memory>
 #include <iosfwd>
 #include <unordered_map>

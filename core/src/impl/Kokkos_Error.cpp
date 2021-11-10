@@ -58,7 +58,16 @@
 
 namespace Kokkos {
 namespace Impl {
+void traceback_callstack(std::ostream& msg) {
+  msg << std::endl << "Traceback functionality not available" << std::endl;
+}
 
+void throw_runtime_exception(const std::string& msg) {
+  std::ostringstream o;
+  o << msg;
+  traceback_callstack(o);
+  throw std::runtime_error(o.str());
+}
 void host_abort(const char *const message) {
   fwrite(message, 1, strlen(message), stderr);
   fflush(stderr);
