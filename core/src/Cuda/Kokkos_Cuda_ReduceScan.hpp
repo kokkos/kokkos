@@ -492,8 +492,13 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     const int num_warps = blockDim.x * blockDim.y / 32;
     for (int w = shared_elements; w < num_warps; w += shared_elements) {
       if (warp_id >= w && warp_id < w + shared_elements) {
-        if ((threadIdx.y * blockDim.x + threadIdx.x) % 32 == 0)
-          ValueJoin::join(functor, my_shared_team_buffer_element, &value);
+        if ((threadIdx.y * blockDim.x + threadIdx.x) % 32 == 0) {
+          auto p = reinterpret_cast<volatile_wrapper<Scalar>*>(
+              my_shared_team_buffer_element);
+          Scalar tmp = p->get();
+          ValueJoin::join(functor, &tmp, &value);
+          p->set(tmp);
+        }
       }
       __syncthreads();
     }
