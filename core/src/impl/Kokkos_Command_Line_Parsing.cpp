@@ -59,7 +59,7 @@ void throw_runtime_exception(const std::string& msg) {
   traceback_callstack(o);
   throw std::runtime_error(o.str());
 }
-}
+}  // namespace
 
 bool Kokkos::Impl::is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
