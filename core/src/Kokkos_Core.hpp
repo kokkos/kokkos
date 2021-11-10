@@ -102,7 +102,7 @@ struct InitArguments {
         skip_device{9999},
         disable_warnings{dw},
         tune_internals{ti} {}
-  Tools::InitArguments get_tools_init_arguments() const {
+  Tools::InitArguments impl_get_tools_init_arguments() const {
     Tools::InitArguments init_tools;
     init_tools.tune_internals =
         tune_internals ? Tools::InitArguments::PossiblyUnsetOption::on

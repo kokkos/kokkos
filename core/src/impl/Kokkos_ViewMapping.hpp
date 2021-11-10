@@ -2928,10 +2928,10 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         functor_name =
-            (destroy ? "Kokkos::View::destruction [" + name + "]"
-                     : "Kokkos::View::initialization [" + name + "]");
+            (destroy ? "Kokkos::View::destruction [" + functor_name + "]"
+                     : "Kokkos::View::initialization [" + functor_name + "]");
         Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "]",
+            "Kokkos::View::initialization [" + functor_name + "]",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
 

@@ -50,7 +50,6 @@
 
 namespace Kokkos {
 namespace Impl {
-void traceback_callstack(std::ostream& msg);
 bool is_unsigned_int(const char* str);
 bool check_arg(char const* arg, char const* expected);
 void throw_runtime_exception(const std::string& msg);

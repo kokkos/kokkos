@@ -45,6 +45,7 @@
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <cctype>
 #include <cstring>
 #include <iostream>
@@ -517,7 +518,7 @@ void pre_initialize_internal(const InitArguments& args) {
 }
 
 void post_initialize_internal(const InitArguments& args) {
-  initialize_profiling(args.get_tools_init_arguments());
+  initialize_profiling(args.impl_get_tools_init_arguments());
   g_is_initialized = true;
 }
 
@@ -593,7 +594,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
   bool kokkos_numa_found     = false;
   bool kokkos_device_found   = false;
   bool kokkos_ndevices_found = false;
-  auto tools_init_arguments  = arguments.get_tools_init_arguments();
+  auto tools_init_arguments  = arguments.impl_get_tools_init_arguments();
   Tools::Impl::parse_command_line_arguments(narg, arg, tools_init_arguments);
   if (tools_init_arguments.tune_internals !=
       Kokkos::Tools::InitArguments::PossiblyUnsetOption::unset) {
@@ -809,7 +810,7 @@ void parse_environment_variables(InitArguments& arguments) {
   auto& tool_help        = arguments.tool_help;
   char* endptr;
 
-  auto tools_init_arguments = arguments.get_tools_init_arguments();
+  auto tools_init_arguments = arguments.impl_get_tools_init_arguments();
   auto init_result =
       Tools::Impl::parse_environment_variables(tools_init_arguments);
   if (init_result.result == Kokkos::Tools::Impl::InitializationStatus::

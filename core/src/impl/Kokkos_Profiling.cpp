@@ -49,6 +49,7 @@
 
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Command_Line_Parsing.hpp>
 
 #if defined(KOKKOS_ENABLE_LIBDL) || defined(KOKKOS_TOOLS_INDEPENDENT_BUILD)
 #include <dlfcn.h>

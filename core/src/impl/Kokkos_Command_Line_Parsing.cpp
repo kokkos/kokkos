@@ -45,14 +45,13 @@
 #include <string>
 #include <sstream>
 #include <cstring>
-namespace Kokkos {
-namespace Impl {
+#include <impl/Kokkos_Command_Line_Parsing.hpp>
 
 void traceback_callstack(std::ostream& msg) {
   msg << std::endl << "Traceback functionality not available" << std::endl;
 }
 
-bool is_unsigned_int(const char* str) {
+bool Kokkos::Impl::is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
   for (size_t i = 0; i < len; ++i) {
     if (!isdigit(str[i])) {
@@ -62,7 +61,7 @@ bool is_unsigned_int(const char* str) {
   return true;
 }
 
-bool check_arg(char const* arg, char const* expected) {
+bool Kokkos::Impl::check_arg(char const* arg, char const* expected) {
   std::size_t arg_len = std::strlen(arg);
   std::size_t exp_len = std::strlen(expected);
   if (arg_len < exp_len) return false;
@@ -75,14 +74,14 @@ bool check_arg(char const* arg, char const* expected) {
   }
   return true;
 }
-void throw_runtime_exception(const std::string& msg) {
+void Kokkos::Impl::throw_runtime_exception(const std::string& msg) {
   std::ostringstream o;
   o << msg;
   traceback_callstack(o);
   throw std::runtime_error(o.str());
 }
 
-bool check_int_arg(char const* arg, char const* expected, int* value) {
+bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected, int* value) {
   if (!check_arg(arg, expected)) return false;
   std::size_t arg_len = std::strlen(arg);
   std::size_t exp_len = std::strlen(expected);
@@ -101,7 +100,7 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   }
   return true;
 }
-bool check_str_arg(char const* arg, char const* expected, std::string& value) {
+bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected, std::string& value) {
   if (!check_arg(arg, expected)) return false;
   std::size_t arg_len = std::strlen(arg);
   std::size_t exp_len = std::strlen(expected);
@@ -118,7 +117,7 @@ bool check_str_arg(char const* arg, char const* expected, std::string& value) {
   }
   return true;
 }
-void warn_deprecated_command_line_argument(std::string deprecated,
+void Kokkos::Impl::warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string valid) {
   std::cerr
       << "Warning: command line argument '" << deprecated
@@ -126,6 +125,3 @@ void warn_deprecated_command_line_argument(std::string deprecated,
       << "' instead. Raised by Kokkos::initialize(int narg, char* argc[])."
       << std::endl;
 }
-}  // namespace Impl
-
-}  // namespace Kokkos
