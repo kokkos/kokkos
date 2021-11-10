@@ -562,7 +562,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
 
   __device__ static inline void scalar_intra_warp_reduction(
       const FunctorType& functor,
-      Scalar* value,           // Contribution
+      volatile_wrapper<Scalar>* value,           // Contribution
       const bool skip_vector,  // Skip threads if Kokkos vector lanes are not
                                // part of the reduction
       const int width)         // How much of the warp participates
@@ -575,7 +575,10 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     const int lane_id = (threadIdx.y * blockDim.x + threadIdx.x) % 32;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
       if (lane_id + delta < 32) {
-        ValueJoin::join(functor, value, value + delta);
+	Scalar s = value->get();
+	Scalar sd = (value + delta)->get();
+        ValueJoin::join(functor, &s, &sd);
+	value->set(s);
       }
       __syncwarp(mask);
     }
@@ -590,7 +593,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
         shared_team_buffer_element + threadIdx.y * blockDim.x + threadIdx.x;
     *my_shared_team_buffer_element = value;
     // Warp Level Reduction, ignoring Kokkos vector entries
-    scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, skip,
+    scalar_intra_warp_reduction(functor, reinterpret_cast<volatile_wrapper<Scalar>*>(my_shared_team_buffer_element), skip,
                                 32);
     // Wait for every warp to be done before using one warp to do final cross
     // warp reduction
@@ -601,7 +604,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
       if (delta < blockDim.x * blockDim.y)
         *my_shared_team_buffer_element = shared_team_buffer_element[delta];
       __syncwarp(0xffffffff);
-      scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, false,
+      scalar_intra_warp_reduction(functor, reinterpret_cast<volatile_wrapper<Scalar>*>(my_shared_team_buffer_element), false,
                                   blockDim.x * blockDim.y / 32);
       if (threadIdx.x + threadIdx.y == 0) *result = *shared_team_buffer_element;
     }
