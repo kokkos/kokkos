@@ -49,6 +49,7 @@
 /** Duplicates of Kokkos_Error.cpp/hpp, reproduced here
  * for use in non-Kokkos applications
  */
+namespace {
 void traceback_callstack(std::ostream& msg) {
   msg << std::endl << "Traceback functionality not available" << std::endl;
 }
@@ -57,6 +58,7 @@ void throw_runtime_exception(const std::string& msg) {
   o << msg;
   traceback_callstack(o);
   throw std::runtime_error(o.str());
+}
 }
 
 bool Kokkos::Impl::is_unsigned_int(const char* str) {
