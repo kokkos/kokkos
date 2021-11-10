@@ -170,13 +170,20 @@ struct ChunkedArrayManager {
           m_chunk_max(arg_chunk_max),
           m_chunk_size(arg_chunk_size) {}
 
+    // Concurrently destroy array of chunk pointers.
+    KOKKOS_INLINE_FUNCTION void operator()(unsigned i) const {
+      Space().deallocate(m_label.c_str(), m_chunks[i],
+                         sizeof(value_type) * m_chunk_size);
+    }
+
     void execute() {
       // Destroy the array of chunk pointers.
-      // Two entries beyond the max chunks are allocation counters.
-      for (unsigned i = 0; i < m_chunk_max; i++) {
-        Space().deallocate(m_label.c_str(), m_chunks[i],
-                           sizeof(value_type) * m_chunk_size);
-      }
+      using ExecSpace = typename MemorySpace::execution_space;
+      using Range = Kokkos::RangePolicy<unsigned, ExecSpace>;
+      Kokkos::Impl::ParallelFor<Destroy<Space>, Range> closure(*this, Range(0, m_chunk_max));
+      closure.execute();
+      ExecSpace().fence();
+
       // Destroy the linked allocation if we have one.
       if (m_linked != nullptr) {
         Space().deallocate(m_label.c_str(), m_linked,
