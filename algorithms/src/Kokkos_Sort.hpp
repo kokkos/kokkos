@@ -521,8 +521,8 @@ struct BinOp3D {
 
 namespace Impl {
 
-template <class ViewType>
-bool try_std_sort(ViewType view) {
+template <class ViewType, class ExecutionSpace>
+bool try_std_sort(ViewType view, const ExecutionSpace& exec) {
   bool possible    = true;
   size_t stride[8] = {view.stride_0(), view.stride_1(), view.stride_2(),
                       view.stride_3(), view.stride_4(), view.stride_5(),
@@ -533,6 +533,7 @@ bool try_std_sort(ViewType view) {
   possible = possible && (ViewType::Rank == 1);
   possible = possible && (stride[0] == 1);
   if (possible) {
+    exec.fence("Kokkos::sort: Fence before sorting on the host");
     std::sort(view.data(), view.data() + view.extent(0));
   }
   return possible;
@@ -560,7 +561,7 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
     const ExecutionSpace& exec, ViewType const& view,
     bool const always_use_kokkos_sort = false) {
   if (!always_use_kokkos_sort) {
-    if (Impl::try_std_sort(view)) return;
+    if (Impl::try_std_sort(view, exec)) return;
   }
   using CompType = BinOp1D<ViewType>;
 
