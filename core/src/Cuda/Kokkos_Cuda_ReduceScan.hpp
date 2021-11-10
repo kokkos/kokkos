@@ -65,9 +65,13 @@ template <typename T>
 struct alignas(T) volatile_wrapper {
   T t;
 
-  __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs)
-    : t(rhs.get())
-    { }
+  // These should never be 'constructed', as such. Rather, they should always
+  // come from expressions like
+  // T* pt;
+  // auto vpt = reinterpret_cast<volatile_wrapper<T> *>(pt);
+  __device__ __host__ volatile_wrapper() = delete;
+  __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs) = delete;
+
   __device__ __host__ void operator=(const volatile_wrapper<T>& rhs) {
     set(rhs.get());
   }
@@ -81,8 +85,6 @@ struct alignas(T) volatile_wrapper {
     }
     return ret;
   }
-
-  operator T() const { return get(); }
 
   __device__ __host__ inline void set(const T& s) {
     auto vps = reinterpret_cast<const volatile char*>(&s);
