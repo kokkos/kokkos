@@ -854,40 +854,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 namespace Kokkos {
 namespace Impl {
 
-template <typename T>
-struct alignas(T) volatile_wrapper {
-  T t;
-
-  __device__ __host__ inline volatile_wrapper(const T& rhs) { set(rhs.get()); }
-
-  __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs)
-    : t(rhs.get())
-    { }
-  __device__ __host__ void operator=(const volatile_wrapper<T>& rhs) {
-    set(rhs.get());
-  }
-
-  __device__ __host__ inline T get() const {
-    T ret;
-    auto vpt   = reinterpret_cast<const volatile char*>(&t);
-    auto p_ret = reinterpret_cast<char*>(&ret);
-    for (size_t i = 0; i < sizeof(T); ++i) {
-      p_ret[i] = vpt[i];
-    }
-    return ret;
-  }
-
-  operator T() const { return get(); }
-
-  __device__ __host__ inline void set(const T& s) {
-    auto vps = reinterpret_cast<const volatile char*>(&s);
-    auto pt  = reinterpret_cast<volatile char*>(&t);
-    for (size_t i = 0; i < sizeof(T); ++i) {
-      pt[i] = vps[i];
-    }
-  }
-};
-
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Cuda> {
