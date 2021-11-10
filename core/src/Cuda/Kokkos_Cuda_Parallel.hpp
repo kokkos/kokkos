@@ -860,6 +860,13 @@ struct alignas(T) volatile_wrapper {
 
   __device__ __host__ inline volatile_wrapper(const T& rhs) { set(rhs.get()); }
 
+  __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs)
+    : t(rhs.get())
+    { }
+  __device__ __host__ void operator=(const volatile_wrapper<T>& rhs) {
+    set(rhs.get());
+  }
+
   __device__ __host__ inline T get() const {
     T ret;
     auto vpt   = reinterpret_cast<const volatile char*>(&t);
