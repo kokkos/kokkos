@@ -250,8 +250,8 @@ class BinSort {
   //----------------------------------------
   // Create the permutation vector, the bin_offset array and the bin_count
   // array. Can be called again if keys changed
-  template <class ExecutionSpace>
-  void create_permute_vector(const ExecutionSpace& exec) {
+  template <class ExecutionSpace = execution_space>
+  void create_permute_vector(const ExecutionSpace& exec = execution_space{}) {
     const size_t len = range_end - range_begin;
     Kokkos::parallel_for(
         "Kokkos::Sort::BinCount",
@@ -275,8 +275,6 @@ class BinSort {
               exec, 0, bin_op.max_bins()),
           *this);
   }
-
-  void create_permute_vector() { create_permute_vector(execution_space{}); }
 
   // Sort a subset of a view with respect to the first dimension using the
   // permutation array
