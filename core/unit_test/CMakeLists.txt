@@ -117,6 +117,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         FunctorAnalysis
         Init
         LocalDeepCopy
+        MathematicalConstants
         MathematicalFunctions
         MDRange_a
         MDRange_b
