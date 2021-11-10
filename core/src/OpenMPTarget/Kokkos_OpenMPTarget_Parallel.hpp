@@ -455,16 +455,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   void execute() const {
     if constexpr (HasJoin) {
       // Enter this loop if the Functor has a init-join.
-    printf("Execute HasJoin in RangePolicy \n");
+      printf("Execute HasJoin in RangePolicy \n");
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
     } else if constexpr (UseReducer) {
-//    printf("Execute UseReducer in RangePolicy \n");
+      //    printf("Execute UseReducer in RangePolicy \n");
       // Enter this loop if the Functor is a reducer type.
       ParReduceSpecialize::execute_reducer(m_functor, m_policy, m_result_ptr,
                                            m_result_ptr_on_device);
     } else if constexpr (IsArray) {
-//    printf("Execute IsArray in RangePolicy \n");
+      //    printf("Execute IsArray in RangePolicy \n");
       // Enter this loop if the reduction is on an array and the routine is
       // templated over the size of the array.
       if (m_result_ptr_num_elems <= 2) {
@@ -1034,7 +1034,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const int vector_length = p.impl_vector_length();
 
     auto begin = 0;
-    auto end = league_size*team_size + team_size*vector_length;
+    auto end   = league_size * team_size + team_size * vector_length;
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
@@ -1042,7 +1042,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     // FIXME_OPENMPTARGET: This would oversubscribe scratch memory since we are
     // already using the available scratch memory to create temporaries for each
     // thread.
-    if constexpr ((shmem_size_L0 + shmem_size_L1) > 0) {
+    if ((shmem_size_L0 + shmem_size_L1) > 0) {
       Kokkos::abort(
           "OpenMPTarget: Scratch memory is not supported in `parallel_reduce` "
           "over functors with init/join.");
@@ -1129,7 +1129,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     is_device_ptr(scratch_ptr)
       for (int i = 0; i < nteams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        ValueType* team_scratch = scratch_ptr;
+        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr);
         const int team_offset   = team_size * value_count;
         ValueJoin::join(
             f, &team_scratch[i * team_offset],
@@ -1204,15 +1204,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   void execute() const {
     if constexpr (HasJoin) {
-    printf("Execute HasJoin in TeamPolicy \n");
+      printf("Execute HasJoin in TeamPolicy \n");
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
     } else if constexpr (UseReducer) {
-//    printf("Execute UseReducer in TeamPolicy \n");
+      //    printf("Execute UseReducer in TeamPolicy \n");
       ParReduceSpecialize::execute_reducer(m_functor, m_policy, m_result_ptr,
                                            m_result_ptr_on_device);
     } else if constexpr (IsArray) {
-//    printf("Execute IsArray in TeamPolicy \n");
+      //    printf("Execute IsArray in TeamPolicy \n");
       if (m_result_ptr_num_elems <= 2) {
         ParReduceSpecialize::template execute_array<2>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
