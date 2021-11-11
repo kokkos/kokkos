@@ -45,7 +45,6 @@
 #include <gtest/gtest.h>
 #include <TestStdAlgorithmsHelperFunctors.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_MinMaxOperations.hpp>
 #include <std_algorithms/Kokkos_MinMaxElementOperations.hpp>
 
 namespace KE = Kokkos::Experimental;

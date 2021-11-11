@@ -42,10 +42,11 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STD_MIN_MAX_OPERATIONS_HPP
-#define KOKKOS_STD_MIN_MAX_OPERATIONS_HPP
+#ifndef KOKKOS_MIN_MAX_CLAMP_HPP
+#define KOKKOS_MIN_MAX_CLAMP_HPP
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Pair.hpp>
 
 namespace Kokkos {
 namespace Experimental {

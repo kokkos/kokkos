@@ -49,6 +49,7 @@
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
+#include <impl/Kokkos_Tools_Generic.hpp>
 #include <type_traits>
 #include <iostream>
 
