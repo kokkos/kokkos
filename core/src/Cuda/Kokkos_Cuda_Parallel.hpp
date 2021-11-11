@@ -497,7 +497,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
     const int block_size =
-      m_policy.impl_const_additional_data().block_size > 0
+        m_policy.impl_const_additional_data().block_size > 0
             ? m_policy.impl_const_additional_data().block_size
             : Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
                   m_policy.space().impl_internal_space_instance(), attr,

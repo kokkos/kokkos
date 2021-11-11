@@ -57,7 +57,7 @@ namespace Kokkos {
 class Cuda;
 namespace Experimental {
 class HIP;
-} // namespace Experimental
+}  // namespace Experimental
 
 namespace Tools {
 
@@ -74,7 +74,8 @@ class IsTunableRangePolicy<
     typename std::enable_if<std::is_same<typename Kokkos::RangePolicy<
                                              Properties...>::execution_space,
                                          Kokkos::Cuda>::value,
-                            void>::type> : public std::false_type {}; // TODO: change to true when CUDA supported
+                            void>::type> : public std::false_type {
+};  // TODO: change to true when CUDA supported
 
 template <class... Properties>
 class IsTunableRangePolicy<
@@ -179,20 +180,18 @@ struct SimpleTeamSizeCalculator {
                                      exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
-    template <typename Functor, typename Tag, template <class...> class Policy,
+  template <typename Functor, typename Tag, template <class...> class Policy,
             class... Traits>
-  int64_t range_max_block_size(const Policy<Traits...>&,
-                               const Functor&, const Tag&) const {
+  int64_t range_max_block_size(const Policy<Traits...>&, const Functor&,
+                               const Tag&) const {
     return 1;
   }
   template <typename Functor, typename Tag, template <class...> class Policy,
             class... Traits>
-  int64_t range_opt_block_size(const Policy<Traits...>&,
-                               const Functor&, const Tag&) const {
+  int64_t range_opt_block_size(const Policy<Traits...>&, const Functor&,
+                               const Tag&) const {
     return 1;
-  
-}
-
+  }
 };
 
 // when we have a complex reducer, we need to pass an
@@ -228,33 +227,30 @@ struct ComplexReducerSizeCalculator {
         Kokkos::Impl::ParallelReduce<Functor, Policy, ReducerType, exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
-template <typename Functor, typename Tag, template <class...> class Policy,
+  template <typename Functor, typename Tag, template <class...> class Policy,
             class... Traits>
-  int64_t range_opt_block_size(const Policy<Traits...>&,
-                               const Functor&, const Tag&) const {
-
+  int64_t range_opt_block_size(const Policy<Traits...>&, const Functor&,
+                               const Tag&) const {
     return 1;
   }
-template <typename Functor, typename Tag, template <class...> class Policy,
+  template <typename Functor, typename Tag, template <class...> class Policy,
             class... Traits>
-  int64_t range_max_block_size(const Policy<Traits...>&,
-                               const Functor&, const Tag&) const {
+  int64_t range_max_block_size(const Policy<Traits...>&, const Functor&,
+                               const Tag&) const {
+    /**
+        // CUDA version, doesn't work
+        using traits = Kokkos::Impl::PolicyTraits<Traits...>;
 
-/**
-    // CUDA version, doesn't work
-    using traits = Kokkos::Impl::PolicyTraits<Traits...>;
-
-    cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
-        typename DriverFor<Tag>::template type<Functor, Policy<Traits...>,
-                                               Kokkos::Cuda, ReducerType>,
-        typename Policy<Traits...>::launch_bounds>();
-    const int block_size =
-        Kokkos::Impl::cuda_get_max_block_size<Functor,
-                                              typename traits::launch_bounds>(
-            policy.space().impl_internal_space_instance(), attr, functor, 1, 0,
-            0);
-    return block_size;
- */
+        cudaFuncAttributes attr = Kokkos::Tools::Impl::get_cuda_func_attributes<
+            typename DriverFor<Tag>::template type<Functor, Policy<Traits...>,
+                                                   Kokkos::Cuda, ReducerType>,
+            typename Policy<Traits...>::launch_bounds>();
+        const int block_size =
+            Kokkos::Impl::cuda_get_max_block_size<Functor,
+                                                  typename
+       traits::launch_bounds>( policy.space().impl_internal_space_instance(),
+       attr, functor, 1, 0, 0); return block_size;
+     */
     return 1;
   }
 };
