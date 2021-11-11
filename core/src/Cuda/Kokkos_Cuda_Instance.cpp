@@ -261,6 +261,7 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 unsigned long *CudaInternal::constantMemHostStaging = nullptr;
 cudaEvent_t CudaInternal::constantMemReusable       = nullptr;
+std::mutex CudaInternal::constantMemMutex;
 
 //----------------------------------------------------------------------------
 

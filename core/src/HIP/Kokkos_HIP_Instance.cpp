@@ -97,6 +97,7 @@ const HIPInternalDevices &HIPInternalDevices::singleton() {
 
 unsigned long *Impl::HIPInternal::constantMemHostStaging = nullptr;
 hipEvent_t Impl::HIPInternal::constantMemReusable        = nullptr;
+std::mutex Impl::HIPInternal::constantMemMutex;
 
 namespace Impl {
 
