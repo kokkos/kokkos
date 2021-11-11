@@ -55,9 +55,6 @@
 // distance
 #include <std_algorithms/Kokkos_Distance.hpp>
 
-// clamp, min, max, minmax
-#include <std_algorithms/Kokkos_MinMaxOperations.hpp>
-
 // move, swap, iter_swap
 #include "std_algorithms/Kokkos_ModifyingOperations.hpp"
 
