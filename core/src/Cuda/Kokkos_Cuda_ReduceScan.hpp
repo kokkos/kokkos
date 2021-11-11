@@ -897,6 +897,23 @@ inline unsigned cuda_single_inter_block_reduce_scan_shmem(
          Impl::FunctorValueTraits<FunctorType, ArgTag>::value_size(functor);
 }
 
+template <typename WorkTag, typename Policy, typename FunctorType>
+inline void check_reduced_view_shmem_size(const Policy& policy,
+                                          const FunctorType& functor) {
+  size_t minBlockSize = CudaTraits::WarpSize * 1;
+  unsigned reqShmemSize =
+      cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
+          functor, minBlockSize);
+  size_t maxShmemPerBlock =
+      policy.space().impl_internal_space_instance()->m_maxShmemPerBlock;
+
+  if (reqShmemSize > maxShmemPerBlock) {
+    Kokkos::Impl::throw_runtime_exception(
+        "Kokkos::Impl::ParallelReduce< Cuda > requested too much L0 scratch "
+        "memory");
+  }
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 

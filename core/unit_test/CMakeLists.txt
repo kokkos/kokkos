@@ -530,6 +530,7 @@ if(Kokkos_ENABLE_CUDA)
     SOURCES
       UnitTestMainInit.cpp
       ${Cuda_SOURCES1}
+      cuda/TestCuda_ReducerViewSizeLimit.cpp
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(

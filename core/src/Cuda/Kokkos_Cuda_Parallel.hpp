@@ -1228,7 +1228,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -1246,7 +1248,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 };
 
 // MDRangePolicy impl
@@ -1547,7 +1551,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -1561,7 +1567,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 };
 
 //----------------------------------------------------------------------------
