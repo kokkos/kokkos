@@ -550,7 +550,10 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
       ValueInit::init(functor, &value);
       for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
            i += blockDim.x * blockDim.y) {
-        ValueJoin::join(functor, &value, &global_team_buffer_element[i]);
+        Scalar tmp = reinterpret_cast<volatile_wrapper<Scalar>*>(
+                         &global_team_buffer_element[i])
+                         ->get();
+        ValueJoin::join(functor, &value, &tmp);
       }
       scalar_intra_block_reduction(
           functor, value, false, shared_team_buffer_elements + (blockDim.y - 1),
