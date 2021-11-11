@@ -904,6 +904,8 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       }
     }
 
+    __threadfence();
+
     cuda_intra_block_reduce_scan<DoScan, FunctorType, ArgTag>(
         functor, pointer_type(shared_data));
 
