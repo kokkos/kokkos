@@ -134,25 +134,27 @@ __device__ inline
   alignas(alignof(ValueType) > alignof(double) ? alignof(ValueType)
                                                : alignof(double))
       __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * STEP_WIDTH];
-  ValueType* result = (ValueType*)&sh_result;
+  auto result = reinterpret_cast<volatile_wrapper<ValueType>*>(&sh_result);
   const int step    = 32 / blockDim.x;
   int shift         = STEP_WIDTH;
   const int id      = threadIdx.y % step == 0 ? threadIdx.y / step : 65000;
   if (id < STEP_WIDTH) {
-    result[id] = value;
+    result[id].set(value);
   }
   __syncthreads();
   while (shift <= max_active_thread / step) {
     if (shift <= id && shift + STEP_WIDTH > id && threadIdx.x == 0) {
-      join(result[id % STEP_WIDTH], value);
+      ValueType v = result[id % STEP_WIDTH].get();
+      join(v, value);
+      result[id % STEP_WIDTH].set(v);
     }
     __syncthreads();
     shift += STEP_WIDTH;
   }
 
-  value = result[0];
+  value = result[0].get();
   for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++)
-    join(value, result[i]);
+    join(value, result[i].get());
 }
 
 template <class ValueType, class JoinOp>
@@ -301,25 +303,28 @@ __device__ inline
   alignas(alignof(ValueType) > alignof(double) ? alignof(ValueType)
                                                : alignof(double))
       __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * STEP_WIDTH];
-  ValueType* result = (ValueType*)&sh_result;
+  auto result = reinterpret_cast<volatile_wrapper<ValueType>*>(&sh_result);
   const int step    = 32 / blockDim.x;
   int shift         = STEP_WIDTH;
   const int id      = threadIdx.y % step == 0 ? threadIdx.y / step : 65000;
   if (id < STEP_WIDTH) {
-    result[id] = value;
+    result[id].set(value);
   }
   __syncthreads();
   while (shift <= max_active_thread / step) {
     if (shift <= id && shift + STEP_WIDTH > id && threadIdx.x == 0) {
-      reducer.join(result[id % STEP_WIDTH], value);
+      ValueType v = result[id % STEP_WIDTH].get();
+      reducer.join(v, value);
+      result[id % STEP_WIDTH].set(v);
     }
     __syncthreads();
     shift += STEP_WIDTH;
   }
 
-  value = result[0];
-  for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++)
-    reducer.join(value, result[i]);
+  value = result[0].get();
+  for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++) {
+    reducer.join(value, result[i].get());
+  }
 
   reducer.reference() = value;
 }
