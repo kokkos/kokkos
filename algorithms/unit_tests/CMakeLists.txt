@@ -45,7 +45,6 @@ LIST(APPEND ALGORITHM_SOURCES
   TestRandomAccessIterator.cpp
 
   #--- min,max ---
-  TestStdAlgorithmsMinMaxOps.cpp
   TestStdAlgorithmsMinMaxElementOps.cpp
 
   #--- non mod sequence ----

@@ -42,59 +42,22 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STD_ALGORITHMS_HPP
-#define KOKKOS_STD_ALGORITHMS_HPP
+#ifndef KOKKOS_COMMAND_LINE_PARSING_HPP
+#define KOKKOS_COMMAND_LINE_PARSING_HPP
 
-/// \file Kokkos_StdAlgorithms.hpp
-/// \brief Kokkos counterparts for Standard C++ Library algorithms
+#include <string>
+#include <iosfwd>
 
-#include <std_algorithms/Kokkos_Constraints.hpp>
-#include <std_algorithms/Kokkos_RandomAccessIterator.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-
-// distance
-#include <std_algorithms/Kokkos_Distance.hpp>
-
-// move, swap, iter_swap
-#include "std_algorithms/Kokkos_ModifyingOperations.hpp"
-
-// find, find_if, find_if_not
-// for_each, for_each_n
-// mismatch
-// equal
-// count_if, count
-// all_of, any_of, none_of
-// adjacent_find
-// lexicographical_compare
-// search, find_first_of, find_end, search_n
-#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
-
-// replace, replace_copy_if, replace_copy, replace_if
-// copy, copy_n, copy_backward, copy_if
-// fill, fill_n
-// transform
-// generate, generate_n
-// reverse, reverse_copy
-// move, move_backward
-// swap_ranges
-// unique, unique_copy
-// rotate, rotate_copy
-// remove, remove_if, remove_copy, remove_copy_if
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
-
-// is_sorted_until, is_sorted
-#include <std_algorithms/Kokkos_SortingOperations.hpp>
-
-// min_element, max_element, minmax_element
-#include <std_algorithms/Kokkos_MinMaxElementOperations.hpp>
-
-// is_partitioned, partition_copy, partition_point
-#include <std_algorithms/Kokkos_PartitioningOperations.hpp>
-
-// adjacent_difference
-// reduce, transform_reduce
-// exclusive_scan, transform_exclusive_scan
-// inclusive_scan, transform_inclusive_scan
-#include <std_algorithms/Kokkos_Numeric.hpp>
+namespace Kokkos {
+namespace Impl {
+bool is_unsigned_int(const char* str);
+bool check_arg(char const* arg, char const* expected);
+// void throw_runtime_exception(const std::string& msg);
+bool check_int_arg(char const* arg, char const* expected, int* value);
+bool check_str_arg(char const* arg, char const* expected, std::string& value);
+void warn_deprecated_command_line_argument(std::string deprecated,
+                                           std::string valid);
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif
