@@ -67,11 +67,6 @@ struct TestSubscriber {
   static const test_view_type *other_ptr;
 
   template <typename View>
-  static void constructed(View &self) {
-    self_ptr = &self;
-  }
-
-  template <typename View>
   static void copy_constructed(View &self, const View &other) {
     self_ptr  = &self;
     other_ptr = &other;
