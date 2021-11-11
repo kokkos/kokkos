@@ -65,6 +65,23 @@ struct ChunkSize {
   ChunkSize(int value_) : value(value_) {}
 };
 
+class Cuda;  // forward decl
+namespace Impl {
+
+struct EmptyBackendData {};
+struct BlocksizeBackendData {
+  int block_size = -1;
+};
+template <typename>
+struct BackendData {
+  using type = EmptyBackendData;
+};
+template <>
+struct BackendData<Cuda> {
+  using type = BlocksizeBackendData;
+};
+
+}  // namespace Impl
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * Valid template argument options:
@@ -97,7 +114,9 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   typename traits::index_type m_end;
   typename traits::index_type m_granularity;
   typename traits::index_type m_granularity_mask;
-
+  using additional_data =
+      typename Impl::BackendData<typename traits::execution_space>::type;
+  additional_data m_additional_data;
   template <class... OtherProperties>
   friend class RangePolicy;
 
@@ -238,6 +257,10 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
    *
    *  Typically used to partition a range over a group of threads.
    */
+  additional_data& impl_additional_data() { return m_additional_data; }
+  const additional_data& impl_const_additional_data() const {
+    return m_additional_data;
+  }
   struct WorkRange {
     using work_tag    = typename RangePolicy<Properties...>::work_tag;
     using member_type = typename RangePolicy<Properties...>::member_type;

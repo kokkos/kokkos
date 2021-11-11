@@ -649,7 +649,47 @@ auto make_categorical_tuner(std::string name, std::vector<Choice> choices)
     -> CategoricalTuner<Choice> {
   return CategoricalTuner<Choice>(name, choices);
 }
+struct BlockSizeTuner {
+  CategoricalTuner<int64_t> tuner;
 
+ private:
+  template <class Policy, class Functor, class Tag, class Calculator>
+  static CategoricalTuner<int64_t> make_tuner(const std::string& name,
+                                              const Policy& policy,
+                                              const Functor& functor, Tag tag,
+                                              Calculator& calc) {
+    auto max_block_size = calc.range_max_block_size(policy, functor, tag);
+    auto opt_block_size = calc.range_opt_block_size(policy, functor, tag);
+    std::vector<int64_t> valid_block_sizes;
+    for (int64_t block = max_block_size; block > 0; block -= 32) {
+      valid_block_sizes.push_back(block);
+    }
+    return make_categorical_tuner(name + "_block_sizes", valid_block_sizes,
+                                  opt_block_size);
+  }
+
+ public:
+  /** Note DZP: needed, but unfortunate. Code refactoring to avoid need for this
+   * would be good
+   */
+  BlockSizeTuner() = default;
+  template <class Policy, class Functor, class Tag, class Calculator>
+  BlockSizeTuner(const std::string& name, const Policy& policy,
+                 const Functor& functor, Tag tag, const Calculator& calc)
+      : tuner(make_tuner(name, policy, functor, tag, calc)) {
+    // std::cout << "Constructing for "<<name<<", "<<tuner.choices.size()<<"
+    // choices "<<std::endl; for(auto& val : tuner.choices){
+    //  std::cout << "Got value "<<val<<std::endl;
+    //}
+  }
+  template <class Policy>
+  void tune(Policy& in) {
+    in.impl_additional_data().block_size = tuner.begin();
+    // std::cout << "Returned size
+    // "<<in.impl_additional_data().block_size<<std::endl;
+  }
+  void end() { tuner.end(); }
+};
 }  // namespace Experimental
 }  // namespace Tools
 }  // namespace Kokkos
