@@ -455,16 +455,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   void execute() const {
     if constexpr (HasJoin) {
       // Enter this loop if the Functor has a init-join.
-      printf("Execute HasJoin in RangePolicy \n");
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
     } else if constexpr (UseReducer) {
-      //    printf("Execute UseReducer in RangePolicy \n");
       // Enter this loop if the Functor is a reducer type.
       ParReduceSpecialize::execute_reducer(m_functor, m_policy, m_result_ptr,
                                            m_result_ptr_on_device);
     } else if constexpr (IsArray) {
-      //    printf("Execute IsArray in RangePolicy \n");
       // Enter this loop if the reduction is on an array and the routine is
       // templated over the size of the array.
       if (m_result_ptr_num_elems <= 2) {
@@ -1204,15 +1201,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   void execute() const {
     if constexpr (HasJoin) {
-      printf("Execute HasJoin in TeamPolicy \n");
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
     } else if constexpr (UseReducer) {
-      //    printf("Execute UseReducer in TeamPolicy \n");
       ParReduceSpecialize::execute_reducer(m_functor, m_policy, m_result_ptr,
                                            m_result_ptr_on_device);
     } else if constexpr (IsArray) {
-      //    printf("Execute IsArray in TeamPolicy \n");
       if (m_result_ptr_num_elems <= 2) {
         ParReduceSpecialize::template execute_array<2>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
