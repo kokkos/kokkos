@@ -54,6 +54,11 @@
 
 namespace Kokkos {
 
+class Cuda;
+namespace Experimental {
+class HIP;
+} // namespace Experimental
+
 namespace Tools {
 
 namespace Experimental {
@@ -69,7 +74,7 @@ class IsTunableRangePolicy<
     typename std::enable_if<std::is_same<typename Kokkos::RangePolicy<
                                              Properties...>::execution_space,
                                          Kokkos::Cuda>::value,
-                            void>::type> : public std::true_type {};
+                            void>::type> : public std::false_type {}; // TODO: change to true when CUDA supported
 
 template <class... Properties>
 class IsTunableRangePolicy<
@@ -86,8 +91,6 @@ template <int Rank>
 using MDRangeTuningMap =
     std::map<std::string, Kokkos::Tools::Experimental::MDRangeTuner<Rank>>;
 
-template <int Rank>
-static MDRangeTuningMap<Rank> mdrange_tuners;
 template <int Rank>
 static MDRangeTuningMap<Rank> mdrange_tuners;
 
@@ -230,8 +233,6 @@ template <typename Functor, typename Tag, template <class...> class Policy,
   int64_t range_opt_block_size(const Policy<Traits...>&,
                                const Functor&, const Tag&) const {
 
-    (void)policy;
-    (void)functor;
     return 1;
   }
 template <typename Functor, typename Tag, template <class...> class Policy,
@@ -254,8 +255,6 @@ template <typename Functor, typename Tag, template <class...> class Policy,
             0);
     return block_size;
  */
-    (void)policy;
-    (void)functor;
     return 1;
   }
 };
