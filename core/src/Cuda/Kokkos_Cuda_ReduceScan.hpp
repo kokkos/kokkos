@@ -386,13 +386,13 @@ __device__ inline
       last_block = true;
       reducer.init(value);
 
-      pointer_type const volatile global = (pointer_type)m_scratch_space;
+      auto global = reinterpret_cast<volatile_wrapper<value_type>*>(m_scratch_space);
 
       // Reduce all global values with splitting work over threads in one warp
       const int step_size =
           blockDim.x * blockDim.y < 32 ? blockDim.x * blockDim.y : 32;
       for (int i = id; i < (int)gridDim.x; i += step_size) {
-        value_type tmp = global[i];
+        value_type tmp = global[i]->get();
         reducer.join(value, tmp);
       }
 
