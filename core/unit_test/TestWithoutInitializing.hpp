@@ -67,6 +67,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init) {
         return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
@@ -89,4 +90,5 @@ TEST(TEST_CATEGORY, resize_realloc_no_init) {
         return MatchDiagnostic{true, {"Found dealloc event"}};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 }

@@ -72,6 +72,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
         return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
@@ -94,6 +95,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
         return MatchDiagnostic{true, {"Found dealloc event"}};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 }
 
 TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
@@ -117,6 +119,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
         return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 }
 
 TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
@@ -142,6 +145,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
         return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
@@ -164,4 +168,5 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
         return MatchDiagnostic{true, {"Found dealloc event"}};
       });
   ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 }
