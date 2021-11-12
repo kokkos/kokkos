@@ -171,13 +171,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     ValueType result;
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
-#pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
-    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
-    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
-
-    OpenMPTargetReducerWrapper<ReducerType>::init(result);
-
     // Initialize and copy back the result even if it is a zero length
     // reduction.
     if (end <= begin) {
@@ -185,6 +178,12 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                      ptr_on_device);
       return;
     }
+
+#pragma omp declare reduction(                                         \
+    custom:ValueType                                                   \
+    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+
 #pragma omp target teams distribute parallel for map(to                    \
                                                      : f) reduction(custom \
                                                                     : result)
