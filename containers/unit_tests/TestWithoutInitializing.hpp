@@ -73,11 +73,16 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
+}
 
+TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
+  using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
+  Kokkos::DualView<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6,
+                                                              5);
 
-  success = validate_absence(
+  auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 8, 7, 6, 5);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
@@ -146,11 +151,17 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
+}
 
+TEST(TEST_CATEGORY, resize_realloc_no_alloc_scatterview) {
+  using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
+  Kokkos::Experimental::ScatterView<
+      int*** * [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      bla("bla", 7, 6, 5, 4);
 
-  success = validate_absence(
+  auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 7, 6, 5, 4);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 7, 6, 5, 4);

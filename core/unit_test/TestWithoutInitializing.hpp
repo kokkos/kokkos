@@ -68,11 +68,15 @@ TEST(TEST_CATEGORY, resize_realloc_no_init) {
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
+}
 
+TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
+  using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
+  Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
 
-  success = validate_absence(
+  auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 8, 7, 6, 5);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
