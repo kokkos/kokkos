@@ -95,7 +95,6 @@ struct TestTeamReduceLarge {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const member_t& t, uint64_t& update) const {
-    const uint64_t i = t.league_rank();
     Kokkos::single(Kokkos::PerTeam(t), [&]() { update++; });
   }
 
