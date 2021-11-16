@@ -839,7 +839,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const int nwork            = m_league_size * m_team_size;
+    const auto nwork =
+        static_cast<typename Policy::index_type>(m_league_size) * m_team_size;
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||

@@ -1456,7 +1456,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline void execute() {
-    const int nwork = m_policy.m_num_tiles;
+    const auto nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
@@ -1822,7 +1822,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const int nwork            = m_league_size * m_team_size;
+    const auto nwork =
+        static_cast<typename Policy::index_type>(m_league_size) * m_team_size;
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
@@ -2331,7 +2332,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() {
-    const int nwork = m_policy.end() - m_policy.begin();
+    const auto nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
@@ -2618,7 +2619,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   inline void execute() {
-    const int nwork = m_policy.end() - m_policy.begin();
+    const auto nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
