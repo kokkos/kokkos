@@ -839,13 +839,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const auto nwork =
-        static_cast<typename Policy::index_type>(m_league_size) * m_team_size;
+    const bool do_work         = m_league_size > 0 && m_team_size > 0;
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
                                  !std::is_same<ReducerType, InvalidType>::value;
-    if ((nwork > 0) || need_device_set) {
+    if (do_work || need_device_set) {
       const int block_count =
           UseShflReduction
               ? std::min(
@@ -864,7 +863,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       dim3 block(m_vector_size, m_team_size, 1);
       dim3 grid(block_count, 1, 1);
-      if (nwork == 0) {
+      if (!do_work) {
         block = dim3(1, 1, 1);
         grid  = dim3(1, 1, 1);
       }
