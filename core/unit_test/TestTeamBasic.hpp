@@ -107,7 +107,7 @@ struct TestTeamReduceLarge {
 
 TEST(TEST_CATEGORY, team_reduce_large) {
   std::vector<int> ranges{(2LU << 23) - 1, 2LU << 23, (2LU << 24),
-                          (2LU << 24) + 1};
+                          (2LU << 24) + 1, 1LU << 29};
   for (const auto range : ranges) {
     TestTeamReduceLarge<TEST_EXECSPACE> test(range);
     test.run();
