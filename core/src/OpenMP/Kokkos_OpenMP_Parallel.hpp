@@ -80,8 +80,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 #endif
 #endif
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      printf("    [exec] iwork: %ld\tthreadnum:  (%d)\n",
-             static_cast<long>(iwork), omp_get_thread_num());
+      // printf("    [exec] iwork: %ld\tthreadnum:  (%d)\n",
+      //        static_cast<long>(iwork), omp_get_thread_num());
       functor(iwork);
     }
   }
