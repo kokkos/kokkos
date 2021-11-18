@@ -42,19 +42,15 @@
 //@HEADER
 */
 
-#include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_MinMaxOperations.hpp>
-#include <std_algorithms/Kokkos_MinMaxElementOperations.hpp>
-
-namespace Test {
-namespace MinMaxOps {
-
-namespace KE = Kokkos::Experimental;
+#include <gtest/gtest.h>
+#include <Kokkos_Core.hpp>
 
 // ----------------------------------------------------------
 // test max()
 // ----------------------------------------------------------
-TEST(std_algorithms_min_max, max) {
+TEST(TEST_CATEGORY, max) {
+  namespace KE = Kokkos::Experimental;
+
   int a = 1;
   int b = 2;
   EXPECT_TRUE(KE::max(a, b) == 2);
@@ -70,7 +66,8 @@ struct StdAlgoMinMaxOpsTestMax {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ind) const {
-    auto v1 = 10.;
+    namespace KE = Kokkos::Experimental;
+    auto v1      = 10.;
     if (KE::max(v1, m_view(ind)) == 10.) {
       m_view(ind) = 6.;
     }
@@ -80,7 +77,9 @@ struct StdAlgoMinMaxOpsTestMax {
   StdAlgoMinMaxOpsTestMax(ViewType aIn) : m_view(aIn) {}
 };
 
-TEST(std_algorithms_min_max, max_within_parfor) {
+TEST(TEST_CATEGORY, max_within_parfor) {
+  namespace KE = Kokkos::Experimental;
+
   using view_t = Kokkos::View<double*>;
   view_t a("a", 10);
 
@@ -95,7 +94,9 @@ TEST(std_algorithms_min_max, max_within_parfor) {
 // ----------------------------------------------------------
 // test min()
 // ----------------------------------------------------------
-TEST(std_algorithms_min_max, min) {
+TEST(TEST_CATEGORY, min) {
+  namespace KE = Kokkos::Experimental;
+
   int a = 1;
   int b = 2;
   EXPECT_TRUE(KE::min(a, b) == 1);
@@ -111,7 +112,8 @@ struct StdAlgoMinMaxOpsTestMin {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ind) const {
-    auto v1 = 10.;
+    namespace KE = Kokkos::Experimental;
+    auto v1      = 10.;
     if (KE::min(v1, m_view(ind)) == 0.) {
       m_view(ind) = 8.;
     }
@@ -121,7 +123,8 @@ struct StdAlgoMinMaxOpsTestMin {
   StdAlgoMinMaxOpsTestMin(ViewType aIn) : m_view(aIn) {}
 };
 
-TEST(std_algorithms_min_max, min_within_parfor) {
+TEST(TEST_CATEGORY, min_within_parfor) {
+  namespace KE = Kokkos::Experimental;
   using view_t = Kokkos::View<double*>;
   view_t a("a", 10);
 
@@ -136,7 +139,8 @@ TEST(std_algorithms_min_max, min_within_parfor) {
 // ----------------------------------------------------------
 // test minmax()
 // ----------------------------------------------------------
-TEST(std_algorithms_min_max, minmax) {
+TEST(TEST_CATEGORY, minmax) {
+  namespace KE  = Kokkos::Experimental;
   int a         = 1;
   int b         = 2;
   const auto& r = KE::minmax(a, b);
@@ -156,6 +160,7 @@ struct StdAlgoMinMaxOpsTestMinMax {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ind) const {
+    namespace KE  = Kokkos::Experimental;
     auto v1       = 7.;
     const auto& r = KE::minmax(v1, m_view(ind));
     m_view(ind)   = (double)(r.first - r.second);
@@ -165,7 +170,8 @@ struct StdAlgoMinMaxOpsTestMinMax {
   StdAlgoMinMaxOpsTestMinMax(ViewType aIn) : m_view(aIn) {}
 };
 
-TEST(std_algorithms_min_max, minmax_within_parfor) {
+TEST(TEST_CATEGORY, minmax_within_parfor) {
+  namespace KE = Kokkos::Experimental;
   using view_t = Kokkos::View<double*>;
   view_t a("a", 10);
 
@@ -180,7 +186,9 @@ TEST(std_algorithms_min_max, minmax_within_parfor) {
 // ----------------------------------------------------------
 // test clamp()
 // ----------------------------------------------------------
-TEST(std_algorithms_min_max, clamp) {
+TEST(TEST_CATEGORY, clamp) {
+  namespace KE = Kokkos::Experimental;
+
   int a         = 1;
   int b         = 2;
   int c         = 19;
@@ -209,6 +217,7 @@ struct StdAlgoMinMaxOpsTestClamp {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ind) const {
+    namespace KE  = Kokkos::Experimental;
     m_view(ind)   = 10.;
     const auto b  = -2.;
     const auto c  = 3.;
@@ -220,7 +229,8 @@ struct StdAlgoMinMaxOpsTestClamp {
   StdAlgoMinMaxOpsTestClamp(ViewType aIn) : m_view(aIn) {}
 };
 
-TEST(std_algorithms_min_max, clamp_within_parfor) {
+TEST(TEST_CATEGORY, clamp_within_parfor) {
+  namespace KE = Kokkos::Experimental;
   using view_t = Kokkos::View<double*>;
   view_t a("a", 10);
 
@@ -231,6 +241,3 @@ TEST(std_algorithms_min_max, clamp_within_parfor) {
     EXPECT_DOUBLE_EQ(a_h(0), 3.);
   }
 }
-
-}  // namespace MinMaxOps
-}  // namespace Test

@@ -133,6 +133,7 @@ class CudaInternal {
   //  here will break once there are multiple devices though
   static unsigned long* constantMemHostStaging;
   static cudaEvent_t constantMemReusable;
+  static std::mutex constantMemMutex;
 
   static CudaInternal& singleton();
 

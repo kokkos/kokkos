@@ -1145,8 +1145,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_chunk_size(p.m_chunk_size) {}
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
-                     int team_size_request, int vector_length_request = 1)
+  TeamPolicyInternal(const typename traits::execution_space&,
+                     int league_size_request, int team_size_request,
+                     int vector_length_request = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_tune_team_size(false),
@@ -1155,7 +1156,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
     init(league_size_request, team_size_request, vector_length_request);
   }
 
-  TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
+  TeamPolicyInternal(const typename traits::execution_space&,
+                     int league_size_request,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
                      int vector_length_request = 1)
@@ -1168,7 +1170,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
          vector_length_request);
   }
 
-  TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
+  TeamPolicyInternal(const typename traits::execution_space&,
+                     int league_size_request,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
                      const Kokkos::AUTO_t& /* vector_length_request */)
@@ -1179,8 +1182,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_chunk_size(0) {
     init(league_size_request, default_team_size, 1);
   }
-  TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
-                     int team_size_request,
+  TeamPolicyInternal(const typename traits::execution_space&,
+                     int league_size_request, int team_size_request,
                      const Kokkos::AUTO_t& /* vector_length_request */)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},

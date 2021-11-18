@@ -142,6 +142,7 @@ class HIPInternal {
   // here will break once there are multiple devices though
   static unsigned long *constantMemHostStaging;
   static hipEvent_t constantMemReusable;
+  static std::mutex constantMemMutex;
 
   static HIPInternal &singleton();
 

@@ -115,14 +115,18 @@ void test_shared_alloc() {
     // RecordMemS::print_records( std::cout, s, true );
 #endif
 
-    Kokkos::parallel_for(range, [=](size_t i) {
+    // This must be a plain for-loop since deallocation (which can be triggered
+    // by RecordBase::decrement) fences all execution space instances. If this
+    // is a parallel_for, the test can hang with the parallel_for blocking
+    // waiting for itself to complete.
+    for (size_t i = range.begin(); i < range.end(); ++i) {
       while (nullptr !=
              (r[i] = static_cast<RecordMemS*>(RecordBase::decrement(r[i])))) {
 #ifdef KOKKOS_ENABLE_DEBUG
         if (r[i]->use_count() == 1) RecordBase::is_sane(r[i]);
 #endif
       }
-    });
+    }
 
     Kokkos::fence();
   }
@@ -156,14 +160,18 @@ void test_shared_alloc() {
     RecordBase::is_sane(r[0]);
 #endif
 
-    Kokkos::parallel_for(range, [=](size_t i) {
+    // This must be a plain for-loop since deallocation (which can be triggered
+    // by RecordBase::decrement) fences all execution space instances. If this
+    // is a parallel_for, the test can hang with the parallel_for blocking
+    // waiting for itself to complete.
+    for (size_t i = range.begin(); i < range.end(); ++i) {
       while (nullptr !=
              (r[i] = static_cast<RecordMemS*>(RecordBase::decrement(r[i])))) {
 #ifdef KOKKOS_ENABLE_DEBUG
         if (r[i]->use_count() == 1) RecordBase::is_sane(r[i]);
 #endif
       }
-    });
+    }
 
     Kokkos::fence();
 
