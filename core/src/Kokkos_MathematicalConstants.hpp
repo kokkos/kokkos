@@ -48,43 +48,18 @@
 #include <type_traits>
 
 namespace Kokkos {
-namespace Impl {
-template <class>
-struct AlwaysFalse : std::false_type {};
-template <class T>
-struct IllFormed {
-  static_assert(AlwaysFalse<T>::value,
-                "A program that instantiates primary template of a math "
-                "constant variable template is ill-formed");
-};
-}  // namespace Impl
-
 namespace Experimental {
 
 #if defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE)                                \
-  template <class T, std::enable_if_t<std::is_floating_point_v<T>>* = nullptr> \
-  struct TRAIT {                                                               \
-    static constexpr T value = VALUE;                                          \
-  };                                                                           \
-  template <class T>                                                           \
-  inline constexpr auto TRAIT##_v = TRAIT<T>::value
+#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
+  template <class T>                            \
+  inline constexpr auto TRAIT##_v =             \
+      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE);
 #else
-#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE)   \
-  template <class T>                              \
-  struct TRAIT : ::Kokkos::Impl::IllFormed<T> {}; \
-  template <>                                     \
-  struct TRAIT<float> {                           \
-    static constexpr float value = VALUE;         \
-  };                                              \
-  template <>                                     \
-  struct TRAIT<double> {                          \
-    static constexpr double value = VALUE;        \
-  };                                              \
-  template <>                                     \
-  struct TRAIT<long double> {                     \
-    static constexpr long double value = VALUE;   \
-  }
+#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
+  template <class T>                            \
+  constexpr auto TRAIT##_v =                    \
+      std::enable_if_t<std::is_floating_point<T>::value, T>(VALUE);
 #endif
 
 // clang-format off
