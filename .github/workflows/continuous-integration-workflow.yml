@@ -1,6 +1,10 @@
 name: github-Linux
 on: [push, pull_request]
 
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
 jobs:
   CI:
     continue-on-error: true
