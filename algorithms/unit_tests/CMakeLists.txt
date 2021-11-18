@@ -44,9 +44,6 @@ LIST(APPEND ALGORITHM_SOURCES
   TestStdAlgorithmsConstraints.cpp
   TestRandomAccessIterator.cpp
 
-  #--- min,max ---
-  TestStdAlgorithmsMinMaxElementOps.cpp
-
   #--- non mod sequence ----
   TestStdAlgorithmsLexicographicalCompare.cpp
   TestStdAlgorithmsForEach.cpp
