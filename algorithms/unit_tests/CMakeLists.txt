@@ -36,74 +36,6 @@ ENDIF()
 
 SET(ALGORITHM UnitTestMain.cpp)
 
-LIST(APPEND ALGORITHM_SOURCES
-  TestStdAlgorithmsCommon.cpp
-
-  #--- general ones ---
-  TestStdReducers.cpp
-  TestStdAlgorithmsConstraints.cpp
-  TestRandomAccessIterator.cpp
-
-  #--- non mod sequence ----
-  TestStdAlgorithmsLexicographicalCompare.cpp
-  TestStdAlgorithmsForEach.cpp
-  TestStdAlgorithmsFind.cpp
-  TestStdAlgorithmsFindFirstOf.cpp
-  TestStdAlgorithmsFindEnd.cpp
-  TestStdAlgorithmsCount.cpp
-  TestStdAlgorithmsEqual.cpp
-  TestStdAlgorithmsAllAnyNoneOf.cpp
-  TestStdAlgorithmsAdjacentFind.cpp
-  TestStdAlgorithmsSearch.cpp
-  TestStdAlgorithmsSearch_n.cpp
-  TestStdAlgorithmsMismatch.cpp
-
-  #--- mod ----
-  TestStdAlgorithmsModOps.cpp
-  TestStdAlgorithmsModSeqOps.cpp
-  TestStdAlgorithmsTransformUnaryOp.cpp
-  TestStdAlgorithmsReplace.cpp
-  TestStdAlgorithmsReplaceIf.cpp
-  TestStdAlgorithmsReplaceCopy.cpp
-  TestStdAlgorithmsReplaceCopyIf.cpp
-  TestStdAlgorithmsCopyIf.cpp
-  TestStdAlgorithmsUnique.cpp
-  TestStdAlgorithmsUniqueCopy.cpp
-  TestStdAlgorithmsRemove.cpp
-  TestStdAlgorithmsRemoveIf.cpp
-  TestStdAlgorithmsRemoveCopy.cpp
-  TestStdAlgorithmsRemoveCopyIf.cpp
-  TestStdAlgorithmsRotate.cpp
-  TestStdAlgorithmsRotateCopy.cpp
-  TestStdAlgorithmsReverse.cpp
-  TestStdAlgorithmsShiftLeft.cpp
-  TestStdAlgorithmsShiftRight.cpp
-
-  #--- sorting ----
-  TestStdAlgorithmsIsSorted.cpp
-  TestStdAlgorithmsIsSortedUntil.cpp
-
-  #--- partitioning ----
-  TestStdAlgorithmsPartitioningOps.cpp
-  TestStdAlgorithmsPartitionCopy.cpp
-
-  #--- numerics ----
-  TestStdAlgorithmsNumerics.cpp
-  TestStdAlgorithmsAdjacentDifference.cpp
-  TestStdAlgorithmsExclusiveScan.cpp
-  TestStdAlgorithmsTransformExclusiveScan.cpp
-  TestStdAlgorithmsInclusiveScan.cpp
-  TestStdAlgorithmsTransformInclusiveScan.cpp
-)
-
-IF(Kokkos_ENABLE_OPENMP)
-  LIST(APPEND ALGORITHM_SOURCES
-    TestOpenMP_Sort1D.cpp
-    TestOpenMP_Sort3D.cpp
-    TestOpenMP_SortDynamicView.cpp
-  )
-ENDIF()
-
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
@@ -158,7 +90,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(STDALGO_SOURCES_B)
     foreach(Name
 	StdAlgorithmsCommon
-	StdAlgorithmsMinMaxOps
 	StdAlgorithmsMinMaxElementOps
 	)
       list(APPEND STDALGO_SOURCES_B Test${Name}.cpp)
