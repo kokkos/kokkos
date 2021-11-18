@@ -11,14 +11,14 @@ jobs:
         cmake_build_type: ['Release', 'Debug']
         openmp: ['ON']
         include:
-#          - distro: 'fedora:intel'
-#            cxx: 'icpc'
-#            cmake_build_type: 'Release'
-#            openmp: 'ON'
-#          - distro: 'fedora:intel'
-#            cxx: 'icpc'
-#            cmake_build_type: 'Debug'
-#            openmp: 'ON'
+          - distro: 'fedora:intel'
+            cxx: 'icpc'
+            cmake_build_type: 'Release'
+            openmp: 'ON'
+          - distro: 'fedora:intel'
+            cxx: 'icpc'
+            cmake_build_type: 'Debug'
+            openmp: 'ON'
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
