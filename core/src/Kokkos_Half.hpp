@@ -116,4 +116,62 @@ cast_from_half(half_t val) {
 #else
 #define KOKKOS_HALF_T_IS_FLOAT false
 #endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
+
+#ifndef KOKKOS_IMPL_BHALF_TYPE_DEFINED
+#define KOKKOS_IMPL_BHALF_TYPE_DEFINED
+#define KOKKOS_BHALF_T_IS_FLOAT true
+namespace Kokkos {
+namespace Impl {
+struct bhalf_impl_t {
+  using type = float;
+};
+}  // namespace Impl
+
+namespace Experimental {
+
+using bhalf_t = Kokkos::Impl::bhalf_impl_t::type;
+
+// cast_to_bhalf
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(float val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(bool val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(double val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(short val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned short val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(int val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned int val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(long val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned long val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(long long val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned long long val) { return bhalf_t(val); }
+
+// cast_from_bhalf
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    std::is_same<T, float>::value || std::is_same<T, bool>::value ||
+        std::is_same<T, double>::value || std::is_same<T, short>::value ||
+        std::is_same<T, unsigned short>::value || std::is_same<T, int>::value ||
+        std::is_same<T, unsigned int>::value || std::is_same<T, long>::value ||
+        std::is_same<T, unsigned long>::value ||
+        std::is_same<T, long long>::value ||
+        std::is_same<T, unsigned long long>::value,
+    T>
+cast_from_bhalf(bhalf_t val) {
+  return T(val);
+}
+}  // namespace Experimental
+}  // namespace Kokkos
+#else
+#define KOKKOS_BHALF_T_IS_FLOAT false
+#endif  // KOKKOS_IMPL_BHALF_TYPE_DEFINED
 #endif  // KOKKOS_HALF_HPP_
