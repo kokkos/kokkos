@@ -312,10 +312,11 @@ void OpenMP::impl_initialize(int thread_count) {
     // g_openmp_hardware_max_threads to thread_count
     if (thread_count < 0) {
       thread_count = Impl::g_openmp_hardware_max_threads;
-    } else if (thread_count == 0 &&
-               Impl::g_openmp_hardware_max_threads != process_num_threads) {
-      Impl::g_openmp_hardware_max_threads = process_num_threads;
-      omp_set_num_threads(Impl::g_openmp_hardware_max_threads);
+    } else if (thread_count == 0) {
+      if (Impl::g_openmp_hardware_max_threads != process_num_threads) {
+        Impl::g_openmp_hardware_max_threads = process_num_threads;
+        omp_set_num_threads(Impl::g_openmp_hardware_max_threads);
+      }
     } else {
       if (Kokkos::show_warnings() && thread_count > process_num_threads) {
         printf(
