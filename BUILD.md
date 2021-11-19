@@ -180,6 +180,9 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_PROFILING_LOAD_PRINT
     * Whether to print information about which profiling tools gotloaded
     * BOOL Default: OFF
+* Kokkos_ENABLE_NATIVE_OPENMP
+    * Whether to enable refactored OpenMP backend implementation
+    * BOOL Default: OFF
 * Kokkos_ENABLE_TESTS
     * Whether to enable test suite
     * BOOL Default: OFF
