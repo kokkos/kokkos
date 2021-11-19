@@ -755,12 +755,14 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       tools/TestLogicalSpaces.cpp
   )
   endif()
+  if(NOT (KOKKOS_CXX_COMPILER_ID STREQUAL Intel AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 18.0.0))
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_KokkosP
     SOURCES
     tools/TestEventCorrectness.cpp
     tools/TestProfilingSection.cpp
   )
+  endif()
   if(KOKKOS_ENABLE_LIBDL)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_ToolIndependence
