@@ -577,6 +577,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y0(const CmplxType& z,
   //                           argument regions
   //             bw_start  --- Starting point for backward recurrence
   //    Output:  cby0      --- Y0(z)
+  using Kokkos::Experimental::egamma_v;
   using Kokkos::Experimental::fabs;
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
@@ -586,7 +587,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y0(const CmplxType& z,
 
   CmplxType cby0, cbj0;
   constexpr auto pi    = pi_v<RealType>;
-  const RealType el    = 0.57721566490153286060651209008240;
+  constexpr auto el    = egamma_v<RealType>;
   const RealType a[12] = {
       -0.703125e-01,           0.112152099609375e+00,   -0.5725014209747314e+00,
       0.6074042001273483e+01,  -0.1100171402692467e+03, 0.3038090510922384e+04,
@@ -772,6 +773,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y1(const CmplxType& z,
   //                           argument regions
   //             bw_start  --- Starting point for backward recurrence
   //    Output:  cby1      --- Y1(z)
+  using Kokkos::Experimental::egamma_v;
   using Kokkos::Experimental::fabs;
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
@@ -781,7 +783,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y1(const CmplxType& z,
 
   CmplxType cby1, cbj0, cbj1, cby0;
   constexpr auto pi     = pi_v<RealType>;
-  const RealType el     = 0.57721566490153286060651209008240;
+  constexpr auto el     = egamma_v<RealType>;
   const RealType a1[12] = {0.1171875e+00,          -0.144195556640625e+00,
                            0.6765925884246826e+00, -0.6883914268109947e+01,
                            0.1215978918765359e+03, -0.3302272294480852e+04,
@@ -950,6 +952,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k0(const CmplxType& z,
   //                           argument regions
   //             bw_start  --- Starting point for backward recurrence
   //    Output:  cbk0      --- K0(z)
+  using Kokkos::Experimental::egamma_v;
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::pow;
@@ -958,7 +961,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k0(const CmplxType& z,
 
   CmplxType cbk0, cbi0;
   constexpr auto pi = pi_v<RealType>;
-  const RealType el = 0.57721566490153286060651209008240;
+  constexpr auto el = egamma_v<RealType>;
 
   RealType a0  = Kokkos::abs(z);
   CmplxType ci = CmplxType(0.0, 1.0);
@@ -1098,6 +1101,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k1(const CmplxType& z,
   //                           argument regions
   //             bw_start  --- Starting point for backward recurrence
   //    Output:  cbk1      --- K1(z)
+  using Kokkos::Experimental::egamma_v;
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::pow;
@@ -1106,7 +1110,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k1(const CmplxType& z,
 
   CmplxType cbk0, cbi0, cbk1, cbi1;
   constexpr auto pi = pi_v<RealType>;
-  const RealType el = 0.57721566490153286060651209008240;
+  constexpr auto el = egamma_v<RealType>;
 
   RealType a0  = Kokkos::abs(z);
   CmplxType ci = CmplxType(0.0, 1.0);
