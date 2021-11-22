@@ -126,8 +126,8 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erf(
 
   using CmplxType = Kokkos::complex<RealType>;
 
-  auto const inf = infinity<RealType>::value;
-  auto const tol = epsilon<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
+  constexpr auto tol = epsilon<RealType>::value;
 
   const RealType fnorm = 1.12837916709551;
   const RealType gnorm = 0.564189583547756;
@@ -305,8 +305,8 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erfcx(
 
   using CmplxType = Kokkos::complex<RealType>;
 
-  auto const inf = infinity<RealType>::value;
-  auto const tol = epsilon<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
+  constexpr auto tol = epsilon<RealType>::value;
 
   const RealType fnorm = 1.12837916709551;
   const RealType gnorm = 0.564189583547756;
@@ -582,7 +582,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y0(const CmplxType& z,
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::pow;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType cby0, cbj0;
   constexpr auto pi    = pi_v<RealType>;
@@ -777,7 +777,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y1(const CmplxType& z,
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::pow;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType cby1, cbj0, cbj1, cby0;
   constexpr auto pi     = pi_v<RealType>;
@@ -954,7 +954,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k0(const CmplxType& z,
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::pow;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType cbk0, cbi0;
   constexpr auto pi = pi_v<RealType>;
@@ -1102,7 +1102,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k1(const CmplxType& z,
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::pow;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType cbk0, cbi0, cbk1, cbi1;
   constexpr auto pi = pi_v<RealType>;
@@ -1172,7 +1172,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h10(const CmplxType& z) {
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType ch10, cbk0, cbj0, cby0;
   constexpr auto pi = pi_v<RealType>;
@@ -1203,7 +1203,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h11(const CmplxType& z) {
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType ch11, cbk1, cbj1, cby1;
   constexpr auto pi = pi_v<RealType>;
@@ -1234,7 +1234,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h20(const CmplxType& z) {
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType ch20, cbk0, cbj0, cby0;
   constexpr auto pi = pi_v<RealType>;
@@ -1265,7 +1265,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h21(const CmplxType& z) {
   using Kokkos::Experimental::infinity;
   using Kokkos::Experimental::pi_v;
 
-  auto const inf = infinity<RealType>::value;
+  constexpr auto inf = infinity<RealType>::value;
 
   CmplxType ch21, cbk1, cbj1, cby1;
   constexpr auto pi = pi_v<RealType>;
