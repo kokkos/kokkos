@@ -54,12 +54,12 @@ namespace Experimental {
 #define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
   template <class T>                            \
   inline constexpr auto TRAIT##_v =             \
-      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE);
+      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE)
 #else
 #define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
   template <class T>                            \
   constexpr auto TRAIT##_v =                    \
-      std::enable_if_t<std::is_floating_point<T>::value, T>(VALUE);
+      std::enable_if_t<std::is_floating_point<T>::value, T>(VALUE)
 #endif
 
 // clang-format off
