@@ -364,19 +364,13 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <class FunctorType>
   int internal_team_size_recommended_for(const FunctorType& f) const {
     // FIXME_SYCL improve
-    const int max_team_size_half = internal_team_size_max_for(f) / 2;
-    int power_of_two             = 1;
-    while (power_of_two <= max_team_size_half) power_of_two <<= 1;
-    return power_of_two;
+    return 1 << Kokkos::log2(internal_team_size_max_for(f));
   }
 
   template <class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    const int max_team_size_half = internal_team_size_max_reduce(f) / 2;
-    int power_of_two             = 1;
-    while (power_of_two <= max_team_size_half) power_of_two <<= 1;
-    return power_of_two;
+    return 1 << Kokkos::log2(internal_team_size_max_reduce(f));
   }
 };
 
