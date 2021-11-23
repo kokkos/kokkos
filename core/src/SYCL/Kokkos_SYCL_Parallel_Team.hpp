@@ -598,6 +598,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         sizeof(value_type) * std::max(value_count, 1u) * init_size));
     value_type* device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
+    auto scratch_flags = static_cast<unsigned int*>(
+        instance.scratch_flags(sizeof(unsigned int)));
 
     sycl::event last_reduction_event;
 
@@ -653,14 +655,17 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // separately, write the workgroup results back to global memory and recurse
     // until only one workgroup does the reduction and thus gets the final
     // value.
-    bool first_run = true;
-    while (size > 1) {
+    if (size > 1) {
       auto n_wgroups             = (size + wgroup_size - 1) / wgroup_size;
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
             local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
                       cgh);
+        sycl::accessor<unsigned int, 1, sycl::access::mode::read_write,
+                       sycl::access::target::local>
+            num_teams_done(1, cgh);
+
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
         sycl::accessor<char, 1, sycl::access::mode::read_write,
@@ -680,16 +685,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 sycl::range<2>(m_team_size, m_vector_size)),
             [=](sycl::nd_item<2> item) {
 #ifdef KOKKOS_ENABLE_DEBUG
-              if (first_run && item.get_sub_group().get_local_range() %
-                                       item.get_local_range(1) !=
-                                   0)
+              if (item.get_sub_group().get_local_range() %
+                      item.get_local_range(1) !=
+                  0)
                 Kokkos::abort(
                     "The sub_group size is not divisible by the vector_size. "
                     "Choose a smaller vector_size!");
 #endif
-              const auto local_id = item.get_local_linear_id();
-              const auto global_id =
-                  wgroup_size * item.get_group_linear_id() + local_id;
+              const auto local_id          = item.get_local_linear_id();
               const auto& selected_reducer = ReducerConditional::select(
                   static_cast<const FunctorType&>(functor),
                   static_cast<const ReducerType&>(reducer));
@@ -698,45 +701,55 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               // memory. Otherwise, the local memory is initialized with the
               // results from the previous iteration that are stored in global
               // memory.
-              if (first_run) {
-                reference_type update = ValueInit::init(
-                    selected_reducer, &local_mem[local_id * value_count]);
-                const member_type team_member(
-                    team_scratch_memory_L0.get_pointer(), shmem_begin,
-                    scratch_size[0],
-                    static_cast<char*>(scratch_ptr[1]) +
-                        item.get_group(1) * scratch_size[1],
-                    scratch_size[1], item);
-                if constexpr (std::is_same<WorkTag, void>::value)
-                  functor(team_member, update);
-                else
-                  functor(WorkTag(), team_member, update);
-              } else {
-                if (global_id >= size)
-                  ValueInit::init(selected_reducer,
-                                  &local_mem[local_id * value_count]);
-                else {
-                  ValueOps::copy(functor, &local_mem[local_id * value_count],
-                                 &results_ptr[global_id * value_count]);
-                }
-              }
+              reference_type update = ValueInit::init(
+                  selected_reducer, &local_mem[local_id * value_count]);
+              const member_type team_member(
+                  team_scratch_memory_L0.get_pointer(), shmem_begin,
+                  scratch_size[0],
+                  static_cast<char*>(scratch_ptr[1]) +
+                      item.get_group(1) * scratch_size[1],
+                  scratch_size[1], item);
+              if constexpr (std::is_same<WorkTag, void>::value)
+                functor(team_member, update);
+              else
+                functor(WorkTag(), team_member, update);
               item.barrier(sycl::access::fence_space::local_space);
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
                   device_accessible_result_ptr, value_count, selected_reducer,
-                  static_cast<const FunctorType&>(functor),
-                  n_wgroups <= 1 && item.get_group_linear_id() == 0);
+                  static_cast<const FunctorType&>(functor), false,
+                  item.get_local_range()[0]);
 
-              // FIXME_SYCL not quite sure why this is necessary
-              item.barrier(sycl::access::fence_space::global_space);
+              if (local_id == 0)
+                num_teams_done[0] =
+                    Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
+              item.barrier(sycl::access::fence_space::local_space);
+              if (num_teams_done[0] == n_wgroups) {
+                if (local_id >= n_wgroups)
+                  ValueInit::init(selected_reducer,
+                                  &local_mem[local_id * value_count]);
+                else {
+                  ValueOps::copy(functor, &local_mem[local_id * value_count],
+                                 &results_ptr[local_id * value_count]);
+                  for (unsigned int id = local_id + wgroup_size; id < n_wgroups;
+                       id += wgroup_size) {
+                    ValueJoin::join(selected_reducer,
+                                    &local_mem[local_id * value_count],
+                                    &results_ptr[id * value_count]);
+                  }
+                }
+
+                SYCLReduction::workgroup_reduction<ValueJoin, ValueOps,
+                                                   WorkTag>(
+                    item, local_mem.get_pointer(), results_ptr,
+                    device_accessible_result_ptr, value_count, selected_reducer,
+                    static_cast<const FunctorType&>(functor), true, n_wgroups);
+              }
             });
       });
-      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
-      last_reduction_event = parallel_reduce_event;
-
-      first_run = false;
-      size      = n_wgroups;
+      last_reduction_event =
+          q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
