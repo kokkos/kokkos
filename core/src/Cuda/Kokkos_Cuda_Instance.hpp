@@ -104,10 +104,10 @@ class CudaInternal {
   cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
-  mutable size_type m_scratchSpaceCount;
-  mutable size_type m_scratchFlagsCount;
-  mutable size_type m_scratchUnifiedCount;
-  mutable size_type m_scratchFunctorSize;
+  mutable std::size_t m_scratchSpaceCount;
+  mutable std::size_t m_scratchFlagsCount;
+  mutable std::size_t m_scratchUnifiedCount;
+  mutable std::size_t m_scratchFunctorSize;
 
   size_type m_scratchUnifiedSupported;
   size_type m_streamCount;
@@ -196,10 +196,10 @@ class CudaInternal {
   }
 
   // Resizing of reduction related scratch spaces
-  size_type* scratch_space(const size_type size) const;
-  size_type* scratch_flags(const size_type size) const;
-  size_type* scratch_unified(const size_type size) const;
-  size_type* scratch_functor(const size_type size) const;
+  size_type* scratch_space(const std::size_t size) const;
+  size_type* scratch_flags(const std::size_t size) const;
+  size_type* scratch_unified(const std::size_t size) const;
+  size_type* scratch_functor(const std::size_t size) const;
   uint32_t impl_get_instance_id() const;
   // Resizing of team level 1 scratch
   std::pair<void*, int> resize_team_scratch_space(std::int64_t bytes,
