@@ -299,6 +299,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erfcx(
   using Kokkos::Experimental::exp;
   using Kokkos::Experimental::fabs;
   using Kokkos::Experimental::infinity;
+  using Kokkos::Experimental::inv_sqrtpi_v;
   using Kokkos::Experimental::isinf;
   using Kokkos::Experimental::pi_v;
   using Kokkos::Experimental::sin;
@@ -309,7 +310,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erfcx(
   constexpr auto tol = epsilon<RealType>::value;
 
   const RealType fnorm = 1.12837916709551;
-  const RealType gnorm = 0.564189583547756;
+  constexpr auto gnorm = inv_sqrtpi_v<RealType>;
   const RealType eh    = 0.606530659712633;
   const RealType ef    = 0.778800783071405;
   // const RealType tol   = 1.0e-13;
