@@ -324,7 +324,7 @@ using ScratchGrain =
 enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
 Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
-    const Kokkos::Experimental::HIP::size_type size) {
+    const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount * sizeScratchGrain < size) {
     m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
@@ -348,7 +348,7 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
 }
 
 Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
-    const Kokkos::Experimental::HIP::size_type size) {
+    const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount * sizeScratchGrain < size) {
     m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
@@ -486,12 +486,12 @@ Kokkos::Experimental::HIP::size_type hip_internal_maximum_grid_count() {
 }
 
 Kokkos::Experimental::HIP::size_type *hip_internal_scratch_space(
-    const HIP &instance, const HIP::size_type size) {
+    const HIP &instance, const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);
 }
 
 Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
-    const HIP &instance, const HIP::size_type size) {
+    const HIP &instance, const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_flags(size);
 }
 

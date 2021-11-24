@@ -60,12 +60,12 @@ CudaSpace::size_type cuda_internal_maximum_shared_words();
 
 CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
 
-CudaSpace::size_type* cuda_internal_scratch_flags(
-    const Cuda&, const CudaSpace::size_type size);
-CudaSpace::size_type* cuda_internal_scratch_space(
-    const Cuda&, const CudaSpace::size_type size);
-CudaSpace::size_type* cuda_internal_scratch_unified(
-    const Cuda&, const CudaSpace::size_type size);
+CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
+                                                  const std::size_t size);
+CudaSpace::size_type* cuda_internal_scratch_space(const Cuda&,
+                                                  const std::size_t size);
+CudaSpace::size_type* cuda_internal_scratch_unified(const Cuda&,
+                                                    const std::size_t size);
 
 }  // namespace Impl
 }  // namespace Kokkos

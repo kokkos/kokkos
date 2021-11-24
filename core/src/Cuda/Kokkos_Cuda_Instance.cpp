@@ -620,8 +620,7 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   return m_scratchSpace;
 }
 
-Cuda::size_type *CudaInternal::scratch_unified(
-    const Cuda::size_type size) const {
+Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
   if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
       m_scratchUnifiedCount * sizeScratchGrain < size) {
     m_scratchUnifiedCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
