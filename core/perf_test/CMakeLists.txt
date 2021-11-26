@@ -2,6 +2,7 @@
 #INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 #INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
+find_package(GTest REQUIRED)
 
 # warning: PerfTest_CustomReduction.cpp uses
 # ../../algorithms/src/Kokkos_Random.hpp
