@@ -6,6 +6,12 @@ INCLUDE(GNUInstallDirs)
 
 MESSAGE(STATUS "The project name is: ${PROJECT_NAME}")
 
+IF(GTest_FOUND)
+  SET(KOKKOS_GTEST_LIB GTest::gtest)
+ELSE()  # fallback to internal gtest
+  SET(KOKKOS_GTEST_LIB kokkos_gtest)
+ENDIF()
+
 FUNCTION(VERIFY_EMPTY CONTEXT)
   if(${ARGN})
     MESSAGE(FATAL_ERROR "Kokkos does not support all of Tribits. Unhandled arguments in ${CONTEXT}:\n${ARGN}")
@@ -157,7 +163,7 @@ FUNCTION(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
         TRIBITS_ADD_EXECUTABLE_AND_TEST(
             ${ROOT_NAME}
             SOURCES ${PARSE_SOURCES}
-            TESTONLYLIBS GTest::gtest
+            TESTONLYLIBS ${KOKKOS_GTEST_LIB}
             NUM_MPI_PROCS 1
             COMM serial mpi
             ARGS ${PARSE_ARGS}
@@ -249,7 +255,7 @@ MACRO(KOKKOS_ADD_TEST_EXECUTABLE ROOT_NAME)
   KOKKOS_ADD_EXECUTABLE(${ROOT_NAME}
     SOURCES ${PARSE_SOURCES}
     ${PARSE_UNPARSED_ARGUMENTS}
-    TESTONLYLIBS GTest::gtest
+    TESTONLYLIBS ${KOKKOS_GTEST_LIB}
   )
   SET(EXE_NAME ${PACKAGE_NAME}_${ROOT_NAME})
 ENDMACRO()

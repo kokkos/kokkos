@@ -175,6 +175,15 @@ IF(NOT MSVC)
     GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 ENDIF()
 
+# FIXME: only if this is required, do not use REQUIRED etc
+#        also, possibly find a better place for this
+#        (has to be before kokkos_tribits)
+find_package(GTest)
+IF(GTest_FOUND)
+  message(STATUS "\n\nGTEST_INCLUDE_DIRS=${GTEST_INCLUDE_DIRS}\n")
+  message(STATUS "\n\nGTEST_BOTH_LIBRARIES=${GTEST_BOTH_LIBRARIES}\n")
+ENDIF()
+
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
@@ -278,15 +287,6 @@ KOKKOS_PACKAGE_DECL()
 #
 # D) Process the subpackages (subdirectories) for Kokkos
 #
-
-# FIXME: only if this is required, do not use REQUIRED etc
-find_package(GTest)
-if(GTest_FOUND)
-  message(STATUS "\n\nGTest_FOUND=TRUE\n")
-endif()
-message(STATUS "\n\n${GTEST_INCLUDE_DIRS}\n")
-message(STATUS "\n\n${GTEST_BOTH_LIBRARIES}\n")
-
 KOKKOS_PROCESS_SUBPACKAGES()
 
 
