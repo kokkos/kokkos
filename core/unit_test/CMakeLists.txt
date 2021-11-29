@@ -2,7 +2,6 @@
 # Add test-only library for gtest to be reused by all the subpackages
 #
 
-find_package(GTest REQUIRED)
 
 SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
 

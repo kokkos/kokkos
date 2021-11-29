@@ -4,8 +4,6 @@ KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
-find_package(GTest REQUIRED)
-
 foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")

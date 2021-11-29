@@ -278,6 +278,15 @@ KOKKOS_PACKAGE_DECL()
 #
 # D) Process the subpackages (subdirectories) for Kokkos
 #
+
+# FIXME: only if this is required, do not use REQUIRED etc
+find_package(GTest)
+if(GTest_FOUND)
+  message(STATUS "\n\nGTest_FOUND=TRUE\n")
+endif()
+message(STATUS "\n\n${GTEST_INCLUDE_DIRS}\n")
+message(STATUS "\n\n${GTEST_BOTH_LIBRARIES}\n")
+
 KOKKOS_PROCESS_SUBPACKAGES()
 
 
