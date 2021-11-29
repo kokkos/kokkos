@@ -55,7 +55,7 @@ struct CudaTraits {
 
 CudaSpace::size_type cuda_internal_multiprocessor_count();
 CudaSpace::size_type cuda_internal_maximum_warp_count();
-CudaSpace::size_type cuda_internal_maximum_grid_count();
+std::array<CudaSpace::size_type, 3> cuda_internal_maximum_grid_count();
 CudaSpace::size_type cuda_internal_maximum_shared_words();
 
 CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
@@ -91,7 +91,7 @@ class CudaInternal {
   int m_cudaArch;
   unsigned m_multiProcCount;
   unsigned m_maxWarpCount;
-  unsigned m_maxBlock;
+  std::array<size_type, 3> m_maxBlock;
   unsigned m_maxSharedWords;
   uint32_t m_maxConcurrency;
   int m_shmemPerSM;
@@ -164,7 +164,7 @@ class CudaInternal {
         m_cudaArch(-1),
         m_multiProcCount(0),
         m_maxWarpCount(0),
-        m_maxBlock(0),
+        m_maxBlock({0, 0, 0}),
         m_maxSharedWords(0),
         m_maxConcurrency(0),
         m_shmemPerSM(0),
