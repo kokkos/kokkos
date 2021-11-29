@@ -760,7 +760,9 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_KokkosP
     SOURCES
+    UnitTestMainInit.cpp
     tools/TestEventCorrectness.cpp
+    tools/TestWithoutInitializing.cpp
     tools/TestProfilingSection.cpp
   )
   endif()
