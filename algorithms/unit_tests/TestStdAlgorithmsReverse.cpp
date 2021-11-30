@@ -118,8 +118,9 @@ template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "reverse: " << name << ", " << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType()) << std::endl;
+  // std::cout << "reverse: " << name << ", " << view_tag_to_string(Tag{}) << ",
+  // "
+  //           << value_type_to_string(ValueType()) << std::endl;
 
   auto test_view = create_view<ValueType>(Tag{}, view_ext, "reverse");
   auto orig_view = create_view<ValueType>(Tag{}, view_ext, "reverse");

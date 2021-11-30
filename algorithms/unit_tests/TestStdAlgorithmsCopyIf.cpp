@@ -242,8 +242,9 @@ template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "copy_if: " << name << ", " << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType()) << std::endl;
+  // std::cout << "copy_if: " << name << ", " << view_tag_to_string(Tag{}) << ",
+  // "
+  //           << value_type_to_string(ValueType()) << std::endl;
 
   auto view_from = create_view<ValueType>(Tag{}, view_ext, "copy_if_from");
   IsEvenFunctor<ValueType> pred;

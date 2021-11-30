@@ -262,13 +262,13 @@ void run_single_scenario(const InfoType& scenario_info,
 
 template <class Tag, class ValueType, class... Args>
 void run_all_scenarios(Args... args /* copy on purpose */) {
-  if (0 < sizeof...(args)) {
-    std::cout << "adjacent_difference: " << view_tag_to_string(Tag{})
-              << ", custom binary op, all overloads \n";
-  } else {
-    std::cout << "adjacent_difference: " << view_tag_to_string(Tag{})
-              << ", default binary op, all overloads \n";
-  }
+  // if (0 < sizeof...(args)) {
+  //   std::cout << "adjacent_difference: " << view_tag_to_string(Tag{})
+  //             << ", custom binary op, all overloads \n";
+  // } else {
+  //   std::cout << "adjacent_difference: " << view_tag_to_string(Tag{})
+  //             << ", default binary op, all overloads \n";
+  // }
 
   for (const auto& it : default_scenarios) {
     run_single_scenario<Tag, ValueType>(it, args...);

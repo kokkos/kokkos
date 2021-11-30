@@ -77,7 +77,7 @@ void run_single_scenario(ViewType view1, ViewType view2,
 
   const std::size_t ext1 = view1.extent(0);
   const std::size_t ext2 = view2.extent(0);
-  print_scenario_details<Tag, value_type>(ext1, ext2, flag);
+  // print_scenario_details<Tag, value_type>(ext1, ext2, flag);
 
   aux_view_t aux_view1("aux_view1", ext1);
   auto v1_h = create_mirror_view(Kokkos::HostSpace(), aux_view1);

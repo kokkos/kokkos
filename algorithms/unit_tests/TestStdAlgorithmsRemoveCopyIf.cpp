@@ -169,8 +169,9 @@ template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "remove_copy_if: " << name << ", " << view_tag_to_string(Tag{})
-            << ", " << value_type_to_string(ValueType()) << std::endl;
+  // std::cout << "remove_copy_if: " << name << ", " <<
+  // view_tag_to_string(Tag{})
+  //           << ", " << value_type_to_string(ValueType()) << std::endl;
 
   using pred_type = IsEvenFunctor<ValueType>;
   pred_type remove_if_even;

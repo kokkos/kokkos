@@ -241,10 +241,10 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
                          BinaryOp bop, UnaryOp uop) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "transform_exclusive_scan custom op: " << name << ", "
-            << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType()) << ", "
-            << "init = " << init_value << std::endl;
+  // std::cout << "transform_exclusive_scan custom op: " << name << ", "
+  //           << view_tag_to_string(Tag{}) << ", "
+  //           << value_type_to_string(ValueType()) << ", "
+  //           << "init = " << init_value << std::endl;
 
   auto view_dest =
       create_view<ValueType>(Tag{}, view_ext, "transform_exclusive_scan");

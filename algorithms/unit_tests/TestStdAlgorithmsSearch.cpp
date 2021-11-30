@@ -271,7 +271,7 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
                          Args... args) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  print_scenario_details<Tag, ValueType>(name, seq_ext, args...);
+  // print_scenario_details<Tag, ValueType>(name, seq_ext, args...);
 
   auto view = create_view<ValueType>(Tag{}, view_ext, "search_test_view");
   fill_view(view, name);

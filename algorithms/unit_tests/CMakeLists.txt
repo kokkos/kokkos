@@ -36,77 +36,6 @@ ENDIF()
 
 SET(ALGORITHM UnitTestMain.cpp)
 
-LIST(APPEND ALGORITHM_SOURCES
-  TestStdAlgorithmsCommon.cpp
-
-  #--- general ones ---
-  TestStdReducers.cpp
-  TestStdAlgorithmsConstraints.cpp
-  TestRandomAccessIterator.cpp
-
-  #--- min,max ---
-  TestStdAlgorithmsMinMaxElementOps.cpp
-
-  #--- non mod sequence ----
-  TestStdAlgorithmsLexicographicalCompare.cpp
-  TestStdAlgorithmsForEach.cpp
-  TestStdAlgorithmsFind.cpp
-  TestStdAlgorithmsFindFirstOf.cpp
-  TestStdAlgorithmsFindEnd.cpp
-  TestStdAlgorithmsCount.cpp
-  TestStdAlgorithmsEqual.cpp
-  TestStdAlgorithmsAllAnyNoneOf.cpp
-  TestStdAlgorithmsAdjacentFind.cpp
-  TestStdAlgorithmsSearch.cpp
-  TestStdAlgorithmsSearch_n.cpp
-  TestStdAlgorithmsMismatch.cpp
-
-  #--- mod ----
-  TestStdAlgorithmsModOps.cpp
-  TestStdAlgorithmsModSeqOps.cpp
-  TestStdAlgorithmsTransformUnaryOp.cpp
-  TestStdAlgorithmsReplace.cpp
-  TestStdAlgorithmsReplaceIf.cpp
-  TestStdAlgorithmsReplaceCopy.cpp
-  TestStdAlgorithmsReplaceCopyIf.cpp
-  TestStdAlgorithmsCopyIf.cpp
-  TestStdAlgorithmsUnique.cpp
-  TestStdAlgorithmsUniqueCopy.cpp
-  TestStdAlgorithmsRemove.cpp
-  TestStdAlgorithmsRemoveIf.cpp
-  TestStdAlgorithmsRemoveCopy.cpp
-  TestStdAlgorithmsRemoveCopyIf.cpp
-  TestStdAlgorithmsRotate.cpp
-  TestStdAlgorithmsRotateCopy.cpp
-  TestStdAlgorithmsReverse.cpp
-  TestStdAlgorithmsShiftLeft.cpp
-  TestStdAlgorithmsShiftRight.cpp
-
-  #--- sorting ----
-  TestStdAlgorithmsIsSorted.cpp
-  TestStdAlgorithmsIsSortedUntil.cpp
-
-  #--- partitioning ----
-  TestStdAlgorithmsPartitioningOps.cpp
-  TestStdAlgorithmsPartitionCopy.cpp
-
-  #--- numerics ----
-  TestStdAlgorithmsNumerics.cpp
-  TestStdAlgorithmsAdjacentDifference.cpp
-  TestStdAlgorithmsExclusiveScan.cpp
-  TestStdAlgorithmsTransformExclusiveScan.cpp
-  TestStdAlgorithmsInclusiveScan.cpp
-  TestStdAlgorithmsTransformInclusiveScan.cpp
-)
-
-IF(Kokkos_ENABLE_OPENMP)
-  LIST(APPEND ALGORITHM_SOURCES
-    TestOpenMP_Sort1D.cpp
-    TestOpenMP_Sort3D.cpp
-    TestOpenMP_SortDynamicView.cpp
-  )
-ENDIF()
-
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
@@ -114,25 +43,143 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   else()
     string(TOUPPER ${Tag} DEVICE)
   endif()
+  string(TOLOWER ${Tag} dir)
 
   if(Kokkos_ENABLE_${DEVICE})
-    set(dir ${CMAKE_CURRENT_BINARY_DIR})
-    set(file ${dir}/Test${Tag}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-      file(WRITE ${dir}/dummy.cpp
-          "#include <Test${Tag}_Category.hpp>\n"
-	  "#include <TestRandomCommon.hpp>\n"
-	  "#include <TestSortCommon.hpp>\n"
+    set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
+    file(MAKE_DIRECTORY ${dir})
+
+    # -------------------------
+    # Sort1d,3d, Random
+    # -------------------------
+    set(SOURCES_A)
+    if(Tag STREQUAL "OpenMP")
+      LIST(APPEND SOURCES_A
+	TestOpenMP_Sort1D.cpp
+	TestOpenMP_Sort3D.cpp
+	TestOpenMP_SortDynamicView.cpp
+	)
+    endif()
+
+    set(file ${dir}/TestRandomAndSort.cpp)
+    # Write to a temporary intermediate file and call configure_file to avoid
+    # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+    file(WRITE ${dir}/dummy.cpp
+      "#include <Test${Tag}_Category.hpp>\n"
+      "#include <TestRandomCommon.hpp>\n"
+      "#include <TestSortCommon.hpp>\n"
       )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ALGORITHM_SOURCES ${file})
+    configure_file(${dir}/dummy.cpp ${file})
+    list(APPEND SOURCES_A ${file})
+
+    # ------------------------------------------
+    # std set A
+    # ------------------------------------------
+    set(STDALGO_SOURCES_A)
+    foreach(Name
+	StdReducers
+	StdAlgorithmsConstraints
+	RandomAccessIterator
+	)
+      list(APPEND STDALGO_SOURCES_A Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std set B
+    # ------------------------------------------
+    set(STDALGO_SOURCES_B)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsMinMaxElementOps
+	)
+      list(APPEND STDALGO_SOURCES_B Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std set C
+    # ------------------------------------------
+    set(STDALGO_SOURCES_C)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsLexicographicalCompare
+	StdAlgorithmsForEach
+	StdAlgorithmsFind
+	StdAlgorithmsFindFirstOf
+	StdAlgorithmsFindEnd
+	StdAlgorithmsCount
+	StdAlgorithmsEqual
+	StdAlgorithmsAllAnyNoneOf
+	StdAlgorithmsAdjacentFind
+	StdAlgorithmsSearch
+	StdAlgorithmsSearch_n
+	StdAlgorithmsMismatch
+	)
+      list(APPEND STDALGO_SOURCES_C Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std set D
+    # ------------------------------------------
+    set(STDALGO_SOURCES_D)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsModOps
+	StdAlgorithmsModSeqOps
+	StdAlgorithmsReplace
+	StdAlgorithmsReplaceIf
+	StdAlgorithmsReplaceCopy
+	StdAlgorithmsReplaceCopyIf
+	StdAlgorithmsCopyIf
+	StdAlgorithmsUnique
+	StdAlgorithmsUniqueCopy
+	StdAlgorithmsRemove
+	StdAlgorithmsRemoveIf
+	StdAlgorithmsRemoveCopy
+	StdAlgorithmsRemoveCopyIf
+	StdAlgorithmsRotate
+	StdAlgorithmsRotateCopy
+	StdAlgorithmsReverse
+	StdAlgorithmsShiftLeft
+	StdAlgorithmsShiftRight
+	)
+      list(APPEND STDALGO_SOURCES_D Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std set E
+    # ------------------------------------------
+    set(STDALGO_SOURCES_E)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsIsSorted
+	StdAlgorithmsIsSortedUntil
+	StdAlgorithmsPartitioningOps
+	StdAlgorithmsPartitionCopy
+	StdAlgorithmsNumerics
+	StdAlgorithmsAdjacentDifference
+	StdAlgorithmsExclusiveScan
+	StdAlgorithmsTransformExclusiveScan
+	StdAlgorithmsInclusiveScan
+	StdAlgorithmsTransformInclusiveScan
+	)
+      list(APPEND STDALGO_SOURCES_E Test${Name}.cpp)
+    endforeach()
+
   endif()
 endforeach()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest
+  UnitTest_RandomAndSort
   SOURCES
     UnitTestMain.cpp
-    ${ALGORITHM_SOURCES}
+    ${SOURCES_A}
 )
+
+foreach(ID A;B;C;D;E)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_StdSet_${ID}
+    SOURCES
+    UnitTestMain.cpp
+    ${STDALGO_SOURCES_${ID}}
+    )
+endforeach()
