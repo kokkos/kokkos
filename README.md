@@ -70,7 +70,7 @@ we are unaware of.
 * MSVC: 19.29
 * ARM/Clang: 20.1
 * IBM XL: 16.1.1
-* ROCim: 4.3.0
+* ROCm: 4.3.0
 
 ### Build system:
 
