@@ -86,6 +86,15 @@ inline __device__ T* kokkos_impl_cuda_shared_memory() {
 
 namespace Kokkos {
 namespace Impl {
+// CachePreferences during kernel launch.
+// KokkosCachePreferL1 = 0 - cudaFuncCachePreferL1
+// KokkosCachePreferShared = 1 - cudaFuncCachePreferShared
+// KokkosCachePreferEqual = 2 - cudaFuncCachePreferEqual
+enum CachePreference {
+  KokkosCachePreferL1     = 0,
+  KokkosCachePreferShared = 1,
+  KokkosCachePreferEqual  = 2
+};
 
 //----------------------------------------------------------------------------
 // See section B.17 of Cuda C Programming Guide Version 3.2
@@ -165,13 +174,15 @@ template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 inline void configure_shmem_preference(KernelFuncPtr const& func,
                                        int prefer_shmem) {
 #ifndef KOKKOS_ARCH_KEPLER
+
   // On Kepler the L1 has no benefit since it doesn't cache reads
   auto set_cache_config = [&] {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-        func, (prefer_shmem == 0)
+        func, (prefer_shmem == KokkosCachePreferL1)
                   ? cudaFuncCachePreferL1
-                  : (prefer_shmem == 1) ? cudaFuncCachePreferEqual
-                                        : cudaFuncCachePreferShared));
+                  : (prefer_shmem == KokkosCachePreferShared)
+                        ? cudaFuncCachePreferShared
+                        : cudaFuncCachePreferEqual));
     return prefer_shmem;
   };
   static bool cache_config_preference_cached = set_cache_config();
@@ -217,10 +228,6 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
     Policy const&, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     int& prefer_shmem) {
-  // prefer_shmem = 0 - cudaFuncCachePreferL1
-  // prefer_shmem = 1 - cudaFuncCachePreferEqual
-  // prefer_shmem = 2 - cudaFuncCachePreferShared
-
   // Calculate maximum number of blocks that can simultaneously run on a SM
   // based on the block size requested.
   int const block_size   = block.x * block.y * block.z;
@@ -246,11 +253,11 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   // shared memory, set cudaFuncCachePreferL1, if it's greater than half set
   // cudaFuncCachePreferEqual else set cudaFuncCachePreferShared.
   if (dynamic_shmem / 2 > shmem)
-    prefer_shmem = 0;
+    prefer_shmem = KokkosCachePreferL1;
   else if (dynamic_shmem > shmem) {
-    prefer_shmem = 1;
+    prefer_shmem = KokkosCachePreferEqual;
   } else
-    prefer_shmem = 2;
+    prefer_shmem = KokkosCachePreferShared;
 }
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
