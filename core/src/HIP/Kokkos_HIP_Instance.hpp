@@ -76,9 +76,9 @@ HIP::size_type hip_internal_maximum_grid_count();
 HIP::size_type hip_internal_multiprocessor_count();
 
 HIP::size_type *hip_internal_scratch_space(const HIP &instance,
-                                           const HIP::size_type size);
+                                           const std::size_t size);
 HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
-                                           const HIP::size_type size);
+                                           const std::size_t size);
 
 //----------------------------------------------------------------------------
 
@@ -117,8 +117,8 @@ class HIPInternal {
   mutable std::mutex m_mutexSharedMemory;
 
   // Scratch Spaces for Reductions
-  size_type m_scratchSpaceCount = 0;
-  size_type m_scratchFlagsCount = 0;
+  std::size_t m_scratchSpaceCount = 0;
+  std::size_t m_scratchFlagsCount = 0;
 
   size_type *m_scratchSpace           = nullptr;
   size_type *m_scratchFlags           = nullptr;
@@ -167,8 +167,8 @@ class HIPInternal {
   HIPInternal() = default;
 
   // Resizing of reduction related scratch spaces
-  size_type *scratch_space(const size_type size);
-  size_type *scratch_flags(const size_type size);
+  size_type *scratch_space(const std::size_t size);
+  size_type *scratch_flags(const std::size_t size);
   uint32_t impl_get_instance_id() const noexcept;
   // Resizing of team level 1 scratch
   void *resize_team_scratch_space(std::int64_t bytes,

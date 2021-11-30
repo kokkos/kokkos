@@ -573,7 +573,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 using ScratchGrain = Cuda::size_type[Impl::CudaTraits::WarpSize];
 enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
-Cuda::size_type *CudaInternal::scratch_flags(const Cuda::size_type size) const {
+Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount * sizeScratchGrain < size) {
     m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
@@ -598,7 +598,7 @@ Cuda::size_type *CudaInternal::scratch_flags(const Cuda::size_type size) const {
   return m_scratchFlags;
 }
 
-Cuda::size_type *CudaInternal::scratch_space(const Cuda::size_type size) const {
+Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount * sizeScratchGrain < size) {
     m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
@@ -620,8 +620,7 @@ Cuda::size_type *CudaInternal::scratch_space(const Cuda::size_type size) const {
   return m_scratchSpace;
 }
 
-Cuda::size_type *CudaInternal::scratch_unified(
-    const Cuda::size_type size) const {
+Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
   if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
       m_scratchUnifiedCount * sizeScratchGrain < size) {
     m_scratchUnifiedCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
@@ -644,8 +643,7 @@ Cuda::size_type *CudaInternal::scratch_unified(
   return m_scratchUnified;
 }
 
-Cuda::size_type *CudaInternal::scratch_functor(
-    const Cuda::size_type size) const {
+Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
     m_scratchFunctorSize = size;
 
@@ -795,17 +793,17 @@ Cuda::size_type cuda_internal_maximum_shared_words() {
 }
 
 Cuda::size_type *cuda_internal_scratch_space(const Cuda &instance,
-                                             const Cuda::size_type size) {
+                                             const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);
 }
 
 Cuda::size_type *cuda_internal_scratch_flags(const Cuda &instance,
-                                             const Cuda::size_type size) {
+                                             const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_flags(size);
 }
 
 Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
-                                               const Cuda::size_type size) {
+                                               const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_unified(size);
 }
 
