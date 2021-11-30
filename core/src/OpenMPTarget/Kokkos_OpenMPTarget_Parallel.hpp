@@ -168,13 +168,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    ValueType result = ValueType();
-
-#pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
-    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
-    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
-
+    ValueType result;
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
     // Initialize and copy back the result even if it is a zero length
@@ -184,6 +178,12 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                      ptr_on_device);
       return;
     }
+
+#pragma omp declare reduction(                                         \
+    custom:ValueType                                                   \
+    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+
 #pragma omp target teams distribute parallel for map(to                    \
                                                      : f) reduction(custom \
                                                                     : result)
@@ -1023,15 +1023,14 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   // RangePolicy. Need a new implementation.
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
-    const auto begin      = p.begin();
-    const auto end        = p.end();
     constexpr int HasInit = ReduceFunctorHasInit<FunctorType>::value;
-
-    const auto size = end - begin;
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
     const int vector_length = p.impl_vector_length();
+
+    auto begin = 0;
+    auto end   = league_size * team_size + team_size * vector_length;
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
@@ -1039,16 +1038,13 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     // FIXME_OPENMPTARGET: This would oversubscribe scratch memory since we are
     // already using the available scratch memory to create temporaries for each
     // thread.
-    if constexpr ((shmem_size_L0 + shmem_size_L1) > 0) {
+    if ((shmem_size_L0 + shmem_size_L1) > 0) {
       Kokkos::abort(
           "OpenMPTarget: Scratch memory is not supported in `parallel_reduce` "
           "over functors with init/join.");
     }
 
-    // Maximum active teams possible.
-    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
-    const auto nteams =
-        league_size < max_active_teams ? league_size : max_active_teams;
+    const auto nteams = league_size;
 
     // Number of elements in the reduction
     const auto value_count =
@@ -1129,7 +1125,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     is_device_ptr(scratch_ptr)
       for (int i = 0; i < nteams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        ValueType* team_scratch = scratch_ptr;
+        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr);
         const int team_offset   = team_size * value_count;
         ValueJoin::join(
             f, &team_scratch[i * team_offset],

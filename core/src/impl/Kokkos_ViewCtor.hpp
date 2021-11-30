@@ -67,10 +67,6 @@ struct is_view_ctor_property<AllowPadding_t> : public std::true_type {};
 template <>
 struct is_view_ctor_property<NullSpace_t> : public std::true_type {};
 
-template <typename T>
-struct is_without_initializing
-    : std::is_same<T, Kokkos::Impl::WithoutInitializing_t> {};
-
 //----------------------------------------------------------------------------
 /**\brief Whether a type can be used for a view label */
 
