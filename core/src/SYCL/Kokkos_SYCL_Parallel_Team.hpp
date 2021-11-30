@@ -588,7 +588,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // FIXME_SYCL optimize
     const size_t wgroup_size = m_team_size * m_vector_size;
-    std::size_t size         = m_league_size * m_team_size * m_vector_size;
+    std::size_t size = std::size_t(m_league_size) * m_team_size * m_vector_size;
     const auto init_size =
         std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
     const unsigned int value_count =

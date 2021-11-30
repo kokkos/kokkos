@@ -336,7 +336,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   inline void execute() {
     using ClosureType = ParallelReduce<FunctorType, Policy, ReducerType,
                                        Kokkos::Experimental::HIP>;
-    const int nwork   = m_policy.m_num_tiles;
+    const auto nwork  = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions

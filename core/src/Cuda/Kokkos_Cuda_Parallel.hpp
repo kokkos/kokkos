@@ -1456,7 +1456,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline void execute() {
-    const int nwork = m_policy.m_num_tiles;
+    const auto nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
@@ -1822,7 +1822,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const int nwork            = m_league_size * m_team_size;
+    const bool is_empty_range  = m_league_size == 0 || m_team_size == 0;
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
@@ -1830,7 +1830,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                  Policy::is_graph_kernel::value ||
 #endif
                                  !std::is_same<ReducerType, InvalidType>::value;
-    if ((nwork > 0) || need_device_set) {
+    if (!is_empty_range || need_device_set) {
       const int block_count =
           UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
                            : std::min(int(m_league_size), m_team_size);
@@ -1849,7 +1849,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       dim3 grid(block_count, 1, 1);
       const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
-      if ((nwork == 0)
+      if (is_empty_range
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
           || Kokkos::Impl::CudaInternal::cuda_use_serial_execution()
 #endif
@@ -2331,7 +2331,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() {
-    const int nwork = m_policy.end() - m_policy.begin();
+    const auto nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
@@ -2618,7 +2618,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   inline void execute() {
-    const int nwork = m_policy.end() - m_policy.begin();
+    const auto nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
