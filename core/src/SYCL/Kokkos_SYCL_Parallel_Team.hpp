@@ -658,13 +658,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (size > 1) {
       auto n_wgroups             = (size + wgroup_size - 1) / wgroup_size;
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+        // FIXME_SYCL eor some reason, we get "misaligned memory" errors when
+        // using a separate local memory allocation using SYCL+CUDA
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
-            local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
+            local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u) +
+                          (sizeof(unsigned int) + sizeof(value_type) - 1) /
+                              sizeof(value_type),
                       cgh);
-        sycl::accessor<unsigned int, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local>
-            num_teams_done(1, cgh);
 
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
@@ -692,6 +693,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     "The sub_group size is not divisible by the vector_size. "
                     "Choose a smaller vector_size!");
 #endif
+              auto& num_teams_done = reinterpret_cast<unsigned int&>(
+                  local_mem[wgroup_size * std::max(value_count, 1u)]);
               const auto local_id          = item.get_local_linear_id();
               const auto& selected_reducer = ReducerConditional::select(
                   static_cast<const FunctorType&>(functor),
@@ -722,10 +725,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   item.get_local_range()[0]);
 
               if (local_id == 0)
-                num_teams_done[0] =
-                    Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
+                num_teams_done = Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
               item.barrier(sycl::access::fence_space::local_space);
-              if (num_teams_done[0] == n_wgroups) {
+              if (num_teams_done == n_wgroups) {
                 if (local_id >= n_wgroups)
                   ValueInit::init(selected_reducer,
                                   &local_mem[local_id * value_count]);
