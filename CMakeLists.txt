@@ -175,13 +175,8 @@ IF(NOT MSVC)
     GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 ENDIF()
 
-# FIXME: only if this is required, do not use REQUIRED etc
-#        also, possibly find a better place for this
-#        (has to be before kokkos_tribits)
-find_package(GTest)
-IF(GTest_FOUND)
-  message(STATUS "\n\nGTEST_INCLUDE_DIRS=${GTEST_INCLUDE_DIRS}\n")
-  message(STATUS "\n\nGTEST_BOTH_LIBRARIES=${GTEST_BOTH_LIBRARIES}\n")
+IF(Kokkos_ENABLE_TESTS)
+  find_package(GTest)
 ENDIF()
 
 # Include a set of Kokkos-specific wrapper functions that
