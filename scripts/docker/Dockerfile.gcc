@@ -2,8 +2,8 @@ FROM gcc:5.3.0
 
 RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
-    wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
-    wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
+    wget --no-check-certificate --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
+    wget --no-check-certificate --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
     gpg --import ${KEYDUMP_FILE} && \
     gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
     rm ${KEYDUMP_FILE}*
@@ -13,9 +13,9 @@ ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
     CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
     CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt && \
-    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
-    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
-    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
+    wget --no-check-certificate --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
+    wget --no-check-certificate --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
+    wget --no-check-certificate  --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
     gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
     grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
     mkdir -p ${CMAKE_DIR} && \
