@@ -297,6 +297,7 @@ TEST(TEST_CATEGORY, dynamic_view_hooks) {
   TestDynamicViewHooks::testDynamicViewHooksMoveConstruct<ExecSpace>();
   TestDynamicViewHooks::testDynamicViewHooksCopyAssign<ExecSpace>();
   TestDynamicViewHooks::testDynamicViewHooksMoveAssign<ExecSpace>();
+  Kokkos::Experimental::DynamicViewHooks::reset();
 }
 
 }  // namespace Test
