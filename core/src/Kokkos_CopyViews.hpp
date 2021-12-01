@@ -3223,9 +3223,8 @@ struct MirrorType {
 
 template <class T, class... P, class... I>
 inline typename std::enable_if<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
-        !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                      Kokkos::LayoutStride>::value,
+    !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
+                  Kokkos::LayoutStride>::value,
     typename Kokkos::View<T, P...>::HostMirror>::type
 create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
   using src_type = View<T, P...>;
@@ -3246,9 +3245,8 @@ create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
 
 template <class T, class... P, class... I>
 inline typename std::enable_if<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
-        std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                     Kokkos::LayoutStride>::value,
+    std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
+                 Kokkos::LayoutStride>::value,
     typename Kokkos::View<T, P...>::HostMirror>::type
 create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
   using src_type = View<T, P...>;
@@ -3281,11 +3279,8 @@ create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
 
 // Create a mirror in a new space (specialization for different space)
 template <class Space, class T, class... P, class... I>
-typename std::enable_if<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
-    typename Impl::MirrorType<Space, T, P...>::view_type>::type
-create_mirror(const Space&, const Kokkos::View<T, P...>& src,
-              const I&... arg_prop) {
+typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
+    const Space&, const Kokkos::View<T, P...>& src, const I&... arg_prop) {
   return typename Impl::MirrorType<Space, T, P...>::view_type(
       Kokkos::view_alloc(src.label(), arg_prop...), src.layout());
 }
@@ -3339,8 +3334,10 @@ create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
 }  // namespace Impl
 
 template <class T, class... P>
-typename Kokkos::View<T, P...>::HostMirror create_mirror(
-    Kokkos::View<T, P...> const& v) {
+std::enable_if_t<
+    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
+    typename Kokkos::View<T, P...>::HostMirror>
+create_mirror(Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(v);
 }
 
