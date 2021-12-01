@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <View/Hooks/Kokkos_ViewHooks.hpp>
+#include <Kokkos_View.hpp>
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 namespace Kokkos {

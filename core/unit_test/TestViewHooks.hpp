@@ -47,8 +47,6 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_View.hpp>
-#include <View/Hooks/Kokkos_ViewHooks.hpp>
-#include <Kokkos_ViewHolder.hpp>
 
 namespace TestViewHooks {
 struct TestSubscriber;
