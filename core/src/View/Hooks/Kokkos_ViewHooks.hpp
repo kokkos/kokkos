@@ -109,10 +109,9 @@ struct SubscribableViewHooks {
   }
 };
 
-namespace Impl
-{
+namespace Impl {
 template <class ViewType, class Traits = typename ViewType::traits,
-    class Enabled = void>
+          class Enabled = void>
 struct DynamicViewHooksCaller;
 }
 
@@ -137,7 +136,7 @@ struct DynamicViewHooksSubscriber {
 };
 
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_DEFAULT_DYNAMIC_VIEWHOOKS
-using DefaultViewHooks = SubscribableViewHooks< DynamicViewHooksSubscriber >;
+using DefaultViewHooks = SubscribableViewHooks<DynamicViewHooksSubscriber>;
 #else
 using DefaultViewHooks = EmptyViewHooks;
 #endif
