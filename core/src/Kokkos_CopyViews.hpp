@@ -3284,53 +3284,6 @@ typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
   return typename Impl::MirrorType<Space, T, P...>::view_type(
       Kokkos::view_alloc(src.label(), arg_prop...), src.layout());
 }
-
-template <class T, class... P, class... I>
-inline typename std::enable_if<
-    (std::is_same<
-         typename Kokkos::View<T, P...>::memory_space,
-         typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
-     std::is_same<
-         typename Kokkos::View<T, P...>::data_type,
-         typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
-    typename Kokkos::View<T, P...>::HostMirror>::type
-create_mirror_view(const Kokkos::View<T, P...>& src, const I&...) {
-  return src;
-}
-
-template <class T, class... P, class... I>
-inline typename std::enable_if<
-    !(std::is_same<
-          typename Kokkos::View<T, P...>::memory_space,
-          typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
-      std::is_same<
-          typename Kokkos::View<T, P...>::data_type,
-          typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
-    typename Kokkos::View<T, P...>::HostMirror>::type
-create_mirror_view(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
-  return create_mirror(src, arg_prop...);
-}
-
-// Create a mirror view in a new space (specialization for same space)
-template <class Space, class T, class... P, class... I>
-typename std::enable_if<
-    Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
-    typename Impl::MirrorViewType<Space, T, P...>::view_type>::type
-create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
-                   const I&...) {
-  return src;
-}
-
-// Create a mirror view in a new space (specialization for different space)
-template <class Space, class T, class... P, class... I>
-typename std::enable_if<
-    !Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
-    typename Impl::MirrorViewType<Space, T, P...>::view_type>::type
-create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
-                   const I&... arg_prop) {
-  return typename Impl::MirrorViewType<Space, T, P...>::view_type(
-      Kokkos::view_alloc(src.label(), arg_prop...), src.layout());
-}
 }  // namespace Impl
 
 template <class T, class... P>
@@ -3361,6 +3314,56 @@ typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
     Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(space, v, wi);
 }
+
+namespace Impl {
+
+template <class T, class... P, class... I>
+inline typename std::enable_if<
+    (std::is_same<
+         typename Kokkos::View<T, P...>::memory_space,
+         typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
+     std::is_same<
+         typename Kokkos::View<T, P...>::data_type,
+         typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
+    typename Kokkos::View<T, P...>::HostMirror>::type
+create_mirror_view(const Kokkos::View<T, P...>& src, const I&...) {
+  return src;
+}
+
+template <class T, class... P, class... I>
+inline typename std::enable_if<
+    !(std::is_same<
+          typename Kokkos::View<T, P...>::memory_space,
+          typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
+      std::is_same<
+          typename Kokkos::View<T, P...>::data_type,
+          typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
+    typename Kokkos::View<T, P...>::HostMirror>::type
+create_mirror_view(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
+  return Kokkos::create_mirror(arg_prop..., src);
+}
+
+// Create a mirror view in a new space (specialization for same space)
+template <class Space, class T, class... P, class... I>
+typename std::enable_if<
+    Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
+    typename Impl::MirrorViewType<Space, T, P...>::view_type>::type
+create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
+                   const I&...) {
+  return src;
+}
+
+// Create a mirror view in a new space (specialization for different space)
+template <class Space, class T, class... P, class... I>
+typename std::enable_if<
+    !Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
+    typename Impl::MirrorViewType<Space, T, P...>::view_type>::type
+create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
+                   const I&... arg_prop) {
+  return typename Impl::MirrorViewType<Space, T, P...>::view_type(
+      Kokkos::view_alloc(src.label(), arg_prop...), src.layout());
+}
+}  // namespace Impl
 
 template <class T, class... P>
 typename Kokkos::View<T, P...>::HostMirror create_mirror_view(
