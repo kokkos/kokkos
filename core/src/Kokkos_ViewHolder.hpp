@@ -68,29 +68,21 @@ namespace Experimental {
 namespace Impl {
 
 template <class DataType, class... Properties>
-using unmanaged_view_type_like = View<typename ViewTraits<DataType, Properties...>::non_const_data_type,
-    typename ViewTraits<DataType, Properties...>::array_layout,
-    HostSpace, MemoryTraits<Unmanaged > >;
+using unmanaged_view_type_like =
+    View<typename ViewTraits<DataType, Properties...>::non_const_data_type,
+         typename ViewTraits<DataType, Properties...>::array_layout, HostSpace,
+         MemoryTraits<Unmanaged>>;
 
 template <class DataType, class... Properties>
-unmanaged_view_type_like< DataType, Properties... >
-make_unmanaged_view_like(View<DataType, Properties...> view,
-                         unsigned char *buff) {
+unmanaged_view_type_like<DataType, Properties...> make_unmanaged_view_like(
+    View<DataType, Properties...> view, unsigned char *buff) {
   static_assert(
       !std::is_same<
           typename View<DataType, Properties...>::traits::memory_space,
           AnonymousSpace>::value,
       "make_unmanaged_view_like can't create an anonymous space view");
-  using traits_type   = ViewTraits<DataType, Properties...>;
-  using new_data_type = typename traits_type::non_const_data_type;
 
-  // Use a contiguous layout type. Keep layout left if it already is, otherwise
-  // use layout right
-  using layout_type = typename std::conditional<
-      std::is_same<LayoutLeft, typename traits_type::array_layout>::value,
-      LayoutLeft, LayoutRight>::type;
-
-  using new_view_type = unmanaged_view_type_like< DataType, Properties... >;
+  using new_view_type = unmanaged_view_type_like<DataType, Properties...>;
 
   return new_view_type(
       reinterpret_cast<typename new_view_type::pointer_type>(buff),
@@ -175,37 +167,33 @@ class ViewHolderImplBase {
   bool m_is_hostspace     = false;
 };
 
-template< typename SrcViewType, typename DstViewType, typename Enabled = void >
-struct ViewHolderImplDeepCopyImpl
-{
-  static void copy_to_unmanaged( SrcViewType &, void * )
-  {
+template <typename SrcViewType, typename DstViewType, typename Enabled = void>
+struct ViewHolderImplDeepCopyImpl {
+  static void copy_to_unmanaged(SrcViewType &, void *) {
     Kokkos::Impl::throw_runtime_exception(
-        "Cannot deep copy a view holder to an incompatible view" );
+        "Cannot deep copy a view holder to an incompatible view");
   }
 
-  static void copy_from_unmanaged( DstViewType &, const void * )
-  {
+  static void copy_from_unmanaged(DstViewType &, const void *) {
     Kokkos::Impl::throw_runtime_exception(
-        "Cannot deep copy from a host unmanaged view holder to an incompatible view" );
+        "Cannot deep copy from a host unmanaged view holder to an incompatible "
+        "view");
   }
 };
 
-template< typename SrcViewType, typename DstViewType >
-struct ViewHolderImplDeepCopyImpl< SrcViewType, DstViewType,
-    std::enable_if_t< is_always_assignable_impl<
-      typename std::remove_reference<DstViewType>::type,
-    typename std::remove_const<
-    typename std::remove_reference<SrcViewType>::type>::type>::value > >
-{
-  static void copy_to_unmanaged( SrcViewType &_src, void *_buff )
-  {
+template <typename SrcViewType, typename DstViewType>
+struct ViewHolderImplDeepCopyImpl<
+    SrcViewType, DstViewType,
+    std::enable_if_t<is_always_assignable_impl<
+        typename std::remove_reference<DstViewType>::type,
+        typename std::remove_const<
+            typename std::remove_reference<SrcViewType>::type>::type>::value>> {
+  static void copy_to_unmanaged(SrcViewType &_src, void *_buff) {
     auto dst = make_unmanaged_view_like(_src, _buff);
     deep_copy(dst, _src);
   }
 
-  static void copy_from_unmanaged( DstViewType &_dst, const void *_buff )
-  {
+  static void copy_from_unmanaged(DstViewType &_dst, const void *_buff) {
     auto src = Impl::make_unmanaged_view_like(_dst, _buff);
     deep_copy(_dst, src);
   }
@@ -228,13 +216,14 @@ class ViewHolderImpl : public ViewHolderImplBase {
         m_view(view) {}
 
   void deep_copy_to_buffer(unsigned char *buff) override {
-    using dst_type = unmanaged_view_type_like< View >;
-    ViewHolderImplDeepCopyImpl< View, dst_type >::copy_to_unmanaged(m_view, buff);
+    using dst_type = unmanaged_view_type_like<View>;
+    ViewHolderImplDeepCopyImpl<View, dst_type>::copy_to_unmanaged(m_view, buff);
   }
 
   void deep_copy_from_buffer(unsigned char *buff) override {
-    using src_type = unmanaged_view_type_like< View >;
-    ViewHolderImplDeepCopyImpl< src_type, View >::copy_from_unmanaged(m_view, buff);
+    using src_type = unmanaged_view_type_like<View>;
+    ViewHolderImplDeepCopyImpl<src_type, View>::copy_from_unmanaged(m_view,
+                                                                    buff);
   }
 
   ViewHolderImpl *clone() const override { return new ViewHolderImpl(m_view); }
@@ -262,8 +251,8 @@ class ViewHolderImpl<View, typename std::enable_if<std::is_const<
         m_view(view) {}
 
   void deep_copy_to_buffer(unsigned char *buff) override {
-    using dst_type = unmanaged_view_type_like< View >;
-    ViewHolderImplDeepCopyImpl< View, dst_type >::copy_to_unmanaged(m_view, buff);
+    using dst_type = unmanaged_view_type_like<View>;
+    ViewHolderImplDeepCopyImpl<View, dst_type>::copy_to_unmanaged(m_view, buff);
   }
 
   ViewHolderImpl *clone() const override { return new ViewHolderImpl(m_view); }

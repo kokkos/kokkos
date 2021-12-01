@@ -3,10 +3,8 @@
 
 #include <Kokkos_ViewHolder.hpp>
 
-namespace Kokkos
-{
-namespace Experimental
-{
+namespace Kokkos {
+namespace Experimental {
 struct DynamicViewHooks {
   using callback_type       = std::function<void(const ViewHolder &)>;
   using const_callback_type = std::function<void(const ConstViewHolder &)>;
@@ -14,42 +12,42 @@ struct DynamicViewHooks {
   class callback_overload_set {
    public:
     template <class DataType, class... Properties>
-        void call(View<DataType, Properties...> &view) {
-          std::lock_guard<std::mutex> lock(m_mutex);
+    void call(View<DataType, Properties...> &view) {
+      std::lock_guard<std::mutex> lock(m_mutex);
 
-          if (!any_set()) return;
+      if (!any_set()) return;
 
-          auto holder = make_view_holder(view);
-          do_call(std::move(holder));
-        }
+      auto holder = make_view_holder(view);
+      do_call(std::move(holder));
+    }
 
-        template <typename F>
-        void set_callback(F &&cb) {
-          std::lock_guard<std::mutex> lock(m_mutex);
-          m_callback = std::forward<F>(cb);
-        }
+    template <typename F>
+    void set_callback(F &&cb) {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_callback = std::forward<F>(cb);
+    }
 
-        template <typename F>
-        void set_const_callback(F &&cb) {
-          std::lock_guard<std::mutex> lock(m_mutex);
-          m_const_callback = std::forward<F>(cb);
-        }
+    template <typename F>
+    void set_const_callback(F &&cb) {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_const_callback = std::forward<F>(cb);
+    }
 
-        void clear_callback() {
-          std::lock_guard<std::mutex> lock(m_mutex);
-          m_callback = {};
-        }
+    void clear_callback() {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_callback = {};
+    }
 
-        void clear_const_callback() {
-          std::lock_guard<std::mutex> lock(m_mutex);
-          m_const_callback = {};
-        }
+    void clear_const_callback() {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_const_callback = {};
+    }
 
-        void reset() {
-          std::lock_guard<std::mutex> lock(m_mutex);
-          m_callback       = {};
-          m_const_callback = {};
-        }
+    void reset() {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      m_callback       = {};
+      m_const_callback = {};
+    }
 
    private:
     // Not thread safe, don't call outside of mutex lock
@@ -65,7 +63,7 @@ struct DynamicViewHooks {
     // Not thread safe, call inside of mutex
     bool any_set() const noexcept {
       return static_cast<bool>(m_callback) ||
-      static_cast<bool>(m_const_callback);
+             static_cast<bool>(m_const_callback);
     }
 
     callback_type m_callback;
@@ -89,8 +87,7 @@ struct DynamicViewHooks {
 };
 
 namespace Impl {
-template <class ViewType, class Traits,
-    class Enabled >
+template <class ViewType, class Traits, class Enabled>
 struct DynamicViewHooksCaller {
   static void call_construct_hooks(ViewType &) {}
   static void call_copy_construct_hooks(ViewType &) {}
@@ -100,45 +97,45 @@ struct DynamicViewHooksCaller {
 };
 
 template <class ViewType, class Traits>
-    struct DynamicViewHooksCaller<
-        ViewType, Traits,
-        typename std::enable_if<!std::is_same<typename Traits::memory_space,
-        AnonymousSpace>::value>::type> {
-      static void call_copy_construct_hooks(ViewType &view) {
-        static thread_local bool reentrant = false;
-        if (!reentrant) {
-          reentrant = true;
-          DynamicViewHooks::copy_constructor_set.call(view);
-          reentrant = false;
-        }
-      }
+struct DynamicViewHooksCaller<
+    ViewType, Traits,
+    typename std::enable_if<!std::is_same<typename Traits::memory_space,
+                                          AnonymousSpace>::value>::type> {
+  static void call_copy_construct_hooks(ViewType &view) {
+    static thread_local bool reentrant = false;
+    if (!reentrant) {
+      reentrant = true;
+      DynamicViewHooks::copy_constructor_set.call(view);
+      reentrant = false;
+    }
+  }
 
-      static void call_copy_assign_hooks(ViewType &view) {
-        if (!DynamicViewHooks::reentrant) {
-          DynamicViewHooks::reentrant = true;
-          DynamicViewHooks::copy_assignment_set.call(view);
-          DynamicViewHooks::reentrant = false;
-        }
-      }
+  static void call_copy_assign_hooks(ViewType &view) {
+    if (!DynamicViewHooks::reentrant) {
+      DynamicViewHooks::reentrant = true;
+      DynamicViewHooks::copy_assignment_set.call(view);
+      DynamicViewHooks::reentrant = false;
+    }
+  }
 
-      static void call_move_construct_hooks(ViewType &view) {
-        if (!DynamicViewHooks::reentrant) {
-          DynamicViewHooks::reentrant = true;
-          DynamicViewHooks::move_constructor_set.call(view);
-          DynamicViewHooks::reentrant = false;
-        }
-      }
+  static void call_move_construct_hooks(ViewType &view) {
+    if (!DynamicViewHooks::reentrant) {
+      DynamicViewHooks::reentrant = true;
+      DynamicViewHooks::move_constructor_set.call(view);
+      DynamicViewHooks::reentrant = false;
+    }
+  }
 
-      static void call_move_assign_hooks(ViewType &view) {
-        if (!DynamicViewHooks::reentrant) {
-          DynamicViewHooks::reentrant = true;
-          DynamicViewHooks::move_assignment_set.call(view);
-          DynamicViewHooks::reentrant = false;
-        }
-      }
-    };
+  static void call_move_assign_hooks(ViewType &view) {
+    if (!DynamicViewHooks::reentrant) {
+      DynamicViewHooks::reentrant = true;
+      DynamicViewHooks::move_assignment_set.call(view);
+      DynamicViewHooks::reentrant = false;
+    }
+  }
+};
 }  // namespace Impl
-}
-}
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #endif  // KOKKOS_EXPERIMENTAL_DYNAMICVIEWHOOKS_HPP
