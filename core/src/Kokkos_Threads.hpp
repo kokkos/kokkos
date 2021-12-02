@@ -125,21 +125,12 @@ class Threads {
   //! \name Space-specific functions
   //@{
 
-  /** \brief Initialize the device in the "ready to work" state.
-   *
-   *  The device is initialized in a "ready to work" or "awake" state.
-   *  This state reduces latency and thus improves performance when
-   *  dispatching work.  However, the "awake" state consumes resources
-   *  even when no work is being done.  You may call sleep() to put
-   *  the device in a "sleeping" state that does not consume as many
-   *  resources, but it will take time (latency) to awaken the device
-   *  again (via the wake()) method so that it is ready for work.
-   *
+  /** 
    *  Teams of threads are distributed as evenly as possible across
    *  the requested number of numa regions and cores per numa region.
    *  A team will not be split across a numa region.
    *
-   *  If the 'use_' arguments are not supplied the hwloc is queried
+   *  If the 'use_' arguments are not supplied, the hwloc is queried
    *  to use all available cores.
    */
   static void impl_initialize(unsigned threads_count             = 0,
