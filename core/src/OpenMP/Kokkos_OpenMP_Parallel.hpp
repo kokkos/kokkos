@@ -101,14 +101,14 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   template <class TagType>
   inline static
       typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec(const FunctorType& functor, const Member iwork) {
+      exec_work(const FunctorType& functor, const Member iwork) {
     functor(iwork);
   }
 
   template <class TagType>
   inline static
       typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec(const FunctorType& functor, const Member iwork) {
+      exec_work(const FunctorType& functor, const Member iwork) {
     const TagType t{};
     functor(t, iwork);
   }
@@ -128,7 +128,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 #endif
 #endif
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      ParallelFor::template exec<WorkTag>(m_functor, iwork);
+      ParallelFor::template exec_work<WorkTag>(m_functor, iwork);
     }
   }
 
@@ -147,7 +147,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 #endif
 #endif
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      ParallelFor::template exec<WorkTag>(m_functor, iwork);
+      ParallelFor::template exec_work<WorkTag>(m_functor, iwork);
     }
   }
 
@@ -233,8 +233,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     }
   }
 
-  inline static void exec(const MDRangePolicy& mdr_policy,
-                          const FunctorType& functor, const Member iwork) {
+  inline static void exec_work(const MDRangePolicy& mdr_policy,
+                               const FunctorType& functor, const Member iwork) {
     iterate_type(mdr_policy, functor)(iwork);
   }
 
@@ -253,7 +253,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #endif
 #endif
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      exec(m_mdr_policy, m_functor, iwork);
+      exec_work(m_mdr_policy, m_functor, iwork);
     }
   }
 
@@ -272,7 +272,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #endif
 #endif
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      exec(m_mdr_policy, m_functor, iwork);
+      exec_work(m_mdr_policy, m_functor, iwork);
     }
   }
 
