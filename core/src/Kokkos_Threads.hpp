@@ -127,7 +127,7 @@ class Threads {
   //! \name Space-specific functions
   //@{
 
-  /** 
+  /**
    *  Teams of threads are distributed as evenly as possible across
    *  the requested number of numa regions and cores per numa region.
    *  A team will not be split across a numa region.
