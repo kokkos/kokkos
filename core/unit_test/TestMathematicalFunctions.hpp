@@ -348,7 +348,13 @@ DEFINE_UNARY_FUNCTION_EVAL(asinh, 4);
 DEFINE_UNARY_FUNCTION_EVAL(acosh, 2);
 DEFINE_UNARY_FUNCTION_EVAL(atanh, 2);
 
+#if defined(__APPLE__)
+// Apple's standard library implementation seems to have a poor implementation
+DEFINE_UNARY_FUNCTION_EVAL(erf, 5);
+#else
 DEFINE_UNARY_FUNCTION_EVAL(erf, 2);
+#endif
+
 DEFINE_UNARY_FUNCTION_EVAL(erfc, 5);
 // has a larger error due to some impls doing integer exact.
 // We cast always to double leading to larger difference when comparing our
