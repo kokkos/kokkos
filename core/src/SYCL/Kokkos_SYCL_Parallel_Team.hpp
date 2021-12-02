@@ -410,6 +410,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::queue& q = *instance.m_queue;
 
     auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+      // Avoid capturing *this since it might not be trivially copyable
+      const auto shmem_begin     = m_shmem_begin;
+      const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
+      void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
       sycl::accessor<char, 1, sycl::access::mode::read_write,
@@ -418,35 +423,47 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               sycl::range<1>(std::max(m_scratch_size[0] + m_shmem_begin, 1)),
               cgh);
 
-      // Avoid capturing *this since it might not be trivially copyable
-      const auto shmem_begin     = m_shmem_begin;
-      const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
-      void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+      auto lambda = [=](sycl::nd_item<2> item) {
+        const member_type team_member(team_scratch_memory_L0.get_pointer(),
+                                      shmem_begin, scratch_size[0],
+                                      static_cast<char*>(scratch_ptr[1]) +
+                                          item.get_group(1) * scratch_size[1],
+                                      scratch_size[1], item);
+        if constexpr (std::is_same<work_tag, void>::value)
+          functor(team_member);
+        else
+          functor(work_tag(), team_member);
+      };
+
+#if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
+      sycl::kernel_id functor_kernel_id =
+          sycl::get_kernel_id<decltype(lambda)>();
+      auto context = q.get_context();
+      auto device  = q.get_device();
+      auto kernel_bundle =
+          sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+              context, std::vector{functor_kernel_id});
+      auto kernel = kernel_bundle.get_kernel(functor_kernel_id);
+      auto max_sg_size =
+          kernel
+              .get_info<sycl::info::kernel_device_specific::max_sub_group_size>(
+                  device);
+      if (max_sg_size % m_vector_size != 0) {
+        std::stringstream out;
+        out << "The sub_group size (" << max_sg_size
+            << ") is not divisible by the vector_size (" << m_vector_size
+            << "). Choose a smaller vector_size!\n";
+        Kokkos::Impl::throw_runtime_exception(out.str());
+      }
+
+      cgh.use_kernel_bundle(kernel_bundle);
+#endif
 
       cgh.parallel_for(
           sycl::nd_range<2>(
               sycl::range<2>(m_team_size, m_league_size * m_vector_size),
               sycl::range<2>(m_team_size, m_vector_size)),
-          [=](sycl::nd_item<2> item) {
-#ifdef KOKKOS_ENABLE_DEBUG
-            if (item.get_sub_group().get_local_range() %
-                    item.get_local_range(1) !=
-                0)
-              Kokkos::abort(
-                  "The sub_group size is not divisible by the vector_size. "
-                  "Choose a smaller vector_size!");
-#endif
-            const member_type team_member(
-                team_scratch_memory_L0.get_pointer(), shmem_begin,
-                scratch_size[0],
-                static_cast<char*>(scratch_ptr[1]) +
-                    item.get_group(1) * scratch_size[1],
-                scratch_size[1], item);
-            if constexpr (std::is_same<work_tag, void>::value)
-              functor(team_member);
-            else
-              functor(work_tag(), team_member);
-          });
+          lambda);
     });
     q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
     return parallel_for_event;
