@@ -301,7 +301,7 @@ CudaInternal::~CudaInternal() {
   m_cudaArch                = -1;
   m_multiProcCount          = 0;
   m_maxWarpCount            = 0;
-  m_maxBlock                = 0;
+  m_maxBlock                = {0, 0, 0};
   m_maxSharedWords          = 0;
   m_maxConcurrency          = 0;
   m_scratchSpaceCount       = 0;
@@ -433,7 +433,9 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
     //----------------------------------
     // Maximum number of blocks:
 
-    m_maxBlock = cudaProp.maxGridSize[0];
+    m_maxBlock[0] = cudaProp.maxGridSize[0];
+    m_maxBlock[1] = cudaProp.maxGridSize[1];
+    m_maxBlock[2] = cudaProp.maxGridSize[2];
 
     m_shmemPerSM       = cudaProp.sharedMemPerMultiprocessor;
     m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
@@ -733,7 +735,7 @@ void CudaInternal::finalize() {
     m_cudaDev                 = -1;
     m_multiProcCount          = 0;
     m_maxWarpCount            = 0;
-    m_maxBlock                = 0;
+    m_maxBlock                = {0, 0, 0};
     m_maxSharedWords          = 0;
     m_scratchSpaceCount       = 0;
     m_scratchFlagsCount       = 0;
@@ -784,7 +786,7 @@ Cuda::size_type cuda_internal_maximum_warp_count() {
   return CudaInternal::singleton().m_maxWarpCount;
 }
 
-Cuda::size_type cuda_internal_maximum_grid_count() {
+std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
   return CudaInternal::singleton().m_maxBlock;
 }
 

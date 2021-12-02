@@ -145,6 +145,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         MDRange_d
         MDRange_e
         MDRange_f
+        MDRange_g
         NumericTraits
         Other
         RangePolicy

@@ -242,7 +242,9 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
     //----------------------------------
     // Maximum number of blocks
-    m_maxBlock = hipProp.maxGridSize[0];
+    m_maxBlock[0] = hipProp.maxGridSize[0];
+    m_maxBlock[1] = hipProp.maxGridSize[1];
+    m_maxBlock[2] = hipProp.maxGridSize[2];
 
     // theoretically, we can get 40 WF's / CU, but only can sustain 32
     // see
@@ -419,7 +421,7 @@ void HIPInternal::finalize() {
     m_hipArch                   = -1;
     m_multiProcCount            = 0;
     m_maxWarpCount              = 0;
-    m_maxBlock                  = 0;
+    m_maxBlock                  = {0, 0, 0};
     m_maxSharedWords            = 0;
     m_maxShmemPerBlock          = 0;
     m_scratchSpaceCount         = 0;
@@ -487,7 +489,8 @@ Kokkos::Experimental::HIP::size_type hip_internal_maximum_warp_count() {
   return HIPInternal::singleton().m_maxWarpCount;
 }
 
-Kokkos::Experimental::HIP::size_type hip_internal_maximum_grid_count() {
+std::array<Kokkos::Experimental::HIP::size_type, 3>
+hip_internal_maximum_grid_count() {
   return HIPInternal::singleton().m_maxBlock;
 }
 

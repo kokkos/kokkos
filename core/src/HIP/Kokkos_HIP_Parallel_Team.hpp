@@ -248,7 +248,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
+            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()[0]))
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on HIP execution "
           "space.");

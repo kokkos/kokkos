@@ -72,7 +72,7 @@ struct HIPTraits {
 //----------------------------------------------------------------------------
 
 HIP::size_type hip_internal_maximum_warp_count();
-HIP::size_type hip_internal_maximum_grid_count();
+std::array<HIP::size_type, 3> hip_internal_maximum_grid_count();
 HIP::size_type hip_internal_multiprocessor_count();
 
 HIP::size_type *hip_internal_scratch_space(const HIP &instance,
@@ -90,13 +90,13 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::Experimental::HIP::size_type;
 
-  int m_hipDev              = -1;
-  int m_hipArch             = -1;
-  unsigned m_multiProcCount = 0;
-  unsigned m_maxWarpCount   = 0;
-  unsigned m_maxBlock       = 0;
-  unsigned m_maxWavesPerCU  = 0;
-  unsigned m_maxSharedWords = 0;
+  int m_hipDev                        = -1;
+  int m_hipArch                       = -1;
+  unsigned m_multiProcCount           = 0;
+  unsigned m_maxWarpCount             = 0;
+  std::array<size_type, 3> m_maxBlock = {0, 0, 0};
+  unsigned m_maxWavesPerCU            = 0;
+  unsigned m_maxSharedWords           = 0;
   int m_regsPerSM;
   int m_shmemPerSM       = 0;
   int m_maxShmemPerBlock = 0;
