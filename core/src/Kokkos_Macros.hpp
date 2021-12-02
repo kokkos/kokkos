@@ -187,6 +187,12 @@
 #endif
 #endif
 
+#if defined(__NVCOMPILER)
+#define KOKKOS_COMPILER_NVCPP                              \
+  __NVCOMPILER_MAJOR__ * 100 + __NVCOMPILER_MINOR__ * 10 + \
+      __NVCOMPILER_PATCHLEVEL__
+#endif
+
 #if defined(_MSC_VER) && !defined(KOKKOS_COMPILER_INTEL)
 #define KOKKOS_COMPILER_MSVC _MSC_VER
 #endif
