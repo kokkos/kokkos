@@ -71,8 +71,13 @@ template <typename ExecutionSpace>
 struct TestMDRangeLargeDeepCopy {
   static void run() {
     ExecutionSpace exec;
-    using MemorySpace       = typename ExecutionSpace::memory_space;
-    const int s             = 45;
+    using MemorySpace = typename ExecutionSpace::memory_space;
+    // FIXME_SYCL
+#ifdef KOKKOS_ENABLE_SYCL
+    const int s = 13;
+#else
+    const int s = 45;
+#endif
     const int step_sizes[2] = {1, 10000};
     Kokkos::View<int**, MemorySpace> view("v", s * step_sizes[0],
                                           (s + 1) * step_sizes[1]);
