@@ -43,46 +43,38 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <cstdio>
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
-  Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
+namespace Test {
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
-    Kokkos::finalize();
-    exit(1);
+template <typename ExecutionSpace>
+struct TestSharedAtomicsFunctor {
+  Kokkos::View<int, typename ExecutionSpace::memory_space> m_view;
+
+  TestSharedAtomicsFunctor(
+      Kokkos::View<int, typename ExecutionSpace::memory_space>& view)
+      : m_view(view) {}
+
+  KOKKOS_INLINE_FUNCTION void operator()(
+      const typename Kokkos::TeamPolicy<ExecutionSpace>::member_type t) const {
+    int* x = (int*)t.team_shmem().get_shmem(sizeof(int));
+    Kokkos::single(Kokkos::PerTeam(t), [=]() { *x = 0; });
+    t.team_barrier();
+    Kokkos::atomic_add(x, 1);
+    t.team_barrier();
+    Kokkos::single(Kokkos::PerTeam(t), [=]() { m_view() = *x; });
   }
+};
 
-  const long n = strtol(argv[1], nullptr, 10);
-
-  printf("Number of even integers from 0 to %ld\n", n - 1);
-
-  Kokkos::Timer timer;
-  timer.reset();
-
-  // Compute the number of even integers from 0 to n-1, in parallel.
-  long count = 0;
-  Kokkos::parallel_reduce(
-      n, KOKKOS_LAMBDA(const long i, long& lcount) { lcount += (i % 2) == 0; },
-      count);
-
-  double count_time = timer.seconds();
-  printf("  Parallel: %ld    %10.6f\n", count, count_time);
-
-  timer.reset();
-
-  // Compare to a sequential loop.
-  long seq_count = 0;
-  for (long i = 0; i < n; ++i) {
-    seq_count += (i % 2) == 0;
-  }
-
-  count_time = timer.seconds();
-  printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
-
-  Kokkos::finalize();
-
-  return (count == seq_count) ? 0 : -1;
+TEST(TEST_CATEGORY, atomic_shared) {
+  TEST_EXECSPACE exec;
+  Kokkos::View<int, typename TEST_EXECSPACE::memory_space> view("ref_value");
+  int n = 8;
+  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, n)
+                           .set_scratch_size(0, Kokkos::PerTeam(8)),
+                       TestSharedAtomicsFunctor<TEST_EXECSPACE>(view));
+  exec.fence("Fence after test kernel");
+  int i = 0;
+  Kokkos::deep_copy(i, view);
+  ASSERT_EQ(i, n);
 }
+}  // namespace Test
