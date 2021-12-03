@@ -13,9 +13,6 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
     SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   )
 
-  # avoid deprecation warnings from MSVC
-  TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0)
-
   TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
   IF((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
     TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_14)
