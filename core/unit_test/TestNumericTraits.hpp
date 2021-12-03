@@ -589,12 +589,16 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(long double, max_exponent10);
                     std::numeric_limits<T>::TRAIT(),                           \
                 "")
 
+// Workaround compiler issue error: expression must have a constant value
+// See kokkos/kokkos#4574
+#ifndef KOKKOS_COMPILER_NVHPC
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, signaling_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, signaling_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, signaling_NaN);
+#endif
 
 #undef CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION
 
