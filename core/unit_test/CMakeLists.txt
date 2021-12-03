@@ -106,6 +106,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         AtomicOperations_float
         AtomicOperations_complexdouble
         AtomicOperations_complexfloat
+        AtomicOperations_shared
         AtomicViews
         Atomics
         BlockSizeDeduction

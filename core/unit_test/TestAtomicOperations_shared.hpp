@@ -46,6 +46,8 @@
 
 namespace Test {
 
+// FIXME_SYCL This doesn't work yet for SYCL+CUDA
+#if !defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename ExecutionSpace>
 struct TestSharedAtomicsFunctor {
   Kokkos::View<int, typename ExecutionSpace::memory_space> m_view;
@@ -77,4 +79,5 @@ TEST(TEST_CATEGORY, atomic_shared) {
   Kokkos::deep_copy(i, view);
   ASSERT_EQ(i, n);
 }
+#endif
 }  // namespace Test
