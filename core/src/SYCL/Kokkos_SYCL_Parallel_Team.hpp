@@ -447,16 +447,17 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       auto max_sg_size =
           kernel
               .get_info<sycl::info::kernel_device_specific::max_sub_group_size>(
-                  device);
+                  device, sycl::range<3>(m_team_size, m_vector_size, 1));
       if (max_sg_size % m_vector_size != 0) {
         std::stringstream out;
-        out << "The sub_group size (" << max_sg_size
-            << ") is not divisible by the vector_size (" << m_vector_size
-            << "). Choose a smaller vector_size!\n";
+        out << "The maximum subgroup size (" << max_sg_size
+            << ") for this kernel is not divisible by the vector_size ("
+            << m_vector_size << "). Choose a smaller vector_size!\n";
         Kokkos::Impl::throw_runtime_exception(out.str());
       }
-
-      cgh.use_kernel_bundle(kernel_bundle);
+      // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
+      // be used gives a runtime error.
+      // cgh.use_kernel_bundle(kernel_bundle);
 #endif
 
       cgh.parallel_for(
@@ -691,63 +692,82 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
         void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
+        auto lambda = [=](sycl::nd_item<2> item) {
+          const auto local_id = item.get_local_linear_id();
+          const auto global_id =
+              wgroup_size * item.get_group_linear_id() + local_id;
+          const auto& selected_reducer = ReducerConditional::select(
+              static_cast<const FunctorType&>(functor),
+              static_cast<const ReducerType&>(reducer));
+
+          // In the first iteration, we call functor to initialize the local
+          // memory. Otherwise, the local memory is initialized with the
+          // results from the previous iteration that are stored in global
+          // memory.
+          if (first_run) {
+            reference_type update = ValueInit::init(
+                selected_reducer, &local_mem[local_id * value_count]);
+            const member_type team_member(
+                team_scratch_memory_L0.get_pointer(), shmem_begin,
+                scratch_size[0],
+                static_cast<char*>(scratch_ptr[1]) +
+                    item.get_group(1) * scratch_size[1],
+                scratch_size[1], item);
+            if constexpr (std::is_same<WorkTag, void>::value)
+              functor(team_member, update);
+            else
+              functor(WorkTag(), team_member, update);
+          } else {
+            if (global_id >= size)
+              ValueInit::init(selected_reducer,
+                              &local_mem[local_id * value_count]);
+            else {
+              ValueOps::copy(functor, &local_mem[local_id * value_count],
+                             &results_ptr[global_id * value_count]);
+            }
+          }
+          item.barrier(sycl::access::fence_space::local_space);
+
+          SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
+              item, local_mem.get_pointer(), results_ptr,
+              device_accessible_result_ptr, value_count, selected_reducer,
+              static_cast<const FunctorType&>(functor),
+              n_wgroups <= 1 && item.get_group_linear_id() == 0);
+
+          // FIXME_SYCL not quite sure why this is necessary
+          item.barrier(sycl::access::fence_space::global_space);
+        };
+
+#if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
+        sycl::kernel_id functor_kernel_id =
+            sycl::get_kernel_id<decltype(lambda)>();
+        auto context = q.get_context();
+        auto device  = q.get_device();
+        auto kernel_bundle =
+            sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+                context, std::vector{functor_kernel_id});
+        auto kernel      = kernel_bundle.get_kernel(functor_kernel_id);
+        auto max_sg_size = kernel.get_info<
+            sycl::info::kernel_device_specific::max_sub_group_size>(
+            device, sycl::range<3>(m_team_size, m_vector_size, 1));
+        if (max_sg_size % m_vector_size != 0) {
+          std::stringstream out;
+          out << "The maximum subgroup size (" << max_sg_size
+              << ") for this kernel is not divisible by the vector_size ("
+              << m_vector_size << "). Choose a smaller vector_size!\n";
+          Kokkos::Impl::throw_runtime_exception(out.str());
+        }
+        // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
+        // be used gives a runtime error.
+
+//     cgh.use_kernel_bundle(kernel_bundle);
+#endif
+
         cgh.parallel_for(
             sycl::nd_range<2>(
                 sycl::range<2>(m_team_size, m_league_size * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
-            [=](sycl::nd_item<2> item) {
-#ifdef KOKKOS_ENABLE_DEBUG
-              if (first_run && item.get_sub_group().get_local_range() %
-                                       item.get_local_range(1) !=
-                                   0)
-                Kokkos::abort(
-                    "The sub_group size is not divisible by the vector_size. "
-                    "Choose a smaller vector_size!");
-#endif
-              const auto local_id = item.get_local_linear_id();
-              const auto global_id =
-                  wgroup_size * item.get_group_linear_id() + local_id;
-              const auto& selected_reducer = ReducerConditional::select(
-                  static_cast<const FunctorType&>(functor),
-                  static_cast<const ReducerType&>(reducer));
-
-              // In the first iteration, we call functor to initialize the local
-              // memory. Otherwise, the local memory is initialized with the
-              // results from the previous iteration that are stored in global
-              // memory.
-              if (first_run) {
-                reference_type update = ValueInit::init(
-                    selected_reducer, &local_mem[local_id * value_count]);
-                const member_type team_member(
-                    team_scratch_memory_L0.get_pointer(), shmem_begin,
-                    scratch_size[0],
-                    static_cast<char*>(scratch_ptr[1]) +
-                        item.get_group(1) * scratch_size[1],
-                    scratch_size[1], item);
-                if constexpr (std::is_same<WorkTag, void>::value)
-                  functor(team_member, update);
-                else
-                  functor(WorkTag(), team_member, update);
-              } else {
-                if (global_id >= size)
-                  ValueInit::init(selected_reducer,
-                                  &local_mem[local_id * value_count]);
-                else {
-                  ValueOps::copy(functor, &local_mem[local_id * value_count],
-                                 &results_ptr[global_id * value_count]);
-                }
-              }
-              item.barrier(sycl::access::fence_space::local_space);
-
-              SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
-                  item, local_mem.get_pointer(), results_ptr,
-                  device_accessible_result_ptr, value_count, selected_reducer,
-                  static_cast<const FunctorType&>(functor),
-                  n_wgroups <= 1 && item.get_group_linear_id() == 0);
-
-              // FIXME_SYCL not quite sure why this is necessary
-              item.barrier(sycl::access::fence_space::global_space);
-            });
+            lambda);
       });
       q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
       last_reduction_event = parallel_reduce_event;
