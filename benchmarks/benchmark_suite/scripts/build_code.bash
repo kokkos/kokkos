@@ -60,22 +60,22 @@ do
   shift
 done
 
-mkdir build
+mkdir -p build
 
 # Build BytesAndFlops
-mkdir build/bytes_and_flops
+mkdir -p build/bytes_and_flops
 cd build/bytes_and_flops
 make KOKKOS_ARCH=${KOKKOS_ARCH} KOKKOS_DEVICES=${KOKKOS_DEVICES} CXX=${CXX} KOKKOS_PATH=${KOKKOS_PATH}\
      CXXFLAGS=${OPT_FLAG} -f ${KOKKOS_PATH}/benchmarks/bytes_and_flops/Makefile -j 16
 cd ../..
 
-mkdir build/miniMD
+mkdir -p build/miniMD
 cd build/miniMD
 make KOKKOS_ARCH=${KOKKOS_ARCH} KOKKOS_DEVICES=${KOKKOS_DEVICES} CXX=${CXX} KOKKOS_PATH=${KOKKOS_PATH} \
      CXXFLAGS=${OPT_FLAG} -f ${MINIMD_PATH}/Makefile -j 16
 cd ../../
 
-mkdir build/miniFE
+mkdir -p build/miniFE
 cd build/miniFE
 make KOKKOS_ARCH=${KOKKOS_ARCH} KOKKOS_DEVICES=${KOKKOS_DEVICES} CXX=${CXX} KOKKOS_PATH=${KOKKOS_PATH} \
      CXXFLAGS=${OPT_FLAG} -f ${MINIFE_PATH}/src/Makefile -j 16

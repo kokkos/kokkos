@@ -3,15 +3,9 @@
 # BytesAndFlops
 cd build/bytes_and_flops
 
-USE_CUDA=`grep "_CUDA" KokkosCore_config.h | wc -l`
+BAF_EXE=bytes_and_flops.exe
+TEAM_SIZE=1
 
-if [[ ${USE_CUDA} > 0 ]]; then
-  BAF_EXE=bytes_and_flops.cuda
-  TEAM_SIZE=256
-else
-  BAF_EXE=bytes_and_flops.exe
-  TEAM_SIZE=1
-fi
 
 BAF_PERF_1=`./${BAF_EXE} 2 100000 1024 1 1 1 1 ${TEAM_SIZE} 6000 | awk '{print $12/174.5}'`
 BAF_PERF_2=`./${BAF_EXE} 2 100000 1024 16 1 8 64 ${TEAM_SIZE} 6000 | awk '{print $14/1142.65}'`
