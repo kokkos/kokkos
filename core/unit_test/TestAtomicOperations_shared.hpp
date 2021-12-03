@@ -70,14 +70,17 @@ struct TestSharedAtomicsFunctor {
 TEST(TEST_CATEGORY, atomic_shared) {
   TEST_EXECSPACE exec;
   Kokkos::View<int, typename TEST_EXECSPACE::memory_space> view("ref_value");
-  int n = 8;
-  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, n)
+  auto team_size =
+      Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, Kokkos::AUTO)
+          .team_size_recommended(TestSharedAtomicsFunctor<TEST_EXECSPACE>(view),
+                                 Kokkos::ParallelForTag{});
+  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, team_size)
                            .set_scratch_size(0, Kokkos::PerTeam(8)),
                        TestSharedAtomicsFunctor<TEST_EXECSPACE>(view));
   exec.fence("Fence after test kernel");
   int i = 0;
   Kokkos::deep_copy(i, view);
-  ASSERT_EQ(i, n);
+  ASSERT_EQ(i, team_size);
 }
 #endif
 }  // namespace Test
