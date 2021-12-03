@@ -278,23 +278,10 @@ class HPX {
         m_future(m_independent_instance_data->m_future),
         m_future_mutex(m_independent_instance_data->m_future_mutex) {}
 
-  HPX(const HPX &other)
-      : m_instance_id(other.m_instance_id),
-        m_mode(other.m_mode),
-        m_independent_instance_data(other.m_independent_instance_data),
-        m_buffer(other.m_buffer),
-        m_future(other.m_future),
-        m_future_mutex(other.m_future_mutex) {}
-
-  HPX &operator=(const HPX &other) {
-    m_instance_id               = other.m_instance_id;
-    m_mode                      = other.m_mode;
-    m_independent_instance_data = other.m_independent_instance_data;
-    m_buffer                    = other.m_buffer;
-    m_future                    = other.m_future;
-    m_future_mutex              = other.m_future_mutex;
-    return *this;
-  }
+  HPX(HPX &&other) = default;
+  HPX &operator=(HPX &&other) = default;
+  HPX(const HPX &other)       = default;
+  HPX &operator=(const HPX &other) = default;
 #else
   HPX() noexcept {}
 #endif
