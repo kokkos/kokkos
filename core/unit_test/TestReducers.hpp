@@ -1036,6 +1036,10 @@ struct TestReducers {
   static void execute_bool() {
     test_LAnd(10001);
     test_LOr(35);
+    test_sum(10001);
+    test_prod(35);
+    test_min(10003);
+    test_max(10007);
   }
 };
 
