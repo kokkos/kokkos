@@ -65,7 +65,7 @@ void host_thread_yield(const uint32_t i, const WaitMode mode) {
   static constexpr uint32_t sleep_limit = 1 << 13;
   static constexpr uint32_t yield_limit = 1 << 12;
 
-  const int c = Kokkos::log2(i);
+  const int c = int_log2(i);
 
   if (WaitMode::ROOT != mode) {
     if (sleep_limit < i) {
