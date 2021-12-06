@@ -2123,13 +2123,16 @@ KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 namespace Impl {
 
-using Kokkos::is_view;
+template <class T>
+using is_view KOKKOS_DEPRECATED = Kokkos::is_view<T>;
 
 } /* namespace Impl */
 } /* namespace Kokkos */
+#endif
 
 #include <impl/Kokkos_ViewUniformType.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
