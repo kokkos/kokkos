@@ -201,7 +201,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
     using ValueOps = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
-    auto selected_reducer = ReducerConditional::select(functor, reducer);
+    const auto& selected_reducer = ReducerConditional::select(functor, reducer);
 
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
