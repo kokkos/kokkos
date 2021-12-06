@@ -49,6 +49,24 @@
 
 #include <vector>
 
+namespace Kokkos::Impl {
+template <typename Functor, typename Policy>
+struct FunctorWrapperRangePolicyParallelFor {
+  using WorkTag = typename Policy::work_tag;
+
+  void operator()(sycl::item<1> item) const {
+    const typename Policy::index_type id = item.get_linear_id() + m_begin;
+    if constexpr (std::is_same<WorkTag, void>::value)
+      m_functor(id);
+    else
+      m_functor(WorkTag(), id);
+  }
+
+  typename Policy::index_type m_begin;
+  Functor m_functor;
+};
+}  // namespace Kokkos::Impl
+
 template <class FunctorType, class... Traits>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::SYCL> {
@@ -72,17 +90,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
+    auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+      FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
+                                                              functor};
       sycl::range<1> range(policy.end() - policy.begin());
-      const auto begin = policy.begin();
-
-      cgh.parallel_for(range, [=](sycl::item<1> item) {
-        const typename Policy::index_type id = item.get_linear_id() + begin;
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id);
-        else
-          functor(WorkTag(), id);
-      });
+      cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
+          range, f);
     });
     q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
