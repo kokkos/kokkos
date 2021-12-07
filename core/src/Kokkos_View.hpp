@@ -2128,7 +2128,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class T>
-using is_view KOKKOS_DEPRECATED = Kokkos::is_view<T>;
+using is_view KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::is_view instead!") =
+    Kokkos::is_view<T>;
 
 } /* namespace Impl */
 } /* namespace Kokkos */
