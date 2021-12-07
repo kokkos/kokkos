@@ -215,7 +215,8 @@ class ParallelScanSYCLBase {
   }
 
   template <typename Functor>
-  sycl::event sycl_direct_launch(const Functor& functor) const {
+  sycl::event sycl_direct_launch(const Functor& functor,
+                                 sycl::event memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -228,6 +229,8 @@ class ParallelScanSYCLBase {
     auto initialize_global_memory = q.submit([&](sycl::handler& cgh) {
       auto global_mem = m_scratch_space;
       auto begin      = m_policy.begin();
+
+      cgh.depends_on(memcpy_event);
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         const typename Policy::index_type id =
             static_cast<typename Policy::index_type>(item.get_id()) + begin;
@@ -294,12 +297,13 @@ class ParallelScanSYCLBase {
         static_cast<pointer_type>(instance.scratch_space(total_memory));
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectKernelMem = instance.m_indirectKernelMem;
+        indirectKernelMem = instance.get_indirect_kernel_mem();
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor(),
+                           indirectKernelMem.m_copy_event);
     functor_wrapper.register_event(indirectKernelMem, event);
     post_functor();
   }
