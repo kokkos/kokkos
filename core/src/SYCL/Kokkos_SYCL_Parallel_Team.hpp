@@ -415,8 +415,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::scoped_lock<std::mutex> m_scratch_lock;
 
   template <typename Functor>
-  sycl::event sycl_direct_launch(const Policy& policy,
-                                 const Functor& functor,
+  sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
                                  const sycl::event& memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
@@ -600,8 +599,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   template <typename PolicyType, typename Functor, typename Reducer>
   sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor,
-                                 const Reducer& reducer,
+                                 const Functor& functor, const Reducer& reducer,
                                  const sycl::event& memcpy_event) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
@@ -821,7 +819,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
     using IndirectReducerMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectReducerMem;
-    IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectKernelMem   = instance.get_indirect_kernel_mem();
     IndirectReducerMem& indirectReducerMem = instance.m_indirectReducerMem;
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
@@ -830,8 +828,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_reducer, indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(),
-        reducer_wrapper.get_functor(), indirectKernelMem.m_copy_event);
+        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
+        indirectKernelMem.m_copy_event);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }

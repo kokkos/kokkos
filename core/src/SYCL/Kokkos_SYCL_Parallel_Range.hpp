@@ -237,18 +237,18 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     const BarePolicy bare_policy(m_policy);
 
-    auto parallel_for_event =
-        q.submit([functor, this, bare_policy, memcpy_event](sycl::handler& cgh) {
-          const auto range                  = compute_ranges();
-          const sycl::range<3> global_range = range.get_global_range();
-          const sycl::range<3> local_range  = range.get_local_range();
-          const sycl::nd_range sycl_swapped_range{
-              sycl::range<3>{global_range[2], global_range[1], global_range[0]},
-              sycl::range<3>{local_range[2], local_range[1], local_range[0]}};
+    auto parallel_for_event = q.submit([functor, this, bare_policy,
+                                        memcpy_event](sycl::handler& cgh) {
+      const auto range                  = compute_ranges();
+      const sycl::range<3> global_range = range.get_global_range();
+      const sycl::range<3> local_range  = range.get_local_range();
+      const sycl::nd_range sycl_swapped_range{
+          sycl::range<3>{global_range[2], global_range[1], global_range[0]},
+          sycl::range<3>{local_range[2], local_range[1], local_range[0]}};
 
-          cgh.depends_on(memcpy_event);
-          cgh.parallel_for(sycl_swapped_range, [functor, bare_policy](
-                                                   sycl::nd_item<3> item) {
+      cgh.depends_on(memcpy_event);
+      cgh.parallel_for(
+          sycl_swapped_range, [functor, bare_policy](sycl::nd_item<3> item) {
             // swap back for correct index calculations in DeviceIterateTile
             const index_type local_x    = item.get_local_id(2);
             const index_type local_y    = item.get_local_id(1);
@@ -266,7 +266,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                 {global_x, global_y, global_z}, {local_x, local_y, local_z})
                 .exec_range();
           });
-        });
+    });
     // This barrier would prevent q.memcpy for subsequent kernels from being
     // brought forward in time.
     // q.submit_barrier(std::vector<sycl::event>{parallel_for_event});

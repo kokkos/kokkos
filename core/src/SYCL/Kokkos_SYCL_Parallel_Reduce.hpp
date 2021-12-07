@@ -186,8 +186,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
   sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor,
-                                 const Reducer& reducer,
+                                 const Functor& functor, const Reducer& reducer,
                                  const sycl::event& memcpy_event) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
@@ -360,7 +359,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
     using IndirectReducerMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectReducerMem;
-    IndirectKernelMem& indirectKernelMem  =  instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectKernelMem   = instance.get_indirect_kernel_mem();
     IndirectReducerMem& indirectReducerMem = instance.m_indirectReducerMem;
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
@@ -369,8 +368,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_reducer, indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(),
-        reducer_wrapper.get_functor(), indirectKernelMem.m_copy_event);
+        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
+        indirectKernelMem.m_copy_event);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }
@@ -459,8 +458,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
   sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor,
-                                 const Reducer& reducer,
+                                 const Functor& functor, const Reducer& reducer,
                                  const sycl::event& memcpy_event) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
@@ -512,7 +510,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // m_result_ptr yet.
     if (size <= 1) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
-
         cgh.depends_on(memcpy_event);
         cgh.single_task([=]() {
           const auto& selected_reducer = ReducerConditional::select(
@@ -668,8 +665,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_reducer, indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(),
-        reducer_wrapper.get_functor(), indirectKernelMem.m_copy_event);
+        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
+        indirectKernelMem.m_copy_event);
 
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);

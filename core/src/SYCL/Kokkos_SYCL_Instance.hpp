@@ -149,8 +149,7 @@ class SYCLInternal {
       fence();
       reserve(sizeof(T));
       if constexpr (sycl::usm::alloc::device == Kind) {
-        m_copy_event =
-            m_q->memcpy(m_data, std::addressof(t), sizeof(T));
+        m_copy_event = m_q->memcpy(m_data, std::addressof(t), sizeof(T));
         // TODO joe: this change is unlikely to be generally safe
         // Anything relying on this copy must depend on m_copy_event
 
@@ -179,7 +178,7 @@ class SYCLInternal {
       m_mutex.unlock();
     }
 
-    sycl::event m_copy_event; //TODO joe: private + API
+    sycl::event m_copy_event;  // TODO joe: private + API
 
    private:
     // USMObjectMem class invariants
@@ -233,7 +232,8 @@ class SYCLInternal {
   static void fence_helper(WAT& wat, const std::string& name,
                            uint32_t instance_id);
 
-  const static size_t usm_pool_size = 30; // TODO joe: arbitrary, should be configurable?
+  const static size_t usm_pool_size =
+      30;  // TODO joe: arbitrary, should be configurable?
   std::vector<IndirectKernelMem> m_indirectKernelMem{usm_pool_size};
 
   int pool_next = usm_pool_size;

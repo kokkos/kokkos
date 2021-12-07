@@ -303,7 +303,7 @@ class ParallelScanSYCLBase {
         m_functor, indirectKernelMem);
 
     sycl::event event = sycl_direct_launch(functor_wrapper.get_functor(),
-                           indirectKernelMem.m_copy_event);
+                                           indirectKernelMem.m_copy_event);
     functor_wrapper.register_event(indirectKernelMem, event);
     post_functor();
   }
