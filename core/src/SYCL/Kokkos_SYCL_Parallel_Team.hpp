@@ -436,18 +436,19 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
-      sycl::kernel_id functor_kernel_id =
-          sycl::get_kernel_id<decltype(lambda)>();
-      auto context = q.get_context();
-      auto device  = q.get_device();
-      auto kernel_bundle =
-          sycl::get_kernel_bundle<sycl::bundle_state::executable>(
-              context, std::vector{functor_kernel_id});
-      auto kernel = kernel_bundle.get_kernel(functor_kernel_id);
+      static sycl::kernel kernel = [&] {
+        sycl::kernel_id functor_kernel_id =
+            sycl::get_kernel_id<decltype(lambda)>();
+        auto kernel_bundle =
+            sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+                q.get_context(), std::vector{functor_kernel_id});
+        return kernel_bundle.get_kernel(functor_kernel_id);
+      }();
       auto max_sg_size =
           kernel
               .get_info<sycl::info::kernel_device_specific::max_sub_group_size>(
-                  device, sycl::range<3>(m_team_size, m_vector_size, 1));
+                  q.get_device(),
+                  sycl::range<3>(m_team_size, m_vector_size, 1));
       if (max_sg_size % m_vector_size != 0) {
         std::stringstream out;
         out << "The maximum subgroup size (" << max_sg_size
@@ -739,17 +740,17 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
-        sycl::kernel_id functor_kernel_id =
-            sycl::get_kernel_id<decltype(lambda)>();
-        auto context = q.get_context();
-        auto device  = q.get_device();
-        auto kernel_bundle =
-            sycl::get_kernel_bundle<sycl::bundle_state::executable>(
-                context, std::vector{functor_kernel_id});
-        auto kernel      = kernel_bundle.get_kernel(functor_kernel_id);
+        static sycl::kernel kernel = [&] {
+          sycl::kernel_id functor_kernel_id =
+              sycl::get_kernel_id<decltype(lambda)>();
+          auto kernel_bundle =
+              sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+                  q.get_context(), std::vector{functor_kernel_id});
+          return kernel_bundle.get_kernel(functor_kernel_id);
+        }();
         auto max_sg_size = kernel.get_info<
             sycl::info::kernel_device_specific::max_sub_group_size>(
-            device, sycl::range<3>(m_team_size, m_vector_size, 1));
+            q.get_device(), sycl::range<3>(m_team_size, m_vector_size, 1));
         if (max_sg_size % m_vector_size != 0) {
           std::stringstream out;
           out << "The maximum subgroup size (" << max_sg_size
