@@ -11,6 +11,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 // Macros
 
+// ONLY use GNUC atomics if not compiling for the device
+// and we didn't explicitly say to use OPENMP or SERIAL atomics
 #if defined(__GNUC__) && \
     (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) && \
     (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
@@ -20,11 +22,13 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_GCC_ATOMICS
 #endif
 
+// Equivalent to above: if we are compiling for the device we
+// need to use CUDA/HIP/SYCL atomics instead of MSVC atomics
 #if defined(_MSC_VER)  && \
     (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) && \
     (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
     !defined(SYCL_LANGUAGE_VERSION)
-#define DESUL_HAVE_MSVC_ATOMICS 
+#define DESUL_HAVE_MSVC_ATOMICS
 #endif
 
 #ifdef __CUDACC__
