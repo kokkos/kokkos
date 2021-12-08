@@ -722,7 +722,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   item, local_mem.get_pointer(), results_ptr,
                   device_accessible_result_ptr, value_count, selected_reducer,
                   static_cast<const FunctorType&>(functor), false,
-                  item.get_local_range()[0]);
+                  item.get_local_range()[0] * item.get_local_range()[1]);
 
               if (local_id == 0)
                 num_teams_done = Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
