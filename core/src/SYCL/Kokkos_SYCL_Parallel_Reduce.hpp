@@ -201,8 +201,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
     using ValueOps = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
-    const auto& selected_reducer = ReducerConditional::select(functor, reducer);
-
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -219,7 +217,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         1);
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
-            selected_reducer);
+            ReducerConditional::select(m_functor, m_reducer));
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
         sizeof(value_type) * std::max(value_count, 1u) * init_size));
     value_type* device_accessible_result_ptr =
@@ -487,10 +485,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     size_t size              = range.get_global_range().size();
     const auto init_size =
         std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
-    const auto& selected_reducer = ReducerConditional::select(functor, reducer);
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
-            selected_reducer);
+            ReducerConditional::select(m_functor, m_reducer));
     // FIXME_SYCL only use the first half
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
         sizeof(value_type) * std::max(value_count, 1u) * init_size * 2));
