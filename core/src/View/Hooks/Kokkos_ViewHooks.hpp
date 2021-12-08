@@ -81,8 +81,6 @@ struct EmptyViewHooks {
   static void move_assign(View &, const View &) {}
 };
 
-/* Will be some sort of mixin, not with a flag but with a type */
-/* Because that functionality is not available yet we'll go with this. */
 template <class... Subscribers>
 struct SubscribableViewHooks {
   using hooks_policy = SubscribableViewHooks<Subscribers...>;

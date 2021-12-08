@@ -209,7 +209,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       )
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES2A ${file})
-      message("setting up test ${file}")
     endforeach()
 
     set(TagHostAccessible ${Tag})
