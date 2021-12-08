@@ -65,7 +65,7 @@ struct invoke_subscriber_impl;
 template <template <typename> class Invoker>
 struct invoke_subscriber_impl<Invoker> {
   template <typename ViewType>
-  static void invoke(ViewType &self, const ViewType &other) {}
+  static void invoke(ViewType &, const ViewType &) {}
 };
 
 template <template <typename> class Invoker, typename Subscriber,

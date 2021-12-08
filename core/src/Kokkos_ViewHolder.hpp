@@ -46,6 +46,7 @@
 #define KOKKOS_VIEWHOLDER_HPP
 
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_HostSpace.hpp>
 
 #include <memory>
 #include <type_traits>
