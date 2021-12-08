@@ -46,31 +46,22 @@
 #define KOKKOS_VIEWHOLDER_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Layout.hpp>
 
-#include <functional>
 #include <memory>
 #include <type_traits>
+#include <string>
 
 namespace Kokkos {
 template <class T1, class T2>
 struct is_always_assignable_impl;
-
-template <class DataType, class... Properties>
-class View;
-
-template <class DataType, class... Properties>
-struct ViewTraits;
 
 namespace Experimental {
 namespace Impl {
 
 template <class DataType, class... Properties>
 using unmanaged_view_type_like =
-    View<typename ViewTraits<DataType, Properties...>::non_const_data_type,
-         typename ViewTraits<DataType, Properties...>::array_layout, HostSpace,
+    View<typename View<DataType, Properties...>::traits::non_const_data_type,
+         typename View<DataType, Properties...>::traits::array_layout, HostSpace,
          MemoryTraits<Unmanaged>>;
 
 template <class DataType, class... Properties>

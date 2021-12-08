@@ -2,6 +2,8 @@
 #define KOKKOS_EXPERIMENTAL_DYNAMICVIEWHOOKS_HPP
 
 #include <Kokkos_ViewHolder.hpp>
+#include <mutex>
+#include <functional>
 
 namespace Kokkos {
 namespace Experimental {
