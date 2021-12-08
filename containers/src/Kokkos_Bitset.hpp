@@ -270,7 +270,7 @@ class Bitset {
     block = Impl::rotate_right(block, offset);
     return (((!(scan_direction & BIT_SCAN_REVERSE)
                   ? Impl::bit_scan_forward(block)
-                  : ::Kokkos::log2(block)) +
+                  : Impl::int_log2(block)) +
              offset) &
             block_mask) +
            block_start;
