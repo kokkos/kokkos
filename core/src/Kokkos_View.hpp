@@ -302,7 +302,7 @@ struct ViewTraits {
   using HooksPolicy = typename std::conditional<
       !std::is_same<typename prop::hooks_policy, void>::value,
       typename prop::hooks_policy,
-      typename Kokkos::Experimental::DefaultViewHooks>::type;
+      Kokkos::Experimental::DefaultViewHooks>::type;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
@@ -1440,14 +1440,14 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     hooks_policy::copy_construct(*this, other);
 #endif
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   View(View&& other)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
@@ -1455,7 +1455,7 @@ class View : public ViewTraits<DataType, Properties...> {
 #endif
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   View& operator=(const View& other) {
     m_map   = other.m_map;
     m_track = other.m_track;
@@ -1467,7 +1467,7 @@ class View : public ViewTraits<DataType, Properties...> {
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   View& operator=(View&& other) {
     m_map   = std::move(other.m_map);
     m_track = std::move(other.m_track);
