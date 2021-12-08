@@ -61,8 +61,8 @@ namespace Impl {
 template <class DataType, class... Properties>
 using unmanaged_view_type_like =
     View<typename View<DataType, Properties...>::traits::non_const_data_type,
-         typename View<DataType, Properties...>::traits::array_layout, HostSpace,
-         MemoryTraits<Unmanaged>>;
+         typename View<DataType, Properties...>::traits::array_layout,
+         HostSpace, MemoryTraits<Unmanaged>>;
 
 template <class DataType, class... Properties>
 unmanaged_view_type_like<DataType, Properties...> make_unmanaged_view_like(
