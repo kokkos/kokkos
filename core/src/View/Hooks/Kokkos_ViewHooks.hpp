@@ -135,7 +135,7 @@ struct DynamicViewHooksSubscriber {
   }
 };
 
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_DEFAULT_DYNAMIC_VIEWHOOKS
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_DEFAULT_DYNAMIC_VIEW_HOOKS
 using DefaultViewHooks = SubscribableViewHooks<DynamicViewHooksSubscriber>;
 #else
 using DefaultViewHooks = EmptyViewHooks;

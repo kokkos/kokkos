@@ -57,6 +57,7 @@ KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tu
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 KOKKOS_ENABLE_OPTION(LAUNCH_COMPILER      ON  "Whether to potentially use the launch compiler")
 KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake language support")
+KOKKOS_ENABLE_OPTION(EXPERIMENTAL_DEFAULT_DYNAMIC_VIEW_HOOKS OFF "Whether to use the experimental dynamic view hooks by default for each view")
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")
 KOKKOS_ENABLE_OPTION(EXPERIMENTAL_DEFAULT_DYNAMIC_VIEWHOOKS OFF "Whether to use the experimental dynamic view hooks by default for each view")
 
