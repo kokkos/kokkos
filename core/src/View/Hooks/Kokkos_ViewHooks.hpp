@@ -20,18 +20,17 @@ struct invoke_subscriber_impl;
 
 template <template <typename> class Invoker>
 struct invoke_subscriber_impl<Invoker> {
-  template <typename... Args>
-  static void invoke(Args &&...) {}
+  template <typename ViewType>
+  static void invoke(ViewType &self, const ViewType &other) {}
 };
 
 template <template <typename> class Invoker, typename Subscriber,
           typename... RemSubscribers>
 struct invoke_subscriber_impl<Invoker, Subscriber, RemSubscribers...> {
-  template <typename... Args>
-  static void invoke(Args &&... args) {
-    Invoker<Subscriber>::call(std::forward<Args>(args)...);
-    invoke_subscriber_impl<Invoker, RemSubscribers...>::invoke(
-        std::forward<Args>(args)...);
+  template <typename ViewType>
+  static void invoke(ViewType &self, const ViewType &other) {
+    Invoker<Subscriber>::call(self, other);
+    invoke_subscriber_impl<Invoker, RemSubscribers...>::invoke(self, other);
   }
 };
 
