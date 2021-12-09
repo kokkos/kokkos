@@ -1479,7 +1479,7 @@ class TestViewAPI {
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
       return;
 #endif
-// FIXME
+// FIXME_MSVC_WITH_CUDA
 // This test doesn't behave as expected on Windows with CUDA
 #if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
     if (std::is_same<typename dView1::memory_space,
