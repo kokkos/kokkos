@@ -22,6 +22,12 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
   IF(CMAKE_CXX_CLANG_TIDY)
     SET_TARGET_PROPERTIES(kokkos_gtest PROPERTIES CXX_CLANG_TIDY "")
   ENDIF()
+
+  FIND_PACKAGE(Threads QUIET)
+  IF(TARGET Threads::Threads)
+    SET_TARGET_PROPERTIES(kokkos_gtest PROPERTIES
+                          INTERFACE_LINK_LIBRARIES Threads::Threads)
+  ENDIF()
 ENDIF()
 
 #
