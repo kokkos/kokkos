@@ -232,11 +232,11 @@ class SYCLInternal {
   static void fence_helper(WAT& wat, const std::string& name,
                            uint32_t instance_id);
 
-  const static size_t usm_pool_size =
+  const static size_t m_usm_pool_size =
       30;  // TODO joe: arbitrary, should be configurable?
-  std::vector<IndirectKernelMem> m_indirectKernelMem{usm_pool_size};
+  std::vector<IndirectKernelMem> m_indirectKernelMem{m_usm_pool_size};
 
-  int pool_next = usm_pool_size;
+  int m_pool_next = m_usm_pool_size;
 
  public:
   static void fence(sycl::queue& q, const std::string& name,

@@ -154,7 +154,8 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     m_indirectReducerMem.reset(*m_queue, m_instance_id);
     for (auto& usm_mem : m_indirectKernelMem) {
       usm_mem.reset(*m_queue, m_instance_id);
-      usm_mem.reserve(0x1440);  // TODO joe: arbitrary (probably too large) size
+      // TODO 0x1440= 5184, arbitrary, larger than largest encountered kernel.
+      usm_mem.reserve(0x1440);
     }
 
   } else {
@@ -309,8 +310,8 @@ template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
 
 // This function cycles through a pool of USM allocations for functors
 SYCLInternal::IndirectKernelMem& SYCLInternal::get_indirect_kernel_mem() {
-  pool_next = (pool_next + 1) % usm_pool_size;
-  return m_indirectKernelMem[pool_next];
+  m_pool_next = (m_pool_next + 1) % m_usm_pool_size;
+  return m_indirectKernelMem[m_pool_next];
 }
 
 template <sycl::usm::alloc Kind>
