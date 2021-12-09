@@ -44,7 +44,6 @@
 
 #include <Kokkos_View.hpp>
 
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 namespace Kokkos {
 namespace Experimental {
 DynamicViewHooks::callback_overload_set DynamicViewHooks::copy_constructor_set;
@@ -54,4 +53,3 @@ DynamicViewHooks::callback_overload_set DynamicViewHooks::move_assignment_set;
 thread_local bool DynamicViewHooks::reentrant = false;
 }  // namespace Experimental
 }  // namespace Kokkos
-#endif
