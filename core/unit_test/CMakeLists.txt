@@ -693,6 +693,7 @@ else()
     default/TestDefaultDeviceType_c3.cpp
     default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
+    default/TestDefaultDeviceTypeViewAPI.cpp
   )
 endif()
 
