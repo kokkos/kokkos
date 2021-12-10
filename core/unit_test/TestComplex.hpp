@@ -48,6 +48,11 @@
 
 namespace Test {
 
+#ifdef KOKKOS_COMPILER_NVHPC
+// warning: 'long double' is treated as 'double' in device code
+#pragma diag_suppress 20208
+#endif
+
 // Test construction and assignment
 
 template <class ExecSpace>

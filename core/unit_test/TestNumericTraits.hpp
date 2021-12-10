@@ -229,6 +229,11 @@ struct TestNumericTraits<
 };
 #endif
 
+#ifdef KOKKOS_COMPILER_NVHPC
+// warning: 'long double' is treated as 'double' in device code
+#pragma diag_suppress 20208
+#endif
+
 TEST(TEST_CATEGORY, numeric_traits_infinity) {
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, double, Infinity>();
