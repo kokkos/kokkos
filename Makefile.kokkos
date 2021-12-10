@@ -23,7 +23,7 @@ KOKKOS_DEBUG ?= "no"
 KOKKOS_USE_TPLS ?= ""
 # Options: c++14,c++1y,c++17,c++1z,c++2a
 KOKKOS_CXX_STANDARD ?= "c++14"
-# Options: aggressive_vectorization,disable_profiling,enable_large_mem_tests,disable_complex_align,disable_deprecated_code,enable_deprecation_warnings
+# Options: aggressive_vectorization,disable_profiling,enable_large_mem_tests,disable_complex_align,disable_deprecated_code,enable_deprecation_warnings,disable_desul_atomics
 KOKKOS_OPTIONS ?= ""
 KOKKOS_CMAKE ?= "no"
 KOKKOS_TRIBITS ?= "no"
@@ -83,7 +83,8 @@ KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS
 KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_lambda)
 KOKKOS_INTERNAL_CUDA_USE_CONSTEXPR := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_constexpr)
 KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_HPX_OPTIONS),enable_async_dispatch)
-KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_desul_atomics)
+KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_desul_atomics) // deprecated
+KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_desul_atomics)
 KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_deprecated_code)
 KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_deprecation_warnings)
 
@@ -1252,8 +1253,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
   KOKKOS_LDFLAGS+=$(KOKKOS_INTERNAL_SYCL_ARCH_FLAG)
 endif
 
-ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
+ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_DESUL_ATOMICS")
+else
+  ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
+    $(error Contradictory Desul atomics options: KOKKOS_OPTIONS=$(KOKKOS_OPTIONS) )
+  endif
 endif
 
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
@@ -1334,7 +1339,7 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
-  ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
+  ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
     KOKKOS_SRC += $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_CUDA.cpp
   endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
