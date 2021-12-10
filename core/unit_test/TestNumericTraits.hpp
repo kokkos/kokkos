@@ -180,19 +180,27 @@ struct TestNumericTraits {
   KOKKOS_FUNCTION void operator()(MaxExponent10, int, int&) const { use_on_device(); }
   // clang-format on
   KOKKOS_FUNCTION void operator()(QuietNaN, int, int& e) const {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
     using Kokkos::Experimental::quiet_NaN;
     constexpr auto nan  = quiet_NaN<T>::value;
     constexpr auto zero = T(0);
     e += (int)!(nan != nan);
     e += (int)!(nan != zero);
+#else
+    (void)e;
+#endif
     use_on_device();
   }
   KOKKOS_FUNCTION void operator()(SignalingNaN, int, int& e) const {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
     using Kokkos::Experimental::signaling_NaN;
     constexpr auto nan  = signaling_NaN<T>::value;
     constexpr auto zero = T(0);
     e += (int)!(nan != nan);
     e += (int)!(nan != zero);
+#else
+    (void)e;
+#endif
     use_on_device();
   }
 
@@ -596,7 +604,7 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(long double, max_exponent10);
 
 // Workaround compiler issue error: expression must have a constant value
 // See kokkos/kokkos#4574
-#ifndef KOKKOS_COMPILER_NVHPC
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, quiet_NaN);
