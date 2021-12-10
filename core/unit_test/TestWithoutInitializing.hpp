@@ -54,7 +54,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -79,7 +79,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 8, 7, 6, 5);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};

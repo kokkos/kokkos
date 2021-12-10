@@ -59,7 +59,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -85,7 +85,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 8, 7, 6, 5);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -111,7 +111,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -137,7 +137,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 4, 5, 6, 8);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 7, 6, 5, 4);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -164,7 +164,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_scatterview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 7, 6, 5, 4);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 7, 6, 5, 4);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
