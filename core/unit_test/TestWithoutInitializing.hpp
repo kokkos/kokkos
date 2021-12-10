@@ -79,7 +79,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 8, 7, 6, 5);
-        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
