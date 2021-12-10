@@ -2212,6 +2212,9 @@ bool UnitTestOptions::MatchesFilter(const std::string& name_str,
     }
     pattern = next_sep + 1;
   }
+#if defined(__EDG__)
+#pragma diag_suppress code_is_unreachable
+#endif
   return true;
 }
 
@@ -4292,9 +4295,8 @@ class TestNameIs {
   // TestNameIs has NO default constructor.
   explicit TestNameIs(const char* name)
       : name_(name) {}
-// Workaround: suppress unused-function with intel compilers
-#if defined(__INTEL_COMPILER)
-#pragma warning disable 177
+#if defined(__EDG__)
+#pragma diag_suppress declared_but_not_referenced
 #endif
   // Returns true if and only if the test name of test_info matches name_.
   bool operator()(const TestInfo * test_info) const {
