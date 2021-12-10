@@ -55,7 +55,7 @@ KOKKOS_ENABLE_OPTION(COMPILER_WARNINGS    OFF "Whether to print all compiler war
 KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
 KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tuning tools")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
-KOKKOS_ENABLE_OPTION(NATIVE_OPENMP        OFF "Whether to enable refactored OpenMP backend implementation")
+KOKKOS_ENABLE_OPTION(NATIVE_OPENMP        ON  "Whether to enable refactored OpenMP backend implementation")
 KOKKOS_ENABLE_OPTION(LAUNCH_COMPILER      ON  "Whether to potentially use the launch compiler")
 KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake language support")
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")

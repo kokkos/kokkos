@@ -182,7 +182,7 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
     * BOOL Default: OFF
 * Kokkos_ENABLE_NATIVE_OPENMP
     * Whether to enable refactored OpenMP backend implementation
-    * BOOL Default: OFF
+    * BOOL Default: ON
 * Kokkos_ENABLE_TESTS
     * Whether to enable test suite
     * BOOL Default: OFF
