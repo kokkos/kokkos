@@ -28,6 +28,32 @@ pipeline {
 
         stage('Build') {
             parallel {
+                stage('CUDA-11.4-NVHPC') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvhpc'
+                            dir 'scripts/docker'
+                            label 'nvidia-docker && volta && large_images'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                        }
+                    }
+                    steps {
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              /opt/cmake/bin/cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER=nvc++ \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_OPENMP=ON \
+                              .. && \
+                              make -j8 && ctest --verbose'''
+                    }
+                }
                 stage('SYCL-OneAPI') {
                     agent {
                         dockerfile {
