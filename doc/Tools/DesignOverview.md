@@ -4,7 +4,7 @@ This document covers the high-level design goals and implementation of the Kokko
 
 ## History
 
-Much of the design of Kokkos Tools has influences from its history. As Kokkos was being developed, the developers wanted ways to check the performance of Kokkos code in a platform and backend-agnostic way. Suppose Christian had some clever new optimization in Kokkos itself, and wanted to check whether this was (a) brilliant or (b) deeply stupid. As this capability was developed, it became more and more clear that these facilities were useful to developers of Kokkos applications. 
+Much of the design of Kokkos Tools has influences from its history. As Kokkos was being developed, the developers wanted ways to check the performance of Kokkos code in a platform and backend-agnostic way. Suppose someone had some clever new optimization in Kokkos itself, and wanted to check whether this was (a) brilliant or (b) deeply stupid. As this capability was developed, it became more and more clear that these facilities were useful to developers of Kokkos applications. 
 
 ## Goals
 
