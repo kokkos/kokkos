@@ -141,9 +141,16 @@ class alignas(2) half_t {
   KOKKOS_FUNCTION
   half_t() : val(0.0F) {}
 
-  // Copy constructors
+// Copy constructors
+// Getting "C2580: multiple versions of a defaulted special
+// member function are not allowed" with VS 16.11.3 and CUDA 11.4.2
+#if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_FUNCTION
+  half_t(const half_t& rhs) : val(rhs.val) {}
+#else
   KOKKOS_DEFAULTED_FUNCTION
   half_t(const half_t&) noexcept = default;
+#endif
 
   KOKKOS_INLINE_FUNCTION
   half_t(const volatile half_t& rhs) {
