@@ -3423,6 +3423,73 @@ create_mirror_view_and_copy(
   return mirror;
 }
 
+// Variants taking an execution space parameter
+
+template <class ExecSpace, class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
+    const ExecSpace& e, Space const& space, Kokkos::View<T, P...> const& v) {
+  return Impl::create_mirror(space, v, e);
+}
+
+template <class ExecSpace, class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
+    const ExecSpace& e, Kokkos::Impl::WithoutInitializing_t wi,
+    Space const& space, Kokkos::View<T, P...> const& v) {
+  return Impl::create_mirror(space, v, wi, e);
+}
+
+template <class ExecSpace, class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
+    const ExecSpace& e, Space const& space, Kokkos::View<T, P...> const& v) {
+  return Impl::create_mirror_view(space, v, e);
+}
+
+template <class ExecSpace, class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
+    const ExecSpace& e, Kokkos::Impl::WithoutInitializing_t wi,
+    Space const& space, Kokkos::View<T, P...> const& v) {
+  return Impl::create_mirror_view(space, v, wi, e);
+}
+
+// Create a mirror view and deep_copy in a new space (specialization for same
+// space)
+template <class ExecSpace, class Space, class T, class... P>
+typename Impl::MirrorViewType<Space, T, P...>::view_type
+create_mirror_view_and_copy(
+    const ExecSpace& e, const Space&, const Kokkos::View<T, P...>& src,
+    std::string const& name = "",
+    typename std::enable_if<
+        Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
+  (void)name;
+  e.fence(
+      "Kokkos::create_mirror_view_and_copy: fence before returning src "
+      "view");  // same behavior as deep_copy(src, src)
+  return src;
+}
+
+// Create a mirror view and deep_copy in a new space (specialization for
+// different space)
+template <class ExecSpace, class Space, class T, class... P>
+typename Impl::MirrorViewType<Space, T, P...>::view_type
+create_mirror_view_and_copy(
+    const ExecSpace& e, const Space&, const Kokkos::View<T, P...>& src,
+    std::string const& name = "",
+    typename std::enable_if<
+        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
+  using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
+  std::string label = name.empty() ? src.label() : name;
+  auto mirror       = typename Mirror::non_const_type{
+      view_alloc(WithoutInitializing, label, e), src.layout()};
+  deep_copy(e, mirror, src);
+  return mirror;
+}
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // Create a mirror view in a new space without initializing (specialization for
 // same space)
