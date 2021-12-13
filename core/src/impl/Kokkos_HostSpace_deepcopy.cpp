@@ -66,15 +66,19 @@ void hostspace_parallel_deepcopy_async(void* dst, const void* src,
 void hostspace_parallel_deepcopy_async(const DefaultHostExecutionSpace& exec,
                                        void* dst, const void* src,
                                        ptrdiff_t n) {
+  using policy_t = Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>;
   constexpr int host_deep_copy_serial_limit = 10 * 8192;
 
+  // If the asynchronous HPX backend is enabled, do *not* copy anything
+  // synchronously. The deep copy must be correctly sequenced with respect to
+  // other kernels submitted to the same instance, so we only use the fallback
+  // parallel_for version in this case.
+#if !(defined(KOKKOS_ENABLE_HPX) && defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH))
   if ((n < host_deep_copy_serial_limit) ||
       (DefaultHostExecutionSpace().concurrency() == 1)) {
     std::memcpy(dst, src, n);
     return;
   }
-
-  using policy_t = Kokkos::RangePolicy<DefaultHostExecutionSpace>;
 
   // Both src and dst are aligned the same way with respect to 8 byte words
   if (reinterpret_cast<ptrdiff_t>(src) % 8 ==
@@ -141,6 +145,7 @@ void hostspace_parallel_deepcopy_async(const DefaultHostExecutionSpace& exec,
     }
     return;
   }
+#endif
 
   // Src and dst are not aligned the same way, we can only to byte wise copy.
   {
