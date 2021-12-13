@@ -83,7 +83,8 @@ KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS
 KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_lambda)
 KOKKOS_INTERNAL_CUDA_USE_CONSTEXPR := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_constexpr)
 KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_HPX_OPTIONS),enable_async_dispatch)
-KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_desul_atomics) // deprecated
+# deprecated
+KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_desul_atomics)
 KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_desul_atomics)
 KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_deprecated_code)
 KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_deprecation_warnings)
