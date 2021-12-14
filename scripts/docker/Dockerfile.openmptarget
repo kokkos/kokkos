@@ -62,4 +62,4 @@ RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
     make install && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
-ENV LD_LIBARY_PATH=${LLVM_DIR}/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=${LLVM_DIR}/lib:$LD_LIBRARY_PATH
