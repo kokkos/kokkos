@@ -28,6 +28,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
         OffsetView
         ScatterView
         StaticCrsGraph
+        WithoutInitializing
         UnorderedMap
         Vector
         ViewCtorPropEmbeddedDim
