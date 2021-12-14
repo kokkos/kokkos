@@ -80,20 +80,15 @@ struct DesulToSYCLMemoryScope<MemoryScopeSystem, extended_namespace> {
       sycl_memory_scope<extended_namespace>::system;
 };
 
-template <class T, class MemoryOrder, class MemoryScope>
-using sycl_atomic_ref = sycl::ext::oneapi::atomic_ref<
-    T,
-    DesulToSYCLMemoryOrder<MemoryOrder>::value,
-    DesulToSYCLMemoryScope<MemoryScope>::value,
-    // FIXME In SYCL 2020 Specification (revision 3) the class template atomic_ref has
-    // its trailing (non-type) template parameter defaulted to
-    // access::address_space::generic_space, but in currently available implementations
-    // a/ the template parameter has no default template argument, and b/ the
-    // generic_space enumerator is not a valid address space (only global_space,
-    // local_space, and global_space are).  Worse it is not yet defined as part of the
-    // access::address_space enumerator list.
-    // Here we arbitrarily elected to use global_space as a temporary workaround.
-    sycl::access::address_space::global_space>;
+template <class T,
+          class MemoryOrder,
+          class MemoryScope,
+          sycl::access::address_space AddressSpace>
+using sycl_atomic_ref =
+    sycl::ext::oneapi::atomic_ref<T,
+                                  DesulToSYCLMemoryOrder<MemoryOrder>::value,
+                                  DesulToSYCLMemoryScope<MemoryScope>::value,
+                                  AddressSpace>;
 
 }  // namespace Impl
 }  // namespace desul
