@@ -95,9 +95,11 @@ TEST(TEST_CATEGORY, reducers_half_t) {
 //}
 
 TEST(TEST_CATEGORY, reducers_bhalf_t) {
-#if defined(Kokkos_ENABLE_OPENMP)
+#if defined(KOKKOS_ENABLE_OPENMP)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::OpenMP>::value)
-#endif
+#else
+  if (true)
+#endif  // ENABLE_OPENMP
   {
     using ThisTestType = Kokkos::Experimental::bhalf_t;
     TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
@@ -118,9 +120,9 @@ TEST(TEST_CATEGORY, reducers_bhalf_t) {
     TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(20);
     TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(21);
 #endif
-    return;
+  } else {
+    GTEST_SKIP();
   }
-  GTEST_SKIP();
 }
 
 TEST(TEST_CATEGORY, reducers_int8_t) {
