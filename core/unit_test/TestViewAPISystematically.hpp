@@ -68,8 +68,9 @@ struct TestViewAPI<
   using h_alloc_type = typename Kokkos::View<data_type, alloc_layout_type,
                                              space_type>::HostMirror;
 
-  size_t dyn_sizes[sizeof...(DynamicSizes)] = {DynamicSizes...};
-  size_t all_sizes[sizeof...(AllSizes)]     = {AllSizes...};
+  // add a +1 to avoid zero length static array
+  size_t dyn_sizes[sizeof...(DynamicSizes) + 1] = {DynamicSizes..., 1};
+  size_t all_sizes[sizeof...(AllSizes) + 1]     = {AllSizes..., 1};
 
   constexpr static size_t expected_rank = sizeof...(AllSizes);
 
@@ -127,17 +128,18 @@ using compatible_extents_test_types = ::testing::Types<
     std::tuple<int * [10], LayoutStride, _sizes<0>, _sizes<0, 10>>,
     std::tuple<int* * [15], LayoutStride, _sizes<0, 0>, _sizes<0, 0, 15>>>;
 
-TYPED_TEST_SUITE(TestViewAPI, compatible_extents_test_types);
+TYPED_TEST_SUITE(TestViewAPI, compatible_extents_test_types, );
 
 TYPED_TEST(TestViewAPI, sizes) {
-  using view_type = typename TestFixture::view_type;
-  auto a          = this->create_view();
-  static_assert(view_type::rank == TestFixture::expected_rank);
+  using view_t = typename TestFixture::view_type;
+  auto a       = this->create_view();
+  static_assert(view_t::rank == TestFixture::expected_rank,
+                "TestViewAPI: Error: rank mismatch");
   size_t expected_span = 1;
-  for (int r = 0; r < view_type::rank; r++) expected_span *= this->all_sizes[r];
+  for (int r = 0; r < view_t::rank; r++) expected_span *= this->all_sizes[r];
 
   EXPECT_EQ(expected_span, a.span());
-  for (int r = 0; r < view_type::rank; r++) {
+  for (int r = 0; r < view_t::rank; r++) {
     EXPECT_EQ(this->all_sizes[r], a.extent(r));
     EXPECT_EQ(this->all_sizes[r], size_t(a.extent_int(r)));
   }
