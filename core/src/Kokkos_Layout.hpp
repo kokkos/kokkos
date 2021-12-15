@@ -84,9 +84,14 @@ struct LayoutLeft {
   LayoutLeft& operator=(LayoutLeft&&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  explicit constexpr LayoutLeft(size_t N0 = 0, size_t N1 = 0, size_t N2 = 0,
-                                size_t N3 = 0, size_t N4 = 0, size_t N5 = 0,
-                                size_t N6 = 0, size_t N7 = 0)
+  explicit constexpr LayoutLeft(size_t N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                size_t N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : dimension{N0, N1, N2, N3, N4, N5, N6, N7} {}
 
   friend bool operator==(const LayoutLeft& left, const LayoutLeft& right) {
@@ -128,9 +133,14 @@ struct LayoutRight {
   LayoutRight& operator=(LayoutRight&&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  explicit constexpr LayoutRight(size_t N0 = 0, size_t N1 = 0, size_t N2 = 0,
-                                 size_t N3 = 0, size_t N4 = 0, size_t N5 = 0,
-                                 size_t N6 = 0, size_t N7 = 0)
+  explicit constexpr LayoutRight(size_t N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : dimension{N0, N1, N2, N3, N4, N5, N6, N7} {}
 
   friend bool operator==(const LayoutRight& left, const LayoutRight& right) {
@@ -177,14 +187,14 @@ struct LayoutStride {
     // Verify valid rank order:
     int check_input = ARRAY_LAYOUT_MAX_RANK < rank ? 0 : int(1 << rank) - 1;
     for (int r = 0; r < ARRAY_LAYOUT_MAX_RANK; ++r) {
-      tmp.dimension[r] = 0;
-      tmp.stride[r]    = 0;
+      tmp.dimension[r] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
+      tmp.stride[r]    = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
     }
     for (int r = 0; r < rank; ++r) {
       check_input &= ~int(1 << order[r]);
     }
     if (0 == check_input) {
-      size_t n = 1;
+      size_t n = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
       for (int r = 0; r < rank; ++r) {
         tmp.stride[order[r]] = n;
         n *= (dimen[order[r]]);
@@ -195,12 +205,22 @@ struct LayoutStride {
   }
 
   KOKKOS_INLINE_FUNCTION
-  explicit constexpr LayoutStride(size_t N0 = 0, size_t S0 = 0, size_t N1 = 0,
-                                  size_t S1 = 0, size_t N2 = 0, size_t S2 = 0,
-                                  size_t N3 = 0, size_t S3 = 0, size_t N4 = 0,
-                                  size_t S4 = 0, size_t N5 = 0, size_t S5 = 0,
-                                  size_t N6 = 0, size_t S6 = 0, size_t N7 = 0,
-                                  size_t S7 = 0)
+  explicit constexpr LayoutStride(size_t N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                  size_t S7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : dimension{N0, N1, N2, N3, N4, N5, N6, N7}, stride{S0, S1, S2, S3,
                                                           S4, S5, S6, S7} {}
 
@@ -284,10 +304,14 @@ struct LayoutTiled {
   LayoutTiled& operator=(LayoutTiled&&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  explicit constexpr LayoutTiled(size_t argN0 = 0, size_t argN1 = 0,
-                                 size_t argN2 = 0, size_t argN3 = 0,
-                                 size_t argN4 = 0, size_t argN5 = 0,
-                                 size_t argN6 = 0, size_t argN7 = 0)
+  explicit constexpr LayoutTiled(size_t argN0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : dimension{argN0, argN1, argN2, argN3, argN4, argN5, argN6, argN7} {}
 
   friend bool operator==(const LayoutTiled& left, const LayoutTiled& right) {

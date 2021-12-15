@@ -308,6 +308,94 @@ struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
 namespace Kokkos {
 namespace Impl {
 
+template <typename IntType>
+KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
+    const IntType i0, const IntType i1, const IntType i2, const IntType i3,
+    const IntType i4, const IntType i5, const IntType i6, const IntType i7) {
+  static_assert(std::is_integral<IntType>::value,
+                "count_valid_integers() must have integer arguments.");
+  return (i0 != KOKKOS_INVALID_INDEX) + (i1 != KOKKOS_INVALID_INDEX) +
+         (i2 != KOKKOS_INVALID_INDEX) + (i3 != KOKKOS_INVALID_INDEX) +
+         (i4 != KOKKOS_INVALID_INDEX) + (i5 != KOKKOS_INVALID_INDEX) +
+         (i6 != KOKKOS_INVALID_INDEX) + (i7 != KOKKOS_INVALID_INDEX);
+}
+
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_device(const size_t dyn_rank, const bool is_void_spec,
+                               const size_t i0, const size_t i1,
+                               const size_t i2, const size_t i3,
+                               const size_t i4, const size_t i5,
+                               const size_t i6, const size_t i7) {
+  if (is_void_spec) {
+    const size_t num_passed_args =
+        count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
+
+    if (num_passed_args != dyn_rank && is_void_spec) {
+      Kokkos::abort(
+          "Number of arguments passed to Kokkos::View() constructor must match "
+          "the dynamic rank of the view.");
+    }
+  }
+}
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank_host(const size_t dyn_rank, const bool is_void_spec,
+                             const size_t i0, const size_t i1, const size_t i2,
+                             const size_t i3, const size_t i4, const size_t i5,
+                             const size_t i6, const size_t i7,
+                             const std::string& label) {
+  if (is_void_spec) {
+    const size_t num_passed_args =
+        count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
+
+    if (num_passed_args != dyn_rank) {
+      const std::string message =
+          "Constructor for Kokkos View '" + label +
+          "' has mismatched number of arguments. Number of arguments = " +
+          std::to_string(num_passed_args) +
+          " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
+      Kokkos::abort(message.c_str());
+    }
+  }
+}
+#endif
+
+template <typename Traits, typename Layout>
+void runtime_check_rank(const std::string& label, Layout& layout) {
+  size_t i0 = layout.dimension[0];
+  size_t i1 = layout.dimension[1];
+  size_t i2 = layout.dimension[2];
+  size_t i3 = layout.dimension[3];
+  size_t i4 = layout.dimension[4];
+  size_t i5 = layout.dimension[5];
+  size_t i6 = layout.dimension[6];
+  size_t i7 = layout.dimension[7];
+
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  KOKKOS_IMPL_IF_ON_HOST
+  Impl::runtime_check_rank_host(
+      Traits::rank_dynamic,
+      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
+      i4, i5, i6, i7, label);
+  else Impl::runtime_check_rank_device(
+      Traits::rank_dynamic,
+      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
+      i4, i5, i6, i7);
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+  Impl::runtime_check_rank_host(
+      Traits::rank_dynamic,
+      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
+      i4, i5, i6, i7, label);
+#else
+  Impl::runtime_check_rank_device(
+      Traits::rank_dynamic,
+      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
+      i4, i5, i6, i7);
+
+#endif
+}
+
 struct ALL_t {
   KOKKOS_INLINE_FUNCTION
   constexpr const ALL_t& operator()() const { return *this; }
@@ -3357,6 +3445,10 @@ class ViewMapping<
         static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
             arg_prop)
             .value;
+
+    // Runtime check for matching rank and laytout args
+    runtime_check_rank<Traits>(alloc_name, arg_layout);
+
     // Create shared memory tracking record with allocate memory from the memory
     // space
     record_type* const record = record_type::allocate(
