@@ -596,8 +596,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
     using ValueOps = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
-    auto selected_reducer = ReducerConditional::select(functor, reducer);
-
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -606,12 +604,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // FIXME_SYCL optimize
     const size_t wgroup_size = m_team_size * m_vector_size;
-    std::size_t size         = m_league_size * m_team_size * m_vector_size;
+    std::size_t size = std::size_t(m_league_size) * m_team_size * m_vector_size;
     const auto init_size =
         std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
-            selected_reducer);
+            ReducerConditional::select(m_functor, m_reducer));
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
         sizeof(value_type) * std::max(value_count, 1u) * init_size));
     value_type* device_accessible_result_ptr =
