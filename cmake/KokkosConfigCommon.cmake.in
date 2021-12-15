@@ -9,6 +9,10 @@ SET(Kokkos_CXX_COMPILER_ID "@KOKKOS_CXX_COMPILER_ID@")
 FOREACH(DEV ${Kokkos_DEVICES})
   SET(Kokkos_ENABLE_${DEV} ON)
 ENDFOREACH()
+IF(Kokkos_ENABLE_THREADS)  # for backward compatibility
+  SET(Kokkos_ENABLE_PTHREAD ON)
+  LIST(APPEND Kokkos_DEVICES PTHREAD)
+ENDIF()
 
 IF(NOT Kokkos_FIND_QUIETLY)
   MESSAGE(STATUS "Enabled Kokkos devices: ${Kokkos_DEVICES}")

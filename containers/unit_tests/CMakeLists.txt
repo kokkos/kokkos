@@ -5,12 +5,7 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
 foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
-  # Because there is always an exception to the rule
-  if(Tag STREQUAL "Threads")
-    set(DEVICE "PTHREAD")
-  else()
-    string(TOUPPER ${Tag} DEVICE)
-  endif()
+  string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
   # Add test for that backend if it is enabled
   if(KOKKOS_ENABLE_${DEVICE})
