@@ -6,12 +6,12 @@ local compiler_input="$2"
 check_sems_intel() {
   ICPCVER="$(icpc --version | grep icpc | cut -d ' ' -f 3)"
   if [[ "${ICPCVER}" = 17.* ]]; then
-    module swap sems-gcc/4.9.3 sems-gcc/6.4.0
+    module swap sems-archive-gcc/4.9.3 sems-archive-gcc/6.4.0
     module list
   fi
   if [[ "${ICPCVER}" = 19.* ]]; then
     # Newer gcc needed for c++ standard beyond c++14
-    module swap sems-gcc/6.1.0 sems-gcc/7.2.0
+    module swap sems-archive-gcc/6.1.0 sems-archive-gcc/7.2.0
     module list
   fi
 }
@@ -20,7 +20,7 @@ check_sems_clang() {
   CLANGVER=$(clang --version | grep "clang version" | cut -d " " -f 3)
   if [[ "${CLANGVER}" = 9.* ]] || [[ "${CLANGVER}" = 10.* ]]; then
     # Newer gcc needed for c++ standard beyond c++14
-    module swap sems-gcc/5.3.0 sems-gcc/9.2.0
+    module swap sems-archive-gcc/5.3.0 sems-archive-gcc/9.2.0
     module list
   fi
 }
