@@ -421,7 +421,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // Avoid capturing *this since it might not be trivially copyable
       const auto shmem_begin     = m_shmem_begin;
       const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
-      void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+      char* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
       auto lambda = [=](sycl::nd_item<2> item) {
         const member_type team_member(
@@ -637,7 +637,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin     = m_shmem_begin;
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
-        void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+        char* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
@@ -693,7 +693,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin     = m_shmem_begin;
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
-        void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+        char* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
         auto lambda = [=](sycl::nd_item<2> item) {
           auto& num_teams_done = reinterpret_cast<unsigned int&>(
