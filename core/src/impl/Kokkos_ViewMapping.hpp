@@ -2449,8 +2449,10 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return dimension_type::rank == 0
+               ? 1
+               : m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+                     m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
  private:
@@ -2463,16 +2465,19 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   /* Span of the range space, largest stride * dimension */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return size() == size_type(0)
-               ? size_type(0)
-               : Max(m_dim.N0 * m_stride.S0,
-                     Max(m_dim.N1 * m_stride.S1,
-                         Max(m_dim.N2 * m_stride.S2,
-                             Max(m_dim.N3 * m_stride.S3,
-                                 Max(m_dim.N4 * m_stride.S4,
-                                     Max(m_dim.N5 * m_stride.S5,
-                                         Max(m_dim.N6 * m_stride.S6,
-                                             m_dim.N7 * m_stride.S7)))))));
+    return dimension_type::rank == 0
+               ? 1
+               : (size() == size_type(0)
+                      ? size_type(0)
+                      : Max(m_dim.N0 * m_stride.S0,
+                            Max(m_dim.N1 * m_stride.S1,
+                                Max(m_dim.N2 * m_stride.S2,
+                                    Max(m_dim.N3 * m_stride.S3,
+                                        Max(m_dim.N4 * m_stride.S4,
+                                            Max(m_dim.N5 * m_stride.S5,
+                                                Max(m_dim.N6 * m_stride.S6,
+                                                    m_dim.N7 *
+                                                        m_stride.S7))))))));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
