@@ -296,6 +296,7 @@ do
       ;;
     --with-pthread)
       update_kokkos_devices Pthread
+      echo "warning: The --with-pthread option is deprecated. Use --with-threads instead!"
       ;;
     --with-serial)
       update_kokkos_devices Serial

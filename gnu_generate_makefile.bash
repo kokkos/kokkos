@@ -47,6 +47,7 @@ do
       ;;
     --with-pthread)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"
+      echo "warning: The --with-pthread option is deprecated. Use --with-threads instead!"
       ;;
     --with-threads)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Threads"
