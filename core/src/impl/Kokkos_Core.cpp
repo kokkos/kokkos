@@ -247,6 +247,7 @@ int get_gpu(const InitArguments& args) {
     return num_devices;
 #endif
   }(args.ndevices);
+  if (ndevices == 0) return use_gpu;
   const int skip_device = args.skip_device;
 
   // if the exact device is not set, but ndevices was given, assign round-robin
