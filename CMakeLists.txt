@@ -175,6 +175,10 @@ IF(NOT MSVC)
     GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 ENDIF()
 
+IF(Kokkos_ENABLE_TESTS AND NOT KOKKOS_HAS_TRILINOS)
+  find_package(GTest)
+ENDIF()
+
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
