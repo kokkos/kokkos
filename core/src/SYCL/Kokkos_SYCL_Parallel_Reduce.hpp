@@ -388,9 +388,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                     static_cast<const FunctorType&>(functor), false,
                     std::min(size, wgroup_size));
 
-                if (local_id == 0)
-                  num_teams_done[0] =
-                      Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
+                if (local_id == 0) {
+                  sycl::ext::oneapi::atomic_ref<
+                      unsigned, sycl::ext::oneapi::memory_order::relaxed,
+                      sycl::ext::oneapi::memory_scope::device,
+                      sycl::access::address_space::global_space>
+                      scratch_flags_ref(*scratch_flags);
+                  num_teams_done[0] = ++scratch_flags_ref;
+                }
                 item.barrier(sycl::access::fence_space::local_space);
                 if (num_teams_done[0] == n_wgroups) {
                   if (local_id >= n_wgroups)
@@ -433,9 +438,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                     static_cast<const FunctorType&>(functor), false,
                     std::min(size, wgroup_size));
 
-                if (local_id == 0)
-                  num_teams_done[0] =
-                      Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
+                if (local_id == 0) {
+                  sycl::ext::oneapi::atomic_ref<
+                      unsigned, sycl::ext::oneapi::memory_order::relaxed,
+                      sycl::ext::oneapi::memory_scope::device,
+                      sycl::access::address_space::global_space>
+                      scratch_flags_ref(*scratch_flags);
+                  num_teams_done[0] = ++scratch_flags_ref;
+                }
                 item.barrier(sycl::access::fence_space::local_space);
                 if (num_teams_done[0] == n_wgroups) {
                   if (local_id >= n_wgroups)
@@ -718,9 +728,14 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 static_cast<const FunctorType&>(functor), false,
                 std::min(size, wgroup_size));
 
-            if (local_id == 0)
-              num_teams_done[0] =
-                  Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
+            if (local_id == 0) {
+              sycl::ext::oneapi::atomic_ref<
+                  unsigned, sycl::ext::oneapi::memory_order::relaxed,
+                  sycl::ext::oneapi::memory_scope::device,
+                  sycl::access::address_space::global_space>
+                  scratch_flags_ref(*scratch_flags);
+              num_teams_done[0] = ++scratch_flags_ref;
+            }
             item.barrier(sycl::access::fence_space::local_space);
             if (num_teams_done[0] == n_wgroups) {
               if (local_id >= n_wgroups)
@@ -762,9 +777,14 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 static_cast<const FunctorType&>(functor), false,
                 std::min(size, wgroup_size));
 
-            if (local_id == 0)
-              num_teams_done[0] =
-                  Kokkos::atomic_fetch_add(scratch_flags, 1) + 1;
+            if (local_id == 0) {
+              sycl::ext::oneapi::atomic_ref<
+                  unsigned, sycl::ext::oneapi::memory_order::relaxed,
+                  sycl::ext::oneapi::memory_scope::device,
+                  sycl::access::address_space::global_space>
+                  scratch_flags_ref(*scratch_flags);
+              num_teams_done[0] = ++scratch_flags_ref;
+            }
             item.barrier(sycl::access::fence_space::local_space);
             if (num_teams_done[0] == n_wgroups) {
               if (local_id >= n_wgroups)
