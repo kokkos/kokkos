@@ -550,7 +550,7 @@ IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda
+        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend "${CUDA_ARCH_FLAG}=${KOKKOS_CUDA_ARCH_FLAG}"
       )
     ELSE()
       MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
