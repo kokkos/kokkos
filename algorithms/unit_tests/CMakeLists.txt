@@ -9,12 +9,7 @@ KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 SET(ALGORITHM UnitTestMain.cpp)
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
-  # Because there is always an exception to the rule
-  if(Tag STREQUAL "Threads")
-    set(DEVICE "PTHREAD")
-  else()
-    string(TOUPPER ${Tag} DEVICE)
-  endif()
+  string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
 
   if(Kokkos_ENABLE_${DEVICE})

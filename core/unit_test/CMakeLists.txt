@@ -56,8 +56,8 @@ SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
 SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
-SET(KOKKOS_PTHREAD_FEATURE_LEVEL 999)
-SET(KOKKOS_PTHREAD_NAME Threads)
+SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
+SET(KOKKOS_THREADS_NAME Threads)
 
 
 #
@@ -85,12 +85,7 @@ KOKKOS_ADD_EXECUTABLE(
 )
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
-  # Because there is always an exception to the rule
-  if(Tag STREQUAL "Threads")
-    set(DEVICE "PTHREAD")
-  else()
-    string(TOUPPER ${Tag} DEVICE)
-  endif()
+  string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
 
   if(Kokkos_ENABLE_${DEVICE})
@@ -432,7 +427,7 @@ if(Kokkos_ENABLE_SERIAL)
   )
 endif()
 
-if(Kokkos_ENABLE_PTHREAD)
+if(Kokkos_ENABLE_THREADS)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES ${Threads_SOURCES}
