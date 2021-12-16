@@ -25,11 +25,7 @@ IF(Kokkos_ENABLE_PTHREAD)  # for backward compatibility
   SET(KOKKOS_ENABLE_THREADS ON)
   LIST(APPEND KOKKOS_ENABLED_DEVICES THREADS)
   SET(KOKKOS_HAS_HOST ON)
-  IF(Kokkos_ENABLE_DEPRECATED_WARNINGS3)
-    MESSAGE(WARNING "The Kokkos_ENABLE_PTHREAD option is deprecated. Use Kokkos_ENABLE_THREADS instead!")
-  ELSE()
-    MESSAGE(STATUS "The Kokkos_ENABLE_PTHREAD option is deprecated. Use Kokkos_ENABLE_THREADS instead!")
-  ENDIF()
+  MESSAGE(DEPRECATION "The Kokkos_ENABLE_PTHREAD option is deprecated. Use Kokkos_ENABLE_THREADS instead!")
 ENDIF()
 
 # detect clang++ / cl / clang-cl clashes
