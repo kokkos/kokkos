@@ -75,13 +75,15 @@ struct bhalf_impl_t {
 }  // namespace Impl
 
 namespace Experimental {
-
-/********************** BEGIN half forward declarations  **********************/
+namespace Impl {
 template <class FloatType>
 class floating_point_wrapper;
+}
 
+/********************** BEGIN half forward declarations  **********************/
 // Declare half_t (binary16)
-using half_t = floating_point_wrapper<Kokkos::Impl::half_impl_t::type>;
+using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
+    Kokkos::Impl::half_impl_t ::type>;
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
@@ -104,6 +106,8 @@ KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned long val);
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned long long val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(half_t);
 
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
@@ -145,7 +149,8 @@ KOKKOS_INLINE_FUNCTION
 // declare bhalf_t
 #if (CUDA_VERSION >= 11000)
 #define KOKKOS_IMPL_BHALF_TYPE_DEFINED
-using bhalf_t = floating_point_wrapper<Kokkos::Impl::bhalf_impl_t::type>;
+using bhalf_t = Kokkos::Experimental::Impl::floating_point_wrapper<
+    Kokkos::Impl ::bhalf_impl_t ::type>;
 
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(float val);
@@ -169,6 +174,8 @@ KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(unsigned long val);
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(unsigned long long val);
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(bhalf_t val);
 
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
@@ -209,6 +216,7 @@ KOKKOS_INLINE_FUNCTION
 #endif  // CUDA_VERSION < 11000
 /*********************** END half forward declarations  ***********************/
 
+namespace Impl {
 template <class FloatType>
 class alignas(FloatType) floating_point_wrapper {
  public:
@@ -249,28 +257,30 @@ class alignas(FloatType) floating_point_wrapper {
 #endif  // CUDA_VERSION >= 11000
 
   template <class T>
-  static KOKKOS_INLINE_FUNCTION auto cast_to_wrapper(
+  static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t cast_to_wrapper(
       T x, volatile Kokkos::Impl::half_impl_t::type&) {
-    return cast_to_half(x);
+    return Kokkos::Experimental::cast_to_half(x);
   }
 
 #if CUDA_VERSION >= 11000
   template <class T>
-  static KOKKOS_INLINE_FUNCTION auto cast_to_wrapper(
+  static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t cast_to_wrapper(
       T x, volatile Kokkos::Impl::bhalf_impl_t::type&) {
-    return cast_to_bhalf(x);
+    return Kokkos::Experimental::cast_to_bhalf(x);
   }
 #endif  // CUDA_VERSION >= 11000
 
   template <class T>
-  static KOKKOS_INLINE_FUNCTION T cast_from_wrapper(const half_t& x) {
-    return cast_from_half<T>(x);
+  static KOKKOS_INLINE_FUNCTION T
+  cast_from_wrapper(const Kokkos::Experimental::half_t& x) {
+    return Kokkos::Experimental::cast_from_half<T>(x);
   }
 
 #if CUDA_VERSION >= 11000
   template <class T>
-  static KOKKOS_INLINE_FUNCTION T cast_from_wrapper(const bhalf_t& x) {
-    return cast_from_bhalf<T>(x);
+  static KOKKOS_INLINE_FUNCTION T
+  cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x) {
+    return Kokkos::Experimental::cast_from_bhalf<T>(x);
   }
 #endif  // CUDA_VERSION >= 11000
         // END: Casting wrappers for supporting multiple impl types
@@ -884,6 +894,7 @@ class alignas(FloatType) floating_point_wrapper {
     return is;
   }
 };
+}  // namespace Impl
 
 /************************** half conversions **********************************/
 KOKKOS_INLINE_FUNCTION
