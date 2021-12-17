@@ -284,7 +284,11 @@ int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
 
 void SYCLSpaceInitializer::initialize(const InitArguments& args) {
-  int use_gpu = Kokkos::Impl::get_gpu(args);
+  // If there a no GPUs return whatever else we can run on if no specific GPU is
+  // requested.
+  const auto num_gpus =
+      sycl::device::get_devices(sycl::info::device_type::gpu).size();
+  int use_gpu = num_gpus == 0 ? args.device_id : Kokkos::Impl::get_gpu(args);
 
   if (std::is_same<Kokkos::Experimental::SYCL,
                    Kokkos::DefaultExecutionSpace>::value ||
