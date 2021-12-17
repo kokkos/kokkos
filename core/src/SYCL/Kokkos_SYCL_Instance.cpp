@@ -154,8 +154,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     m_indirectReducerMem.reset(*m_queue, m_instance_id);
     for (auto& usm_mem : m_indirectKernelMem) {
       usm_mem.reset(*m_queue, m_instance_id);
-      // TODO 0x1440= 5184, arbitrary, larger than largest encountered kernel.
-      usm_mem.reserve(0x1440);
     }
 
   } else {
