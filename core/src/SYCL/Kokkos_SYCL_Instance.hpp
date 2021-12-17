@@ -236,7 +236,7 @@ class SYCLInternal {
       30;  // TODO joe: arbitrary, should be configurable?
   std::vector<IndirectKernelMem> m_indirectKernelMem{m_usm_pool_size};
 
-  int m_pool_next = m_usm_pool_size;
+  size_t m_pool_next{0};
 
  public:
   static void fence(sycl::queue& q, const std::string& name,
