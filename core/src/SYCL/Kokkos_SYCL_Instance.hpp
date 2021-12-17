@@ -149,7 +149,8 @@ class SYCLInternal {
       fence();
       reserve(sizeof(T));
       if constexpr (sycl::usm::alloc::device == Kind) {
-        m_copy_event = m_q->memcpy(m_data, std::addressof(t), sizeof(T));
+        std::memcpy(static_cast<void*>(m_staging.get()), std::addressof(t), sizeof(T));
+        m_copy_event = m_q->memcpy(m_data, m_staging.get(), sizeof(T));
         // TODO joe: this change is unlikely to be generally safe
         // Anything relying on this copy must depend on m_copy_event
 
@@ -193,6 +194,8 @@ class SYCLInternal {
 
     std::optional<sycl::queue> m_q;
     void* m_data      = nullptr;
+    std::unique_ptr<char[]> m_staging;
+
     size_t m_capacity = 0;
     sycl::event m_last_event;
 
