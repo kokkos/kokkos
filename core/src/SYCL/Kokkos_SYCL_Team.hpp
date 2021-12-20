@@ -218,7 +218,7 @@ class SYCLTeamMember {
     m_item.barrier(sycl::access::fence_space::local_space);
 
     reducer.reference() = reduction_array[0];
-    // Make sure that the reduction array hasn't been modified in the mean time.
+    // Make sure that the reduction array hasn't been modified in the meantime.
     m_item.barrier(sycl::access::fence_space::local_space);
   }
 
@@ -300,7 +300,7 @@ class SYCLTeamMember {
       m_item.barrier();  // Wait for atomic
       intermediate += base_data[n_active_subgroups - 1];
     }
-    // Make sure that the reduction array hasn't been modified in the mean time.
+    // Make sure that the reduction array hasn't been modified in the meantime.
     m_item.barrier(sycl::access::fence_space::local_space);
 
     return intermediate;
