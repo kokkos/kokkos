@@ -306,14 +306,9 @@ template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
 
 // This function cycles through a pool of USM allocations for functors
 SYCLInternal::IndirectKernelMem& SYCLInternal::get_indirect_kernel_mem() {
-  /* Thread safety:
-     Is it sufficient to atomically increment m_pool_next here?
-     Suppose m_usm_pool_size is 2, and we have 3 threads attempting to grab
-     USMObjectMem. Threads 0 and 2 will get the same resource. Is this OK?
-     `copy_from` is mutex locked anyway, and semantically, it's OK for two
-     threads to want to use the same USMObjectMem, so long as one ends up having
-     to wait for m_last_event, so it should be safe.
-  */
+  // Thread safety: atomically increment round robin variable
+  // NB: atomic_wrapping_fetch_inc returns values in range [0-N], not
+  // [0-N) as might be expected.
   size_t next_pool = desul::atomic_wrapping_fetch_inc(
       &m_pool_next, m_usm_pool_size - 1, desul::MemoryOrderRelaxed(),
       desul::MemoryScopeDevice());
