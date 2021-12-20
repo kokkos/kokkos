@@ -817,10 +817,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    using IndirectReducerMem =
-        Kokkos::Experimental::Impl::SYCLInternal::IndirectReducerMem;
     IndirectKernelMem& indirectKernelMem   = instance.get_indirect_kernel_mem();
-    IndirectReducerMem& indirectReducerMem = instance.m_indirectReducerMem;
+    IndirectKernelMem& indirectReducerMem  = instance.get_indirect_kernel_mem();
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);

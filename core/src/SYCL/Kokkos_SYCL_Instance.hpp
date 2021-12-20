@@ -212,9 +212,6 @@ class SYCLInternal {
   using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::device>;
   IndirectKernelMem& get_indirect_kernel_mem();
 
-  using IndirectReducerMem = USMObjectMem<sycl::usm::alloc::shared>;
-  IndirectReducerMem m_indirectReducerMem;
-
   bool was_finalized = false;
 
   static SYCLInternal& singleton();
