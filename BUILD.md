@@ -178,7 +178,7 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
     * Whether to print information about which profiling tools gotloaded
     * BOOL Default: OFF
 * Kokkos_ENABLE_TESTS
-    * Whether to build serial  backend
+    * Whether to enable test suite
     * BOOL Default: OFF
 
 ## Other Options
