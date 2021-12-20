@@ -255,6 +255,18 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
   static void register_event(Storage&, sycl::event){};
 };
 
+
+#if 0//def SYCL_DEVICE_COPYABLE
+template <typename Functor, typename Storage>
+class SYCLFunctionWrapper<Functor, Storage, false> : public Functor {
+ public:
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : Functor(functor) {}
+
+  const SYCLFunctionWrapper& get_functor() const { return *this; }
+
+  static void register_event(Storage&, sycl::event){};
+};
+#else
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
   const Functor& m_kernelFunctor;
@@ -271,6 +283,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
     storage.register_event(event);
   }
 };
+#endif
 
 template <typename Functor, typename Storage>
 auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
@@ -279,4 +292,17 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#if 1//def SYCL_DEVICE_COPYABLE
+template <typename Functor, typename Storage>
+struct sycl::is_device_copyable<
+    Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>>
+    : std::true_type {};
+
+template <typename Functor, typename Storage>
+struct sycl::is_device_copyable<
+    const Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage,
+                                                          false>>
+    : std::true_type {};
+#endif
 #endif

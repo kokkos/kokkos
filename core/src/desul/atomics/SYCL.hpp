@@ -19,7 +19,7 @@ namespace desul {
 
 // FIXME_SYCL We need to either use generic_space or figure out how to check for the
 // correct adress space in a SYCL-portable way.
-#ifndef __NVPTX__
+#if 0//ndef __NVPTX__
 #define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, TYPE)                              \
   template <class MemoryOrder>                                                     \
   TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
