@@ -175,7 +175,7 @@ class SYCLInternal {
 
     sycl::event get_copy_event() const { return m_copy_event; }
 
-  private:
+   private:
     // USMObjectMem class invariants
     // All four expressions below must evaluate to true:
     //
