@@ -415,8 +415,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::scoped_lock<std::mutex> m_scratch_lock;
 
   template <typename Functor>
-  sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
-                                 const std::vector<sycl::event> &memcpy_events) const {
+  sycl::event sycl_direct_launch(
+      const Policy& policy, const Functor& functor,
+      const std::vector<sycl::event>& memcpy_events) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -598,9 +599,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::scoped_lock<std::mutex> m_scratch_lock;
 
   template <typename PolicyType, typename Functor, typename Reducer>
-  sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor, const Reducer& reducer,
-                                 const std::vector<sycl::event> &memcpy_events) const {
+  sycl::event sycl_direct_launch(
+      const PolicyType& policy, const Functor& functor, const Reducer& reducer,
+      const std::vector<sycl::event>& memcpy_events) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -817,8 +818,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem   = instance.get_indirect_kernel_mem();
-    IndirectKernelMem& indirectReducerMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
@@ -827,7 +828,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
-       {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
+        {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }

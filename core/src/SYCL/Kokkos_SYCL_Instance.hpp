@@ -173,9 +173,9 @@ class SYCLInternal {
       m_mutex.unlock();
     }
 
-    sycl::event get_copy_event() const {return m_copy_event;}
+    sycl::event get_copy_event() const { return m_copy_event; }
 
-   private:
+  private:
     // USMObjectMem class invariants
     // All four expressions below must evaluate to true:
     //
@@ -255,23 +255,23 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
   Storage& m_storage;
 
  public:
-   SYCLFunctionWrapper(const Functor &functor, Storage &storage)
-       : m_functor(functor), m_storage(storage) {}
+  SYCLFunctionWrapper(const Functor& functor, Storage& storage)
+      : m_functor(functor), m_storage(storage) {}
 
-   const Functor &get_functor() const { return m_functor; }
+  const Functor& get_functor() const { return m_functor; }
 
-   sycl::event get_copy_event() const { return {}; }
+  sycl::event get_copy_event() const { return {}; }
 
-   static void register_event(Storage &, sycl::event){};
+  static void register_event(Storage&, sycl::event){};
 };
 
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
-  const Functor &m_kernelFunctor;
-  Storage &m_storage;
+  const Functor& m_kernelFunctor;
+  Storage& m_storage;
 
-public:
-  SYCLFunctionWrapper(const Functor &functor, Storage &storage)
+ public:
+  SYCLFunctionWrapper(const Functor& functor, Storage& storage)
       : m_kernelFunctor(storage.copy_from(functor)), m_storage(storage) {}
 
   std::reference_wrapper<const Functor> get_functor() const {
@@ -280,7 +280,7 @@ public:
 
   sycl::event get_copy_event() const { return m_storage.get_copy_event(); }
 
-  static void register_event(Storage &storage, sycl::event event) {
+  static void register_event(Storage& storage, sycl::event event) {
     storage.register_event(event);
   }
 };

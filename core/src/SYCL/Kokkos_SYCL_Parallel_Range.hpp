@@ -82,9 +82,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  static sycl::event
-  sycl_direct_launch(const Policy &policy, const Functor &functor,
-                     const std::vector<sycl::event> &memcpy_events) {
+  static sycl::event sycl_direct_launch(
+      const Policy& policy, const Functor& functor,
+      const std::vector<sycl::event>& memcpy_events) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -224,9 +224,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <typename Functor>
-  sycl::event
-  sycl_direct_launch(const Functor &functor,
-                     const std::vector<sycl::event> &memcpy_events) const {
+  sycl::event sycl_direct_launch(
+      const Functor& functor,
+      const std::vector<sycl::event>& memcpy_events) const {
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
@@ -237,7 +237,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const BarePolicy bare_policy(m_policy);
 
     auto parallel_for_event = q.submit([functor, this, bare_policy,
-                                        memcpy_events](sycl::handler &cgh) {
+                                        memcpy_events](sycl::handler& cgh) {
       const auto range                  = compute_ranges();
       const sycl::range<3> global_range = range.get_global_range();
       const sycl::range<3> local_range  = range.get_local_range();

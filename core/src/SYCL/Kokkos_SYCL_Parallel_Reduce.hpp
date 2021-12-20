@@ -185,10 +185,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
-  sycl::event
-  sycl_direct_launch(const PolicyType &policy, const Functor &functor,
-                     const Reducer &reducer,
-                     const std::vector<sycl::event> &memcpy_events) const {
+  sycl::event sycl_direct_launch(
+      const PolicyType& policy, const Functor& functor, const Reducer& reducer,
+      const std::vector<sycl::event>& memcpy_events) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -358,8 +357,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem   = instance.get_indirect_kernel_mem();
-    IndirectKernelMem& indirectReducerMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
@@ -457,9 +456,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
-  sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor, const Reducer& reducer,
-                                 const std::vector<sycl::event>& memcpy_events) const {
+  sycl::event sycl_direct_launch(
+      const PolicyType& policy, const Functor& functor, const Reducer& reducer,
+      const std::vector<sycl::event>& memcpy_events) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -654,8 +653,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         *m_space.impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem   = instance.get_indirect_kernel_mem();
-    IndirectKernelMem& indirectReducerMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
