@@ -152,13 +152,6 @@ class SYCLInternal {
         std::memcpy(static_cast<void*>(m_staging.get()), std::addressof(t),
                     sizeof(T));
         m_copy_event = m_q->memcpy(m_data, m_staging.get(), sizeof(T));
-        // TODO joe: this change is unlikely to be generally safe
-        // Anything relying on this copy must depend on m_copy_event
-
-        // SYCLInternal::fence(
-        //     memcopied,
-        //     "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
-        //     m_instance_id);
       } else
         std::memcpy(m_data, std::addressof(t), sizeof(T));
       return *reinterpret_cast<T*>(m_data);
@@ -180,7 +173,7 @@ class SYCLInternal {
       m_mutex.unlock();
     }
 
-    sycl::event m_copy_event;  // TODO joe: private + API
+    sycl::event get_copy_event() const {return m_copy_event;}
 
    private:
     // USMObjectMem class invariants
@@ -192,6 +185,8 @@ class SYCLInternal {
     //  The above invariants mean that:
     //  if m_data != nullptr then m_capacity != 0 && m_q != nullopt
     //  if m_data == nullptr then m_capacity == 0
+
+    sycl::event m_copy_event;
 
     std::optional<sycl::queue> m_q;
     void* m_data = nullptr;
@@ -257,28 +252,35 @@ class SYCLFunctionWrapper;
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, true> {
   const Functor& m_functor;
+  Storage& m_storage;
 
  public:
-  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
+   SYCLFunctionWrapper(const Functor &functor, Storage &storage)
+       : m_functor(functor), m_storage(storage) {}
 
-  const Functor& get_functor() const { return m_functor; }
+   const Functor &get_functor() const { return m_functor; }
 
-  static void register_event(Storage&, sycl::event){};
+   sycl::event get_copy_event() const { return {}; }
+
+   static void register_event(Storage &, sycl::event){};
 };
 
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
-  const Functor& m_kernelFunctor;
+  const Functor &m_kernelFunctor;
+  Storage &m_storage;
 
- public:
-  SYCLFunctionWrapper(const Functor& functor, Storage& storage)
-      : m_kernelFunctor(storage.copy_from(functor)) {}
+public:
+  SYCLFunctionWrapper(const Functor &functor, Storage &storage)
+      : m_kernelFunctor(storage.copy_from(functor)), m_storage(storage) {}
 
   std::reference_wrapper<const Functor> get_functor() const {
     return {m_kernelFunctor};
   }
 
-  static void register_event(Storage& storage, sycl::event event) {
+  sycl::event get_copy_event() const { return m_storage.get_copy_event(); }
+
+  static void register_event(Storage &storage, sycl::event event) {
     storage.register_event(event);
   }
 };

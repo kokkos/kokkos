@@ -416,7 +416,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   template <typename Functor>
   sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
-                                 const sycl::event& memcpy_event) const {
+                                 const std::vector<sycl::event> &memcpy_events) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -474,7 +474,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // cgh.use_kernel_bundle(kernel_bundle);
 #endif
 
-      cgh.depends_on(memcpy_event);
+      cgh.depends_on(memcpy_events);
       cgh.parallel_for(
           sycl::nd_range<2>(
               sycl::range<2>(m_team_size, m_league_size * m_vector_size),
@@ -499,7 +499,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     sycl::event event =
         sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
-                           indirectKernelMem.m_copy_event);
+                           {functor_wrapper.get_copy_event()});
     functor_wrapper.register_event(indirectKernelMem, event);
   }
 
@@ -600,7 +600,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   template <typename PolicyType, typename Functor, typename Reducer>
   sycl::event sycl_direct_launch(const PolicyType& policy,
                                  const Functor& functor, const Reducer& reducer,
-                                 const sycl::event& memcpy_event) const {
+                                 const std::vector<sycl::event> &memcpy_events) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -653,7 +653,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
         void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
-        cgh.depends_on(memcpy_event);
+        cgh.depends_on(memcpy_events);
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
@@ -780,7 +780,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //     cgh.use_kernel_bundle(kernel_bundle);
 #endif
 
-        if (first_run) cgh.depends_on(memcpy_event);
+        if (first_run) cgh.depends_on(memcpy_events);
 
         cgh.parallel_for(
             sycl::nd_range<2>(
@@ -827,7 +827,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
-        indirectKernelMem.m_copy_event);
+       {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }
