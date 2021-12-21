@@ -48,6 +48,8 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Pair.hpp>
 
+#include <initializer_list>
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -79,6 +81,31 @@ constexpr KOKKOS_INLINE_FUNCTION const T& max(const T& a, const T& b,
   return comp(a, b) ? b : a;
 }
 
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr T max(std::initializer_list<T> ilist) {
+  auto first      = ilist.begin();
+  auto const last = ilist.end();
+  auto result     = *first;
+  if (first == last) return result;
+  while (++first != last) {
+    if (*first > result) result = *first;
+  }
+  return result;
+}
+
+template <class T, class Compare>
+KOKKOS_INLINE_FUNCTION constexpr T max(std::initializer_list<T> ilist,
+                                       Compare comp) {
+  auto first      = ilist.begin();
+  auto const last = ilist.end();
+  auto result     = *first;
+  if (first == last) return result;
+  while (++first != last) {
+    if (comp(result, *first)) result = *first;
+  }
+  return result;
+}
+
 // min
 template <class T>
 constexpr KOKKOS_INLINE_FUNCTION const T& min(const T& a, const T& b) {
@@ -89,6 +116,31 @@ template <class T, class ComparatorType>
 constexpr KOKKOS_INLINE_FUNCTION const T& min(const T& a, const T& b,
                                               ComparatorType comp) {
   return comp(b, a) ? b : a;
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr T min(std::initializer_list<T> ilist) {
+  auto first      = ilist.begin();
+  auto const last = ilist.end();
+  auto result     = *first;
+  if (first == last) return result;
+  while (++first != last) {
+    if (*first < result) result = *first;
+  }
+  return result;
+}
+
+template <class T, class Compare>
+KOKKOS_INLINE_FUNCTION constexpr T min(std::initializer_list<T> ilist,
+                                       Compare comp) {
+  auto first      = ilist.begin();
+  auto const last = ilist.end();
+  auto result     = *first;
+  if (first == last) return result;
+  while (++first != last) {
+    if (comp(*first, result)) result = *first;
+  }
+  return result;
 }
 
 // minmax
@@ -103,6 +155,34 @@ constexpr KOKKOS_INLINE_FUNCTION auto minmax(const T& a, const T& b,
                                              ComparatorType comp) {
   using return_t = ::Kokkos::pair<const T&, const T&>;
   return comp(b, a) ? return_t{b, a} : return_t{a, b};
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
+    std::initializer_list<T> ilist) {
+  auto first      = ilist.begin();
+  auto const last = ilist.end();
+  Kokkos::pair<T, T> result{*first, *first};
+  if (first == last) return result;
+  while (++first != last) {
+    if (*first < result.first) result.first = *first;
+    if (*first > result.second) result.second = *first;
+  }
+  return result;
+}
+
+template <class T, class Compare>
+KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
+    std::initializer_list<T> ilist, Compare comp) {
+  auto first      = ilist.begin();
+  auto const last = ilist.end();
+  Kokkos::pair<T, T> result{*first, *first};
+  if (first == last) return result;
+  while (++first != last) {
+    if (comp(*first, result.first)) result.first = *first;
+    if (comp(result.second, *first)) result.second = *first;
+  }
+  return result;
 }
 
 }  // namespace Experimental
