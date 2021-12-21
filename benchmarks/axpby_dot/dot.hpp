@@ -86,7 +86,7 @@ struct DOT {
       auto result_ptr = static_cast<double*>(
           sycl::malloc(sizeof(result), sycl_queue, sycl::usm::alloc::shared));
       sycl_queue.submit([&](cl::sycl::handler& cgh) {
-        auto reduction = cl::sycl::ONEAPI::reduction(result_ptr, std::plus<>());
+        auto reduction = cl::sycl::ext::oneapi::reduction(result_ptr, std::plus<>());
         cgh.parallel_for(cl::sycl::nd_range<1>(N, 128), reduction,
                          [=](cl::sycl::nd_item<1> itemId, auto& sum) {
                            const int i = itemId.get_global_id();
@@ -104,7 +104,7 @@ struct DOT {
       auto result_ptr = static_cast<double*>(
           sycl::malloc(sizeof(result), sycl_queue, sycl::usm::alloc::shared));
       sycl_queue.submit([&](cl::sycl::handler& cgh) {
-        auto reduction = cl::sycl::ONEAPI::reduction(result_ptr, std::plus<>());
+        auto reduction = cl::sycl::ext::oneapi::reduction(result_ptr, std::plus<>());
         cgh.parallel_for(cl::sycl::nd_range<1>(N, 128), reduction,
                          [=](cl::sycl::nd_item<1> itemId, auto& sum) {
                            const int i = itemId.get_global_id();
