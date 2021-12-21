@@ -88,7 +88,7 @@ KOKKOS_INLINE_FUNCTION constexpr T max(std::initializer_list<T> ilist) {
   auto result     = *first;
   if (first == last) return result;
   while (++first != last) {
-    if (*first > result) result = *first;
+    if (result < *first) result = *first;
   }
   return result;
 }
@@ -166,7 +166,7 @@ KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
   if (first == last) return result;
   while (++first != last) {
     if (*first < result.first) result.first = *first;
-    if (*first > result.second) result.second = *first;
+    if (result.second < *first) result.second = *first;
   }
   return result;
 }
