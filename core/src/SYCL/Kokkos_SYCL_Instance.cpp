@@ -329,7 +329,8 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
     Record::increment(r);
 
     m_data = r->data();
-    m_staging.reset(new char[n]);
+    if constexpr (sycl::usm::alloc::device == Kind)
+      m_staging.reset(new char[n]);
     m_capacity = n;
   }
 
