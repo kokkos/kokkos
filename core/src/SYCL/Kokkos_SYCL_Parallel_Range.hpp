@@ -57,12 +57,12 @@ struct FunctorWrapperRangePolicyParallelFor {
   void operator()(sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_same<WorkTag, void>::value)
-      m_functor(id);
+      m_functor.get_functor()(id);
     else
-      m_functor(WorkTag(), id);
+      m_functor.get_functor()(WorkTag(), id);
   }
 
-#if 0//def SYCL_DEVICE_COPYABLE
+#ifdef SYCL_DEVICE_COPYABLE
   // We get ambiguous specialization if this class is trivially_copyable
   ~FunctorWrapperRangePolicyParallelFor() {}
 #endif
@@ -72,7 +72,7 @@ struct FunctorWrapperRangePolicyParallelFor {
 };
 }  // namespace Kokkos::Impl
 
-#if 0//def SYCL_DEVICE_COPYABLE
+#ifdef SYCL_DEVICE_COPYABLE
 template <class Functor, class Policy>
 struct sycl::is_device_copyable<
     Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>>
@@ -128,7 +128,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     sycl::event event =
-        sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+        sycl_direct_launch(m_policy, functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
   }
 
