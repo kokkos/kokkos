@@ -360,17 +360,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
     IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
         {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
 
-    functor_wrapper.register_event(indirectKernelMem, event);
-    reducer_wrapper.register_event(indirectReducerMem, event);
+    functor_wrapper.register_event(event);
+    reducer_wrapper.register_event(event);
   }
 
  private:
@@ -656,17 +656,17 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
     IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor(),
         {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
 
-    functor_wrapper.register_event(indirectKernelMem, event);
-    reducer_wrapper.register_event(indirectReducerMem, event);
+    functor_wrapper.register_event(event);
+    reducer_wrapper.register_event(event);
   }
 
  private:

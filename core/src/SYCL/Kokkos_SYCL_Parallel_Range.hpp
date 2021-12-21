@@ -118,12 +118,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 .impl_internal_space_instance()
                                 ->get_indirect_kernel_mem();
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     sycl::event event =
         sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
                            {functor_wrapper.get_copy_event()});
-    functor_wrapper.register_event(indirectKernelMem, event);
+    functor_wrapper.register_event(event);
   }
 
   ParallelFor(const ParallelFor&) = delete;
@@ -286,11 +286,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         indirectKernelMem =
             m_space.impl_internal_space_instance()->get_indirect_kernel_mem();
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     sycl::event event = sycl_direct_launch(functor_wrapper.get_functor(),
                                            {functor_wrapper.get_copy_event()});
-    functor_wrapper.register_event(indirectKernelMem, event);
+    functor_wrapper.register_event(event);
   }
 
   ParallelFor(const ParallelFor&) = delete;

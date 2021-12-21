@@ -299,13 +299,13 @@ class ParallelScanSYCLBase {
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.get_indirect_kernel_mem();
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
     sycl::event event = sycl_direct_launch(functor_wrapper.get_functor(),
                                            functor_wrapper.get_copy_event());
 
-    functor_wrapper.register_event(indirectKernelMem, event);
+    functor_wrapper.register_event(event);
     post_functor();
   }
 
