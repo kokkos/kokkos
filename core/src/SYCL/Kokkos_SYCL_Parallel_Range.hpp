@@ -109,7 +109,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
           range, f);
     });
-    q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
   }
@@ -268,7 +268,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .exec_range();
       });
     });
-    q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
   }

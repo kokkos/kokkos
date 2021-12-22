@@ -196,7 +196,7 @@ class ParallelScanSYCLBase {
             if (global_id < size) global_mem[global_id] = local_value;
           });
     });
-    q.submit_barrier(std::vector<sycl::event>{local_scans});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{local_scans});
 
     if (n_wgroups > 1) {
       scan_internal(q, functor_wrapper, group_results, n_wgroups);
@@ -211,7 +211,8 @@ class ParallelScanSYCLBase {
                                 &group_results[item.get_group_linear_id()]);
             });
       });
-      q.submit_barrier(std::vector<sycl::event>{update_with_group_results});
+      q.ext_oneapi_submit_barrier(
+          std::vector<sycl::event>{update_with_group_results});
     }
   }
 
@@ -241,7 +242,8 @@ class ParallelScanSYCLBase {
         global_mem[id] = update;
       });
     });
-    q.submit_barrier(std::vector<sycl::event>{initialize_global_memory});
+    q.ext_oneapi_submit_barrier(
+        std::vector<sycl::event>{initialize_global_memory});
 
     // Perform the actual exclusive scan
     scan_internal(q, functor_wrapper, m_scratch_space, len);
@@ -260,7 +262,8 @@ class ParallelScanSYCLBase {
         global_mem[global_id] = update;
       });
     });
-    q.submit_barrier(std::vector<sycl::event>{update_global_results});
+    q.ext_oneapi_submit_barrier(
+        std::vector<sycl::event>{update_global_results});
     return update_global_results;
   }
 
