@@ -55,6 +55,17 @@ struct Greater {
     return lhs > rhs;
   }
 };
+
+struct PairIntCompareFirst {
+  int first;
+  int second;
+
+ private:
+  friend constexpr bool operator<(PairIntCompareFirst const& lhs,
+                                  PairIntCompareFirst const& rhs) {
+    return lhs.first < rhs.first;
+  }
+};
 }  // namespace Test
 
 // ----------------------------------------------------------
@@ -78,6 +89,16 @@ TEST(TEST_CATEGORY, max) {
 
   STATIC_ASSERT(KE::max({3, -1, 0}) == 3);
   STATIC_ASSERT(KE::max({3, -1, 0}, ::Test::Greater<int>{}) == -1);
+
+  STATIC_ASSERT(KE::max({
+                            ::Test::PairIntCompareFirst{255, 0},
+                            ::Test::PairIntCompareFirst{255, 1},
+                            ::Test::PairIntCompareFirst{0, 2},
+                            ::Test::PairIntCompareFirst{0, 3},
+                            ::Test::PairIntCompareFirst{255, 4},
+                            ::Test::PairIntCompareFirst{0, 5},
+                        })
+                    .second == 0);  // leftmost element
 }
 
 template <class ViewType>
@@ -132,6 +153,16 @@ TEST(TEST_CATEGORY, min) {
 
   STATIC_ASSERT(KE::min({3, -1, 0}) == -1);
   STATIC_ASSERT(KE::min({3, -1, 0}, ::Test::Greater<int>{}) == 3);
+
+  STATIC_ASSERT(KE::min({
+                            ::Test::PairIntCompareFirst{255, 0},
+                            ::Test::PairIntCompareFirst{255, 1},
+                            ::Test::PairIntCompareFirst{0, 2},
+                            ::Test::PairIntCompareFirst{0, 3},
+                            ::Test::PairIntCompareFirst{255, 4},
+                            ::Test::PairIntCompareFirst{0, 5},
+                        })
+                    .second == 2);  // leftmost element
 }
 
 template <class ViewType>
@@ -192,6 +223,25 @@ TEST(TEST_CATEGORY, minmax) {
   STATIC_ASSERT(KE::minmax({3, -1, 0}) == Kokkos::make_pair(-1, 3));
   STATIC_ASSERT(KE::minmax({3, -1, 0}, ::Test::Greater<int>{}) ==
                 Kokkos::make_pair(3, -1));
+
+  STATIC_ASSERT(KE::minmax({
+                               ::Test::PairIntCompareFirst{255, 0},
+                               ::Test::PairIntCompareFirst{255, 1},
+                               ::Test::PairIntCompareFirst{0, 2},
+                               ::Test::PairIntCompareFirst{0, 3},
+                               ::Test::PairIntCompareFirst{255, 4},
+                               ::Test::PairIntCompareFirst{0, 5},
+                           })
+                    .first.second == 2);  // leftmost
+  STATIC_ASSERT(KE::minmax({
+                               ::Test::PairIntCompareFirst{255, 0},
+                               ::Test::PairIntCompareFirst{255, 1},
+                               ::Test::PairIntCompareFirst{0, 2},
+                               ::Test::PairIntCompareFirst{0, 3},
+                               ::Test::PairIntCompareFirst{255, 4},
+                               ::Test::PairIntCompareFirst{0, 5},
+                           })
+                    .second.second == 4);  // rightmost
 }
 
 template <class ViewType>

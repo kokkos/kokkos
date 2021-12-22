@@ -162,11 +162,30 @@ KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
     std::initializer_list<T> ilist) {
   auto first      = ilist.begin();
   auto const last = ilist.end();
+  auto next       = first;
   Kokkos::pair<T, T> result{*first, *first};
-  if (first == last) return result;
+  if (first == last || ++next == last) return result;
+  if (*next < *first)
+    result.first = *next;
+  else
+    result.second = *next;
+  first = next;
   while (++first != last) {
-    if (*first < result.first) result.first = *first;
-    if (result.second < *first) result.second = *first;
+    if (++next == last) {
+      if (*first < result.first)
+        result.first = *first;
+      else if (!(*first < result.second))
+        result.second = *first;
+      break;
+    }
+    if (*next < *first) {
+      if (*next < result.first) result.first = *next;
+      if (!(*first < result.second)) result.second = *first;
+    } else {
+      if (*first < result.first) result.first = *first;
+      if (!(*next < result.second)) result.second = *next;
+    }
+    first = next;
   }
   return result;
 }
@@ -176,11 +195,30 @@ KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
     std::initializer_list<T> ilist, Compare comp) {
   auto first      = ilist.begin();
   auto const last = ilist.end();
+  auto next       = first;
   Kokkos::pair<T, T> result{*first, *first};
-  if (first == last) return result;
+  if (first == last || ++next == last) return result;
+  if (comp(*next, *first))
+    result.first = *next;
+  else
+    result.second = *next;
+  first = next;
   while (++first != last) {
-    if (comp(*first, result.first)) result.first = *first;
-    if (comp(result.second, *first)) result.second = *first;
+    if (++next == last) {
+      if (comp(*first, result.first))
+        result.first = *first;
+      else if (!comp(*first, result.second))
+        result.second = *first;
+      break;
+    }
+    if (comp(*next, *first)) {
+      if (comp(*next, result.first)) result.first = *next;
+      if (!comp(*first, result.second)) result.second = *first;
+    } else {
+      if (comp(*first, result.first)) result.first = *first;
+      if (!comp(*next, result.second)) result.second = *next;
+    }
+    first = next;
   }
   return result;
 }
