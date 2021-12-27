@@ -50,6 +50,7 @@
 
 // Include special backend specific versions here
 #include <Cuda/Kokkos_Cuda_Half.hpp>
+#include <SYCL/Kokkos_SYCL_Half.hpp>
 
 // Potentially include special compiler specific versions here
 // e.g. for Intel
