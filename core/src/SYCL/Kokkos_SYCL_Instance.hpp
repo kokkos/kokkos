@@ -245,7 +245,7 @@ class SYCLFunctionWrapper;
 
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, true> {
-  const Functor& m_functor;
+  const Functor m_functor;
 
  public:
   SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
@@ -259,14 +259,18 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
 #ifdef SYCL_DEVICE_COPYABLE
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
- const Functor m_functor;
+ union bla{
+        bla(){};
+         //bla(const Functor& other) : m_functor(other) {}
+       bla(const bla& other) { m_functor = other.m_functor;}
+   Functor m_functor;
+   ~bla(){};
+ } m_functor;
 
  public:
-  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
+  SYCLFunctionWrapper(const Functor& functor, Storage&) /*: m_functor(functor){}// */{m_functor.m_functor = functor;}
 
-  const Functor& get_functor() const { return m_functor; }
-
-  operator Functor() const {return m_functor;}
+  const Functor& get_functor() const { return m_functor.m_functor; }
 
   static void register_event(Storage&, sycl::event){};
 };

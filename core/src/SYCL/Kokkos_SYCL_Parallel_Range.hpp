@@ -241,7 +241,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const BarePolicy bare_policy(m_policy);
 
     auto parallel_for_event =
-        q.submit([functor, this, bare_policy](sycl::handler& cgh) {
+        q.submit([&](sycl::handler& cgh) {
           const auto range                  = compute_ranges();
           const sycl::range<3> global_range = range.get_global_range();
           const sycl::range<3> local_range  = range.get_local_range();
