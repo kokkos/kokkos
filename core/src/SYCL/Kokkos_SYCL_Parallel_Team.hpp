@@ -414,9 +414,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
 
-  template <typename Functor>
+  template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const Policy& policy,
-                                 const Functor& functor) const {
+                                 const FunctorWrapper& functor_wrapper) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -443,9 +443,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             scratch_ptr[1] + item.get_group(1) * scratch_size[1],
             scratch_size[1], item);
         if constexpr (std::is_same<work_tag, void>::value)
-          functor.get_functor()(team_member);
+          functor_wrapper.get_functor()(team_member);
         else
-          functor.get_functor()(work_tag(), team_member);
+          functor_wrapper.get_functor()(work_tag(), team_member);
       };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
@@ -595,10 +595,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
 
-  template <typename PolicyType, typename Functor, typename Reducer>
+  template <typename PolicyType, typename FunctorWrapper, typename ReducerWrapper>
   sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor,
-                                 const Reducer& reducer) const {
+                                 const FunctorWrapper& functor_wrapper,
+                                 const ReducerWrapper& reducer_wrapper) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -655,8 +655,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
               const auto& selected_reducer = ReducerConditional::select(
-                  static_cast<const FunctorType&>(functor.get_functor()),
-                  static_cast<const ReducerType&>(reducer.get_functor()));
+                  static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+                  static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
               reference_type update =
                   ValueInit::init(selected_reducer, results_ptr);
               if (size == 1) {
@@ -665,15 +665,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     scratch_size[0], static_cast<char*>(scratch_ptr[1]),
                     scratch_size[1], item);
                 if constexpr (std::is_same<WorkTag, void>::value)
-                  functor.get_functor()(team_member, update);
+                  functor_wrapper.get_functor()(team_member, update);
                 else
-                  functor.get_functor()(WorkTag(), team_member, update);
+                  functor_wrapper.get_functor()(WorkTag(), team_member, update);
               }
               if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
                 FunctorFinal<FunctorType, WorkTag>::final(
-                    static_cast<const FunctorType&>(functor.get_functor()), results_ptr);
+                    static_cast<const FunctorType&>(functor_wrapper.get_functor()), results_ptr);
               if (device_accessible_result_ptr)
-                ValueOps::copy(functor.get_functor(), device_accessible_result_ptr,
+                ValueOps::copy(functor_wrapper.get_functor(), device_accessible_result_ptr,
                                &results_ptr[0]);
             });
       });
@@ -711,8 +711,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           const auto global_id =
               wgroup_size * item.get_group_linear_id() + local_id;
           const auto& selected_reducer = ReducerConditional::select(
-              static_cast<const FunctorType&>(functor.get_functor()),
-              static_cast<const ReducerType&>(reducer.get_functor()));
+              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
 
           // In the first iteration, we call functor to initialize the local
           // memory. Otherwise, the local memory is initialized with the
@@ -728,15 +728,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     item.get_group(1) * scratch_size[1],
                 scratch_size[1], item);
             if constexpr (std::is_same<WorkTag, void>::value)
-              functor.get_functor()(team_member, update);
+              functor_wrapper.get_functor()(team_member, update);
             else
-              functor.get_functor()(WorkTag(), team_member, update);
+              functor_wrapper.get_functor()(WorkTag(), team_member, update);
           } else {
             if (global_id >= size)
               ValueInit::init(selected_reducer,
                               &local_mem[local_id * value_count]);
             else {
-              ValueOps::copy(functor.get_functor(), &local_mem[local_id * value_count],
+              ValueOps::copy(functor_wrapper.get_functor(), &local_mem[local_id * value_count],
                              &results_ptr[global_id * value_count]);
             }
           }
@@ -745,7 +745,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr,
               device_accessible_result_ptr, value_count, selected_reducer,
-              static_cast<const FunctorType&>(functor.get_functor()),
+              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
 
           // FIXME_SYCL not quite sure why this is necessary

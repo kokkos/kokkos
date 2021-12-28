@@ -50,16 +50,16 @@
 #include <vector>
 
 namespace Kokkos::Impl {
-template <typename Functor, typename Policy>
+template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelFor {
   using WorkTag = typename Policy::work_tag;
 
   void operator()(sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_same<WorkTag, void>::value)
-      m_functor.get_functor()(id);
+      m_functor_wrapper.get_functor()(id);
     else
-      m_functor.get_functor()(WorkTag(), id);
+      m_functor_wrapper.get_functor()(WorkTag(), id);
   }
 
 #ifdef SYCL_DEVICE_COPYABLE
@@ -68,7 +68,7 @@ struct FunctorWrapperRangePolicyParallelFor {
 #endif
 
   typename Policy::index_type m_begin;
-  Functor m_functor;
+  FunctorWrapper m_functor_wrapper;
 };
 }  // namespace Kokkos::Impl
 
@@ -229,8 +229,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                   "Kokkos::MDRange Error: Exceeded rank bounds with SYCL\n");
   }
 
-  template <typename Functor>
-  sycl::event sycl_direct_launch(const Functor& functor) const {
+  template <typename FunctorWrapper>
+  sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper) const {
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
@@ -249,7 +249,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
               sycl::range<3>{global_range[2], global_range[1], global_range[0]},
               sycl::range<3>{local_range[2], local_range[1], local_range[0]}};
 
-          cgh.parallel_for(sycl_swapped_range, [functor, bare_policy](
+          cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy](
                                                    sycl::nd_item<3> item) {
             // swap back for correct index calculations in DeviceIterateTile
             const index_type local_x    = item.get_local_id(2);
@@ -264,7 +264,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
             Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, FunctorType,
                                             typename Policy::work_tag>(
-                bare_policy, functor.get_functor(), {n_global_x, n_global_y, n_global_z},
+                bare_policy, functor_wrapper.get_functor(), {n_global_x, n_global_y, n_global_z},
                 {global_x, global_y, global_z}, {local_x, local_y, local_z})
                 .exec_range();
           });

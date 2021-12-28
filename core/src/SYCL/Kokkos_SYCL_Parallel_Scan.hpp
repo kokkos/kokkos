@@ -151,8 +151,8 @@ class ParallelScanSYCLBase {
   std::scoped_lock<std::mutex> m_shared_memory_lock;
 
  private:
-  template <typename Functor>
-  void scan_internal(sycl::queue& q, const Functor& functor,
+  template <typename FunctorWrapper>
+  void scan_internal(sycl::queue& q, const FunctorWrapper& functor_wrapper,
                      pointer_type global_mem, std::size_t size) const {
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size = 128;
@@ -182,9 +182,9 @@ class ParallelScanSYCLBase {
             if (global_id < size)
               local_value = global_mem[global_id];
             else
-              ValueInit::init(functor.get_functor(), &local_value);
+              ValueInit::init(functor_wrapper.get_functor(), &local_value);
 
-            workgroup_scan<ValueJoin, ValueInit>(item, functor.get_functor(),
+            workgroup_scan<ValueJoin, ValueInit>(item, functor_wrapper.get_functor(),
                                                  local_mem.get_pointer(),
                                                  local_value, wgroup_size);
 
@@ -199,14 +199,14 @@ class ParallelScanSYCLBase {
     q.submit_barrier(std::vector<sycl::event>{local_scans});
 
     if (n_wgroups > 1) {
-      scan_internal(q, functor, group_results, n_wgroups);
+      scan_internal(q, functor_wrapper, group_results, n_wgroups);
       auto update_with_group_results = q.submit([&](sycl::handler& cgh) {
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             [=](sycl::nd_item<1> item) {
               const auto global_id = item.get_global_linear_id();
               if (global_id < size)
-                ValueJoin::join(functor.get_functor(), &global_mem[global_id],
+                ValueJoin::join(functor_wrapper.get_functor(), &global_mem[global_id],
                                 &group_results[item.get_group_linear_id()]);
             });
       });
@@ -214,8 +214,8 @@ class ParallelScanSYCLBase {
     }
   }
 
-  template <typename Functor>
-  sycl::event sycl_direct_launch(const Functor& functor) const {
+  template <typename FunctorWrapper>
+  sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -232,18 +232,18 @@ class ParallelScanSYCLBase {
         const typename Policy::index_type id =
             static_cast<typename Policy::index_type>(item.get_id()) + begin;
         value_type update{};
-        ValueInit::init(functor.get_functor(), &update);
+        ValueInit::init(functor_wrapper.get_functor(), &update);
         if constexpr (std::is_same<WorkTag, void>::value)
-          functor.get_functor()(id, update, false);
+          functor_wrapper.get_functor()(id, update, false);
         else
-          functor.get_functor()(WorkTag(), id, update, false);
+          functor_wrapper.get_functor()(WorkTag(), id, update, false);
         global_mem[id] = update;
       });
     });
     q.submit_barrier(std::vector<sycl::event>{initialize_global_memory});
 
     // Perform the actual exclusive scan
-    scan_internal(q, functor, m_scratch_space, len);
+    scan_internal(q, functor_wrapper, m_scratch_space, len);
 
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
@@ -253,9 +253,9 @@ class ParallelScanSYCLBase {
 
         value_type update = global_mem[global_id];
         if constexpr (std::is_same<WorkTag, void>::value)
-          functor.get_functor()(global_id, update, true);
+          functor_wrapper.get_functor()(global_id, update, true);
         else
-          functor.get_functor()(WorkTag(), global_id, update, true);
+          functor_wrapper.get_functor()(WorkTag(), global_id, update, true);
         global_mem[global_id] = update;
       });
     });
