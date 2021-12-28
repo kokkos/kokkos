@@ -62,11 +62,6 @@ struct FunctorWrapperRangePolicyParallelFor {
       m_functor_wrapper.get_functor()(WorkTag(), id);
   }
 
-#ifdef SYCL_DEVICE_COPYABLE
-  // We get ambiguous specialization if this class is trivially_copyable
-  ~FunctorWrapperRangePolicyParallelFor() {}
-#endif
-
   typename Policy::index_type m_begin;
   FunctorWrapper m_functor_wrapper;
 };
