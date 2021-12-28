@@ -232,22 +232,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
         cgh.single_task([=]() {
+          const auto& functor = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
-              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
           reference_type update =
               ValueInit::init(selected_reducer, results_ptr);
           if (size == 1) {
             if constexpr (std::is_same<WorkTag, void>::value)
-              functor_wrapper.get_functor()(begin, update);
+              functor(begin, update);
             else
-              functor_wrapper.get_functor()(WorkTag(), begin, update);
+              functor(WorkTag(), begin, update);
           }
           if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
             FunctorFinal<FunctorType, WorkTag>::final(
-                static_cast<const FunctorType&>(functor_wrapper.get_functor()), results_ptr);
+                static_cast<const FunctorType&>(functor), results_ptr);
           if (device_accessible_result_ptr != nullptr)
-            ValueOps::copy(functor_wrapper.get_functor(), &device_accessible_result_ptr[0],
+            ValueOps::copy(functor, &device_accessible_result_ptr[0],
                            &results_ptr[0]);
         });
       });
@@ -278,8 +279,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               const auto global_id =
                   wgroup_size * item.get_group_linear_id() * values_per_thread +
                   local_id;
+              const auto& functor = functor_wrapper.get_functor();
               const auto& selected_reducer = ReducerConditional::select(
-                  static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+                  static_cast<const FunctorType&>(functor),
                   static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
 
               // In the first iteration, we call functor to initialize the local
@@ -297,16 +299,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                 for (index_type id = global_id; id < upper_bound;
                      id += wgroup_size) {
                   if constexpr (std::is_same<WorkTag, void>::value)
-                    functor_wrapper.get_functor()(id + begin, update);
+                    functor(id + begin, update);
                   else
-                    functor_wrapper.get_functor()(WorkTag(), id + begin, update);
+                    functor(WorkTag(), id + begin, update);
                 }
               } else {
                 if (global_id >= size)
                   ValueInit::init(selected_reducer,
                                   &local_mem[local_id * value_count]);
                 else {
-                  ValueOps::copy(functor_wrapper.get_functor(), &local_mem[local_id * value_count],
+                  ValueOps::copy(functor, &local_mem[local_id * value_count],
                                  &results_ptr[global_id * value_count]);
                   for (index_type id = global_id + wgroup_size;
                        id < upper_bound; id += wgroup_size) {
@@ -321,7 +323,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
                   device_accessible_result_ptr, value_count, selected_reducer,
-                  static_cast<const FunctorType&>(functor_wrapper.get_functor()), n_wgroups <= 1);
+                  static_cast<const FunctorType&>(functor), n_wgroups <= 1);
             });
       });
       q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
@@ -505,23 +507,24 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     if (size <= 1) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         cgh.single_task([=]() {
+          const auto& functor = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
-              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
           reference_type update =
               ValueInit::init(selected_reducer, results_ptr);
           if (size == 1) {
             Kokkos::Impl::Reduce::DeviceIterateTile<
                 Policy::rank, BarePolicy, FunctorType, typename Policy::work_tag,
-                reference_type>(policy, functor_wrapper.get_functor(), update, {1, 1, 1}, {0, 0, 0},
+                reference_type>(policy, functor, update, {1, 1, 1}, {0, 0, 0},
                                 {0, 0, 0})
                 .exec_range();
           }
           if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
             FunctorFinal<FunctorType, WorkTag>::final(
-                static_cast<const FunctorType&>(functor_wrapper.get_functor()), results_ptr);
+                static_cast<const FunctorType&>(functor), results_ptr);
           if (device_accessible_result_ptr)
-            ValueOps::copy(functor_wrapper.get_functor(), &device_accessible_result_ptr[0],
+            ValueOps::copy(functor, &device_accessible_result_ptr[0],
                            &results_ptr[0]);
         });
       });
@@ -548,8 +551,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           const auto local_id = item.get_local_linear_id();
           const auto global_id =
               wgroup_size * item.get_group_linear_id() + local_id;
+          const auto& functor = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
-              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
 
           // In the first iteration, we call functor to initialize the local
@@ -576,7 +580,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
             Kokkos::Impl::Reduce::DeviceIterateTile<
                 Policy::rank, BarePolicy, FunctorType, typename Policy::work_tag,
-                reference_type>(bare_policy, functor_wrapper.get_functor(), update,
+                reference_type>(bare_policy, functor, update,
                                 {n_global_x, n_global_y, n_global_z},
                                 {global_x, global_y, global_z},
                                 {local_x, local_y, local_z})
@@ -586,7 +590,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               ValueInit::init(selected_reducer,
                               &local_mem[local_id * value_count]);
             else {
-              ValueOps::copy(functor_wrapper.get_functor(), &local_mem[local_id * value_count],
+              ValueOps::copy(functor, &local_mem[local_id * value_count],
                              &results_ptr[global_id * value_count]);
               for (index_type id = global_id + wgroup_size; id < upper_bound;
                    id += wgroup_size) {
@@ -601,7 +605,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr2,
               device_accessible_result_ptr, value_count, selected_reducer,
-              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const FunctorType&>(functor),
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
         });
       });

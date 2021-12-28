@@ -654,8 +654,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
+              const auto& functor = functor_wrapper.get_functor();
               const auto& selected_reducer = ReducerConditional::select(
-                  static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+                  static_cast<const FunctorType&>(functor),
                   static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
               reference_type update =
                   ValueInit::init(selected_reducer, results_ptr);
@@ -665,15 +666,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     scratch_size[0], static_cast<char*>(scratch_ptr[1]),
                     scratch_size[1], item);
                 if constexpr (std::is_same<WorkTag, void>::value)
-                  functor_wrapper.get_functor()(team_member, update);
+                  functor(team_member, update);
                 else
-                  functor_wrapper.get_functor()(WorkTag(), team_member, update);
+                  functor(WorkTag(), team_member, update);
               }
               if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
                 FunctorFinal<FunctorType, WorkTag>::final(
-                    static_cast<const FunctorType&>(functor_wrapper.get_functor()), results_ptr);
+                    static_cast<const FunctorType&>(functor), results_ptr);
               if (device_accessible_result_ptr)
-                ValueOps::copy(functor_wrapper.get_functor(), device_accessible_result_ptr,
+                ValueOps::copy(functor, device_accessible_result_ptr,
                                &results_ptr[0]);
             });
       });
@@ -710,8 +711,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           const auto local_id = item.get_local_linear_id();
           const auto global_id =
               wgroup_size * item.get_group_linear_id() + local_id;
+	  const auto& functor = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
-              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
 
           // In the first iteration, we call functor to initialize the local
@@ -728,15 +730,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     item.get_group(1) * scratch_size[1],
                 scratch_size[1], item);
             if constexpr (std::is_same<WorkTag, void>::value)
-              functor_wrapper.get_functor()(team_member, update);
+              functor(team_member, update);
             else
-              functor_wrapper.get_functor()(WorkTag(), team_member, update);
+              functor(WorkTag(), team_member, update);
           } else {
             if (global_id >= size)
               ValueInit::init(selected_reducer,
                               &local_mem[local_id * value_count]);
             else {
-              ValueOps::copy(functor_wrapper.get_functor(), &local_mem[local_id * value_count],
+              ValueOps::copy(functor, &local_mem[local_id * value_count],
                              &results_ptr[global_id * value_count]);
             }
           }
@@ -745,7 +747,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr,
               device_accessible_result_ptr, value_count, selected_reducer,
-              static_cast<const FunctorType&>(functor_wrapper.get_functor()),
+              static_cast<const FunctorType&>(functor),
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
 
           // FIXME_SYCL not quite sure why this is necessary
