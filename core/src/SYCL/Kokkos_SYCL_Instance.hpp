@@ -201,10 +201,10 @@ class SYCLInternal {
   // An indirect kernel is one where the functor to be executed is explicitly
   // copied to USM memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
-  using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::shared>;
+  using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::host>;
   IndirectKernelMem m_indirectKernelMem;
 
-  using IndirectReducerMem = USMObjectMem<sycl::usm::alloc::shared>;
+  using IndirectReducerMem = USMObjectMem<sycl::usm::alloc::host>;
   IndirectReducerMem m_indirectReducerMem;
 
   bool was_finalized = false;
@@ -259,16 +259,32 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
 #ifdef SYCL_DEVICE_COPYABLE
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
- union bla{
-        bla(){};
-         //bla(const Functor& other) : m_functor(other) {}
-       bla(const bla& other) { m_functor = other.m_functor;}
-   Functor m_functor;
-   ~bla(){};
+  union bla{
+    bla(){};
+
+    bla(const Functor& f) : m_functor{f} {}
+
+    bla(const bla& other) {
+      std::memcpy(&m_functor, &other.m_functor, sizeof(m_functor));
+    }
+    bla(bla&& other) { 
+      std::memcpy(&m_functor, &other.m_functor, sizeof(m_functor));
+    }
+    bla& operator=(const bla& other) {
+      std::memcpy(&m_functor, &other.m_functor, sizeof(m_functor)); 
+      return *this;
+    }
+    bla& operator=(bla&& other) {
+      std::memcpy(&m_functor, &other.m_functor, sizeof(m_functor));
+      return *this;
+    }
+    ~bla(){};
+
+    Functor m_functor;
  } m_functor;
 
  public:
-  SYCLFunctionWrapper(const Functor& functor, Storage&) /*: m_functor(functor){}// */{m_functor.m_functor = functor;}
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor){}
 
   const Functor& get_functor() const { return m_functor.m_functor; }
 

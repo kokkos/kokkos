@@ -262,9 +262,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             const index_type n_global_y = item.get_group_range(1);
             const index_type n_global_z = item.get_group_range(0);
 
-            Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, Functor,
+            Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, FunctorType,
                                             typename Policy::work_tag>(
-                bare_policy, functor, {n_global_x, n_global_y, n_global_z},
+                bare_policy, functor.get_functor(), {n_global_x, n_global_y, n_global_z},
                 {global_x, global_y, global_z}, {local_x, local_y, local_z})
                 .exec_range();
           });
@@ -289,7 +289,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
   }
 

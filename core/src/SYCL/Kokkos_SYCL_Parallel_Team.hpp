@@ -443,9 +443,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             scratch_ptr[1] + item.get_group(1) * scratch_size[1],
             scratch_size[1], item);
         if constexpr (std::is_same<work_tag, void>::value)
-          functor(team_member);
+          functor.get_functor()(team_member);
         else
-          functor(work_tag(), team_member);
+          functor.get_functor()(work_tag(), team_member);
       };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
@@ -497,7 +497,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_functor, indirectKernelMem);
 
     sycl::event event =
-        sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+        sycl_direct_launch(m_policy, functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
   }
 
@@ -821,7 +821,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_reducer, indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+        m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }

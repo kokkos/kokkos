@@ -182,9 +182,9 @@ class ParallelScanSYCLBase {
             if (global_id < size)
               local_value = global_mem[global_id];
             else
-              ValueInit::init(functor, &local_value);
+              ValueInit::init(functor.get_functor(), &local_value);
 
-            workgroup_scan<ValueJoin, ValueInit>(item, functor,
+            workgroup_scan<ValueJoin, ValueInit>(item, functor.get_functor(),
                                                  local_mem.get_pointer(),
                                                  local_value, wgroup_size);
 
@@ -206,7 +206,7 @@ class ParallelScanSYCLBase {
             [=](sycl::nd_item<1> item) {
               const auto global_id = item.get_global_linear_id();
               if (global_id < size)
-                ValueJoin::join(functor, &global_mem[global_id],
+                ValueJoin::join(functor.get_functor(), &global_mem[global_id],
                                 &group_results[item.get_group_linear_id()]);
             });
       });
@@ -232,11 +232,11 @@ class ParallelScanSYCLBase {
         const typename Policy::index_type id =
             static_cast<typename Policy::index_type>(item.get_id()) + begin;
         value_type update{};
-        ValueInit::init(functor, &update);
+        ValueInit::init(functor.get_functor(), &update);
         if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id, update, false);
+          functor.get_functor()(id, update, false);
         else
-          functor(WorkTag(), id, update, false);
+          functor.get_functor()(WorkTag(), id, update, false);
         global_mem[id] = update;
       });
     });
@@ -253,9 +253,9 @@ class ParallelScanSYCLBase {
 
         value_type update = global_mem[global_id];
         if constexpr (std::is_same<WorkTag, void>::value)
-          functor(global_id, update, true);
+          functor.get_functor()(global_id, update, true);
         else
-          functor(WorkTag(), global_id, update, true);
+          functor.get_functor()(WorkTag(), global_id, update, true);
         global_mem[global_id] = update;
       });
     });
@@ -299,7 +299,7 @@ class ParallelScanSYCLBase {
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     post_functor();
   }
