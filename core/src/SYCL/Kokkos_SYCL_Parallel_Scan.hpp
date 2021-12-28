@@ -184,9 +184,9 @@ class ParallelScanSYCLBase {
             else
               ValueInit::init(functor_wrapper.get_functor(), &local_value);
 
-            workgroup_scan<ValueJoin, ValueInit>(item, functor_wrapper.get_functor(),
-                                                 local_mem.get_pointer(),
-                                                 local_value, wgroup_size);
+            workgroup_scan<ValueJoin, ValueInit>(
+                item, functor_wrapper.get_functor(), local_mem.get_pointer(),
+                local_value, wgroup_size);
 
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
               group_results[item.get_group_linear_id()] =
@@ -206,7 +206,8 @@ class ParallelScanSYCLBase {
             [=](sycl::nd_item<1> item) {
               const auto global_id = item.get_global_linear_id();
               if (global_id < size)
-                ValueJoin::join(functor_wrapper.get_functor(), &global_mem[global_id],
+                ValueJoin::join(functor_wrapper.get_functor(),
+                                &global_mem[global_id],
                                 &group_results[item.get_group_linear_id()]);
             });
       });

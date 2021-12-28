@@ -255,11 +255,10 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
   static void register_event(Storage&, sycl::event){};
 };
 
-
 #ifdef SYCL_DEVICE_COPYABLE
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
-  union TrivialWrapper{
+  union TrivialWrapper {
     TrivialWrapper(){};
 
     TrivialWrapper(const Functor& f) : m_f{f} {}
@@ -267,11 +266,11 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
     TrivialWrapper(const TrivialWrapper& other) {
       std::memcpy(&m_f, &other.m_f, sizeof(m_f));
     }
-    TrivialWrapper(TrivialWrapper&& other) { 
+    TrivialWrapper(TrivialWrapper&& other) {
       std::memcpy(&m_f, &other.m_f, sizeof(m_f));
     }
     TrivialWrapper& operator=(const TrivialWrapper& other) {
-      std::memcpy(&m_f, &other.m_f, sizeof(m_f)); 
+      std::memcpy(&m_f, &other.m_f, sizeof(m_f));
       return *this;
     }
     TrivialWrapper& operator=(TrivialWrapper&& other) {
@@ -281,10 +280,10 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
     ~TrivialWrapper(){};
 
     Functor m_f;
- } m_functor;
+  } m_functor;
 
  public:
-  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor){}
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
 
   const Functor& get_functor() const { return m_functor.m_f; }
 

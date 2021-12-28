@@ -184,7 +184,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             p.space().impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
-  template <typename PolicyType, typename FunctorWrapper, typename ReducerWrapper>
+  template <typename PolicyType, typename FunctorWrapper,
+            typename ReducerWrapper>
   sycl::event sycl_direct_launch(const PolicyType& policy,
                                  const FunctorWrapper& functor_wrapper,
                                  const ReducerWrapper& reducer_wrapper) const {
@@ -232,7 +233,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
         cgh.single_task([=]() {
-          const auto& functor = functor_wrapper.get_functor();
+          const auto& functor          = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
@@ -279,10 +280,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               const auto global_id =
                   wgroup_size * item.get_group_linear_id() * values_per_thread +
                   local_id;
-              const auto& functor = functor_wrapper.get_functor();
+              const auto& functor          = functor_wrapper.get_functor();
               const auto& selected_reducer = ReducerConditional::select(
                   static_cast<const FunctorType&>(functor),
-                  static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
+                  static_cast<const ReducerType&>(
+                      reducer_wrapper.get_functor()));
 
               // In the first iteration, we call functor to initialize the local
               // memory. Otherwise, the local memory is initialized with the
@@ -364,8 +366,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper, reducer_wrapper);
+    sycl::event event =
+        sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }
@@ -452,7 +454,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
-  template <typename PolicyType, typename FunctorWrapper, typename ReducerWrapper>
+  template <typename PolicyType, typename FunctorWrapper,
+            typename ReducerWrapper>
   sycl::event sycl_direct_launch(const PolicyType& policy,
                                  const FunctorWrapper& functor_wrapper,
                                  const ReducerWrapper& reducer_wrapper) const {
@@ -507,7 +510,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     if (size <= 1) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         cgh.single_task([=]() {
-          const auto& functor = functor_wrapper.get_functor();
+          const auto& functor          = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
@@ -515,9 +518,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               ValueInit::init(selected_reducer, results_ptr);
           if (size == 1) {
             Kokkos::Impl::Reduce::DeviceIterateTile<
-                Policy::rank, BarePolicy, FunctorType, typename Policy::work_tag,
-                reference_type>(policy, functor, update, {1, 1, 1}, {0, 0, 0},
-                                {0, 0, 0})
+                Policy::rank, BarePolicy, FunctorType,
+                typename Policy::work_tag, reference_type>(
+                policy, functor, update, {1, 1, 1}, {0, 0, 0}, {0, 0, 0})
                 .exec_range();
           }
           if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
@@ -551,7 +554,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           const auto local_id = item.get_local_linear_id();
           const auto global_id =
               wgroup_size * item.get_group_linear_id() + local_id;
-          const auto& functor = functor_wrapper.get_functor();
+          const auto& functor          = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
@@ -579,11 +582,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             const index_type n_global_z = 1;
 
             Kokkos::Impl::Reduce::DeviceIterateTile<
-                Policy::rank, BarePolicy, FunctorType, typename Policy::work_tag,
-                reference_type>(bare_policy, functor, update,
-                                {n_global_x, n_global_y, n_global_z},
-                                {global_x, global_y, global_z},
-                                {local_x, local_y, local_z})
+                Policy::rank, BarePolicy, FunctorType,
+                typename Policy::work_tag, reference_type>(
+                bare_policy, functor, update,
+                {n_global_x, n_global_y, n_global_z},
+                {global_x, global_y, global_z}, {local_x, local_y, local_z})
                 .exec_range();
           } else {
             if (global_id >= size)
@@ -657,8 +660,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper, reducer_wrapper);
+    sycl::event event =
+        sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }
