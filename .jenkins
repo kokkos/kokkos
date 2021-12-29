@@ -55,7 +55,7 @@ pipeline {
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --verbose'''
+                              make -j8 -k && ctest --verbose'''
                     }
                     post {
                         always {
