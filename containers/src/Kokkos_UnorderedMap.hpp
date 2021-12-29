@@ -311,7 +311,11 @@ class UnorderedMap {
                                       // always return a valid reference
         ,
         m_keys("UnorderedMap keys", capacity() + 1),
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+        m_values("UnorderedMap values", (is_set ? 1 : capacity() + 1)),
+#else
         m_values("UnorderedMap values", (is_set ? 0 : capacity() + 1)),
+#endif
         m_scalars("UnorderedMap scalars") {
     if (!is_insertable_map) {
       throw std::runtime_error(
@@ -341,13 +345,24 @@ class UnorderedMap {
       const key_type tmp = key_type();
       Kokkos::deep_copy(m_keys, tmp);
     }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    if (is_set) {
+      const impl_value_type tmp = impl_value_type();
+      Kokkos::deep_copy(m_values, tmp);
+    }
+#endif
     Kokkos::deep_copy(m_scalars, 0);
     m_size = 0;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    return (m_keys.is_allocated() && m_values.is_allocated() &&
+            m_scalars.is_allocated());
+#else
     return (m_keys.is_allocated() && (is_set || m_values.is_allocated()) &&
             m_scalars.is_allocated());
+#endif
   }
 
   /// \brief Change the capacity of the the map
@@ -688,6 +703,19 @@ class UnorderedMap {
     KOKKOS_EXPECTS(i < capacity());
     return m_values[i];
   }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  template <typename Dummy = value_type>
+  KOKKOS_FORCEINLINE_FUNCTION KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Calling value_at for value_type==void is deprecated!")
+      std::enable_if_t<
+          std::is_void<Dummy>::value,  // is_set
+          std::conditional_t<has_const_value, impl_value_type,
+                             impl_value_type &>> value_at(size_type /*i*/)
+          const {
+    return m_values[0];
+  }
+#endif
 
   /// \brief Get the key with \c i as its direct index.
   ///
