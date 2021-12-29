@@ -261,7 +261,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
   union TrivialWrapper {
     TrivialWrapper(){};
 
-    TrivialWrapper(const Functor& f) : m_f{f} {}
+    TrivialWrapper(const Functor& f) { std::memcpy(&m_f, &f, sizeof(m_f)); }
 
     TrivialWrapper(const TrivialWrapper& other) {
       std::memcpy(&m_f, &other.m_f, sizeof(m_f));

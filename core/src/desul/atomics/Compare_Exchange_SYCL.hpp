@@ -29,7 +29,7 @@ inline void atomic_thread_fence(MemoryOrder, MemoryScope) {
 
 // FIXME_SYCL We need to either use generic_space or figure out how to check for the
 // correct adress space in a SYCL-portable way.
-#if 0//ndef __NVPTX__
+#ifndef __NVPTX__
 template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope) {
