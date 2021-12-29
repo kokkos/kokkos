@@ -413,7 +413,7 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
   if (BlockSizeMask & blockDim.y) {
     Kokkos::abort(
         "HIP::hip_single_inter_block_reduce_scan requires power-of-two "
-        "blockDim");
+        "blockDim\n");
   }
 
   integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /

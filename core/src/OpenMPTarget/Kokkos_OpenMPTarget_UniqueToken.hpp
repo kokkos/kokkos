@@ -95,7 +95,7 @@ class UniqueToken<OpenMPTarget, UniqueTokenScope::Global> {
     if (result.first < 0) {
       Kokkos::abort(
           "UniqueToken<OpenMPTarget> failure to acquire tokens, no tokens "
-          "available");
+          "available\n");
     }
 
     return result.first;

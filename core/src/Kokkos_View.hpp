@@ -104,7 +104,7 @@ void runtime_check_rank_device(const size_t dyn_rank, const bool is_void_spec,
     if (num_passed_args != dyn_rank && is_void_spec) {
       Kokkos::abort(
           "Number of arguments passed to Kokkos::View() constructor must match "
-          "the dynamic rank of the view.");
+          "the dynamic rank of the view.\n");
     }
   }
 }
@@ -1817,7 +1817,7 @@ class View : public ViewTraits<DataType, Properties...> {
     if (is_layout_stride) {
       Kokkos::abort(
           "Kokkos::View::shmem_size(extents...) doesn't work with "
-          "LayoutStride. Pass a LayoutStride object instead");
+          "LayoutStride. Pass a LayoutStride object instead\n");
     }
     const size_t num_passed_args = Impl::count_valid_integers(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);

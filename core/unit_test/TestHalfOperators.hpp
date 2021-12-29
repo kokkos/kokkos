@@ -491,7 +491,8 @@ struct Functor_TestHalfOperators {
 
     // if (h_lhs != tmp_lhs) {
     //  printf("tmp_lhs = %f, h_lhs = %f\n", __half2float(tmp_lhs),
-    //  __half2float(h_lhs)); Kokkos::abort("Error in half_t prefix operators");
+    //  __half2float(h_lhs)); Kokkos::abort("Error in half_t prefix
+    //  operators\n");
     //}
 
     actual_lhs(POSTFIX_INC)   = cast_from_half<double>(tmp_lhs++);
@@ -503,7 +504,7 @@ struct Functor_TestHalfOperators {
     // if (h_lhs != tmp_lhs) {
     //  printf("tmp_lhs = %f, h_lhs = %f\n", __half2float(tmp_lhs),
     //  __half2float(h_lhs)); Kokkos::abort("Error in half_t postfix
-    //  operators");
+    //  operators\n");
     //}
 
     tmp_lhs = h_lhs;
@@ -883,14 +884,14 @@ struct Functor_TestHalfOperators {
     half_tmp = cast_from_half<float>(h_lhs);
     tmp_ptr  = &(tmp_lhs = half_tmp);
     if (tmp_ptr != &tmp_lhs)
-      Kokkos::abort("Error in half_t address-of operator");
+      Kokkos::abort("Error in half_t address-of operator\n");
     actual_lhs(AO_IMPL_HALF)   = cast_from_half<double>(*tmp_ptr);
     expected_lhs(AO_IMPL_HALF) = d_lhs;
 
     tmp2_lhs = h_lhs;
     tmp_ptr  = &(tmp_lhs = tmp2_lhs);
     if (tmp_ptr != &tmp_lhs)
-      Kokkos::abort("Error in half_t address-of operator");
+      Kokkos::abort("Error in half_t address-of operator\n");
     actual_lhs(AO_HALF_T)   = cast_from_half<double>(tmp_ptr[0]);
     expected_lhs(AO_HALF_T) = d_lhs;
 

@@ -138,7 +138,8 @@ class TaskQueueMultiple : public TaskQueue<ExecSpace, MemorySpace> {
     auto* const end_tag = reinterpret_cast<TaskBase*>(TaskBase::EndTag);
 
     if (m_other_queues == nullptr) {
-      Kokkos::abort("attempted to steal task before queues were initialized!");
+      Kokkos::abort(
+          "attempted to steal task before queues were initialized!\n");
     }
 
     // Loop by priority and then type, and then team

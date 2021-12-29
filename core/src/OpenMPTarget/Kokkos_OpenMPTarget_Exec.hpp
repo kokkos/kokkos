@@ -1287,7 +1287,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
 
     if (m_chunk_size > 0) {
       if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+        Kokkos::abort("TeamPolicy blocking granularity must be power of two\n");
     }
 
     int new_chunk_size = 1;

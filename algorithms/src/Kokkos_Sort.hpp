@@ -290,7 +290,7 @@ class BinSort {
     const size_t values_len = values_range_end - values_range_begin;
     if (len != values_len) {
       Kokkos::abort(
-          "BinSort::sort: values range length != permutation vector length");
+          "BinSort::sort: values range length != permutation vector length\n");
     }
 
     scratch_view_type sorted_values(

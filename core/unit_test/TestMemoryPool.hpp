@@ -525,7 +525,7 @@ struct TestMemoryPoolHuge<
               , ptrs(i) );
 #endif
       if (!ptrs(i)) {
-        Kokkos::abort("TestMemoryPoolHuge");
+        Kokkos::abort("TestMemoryPoolHuge\n");
         ++err;
       }
     }

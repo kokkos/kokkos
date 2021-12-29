@@ -99,7 +99,7 @@ TaskExec<Kokkos::Experimental::OpenMPTarget>::TaskExec(
 
 void TaskExec<Kokkos::Experimental::OpenMPTarget>::team_barrier_impl() const {
   if (m_team_exec->scratch_reduce_size() < int(2 * sizeof(int64_t))) {
-    Kokkos::abort("TaskQueue<OpenMPTarget> scratch_reduce memory too small");
+    Kokkos::abort("TaskQueue<OpenMPTarget> scratch_reduce memory too small\n");
   }
 
   // Use team shared memory to synchronize.
@@ -145,7 +145,7 @@ void TaskQueueSpecialization<Kokkos::Experimental::OpenMPTarget>::execute(
   // const int team_size = PoolExec::pool_size(1); // Threads per NUMA
 
   if (8 < team_size) {
-    Kokkos::abort("TaskQueue<OpenMPTarget> unsupported team size");
+    Kokkos::abort("TaskQueue<OpenMPTarget> unsupported team size\n");
   }
 
 #pragma omp parallel

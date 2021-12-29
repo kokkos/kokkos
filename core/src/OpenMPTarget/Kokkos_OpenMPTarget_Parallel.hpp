@@ -479,7 +479,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         ParReduceSpecialize::template execute_array<TagType, 32>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
       } else {
-        Kokkos::abort("array reduction length must be <= 32");
+        Kokkos::abort("array reduction length must be <= 32\n");
       }
     } else {
       // This loop handles the basic scalar reduction.
@@ -1041,7 +1041,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     if ((shmem_size_L0 + shmem_size_L1) > 0) {
       Kokkos::abort(
           "OpenMPTarget: Scratch memory is not supported in `parallel_reduce` "
-          "over functors with init/join.");
+          "over functors with init/join.\n");
     }
 
     const auto nteams = league_size;
@@ -1222,7 +1222,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         ParReduceSpecialize::template execute_array<32>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
       } else {
-        Kokkos::abort("array reduction length must be <= 32");
+        Kokkos::abort("array reduction length must be <= 32\n");
       }
     } else {
       ParReduceSpecialize::template execute_array<1>(

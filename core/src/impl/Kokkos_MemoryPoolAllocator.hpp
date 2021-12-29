@@ -100,7 +100,7 @@ class MemoryPoolAllocator {
   pointer allocate(size_t n) {
     void* rv = m_pool.allocate(n * sizeof(T));
     if (rv == nullptr) {
-      Kokkos::abort("Kokkos MemoryPool allocator failed to allocate memory");
+      Kokkos::abort("Kokkos MemoryPool allocator failed to allocate memory\n");
     }
     return reinterpret_cast<T*>(rv);
   }

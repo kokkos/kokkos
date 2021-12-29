@@ -221,7 +221,7 @@ struct MultipleTaskQueueTeamEntry {
           !task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
           void*>::type = nullptr) {
-    Kokkos::abort("should be unreachable!");
+    Kokkos::abort("should be unreachable!\n");
   }
 
   template <class _always_void = void>

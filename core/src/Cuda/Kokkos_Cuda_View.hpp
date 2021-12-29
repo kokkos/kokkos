@@ -266,7 +266,7 @@ class ViewDataHandle<
     if (0 == r) {
       Kokkos::abort(
           "Cuda const random access View using Cuda texture memory requires "
-          "Kokkos to allocate the View's memory");
+          "Kokkos to allocate the View's memory\n");
     }
 #endif
 
@@ -275,7 +275,7 @@ class ViewDataHandle<
 #else
     (void)arg_tracker;
     Kokkos::Impl::cuda_abort(
-        "Cannot create Cuda texture object from within a Cuda kernel");
+        "Cannot create Cuda texture object from within a Cuda kernel\n");
     return handle_type();
 #endif
   }

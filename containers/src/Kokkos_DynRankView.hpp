@@ -280,7 +280,7 @@ KOKKOS_INLINE_FUNCTION void dyn_rank_view_verify_operator_bounds(
   if (static_cast<iType0>(rank) > op_rank) {
     Kokkos::abort(
         "DynRankView Bounds Checking Error: Need at least rank arguments to "
-        "the operator()");
+        "the operator()\n");
   }
 
   if (!dyn_rank_view_verify_operator_bounds<0>(rank, map, args...)) {
@@ -294,7 +294,7 @@ KOKKOS_INLINE_FUNCTION void dyn_rank_view_verify_operator_bounds(
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else
     (void)tracker;
-    Kokkos::abort("DynRankView bounds error");
+    Kokkos::abort("DynRankView bounds error\n");
 #endif
   }
 }
@@ -1520,7 +1520,7 @@ subdynrankview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
   {
     Kokkos::abort(
         "subdynrankview: num of args must be >= rank of the source "
-        "DynRankView");
+        "DynRankView\n");
   }
 
   using metafcn =

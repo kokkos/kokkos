@@ -589,7 +589,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     m_league_size = league_size_request;
 
     if (team_size_request > team_max)
-      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!\n");
 
     m_team_size = team_size_request < team_max ? team_size_request : team_max;
 
@@ -811,7 +811,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
     if (m_chunk_size > 0) {
       if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+        Kokkos::abort("TeamPolicy blocking granularity must be power of two\n");
     }
 
     int new_chunk_size = 1;

@@ -72,7 +72,7 @@ struct ArrayBoundsCheck<Integral, true> {
       s += " < 0";
       Kokkos::Impl::throw_runtime_exception(s);
 #else
-      Kokkos::abort("Kokkos::Array: negative index in device code");
+      Kokkos::abort("Kokkos::Array: negative index in device code\n");
 #endif
     }
     ArrayBoundsCheck<Integral, false>(i, N);
@@ -91,7 +91,7 @@ struct ArrayBoundsCheck<Integral, false> {
       s += std::to_string(N);
       Kokkos::Impl::throw_runtime_exception(s);
 #else
-      Kokkos::abort("Kokkos::Array: index >= size");
+      Kokkos::abort("Kokkos::Array: index >= size\n");
 #endif
     }
   }
@@ -180,7 +180,7 @@ struct Array<T, 0, Proxy> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
-    Kokkos::abort("Unreachable code");
+    Kokkos::abort("Unreachable code\n");
     return *reinterpret_cast<pointer>(-1);
   }
 
@@ -189,7 +189,7 @@ struct Array<T, 0, Proxy> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
-    Kokkos::abort("Unreachable code");
+    Kokkos::abort("Unreachable code\n");
     return *reinterpret_cast<const_pointer>(-1);
   }
 

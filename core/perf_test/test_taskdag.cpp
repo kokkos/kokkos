@@ -123,7 +123,7 @@ struct TestFib {
         // High priority to retire this branch.
         Kokkos::respawn(this, fib_all, Kokkos::TaskPriority::High);
       } else {
-        Kokkos::abort("Failed nested task spawn (allocation)");
+        Kokkos::abort("Failed nested task spawn (allocation)\n");
       }
     }
   }

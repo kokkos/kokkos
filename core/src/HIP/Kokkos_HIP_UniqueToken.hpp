@@ -92,7 +92,7 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
 
     if (result.first < 0) {
       Kokkos::abort(
-          "UniqueToken<HIP> failure to acquire tokens, no tokens available");
+          "UniqueToken<HIP> failure to acquire tokens, no tokens available\n");
     }
 
     return result.first;

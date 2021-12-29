@@ -2114,7 +2114,7 @@ struct TestUnmanagedSubviewReset {
     for (int i = 0; i < int(a.extent(0)); ++i) {
       sub_a.assign_data(&a(i, 0, 0, 0));
       if (&sub_a(1, 1, 1) != &a(i, 1, 1, 1)) {
-        Kokkos::abort("TestUnmanagedSubviewReset");
+        Kokkos::abort("TestUnmanagedSubviewReset\n");
       }
     }
   }

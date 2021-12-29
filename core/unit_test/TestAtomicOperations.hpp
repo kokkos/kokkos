@@ -98,7 +98,7 @@ struct LoadStoreFunctor {
   void operator()(int) const {
     T old = Kokkos::atomic_load(&data());
     if (old != i0)
-      Kokkos::abort("Kokkos Atomic Load didn't get the right value");
+      Kokkos::abort("Kokkos Atomic Load didn't get the right value\n");
     Kokkos::atomic_store(&data(), i1);
     Kokkos::atomic_assign(&data(), old);
   }

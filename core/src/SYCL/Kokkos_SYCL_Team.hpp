@@ -252,7 +252,7 @@ class SYCLTeamMember {
     const auto base_data          = static_cast<Type*>(m_team_reduce);
     if (static_cast<int>(n_active_subgroups * sizeof(Type)) >
         m_team_reduce_size)
-      Kokkos::abort("Not implemented!");
+      Kokkos::abort("Not implemented!\n");
 
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;

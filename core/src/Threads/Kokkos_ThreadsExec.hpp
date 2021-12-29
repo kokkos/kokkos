@@ -702,7 +702,7 @@ class UniqueToken<Threads, UniqueTokenScope::Instance> {
       if (result.first < 0) {
         ::Kokkos::abort(
             "UniqueToken<Threads> failure to acquire tokens, no tokens "
-            "available");
+            "available\n");
       }
       return result.first;
     }

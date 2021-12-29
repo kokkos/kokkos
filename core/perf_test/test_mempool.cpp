@@ -269,13 +269,13 @@ int main(int argc, char* argv[]) {
     Kokkos::Timer timer;
 
     if (!functor.test_fill()) {
-      Kokkos::abort("fill ");
+      Kokkos::abort("fill \n");
     }
 
     auto t0 = timer.seconds();
 
     if (!functor.test_alloc_dealloc()) {
-      Kokkos::abort("alloc/dealloc ");
+      Kokkos::abort("alloc/dealloc \n");
     }
 
     auto t1              = timer.seconds();

@@ -377,7 +377,7 @@ class BasicTaskScheduler : public Impl::TaskSchedulerBase {
                                          Kokkos::Impl::MemoryScopeDevice());
           if (q != static_cast<queue_type const*>(t->m_queue)) {
             Kokkos::abort(
-                "Kokkos when_all Futures must be in the same scheduler");
+                "Kokkos when_all Futures must be in the same scheduler\n");
           }
         }
       }
@@ -466,7 +466,7 @@ class BasicTaskScheduler : public Impl::TaskSchedulerBase {
           // if ( m_queue != static_cast< BasicTaskScheduler const * >(
           // arg_f.m_task->m_scheduler )->m_queue ) {
           //  Kokkos::abort("Kokkos when_all Futures must be in the same
-          //  scheduler" );
+          //  scheduler\n" );
           //}
           // Increment reference count to track subsequent assignment.
           // This increment likely has to be SeqCst

@@ -118,7 +118,7 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
     if (tracker.has_record()) {
       Kokkos::Impl::operator_bounds_error_on_device(map);
     } else {
-      Kokkos::abort("OffsetView bounds error");
+      Kokkos::abort("OffsetView bounds error\n");
     }
 #endif
   }
@@ -149,7 +149,7 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
     message += "The number of offsets provided ( " +
                std::to_string(numOffsets) +
                " ) must equal the dynamic rank ( " +
-               std::to_string(rank_dynamic) + " ).";
+               std::to_string(rank_dynamic) + " ).\n";
     isBad = true;
   }
 
@@ -162,7 +162,8 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
                                const index_list_type minIndices) {
   if (rank_dynamic != rank) {
     Kokkos::abort(
-        "The full rank of an OffsetView must be the same as the dynamic rank.");
+        "The full rank of an OffsetView must be the same as the dynamic "
+        "rank.\n");
   }
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
@@ -171,7 +172,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   if (numOffsets != rank) {
     Kokkos::abort(
         "The number of offsets provided to an OffsetView constructor must "
-        "equal the dynamic rank.");
+        "equal the dynamic rank.\n");
   }
 }
 }  // namespace Impl
@@ -1024,23 +1025,23 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     if (begins.size() != Rank)
       Kokkos::abort(
           "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
-          "OffsetView: begins has bad Rank");
+          "OffsetView: begins has bad Rank\n");
     if (ends.size() != Rank)
       Kokkos::abort(
           "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
-          "OffsetView: ends has bad Rank");
+          "OffsetView: ends has bad Rank\n");
 
     for (size_t i = 0; i != begins.size(); ++i) {
       switch (check_subtraction(at(ends, i), at(begins, i))) {
         case subtraction_failure::negative:
           Kokkos::abort(
               "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
-              "OffsetView: bad range");
+              "OffsetView: bad range\n");
           break;
         case subtraction_failure::overflow:
           Kokkos::abort(
               "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
-              "OffsetView: range overflows");
+              "OffsetView: range overflows\n");
           break;
         default: break;
       }

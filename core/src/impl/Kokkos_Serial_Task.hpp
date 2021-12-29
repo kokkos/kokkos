@@ -224,7 +224,7 @@ class TaskQueueSpecializationConstrained<
         // and all tasks waiting on this task are updated.
         queue->complete(task);
       } else if (0 != queue->m_ready_count) {
-        Kokkos::abort("TaskQueue<Serial>::execute ERROR: ready_count");
+        Kokkos::abort("TaskQueue<Serial>::execute ERROR: ready_count\n");
       }
     }
   }

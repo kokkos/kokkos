@@ -370,7 +370,7 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
         m_league_size(league_size_request),
         m_chunk_size(32) {
     if (team_size_request > 1)
-      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!\n");
   }
 
   TeamPolicyInternal(const execution_space& space, int league_size_request,

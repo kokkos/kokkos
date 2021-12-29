@@ -292,7 +292,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
     KOKKOS_FORCEINLINE_FUNCTION static void check() {
       Kokkos::abort(
           "Kokkos::DynamicView ERROR: attempt to access inaccessible memory "
-          "space");
+          "space\n");
     };
   };
 
@@ -442,7 +442,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
           *reinterpret_cast<uintptr_t volatile*>(m_chunks + m_chunk_max);
 
       if (n <= ic) {
-        Kokkos::abort("Kokkos::DynamicView array bounds error");
+        Kokkos::abort("Kokkos::DynamicView array bounds error\n");
       }
 
       // Allocation of this chunk is in progress
@@ -468,7 +468,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         m_chunk_shift;  // New total number of chunks needed for resize
 
     if (m_chunk_max < NC) {
-      Kokkos::abort("DynamicView::resize_serial exceeded maximum size");
+      Kokkos::abort("DynamicView::resize_serial exceeded maximum size\n");
     }
 
     // *m_chunks[m_chunk_max] stores the current number of chunks being used

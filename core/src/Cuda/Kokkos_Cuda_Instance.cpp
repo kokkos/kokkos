@@ -245,7 +245,7 @@ CudaInternalDevices::CudaInternalDevices() {
   if (m_cudaDevCount > MAXIMUM_DEVICE_COUNT) {
     Kokkos::abort(
         "Sorry, you have more GPUs per node than we thought anybody would ever "
-        "have. Please report this to github.com/kokkos/kokkos.");
+        "have. Please report this to github.com/kokkos/kokkos.\n");
   }
   for (int i = 0; i < m_cudaDevCount; ++i) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(m_cudaProp + i, i));

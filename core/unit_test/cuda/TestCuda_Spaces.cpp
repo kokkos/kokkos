@@ -47,7 +47,7 @@
 
 namespace Test {
 
-__global__ void test_abort() { Kokkos::abort("test_abort"); }
+__global__ void test_abort() { Kokkos::abort("test_abort\n"); }
 
 __global__ void test_cuda_spaces_int_value(int *ptr) {
   if (*ptr == 42) {

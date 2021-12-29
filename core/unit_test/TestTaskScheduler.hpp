@@ -130,7 +130,7 @@ struct TestFib {
         );
 #endif
 
-        Kokkos::abort("TestFib insufficient memory");
+        Kokkos::abort("TestFib insufficient memory\n");
       }
     }
   }

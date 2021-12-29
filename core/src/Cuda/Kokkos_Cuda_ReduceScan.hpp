@@ -651,7 +651,8 @@ __device__ void cuda_intra_block_reduce_scan(
   // Must have power of two thread count
 
   if (BlockSizeMask & blockDim.y) {
-    Kokkos::abort("Cuda::cuda_intra_block_scan requires power-of-two blockDim");
+    Kokkos::abort(
+        "Cuda::cuda_intra_block_scan requires power-of-two blockDim\n");
   }
 
 #define BLOCK_REDUCE_STEP(R, TD, S)                          \
@@ -800,7 +801,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
   if (BlockSizeMask & blockDim.y) {
     Kokkos::abort(
         "Cuda::cuda_single_inter_block_reduce_scan requires power-of-two "
-        "blockDim");
+        "blockDim\n");
   }
 
   const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /

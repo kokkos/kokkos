@@ -658,7 +658,7 @@ struct SubviewExtents {
   template <size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION void error(const ViewDimension<DimArgs...>&,
                                          Args...) const {
-    Kokkos::abort("Kokkos::subview bounds error");
+    Kokkos::abort("Kokkos::subview bounds error\n");
   }
 #endif
 
@@ -1131,7 +1131,7 @@ struct ViewOffset<
     if (rhs.m_stride.S0 != 1) {
       Kokkos::abort(
           "Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride "
-          " requires stride == 1");
+          " requires stride == 1\n");
     }
   }
 
@@ -1452,7 +1452,7 @@ struct ViewOffset<
     if (rhs.m_stride.S0 != 1) {
       Kokkos::abort(
           "Kokkos::Impl::ViewOffset assignment of LayoutLeft from LayoutStride "
-          "requires stride == 1");
+          "requires stride == 1\n");
     }
   }
 
@@ -2127,7 +2127,7 @@ struct ViewOffset<
                                                 : rhs.m_stride.S7)))))) != 1) {
       Kokkos::abort(
           "Kokkos::Impl::ViewOffset assignment of LayoutRight from "
-          "LayoutStride requires right-most stride == 1");
+          "LayoutStride requires right-most stride == 1\n");
     }
   }
 
@@ -2754,7 +2754,7 @@ struct ViewDataHandle<
     if (reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
-          "attribute");
+          "attribute\n");
     }
     return handle_type(arg_data_ptr);
   }
@@ -2765,7 +2765,7 @@ struct ViewDataHandle<
         Impl::MEMORY_ALIGNMENT) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
-          "attribute");
+          "attribute\n");
     }
     return handle_type(arg_data_ptr + offset);
   }
@@ -2799,7 +2799,7 @@ struct ViewDataHandle<
     if (reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
-          "attribute");
+          "attribute\n");
     }
     return (value_type*)(arg_data_ptr);
   }
@@ -2810,7 +2810,7 @@ struct ViewDataHandle<
         Impl::MEMORY_ALIGNMENT) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
-          "attribute");
+          "attribute\n");
     }
     return (value_type*)(arg_data_ptr + offset);
   }
@@ -3526,7 +3526,7 @@ class ViewMapping<
       if (!assignable)
         Kokkos::abort(
             "View Assignment: trying to assign runtime dimension to non "
-            "matching compile time dimension.");
+            "matching compile time dimension.\n");
     }
     dst.m_impl_offset = dst_offset_type(src.m_impl_offset);
     dst.m_impl_handle = Kokkos::Impl::ViewDataHandle<DstTraits>::assign(
@@ -3679,7 +3679,7 @@ class ViewMapping<
       if (!assignable)
         Kokkos::abort(
             "View Assignment: trying to assign runtime dimension to non "
-            "matching compile time dimension.");
+            "matching compile time dimension.\n");
     }
     dst.m_impl_offset = dst_offset_type(src.m_impl_offset);
     dst.m_impl_handle = Kokkos::Impl::ViewDataHandle<DstTraits>::assign(
@@ -3915,7 +3915,7 @@ struct OperatorBoundsErrorOnDevice;
 template <class MapType>
 struct OperatorBoundsErrorOnDevice<MapType, false> {
   KOKKOS_INLINE_FUNCTION
-  static void run(MapType const&) { Kokkos::abort("View bounds error"); }
+  static void run(MapType const&) { Kokkos::abort("View bounds error\n"); }
 };
 
 template <class MapType>
@@ -3936,7 +3936,8 @@ struct OperatorBoundsErrorOnDevice<MapType, true> {
     for (char const* p2 = label; (*p2 != '\0') && (p < end); ++p, ++p2) {
       *p = *p2;
     }
-    *p = '\0';
+    *p     = '\n';
+    *(++p) = '\0';
     Kokkos::abort(msg);
   }
 };
@@ -3953,7 +3954,7 @@ template <class Map>
 KOKKOS_FUNCTION
     std::enable_if_t<!is_detected<printable_label_typedef_t, Map>::value>
     operator_bounds_error_on_device(Map const&) {
-  Kokkos::abort("View bounds error");
+  Kokkos::abort("View bounds error\n");
 }
 
 template <class Map>
@@ -3988,7 +3989,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     if (tracker.m_tracker.has_record()) {
       operator_bounds_error_on_device(map);
     } else {
-      Kokkos::abort("View bounds error");
+      Kokkos::abort("View bounds error\n");
     }
 #endif
   }

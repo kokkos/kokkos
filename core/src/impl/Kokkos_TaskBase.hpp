@@ -206,7 +206,7 @@ class TaskBase {
     if (lock != Kokkos::Impl::desul_atomic_exchange(
                     &m_next, dep, Kokkos::Impl::MemoryOrderSeqCst(),
                     Kokkos::Impl::MemoryScopeDevice())) {
-      Kokkos::abort("TaskScheduler ERROR: resetting task dependence");
+      Kokkos::abort("TaskScheduler ERROR: resetting task dependence\n");
     }
     if (nullptr != dep) {
       // The future may be destroyed upon returning from this call

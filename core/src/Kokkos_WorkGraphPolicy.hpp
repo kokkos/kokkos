@@ -100,7 +100,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
     if ((N <= j) || (END_TOKEN != atomic_exchange(ready_queue + j, w))) {
       // ERROR: past the end of queue or did not replace END_TOKEN
-      Kokkos::abort("WorkGraphPolicy push_work error");
+      Kokkos::abort("WorkGraphPolicy push_work error\n");
     }
 
     memory_fence();

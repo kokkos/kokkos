@@ -618,7 +618,7 @@ class UniqueToken<HPX, UniqueTokenScope::Instance> {
       if (result.first < 0) {
         ::Kokkos::abort(
             "UniqueToken<HPX> failure to acquire tokens, no tokens "
-            "available");
+            "available\n");
       }
       return result.first;
     }
@@ -836,7 +836,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
 
     if (m_chunk_size > 0) {
       if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+        Kokkos::abort("TeamPolicy blocking granularity must be power of two\n");
     } else {
       int new_chunk_size = 1;
       while (new_chunk_size * 4 * Kokkos::Experimental::HPX::concurrency() <

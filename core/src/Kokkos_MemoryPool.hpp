@@ -502,7 +502,7 @@ class MemoryPool {
     if (size_t(1LU << m_max_block_size_lg2) < alloc_size) {
       Kokkos::abort(
           "Kokkos MemoryPool allocation request exceeded specified maximum "
-          "allocation size");
+          "allocation size\n");
     }
 
     if (0 == alloc_size) return nullptr;
@@ -773,7 +773,7 @@ class MemoryPool {
     }
 
     if (!ok_contains || !ok_block_aligned || !ok_dealloc_once) {
-      Kokkos::abort("Kokkos MemoryPool::deallocate given erroneous pointer");
+      Kokkos::abort("Kokkos MemoryPool::deallocate given erroneous pointer\n");
     }
   }
   // end deallocate

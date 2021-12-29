@@ -67,7 +67,7 @@ __global__ void start_intra_block_scan()
   if (values[i] != ((i + 2) * (i + 1)) / 2) {
     printf("Value for %d should be %d but is %d\n", i, ((i + 2) * (i + 1)) / 2,
            values[i]);
-    Kokkos::abort("Test for intra_block_reduce_scan failed!");
+    Kokkos::abort("Test for intra_block_reduce_scan failed!\n");
   }
 }
 

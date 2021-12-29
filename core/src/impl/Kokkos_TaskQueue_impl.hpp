@@ -87,13 +87,14 @@ TaskQueue<ExecSpace, MemorySpace>::~TaskQueue() {
   for (int i = 0; i < NumQueue; ++i) {
     for (int j = 0; j < 2; ++j) {
       if (m_ready[i][j] != (task_root_type *)task_root_type::EndTag) {
-        Kokkos::abort("TaskQueue::~TaskQueue ERROR: has ready tasks");
+        Kokkos::abort("TaskQueue::~TaskQueue ERROR: has ready tasks\n");
       }
     }
   }
 
   if (0 != m_ready_count) {
-    Kokkos::abort("TaskQueue::~TaskQueue ERROR: has ready or executing tasks");
+    Kokkos::abort(
+        "TaskQueue::~TaskQueue ERROR: has ready or executing tasks\n");
   }
 }
 
@@ -130,7 +131,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::decrement(
     queue->deallocate(task, t.m_alloc_size);
   } else if (count <= 1) {
     Kokkos::abort(
-        "TaskScheduler task has negative reference count or is incomplete");
+        "TaskScheduler task has negative reference count or is incomplete\n");
   }
 }
 
@@ -192,7 +193,7 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
 
   if (zero != next) {
     Kokkos::abort(
-        "TaskQueue::push_task ERROR: already a member of another queue");
+        "TaskQueue::push_task ERROR: already a member of another queue\n");
   }
 
   // store the head of the queue
@@ -370,7 +371,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
     respawn = true;
   } else {
     // Task in Complete state
-    Kokkos::abort("TaskQueue::schedule_runnable ERROR: task is complete");
+    Kokkos::abort("TaskQueue::schedule_runnable ERROR: task is complete\n");
   }
 
   //----------------------------------------
@@ -483,7 +484,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_aggregate(
     // Task in Waiting state
   } else if (lock == t.m_wait) {
     // Task in Complete state
-    Kokkos::abort("TaskQueue::schedule_aggregate ERROR: task is complete");
+    Kokkos::abort("TaskQueue::schedule_aggregate ERROR: task is complete\n");
   }
 
   //----------------------------------------
@@ -569,7 +570,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::reschedule(
   if (lock != Kokkos::Impl::desul_atomic_exchange(
                   &task->m_next, zero, Kokkos::Impl::MemoryOrderSeqCst(),
                   Kokkos::Impl::MemoryScopeDevice())) {
-    Kokkos::abort("TaskScheduler::respawn ERROR: already respawned");
+    Kokkos::abort("TaskScheduler::respawn ERROR: already respawned\n");
   }
 }
 

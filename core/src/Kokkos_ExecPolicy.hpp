@@ -215,7 +215,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
     if (m_granularity > 0) {
       if (!Impl::is_integral_power_of_two(m_granularity))
-        Kokkos::abort("RangePolicy blocking granularity must be power of two");
+        Kokkos::abort(
+            "RangePolicy blocking granularity must be power of two\n");
     }
 
     int64_t new_chunk_size = 1;

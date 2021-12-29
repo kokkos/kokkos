@@ -428,7 +428,7 @@ class BasicFuture {
   KOKKOS_INLINE_FUNCTION
   const typename Impl::TaskResult<ValueType>::reference_type get() const {
     if (nullptr == m_task) {
-      Kokkos::abort("Kokkos:::Future::get ERROR: is_null()");
+      Kokkos::abort("Kokkos:::Future::get ERROR: is_null()\n");
     }
     return Impl::TaskResult<ValueType>::get(m_task);
   }

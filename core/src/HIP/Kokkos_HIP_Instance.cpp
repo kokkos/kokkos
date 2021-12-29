@@ -88,7 +88,7 @@ HIPInternalDevices::HIPInternalDevices() {
   if (m_hipDevCount > MAXIMUM_DEVICE_COUNT) {
     Kokkos::abort(
         "Sorry, you have more GPUs per node than we thought anybody would ever "
-        "have. Please report this to github.com/kokkos/kokkos.");
+        "have. Please report this to github.com/kokkos/kokkos.\n");
   }
   for (int i = 0; i < m_hipDevCount; ++i) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(m_hipProp + i, i));

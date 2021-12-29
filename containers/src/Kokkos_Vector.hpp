@@ -163,7 +163,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     DV::sync_host();
     DV::modify_host();
     if (it < begin() || it > end())
-      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator\n");
     if (count == 0) return it;
     ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
@@ -194,7 +194,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     DV::sync_host();
     DV::modify_host();
     if (it < begin() || it > end())
-      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator\n");
 
     bool resized = false;
     if ((size() == 0) && (it == begin())) {

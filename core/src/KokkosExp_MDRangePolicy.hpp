@@ -104,7 +104,7 @@ constexpr To checked_narrow_cast(From arg) {
       (is_different_signedness &&
        is_less_than_value_initialized_variable(arg) !=
            is_less_than_value_initialized_variable(ret))) {
-    Kokkos::abort("unsafe narrowing conversion");
+    Kokkos::abort("unsafe narrowing conversion\n");
   }
   return ret;
 }
@@ -375,7 +375,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
              static_cast<int>(properties.max_threads));
       Kokkos::abort(
           "ExecSpace Error: MDRange tile dims exceed maximum number "
-          "of threads per block - choose smaller tile dims");
+          "of threads per block - choose smaller tile dims\n");
     }
   }
 };

@@ -97,7 +97,8 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
 
     if (result.first < 0) {
       Kokkos::abort(
-          "UniqueToken<SYCL> failure to acquire tokens, no tokens available");
+          "UniqueToken<SYCL> failure to acquire tokens, no tokens "
+          "available\n");
     }
 
     return result.first;
