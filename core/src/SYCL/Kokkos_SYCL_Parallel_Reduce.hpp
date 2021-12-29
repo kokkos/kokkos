@@ -356,6 +356,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   void execute() const {
+#ifdef SYCL_DEVICE_COPYABLE
+    struct {
+    } indirectKernelMem, indirectReducerMem;
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
+    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_reducer, indirectReducerMem);
+    sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
+#else
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
@@ -372,6 +381,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
+#endif
   }
 
  private:
@@ -652,6 +662,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   void execute() const {
+#ifdef SYCL_DEVICE_COPYABLE
+    struct {
+    } indirectKernelMem, indirectReducerMem;
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
+    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_reducer, indirectReducerMem);
+    sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
+#else
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
     using IndirectKernelMem =
@@ -668,6 +687,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
+#endif
   }
 
  private:
