@@ -203,7 +203,7 @@ template <typename Key, typename Value,
           typename Device = Kokkos::DefaultExecutionSpace,
           typename Hasher = pod_hash<typename std::remove_const<Key>::type>,
           typename EqualTo =
-              pod_equal_to<typename std::remove_const<Key>::type> >
+              pod_equal_to<typename std::remove_const<Key>::type>>
 class UnorderedMap {
  private:
   using host_mirror_space =
@@ -268,20 +268,20 @@ class UnorderedMap {
 
   using key_type_view = std::conditional_t<
       is_insertable_map, View<key_type *, device_type>,
-      View<const key_type *, device_type, MemoryTraits<RandomAccess> > >;
+      View<const key_type *, device_type, MemoryTraits<RandomAccess>>>;
 
   using value_type_view = std::conditional_t<
       is_insertable_map || is_modifiable_map,
       View<impl_value_type *, device_type>,
-      View<const impl_value_type *, device_type, MemoryTraits<RandomAccess> > >;
+      View<const impl_value_type *, device_type, MemoryTraits<RandomAccess>>>;
 
   using size_type_view = std::conditional_t<
       is_insertable_map, View<size_type *, device_type>,
-      View<const size_type *, device_type, MemoryTraits<RandomAccess> > >;
+      View<const size_type *, device_type, MemoryTraits<RandomAccess>>>;
 
   using bitset_type =
       std::conditional_t<is_insertable_map, Bitset<execution_space>,
-                         ConstBitset<execution_space> >;
+                         ConstBitset<execution_space>>;
 
   enum { modified_idx = 0, erasable_idx = 1, failed_insert_idx = 2 };
   enum { num_scalars = 3 };
@@ -311,7 +311,7 @@ class UnorderedMap {
                                       // always return a valid reference
         ,
         m_keys("UnorderedMap keys", capacity() + 1),
-        m_values("UnorderedMap values", (is_set ? 1 : capacity() + 1)),
+        m_values("UnorderedMap values", (is_set ? 0 : capacity() + 1)),
         m_scalars("UnorderedMap scalars") {
     if (!is_insertable_map) {
       throw std::runtime_error(
@@ -341,16 +341,12 @@ class UnorderedMap {
       const key_type tmp = key_type();
       Kokkos::deep_copy(m_keys, tmp);
     }
-    if (is_set) {
-      const impl_value_type tmp = impl_value_type();
-      Kokkos::deep_copy(m_values, tmp);
-    }
     Kokkos::deep_copy(m_scalars, 0);
     m_size = 0;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
-    return (m_keys.is_allocated() && m_values.is_allocated() &&
+    return (m_keys.is_allocated() && (is_set || m_values.is_allocated()) &&
             m_scalars.is_allocated());
   }
 
@@ -684,11 +680,13 @@ class UnorderedMap {
   /// kernel.
   ///
   /// 'const value_type' via Cuda texture fetch must return by value.
-  KOKKOS_FORCEINLINE_FUNCTION
-  std::conditional_t<(is_set || has_const_value), impl_value_type,
-                     impl_value_type &>
+  template <typename Dummy = value_type>
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      !std::is_void<Dummy>::value,  // !is_set
+      std::conditional_t<has_const_value, impl_value_type, impl_value_type &>>
   value_at(size_type i) const {
-    return m_values[is_set ? 0 : (i < capacity() ? i : capacity())];
+    KOKKOS_EXPECTS(i < capacity());
+    return m_values[i];
   }
 
   /// \brief Get the key with \c i as its direct index.
@@ -699,7 +697,8 @@ class UnorderedMap {
   /// kernel.
   KOKKOS_FORCEINLINE_FUNCTION
   key_type key_at(size_type i) const {
-    return m_keys[i < capacity() ? i : capacity()];
+    KOKKOS_EXPECTS(i < capacity());
+    return m_keys[i];
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
