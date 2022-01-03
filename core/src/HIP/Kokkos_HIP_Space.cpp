@@ -262,20 +262,23 @@ SharedAllocationRecord<void, void> SharedAllocationRecord<
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                        void>::~SharedAllocationRecord() {
-  const char* label = nullptr;
+  std::string label;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
     Kokkos::Experimental::HIP exec;
-    Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
+    Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace,
+                           Kokkos::Experimental::HIP>(
         exec, &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
     exec.fence(
         "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
-        "void>::~SharedAllocationRecord(): fence after copying header from "
+        "void>::~SharedAllocationRecord(): fence after copying header to "
         "HostSpace");
+    // FIXME Why is this deep copy necessary?
     label = header.label();
   }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
-  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
+  m_space.deallocate(label.c_str(),
+                     SharedAllocationRecord<void, void>::m_alloc_ptr,
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 

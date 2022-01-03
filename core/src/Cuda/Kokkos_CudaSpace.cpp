@@ -489,20 +489,22 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
 // <editor-fold desc="SharedAllocationRecord destructors"> {{{1
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
-  const char *label = nullptr;
+  std::string label;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
     Kokkos::Cuda exec;
-    Kokkos::Impl::DeepCopy<Kokkos::CudaSpace, HostSpace>(
+    Kokkos::Impl::DeepCopy<HostSpace, Kokkos::CudaSpace, Kokkos::Cuda>(
         exec, &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
     exec.fence(
         "SharedAllocationRecord<Kokkos::CudaSpace, "
-        "void>::~SharedAllocationRecord(): fence after copying header from "
+        "void>::~SharedAllocationRecord(): fence after copying header to "
         "HostSpace");
+    // FIXME Why is this deep copy necessary?
     label = header.label();
   }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
-  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
+  m_space.deallocate(label.c_str(),
+                     SharedAllocationRecord<void, void>::m_alloc_ptr,
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
