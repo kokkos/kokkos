@@ -297,7 +297,7 @@ class ParallelScanSYCLBase {
     m_scratch_space =
         static_cast<pointer_type>(instance.scratch_space(total_memory));
 
-#ifdef SYCL_DEVICE_COPYABLE
+#if 1  // def SYCL_DEVICE_COPYABLE
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(

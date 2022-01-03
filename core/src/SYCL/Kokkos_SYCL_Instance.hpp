@@ -100,7 +100,7 @@ class SYCLInternal {
   // We need a mutex for thread safety when modifying all_queues.
   static std::mutex mutex;
 
-#ifndef SYCL_DEVICE_COPYABLE
+#if 1  // ndef SYCL_DEVICE_COPYABLE
   // USMObjectMem is a reusable buffer for a single object
   // in USM memory
   template <sycl::usm::alloc Kind>

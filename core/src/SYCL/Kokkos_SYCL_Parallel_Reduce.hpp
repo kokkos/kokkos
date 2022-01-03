@@ -356,7 +356,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   void execute() const {
-#ifdef SYCL_DEVICE_COPYABLE
+#if 1  // def SYCL_DEVICE_COPYABLE
     struct {
     } indirectKernelMem, indirectReducerMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
@@ -662,7 +662,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   void execute() const {
-#ifdef SYCL_DEVICE_COPYABLE
+#if 1  // def SYCL_DEVICE_COPYABLE
     struct {
     } indirectKernelMem, indirectReducerMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(

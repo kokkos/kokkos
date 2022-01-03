@@ -150,7 +150,7 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
-#ifndef SYCL_DEVICE_COPYABLE
+#if 1  // ndef SYCL_DEVICE_COPYABLE
     m_indirectKernelMem.reset(*m_queue, m_instance_id);
     m_indirectReducerMem.reset(*m_queue, m_instance_id);
 #endif
@@ -215,7 +215,7 @@ void SYCLInternal::finalize() {
   m_team_scratch_current_size = 0;
   m_team_scratch_ptr          = nullptr;
 
-#ifndef SYCL_DEVICE_COPYABLE
+#if 1  // ndef SYCL_DEVICE_COPYABLE
   m_indirectKernelMem.reset();
   m_indirectReducerMem.reset();
 #endif
@@ -306,7 +306,7 @@ template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
                                                       const std::string&,
                                                       uint32_t);
 
-#ifndef SYCL_DEVICE_COPYABLE
+#if 1  // ndef SYCL_DEVICE_COPYABLE
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
   assert(m_q);

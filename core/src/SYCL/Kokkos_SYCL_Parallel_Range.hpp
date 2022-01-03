@@ -120,7 +120,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     if (m_policy.begin() == m_policy.end()) return;
 
-#ifdef SYCL_DEVICE_COPYABLE
+#if 1  // def SYCL_DEVICE_COPYABLE
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
@@ -290,7 +290,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
-#ifdef SYCL_DEVICE_COPYABLE
+#if 1  // def SYCL_DEVICE_COPYABLE
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
