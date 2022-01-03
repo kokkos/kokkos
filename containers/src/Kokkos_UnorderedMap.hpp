@@ -310,11 +310,12 @@ class UnorderedMap {
                      capacity() + 1)  // +1 so that the *_at functions can
                                       // always return a valid reference
         ,
-        m_keys("UnorderedMap keys", capacity() + 1),
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+        m_keys("UnorderedMap keys", capacity() + 1),
         m_values("UnorderedMap values", (is_set ? 1 : capacity() + 1)),
 #else
-        m_values("UnorderedMap values", (is_set ? 0 : capacity() + 1)),
+        m_keys("UnorderedMap keys", capacity()),
+        m_values("UnorderedMap values", (is_set ? 0 : capacity())),
 #endif
         m_scalars("UnorderedMap scalars") {
     if (!is_insertable_map) {
@@ -700,8 +701,12 @@ class UnorderedMap {
       !std::is_void<Dummy>::value,  // !is_set
       std::conditional_t<has_const_value, impl_value_type, impl_value_type &>>
   value_at(size_type i) const {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    return m_values[i < capacity() ? i : capacity()];
+#else
     KOKKOS_EXPECTS(i < capacity());
     return m_values[i];
+#endif
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
@@ -725,8 +730,12 @@ class UnorderedMap {
   /// kernel.
   KOKKOS_FORCEINLINE_FUNCTION
   key_type key_at(size_type i) const {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    return m_keys[i < capacity() ? i : capacity()];
+#else
     KOKKOS_EXPECTS(i < capacity());
     return m_keys[i];
+#endif
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
