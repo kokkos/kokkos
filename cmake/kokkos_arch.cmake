@@ -366,6 +366,9 @@ IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
     Clang  -fcuda-rdc
     NVIDIA --relocatable-device-code=true
   )
+  COMPILER_SPECIFIC_LINK_OPTIONS(
+    NVIDIA -Xnvlink --suppress-stack-size-warning
+  )
 ENDIF()
 
 # Clang needs mcx16 option enabled for Windows atomic functions
