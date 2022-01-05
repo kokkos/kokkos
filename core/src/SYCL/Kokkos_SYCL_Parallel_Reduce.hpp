@@ -83,16 +83,16 @@ void workgroup_reduction(sycl::nd_item<dim>& item,
     if (id_in_sg + stride < local_range)
       ValueJoin::join(selected_reducer, result,
                       &local_mem[(local_id + stride) * value_count]);
-    sg.barrier();
+    sycl::group_barrier(sg);
   }
-  item.barrier(sycl::access::fence_space::local_space);
+  sycl::group_barrier(item.get_group());
 
   // Copy the subgroup results into the first positions of the
   // reduction array.
   if (id_in_sg == 0)
     ValueOps::copy(functor, &local_mem[sg.get_group_id()[0] * value_count],
                    result);
-  item.barrier(sycl::access::fence_space::local_space);
+  sycl::group_barrier(item.get_group());
 
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
@@ -106,14 +106,14 @@ void workgroup_reduction(sycl::nd_item<dim>& item,
       if (id_in_sg + offset < n_subgroups)
         ValueJoin::join(selected_reducer, result_,
                         &local_mem[(id_in_sg + offset) * value_count]);
-    sg.barrier();
+    sycl::group_barrier(sg);
 
     // Then, we proceed as before.
     for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
       if (id_in_sg + stride < n_subgroups)
         ValueJoin::join(selected_reducer, result_,
                         &local_mem[(id_in_sg + stride) * value_count]);
-      sg.barrier();
+      sycl::group_barrier(sg);
     }
 
     // Finally, we copy the workgroup results back to global memory
@@ -316,7 +316,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   }
                 }
               }
-              item.barrier(sycl::access::fence_space::local_space);
+              sycl::group_barrier(item.get_group());
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
@@ -596,7 +596,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               }
             }
           }
-          item.barrier(sycl::access::fence_space::local_space);
+          sycl::group_barrier(item.get_group());
 
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr2,

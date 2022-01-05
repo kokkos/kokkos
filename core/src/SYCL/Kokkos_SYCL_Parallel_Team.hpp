@@ -740,7 +740,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                              &results_ptr[global_id * value_count]);
             }
           }
-          item.barrier(sycl::access::fence_space::local_space);
+          sycl::group_barrier(item.get_group());
 
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr,
@@ -749,7 +749,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
 
           // FIXME_SYCL not quite sure why this is necessary
-          item.barrier(sycl::access::fence_space::global_space);
+          sycl::group_barrier(item.get_group());
         };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
