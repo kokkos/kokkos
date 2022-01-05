@@ -193,7 +193,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
+        m_chunk_size(vector_length_max()),
         m_tune_team_size(false),
         m_tune_vector_length(false) {}
 
@@ -209,7 +209,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
                 : (verify_requested_vector_length(1))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
+        m_chunk_size(vector_length_max()),
         m_tune_team_size(bool(team_size_request <= 0)),
         m_tune_vector_length(bool(vector_length_request <= 0)) {
     // FIXME_SYCL Check that league size is permissible,
