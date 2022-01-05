@@ -61,8 +61,8 @@ struct PairIntCompareFirst {
   int second;
 
  private:
-  friend constexpr bool operator<(PairIntCompareFirst const& lhs,
-                                  PairIntCompareFirst const& rhs) {
+  friend KOKKOS_FUNCTION constexpr bool operator<(
+      PairIntCompareFirst const& lhs, PairIntCompareFirst const& rhs) {
     return lhs.first < rhs.first;
   }
 };
