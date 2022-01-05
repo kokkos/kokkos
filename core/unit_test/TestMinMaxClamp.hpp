@@ -45,6 +45,29 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
+// FIXME C++17
+#define STATIC_ASSERT(cond) static_assert(cond, "");
+
+namespace Test {
+template <class T>
+struct Greater {
+  KOKKOS_FUNCTION constexpr bool operator()(T const& lhs, T const& rhs) {
+    return lhs > rhs;
+  }
+};
+
+struct PairIntCompareFirst {
+  int first;
+  int second;
+
+ private:
+  friend KOKKOS_FUNCTION constexpr bool operator<(
+      PairIntCompareFirst const& lhs, PairIntCompareFirst const& rhs) {
+    return lhs.first < rhs.first;
+  }
+};
+}  // namespace Test
+
 // ----------------------------------------------------------
 // test max()
 // ----------------------------------------------------------
@@ -58,6 +81,24 @@ TEST(TEST_CATEGORY, max) {
   a = 3;
   b = 1;
   EXPECT_TRUE(KE::max(a, b) == 3);
+
+  STATIC_ASSERT(KE::max(1, 2) == 2);
+  STATIC_ASSERT(KE::max(1, 2, ::Test::Greater<int>{}) == 1);
+
+  EXPECT_TRUE(KE::max({3.f, -1.f, 0.f}) == 3.f);
+
+  STATIC_ASSERT(KE::max({3, -1, 0}) == 3);
+  STATIC_ASSERT(KE::max({3, -1, 0}, ::Test::Greater<int>{}) == -1);
+
+  STATIC_ASSERT(KE::max({
+                            ::Test::PairIntCompareFirst{255, 0},
+                            ::Test::PairIntCompareFirst{255, 1},
+                            ::Test::PairIntCompareFirst{0, 2},
+                            ::Test::PairIntCompareFirst{0, 3},
+                            ::Test::PairIntCompareFirst{255, 4},
+                            ::Test::PairIntCompareFirst{0, 5},
+                        })
+                    .second == 0);  // leftmost element
 }
 
 template <class ViewType>
@@ -104,6 +145,24 @@ TEST(TEST_CATEGORY, min) {
   a = 3;
   b = 2;
   EXPECT_TRUE(KE::min(a, b) == 2);
+
+  STATIC_ASSERT(KE::min(3.f, 2.f) == 2.f);
+  STATIC_ASSERT(KE::min(3.f, 2.f, ::Test::Greater<int>{}) == 3.f);
+
+  EXPECT_TRUE(KE::min({3.f, -1.f, 0.f}) == -1.f);
+
+  STATIC_ASSERT(KE::min({3, -1, 0}) == -1);
+  STATIC_ASSERT(KE::min({3, -1, 0}, ::Test::Greater<int>{}) == 3);
+
+  STATIC_ASSERT(KE::min({
+                            ::Test::PairIntCompareFirst{255, 0},
+                            ::Test::PairIntCompareFirst{255, 1},
+                            ::Test::PairIntCompareFirst{0, 2},
+                            ::Test::PairIntCompareFirst{0, 3},
+                            ::Test::PairIntCompareFirst{255, 4},
+                            ::Test::PairIntCompareFirst{0, 5},
+                        })
+                    .second == 2);  // leftmost element
 }
 
 template <class ViewType>
@@ -152,6 +211,37 @@ TEST(TEST_CATEGORY, minmax) {
   const auto& r2 = KE::minmax(a, b);
   EXPECT_TRUE(r2.first == 2);
   EXPECT_TRUE(r2.second == 3);
+
+  STATIC_ASSERT((Kokkos::pair<float, float>(KE::minmax(3.f, 2.f)) ==
+                 Kokkos::make_pair(2.f, 3.f)));
+  STATIC_ASSERT(
+      (Kokkos::pair<float, float>(KE::minmax(
+           3.f, 2.f, ::Test::Greater<int>{})) == Kokkos::make_pair(3.f, 2.f)));
+
+  EXPECT_TRUE(KE::minmax({3.f, -1.f, 0.f}) == Kokkos::make_pair(-1.f, 3.f));
+
+  STATIC_ASSERT(KE::minmax({3, -1, 0}) == Kokkos::make_pair(-1, 3));
+  STATIC_ASSERT(KE::minmax({3, -1, 0}, ::Test::Greater<int>{}) ==
+                Kokkos::make_pair(3, -1));
+
+  STATIC_ASSERT(KE::minmax({
+                               ::Test::PairIntCompareFirst{255, 0},
+                               ::Test::PairIntCompareFirst{255, 1},
+                               ::Test::PairIntCompareFirst{0, 2},
+                               ::Test::PairIntCompareFirst{0, 3},
+                               ::Test::PairIntCompareFirst{255, 4},
+                               ::Test::PairIntCompareFirst{0, 5},
+                           })
+                    .first.second == 2);  // leftmost
+  STATIC_ASSERT(KE::minmax({
+                               ::Test::PairIntCompareFirst{255, 0},
+                               ::Test::PairIntCompareFirst{255, 1},
+                               ::Test::PairIntCompareFirst{0, 2},
+                               ::Test::PairIntCompareFirst{0, 3},
+                               ::Test::PairIntCompareFirst{255, 4},
+                               ::Test::PairIntCompareFirst{0, 5},
+                           })
+                    .second.second == 4);  // rightmost
 }
 
 template <class ViewType>

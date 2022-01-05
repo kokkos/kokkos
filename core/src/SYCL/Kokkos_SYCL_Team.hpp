@@ -100,7 +100,9 @@ class SYCLTeamMember {
   KOKKOS_INLINE_FUNCTION int team_size() const {
     return m_item.get_local_range(0);
   }
-  KOKKOS_INLINE_FUNCTION void team_barrier() const { m_item.barrier(); }
+  KOKKOS_INLINE_FUNCTION void team_barrier() const {
+    sycl::group_barrier(m_item.get_group());
+  }
 
   KOKKOS_INLINE_FUNCTION const sycl::nd_item<2>& item() const { return m_item; }
 
@@ -119,13 +121,13 @@ class SYCLTeamMember {
   KOKKOS_INLINE_FUNCTION std::enable_if_t<!std::is_arithmetic_v<ValueType>>
   team_broadcast(ValueType& val, const int thread_id) const {
     // Wait for shared data write until all threads arrive here
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
     if (m_item.get_local_id(1) == 0 &&
         static_cast<int>(m_item.get_local_id(0)) == thread_id) {
       *static_cast<ValueType*>(m_team_reduce) = val;
     }
     // Wait for shared data read until root thread writes
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
     val = *(static_cast<ValueType*>(m_team_reduce));
   }
 
@@ -182,7 +184,7 @@ class SYCLTeamMember {
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == 0 && group_id < maximum_work_range)
       reduction_array[group_id] = value;
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     for (unsigned int start = maximum_work_range; start < n_subgroups;
          start += maximum_work_range) {
@@ -190,7 +192,7 @@ class SYCLTeamMember {
           group_id <
               std::min<unsigned int>(start + maximum_work_range, n_subgroups))
         reducer.join(reduction_array[group_id - start], value);
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
     }
 
     // Let the first subgroup do the final reduction
@@ -204,7 +206,7 @@ class SYCLTeamMember {
            offset += local_range)
         if (id_in_sg + offset < maximum_work_range)
           reducer.join(result, reduction_array[id_in_sg + offset]);
-      sg.barrier();
+      sycl::group_barrier(sg);
 
       // Now do the actual subgroup reduction.
       const auto min_range =
@@ -215,7 +217,7 @@ class SYCLTeamMember {
       }
       if (id_in_sg == 0) reduction_array[0] = result;
     }
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     reducer.reference() = reduction_array[0];
     // Make sure that the reduction array hasn't been modified in the meantime.
@@ -256,7 +258,7 @@ class SYCLTeamMember {
 
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     // scan subgroup results using the first subgroup
     if (n_active_subgroups > 1) {
@@ -280,10 +282,10 @@ class SYCLTeamMember {
           base_data[idx] = local_value;
           if (round > 0)
             base_data[idx] += base_data[round * sub_group_range - 1];
-          if (round + 1 < n_rounds) sg.barrier();
+          if (round + 1 < n_rounds) sycl::group_barrier(sg);
         }
       }
-      m_item.barrier(sycl::access::fence_space::local_space);
+      sycl::group_barrier(m_item.get_group());
     }
     auto total = base_data[n_active_subgroups - 1];
 
@@ -297,7 +299,7 @@ class SYCLTeamMember {
         base_data[n_active_subgroups - 1] =
             atomic_fetch_add(global_accum, total);
       }
-      m_item.barrier();  // Wait for atomic
+      sycl::group_barrier(m_item.get_group());  // Wait for atomic
       intermediate += base_data[n_active_subgroups - 1];
     }
     // Make sure that the reduction array hasn't been modified in the meantime.
@@ -719,7 +721,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
        i += grange1)
     closure(i);
 
-  loop_boundaries.member.item().get_sub_group().barrier();
+  sycl::group_barrier(loop_boundaries.member.item().get_sub_group());
 }
 
 //----------------------------------------------------------------------------

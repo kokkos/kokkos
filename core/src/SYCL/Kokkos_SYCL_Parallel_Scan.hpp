@@ -80,7 +80,7 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
     local_mem[sg_group_id] = local_value;
   local_value = sg.shuffle_up(local_value, 1);
   if (id_in_sg == 0) ValueInit::init(functor, &local_value);
-  item.barrier(sycl::access::fence_space::local_space);
+  sycl::group_barrier(item.get_group());
 
   // scan subgroup results using the first subgroup
   if (n_active_subgroups > 1) {
@@ -107,10 +107,10 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
             ValueJoin::join(functor, &local_mem[idx],
                             &local_mem[round * local_range - 1]);
         }
-        if (round + 1 < n_rounds) sg.barrier();
+        if (round + 1 < n_rounds) sycl::group_barrier(sg);
       }
     }
-    item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(item.get_group());
   }
 
   // add results to all subgroups
@@ -196,7 +196,7 @@ class ParallelScanSYCLBase {
             if (global_id < size) global_mem[global_id] = local_value;
           });
     });
-    q.submit_barrier(std::vector<sycl::event>{local_scans});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{local_scans});
 
     if (n_wgroups > 1) {
       scan_internal(q, functor, group_results, n_wgroups);
@@ -210,7 +210,8 @@ class ParallelScanSYCLBase {
                                 &group_results[item.get_group_linear_id()]);
             });
       });
-      q.submit_barrier(std::vector<sycl::event>{update_with_group_results});
+      q.ext_oneapi_submit_barrier(
+          std::vector<sycl::event>{update_with_group_results});
     }
   }
 
@@ -240,7 +241,8 @@ class ParallelScanSYCLBase {
         global_mem[id] = update;
       });
     });
-    q.submit_barrier(std::vector<sycl::event>{initialize_global_memory});
+    q.ext_oneapi_submit_barrier(
+        std::vector<sycl::event>{initialize_global_memory});
 
     // Perform the actual exclusive scan
     scan_internal(q, functor, m_scratch_space, len);
@@ -259,7 +261,8 @@ class ParallelScanSYCLBase {
         global_mem[global_id] = update;
       });
     });
-    q.submit_barrier(std::vector<sycl::event>{update_global_results});
+    q.ext_oneapi_submit_barrier(
+        std::vector<sycl::event>{update_global_results});
     return update_global_results;
   }
 

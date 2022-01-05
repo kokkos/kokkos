@@ -193,7 +193,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
+        m_chunk_size(vector_length_max()),
         m_tune_team_size(false),
         m_tune_vector_length(false) {}
 
@@ -209,7 +209,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
                 : (verify_requested_vector_length(1))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
+        m_chunk_size(vector_length_max()),
         m_tune_team_size(bool(team_size_request <= 0)),
         m_tune_vector_length(bool(vector_length_request <= 0)) {
     // FIXME_SYCL Check that league size is permissible,
@@ -480,7 +480,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               sycl::range<2>(m_team_size, m_vector_size)),
           lambda);
     });
-    q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
     return parallel_for_event;
   }
 
@@ -677,7 +677,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                &results_ptr[0]);
             });
       });
-      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
+      q.ext_oneapi_submit_barrier(
+          std::vector<sycl::event>{parallel_reduce_event});
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -740,7 +741,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                              &results_ptr[global_id * value_count]);
             }
           }
-          item.barrier(sycl::access::fence_space::local_space);
+          sycl::group_barrier(item.get_group());
 
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
               item, local_mem.get_pointer(), results_ptr,
@@ -749,7 +750,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
 
           // FIXME_SYCL not quite sure why this is necessary
-          item.barrier(sycl::access::fence_space::global_space);
+          sycl::group_barrier(item.get_group());
         };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
@@ -783,7 +784,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 sycl::range<2>(m_team_size, m_vector_size)),
             lambda);
       });
-      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
+      q.ext_oneapi_submit_barrier(
+          std::vector<sycl::event>{parallel_reduce_event});
       last_reduction_event = parallel_reduce_event;
 
       first_run = false;
