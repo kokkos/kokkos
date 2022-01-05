@@ -1738,9 +1738,9 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           Kokkos::is_reducer<ReturnType>::value)>
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, ReturnType& return_value) {
-  static_assert(
-      !std::is_const<ReturnType>::value,
-      "A const return type is only allowed for a View or reducer return type!");
+  static_assert(!std::is_const<ReturnType>::value,
+                "A const reduction result type is only allowed for a View or "
+                "reducer return type!");
 
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       label, policy, functor, return_value);
@@ -1757,9 +1757,9 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           Kokkos::is_reducer<ReturnType>::value)>
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
-  static_assert(
-      !std::is_const<ReturnType>::value,
-      "A const return type is only allowed for a View or reducer return type!");
+  static_assert(!std::is_const<ReturnType>::value,
+                "A const reduction result type is only allowed for a View or "
+                "reducer return type!");
 
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       "", policy, functor, return_value);
@@ -1775,13 +1775,14 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           Kokkos::is_reducer<ReturnType>::value)>
 parallel_reduce(const size_t& policy, const FunctorType& functor,
                 ReturnType& return_value) {
-  static_assert(
-      !std::is_const<ReturnType>::value,
-      "A const return type is only allowed for a View or reducer return type!");
+  static_assert(!std::is_const<ReturnType>::value,
+                "A const reduction result type is only allowed for a View or "
+                "reducer return type!");
 
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
+
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       "", policy_type(0, policy), functor, return_value);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
@@ -1796,9 +1797,9 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           Kokkos::is_reducer<ReturnType>::value)>
 parallel_reduce(const std::string& label, const size_t& policy,
                 const FunctorType& functor, ReturnType& return_value) {
-  static_assert(
-      !std::is_const<ReturnType>::value,
-      "A const return type is only allowed for a View or reducer return type!");
+  static_assert(!std::is_const<ReturnType>::value,
+                "A const reduction result type is only allowed for a View or "
+                "reducer return type!");
 
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
