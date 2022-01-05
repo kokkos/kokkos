@@ -48,7 +48,7 @@ For specifics see the LICENSE file contained in the repository or distribution.
 Generally Kokkos should work with all compiler versions newer than the minimum.
 However as in all sufficiently complex enough code, we have to work around compiler
 bugs with almost all compilers. So compiler versions we don't test may have issues
-we are unaware off.
+we are unaware of.
 
 * GCC: 5.3.0
 * Clang: 4.0.0
