@@ -58,10 +58,15 @@ namespace Kokkos {
 
 namespace Impl {
 
+template <class FunctorValueTraits>
+inline constexpr bool use_shuffle_based_algorithm =
+    FunctorValueTraits::StaticValueSize > 0;
+
 namespace SYCLReduction {
 template <class ValueJoin, class ValueOps, typename WorkTag, typename ValueType,
           typename ReducerType, typename FunctorType, int dim>
-std::enable_if_t<FunctorValueTraits<ReducerType, WorkTag>::StaticValueSize == 0>
+std::enable_if_t<
+    !use_shuffle_based_algorithm<FunctorValueTraits<ReducerType, WorkTag>>>
 workgroup_reduction(
     sycl::nd_item<dim>& item, sycl::local_ptr<ValueType> local_mem,
     ValueType* results_ptr, ValueType* device_accessible_result_ptr,
@@ -138,7 +143,8 @@ workgroup_reduction(
 
 template <class ValueJoin, typename WorkTag, typename ValueType,
           typename ReducerType, typename FunctorType, int dim>
-std::enable_if_t<FunctorValueTraits<ReducerType, WorkTag>::StaticValueSize != 0>
+std::enable_if_t<
+    use_shuffle_based_algorithm<FunctorValueTraits<ReducerType, WorkTag>>>
 workgroup_reduction(sycl::nd_item<dim>& item,
                     sycl::local_ptr<ValueType> local_mem, ValueType local_value,
                     ValueType* results_ptr,
