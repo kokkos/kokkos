@@ -515,6 +515,10 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                          const dim3 &block, const int shmem,
                          const HIPInternal *hip_instance,
                          const bool prefer_shmem) {
+#ifndef KOKKOS_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS
+  HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
+      driver, grid, block, shmem, hip_instance, prefer_shmem);
+#else
   // FIXME_HIP - could be if constexpr for c++17
   if (!HIPParallelLaunch<DriverType, LaunchBounds,
                          LaunchMechanism>::default_launchbounds()) {
@@ -538,6 +542,7 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                                          hip_instance, prefer_shmem);
     }
   }
+#endif
 }
 }  // namespace Impl
 }  // namespace Experimental
