@@ -19,10 +19,13 @@ KOKKOS_CFG_DEPENDS(DEVICES NONE)
 KOKKOS_DEPRECATED_LIST(DEVICES ENABLE)
 
 
-KOKKOS_DEVICE_OPTION(PTHREAD       OFF HOST "Whether to build C++ thread backend")
-IF (KOKKOS_ENABLE_PTHREAD)
-  #patch the naming here
+KOKKOS_DEVICE_OPTION(THREADS OFF HOST "Whether to build C++ threads backend")
+IF(Kokkos_ENABLE_PTHREAD)  # for backward compatibility
+  SET(Kokkos_ENABLE_THREADS ON CACHE BOOL "Whether to build C++ threads backend")
   SET(KOKKOS_ENABLE_THREADS ON)
+  LIST(APPEND KOKKOS_ENABLED_DEVICES THREADS)
+  SET(KOKKOS_HAS_HOST ON)
+  MESSAGE(DEPRECATION "The Kokkos_ENABLE_PTHREAD option is deprecated. Use Kokkos_ENABLE_THREADS instead!")
 ENDIF()
 
 # detect clang++ / cl / clang-cl clashes

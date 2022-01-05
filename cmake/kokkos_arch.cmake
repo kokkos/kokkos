@@ -550,7 +550,7 @@ IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda
+        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend "${CUDA_ARCH_FLAG}=${KOKKOS_CUDA_ARCH_FLAG}"
       )
     ELSE()
       MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
@@ -647,30 +647,28 @@ IF(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
   ENDIF()
 ENDIF()
 
-IF (KOKKOS_ENABLE_CUDA)
- #Regardless of version, make sure we define the general architecture name
- IF (KOKKOS_ARCH_KEPLER30 OR KOKKOS_ARCH_KEPLER32 OR KOKKOS_ARCH_KEPLER35 OR KOKKOS_ARCH_KEPLER37)
-   SET(KOKKOS_ARCH_KEPLER ON)
- ENDIF()
+#Regardless of version, make sure we define the general architecture name
+IF (KOKKOS_ARCH_KEPLER30 OR KOKKOS_ARCH_KEPLER32 OR KOKKOS_ARCH_KEPLER35 OR KOKKOS_ARCH_KEPLER37)
+  SET(KOKKOS_ARCH_KEPLER ON)
+ENDIF()
 
- #Regardless of version, make sure we define the general architecture name
- IF (KOKKOS_ARCH_MAXWELL50 OR KOKKOS_ARCH_MAXWELL52 OR KOKKOS_ARCH_MAXWELL53)
-   SET(KOKKOS_ARCH_MAXWELL ON)
- ENDIF()
+#Regardless of version, make sure we define the general architecture name
+IF (KOKKOS_ARCH_MAXWELL50 OR KOKKOS_ARCH_MAXWELL52 OR KOKKOS_ARCH_MAXWELL53)
+  SET(KOKKOS_ARCH_MAXWELL ON)
+ENDIF()
 
- #Regardless of version, make sure we define the general architecture name
- IF (KOKKOS_ARCH_PASCAL60 OR KOKKOS_ARCH_PASCAL61)
-   SET(KOKKOS_ARCH_PASCAL ON)
- ENDIF()
+#Regardless of version, make sure we define the general architecture name
+IF (KOKKOS_ARCH_PASCAL60 OR KOKKOS_ARCH_PASCAL61)
+  SET(KOKKOS_ARCH_PASCAL ON)
+ENDIF()
 
-  #Regardless of version, make sure we define the general architecture name
-  IF (KOKKOS_ARCH_VOLTA70 OR KOKKOS_ARCH_VOLTA72)
-    SET(KOKKOS_ARCH_VOLTA ON)
-  ENDIF()
+#Regardless of version, make sure we define the general architecture name
+IF (KOKKOS_ARCH_VOLTA70 OR KOKKOS_ARCH_VOLTA72)
+  SET(KOKKOS_ARCH_VOLTA ON)
+ENDIF()
 
-  IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
-    SET(KOKKOS_ARCH_AMPERE ON)
-  ENDIF()
+IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
+  SET(KOKKOS_ARCH_AMPERE ON)
 ENDIF()
 
 #CMake verbose is kind of pointless
@@ -704,9 +702,6 @@ IF(NOT _DEVICE_PARALLEL)
   SET(_DEFAULT_DEVICE_MEMSPACE "NoTypeDefined")
 ENDIF()
 MESSAGE(STATUS "    Device Parallel: ${_DEVICE_PARALLEL}")
-IF(KOKKOS_ENABLE_PTHREAD)
-  SET(KOKKOS_ENABLE_THREADS ON)
-ENDIF()
 
 FOREACH (_BACKEND OpenMP Threads HPX)
   STRING(TOUPPER ${_BACKEND} UC_BACKEND)

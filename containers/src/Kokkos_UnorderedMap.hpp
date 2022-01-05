@@ -517,19 +517,35 @@ class UnorderedMap {
       // Continue searching the unordered list for this key,
       // list will only be appended during insert phase.
       // Need volatile_load as other threads may be appending.
+
+      // FIXME_SYCL replacement for memory_fence
+#ifdef KOKKOS_ENABLE_SYCL
+      size_type curr = Kokkos::atomic_load(curr_ptr);
+#else
       size_type curr = volatile_load(curr_ptr);
+#endif
 
       KOKKOS_NONTEMPORAL_PREFETCH_LOAD(
           &m_keys[curr != invalid_index ? curr : 0]);
 #if defined(__MIC__)
 #pragma noprefetch
 #endif
-      while (curr != invalid_index &&
-             !m_equal_to(volatile_load(&m_keys[curr]), k)) {
+      while (curr != invalid_index && !m_equal_to(
+#ifdef KOKKOS_ENABLE_SYCL
+                                          Kokkos::atomic_load(&m_keys[curr])
+#else
+                                          volatile_load(&m_keys[curr])
+#endif
+                                              ,
+                                          k)) {
         result.increment_list_position();
         index_hint = curr;
         curr_ptr   = &m_next_index[curr];
-        curr       = volatile_load(curr_ptr);
+#ifdef KOKKOS_ENABLE_SYCL
+        curr = Kokkos::atomic_load(curr_ptr);
+#else
+        curr = volatile_load(curr_ptr);
+#endif
         KOKKOS_NONTEMPORAL_PREFETCH_LOAD(
             &m_keys[curr != invalid_index ? curr : 0]);
       }
@@ -569,15 +585,26 @@ class UnorderedMap {
             new_index = index_hint;
             // Set key and value
             KOKKOS_NONTEMPORAL_PREFETCH_STORE(&m_keys[new_index]);
+// FIXME_SYCL replacement for memory_fence
+#ifdef KOKKOS_ENABLE_SYCL
+            Kokkos::atomic_store(&m_keys[new_index], k);
+#else
             m_keys[new_index] = k;
+#endif
 
             if (!is_set) {
               KOKKOS_NONTEMPORAL_PREFETCH_STORE(&m_values[new_index]);
+#ifdef KOKKOS_ENABLE_SYCL
+              Kokkos::atomic_store(&m_values[new_index], v);
+#else
               m_values[new_index] = v;
+#endif
             }
 
+#ifndef KOKKOS_ENABLE_SYCL
             // Do not proceed until key and value are updated in global memory
             memory_fence();
+#endif
           }
         } else if (failed_insert_ref) {
           not_done = false;

@@ -2,28 +2,32 @@
 # Add test-only library for gtest to be reused by all the subpackages
 #
 
+IF(NOT GTest_FOUND)  # fallback to internal gtest
+  SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
 
-SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
+  #need here for tribits
+  KOKKOS_INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
+  KOKKOS_ADD_TEST_LIBRARY(
+    kokkos_gtest
+    HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h
+    SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
+  )
 
-#need here for tribits
-KOKKOS_INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
-KOKKOS_ADD_TEST_LIBRARY(
-  kokkos_gtest
-  HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h
-  SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
-)
+  TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
+  IF((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
+    TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_14)
+  ENDIF()
 
-# avoid deprecation warnings from MSVC
-TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
+  # Suppress clang-tidy diagnostics on code that we do not have control over
+  IF(CMAKE_CXX_CLANG_TIDY)
+    SET_TARGET_PROPERTIES(kokkos_gtest PROPERTIES CXX_CLANG_TIDY "")
+  ENDIF()
 
-TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
-IF((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
-  TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_14)
-ENDIF()
-
-# Suppress clang-tidy diagnostics on code that we do not have control over
-IF(CMAKE_CXX_CLANG_TIDY)
-  SET_TARGET_PROPERTIES(kokkos_gtest PROPERTIES CXX_CLANG_TIDY "")
+  FIND_PACKAGE(Threads QUIET)
+  IF(TARGET Threads::Threads)
+    SET_TARGET_PROPERTIES(kokkos_gtest PROPERTIES
+                          INTERFACE_LINK_LIBRARIES Threads::Threads)
+  ENDIF()
 ENDIF()
 
 #
@@ -52,8 +56,8 @@ SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
 SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
-SET(KOKKOS_PTHREAD_FEATURE_LEVEL 999)
-SET(KOKKOS_PTHREAD_NAME Threads)
+SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
+SET(KOKKOS_THREADS_NAME Threads)
 
 
 #
@@ -81,12 +85,7 @@ KOKKOS_ADD_EXECUTABLE(
 )
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
-  # Because there is always an exception to the rule
-  if(Tag STREQUAL "Threads")
-    set(DEVICE "PTHREAD")
-  else()
-    string(TOUPPER ${Tag} DEVICE)
-  endif()
+  string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
 
   if(Kokkos_ENABLE_${DEVICE})
@@ -156,6 +155,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         Reducers_b
         Reducers_c
         Reducers_d
+        Reducers_e
         Reductions_DeviceView
         Scan
         SharedAlloc
@@ -369,6 +369,7 @@ IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_c.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_d.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewMapping_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamBasic.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Scan.cpp
@@ -428,7 +429,7 @@ if(Kokkos_ENABLE_SERIAL)
   )
 endif()
 
-if(Kokkos_ENABLE_PTHREAD)
+if(Kokkos_ENABLE_THREADS)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES ${Threads_SOURCES}
@@ -695,6 +696,7 @@ else()
     default/TestDefaultDeviceType_c3.cpp
     default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
+    default/TestDefaultDeviceTypeViewAPI.cpp
   )
 endif()
 

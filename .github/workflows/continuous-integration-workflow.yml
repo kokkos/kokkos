@@ -47,6 +47,9 @@ jobs:
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
+      - name: maybe_use_external_gtest
+        if: ${{ matrix.distro == 'ubuntu:latest' }}
+        run: sudo apt-get update && sudo apt-get install -y libgtest-dev
       - name: CMake
         run: |
           cmake -B builddir \

@@ -585,10 +585,7 @@ class TestTeamPolicyConstruction {
     policy_t p1(league_size, team_size);
     ASSERT_EQ(p1.league_size(), league_size);
     ASSERT_EQ(p1.team_size(), team_size);
-// FIXME_SYCL implement chunk_size
-#ifndef KOKKOS_ENABLE_SYCL
     ASSERT_GT(p1.chunk_size(), 0);
-#endif
     ASSERT_EQ(size_t(p1.scratch_size(0)), 0u);
 
     policy_t p2 = p1.set_chunk_size(chunk_size);

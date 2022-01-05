@@ -113,7 +113,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <typename FunctorType>
   int team_size_recommended(FunctorType const& f, ParallelForTag const&) const {
-    return internal_team_size_max_for(f);
+    return internal_team_size_recommended_for(f);
   }
 
   template <typename FunctorType>
@@ -193,7 +193,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
+        m_chunk_size(vector_length_max()),
         m_tune_team_size(false),
         m_tune_vector_length(false) {}
 
@@ -209,7 +209,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
                 : (verify_requested_vector_length(1))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
+        m_chunk_size(vector_length_max()),
         m_tune_team_size(bool(team_size_request <= 0)),
         m_tune_vector_length(bool(vector_length_request <= 0)) {
     // FIXME_SYCL Check that league size is permissible,
@@ -330,9 +330,16 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
         (space().impl_internal_space_instance()->m_maxShmemPerBlock -
          2 * sizeof(double) - m_team_scratch_size[0]) /
         (sizeof(double) + m_thread_scratch_size[0]);
-    return std::min<int>(
-               m_space.impl_internal_space_instance()->m_maxWorkgroupSize,
-               max_threads_for_memory) /
+    return std::min({
+             int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
+      // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
+    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||   \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+                 256,
+#endif
+                 max_threads_for_memory
+           }) /
            impl_vector_length();
   }
 
@@ -355,22 +362,29 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
          2 * sizeof(double) - m_team_scratch_size[0]) /
         (sizeof(double) + sizeof(value_type) * value_count +
          m_thread_scratch_size[0]);
-    return std::min<int>(
-               m_space.impl_internal_space_instance()->m_maxWorkgroupSize,
-               max_threads_for_memory) /
+    return std::min<int>({
+             int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
+      // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
+    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||   \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+                 256,
+#endif
+                 max_threads_for_memory
+           }) /
            impl_vector_length();
   }
 
   template <class FunctorType>
   int internal_team_size_recommended_for(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max_for(f);
+    return 1 << Kokkos::Impl::int_log2(internal_team_size_max_for(f));
   }
 
   template <class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max_reduce(f);
+    return 1 << Kokkos::Impl::int_log2(internal_team_size_max_reduce(f));
   }
 };
 
@@ -466,7 +480,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               sycl::range<2>(m_team_size, m_vector_size)),
           lambda);
     });
-    q.submit_barrier(std::vector<sycl::event>{parallel_for_event});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
     return parallel_for_event;
   }
 
@@ -497,7 +511,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                            .impl_internal_space_instance()
                            ->m_team_scratch_mutex) {
     // FIXME_SYCL optimize
-    if (m_team_size < 0) m_team_size = 32;
+    if (m_team_size < 0)
+      m_team_size =
+          m_policy.team_size_recommended(arg_functor, ParallelForTag{});
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
@@ -662,7 +678,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                &results_ptr[0]);
             });
       });
-      q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
+      q.ext_oneapi_submit_barrier(
+          std::vector<sycl::event>{parallel_reduce_event});
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -731,7 +748,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   scratch_flags_ref(*scratch_flags);
               num_teams_done = ++scratch_flags_ref;
             }
-            item.barrier(sycl::access::fence_space::local_space);
+            sycl::group_barrier(item.get_group());
             if (num_teams_done == n_wgroups) {
               if (local_id >= n_wgroups)
                 ValueInit::init(selected_reducer,
@@ -837,8 +854,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 sycl::range<2>(m_team_size, m_vector_size)),
             lambda);
       });
-      last_reduction_event =
-          q.submit_barrier(std::vector<sycl::event>{parallel_reduce_event});
+      last_reduction_event = q.ext_oneapi_submit_barrier(
+          std::vector<sycl::event>{parallel_reduce_event});
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
@@ -880,7 +897,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   void initialize() {
     // FIXME_SYCL optimize
-    if (m_team_size < 0) m_team_size = 32;
+    if (m_team_size < 0)
+      m_team_size =
+          m_policy.team_size_recommended(m_functor, ParallelReduceTag{});
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {
@@ -914,7 +933,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
-    if (m_team_size > m_policy.team_size_max(m_functor, ParallelForTag{}))
+    if (m_team_size > m_policy.team_size_max(m_functor, ParallelReduceTag{}))
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
   }

@@ -267,9 +267,11 @@ struct invoke_helper {
  */
 inline MatchDiagnostic check_match(event_vector::size_type events_scanned,
                                    const event_vector& events) {
-  return (events_scanned == events.size())
-             ? MatchDiagnostic{true}
-             : MatchDiagnostic{false, {"Wrong number of events encountered"}};
+  auto result =
+      ((events_scanned == events.size())
+           ? MatchDiagnostic{true}
+           : MatchDiagnostic{false, {"Wrong number of events encountered"}});
+  return result;
 }
 
 /**

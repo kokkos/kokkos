@@ -148,7 +148,7 @@ display_help_text() {
       echo "--with-openmptarget:                  Enable OpenMPTarget backend."
       echo "--with-sycl:                          Enable Sycl backend."
       echo "--with-openmp:                        Enable OpenMP backend."
-      echo "--with-pthread:                       Enable Pthreads backend."
+      echo "--with-threads:                       Enable Threads backend."
       echo "--with-serial:                        Enable Serial backend."
       echo "--with-devices:                       Explicitly add a set of backends."
       echo ""
@@ -291,8 +291,12 @@ do
     --with-sycl)
       update_kokkos_devices Sycl
       ;;
+    --with-threads)
+      update_kokkos_devices Threads
+      ;;
     --with-pthread)
       update_kokkos_devices Pthread
+      echo "warning: The --with-pthread option is deprecated. Use --with-threads instead!"
       ;;
     --with-serial)
       update_kokkos_devices Serial

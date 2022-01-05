@@ -5,9 +5,9 @@ KOKKOS_VERSION_MINOR = 5
 KOKKOS_VERSION_PATCH = 99
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
-# Options: Cuda,HIP,SYCL,OpenMPTarget,OpenMP,Pthread,Serial
+# Options: Cuda,HIP,SYCL,OpenMPTarget,OpenMP,Threads,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
-KOKKOS_DEVICES ?= "Pthread"
+KOKKOS_DEVICES ?= "Threads"
 # Options:
 # Intel:    KNC,KNL,SNB,HSW,BDW,SKX
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75,Ampere80,Ampere86
@@ -93,12 +93,18 @@ KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
-KOKKOS_INTERNAL_USE_PTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
+KOKKOS_INTERNAL_USE_THREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Threads)
+# deprecated
+KOKKOS_INTERNAL_USE_PTHREAD := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
 KOKKOS_INTERNAL_USE_HPX := $(call kokkos_has_string,$(KOKKOS_DEVICES),HPX)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
+ifeq ($(KOKKOS_INTERNAL_USE_PTHREAD), 1)
+  KOKKOS_INTERNAL_USE_THREADS := 1
+  $(warning Warning: Pthread is deprecated. Use Threads instead! KOKKOS_DEVICES=$(KOKKOS_DEVICES))
+endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
-  ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
+  ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 0)
     ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
       KOKKOS_INTERNAL_USE_SERIAL := 1
     endif
@@ -118,7 +124,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
   KOKKOS_DEVICELIST += OpenMP
 endif
-ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
   KOKKOS_DEVICELIST += Threads
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
@@ -523,7 +529,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
   tmp := $(call kokkos_append_header,'$H''define KOKKOS_ENABLE_OPENMP')
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_THREADS")
 endif
 
@@ -1311,7 +1317,7 @@ ifneq ($(KOKKOS_INTERNAL_NEW_CONFIG), 0)
     tmp := $(call kokkos_append_config_header,"$H""include <fwd/Kokkos_Fwd_OPENMP.hpp>","KokkosCore_Config_FwdBackend.hpp")
     tmp := $(call kokkos_append_config_header,"$H""include <decl/Kokkos_Declare_OPENMP.hpp>","KokkosCore_Config_DeclareBackend.hpp")
   endif
-  ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
+  ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
     tmp := $(call kokkos_append_config_header,"$H""include <fwd/Kokkos_Fwd_THREADS.hpp>","KokkosCore_Config_FwdBackend.hpp")
     tmp := $(call kokkos_append_config_header,"$H""include <decl/Kokkos_Declare_THREADS.hpp>","KokkosCore_Config_DeclareBackend.hpp")
   endif
@@ -1392,7 +1398,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
   KOKKOS_LINK_FLAGS += $(KOKKOS_INTERNAL_OPENMP_FLAG)
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
+ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
   KOKKOS_LIBS += -lpthread
