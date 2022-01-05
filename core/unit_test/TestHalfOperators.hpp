@@ -45,8 +45,6 @@
 
 #ifndef TESTHALFOPERATOR_HPP_
 #define TESTHALFOPERATOR_HPP_
-// TODO: Remove ifndef once https://github.com/kokkos/kokkos/pull/3480 merges
-#ifndef KOKKOS_ENABLE_SYCL
 namespace Test {
 #define FP16_EPSILON 0.0009765625F
 using namespace Kokkos::Experimental;
@@ -978,5 +976,4 @@ void test_half_operators() {
 
 TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }
 }  // namespace Test
-#endif  // KOKKOS_ENABLE_SYCL
 #endif  // TESTHALFOPERATOR_HPP_
