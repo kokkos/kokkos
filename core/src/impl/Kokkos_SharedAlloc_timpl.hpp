@@ -133,7 +133,7 @@ auto SharedAllocationRecordCommon<MemorySpace>::get_record(void* alloc_ptr)
 
 template <class MemorySpace>
 std::string SharedAllocationRecordCommon<MemorySpace>::get_label() const {
-  return std::string(record_base_t::head()->m_label);
+  return record_base_t::m_label;
 }
 
 template <class MemorySpace>
@@ -286,15 +286,7 @@ auto HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_record(
 template <class MemorySpace>
 std::string
 HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_label() const {
-  SharedAllocationHeader header;
-
-  Kokkos::Impl::DeepCopy<Kokkos::HostSpace, MemorySpace>(
-      &header, this->record_base_t::head(), sizeof(SharedAllocationHeader));
-  Kokkos::fence(
-      "HostInaccessibleSharedAllocationRecordCommon::get_label(): fence after "
-      "copying header to HostSpace");
-
-  return std::string(header.m_label);
+  return record_base_t::m_label;
 }
 
 }  // end namespace Impl
