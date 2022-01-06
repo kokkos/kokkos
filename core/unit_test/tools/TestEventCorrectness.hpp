@@ -442,13 +442,9 @@ TEST(kokkosp, raw_allocation) {
         if (alloc.ptr != free.ptr) {
           return MatchDiagnostic{false, {"No match on pointers"}};
         }
-        /**
-         * Note: this is broken in develop, need to fix in a followup
-         *
         if (free.name != "dogs") {
           return MatchDiagnostic{false, {"No match on free name"}};
         }
-        */
         if (free.size != 1000) {
           return MatchDiagnostic{false, {"No match on free size"}};
         }
@@ -477,14 +473,9 @@ TEST(kokkosp, view) {
         if (alloc.ptr != free.ptr) {
           return MatchDiagnostic{false, {"No match on pointers"}};
         }
-        /**
-         * Note: this is broken in develop, need to fix in a followup
-         *
         if (free.name != "dogs") {
           return MatchDiagnostic{false, {"No match on free name"}};
         }
-        */
-
         if (free.size != 1000 * sizeof(float)) {
           return MatchDiagnostic{false, {"No match on free size"}};
         }
