@@ -245,7 +245,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
                                   void>::s_root_record,
 #endif
           Kokkos::Impl::checked_allocation_with_header(space, label, size),
-          sizeof(SharedAllocationHeader) + size, dealloc),
+          sizeof(SharedAllocationHeader) + size, dealloc, label),
       m_space(space) {
   SharedAllocationHeader header;
 
