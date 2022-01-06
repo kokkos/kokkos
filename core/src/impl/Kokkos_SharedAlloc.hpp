@@ -135,6 +135,7 @@ class SharedAllocationRecord<void, void> {
   SharedAllocationRecord* m_next;
 #endif
   int m_count;
+  std::string m_label;
 
   SharedAllocationRecord(SharedAllocationRecord&&)      = delete;
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
@@ -149,7 +150,7 @@ class SharedAllocationRecord<void, void> {
       SharedAllocationRecord* arg_root,
 #endif
       SharedAllocationHeader* arg_alloc_ptr, size_t arg_alloc_size,
-      function_type arg_dealloc);
+      function_type arg_dealloc, const std::string& label);
  private:
   static KOKKOS_THREAD_LOCAL int t_tracking_enabled;
 

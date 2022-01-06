@@ -300,7 +300,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
 
   SharedAllocationHeader header;
@@ -331,7 +332,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
   // Fill in the Header information, directly accessible via host pinned memory
   this->base_t::_fill_host_accessible_header_info(*RecordBase::m_alloc_ptr,

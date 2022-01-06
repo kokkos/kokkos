@@ -275,7 +275,8 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
 #endif
           Impl::checked_allocation_with_header(arg_space, arg_label,
                                                arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
 
   this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
@@ -296,7 +297,8 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::
 #endif
           Impl::checked_allocation_with_header(arg_space, arg_label,
                                                arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
 
   this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
