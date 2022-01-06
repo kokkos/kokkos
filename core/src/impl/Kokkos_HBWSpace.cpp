@@ -243,7 +243,8 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
 #endif
           Impl::checked_allocation_with_header(arg_space, arg_label,
                                                arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
   // Fill in the Header information
   RecordBase::m_alloc_ptr->m_record =
