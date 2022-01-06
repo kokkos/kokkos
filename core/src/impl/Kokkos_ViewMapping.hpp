@@ -2856,24 +2856,38 @@ struct ViewValueFunctor;
 
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
-  using ExecSpace  = typename DeviceType::execution_space;
-  using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
+  using ExecSpace = typename DeviceType::execution_space;
+
+  struct DestroyTag {};
+  struct ConstructTag {};
+  using construct_policy_t =
+      Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, ConstructTag>;
+  using destroy_policy_t =
+      Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, DestroyTag>;
 
   ExecSpace space;
   ValueType* ptr;
   size_t n;
-  bool destroy;
   std::string name;
 
+  template <typename _ValueType = ValueType>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const {
-    if (destroy) {
-      (ptr + i)->~ValueType();
-    }  // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line causes ptax error
-       // __cxa_begin_catch in nested_view unit-test
-    else {
-      new (ptr + i) ValueType();
-    }
+      std::enable_if_t<std::is_default_constructible<_ValueType>::value>
+      operator()(const ConstructTag&, const size_t i) const {
+    new (ptr + i) ValueType();
+  }
+
+  // Not used
+  template <typename _ValueType = ValueType>
+  KOKKOS_INLINE_FUNCTION
+      std::enable_if_t<!std::is_default_constructible<_ValueType>::value>
+      operator()(const ConstructTag&, const size_t) const {}
+
+  KOKKOS_INLINE_FUNCTION void operator()(const DestroyTag&,
+                                         const size_t i) const {
+    // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line causes ptax error
+    // __cxa_begin_catch in nested_view unit-test
+    (ptr + i)->~ValueType();
   }
 
   ViewValueFunctor()                        = default;
@@ -2882,11 +2896,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
                    size_t const arg_n, std::string arg_name)
-      : space(arg_space),
-        ptr(arg_ptr),
-        n(arg_n),
-        destroy(false),
-        name(std::move(arg_name)) {}
+      : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
@@ -2916,7 +2926,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         Kokkos::Profiling::endParallelFor(kpID);
       }
     } else {
-      parallel_for_implementation(false);
+      parallel_for_implementation<false>();
     }
   }
 
@@ -2924,18 +2934,20 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   std::enable_if_t<!(std::is_trivial<Dummy>::value &&
                      std::is_trivially_copy_assignable<ValueType>::value)>
   construct_dispatch() {
-    parallel_for_implementation(false);
+    parallel_for_implementation<false>();
   }
 
-  void parallel_for_implementation(bool arg) {
-    destroy = arg;
+  template <bool Destroy>
+  void parallel_for_implementation() {
     if (!space.in_parallel()) {
-      PolicyType policy(0, n);
+      using policy_t =
+          std::conditional_t<Destroy, destroy_policy_t, construct_policy_t>;
+      policy_t policy(0, n);
       std::string functor_name;
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         functor_name =
-            (destroy ? "Kokkos::View::destruction [" + functor_name + "]"
+            (Destroy ? "Kokkos::View::destruction [" + functor_name + "]"
                      : "Kokkos::View::initialization [" + functor_name + "]");
         Kokkos::Profiling::beginParallelFor(
             "Kokkos::View::initialization [" + functor_name + "]",
@@ -2948,7 +2960,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
                                             true);
       }
 #endif
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
+      const Kokkos::Impl::ParallelFor<ViewValueFunctor, policy_t> closure(
           *this, policy);
       closure.execute();
       space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
@@ -2956,13 +2968,14 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         Kokkos::Profiling::endParallelFor(kpID);
       }
     } else {
-      for (size_t i = 0; i < n; ++i) operator()(i);
+      std::conditional_t<Destroy, DestroyTag, ConstructTag> tag;
+      for (size_t i = 0; i < n; ++i) operator()(tag, i);
     }
   }
 
   void construct_shared_allocation() { construct_dispatch(); }
 
-  void destroy_shared_allocation() { parallel_for_implementation(true); }
+  void destroy_shared_allocation() { parallel_for_implementation<true>(); }
 };
 
 template <class DeviceType, class ValueType>
