@@ -711,13 +711,10 @@ class UnorderedMap {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename Dummy = value_type>
-  KOKKOS_FORCEINLINE_FUNCTION KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Calling value_at for value_type==void is deprecated!")
-      std::enable_if_t<
-          std::is_void<Dummy>::value,  // is_set
-          std::conditional_t<has_const_value, impl_value_type,
-                             impl_value_type &>> value_at(size_type /*i*/)
-          const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      std::is_void<Dummy>::value,  // is_set
+      std::conditional_t<has_const_value, impl_value_type, impl_value_type &>>
+  value_at(size_type /*i*/) const {
     return m_values[0];
   }
 #endif
