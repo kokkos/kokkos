@@ -466,6 +466,25 @@ struct rand<Generator, Kokkos::Experimental::half_t> {
 };
 #endif  // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+template <class Generator>
+struct rand<Generator, Kokkos::Experimental::bhalf_t> {
+  using bhalf = Kokkos::Experimental::bhalf_t;
+  KOKKOS_INLINE_FUNCTION
+  static bhalf max() { return bhalf(1.0); }
+  KOKKOS_INLINE_FUNCTION
+  static bhalf draw(Generator& gen) { return bhalf(gen.frand()); }
+  KOKKOS_INLINE_FUNCTION
+  static bhalf draw(Generator& gen, const bhalf& range) {
+    return bhalf(gen.frand(float(range)));
+  }
+  KOKKOS_INLINE_FUNCTION
+  static bhalf draw(Generator& gen, const bhalf& start, const bhalf& end) {
+    return bhalf(gen.frand(float(start), float(end)));
+  }
+};
+#endif  // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+
 template <class Generator>
 struct rand<Generator, float> {
   KOKKOS_INLINE_FUNCTION
