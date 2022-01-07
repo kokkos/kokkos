@@ -2850,12 +2850,13 @@ inline bool is_zero_byte(const T& t) {
  *  called from the shared memory tracking destruction.
  *  Secondarily to have two fewer partial specializations.
  */
-template <class DeviceType, class ValueType,
+template <class DeviceType, class ValueType, bool Initialize,
           bool IsScalar = std::is_scalar<ValueType>::value>
 struct ViewValueFunctor;
 
-template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
+template <class DeviceType, class ValueType, bool Initialize>
+struct ViewValueFunctor<DeviceType, ValueType, Initialize,
+                        false /* is_scalar */> {
   using ExecSpace = typename DeviceType::execution_space;
 
   struct DestroyTag {};
@@ -2870,18 +2871,11 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   size_t n;
   std::string name;
 
-  template <typename _ValueType = ValueType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<std::is_default_constructible<_ValueType>::value>
-      operator()(const ConstructTag&, const size_t i) const {
+  template <bool Dummy = Initialize>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<Dummy> operator()(
+      const ConstructTag&, const size_t i) const {
     new (ptr + i) ValueType();
   }
-
-  // Not used
-  template <typename _ValueType = ValueType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!std::is_default_constructible<_ValueType>::value>
-      operator()(const ConstructTag&, const size_t) const {}
 
   KOKKOS_INLINE_FUNCTION void operator()(const DestroyTag&,
                                          const size_t i) const {
@@ -2900,7 +2894,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
-                   std::is_trivially_copy_assignable<ValueType>::value>
+                   std::is_trivially_copy_assignable<ValueType>::value &&
+                   Initialize>
   construct_dispatch() {
     ValueType value{};
     if (Impl::is_zero_byte(value)) {
@@ -2932,10 +2927,14 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   template <typename Dummy = ValueType>
   std::enable_if_t<!(std::is_trivial<Dummy>::value &&
-                     std::is_trivially_copy_assignable<ValueType>::value)>
+                     std::is_trivially_copy_assignable<ValueType>::value) &&
+                   Initialize>
   construct_dispatch() {
     parallel_for_implementation<false>();
   }
+
+  template <bool Dummy = Initialize>
+  std::enable_if_t<!Dummy> construct_dispatch() {}
 
   template <bool Destroy>
   void parallel_for_implementation() {
@@ -2978,8 +2977,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   void destroy_shared_allocation() { parallel_for_implementation<true>(); }
 };
 
-template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
+template <class DeviceType, class ValueType, bool Initialize>
+struct ViewValueFunctor<DeviceType, ValueType, Initialize,
+                        true /* is_scalar */> {
   using ExecSpace  = typename DeviceType::execution_space;
   using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
 
@@ -2988,8 +2988,11 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   size_t n;
   std::string name;
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const { ptr[i] = ValueType(); }
+  template <bool Dummy = Initialize>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<Dummy> operator()(
+      const size_t i) const {
+    ptr[i] = ValueType();
+  }
 
   ViewValueFunctor()                        = default;
   ViewValueFunctor(const ViewValueFunctor&) = default;
@@ -3001,7 +3004,8 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
-                   std::is_trivially_copy_assignable<Dummy>::value>
+                   std::is_trivially_copy_assignable<Dummy>::value &&
+                   Initialize>
   construct_shared_allocation() {
     // Shortcut for zero initialization
     ValueType value{};
@@ -3034,10 +3038,14 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 
   template <typename Dummy = ValueType>
   std::enable_if_t<!(std::is_trivial<Dummy>::value &&
-                     std::is_trivially_copy_assignable<Dummy>::value)>
+                     std::is_trivially_copy_assignable<Dummy>::value) &&
+                   Initialize>
   construct_shared_allocation() {
     parallel_for_implementation();
   }
+
+  template <bool Dummy = Initialize>
+  std::enable_if_t<!Dummy> construct_shared_allocation() {}
 
   void parallel_for_implementation() {
     if (!space.in_parallel()) {
@@ -3356,7 +3364,7 @@ class ViewMapping<
     using value_type      = typename Traits::value_type;
     using functor_type =
         ViewValueFunctor<Kokkos::Device<execution_space, memory_space>,
-                         value_type>;
+                         value_type, alloc_prop::initialize>;
     using record_type =
         Kokkos::Impl::SharedAllocationRecord<memory_space, functor_type>;
 
