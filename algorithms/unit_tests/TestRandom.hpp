@@ -386,6 +386,14 @@ struct test_random_scalar {
       }
 #endif
 
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+      if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+        mean_eps_expect       = 0.019;
+        variance_eps_expect   = 1.0;
+        covariance_eps_expect = 2.8e4;
+      }
+#endif
+
       EXPECT_LT(std::abs(mean_eps), mean_eps_expect);
       EXPECT_LT(std::abs(variance_eps), variance_eps_expect);
       EXPECT_LT(std::abs(covariance_eps), covariance_eps_expect);
@@ -421,6 +429,12 @@ struct test_random_scalar {
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
       if (std::is_same<Scalar, Kokkos::Experimental::half_t>::value) {
         variance_factor = 7;
+      }
+#endif
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+      if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+        variance_factor = 15.01;
       }
 #endif
 
@@ -474,6 +488,12 @@ void test_random(unsigned int num_draws) {
 
   cout << "Test Scalar=half" << endl;
   test_random_scalar<RandomGenerator, Kokkos::Experimental::half_t> test_half(
+      density_1d, density_3d, pool, num_draws);
+  deep_copy(density_1d, 0);
+  deep_copy(density_3d, 0);
+
+  cout << "Test Scalar=bhalf" << endl;
+  test_random_scalar<RandomGenerator, Kokkos::Experimental::bhalf_t> test_bhalf(
       density_1d, density_3d, pool, num_draws);
   deep_copy(density_1d, 0);
   deep_copy(density_3d, 0);
