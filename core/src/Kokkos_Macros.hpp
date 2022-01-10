@@ -80,7 +80,7 @@
  *  KOKKOS_COMPILER_PGI
  *  KOKKOS_COMPILER_MSVC
  *
- *  Macros for which compiler extension to use for atomics on intrinsice types
+ *  Macros for which compiler extension to use for atomics on intrinsic types
  *
  *  KOKKOS_ENABLE_CUDA_ATOMICS
  *  KOKKOS_ENABLE_GNU_ATOMICS
@@ -509,8 +509,8 @@
 #endif
 
 //----------------------------------------------------------------------------
-// If compiling with CUDA, we must use relocateable device code
-// to enable the task policy.
+// If compiling with CUDA, we must use relocatable device code to enable the
+// task policy.
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
