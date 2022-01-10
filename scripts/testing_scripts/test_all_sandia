@@ -119,7 +119,6 @@ fi
 if [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
   if [[ "$MACHINE" = "" ]]; then
     MACHINE=sems
-    module load sems-archive-git
   fi  
 fi
 
