@@ -1605,28 +1605,16 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    KOKKOS_IMPL_IF_ON_HOST
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-    else Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
+    KOKKOS_IF_HOST(
+        (Impl::runtime_check_rank_host(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+    KOKKOS_IF_DEVICE(
+        (Impl::runtime_check_rank_device(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   template <class... P>
@@ -1645,28 +1633,16 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    KOKKOS_IMPL_IF_ON_HOST
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-    else Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
+    KOKKOS_IF_HOST(
+        (Impl::runtime_check_rank_host(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+    KOKKOS_IF_DEVICE(
+        (Impl::runtime_check_rank_device(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   // Allocate with label and layout
@@ -1699,28 +1675,16 @@ class View : public ViewTraits<DataType, Properties...> {
                   "Layout is not extent constructible. A layout object should "
                   "be passed too.\n");
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    KOKKOS_IMPL_IF_ON_HOST
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-    else Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
+    KOKKOS_IF_HOST(
+        (Impl::runtime_check_rank_host(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+    KOKKOS_IF_DEVICE(
+        (Impl::runtime_check_rank_device(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   // Construct view from ViewTracker and map
@@ -1775,28 +1739,16 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(Impl::ViewCtorProp<pointer_type>(arg_ptr),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    KOKKOS_IMPL_IF_ON_HOST
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-    else Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
+    KOKKOS_IF_HOST(
+        (Impl::runtime_check_rank_host(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+    KOKKOS_IF_DEVICE(
+        (Impl::runtime_check_rank_device(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1865,28 +1817,16 @@ class View : public ViewTraits<DataType, Properties...> {
                      sizeof(typename traits::value_type)))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    KOKKOS_IMPL_IF_ON_HOST
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-    else Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    Impl::runtime_check_rank_host(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());
-#else
-    Impl::runtime_check_rank_device(
-        traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
-        arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-
-#endif
+    KOKKOS_IF_HOST(
+        (Impl::runtime_check_rank_host(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+    KOKKOS_IF_DEVICE(
+        (Impl::runtime_check_rank_device(
+             traits::rank_dynamic,
+             std::is_same<typename traits::specialize, void>::value, arg_N0,
+             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 };
 
