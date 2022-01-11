@@ -178,7 +178,7 @@ struct LayoutStride {
     int check_input = ARRAY_LAYOUT_MAX_RANK < rank ? 0 : int(1 << rank) - 1;
     for (int r = 0; r < ARRAY_LAYOUT_MAX_RANK; ++r) {
       tmp.dimension[r] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
-      tmp.stride[r]    = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
+      tmp.stride[r]    = 0;
     }
     for (int r = 0; r < rank; ++r) {
       check_input &= ~int(1 << order[r]);
