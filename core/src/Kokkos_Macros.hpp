@@ -509,17 +509,10 @@
 #define KOKKOS_IMPL_VAN_KOKKOS_IMPL_ISH
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVHPC)
-// clang-format off
-#define KOKKOS_IF_DEVICE(CODE)        \
-  if target (nv::target::is_device) { \
-    KOKKOS_IMPL_STRIP_PARENS(CODE)    \
-  }
-#define KOKKOS_IF_HOST(CODE)        \
-  if target (nv::target::is_host) { \
-    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
-  }
+#include <nv/target>
+#define KOKKOS_IF_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
+#define KOKKOS_IF_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
 #endif
-// clang-format on
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 #ifdef KOKKOS_COMPILER_NVHPC
