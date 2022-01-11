@@ -471,11 +471,6 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
-#if defined(__HIP__)
-// mark that HIP-clang can use __host__ and __device__
-// as valid overload criteria
-#define KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
-#endif
 #elif defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
