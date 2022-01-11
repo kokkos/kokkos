@@ -1660,6 +1660,7 @@ class View : public ViewTraits<DataType, Properties...> {
                      typename Impl::ViewCtorProp<P...>::pointer_type>::value,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
+    static_cast<void>(check_input_args);
   }
 
   // Simple dimension-only layout
