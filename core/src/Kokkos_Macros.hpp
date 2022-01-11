@@ -501,6 +501,76 @@
 
 //----------------------------------------------------------------------------
 
+// Remove surrounding parentheses if present
+#define KOKKOS_IMPL_STRIP_PARENS(X) KOKKOS_IMPL_ESC(KOKKOS_IMPL_ISH X)
+#define KOKKOS_IMPL_ISH(...) KOKKOS_IMPL_ISH __VA_ARGS__
+#define KOKKOS_IMPL_ESC(...) KOKKOS_IMPL_ESC_(__VA_ARGS__)
+#define KOKKOS_IMPL_ESC_(...) KOKKOS_IMPL_VAN_##__VA_ARGS__
+#define KOKKOS_IMPL_VAN_KOKKOS_IMPL_ISH
+
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVHPC)
+// clang-format off
+#define KOKKOS_IF_DEVICE(CODE)        \
+  if target (nv::target::is_device) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)    \
+  }
+#define KOKKOS_IF_HOST(CODE)        \
+  if target (nv::target::is_host) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
+  }
+#endif
+// clang-format on
+
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#ifdef KOKKOS_COMPILER_NVHPC
+#define KOKKOS_IF_DEVICE(CODE)      \
+  if (__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
+  }
+#define KOKKOS_IF_HOST(CODE)         \
+  if (!__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)   \
+  }
+#else
+// Base function.
+static constexpr bool kokkos_omp_on_host() { return true; }
+
+#pragma omp begin declare variant match(device = {kind(host)})
+static constexpr bool kokkos_omp_on_host() { return true; }
+#pragma omp end declare variant
+
+#pragma omp begin declare variant match(device = {kind(nohost)})
+static constexpr bool kokkos_omp_on_host() { return false; }
+#pragma omp end declare variant
+
+#define KOKKOS_IF_DEVICE(CODE)           \
+  if constexpr (!kokkos_omp_on_host()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)       \
+  }
+#define KOKKOS_IF_HOST(CODE)            \
+  if constexpr (kokkos_omp_on_host()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)      \
+  }
+#endif
+#endif
+
+#if !defined(KOKKOS_IF_HOST) && !defined(KOKKOS_IF_DEVICE)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
+    defined(__SYCL_DEVICE_ONLY__)
+#define KOKKOS_IF_DEVICE(CODE) \
+  { KOKKOS_IMPL_STRIP_PARENS(CODE) }
+#define KOKKOS_IF_HOST(CODE) \
+  {}
+#else
+#define KOKKOS_IF_DEVICE(CODE) \
+  {}
+#define KOKKOS_IF_HOST(CODE) \
+  { KOKKOS_IMPL_STRIP_PARENS(CODE) }
+#endif
+#endif
+
+//----------------------------------------------------------------------------
+
 #if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || \
     (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
 #if defined(KOKKOS_ENABLE_PERFORMANCE_POSIX_MEMALIGN)
