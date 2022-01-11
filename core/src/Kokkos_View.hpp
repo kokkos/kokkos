@@ -132,14 +132,7 @@ inline void runtime_check_rank_host(const size_t dyn_rank,
 
 template <typename Traits, typename Layout>
 KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    Layout& layout, const std::string& label,
-    typename std::enable_if<
-        (std::is_same<typename Traits::array_layout,
-                      Kokkos::LayoutLeft>::value ||
-         std::is_same<typename Traits::array_layout,
-                      Kokkos::LayoutRight>::value ||
-         std::is_same<typename Traits::array_layout,
-                      Kokkos::LayoutStride>::value)>::type* = nullptr) {
+    Layout& layout, const std::string& label) {
   size_t i0 = layout.dimension[0];
   size_t i1 = layout.dimension[1];
   size_t i2 = layout.dimension[2];
@@ -169,27 +162,7 @@ KOKKOS_INLINE_FUNCTION void runtime_check_rank(
 
 template <typename Traits, typename Layout>
 KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    Layout& layout, const std::string& label,
-    typename std::enable_if<
-        !(std::is_same<typename Traits::array_layout,
-                       Kokkos::LayoutLeft>::value ||
-          std::is_same<typename Traits::array_layout,
-                       Kokkos::LayoutRight>::value ||
-          std::is_same<typename Traits::array_layout,
-                       Kokkos::LayoutStride>::value)>::type* = nullptr) {
-  // skip check for other layout types
-}
-
-template <typename Traits, typename Layout>
-KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    Layout& layout,
-    typename std::enable_if<
-        (std::is_same<typename Traits::array_layout,
-                      Kokkos::LayoutLeft>::value ||
-         std::is_same<typename Traits::array_layout,
-                      Kokkos::LayoutRight>::value ||
-         std::is_same<typename Traits::array_layout,
-                      Kokkos::LayoutStride>::value)>::type* = nullptr) {
+    Layout& layout) {
   size_t i0 = layout.dimension[0];
   size_t i1 = layout.dimension[1];
   size_t i2 = layout.dimension[2];
@@ -217,20 +190,6 @@ KOKKOS_INLINE_FUNCTION void runtime_check_rank(
 
 #endif
 }
-
-template <typename Traits, typename Layout>
-KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    Layout& layout,
-    typename std::enable_if<
-        !(std::is_same<typename Traits::array_layout,
-                       Kokkos::LayoutLeft>::value ||
-          std::is_same<typename Traits::array_layout,
-                       Kokkos::LayoutRight>::value ||
-          std::is_same<typename Traits::array_layout,
-                       Kokkos::LayoutStride>::value)>::type* = nullptr) {
-  // skip check for other layout types
-}
-
 } /* namespace Impl */
 } /* namespace Kokkos */
 
