@@ -789,7 +789,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 ValueInit::init(selected_reducer, &local_value);
 
             Kokkos::Impl::Reduce::DeviceIterateTile<
-                Policy::rank, BarePolicy, Functor, typename Policy::work_tag,
+                Policy::rank, BarePolicy, FunctorType, typename Policy::work_tag,
                 reference_type>(bare_policy, functor, update,
                                 {n_global_x, n_global_y, n_global_z},
                                 {global_x, global_y, global_z},
