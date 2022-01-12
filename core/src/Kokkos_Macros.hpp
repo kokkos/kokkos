@@ -402,12 +402,6 @@
 #define KOKKOS_IMPL_DEVICE_FUNCTION
 #endif
 
-// Temporary solution for SYCL not supporting printf in kernels.
-// Might disappear at any point once we have found another solution.
-#if !defined(KOKKOS_IMPL_DO_NOT_USE_PRINTF)
-#define KOKKOS_IMPL_DO_NOT_USE_PRINTF(...) printf(__VA_ARGS__)
-#endif
-
 //----------------------------------------------------------------------------
 // Define final version of functions. This is so that clang tidy can find these
 // macros more easily
@@ -477,11 +471,6 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
-#if defined(__HIP__)
-// mark that HIP-clang can use __host__ and __device__
-// as valid overload criteria
-#define KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
-#endif
 #elif defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)

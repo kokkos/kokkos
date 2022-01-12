@@ -68,7 +68,7 @@ void check_struct_copy() {
   parallel_for(
       Kokkos::RangePolicy<ExecutionSpace>(0, 1), KOKKOS_LAMBDA(int) {
         StructCopy data2 = data;
-        KOKKOS_IMPL_DO_NOT_USE_PRINTF("%i \n", data2.device.in_parallel());
+        printf("%i \n", data2.device.in_parallel());
       });
 #endif
 #endif

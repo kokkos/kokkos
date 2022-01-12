@@ -158,8 +158,7 @@ struct TestNumericTraits {
     using Kokkos::Experimental::reciprocal_overflow_threshold;
     auto const inv = 1 / reciprocal_overflow_threshold<T>::value;
     if (inv + inv == inv && inv != 0) {
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "inverse of reciprocal overflow threshold is inf\n");
+      printf("inverse of reciprocal overflow threshold is inf\n");
       ++e;
     }
     use_on_device();

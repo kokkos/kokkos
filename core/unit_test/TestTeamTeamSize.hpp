@@ -185,8 +185,7 @@ template <typename TeamHandleType, typename ReducerValueType>
 struct PrintFunctor1 {
   KOKKOS_INLINE_FUNCTION void operator()(const TeamHandleType& team,
                                          ReducerValueType&) const {
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("Test %i %i\n", int(team.league_rank()),
-                                  int(team.team_rank()));
+    printf("Test %i %i\n", int(team.league_rank()), int(team.team_rank()));
   }
 };
 
@@ -194,8 +193,7 @@ template <typename TeamHandleType, typename ReducerValueType>
 struct PrintFunctor2 {
   KOKKOS_INLINE_FUNCTION void operator()(const TeamHandleType& team,
                                          ReducerValueType& teamVal) const {
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF("Test %i %i\n", int(team.league_rank()),
-                                  int(team.team_rank()));
+    printf("Test %i %i\n", int(team.league_rank()), int(team.team_rank()));
     teamVal += 1;
   }
 };

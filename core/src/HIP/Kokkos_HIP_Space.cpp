@@ -262,26 +262,15 @@ SharedAllocationRecord<void, void> SharedAllocationRecord<
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                        void>::~SharedAllocationRecord() {
-  const char* label = nullptr;
-  if (Kokkos::Profiling::profileLibraryLoaded()) {
-    SharedAllocationHeader header;
-    Kokkos::Experimental::HIP exec;
-    Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
-        exec, &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
-    exec.fence(
-        "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
-        "void>::~SharedAllocationRecord(): fence after copying header from "
-        "HostSpace");
-    label = header.label();
-  }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
-  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
+  m_space.deallocate(m_label.c_str(),
+                     SharedAllocationRecord<void, void>::m_alloc_ptr,
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
 SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
                        void>::~SharedAllocationRecord() {
-  m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
+  m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
@@ -300,7 +289,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
 
   SharedAllocationHeader header;
@@ -331,7 +321,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
       m_space(arg_space) {
   // Fill in the Header information, directly accessible via host pinned memory
   this->base_t::_fill_host_accessible_header_info(*RecordBase::m_alloc_ptr,

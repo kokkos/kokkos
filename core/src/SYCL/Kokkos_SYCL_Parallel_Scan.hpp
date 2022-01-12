@@ -80,7 +80,7 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
     local_mem[sg_group_id] = local_value;
   local_value = sg.shuffle_up(local_value, 1);
   if (id_in_sg == 0) ValueInit::init(functor, &local_value);
-  item.barrier(sycl::access::fence_space::local_space);
+  sycl::group_barrier(item.get_group());
 
   // scan subgroup results using the first subgroup
   if (n_active_subgroups > 1) {
@@ -107,10 +107,10 @@ void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
             ValueJoin::join(functor, &local_mem[idx],
                             &local_mem[round * local_range - 1]);
         }
-        if (round + 1 < n_rounds) sg.barrier();
+        if (round + 1 < n_rounds) sycl::group_barrier(sg);
       }
     }
-    item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(item.get_group());
   }
 
   // add results to all subgroups
