@@ -710,7 +710,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         const BarePolicy bare_policy = m_policy;
 
         cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
-          const auto local_id = item.get_local_linear_id();
+          const auto local_id          = item.get_local_linear_id();
           const auto& functor          = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
@@ -789,11 +789,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 ValueInit::init(selected_reducer, &local_value);
 
             Kokkos::Impl::Reduce::DeviceIterateTile<
-                Policy::rank, BarePolicy, FunctorType, typename Policy::work_tag,
-                reference_type>(bare_policy, functor, update,
-                                {n_global_x, n_global_y, n_global_z},
-                                {global_x, global_y, global_z},
-                                {local_x, local_y, local_z})
+                Policy::rank, BarePolicy, FunctorType,
+                typename Policy::work_tag, reference_type>(
+                bare_policy, functor, update,
+                {n_global_x, n_global_y, n_global_z},
+                {global_x, global_y, global_z}, {local_x, local_y, local_z})
                 .exec_range();
 
             SYCLReduction::workgroup_reduction<ValueJoin, WorkTag>(
