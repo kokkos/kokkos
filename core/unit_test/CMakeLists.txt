@@ -675,16 +675,10 @@ if(Kokkos_ENABLE_SYCL)
   )
 endif()
 
-# FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
-if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-  SET(DEFAULT_DEVICE_SOURCES
-    UnitTestMainInit.cpp
+SET(DEFAULT_DEVICE_SOURCES1
     default/TestDefaultDeviceType.cpp
-  )
-else()
-  SET(DEFAULT_DEVICE_SOURCES
-    UnitTestMainInit.cpp
-    default/TestDefaultDeviceType.cpp
+)
+SET(DEFAULT_DEVICE_SOURCES2
     default/TestDefaultDeviceType_a1.cpp
     default/TestDefaultDeviceType_b1.cpp
     default/TestDefaultDeviceType_c1.cpp
@@ -698,12 +692,29 @@ else()
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
   )
-endif()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Default
-  SOURCES ${DEFAULT_DEVICE_SOURCES}
-)
+# FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
+if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Default
+    SOURCES UnitTestMainInit.cpp ${DEFAULT_DEVICE_SOURCES1}
+  )
+# FIXME_SYCL we need to split the files to avoid a linker error
+elseif (KOKKOS_ENABLE_SYCL)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Default1
+    SOURCES UnitTestMainInit.cpp ${DEFAULT_DEVICE_SOURCES1}
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Default2
+    SOURCES UnitTestMainInit.cpp ${DEFAULT_DEVICE_SOURCES2}
+  )
+else()
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Default
+    SOURCES UnitTestMainInit.cpp ${DEFAULT_DEVICE_SOURCES1} ${DEFAULT_DEVICE_SOURCES2}
+  )
+endif()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_PushFinalizeHook
