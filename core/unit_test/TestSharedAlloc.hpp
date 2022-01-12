@@ -65,7 +65,6 @@ struct SharedAllocDestroy {
 
 template <class MemorySpace, class ExecutionSpace>
 void test_shared_alloc() {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   using Header     = const Kokkos::Impl::SharedAllocationHeader;
   using Tracker    = Kokkos::Impl::SharedAllocationTracker;
   using RecordBase = Kokkos::Impl::SharedAllocationRecord<void, void>;
@@ -231,8 +230,6 @@ void test_shared_alloc() {
 
     ASSERT_EQ(destroy_count, 1);
   }
-
-#endif /* #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) */
 }
 
 TEST(TEST_CATEGORY, impl_shared_alloc) {
