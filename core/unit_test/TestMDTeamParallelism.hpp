@@ -74,7 +74,7 @@ struct FillFlattenedIndex {
 struct FillConstant {
   explicit FillConstant(int initValue_) : initValue(initValue_) {}
 
-  int operator()(int n0, int n1, int n2) const { return initValue; }
+  int operator()(int, int, int) const { return initValue; }
 
   int initValue;
 };
@@ -87,9 +87,9 @@ struct TestMDTeamParallelFor {
   template <typename HostViewType, typename FillFunctor>
   static void check_result_3D(HostViewType h_view,
                               FillFunctor const& fillFunctor) {
-    for (int i = 0; i < h_view.extent(0); ++i) {
-      for (int j = 0; j < h_view.extent(1); ++j) {
-        for (int k = 0; k < h_view.extent(2); ++k) {
+    for (size_t i = 0; i < h_view.extent(0); ++i) {
+      for (size_t j = 0; j < h_view.extent(1); ++j) {
+        for (size_t k = 0; k < h_view.extent(2); ++k) {
           EXPECT_EQ(h_view(i, j, k), fillFunctor(i, j, k));
         }
       }
@@ -130,10 +130,10 @@ struct TestMDTeamParallelFor {
 
   template <typename HostViewType, typename FillFunctor>
   static void check_result_4D(HostViewType h_view, FillFunctor& fillFunctor) {
-    for (int i = 0; i < h_view.extent(0); ++i) {
-      for (int j = 0; j < h_view.extent(1); ++j) {
-        for (int k = 0; k < h_view.extent(2); ++k) {
-          for (int l = 0; l < h_view.extent(3); ++l) {
+    for (size_t i = 0; i < h_view.extent(0); ++i) {
+      for (size_t j = 0; j < h_view.extent(1); ++j) {
+        for (size_t k = 0; k < h_view.extent(2); ++k) {
+          for (size_t l = 0; l < h_view.extent(3); ++l) {
             EXPECT_EQ(h_view(i, j, k, l), fillFunctor(i, j, k, l));
           }
         }
@@ -177,11 +177,11 @@ struct TestMDTeamParallelFor {
 
   template <typename HostViewType, typename FillFunctor>
   static void check_result_5D(HostViewType h_view, FillFunctor& fillFunctor) {
-    for (int i = 0; i < h_view.extent(0); ++i) {
-      for (int j = 0; j < h_view.extent(1); ++j) {
-        for (int k = 0; k < h_view.extent(2); ++k) {
-          for (int l = 0; l < h_view.extent(3); ++l) {
-            for (int m = 0; m < h_view.extent(4); ++m) {
+    for (size_t i = 0; i < h_view.extent(0); ++i) {
+      for (size_t j = 0; j < h_view.extent(1); ++j) {
+        for (size_t k = 0; k < h_view.extent(2); ++k) {
+          for (size_t l = 0; l < h_view.extent(3); ++l) {
+            for (size_t m = 0; m < h_view.extent(4); ++m) {
               EXPECT_EQ(h_view(i, j, k, l, m), fillFunctor(i, j, k, l, m));
             }
           }
@@ -228,12 +228,12 @@ struct TestMDTeamParallelFor {
 
   template <typename HostViewType, typename FillFunctor>
   static void check_result_6D(HostViewType h_view, FillFunctor& fillFunctor) {
-    for (int i = 0; i < h_view.extent(0); ++i) {
-      for (int j = 0; j < h_view.extent(1); ++j) {
-        for (int k = 0; k < h_view.extent(2); ++k) {
-          for (int l = 0; l < h_view.extent(3); ++l) {
-            for (int m = 0; m < h_view.extent(4); ++m) {
-              for (int n = 0; n < h_view.extent(5); ++n) {
+    for (size_t i = 0; i < h_view.extent(0); ++i) {
+      for (size_t j = 0; j < h_view.extent(1); ++j) {
+        for (size_t k = 0; k < h_view.extent(2); ++k) {
+          for (size_t l = 0; l < h_view.extent(3); ++l) {
+            for (size_t m = 0; m < h_view.extent(4); ++m) {
+              for (size_t n = 0; n < h_view.extent(5); ++n) {
                 EXPECT_EQ(h_view(i, j, k, l, m, n),
                           fillFunctor(i, j, k, l, m, n));
               }
@@ -284,13 +284,13 @@ struct TestMDTeamParallelFor {
 
   template <typename HostViewType, typename FillFunctor>
   static void check_result_7D(HostViewType h_view, FillFunctor& fillFunctor) {
-    for (int i = 0; i < h_view.extent(0); ++i) {
-      for (int j = 0; j < h_view.extent(1); ++j) {
-        for (int k = 0; k < h_view.extent(2); ++k) {
-          for (int l = 0; l < h_view.extent(3); ++l) {
-            for (int m = 0; m < h_view.extent(4); ++m) {
-              for (int n = 0; n < h_view.extent(5); ++n) {
-                for (int o = 0; o < h_view.extent(6); ++o) {
+    for (size_t i = 0; i < h_view.extent(0); ++i) {
+      for (size_t j = 0; j < h_view.extent(1); ++j) {
+        for (size_t k = 0; k < h_view.extent(2); ++k) {
+          for (size_t l = 0; l < h_view.extent(3); ++l) {
+            for (size_t m = 0; m < h_view.extent(4); ++m) {
+              for (size_t n = 0; n < h_view.extent(5); ++n) {
+                for (size_t o = 0; o < h_view.extent(6); ++o) {
                   EXPECT_EQ(h_view(i, j, k, l, m, n, o),
                             fillFunctor(i, j, k, l, m, n, o));
                 }
@@ -343,14 +343,14 @@ struct TestMDTeamParallelFor {
 
   template <typename HostViewType, typename FillFunctor>
   static void check_result_8D(HostViewType h_view, FillFunctor& fillFunctor) {
-    for (int i = 0; i < h_view.extent(0); ++i) {
-      for (int j = 0; j < h_view.extent(1); ++j) {
-        for (int k = 0; k < h_view.extent(2); ++k) {
-          for (int l = 0; l < h_view.extent(3); ++l) {
-            for (int m = 0; m < h_view.extent(4); ++m) {
-              for (int n = 0; n < h_view.extent(5); ++n) {
-                for (int o = 0; o < h_view.extent(6); ++o) {
-                  for (int p = 0; p < h_view.extent(7); ++p) {
+    for (size_t i = 0; i < h_view.extent(0); ++i) {
+      for (size_t j = 0; j < h_view.extent(1); ++j) {
+        for (size_t k = 0; k < h_view.extent(2); ++k) {
+          for (size_t l = 0; l < h_view.extent(3); ++l) {
+            for (size_t m = 0; m < h_view.extent(4); ++m) {
+              for (size_t n = 0; n < h_view.extent(5); ++n) {
+                for (size_t o = 0; o < h_view.extent(6); ++o) {
+                  for (size_t p = 0; p < h_view.extent(7); ++p) {
                     EXPECT_EQ(h_view(i, j, k, l, m, n, o, p),
                               fillFunctor(i, j, k, l, m, n, o, p));
                   }
@@ -859,7 +859,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_3D_MDTeamThreadRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType***, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -907,7 +906,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_4D_MDTeamThreadRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -957,7 +955,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_5D_MDTeamThreadRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1008,7 +1005,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_6D_MDTeamThreadRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1063,7 +1059,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_4D_MDThreadVectorRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1123,7 +1118,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_5D_MDThreadVectorRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1185,7 +1179,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_6D_MDThreadVectorRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1249,7 +1242,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_4D_MDTeamVectorRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1304,7 +1296,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_5D_MDTeamVectorRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1360,7 +1351,6 @@ struct TestMDTeamParallelReduce {
   static void test_parallel_reduce_for_6D_MDTeamVectorRange(
       int* dims, const int initValue) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
-    using HostViewType = typename ViewType::HostMirror;
 
     int leagueSize = dims[0];
     int n0         = dims[1];

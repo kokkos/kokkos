@@ -1099,15 +1099,14 @@ struct ParallelForMDTeamThreadRangeCudaImpl {
   template <typename Boundaries, typename Closure>
   KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
       Boundaries const& boundaries, Closure const& closure) {
-    using index_type        = typename Boundaries::index_type;
-    using signed_index_type = std::make_signed_t<index_type>;
-
     (void)boundaries;
     (void)closure;
 
 #ifdef __CUDA_ARCH__
-    auto currentRank = Boundaries::rank - RemainingRank;
+    using index_type        = typename Boundaries::index_type;
+    using signed_index_type = std::make_signed_t<index_type>;
 
+    auto currentRank                  = Boundaries::rank - RemainingRank;
     signed_index_type offsetThreadIdx = (currentRank) ? 0 : threadIdx.y;
     signed_index_type offsetBlockDim  = (currentRank) ? 1 : blockDim.y;
 
@@ -1171,15 +1170,14 @@ struct ParallelForMDThreadVectorRangeCudaImpl {
   template <typename Boundaries, typename Closure>
   KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
       Boundaries const& boundaries, Closure const& closure) {
+    (void)boundaries;
+    (void)closure;
+
+#ifdef __CUDA_ARCH__
     using index_type        = typename Boundaries::index_type;
     using signed_index_type = std::make_signed_t<index_type>;
 
-    (void)boundaries;
-    (void)closure;
-#ifdef __CUDA_ARCH__
-
-    auto currentRank = Boundaries::rank - RemainingRank;
-
+    auto currentRank                  = Boundaries::rank - RemainingRank;
     signed_index_type offsetThreadIdx = (currentRank) ? 0 : threadIdx.x;
     signed_index_type offsetBlockDim  = (currentRank) ? 1 : blockDim.x;
 
@@ -1259,15 +1257,14 @@ struct ParallelForMDTeamVectorRangeCudaImpl {
   template <typename Boundaries, typename Closure>
   KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
       Boundaries const& boundaries, Closure const& closure) {
+    (void)boundaries;
+    (void)closure;
+
+#ifdef __CUDA_ARCH__
     using index_type        = typename Boundaries::index_type;
     using signed_index_type = std::make_signed_t<index_type>;
 
-    (void)boundaries;
-    (void)closure;
-#ifdef __CUDA_ARCH__
-
-    auto currentRank = Boundaries::rank - RemainingRank;
-
+    auto currentRank                   = Boundaries::rank - RemainingRank;
     signed_index_type offsetThreadIdxX = (currentRank) ? 0 : threadIdx.x;
     signed_index_type offsetThreadIdxY = (currentRank) ? 0 : threadIdx.y;
     signed_index_type offsetBlockDimX  = (currentRank) ? 1 : blockDim.x;
