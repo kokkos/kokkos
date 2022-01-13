@@ -3906,8 +3906,6 @@ inline void view_error_operator_bounds(char* buf, int len, const MapType& map,
   view_error_operator_bounds<R + 1>(buf + n, len - n, map, args...);
 }
 
-#if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-
 /* Check #3: is the View managed as determined by the MemoryTraits? */
 template <class MapType, bool is_managed = (MapType::is_managed != 0)>
 struct OperatorBoundsErrorOnDevice;
@@ -3962,8 +3960,6 @@ KOKKOS_FUNCTION
     operator_bounds_error_on_device(Map const& map) {
   OperatorBoundsErrorOnDevice<Map>::run(map);
 }
-
-#endif  // ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
 template <class MemorySpace, class ViewType, class MapType, class... Args>
 KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
