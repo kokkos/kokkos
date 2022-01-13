@@ -69,10 +69,7 @@ void traceback_callstack(std::ostream &msg) {
 }
 
 void throw_runtime_exception(const std::string &msg) {
-  std::ostringstream o;
-  o << msg;
-  traceback_callstack(o);
-  throw std::runtime_error(o.str());
+  throw std::runtime_error(msg);
 }
 
 void host_abort(const char *const message) {
