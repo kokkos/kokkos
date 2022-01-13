@@ -257,7 +257,7 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
   static void register_event(Storage&, sycl::event){};
 };
 
-#ifdef SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
   union TrivialWrapper {
@@ -318,7 +318,7 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#ifdef SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage>
 struct sycl::is_device_copyable<
     Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>>

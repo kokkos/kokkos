@@ -62,7 +62,7 @@ struct FunctorWrapperRangePolicyParallelFor {
       m_functor_wrapper.get_functor()(WorkTag(), id);
   }
 
-#ifdef SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
   // We get ambiguous specialization if this class is trivially_copyable
   ~FunctorWrapperRangePolicyParallelFor() {}
 #endif
@@ -72,7 +72,7 @@ struct FunctorWrapperRangePolicyParallelFor {
 };
 }  // namespace Kokkos::Impl
 
-#ifdef SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <class Functor, class Policy>
 struct sycl::is_device_copyable<
     Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>>
@@ -120,7 +120,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     if (m_policy.begin() == m_policy.end()) return;
 
-#if 1  // def SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
@@ -290,7 +290,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
-#if 1  // def SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(

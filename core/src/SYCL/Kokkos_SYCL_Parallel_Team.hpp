@@ -488,7 +488,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     if (m_league_size == 0) return;
 
-#if 1  // def SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
@@ -887,7 +887,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   inline void execute() {
-#if 1  // def SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
     struct {
     } indirectKernelMem, indirectReducerMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(

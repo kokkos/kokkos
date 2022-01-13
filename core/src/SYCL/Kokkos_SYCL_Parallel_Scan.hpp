@@ -297,7 +297,7 @@ class ParallelScanSYCLBase {
     m_scratch_space =
         static_cast<pointer_type>(instance.scratch_space(total_memory));
 
-#if 1  // def SYCL_DEVICE_COPYABLE
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
     struct {
     } indirectKernelMem;
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
