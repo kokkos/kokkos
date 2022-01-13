@@ -885,15 +885,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     static_assert(Mapping::is_assignable,
                   "Incompatible OffsetView copy construction");
     Mapping::assign(m_map, aview.impl_map(), m_track);
-
-    //#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    //        Kokkos::Experimental::Impl::runtime_check_rank_host(traits::rank_dynamic,
-    //        Rank, minIndices, label());
-    //#else
-    //        Kokkos::Experimental::Impl::runtime_check_rank_device(traits::rank_dynamic,
-    //        Rank, minIndices);
-    //
-    //#endif
   }
 
   // may assign unmanaged from managed.
