@@ -42,11 +42,10 @@
 //@HEADER
 */
 
-#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 
-#include <ostream>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
@@ -68,9 +67,9 @@ void throw_runtime_exception(const std::string &msg) {
   traceback_callstack(o);
   throw std::runtime_error(o.str());
 }
+
 void host_abort(const char *const message) {
-  fwrite(message, 1, strlen(message), stderr);
-  fflush(stderr);
+  std::cerr << message;
   ::abort();
 }
 
