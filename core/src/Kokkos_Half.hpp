@@ -53,6 +53,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ///////// Include special backend specific headers and impl types here /////////
 #include <Cuda/Kokkos_Cuda_Half_Impl_Type.hpp>
+#include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
@@ -263,7 +264,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_INLINE_FUNCTION
   floating_point_wrapper(const volatile floating_point_wrapper& rhs) {
-#if defined(__FPW_USE_DEVICE_OPS__)
+#if defined(__FPW_USE_DEVICE_OPS__) && !defined(KOKKOS_ENABLE_SYCL)
     val = rhs.val;
 #else
     const volatile fixed_width_integer_type* rv_ptr =
@@ -325,7 +326,7 @@ class alignas(FloatType) floating_point_wrapper {
    * conversion constructors.
    */
   KOKKOS_FUNCTION
-  floating_point_wrapper(impl_type rhs) : val(rhs) {}
+  constexpr floating_point_wrapper(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
   floating_point_wrapper(float rhs) : val(cast_to_wrapper(rhs, val).val) {}
   KOKKOS_FUNCTION
@@ -916,6 +917,7 @@ cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x) {
 ////////////////////////////////////////////////////////////////////////////////
 ////// Include special backend specific cast routines and identities here //////
 #include <Cuda/Kokkos_Cuda_Half_Conversion.hpp>
+#include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>
 ////////////////////////////////////////////////////////////////////////////////
 
 // Potentially include special compiler specific versions here
