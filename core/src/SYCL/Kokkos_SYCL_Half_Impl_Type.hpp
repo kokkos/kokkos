@@ -54,6 +54,7 @@
 // Make sure no one else tries to define half_t
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
 #define KOKKOS_SYCL_IMPL_HALF_TYPE_DEFINED
+#define __SYCL_ONLY_USE_FPW_DEVICE_OPS__
 
 namespace Kokkos {
 namespace Impl {

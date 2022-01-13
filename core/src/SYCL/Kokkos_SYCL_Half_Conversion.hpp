@@ -52,19 +52,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-/************************ conversion overloads ********************************/
-template <class T>
-static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t cast_to_wrapper(
-    T x, const volatile Kokkos::Impl::half_impl_t::type&) {
-  return half_t::impl_type(x);
-}
-
-template <class T>
-static KOKKOS_INLINE_FUNCTION T
-cast_from_wrapper(const Kokkos::Experimental::half_t& x) {
-  return half_t::impl_type(x);
-}
-
 /************************** half conversions **********************************/
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(half_t val) { return val; }
