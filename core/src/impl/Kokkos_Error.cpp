@@ -59,7 +59,7 @@
 namespace Kokkos {
 namespace Impl {
 void traceback_callstack(std::ostream &msg) {
-  msg << std::endl << "Traceback functionality not available" << std::endl;
+  msg << "\nTraceback functionality not available\n";
 }
 
 void throw_runtime_exception(const std::string &msg) {
