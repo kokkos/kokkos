@@ -77,11 +77,7 @@ void throw_runtime_exception(const std::string &msg) {
 
 void host_abort(const char *const message) {
   std::cerr << message;
-#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
-  std::cerr << "\nBacktrace:\n";
-  save_stacktrace();
-  print_demangled_saved_stacktrace(std::cerr);
-#endif
+  traceback_callstack(std::cerr);
   ::abort();
 }
 
