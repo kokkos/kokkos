@@ -50,6 +50,7 @@
 #include <iomanip>
 #include <stdexcept>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Stacktrace.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 //----------------------------------------------------------------------------
@@ -70,6 +71,11 @@ void throw_runtime_exception(const std::string &msg) {
 
 void host_abort(const char *const message) {
   std::cerr << message;
+#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
+  std::cerr << "\nBacktrace:\n";
+  save_stacktrace();
+  print_demangled_saved_stacktrace(std::cerr);
+#endif
   ::abort();
 }
 
