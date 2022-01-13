@@ -59,7 +59,7 @@ namespace Impl {
 // total sum.
 template <class ValueJoin, class ValueInit, int dim, typename ValueType,
           typename FunctorType>
-void workgroup_scan(sycl::nd_item<dim> item, FunctorType& functor,
+void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
                     sycl::local_ptr<ValueType> local_mem,
                     ValueType& local_value, unsigned int global_range) {
   // subgroup scans

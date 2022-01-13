@@ -294,14 +294,14 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
 #else
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
-  const Functor m_kernelFunctor;
+  std::reference_wrapper<const Functor> m_kernelFunctor;
 
  public:
   SYCLFunctionWrapper(const Functor& functor, Storage& storage)
       : m_kernelFunctor(storage.copy_from(functor)) {}
 
   std::reference_wrapper<const Functor> get_functor() const {
-    return {m_kernelFunctor};
+    return m_kernelFunctor;
   }
 
   static void register_event(Storage& storage, sycl::event event) {
