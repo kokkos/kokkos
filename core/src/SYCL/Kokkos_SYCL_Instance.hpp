@@ -294,7 +294,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
 #else
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
-  const Functor& m_kernelFunctor;
+  const Functor m_kernelFunctor;
 
  public:
   SYCLFunctionWrapper(const Functor& functor, Storage& storage)
