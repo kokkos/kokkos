@@ -120,13 +120,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     if (m_policy.begin() == m_policy.end()) return;
 
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
-    struct {
-    } indirectKernelMem;
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
-    sycl_direct_launch(m_policy, functor_wrapper);
-#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = m_policy.space()
                                 .impl_internal_space_instance()
@@ -136,7 +129,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_functor, indirectKernelMem);
     sycl::event event = sycl_direct_launch(m_policy, functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
-#endif
   }
 
   ParallelFor(const ParallelFor&) = delete;
@@ -290,13 +282,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
-    struct {
-    } indirectKernelMem;
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
-    sycl_direct_launch(functor_wrapper);
-#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem =
             m_space.impl_internal_space_instance()->m_indirectKernelMem;
@@ -305,7 +290,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         m_functor, indirectKernelMem);
     sycl::event event = sycl_direct_launch(functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
-#endif
   }
 
   ParallelFor(const ParallelFor&) = delete;

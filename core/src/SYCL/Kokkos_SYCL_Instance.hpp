@@ -100,7 +100,6 @@ class SYCLInternal {
   // We need a mutex for thread safety when modifying all_queues.
   static std::mutex mutex;
 
-#if !(defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU))
   // USMObjectMem is a reusable buffer for a single object
   // in USM memory
   template <sycl::usm::alloc Kind>
@@ -207,7 +206,6 @@ class SYCLInternal {
 
   using IndirectReducerMem = USMObjectMem<sycl::usm::alloc::host>;
   IndirectReducerMem m_indirectReducerMem;
-#endif
 
   bool was_finalized = false;
 
@@ -241,21 +239,18 @@ class SYCLInternal {
   }
 };
 
+// FIXME_SYCL the limit is 2048 bytes for all arguments handed to a kernel,
+// assume for now that the rest doesn't need more than 248 bytes.
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage,
-          bool is_memcpyable = std::is_trivially_copyable_v<Functor>>
+          bool ManualCopy = (sizeof(Functor) >= 1800)>
 class SYCLFunctionWrapper;
-
-template <typename Functor, typename Storage>
-class SYCLFunctionWrapper<Functor, Storage, true> {
-  const Functor m_functor;
-
- public:
-  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
-
-  const Functor& get_functor() const { return m_functor; }
-
-  static void register_event(Storage&, sycl::event){};
-};
+#else
+template <typename Functor, typename Storage,
+          bool ManualCopy = (sizeof(Functor) >= 1800 ||
+                             !std::is_trivially_copyable_v<Functor>)>
+class SYCLFunctionWrapper;
+#endif
 
 #if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage>
@@ -294,6 +289,19 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
 #else
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
+  const Functor m_functor;
+
+ public:
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
+
+  const Functor& get_functor() const { return m_functor; }
+
+  static void register_event(Storage&, sycl::event){};
+};
+#endif
+
+template <typename Functor, typename Storage>
+class SYCLFunctionWrapper<Functor, Storage, true> {
   std::reference_wrapper<const Functor> m_kernelFunctor;
 
  public:
@@ -308,7 +316,6 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
     storage.register_event(event);
   }
 };
-#endif
 
 template <typename Functor, typename Storage>
 auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {

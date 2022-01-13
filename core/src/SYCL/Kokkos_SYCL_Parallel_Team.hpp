@@ -488,13 +488,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     if (m_league_size == 0) return;
 
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
-    struct {
-    } indirectKernelMem;
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
-    sycl_direct_launch(m_policy, functor_wrapper);
-#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = m_policy.space()
                                 .impl_internal_space_instance()
@@ -505,7 +498,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     sycl::event event = sycl_direct_launch(m_policy, functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
-#endif
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
@@ -887,15 +879,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   inline void execute() {
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
-    struct {
-    } indirectKernelMem, indirectReducerMem;
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
-    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_reducer, indirectReducerMem);
-    sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
-#else
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
@@ -912,7 +895,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
-#endif
   }
 
  private:

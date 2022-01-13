@@ -150,10 +150,8 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
-#if !(defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU))
     m_indirectKernelMem.reset(*m_queue, m_instance_id);
     m_indirectReducerMem.reset(*m_queue, m_instance_id);
-#endif
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -215,10 +213,8 @@ void SYCLInternal::finalize() {
   m_team_scratch_current_size = 0;
   m_team_scratch_ptr          = nullptr;
 
-#if !(defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU))
   m_indirectKernelMem.reset();
   m_indirectReducerMem.reset();
-#endif
   // guard erasing from all_queues
   {
     std::scoped_lock lock(mutex);
@@ -306,7 +302,6 @@ template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
                                                       const std::string&,
                                                       uint32_t);
 
-#if !(defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU))
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
   assert(m_q);
@@ -344,7 +339,6 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::host>;
-#endif
 
 }  // namespace Impl
 }  // namespace Experimental
