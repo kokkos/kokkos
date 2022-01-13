@@ -59,7 +59,13 @@
 namespace Kokkos {
 namespace Impl {
 void traceback_callstack(std::ostream &msg) {
+#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
+  msg << "\nBacktrace:\n";
+  save_stacktrace();
+  print_demangled_saved_stacktrace(msg);
+#else
   msg << "\nTraceback functionality not available\n";
+#endif
 }
 
 void throw_runtime_exception(const std::string &msg) {
