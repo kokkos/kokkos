@@ -144,11 +144,9 @@ inline int OpenMP::impl_thread_pool_size() noexcept {
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::impl_thread_pool_rank() noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  return Impl::t_openmp_instance ? 0 : omp_get_thread_num();
-#else
-  return -1;
-#endif
+  KOKKOS_IF_HOST((return Impl::t_openmp_instance ? 0 : omp_get_thread_num();))
+
+  KOKKOS_IF_DEVICE((return -1;))
 }
 
 inline void OpenMP::impl_static_fence(OpenMP const& /**instance*/,
@@ -270,43 +268,40 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int size() const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return m_count;
-#else
-    return 0;
-#endif
+    KOKKOS_IF_HOST((return m_count;))
+
+    KOKKOS_IF_DEVICE((return 0;))
   }
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (m_count >= ::Kokkos::OpenMP::impl_thread_pool_size())
-      return ::Kokkos::OpenMP::impl_thread_pool_rank();
-    const ::Kokkos::pair<int, int> result =
-        ::Kokkos::Impl::concurrent_bitset::acquire_bounded(
-            m_buffer, m_count, ::Kokkos::Impl::clock_tic() % m_count);
+    KOKKOS_IF_HOST(
+        (if (m_count >= ::Kokkos::OpenMP::impl_thread_pool_size()) return ::
+             Kokkos::OpenMP::impl_thread_pool_rank();
+         const ::Kokkos::pair<int, int> result =
+             ::Kokkos::Impl::concurrent_bitset::acquire_bounded(
+                 m_buffer, m_count, ::Kokkos::Impl::clock_tic() % m_count);
 
-    if (result.first < 0) {
-      ::Kokkos::abort(
-          "UniqueToken<OpenMP> failure to acquire tokens, no tokens available");
-    }
+         if (result.first < 0) {
+           ::Kokkos::abort(
+               "UniqueToken<OpenMP> failure to acquire tokens, no tokens "
+               "available");
+         }
 
-    return result.first;
-#else
-    return 0;
-#endif
+         return result.first;))
+
+    KOKKOS_IF_DEVICE((return 0;))
   }
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
   void release(int i) const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (m_count < ::Kokkos::OpenMP::impl_thread_pool_size())
+    KOKKOS_IF_HOST((if (m_count < ::Kokkos::OpenMP::impl_thread_pool_size()) {
       ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
-#else
-    (void)i;
-#endif
+    }))
+
+    KOKKOS_IF_DEVICE(((void)i;))
   }
 };
 
@@ -324,21 +319,17 @@ class UniqueToken<OpenMP, UniqueTokenScope::Global> {
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int size() const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return Kokkos::Impl::g_openmp_hardware_max_threads;
-#else
-    return 0;
-#endif
+    KOKKOS_IF_HOST((return Kokkos::Impl::g_openmp_hardware_max_threads;))
+
+    KOKKOS_IF_DEVICE((return 0;))
   }
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return Kokkos::Impl::t_openmp_hardware_id;
-#else
-    return 0;
-#endif
+    KOKKOS_IF_HOST((return Kokkos::Impl::t_openmp_hardware_id;))
+
+    KOKKOS_IF_DEVICE((return 0;))
   }
 
   /// \brief release a value acquired by generate
@@ -354,11 +345,9 @@ inline int OpenMP::impl_thread_pool_size(int depth) {
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::impl_hardware_thread_id() noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  return Impl::t_openmp_hardware_id;
-#else
-  return -1;
-#endif
+  KOKKOS_IF_HOST((return Impl::t_openmp_hardware_id;))
+
+  KOKKOS_IF_DEVICE((return -1;))
 }
 
 inline int OpenMP::impl_max_hardware_threads() noexcept {

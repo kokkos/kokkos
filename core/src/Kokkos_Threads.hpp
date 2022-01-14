@@ -147,11 +147,14 @@ class Threads {
   //----------------------------------------
 
   static int impl_thread_pool_size(int depth = 0);
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  static int impl_thread_pool_rank();
-#else
-  KOKKOS_INLINE_FUNCTION static int impl_thread_pool_rank() { return 0; }
-#endif
+
+  static int impl_thread_pool_rank_host();
+
+  static KOKKOS_FUNCTION int impl_thread_pool_rank() {
+    KOKKOS_IF_HOST((return impl_thread_pool_rank_host();))
+
+    KOKKOS_IF_DEVICE((return 0;))
+  }
 
   inline static unsigned impl_max_hardware_threads() {
     return impl_thread_pool_size(0);
