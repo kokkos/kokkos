@@ -782,6 +782,14 @@ class MemoryPool {
   KOKKOS_INLINE_FUNCTION
   int number_of_superblocks() const noexcept { return m_sb_count; }
 
+  template <class MemorySpace>
+  static KOKKOS_FUNCTION constexpr bool may_access() {
+    KOKKOS_IF_HOST((return SpaceAccessibility<DefaultHostExecutionSpace,
+                                              MemorySpace>::accessible;))
+    KOKKOS_IF_DEVICE((return SpaceAccessibility<DefaultExecutionSpace,
+                                                MemorySpace>::accessible;))
+  }
+
   KOKKOS_INLINE_FUNCTION
   void superblock_state(int sb_id, int &block_size, int &block_count_capacity,
                         int &block_count_used) const noexcept {
@@ -789,9 +797,7 @@ class MemoryPool {
     block_count_capacity = 0;
     block_count_used     = 0;
 
-    if (Kokkos::Impl::MemorySpaceAccess<
-            Kokkos::Impl::ActiveExecutionMemorySpace,
-            base_memory_space>::accessible) {
+    if (may_access<base_memory_space>()) {
       // Can access the state array
 
       const uint32_t state =
