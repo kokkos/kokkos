@@ -231,17 +231,21 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
               msg);))
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA)
-using ActiveExecutionMemorySpace = Kokkos::CudaSpace;
+using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = Kokkos::CudaSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL)
-using ActiveExecutionMemorySpace = Kokkos::Experimental::SYCLDeviceUSMSpace;
+using ActiveExecutionMemorySpace KOKKOS_DEPRECATED =
+    Kokkos::Experimental::SYCLDeviceUSMSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
-using ActiveExecutionMemorySpace = Kokkos::Experimental::HIPSpace;
+using ActiveExecutionMemorySpace KOKKOS_DEPRECATED =
+    Kokkos::Experimental::HIPSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-using ActiveExecutionMemorySpace = Kokkos::HostSpace;
+using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = Kokkos::HostSpace;
 #else
-using ActiveExecutionMemorySpace = void;
+using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = void;
 #endif
 
 template <typename DstMemorySpace, typename SrcMemorySpace>
@@ -251,16 +255,17 @@ template <typename DstMemorySpace, typename SrcMemorySpace,
           bool = Kokkos::Impl::MemorySpaceAccess<DstMemorySpace,
                                                  SrcMemorySpace>::accessible>
 struct verify_space {
-  KOKKOS_FUNCTION static void check() {}
+  KOKKOS_DEPRECATED KOKKOS_FUNCTION static void check() {}
 };
 
 template <typename DstMemorySpace, typename SrcMemorySpace>
 struct verify_space<DstMemorySpace, SrcMemorySpace, false> {
-  KOKKOS_FUNCTION static void check() {
+  KOKKOS_DEPRECATED KOKKOS_FUNCTION static void check() {
     Kokkos::abort(
         "Kokkos::View ERROR: attempt to access inaccessible memory space");
   };
 };
+#endif
 
 // Base class for exec space initializer factories
 class ExecSpaceInitializerBase;
@@ -274,6 +279,7 @@ class LogicalMemorySpace;
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 #define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)        \
   Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
                              DATA_SPACE>::check();
@@ -281,6 +287,7 @@ class LogicalMemorySpace;
 #define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                      \
   Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
                              DATA_SPACE>::check();
+#endif
 
 //----------------------------------------------------------------------------
 
