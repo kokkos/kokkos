@@ -83,7 +83,7 @@ struct InvalidType {};
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
-// Forward declarations for class inter-relationships
+// Forward declarations for class interrelationships
 
 namespace Kokkos {
 
