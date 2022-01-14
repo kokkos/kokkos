@@ -42,15 +42,15 @@
 //@HEADER
 */
 
-#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 
-#include <ostream>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Stacktrace.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 //----------------------------------------------------------------------------
@@ -68,9 +68,14 @@ void throw_runtime_exception(const std::string &msg) {
   traceback_callstack(o);
   throw std::runtime_error(o.str());
 }
+
 void host_abort(const char *const message) {
-  fwrite(message, 1, strlen(message), stderr);
-  fflush(stderr);
+  std::cerr << message;
+#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
+  std::cerr << "\nBacktrace:\n";
+  save_stacktrace();
+  print_demangled_saved_stacktrace(std::cerr);
+#endif
   ::abort();
 }
 

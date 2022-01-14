@@ -357,7 +357,6 @@ void test_offsetview_unmanaged_construction() {
     ASSERT_EQ(bb, ii);
   }
 
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   {
     using offset_view_type = Kokkos::Experimental::OffsetView<Scalar*, Device>;
 
@@ -397,7 +396,6 @@ void test_offsetview_unmanaged_construction() {
     ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1, 1}),
                  std::runtime_error);
   }
-#endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 }
 
 template <typename Scalar, typename Device>
