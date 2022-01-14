@@ -607,36 +607,33 @@ class UniqueToken<HPX, UniqueTokenScope::Instance> {
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (m_buffer == nullptr) {
-      return execution_space::impl_hardware_thread_id();
-    } else {
-      const ::Kokkos::pair<int, int> result =
-          ::Kokkos::Impl::concurrent_bitset::acquire_bounded(
-              m_buffer, m_count, ::Kokkos::Impl::clock_tic() % m_count);
+    KOKKOS_IF_HOST((
+        if (m_buffer == nullptr) {
+          return execution_space::impl_hardware_thread_id();
+        } else {
+          const ::Kokkos::pair<int, int> result =
+              ::Kokkos::Impl::concurrent_bitset::acquire_bounded(
+                  m_buffer, m_count, ::Kokkos::Impl::clock_tic() % m_count);
 
-      if (result.first < 0) {
-        ::Kokkos::abort(
-            "UniqueToken<HPX> failure to acquire tokens, no tokens "
-            "available");
-      }
-      return result.first;
-    }
-#else
-    return 0;
-#endif
+          if (result.first < 0) {
+            ::Kokkos::abort(
+                "UniqueToken<HPX> failure to acquire tokens, no tokens "
+                "available");
+          }
+          return result.first;
+        }))
+
+    KOKKOS_IF_DEVICE((return 0;))
   }
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
   void release(int i) const noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (m_buffer != nullptr) {
+    KOKKOS_IF_HOST((if (m_buffer != nullptr) {
       ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
-    }
-#else
-    (void)i;
-#endif
+    }))
+
+    KOKKOS_IF_DEVICE(((void)i;))
   }
 };
 

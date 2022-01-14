@@ -389,17 +389,14 @@ union SharedAllocationTracker {
 
   KOKKOS_INLINE_FUNCTION
   int use_count() const {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    Record* const tmp =
-        reinterpret_cast<Record*>(m_record_bits & ~DO_NOT_DEREF_FLAG);
-    return (tmp ? tmp->use_count() : 0);
-#else
-    return 0;
-#endif
+    KOKKOS_IF_HOST((Record* const tmp = reinterpret_cast<Record*>(
+                        m_record_bits & ~DO_NOT_DEREF_FLAG);
+                    return (tmp ? tmp->use_count() : 0);))
+
+    KOKKOS_IF_DEVICE((return 0;))
   }
 
-  KOKKOS_INLINE_FUNCTION
-  bool has_record() const {
+  KOKKOS_INLINE_FUNCTION bool has_record() const {
     return (m_record_bits & (~DO_NOT_DEREF_FLAG)) != 0;
   }
 
