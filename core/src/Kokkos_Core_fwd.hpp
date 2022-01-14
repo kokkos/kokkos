@@ -183,7 +183,53 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 // a given memory space.
 
 namespace Kokkos {
+
+template <class AccessSpace, class MemorySpace>
+struct SpaceAccessibility;
+
 namespace Impl {
+
+// primary template: memory space is accessible, do nothing.
+template <class MemorySpace, class AccessSpace,
+          bool = SpaceAccessibility<AccessSpace, MemorySpace>::accessible>
+struct RuntimeCheckMemoryAccessViolation {
+  KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const *const) {}
+};
+
+// explicit specialization: memory access violation will occur, call abort with
+// the specified error message.
+template <class MemorySpace, class AccessSpace>
+struct RuntimeCheckMemoryAccessViolation<AccessSpace, MemorySpace, false> {
+  KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const *const msg) {
+    Kokkos::abort(msg);
+  }
+};
+
+// calls abort with default error message at runtime if memory access violation
+// will occur
+template <class MemorySpace>
+KOKKOS_FUNCTION void runtime_check_memory_access_violation() {
+  KOKKOS_IF_HOST((
+      RuntimeCheckMemoryAccessViolation<MemorySpace, DefaultHostExecutionSpace>(
+          "ERROR: attempt to access inaccessible memory space");))
+  KOKKOS_IF_DEVICE(
+      (RuntimeCheckMemoryAccessViolation<MemorySpace, DefaultExecutionSpace>(
+           "ERROR: attempt to access inaccessible memory space");))
+}
+
+// calls abort with specified error message at runtime if memory access
+// violation will occur
+template <class MemorySpace>
+KOKKOS_FUNCTION void runtime_check_memory_access_violation(
+    char const *const msg) {
+  KOKKOS_IF_HOST((
+      (void)RuntimeCheckMemoryAccessViolation<MemorySpace,
+                                              DefaultHostExecutionSpace>(msg);))
+  KOKKOS_IF_DEVICE((
+      (void)
+          RuntimeCheckMemoryAccessViolation<MemorySpace, DefaultExecutionSpace>(
+              msg);))
+}
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA)
