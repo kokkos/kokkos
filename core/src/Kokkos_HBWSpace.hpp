@@ -216,11 +216,10 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const Kokkos::Experimental::HBWSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size) {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
-#else
-    return (SharedAllocationRecord*)0;
-#endif
+    KOKKOS_IF_HOST((return new SharedAllocationRecord(arg_space, arg_label,
+                                                      arg_alloc_size);))
+    KOKKOS_IF_DEVICE(((void)arg_space; (void)arg_label; (void)arg_alloc_size;
+                      return nullptr;))
   }
 
   /**\brief  Allocate tracked memory in the space */
