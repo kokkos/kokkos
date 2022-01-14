@@ -191,7 +191,8 @@ class CrsRowMapFromCounts {
   using execution_space = typename InCounts::execution_space;
   using value_type      = typename OutRowMap::value_type;
   using index_type      = typename InCounts::size_type;
-  using last_value_type = Kokkos::View<value_type, execution_space>;
+  using last_value_type =
+      Kokkos::View<value_type, typename InCounts::memory_space>;
 
  private:
   InCounts m_in;
