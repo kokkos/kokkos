@@ -576,18 +576,22 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 
 // rank of the calling operator - included as first argument in ARG
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                          \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             typename traits::memory_space>::check();  \
-  Kokkos::Impl::dyn_rank_view_verify_operator_bounds<                  \
-      typename traits::memory_space>                                   \
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                             \
+  Kokkos::Impl::runtime_check_memory_access_violation<                    \
+      typename traits::memory_space>(                                     \
+      "Kokkos::DynRankView ERROR: attempt to access inaccessible memory " \
+      "space");                                                           \
+  Kokkos::Impl::dyn_rank_view_verify_operator_bounds<                     \
+      typename traits::memory_space>                                      \
       ARG;
 
 #else
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                          \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             typename traits::memory_space>::check();
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                             \
+  Kokkos::Impl::runtime_check_memory_access_violation<                    \
+      typename traits::memory_space>(                                     \
+      "Kokkos::DynRankView ERROR: attempt to access inaccessible memory " \
+      "space");
 
 #endif
 

@@ -378,18 +378,22 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 
-#define KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(ARG)                    \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             typename traits::memory_space>::check();  \
-  Kokkos::Experimental::Impl::offsetview_verify_operator_bounds<       \
-      typename traits::memory_space>                                   \
+#define KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(ARG)                      \
+  Kokkos::Impl::runtime_check_memory_access_violation<                   \
+      typename traits::memory_space>(                                    \
+      "Kokkos::OffsetView ERROR: attempt to access inaccessible memory " \
+      "space");                                                          \
+  Kokkos::Experimental::Impl::offsetview_verify_operator_bounds<         \
+      typename traits::memory_space>                                     \
       ARG;
 
 #else
 
-#define KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(ARG)                    \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             typename traits::memory_space>::check();
+#define KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(ARG)                      \
+  Kokkos::Impl::runtime_check_memory_access_violation<                   \
+      typename traits::memory_space>(                                    \
+      "Kokkos::OffsetView ERROR: attempt to access inaccessible memory " \
+      "space");
 
 #endif
  public:
