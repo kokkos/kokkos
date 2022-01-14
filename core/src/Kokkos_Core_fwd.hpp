@@ -265,6 +265,7 @@ struct verify_space<DstMemorySpace, SrcMemorySpace, false> {
         "Kokkos::View ERROR: attempt to access inaccessible memory space");
   };
 };
+#endif
 
 // Base class for exec space initializer factories
 class ExecSpaceInitializerBase;
@@ -278,6 +279,7 @@ class LogicalMemorySpace;
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 #define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)        \
   Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
                              DATA_SPACE>::check();
@@ -285,7 +287,6 @@ class LogicalMemorySpace;
 #define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                      \
   Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
                              DATA_SPACE>::check();
-
 #endif
 
 //----------------------------------------------------------------------------
