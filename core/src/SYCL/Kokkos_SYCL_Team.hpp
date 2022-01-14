@@ -721,6 +721,12 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
        i += grange1)
     closure(i);
 
+  // FIXME_SYCL We only should fence active threads here but this not yet
+  // available in the compiler. We need https://github.com/intel/llvm/pull/4904
+  // or https://github.com/intel/llvm/pull/4903 for that. The current
+  // implementation leads to a deadlock only for SYCL+CUDA if not all threads in
+  // a subgroup see this barrier. For SYCL on Intel GPUs, the subgroup barrier
+  // is essentially a no-op (only a memory fence), though.
   sycl::group_barrier(loop_boundaries.member.item().get_sub_group());
 }
 
