@@ -538,7 +538,7 @@ class MemoryPool {
 #else
     const uint32_t block_id_hint =
         (uint32_t)(Kokkos::Impl::clock_tic()
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
+#ifdef __CUDA_ARCH__  // FIXME_CUDA
                    // Spread out potentially concurrent access
                    // by threads within a warp or thread block.
                    + (threadIdx.x + blockDim.x * threadIdx.y)
