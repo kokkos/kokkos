@@ -2889,6 +2889,10 @@ bool size_mismatch(const ViewType& view, unsigned int max_extent,
     if (new_extents[dim] != view.extent(dim)) {
       return true;
     }
+  for (unsigned int dim = max_extent; dim < 8; ++dim)
+    if (new_extents[dim] != KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+      return true;
+    }
   return false;
 }
 
