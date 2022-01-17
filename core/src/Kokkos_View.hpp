@@ -1537,7 +1537,11 @@ class View : public ViewTraits<DataType, Properties...> {
 #endif
     //------------------------------------------------------------
 
+<<<<<<< HEAD
     if (check_args) {
+=======
+    if (check_input_args) {
+>>>>>>> 20ecfca0f (Simplify runtime_check_rank invocation from View ctr)
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
       size_t i2 = arg_layout.dimension[2];
