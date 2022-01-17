@@ -147,13 +147,13 @@ struct RShiftOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct WrappingIncOper {
+struct IncModOper {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return ((val1 >= val2) ? Scalar1(0) : val1 + Scalar1(1)); }
 };
 
 template <class Scalar1, class Scalar2>
-struct WrappingDecOper {
+struct DecModOper {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return (((val1 == Scalar1(0)) | (val1 > val2)) ? val2 : (val1 - Scalar1(1))); }
 };
@@ -636,12 +636,12 @@ DESUL_INLINE_FUNCTION T atomic_fetch_inc(T* const dest,
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T atomic_wrapping_fetch_inc(T* const dest,
+DESUL_INLINE_FUNCTION T atomic_fetch_inc_mod(T* const dest,
                                          T val,
                                          MemoryOrder order,
                                          MemoryScope scope) {
-  static_assert(std::is_unsigned<T>::value, "Signed types not supported by atomic_wrapping_fetch_inc.");
-  return Impl::atomic_fetch_oper(Impl::WrappingIncOper<T, const T>(), dest, val, order, scope);
+  static_assert(std::is_unsigned<T>::value, "Signed types not supported by atomic_fetch_inc_mod.");
+  return Impl::atomic_fetch_oper(Impl::IncModOper<T, const T>(), dest, val, order, scope);
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
@@ -652,12 +652,12 @@ DESUL_INLINE_FUNCTION T atomic_fetch_dec(T* const dest,
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T atomic_wrapping_fetch_dec(T* const dest,
+DESUL_INLINE_FUNCTION T atomic_fetch_dec_mod(T* const dest,
                                          T val,
                                          MemoryOrder order,
                                          MemoryScope scope) {
-  static_assert(std::is_unsigned<T>::value, "Signed types not supported by atomic_wrapping_fetch_dec.");
-  return Impl::atomic_fetch_oper(Impl::WrappingDecOper<T, const T>(), dest, val, order, scope);
+  static_assert(std::is_unsigned<T>::value, "Signed types not supported by atomic_fetch_dec_mod.");
+  return Impl::atomic_fetch_oper(Impl::DecModOper<T, const T>(), dest, val, order, scope);
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>

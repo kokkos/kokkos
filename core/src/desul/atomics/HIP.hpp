@@ -104,12 +104,12 @@ DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(dec)
 #undef DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP
 
 // clang-format off
-inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicInc(ptr, val); }
-inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicDec(ptr, val); }
+inline __device__ unsigned int atomic_fetch_inc_mod(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicInc(ptr, val); }
+inline __device__ unsigned int atomic_fetch_dec_mod(unsigned int* ptr, unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicDec(ptr, val); }
 // clang-format on
 
 template <typename MemoryOrder>
-inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
+inline __device__ unsigned int atomic_fetch_inc_mod(unsigned int* ptr,
                                                          unsigned int val,
                                                          MemoryOrder,
                                                          MemoryScopeDevice) {
@@ -120,15 +120,15 @@ inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
 }
 
 template <typename MemoryOrder>
-inline __device__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
+inline __device__ unsigned int atomic_fetch_inc_mod(unsigned int* ptr,
                                                          unsigned int val,
                                                          MemoryOrder,
                                                          MemoryScopeCore) {
-  return atomic_wrapping_fetch_inc(ptr, val, MemoryOrder(), MemoryScopeDevice());
+  return atomic_fetch_inc_mod(ptr, val, MemoryOrder(), MemoryScopeDevice());
 }
 
 template <typename MemoryOrder>
-inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
+inline __device__ unsigned int atomic_fetch_dec_mod(unsigned int* ptr,
                                                          unsigned int val,
                                                          MemoryOrder,
                                                          MemoryScopeDevice) {
@@ -139,11 +139,11 @@ inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
 }
 
 template <typename MemoryOrder>
-inline __device__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
+inline __device__ unsigned int atomic_fetch_dec_mod(unsigned int* ptr,
                                                          unsigned int val,
                                                          MemoryOrder,
                                                          MemoryScopeCore) {
-  return atomic_wrapping_fetch_dec(ptr, val, MemoryOrder(), MemoryScopeDevice());
+  return atomic_fetch_dec_mod(ptr, val, MemoryOrder(), MemoryScopeDevice());
 }
 
 // 2/ host-side fallback implementation for atomic functions not provided by GCC
@@ -211,12 +211,12 @@ DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(unsigned long long)
 #undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT
 
 template <class MemoryOrder>
-inline __host__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
+inline __host__ unsigned int atomic_fetch_inc_mod(unsigned int* ptr,
                                                        unsigned int val,
                                                        MemoryOrder order,
                                                        MemoryScopeDevice scope) {
   return Impl::atomic_fetch_oper(
-      Impl::WrappingIncOper<unsigned int, const unsigned int>(),
+      Impl::IncModOper<unsigned int, const unsigned int>(),
       ptr,
       val,
       order,
@@ -224,12 +224,12 @@ inline __host__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
 }
 
 template <class MemoryOrder>
-inline __host__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
+inline __host__ unsigned int atomic_fetch_inc_mod(unsigned int* ptr,
                                                        unsigned int val,
                                                        MemoryOrder order,
                                                        MemoryScopeCore scope) {
   return Impl::atomic_fetch_oper(
-      Impl::WrappingIncOper<unsigned int, const unsigned int>(),
+      Impl::IncModOper<unsigned int, const unsigned int>(),
       ptr,
       val,
       order,
@@ -237,12 +237,12 @@ inline __host__ unsigned int atomic_wrapping_fetch_inc(unsigned int* ptr,
 }
 
 template <class MemoryOrder>
-inline __host__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
+inline __host__ unsigned int atomic_fetch_dec_mod(unsigned int* ptr,
                                                        unsigned int val,
                                                        MemoryOrder order,
                                                        MemoryScopeDevice scope) {
   return Impl::atomic_fetch_oper(
-      Impl::WrappingDecOper<unsigned int, const unsigned int>(),
+      Impl::DecModOper<unsigned int, const unsigned int>(),
       ptr,
       val,
       order,
@@ -250,12 +250,12 @@ inline __host__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
 }
 
 template <class MemoryOrder>
-inline __host__ unsigned int atomic_wrapping_fetch_dec(unsigned int* ptr,
+inline __host__ unsigned int atomic_fetch_dec_mod(unsigned int* ptr,
                                                        unsigned int val,
                                                        MemoryOrder order,
                                                        MemoryScopeCore scope) {
   return Impl::atomic_fetch_oper(
-      Impl::WrappingDecOper<unsigned int, const unsigned int>(),
+      Impl::DecModOper<unsigned int, const unsigned int>(),
       ptr,
       val,
       order,

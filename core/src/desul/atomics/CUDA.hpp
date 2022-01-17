@@ -98,7 +98,7 @@ atomic_fetch_sub(T* dest, T val, MemoryOrder, MemoryScopeCore) {
 }
 
 // Wrapping Atomic Inc
-__device__ inline unsigned int atomic_wrapping_fetch_inc(unsigned int* dest,
+__device__ inline unsigned int atomic_fetch_inc_mod(unsigned int* dest,
                                                 unsigned int val,
                                                 MemoryOrderRelaxed,
                                                 MemoryScopeDevice) {
@@ -106,7 +106,7 @@ __device__ inline unsigned int atomic_wrapping_fetch_inc(unsigned int* dest,
 }
 
 template <typename MemoryOrder>
-__device__ inline unsigned int atomic_wrapping_fetch_inc(unsigned int* dest,
+__device__ inline unsigned int atomic_fetch_inc_mod(unsigned int* dest,
                                                 unsigned int val,
                                                 MemoryOrder,
                                                 MemoryScopeDevice) {
@@ -117,15 +117,15 @@ __device__ inline unsigned int atomic_wrapping_fetch_inc(unsigned int* dest,
 }
 
 template <typename MemoryOrder>
-__device__ inline unsigned int atomic_wrapping_fetch_inc(unsigned int* dest,
+__device__ inline unsigned int atomic_fetch_inc_mod(unsigned int* dest,
                                                 unsigned int val,
                                                 MemoryOrder,
                                                 MemoryScopeCore) {
-  return atomic_wrapping_fetch_inc(dest, val, MemoryOrder(), MemoryScopeDevice());
+  return atomic_fetch_inc_mod(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
 
 // Wrapping Atomic Dec
-__device__ inline unsigned int atomic_wrapping_fetch_dec(unsigned int* dest,
+__device__ inline unsigned int atomic_fetch_dec_mod(unsigned int* dest,
                                                 unsigned int val,
                                                 MemoryOrderRelaxed,
                                                 MemoryScopeDevice) {
@@ -133,7 +133,7 @@ __device__ inline unsigned int atomic_wrapping_fetch_dec(unsigned int* dest,
 }
 
 template <typename MemoryOrder>
-__device__ inline unsigned int atomic_wrapping_fetch_dec(unsigned int* dest,
+__device__ inline unsigned int atomic_fetch_dec_mod(unsigned int* dest,
                                                 unsigned int val,
                                                 MemoryOrder,
                                                 MemoryScopeDevice) {
@@ -144,11 +144,11 @@ __device__ inline unsigned int atomic_wrapping_fetch_dec(unsigned int* dest,
 }
 
 template <typename MemoryOrder>
-__device__ inline unsigned int atomic_wrapping_fetch_dec(unsigned int* dest,
+__device__ inline unsigned int atomic_fetch_dec_mod(unsigned int* dest,
                                                 unsigned int val,
                                                 MemoryOrder,
                                                 MemoryScopeCore) {
-  return atomic_wrapping_fetch_dec(dest, val, MemoryOrder(), MemoryScopeDevice());
+  return atomic_fetch_dec_mod(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
 
 // Atomic Inc
@@ -370,7 +370,7 @@ namespace desul {
 #endif // DESUL_HAVE_CUDA_ATOMICS_ASM
 
 #define DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_INC(TYPE,ORDER,SCOPE) \
-    inline TYPE atomic_wrapping_fetch_inc(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
+    inline TYPE atomic_fetch_inc_mod(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
     using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
     cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
     cas_t assume = oldval; \
@@ -384,7 +384,7 @@ namespace desul {
 DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_INC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
 
 #define DESUL_IMPL_CUDA_HOST_ATOMIC_WRAPPING_FETCH_DEC(TYPE,ORDER,SCOPE) \
-      inline TYPE atomic_wrapping_fetch_dec(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
+      inline TYPE atomic_fetch_dec_mod(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
       using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
       cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
       cas_t assume = oldval; \

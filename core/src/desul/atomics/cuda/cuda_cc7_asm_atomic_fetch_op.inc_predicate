@@ -166,7 +166,7 @@ inline __device__ ctype atomic_fetch_inc(ctype* dest, __DESUL_IMPL_CUDA_ASM_MEMO
     : reg_ret_ctype(result) : "l"(dest),reg_ctype(limit) : "memory"); \
   return result; \
 } \
-inline __device__ ctype atomic_wrapping_fetch_inc(ctype* dest, ctype limit, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
+inline __device__ ctype atomic_fetch_inc_mod(ctype* dest, ctype limit, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
   ctype result = 0; \
   asm volatile( \
           "{\n\t" \
@@ -193,7 +193,7 @@ inline __device__ ctype atomic_fetch_dec(ctype* dest, __DESUL_IMPL_CUDA_ASM_MEMO
     : reg_ret_ctype(result) : "l"(dest),reg_ctype(limit) : "memory"); \
   return result; \
 } \
-inline __device__ ctype atomic_wrapping_fetch_dec(ctype* dest, ctype limit, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
+inline __device__ ctype atomic_fetch_dec_mod(ctype* dest, ctype limit, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
   ctype result = 0; \
   asm volatile( \
           "{\n\t" \
