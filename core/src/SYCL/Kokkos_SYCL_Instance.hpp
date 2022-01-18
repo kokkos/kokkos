@@ -255,6 +255,8 @@ class SYCLFunctionWrapper;
 #if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
+  // We need a union here so that we can avoid calling a constructor for m_f
+  // and can controll all the special member functions.
   union TrivialWrapper {
     TrivialWrapper(){};
 
