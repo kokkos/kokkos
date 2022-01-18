@@ -44,10 +44,17 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Timer.hpp>
+#include <bench.hpp>
 #include <cstdlib>
 
-template <class T>
-void run_stride_unroll(int, int, int, int, int, int, int, int);
+extern template void run_stride_unroll<float>(int, int, int, int, int, int, int,
+                                              int);
+extern template void run_stride_unroll<double>(int, int, int, int, int, int,
+                                               int, int);
+extern template void run_stride_unroll<int32_t>(int, int, int, int, int, int,
+                                                int, int);
+extern template void run_stride_unroll<int64_t>(int, int, int, int, int, int,
+                                                int, int);
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize();
