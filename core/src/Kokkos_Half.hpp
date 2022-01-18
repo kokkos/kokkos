@@ -58,13 +58,13 @@
 
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 
-// __FPW_USE_DEVICE_OPS__: A macro to select which floating_pointer_wrapper
+// KOKKOS_HALF_IS_STORAGE_ONLY: A macro to select which floating_pointer_wrapper
 // operator paths should be used.
 // For CUDA, let the compiler conditionally select when device ops are used
 // For SYCL, Sycl/Kokkos_Sycl_Half_Impl_type.hpp defines
-// __SYCL_ONLY_USE_FPW_DEVICE_OPS__
-#if defined(__CUDA_ARCH__) || defined(__SYCL_ONLY_USE_FPW_DEVICE_OPS__)
-#define __FPW_USE_DEVICE_OPS__
+// KOKKOS_SYCL_HALF_IS_STORAGE_ONLY
+#if defined(__CUDA_ARCH__) || defined(KOKKOS_SYCL_HALF_IS_STORAGE_ONLY)
+#define KOKKOS_HALF_IS_STORAGE_ONLY
 #endif
 
 /************************* BEGIN forward declarations *************************/
@@ -264,14 +264,14 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_INLINE_FUNCTION
   floating_point_wrapper(const volatile floating_point_wrapper& rhs) {
-#if defined(__FPW_USE_DEVICE_OPS__) && !defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_HALF_IS_STORAGE_ONLY) && !defined(KOKKOS_ENABLE_SYCL)
     val = rhs.val;
 #else
     const volatile fixed_width_integer_type* rv_ptr =
         reinterpret_cast<const volatile fixed_width_integer_type*>(&rhs.val);
     const fixed_width_integer_type rv_val = *rv_ptr;
     val       = reinterpret_cast<const impl_type&>(rv_val);
-#endif  // __FPW_USE_DEVICE_OPS__
+#endif  // KOKKOS_HALF_IS_STORAGE_ONLY
   }
 
   // Don't support implicit conversion back to impl_type.
@@ -359,7 +359,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   floating_point_wrapper operator+() const {
     floating_point_wrapper tmp = *this;
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     tmp.val = +tmp.val;
 #else
     tmp.val   = cast_to_wrapper(+cast_from_wrapper<float>(tmp), val).val;
@@ -370,7 +370,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   floating_point_wrapper operator-() const {
     floating_point_wrapper tmp = *this;
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     tmp.val = -tmp.val;
 #else
     tmp.val   = cast_to_wrapper(-cast_from_wrapper<float>(tmp), val).val;
@@ -381,7 +381,7 @@ class alignas(FloatType) floating_point_wrapper {
   // Prefix operators
   KOKKOS_FUNCTION
   floating_point_wrapper& operator++() {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     val = val + impl_type(1.0F);  // cuda has no operator++ for __nv_bfloat
 #else
     float tmp = cast_from_wrapper<float>(*this);
@@ -393,7 +393,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   floating_point_wrapper& operator--() {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     val = val - impl_type(1.0F);  // cuda has no operator-- for __nv_bfloat
 #else
     float tmp = cast_from_wrapper<float>(*this);
@@ -443,7 +443,7 @@ class alignas(FloatType) floating_point_wrapper {
   // Compound operators
   KOKKOS_FUNCTION
   floating_point_wrapper& operator+=(floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     val = val + rhs.val;  // cuda has no operator+= for __nv_bfloat
 #else
     val = cast_to_wrapper(
@@ -488,7 +488,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   floating_point_wrapper& operator-=(floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     val = val - rhs.val;  // cuda has no operator-= for __nv_bfloat
 #else
     val = cast_to_wrapper(
@@ -533,7 +533,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   floating_point_wrapper& operator*=(floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     val = val * rhs.val;  // cuda has no operator*= for __nv_bfloat
 #else
     val = cast_to_wrapper(
@@ -578,7 +578,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   floating_point_wrapper& operator/=(floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     val = val / rhs.val;  // cuda has no operator/= for __nv_bfloat
 #else
     val = cast_to_wrapper(
@@ -625,7 +625,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   friend floating_point_wrapper operator+(floating_point_wrapper lhs,
                                           floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     lhs += rhs;
 #else
     lhs.val = cast_to_wrapper(
@@ -654,7 +654,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   friend floating_point_wrapper operator-(floating_point_wrapper lhs,
                                           floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     lhs -= rhs;
 #else
     lhs.val = cast_to_wrapper(
@@ -683,7 +683,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   friend floating_point_wrapper operator*(floating_point_wrapper lhs,
                                           floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     lhs *= rhs;
 #else
     lhs.val = cast_to_wrapper(
@@ -712,7 +712,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   friend floating_point_wrapper operator/(floating_point_wrapper lhs,
                                           floating_point_wrapper rhs) {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     lhs /= rhs;
 #else
     lhs.val = cast_to_wrapper(
@@ -741,7 +741,7 @@ class alignas(FloatType) floating_point_wrapper {
   // Logical operators
   KOKKOS_FUNCTION
   bool operator!() const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(!val);
 #else
     return !cast_from_wrapper<float>(*this);
@@ -751,7 +751,7 @@ class alignas(FloatType) floating_point_wrapper {
   // NOTE: Loses short-circuit evaluation
   KOKKOS_FUNCTION
   bool operator&&(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val && rhs.val);
 #else
     return cast_from_wrapper<float>(*this) && cast_from_wrapper<float>(rhs);
@@ -761,7 +761,7 @@ class alignas(FloatType) floating_point_wrapper {
   // NOTE: Loses short-circuit evaluation
   KOKKOS_FUNCTION
   bool operator||(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val || rhs.val);
 #else
     return cast_from_wrapper<float>(*this) || cast_from_wrapper<float>(rhs);
@@ -771,7 +771,7 @@ class alignas(FloatType) floating_point_wrapper {
   // Comparison operators
   KOKKOS_FUNCTION
   bool operator==(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val == rhs.val);
 #else
     return cast_from_wrapper<float>(*this) == cast_from_wrapper<float>(rhs);
@@ -780,7 +780,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   bool operator!=(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val != rhs.val);
 #else
     return cast_from_wrapper<float>(*this) != cast_from_wrapper<float>(rhs);
@@ -789,7 +789,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   bool operator<(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val < rhs.val);
 #else
     return cast_from_wrapper<float>(*this) < cast_from_wrapper<float>(rhs);
@@ -798,7 +798,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   bool operator>(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val > rhs.val);
 #else
     return cast_from_wrapper<float>(*this) > cast_from_wrapper<float>(rhs);
@@ -807,7 +807,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   bool operator<=(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val <= rhs.val);
 #else
     return cast_from_wrapper<float>(*this) <= cast_from_wrapper<float>(rhs);
@@ -816,7 +816,7 @@ class alignas(FloatType) floating_point_wrapper {
 
   KOKKOS_FUNCTION
   bool operator>=(floating_point_wrapper rhs) const {
-#ifdef __FPW_USE_DEVICE_OPS__
+#ifdef KOKKOS_HALF_IS_STORAGE_ONLY
     return static_cast<bool>(val >= rhs.val);
 #else
     return cast_from_wrapper<float>(*this) >= cast_from_wrapper<float>(rhs);
