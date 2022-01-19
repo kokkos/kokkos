@@ -1472,11 +1472,8 @@ class View : public ViewTraits<DataType, Properties...> {
         .template get_label<typename traits::memory_space>();
   }
 
-  enum check_input_args: bool { 
-    yes = true, 
-    no = false
-  };
-  
+  enum check_input_args : bool { yes = true, no = false };
+
   //----------------------------------------
   // Allocation according to allocation properties and array layout
 
@@ -1486,7 +1483,8 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      bool check_args = check_input_args::no /*Omit check input args per default*/)
+      bool check_args =
+          check_input_args::no /*Omit check input args per default*/)
       : m_track(), m_map() {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
@@ -1537,11 +1535,7 @@ class View : public ViewTraits<DataType, Properties...> {
 #endif
     //------------------------------------------------------------
 
-<<<<<<< HEAD
     if (check_args) {
-=======
-    if (check_input_args) {
->>>>>>> 20ecfca0f (Simplify runtime_check_rank invocation from View ctr)
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
       size_t i2 = arg_layout.dimension[2];
@@ -1638,7 +1632,7 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-                                           check_input_args::yes) {}
+             check_input_args::yes) {}
 
   // Allocate with label and layout
   template <typename Label>
@@ -1665,7 +1659,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7), check_input_args::yes) {
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not extent constructible. A layout object should "
                   "be passed too.\n");
@@ -1722,7 +1717,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(arg_ptr),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7), check_input_args::yes) {}
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {}
 
   explicit KOKKOS_INLINE_FUNCTION View(
       pointer_type arg_ptr, const typename traits::array_layout& arg_layout)
@@ -1789,7 +1785,8 @@ class View : public ViewTraits<DataType, Properties...> {
                          arg_N7)),
                      sizeof(typename traits::value_type)))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7), check_input_args::yes) {}
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {}
 };
 
 /** \brief Temporary free function rank()
@@ -1814,7 +1811,7 @@ struct RankDataType<ValueType, 0> {
 };
 
 template <unsigned N, typename... Args>
-				std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view_of_rank_n(
+std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view_of_rank_n(
     View<Args...> v) {
   return v;
 }
@@ -2044,4 +2041,3 @@ using is_view KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::is_view instead!") =
 //----------------------------------------------------------------------------
 
 #endif /* #ifndef KOKKOS_VIEW_HPP */
-

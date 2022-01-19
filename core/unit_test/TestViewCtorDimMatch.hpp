@@ -55,7 +55,6 @@ namespace Test {
       "' has mismatched number of arguments. Number of arguments = " #ARGS \
       " but dynamic rank = " #DYNRANK)
 
-TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
 #define PARAM_0
 #define PARAM_1 1
 #define PARAM_2 1, 1
@@ -74,8 +73,9 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
 #define PARAM_6_RANK 6
 #define PARAM_7_RANK 7
 
-  using DType = int;
+using DType = int;
 
+TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   using DType_0 = DType;
   using DType_1 = DType *;
   using DType_2 = DType **;
@@ -182,26 +182,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
-#define PARAM_0
-#define PARAM_1 1
-#define PARAM_2 1, 1
-#define PARAM_3 1, 1, 1
-#define PARAM_4 1, 1, 1, 1
-#define PARAM_5 1, 1, 1, 1, 1
-#define PARAM_6 1, 1, 1, 1, 1, 1
-#define PARAM_7 1, 1, 1, 1, 1, 1, 1
-
-#define PARAM_0_RANK 0
-#define PARAM_1_RANK 1
-#define PARAM_2_RANK 2
-#define PARAM_3_RANK 3
-#define PARAM_4_RANK 4
-#define PARAM_5_RANK 5
-#define PARAM_6_RANK 6
-#define PARAM_7_RANK 7
-
-  using DType = int;
-
   using DType_0 = DType;
   using DType_1 = DType[1];
   using DType_2 = DType[1][1];
@@ -308,26 +288,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
-#define PARAM_0
-#define PARAM_1 1
-#define PARAM_2 1, 1
-#define PARAM_3 1, 1, 1
-#define PARAM_4 1, 1, 1, 1
-#define PARAM_5 1, 1, 1, 1, 1
-#define PARAM_6 1, 1, 1, 1, 1, 1
-#define PARAM_7 1, 1, 1, 1, 1, 1, 1
-
-#define PARAM_0_RANK 0
-#define PARAM_1_RANK 1
-#define PARAM_2_RANK 2
-#define PARAM_3_RANK 3
-#define PARAM_4_RANK 4
-#define PARAM_5_RANK 5
-#define PARAM_6_RANK 6
-#define PARAM_7_RANK 7
-
-  using DType = int;
-
   using DType_0 = DType;
   using DType_1 = DType[1];
   using DType_2 = DType * [1];
@@ -432,6 +392,26 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 6);
   }
 }
+
+#undef PARAM_0
+#undef PARAM_1
+#undef PARAM_2
+#undef PARAM_3
+#undef PARAM_4
+#undef PARAM_5
+#undef PARAM_6
+#undef PARAM_7
+
+#undef PARAM_0_RANK
+#undef PARAM_1_RANK
+#undef PARAM_2_RANK
+#undef PARAM_3_RANK
+#undef PARAM_4_RANK
+#undef PARAM_5_RANK
+#undef PARAM_6_RANK
+#undef PARAM_7_RANK
+
+#undef DType
 
 #undef LIVE
 #undef DIE
