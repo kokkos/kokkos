@@ -100,9 +100,9 @@ inline ExecutionSpaceIdentifier identifier_from_devid(const uint32_t in) {
   // out.type = in >> 24;
   // out.device_id = in >> 17;
   // out.instance_id = ((uint32_t(-1)) << 17 ) & in;
-  return {devicetype_from_uint32t(in >> 24),
-          (~((uint32_t(-1)) << 24)) & (in >> 17),
-          (~((uint32_t(-1)) << 17)) & in};
+  return {devicetype_from_uint32t(in >> 24),     /*First 9 bits*/
+          (~((uint32_t(-1)) << 7)) & (in >> 17), /*Next 7 bits*/
+          (~((uint32_t(-1)) << 17)) & in};       /*Last 17 bits*/
 }
 
 template <typename ExecutionSpace>
