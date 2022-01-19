@@ -414,9 +414,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
 
-  template <typename Functor>
+  template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const Policy& policy,
-                                 const Functor& functor) const {
+                                 const FunctorWrapper& functor_wrapper) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -443,9 +443,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             scratch_ptr[1] + item.get_group(1) * scratch_size[1],
             scratch_size[1], item);
         if constexpr (std::is_same<work_tag, void>::value)
-          functor(team_member);
+          functor_wrapper.get_functor()(team_member);
         else
-          functor(work_tag(), team_member);
+          functor_wrapper.get_functor()(work_tag(), team_member);
       };
 
 #if defined(__SYCL_COMPILER_VERSION) && __SYCL_COMPILER_VERSION > 20210903
@@ -496,8 +496,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event =
-        sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(m_policy, functor_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
   }
 
@@ -595,10 +594,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
 
-  template <typename PolicyType, typename Functor, typename Reducer>
+  template <typename PolicyType, typename FunctorWrapper,
+            typename ReducerWrapper>
   sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const Functor& functor,
-                                 const Reducer& reducer) const {
+                                 const FunctorWrapper& functor_wrapper,
+                                 const ReducerWrapper& reducer_wrapper) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -656,9 +656,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
+              const auto& functor          = functor_wrapper.get_functor();
               const auto& selected_reducer = ReducerConditional::select(
                   static_cast<const FunctorType&>(functor),
-                  static_cast<const ReducerType&>(reducer));
+                  static_cast<const ReducerType&>(
+                      reducer_wrapper.get_functor()));
               reference_type update =
                   ValueInit::init(selected_reducer, results_ptr);
               if (size == 1) {
@@ -714,9 +716,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           auto& num_teams_done = reinterpret_cast<unsigned int&>(
               local_mem[wgroup_size * std::max(value_count, 1u)]);
           const auto local_id          = item.get_local_linear_id();
+          const auto& functor          = functor_wrapper.get_functor();
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
-              static_cast<const ReducerType&>(reducer));
+              static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
 
           if constexpr (FunctorValueTraits<ReducerTypeFwd,
                                            WorkTagFwd>::StaticValueSize == 0) {
@@ -888,8 +891,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+    sycl::event event =
+        sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper);
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
   }
