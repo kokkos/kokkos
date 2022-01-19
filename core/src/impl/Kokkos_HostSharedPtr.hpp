@@ -90,9 +90,9 @@ class HostSharedPtr {
 
   KOKKOS_FUNCTION HostSharedPtr(const HostSharedPtr& other) noexcept
       : m_element_ptr(other.m_element_ptr), m_control(other.m_control) {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);))
-    KOKKOS_IF_DEVICE(m_control = nullptr;)
+    KOKKOS_IF_ON_DEVICE(m_control = nullptr;)
   }
 
   KOKKOS_FUNCTION HostSharedPtr& operator=(HostSharedPtr&& other) noexcept {
@@ -112,9 +112,9 @@ class HostSharedPtr {
       cleanup();
       m_element_ptr = other.m_element_ptr;
       m_control     = other.m_control;
-      KOKKOS_IF_HOST(
+      KOKKOS_IF_ON_HOST(
           (if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);))
-      KOKKOS_IF_DEVICE(m_control = nullptr;)
+      KOKKOS_IF_ON_DEVICE(m_control = nullptr;)
     }
     return *this;
   }
@@ -147,7 +147,7 @@ class HostSharedPtr {
 
  private:
   KOKKOS_FUNCTION void cleanup() noexcept {
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         // If m_counter is set, then this instance is responsible for managing
         // the object pointed to by m_counter and m_element_ptr.
         if (m_control) {

@@ -607,7 +607,7 @@ class UniqueToken<HPX, UniqueTokenScope::Instance> {
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         if (m_buffer == nullptr) {
           return execution_space::impl_hardware_thread_id();
         } else {
@@ -623,17 +623,17 @@ class UniqueToken<HPX, UniqueTokenScope::Instance> {
           return result.first;
         }))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
   void release(int i) const noexcept {
-    KOKKOS_IF_HOST((if (m_buffer != nullptr) {
+    KOKKOS_IF_ON_HOST((if (m_buffer != nullptr) {
       ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
     }))
 
-    KOKKOS_IF_DEVICE(((void)i;))
+    KOKKOS_IF_ON_DEVICE(((void)i;))
   }
 };
 

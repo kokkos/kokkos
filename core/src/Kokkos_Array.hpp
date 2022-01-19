@@ -66,11 +66,11 @@ struct ArrayBoundsCheck<Integral, true> {
   KOKKOS_INLINE_FUNCTION
   ArrayBoundsCheck(Integral i, size_t N) {
     if (i < 0) {
-      KOKKOS_IF_HOST((std::string s = "Kokkos::Array: index ";
-                      s += std::to_string(i); s += " < 0";
-                      Kokkos::Impl::throw_runtime_exception(s);))
+      KOKKOS_IF_ON_HOST((std::string s = "Kokkos::Array: index ";
+                         s += std::to_string(i); s += " < 0";
+                         Kokkos::Impl::throw_runtime_exception(s);))
 
-      KOKKOS_IF_DEVICE(
+      KOKKOS_IF_ON_DEVICE(
           (Kokkos::abort("Kokkos::Array: negative index in device code");))
     }
     ArrayBoundsCheck<Integral, false>(i, N);
@@ -82,12 +82,12 @@ struct ArrayBoundsCheck<Integral, false> {
   KOKKOS_INLINE_FUNCTION
   ArrayBoundsCheck(Integral i, size_t N) {
     if (size_t(i) >= N) {
-      KOKKOS_IF_HOST((std::string s = "Kokkos::Array: index ";
-                      s += std::to_string(i); s += " >= ";
-                      s += std::to_string(N);
-                      Kokkos::Impl::throw_runtime_exception(s);))
+      KOKKOS_IF_ON_HOST((std::string s = "Kokkos::Array: index ";
+                         s += std::to_string(i); s += " >= ";
+                         s += std::to_string(N);
+                         Kokkos::Impl::throw_runtime_exception(s);))
 
-      KOKKOS_IF_DEVICE((Kokkos::abort("Kokkos::Array: index >= size");))
+      KOKKOS_IF_ON_DEVICE((Kokkos::abort("Kokkos::Array: index >= size");))
     }
   }
 };

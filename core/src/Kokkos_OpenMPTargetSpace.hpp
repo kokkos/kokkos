@@ -217,9 +217,9 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const Kokkos::Experimental::OpenMPTargetSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc) {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (return new SharedAllocationRecord(arg_space, arg_label, arg_alloc);))
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         ((void)arg_space; (void)arg_label; (void)arg_alloc; return nullptr;))
   }
 };

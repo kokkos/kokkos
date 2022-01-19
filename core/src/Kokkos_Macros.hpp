@@ -510,17 +510,17 @@
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVHPC)
 #include <nv/target>
-#define KOKKOS_IF_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
-#define KOKKOS_IF_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
+#define KOKKOS_IF_ON_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
+#define KOKKOS_IF_ON_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 #ifdef KOKKOS_COMPILER_NVHPC
-#define KOKKOS_IF_DEVICE(CODE)      \
+#define KOKKOS_IF_ON_DEVICE(CODE)   \
   if (__builtin_is_device_code()) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)  \
   }
-#define KOKKOS_IF_HOST(CODE)         \
+#define KOKKOS_IF_ON_HOST(CODE)      \
   if (!__builtin_is_device_code()) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)   \
   }
@@ -536,28 +536,28 @@ static constexpr bool kokkos_omp_on_host() { return true; }
 static constexpr bool kokkos_omp_on_host() { return false; }
 #pragma omp end declare variant
 
-#define KOKKOS_IF_DEVICE(CODE)           \
+#define KOKKOS_IF_ON_DEVICE(CODE)        \
   if constexpr (!kokkos_omp_on_host()) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)       \
   }
-#define KOKKOS_IF_HOST(CODE)            \
+#define KOKKOS_IF_ON_HOST(CODE)         \
   if constexpr (kokkos_omp_on_host()) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)      \
   }
 #endif
 #endif
 
-#if !defined(KOKKOS_IF_HOST) && !defined(KOKKOS_IF_DEVICE)
+#if !defined(KOKKOS_IF_ON_HOST) && !defined(KOKKOS_IF_ON_DEVICE)
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
     defined(__SYCL_DEVICE_ONLY__)
-#define KOKKOS_IF_DEVICE(CODE) \
+#define KOKKOS_IF_ON_DEVICE(CODE) \
   { KOKKOS_IMPL_STRIP_PARENS(CODE) }
-#define KOKKOS_IF_HOST(CODE) \
+#define KOKKOS_IF_ON_HOST(CODE) \
   {}
 #else
-#define KOKKOS_IF_DEVICE(CODE) \
+#define KOKKOS_IF_ON_DEVICE(CODE) \
   {}
-#define KOKKOS_IF_HOST(CODE) \
+#define KOKKOS_IF_ON_HOST(CODE) \
   { KOKKOS_IMPL_STRIP_PARENS(CODE) }
 #endif
 #endif

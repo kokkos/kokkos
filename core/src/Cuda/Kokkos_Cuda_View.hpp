@@ -253,7 +253,7 @@ class ViewDataHandle<
     if (arg_data_ptr == nullptr) return handle_type();
 
 #if !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         // Assignment of texture = non-texture requires creation of a texture
         // object which can only occur on the host.  In addition, 'get_record'
         // is only valid if called in a host execution space
@@ -273,7 +273,7 @@ class ViewDataHandle<
 
         return handle_type(arg_data_ptr, r);))
 #else
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         // Assignment of texture = non-texture requires creation of a texture
         // object which can only occur on the host.  In addition, 'get_record'
         // is only valid if called in a host execution space
@@ -287,7 +287,7 @@ class ViewDataHandle<
         return handle_type(arg_data_ptr, r);))
 #endif
 
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         ((void)arg_tracker; Kokkos::Impl::cuda_abort(
              "Cannot create Cuda texture object from within a Cuda kernel");
          return handle_type();))

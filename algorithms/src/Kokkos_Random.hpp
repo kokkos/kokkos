@@ -622,9 +622,9 @@ struct Random_UniqueIndex {
   using locks_view_type = View<int**, ExecutionSpace>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type) {
-    KOKKOS_IF_HOST((return ExecutionSpace::impl_hardware_thread_id();))
+    KOKKOS_IF_ON_HOST((return ExecutionSpace::impl_hardware_thread_id();))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 };
 

@@ -645,7 +645,7 @@ struct SubviewExtents {
   template <size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION void error(const ViewDimension<DimArgs...>& dim,
                                          Args... args) const {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (enum {LEN = 1024}; char buffer[LEN];
 
          const int n = snprintf(buffer, LEN, "Kokkos::subview bounds error (");
@@ -653,7 +653,7 @@ struct SubviewExtents {
 
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
 
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         ((void)dim; Kokkos::abort("Kokkos::subview bounds error");))
   }
 
@@ -3961,7 +3961,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     Kokkos::Impl::ViewTracker<ViewType> const& tracker, const MapType& map,
     Args... args) {
   if (!view_verify_operator_bounds<0>(map, args...)) {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (enum {LEN = 1024}; char buffer[LEN];
          const std::string label =
              tracker.m_tracker.template get_label<MemorySpace>();
@@ -3970,7 +3970,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
          view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
 
-    KOKKOS_IF_DEVICE((
+    KOKKOS_IF_ON_DEVICE((
         /* Check #1: is there a SharedAllocationRecord?
            (we won't use it, but if its not there then there isn't
             a corresponding SharedAllocationHeader containing a label).

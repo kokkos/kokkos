@@ -99,7 +99,7 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
     Kokkos::Impl::SharedAllocationTracker const& tracker, const MapType& map,
     const BeginsType& begins, Args... args) {
   if (!offsetview_verify_operator_bounds<0>(map, begins, args...)) {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (enum {LEN = 1024}; char buffer[LEN];
          const std::string label = tracker.template get_label<MemorySpace>();
          int n                   = snprintf(buffer, LEN,
@@ -109,7 +109,7 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
                                              args...);
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
 
-    KOKKOS_IF_DEVICE((
+    KOKKOS_IF_ON_DEVICE((
         /* Check #1: is there a SharedAllocationRecord?
           (we won't use it, but if it is not there then there isn't
            a corresponding SharedAllocationHeader containing a label).
@@ -862,11 +862,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   "Incompatible OffsetView copy construction");
     Mapping::assign(m_map, aview.impl_map(), m_track);
 
-    KOKKOS_IF_HOST((Kokkos::Experimental::Impl::runtime_check_rank_host(
-                        traits::rank_dynamic, Rank, minIndices, label());))
+    KOKKOS_IF_ON_HOST((Kokkos::Experimental::Impl::runtime_check_rank_host(
+                           traits::rank_dynamic, Rank, minIndices, label());))
 
-    KOKKOS_IF_DEVICE((Kokkos::Experimental::Impl::runtime_check_rank_device(
-                          traits::rank_dynamic, Rank, minIndices);))
+    KOKKOS_IF_ON_DEVICE((Kokkos::Experimental::Impl::runtime_check_rank_device(
+                             traits::rank_dynamic, Rank, minIndices);))
 
     for (size_t i = 0; i < minIndices.size(); ++i) {
       m_begins[i] = minIndices.begin()[i];
@@ -1037,8 +1037,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   template <typename B, typename E>
   KOKKOS_INLINE_FUNCTION static subtraction_failure runtime_check_begins_ends(
       const B& begins, const E& ends) {
-    KOKKOS_IF_HOST((return runtime_check_begins_ends_host(begins, ends);))
-    KOKKOS_IF_DEVICE((return runtime_check_begins_ends_device(begins, ends);))
+    KOKKOS_IF_ON_HOST((return runtime_check_begins_ends_host(begins, ends);))
+    KOKKOS_IF_ON_DEVICE(
+        (return runtime_check_begins_ends_device(begins, ends);))
   }
 
   // Constructor around unmanaged data after checking begins < ends for all
@@ -1229,11 +1230,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     // Setup and initialization complete, start tracking
     m_track.assign_allocated_record_to_uninitialized(record);
 
-    KOKKOS_IF_HOST((Kokkos::Experimental::Impl::runtime_check_rank_host(
-                        traits::rank_dynamic, Rank, minIndices, label());))
+    KOKKOS_IF_ON_HOST((Kokkos::Experimental::Impl::runtime_check_rank_host(
+                           traits::rank_dynamic, Rank, minIndices, label());))
 
-    KOKKOS_IF_DEVICE((Kokkos::Experimental::Impl::runtime_check_rank_device(
-                          traits::rank_dynamic, Rank, minIndices);))
+    KOKKOS_IF_ON_DEVICE((Kokkos::Experimental::Impl::runtime_check_rank_device(
+                             traits::rank_dynamic, Rank, minIndices);))
   }
 };
 

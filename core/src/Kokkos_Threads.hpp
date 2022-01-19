@@ -151,9 +151,9 @@ class Threads {
   static int impl_thread_pool_rank_host();
 
   static KOKKOS_FUNCTION int impl_thread_pool_rank() {
-    KOKKOS_IF_HOST((return impl_thread_pool_rank_host();))
+    KOKKOS_IF_ON_HOST((return impl_thread_pool_rank_host();))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   inline static unsigned impl_max_hardware_threads() {

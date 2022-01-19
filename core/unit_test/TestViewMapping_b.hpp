@@ -141,17 +141,17 @@ struct MappingClassValueType {
   KOKKOS_INLINE_FUNCTION
   MappingClassValueType() {
 #if 0
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         (printf("TestViewMappingClassValue construct on Device\n");))
-    KOKKOS_IF_HOST((printf("TestViewMappingClassValue construct on Host\n");))
+    KOKKOS_IF_ON_HOST((printf("TestViewMappingClassValue construct on Host\n");))
 #endif
   }
   KOKKOS_INLINE_FUNCTION
   ~MappingClassValueType() {
 #if 0
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         (printf("TestViewMappingClassValue destruct on Device\n");))
-    KOKKOS_IF_HOST((printf("TestViewMappingClassValue destruct on Host\n");))
+    KOKKOS_IF_ON_HOST((printf("TestViewMappingClassValue destruct on Host\n");))
 #endif
   }
 };

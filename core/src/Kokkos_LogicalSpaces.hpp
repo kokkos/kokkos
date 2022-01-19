@@ -278,10 +278,10 @@ class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const SpaceType& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size) {
-    KOKKOS_IF_HOST((return new SharedAllocationRecord(arg_space, arg_label,
-                                                      arg_alloc_size);))
-    KOKKOS_IF_DEVICE(((void)arg_space; (void)arg_label; (void)arg_alloc_size;
-                      return nullptr;))
+    KOKKOS_IF_ON_HOST((return new SharedAllocationRecord(arg_space, arg_label,
+                                                         arg_alloc_size);))
+    KOKKOS_IF_ON_DEVICE(((void)arg_space; (void)arg_label; (void)arg_alloc_size;
+                         return nullptr;))
   }
 
   /**\brief  Allocate tracked memory in the space */

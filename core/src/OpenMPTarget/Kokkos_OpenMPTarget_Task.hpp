@@ -112,17 +112,17 @@ class TaskExec<Kokkos::Experimental::OpenMPTarget> {
 
  public:
   KOKKOS_FUNCTION void* team_shared() const {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (return m_team_exec ? m_team_exec->scratch_thread() : nullptr;))
 
-    KOKKOS_IF_DEVICE((return nullptr;))
+    KOKKOS_IF_ON_DEVICE((return nullptr;))
   }
 
   KOKKOS_FUNCTION int team_shared_size() const {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (return m_team_exec ? m_team_exec->scratch_thread_size() : 0;))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   /**\brief  Whole team enters this function call
@@ -130,7 +130,7 @@ class TaskExec<Kokkos::Experimental::OpenMPTarget> {
    *         this function call.
    */
   KOKKOS_FUNCTION void team_barrier() const {
-    KOKKOS_IF_HOST((if (1 < m_team_size) { team_barrier_impl(); }))
+    KOKKOS_IF_ON_HOST((if (1 < m_team_size) { team_barrier_impl(); }))
   }
 
   KOKKOS_INLINE_FUNCTION

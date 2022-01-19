@@ -168,9 +168,9 @@ class ThreadsExecTeamMember {
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
                                              const int& thread_id) const {
-    KOKKOS_IF_DEVICE(((void)value; (void)thread_id;))
+    KOKKOS_IF_ON_DEVICE(((void)value; (void)thread_id;))
 
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         // Make sure there is enough scratch space:
         using type = typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE,
                                    ValueType, void>::type;
@@ -189,9 +189,9 @@ class ThreadsExecTeamMember {
   template <class Closure, class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, ValueType& value,
                                              const int& thread_id) const {
-    KOKKOS_IF_DEVICE(((void)f; (void)value; (void)thread_id;))
+    KOKKOS_IF_ON_DEVICE(((void)f; (void)value; (void)thread_id;))
 
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         // Make sure there is enough scratch space:
         using type = typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE,
                                    ValueType, void>::type;
@@ -210,9 +210,9 @@ class ThreadsExecTeamMember {
   KOKKOS_INLINE_FUNCTION
       typename std::enable_if<!Kokkos::is_reducer<Type>::value, Type>::type
       team_reduce(const Type& value) const {
-    KOKKOS_IF_DEVICE((return value;))
+    KOKKOS_IF_ON_DEVICE((return value;))
 
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         // Make sure there is enough scratch space:
         using type =
             typename if_c<sizeof(Type) < TEAM_REDUCE_SIZE, Type, void>::type;
@@ -251,9 +251,9 @@ class ThreadsExecTeamMember {
       typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
       team_reduce(const ReducerType& reducer,
                   const typename ReducerType::value_type contribution) const {
-    KOKKOS_IF_DEVICE(((void)reducer; (void)contribution;))
+    KOKKOS_IF_ON_DEVICE(((void)reducer; (void)contribution;))
 
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (using value_type = typename ReducerType::value_type;
          // Make sure there is enough scratch space:
          using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
@@ -309,9 +309,9 @@ class ThreadsExecTeamMember {
   template <typename ArgType>
   KOKKOS_INLINE_FUNCTION ArgType team_scan(const ArgType& value,
                                            ArgType* const global_accum) const {
-    KOKKOS_IF_DEVICE(((void)global_accum; return value;))
+    KOKKOS_IF_ON_DEVICE(((void)global_accum; return value;))
 
-    KOKKOS_IF_HOST((  // Make sure there is enough scratch space:
+    KOKKOS_IF_ON_HOST((  // Make sure there is enough scratch space:
         using type = typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType,
                                    void>::type;
 

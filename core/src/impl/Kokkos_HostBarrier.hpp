@@ -207,9 +207,9 @@ class HostBarrier {
   KOKKOS_INLINE_FUNCTION
   static void wait_until_equal(int* ptr, const int v,
                                bool active_wait = true) noexcept {
-    KOKKOS_IF_HOST((impl_wait_until_equal_host(ptr, v, active_wait);))
+    KOKKOS_IF_ON_HOST((impl_wait_until_equal_host(ptr, v, active_wait);))
 
-    KOKKOS_IF_DEVICE(((void)active_wait; while (!test_equal(ptr, v)){}))
+    KOKKOS_IF_ON_DEVICE(((void)active_wait; while (!test_equal(ptr, v)){}))
   }
 
   static void impl_wait_until_equal_host(int* ptr, const int v,

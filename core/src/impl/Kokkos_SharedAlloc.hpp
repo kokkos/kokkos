@@ -137,8 +137,8 @@ class SharedAllocationRecord<void, void> {
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
   static KOKKOS_FUNCTION int tracking_enabled() {
-    KOKKOS_IF_HOST(return t_tracking_enabled;)
-    KOKKOS_IF_DEVICE(return 0;)
+    KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
+    KOKKOS_IF_ON_DEVICE(return 0;)
   }
 
   /**\brief A host process thread claims and disables the
@@ -313,9 +313,9 @@ class SharedAllocationRecord
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const MemorySpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc) {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (return new SharedAllocationRecord(arg_space, arg_label, arg_alloc);))
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         ((void)arg_space; (void)arg_label; (void)arg_alloc; return nullptr;))
   }
 };
@@ -339,14 +339,14 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT       \
-  KOKKOS_IF_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
-    Record::increment(m_record);                              \
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT          \
+  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
+    Record::increment(m_record);                                 \
   }))
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT       \
-  KOKKOS_IF_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
-    Record::decrement(m_record);                              \
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT          \
+  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
+    Record::decrement(m_record);                                 \
   }))
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs,               \
@@ -385,11 +385,11 @@ union SharedAllocationTracker {
 
   KOKKOS_INLINE_FUNCTION
   int use_count() const {
-    KOKKOS_IF_HOST((Record* const tmp = reinterpret_cast<Record*>(
-                        m_record_bits & ~DO_NOT_DEREF_FLAG);
-                    return (tmp ? tmp->use_count() : 0);))
+    KOKKOS_IF_ON_HOST((Record* const tmp = reinterpret_cast<Record*>(
+                           m_record_bits & ~DO_NOT_DEREF_FLAG);
+                       return (tmp ? tmp->use_count() : 0);))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   KOKKOS_INLINE_FUNCTION bool has_record() const {

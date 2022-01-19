@@ -284,7 +284,7 @@ KOKKOS_INLINE_FUNCTION void dyn_rank_view_verify_operator_bounds(
   }
 
   if (!dyn_rank_view_verify_operator_bounds<0>(rank, map, args...)) {
-    KOKKOS_IF_HOST(
+    KOKKOS_IF_ON_HOST(
         (enum {LEN = 1024}; char buffer[LEN];
          const std::string label = tracker.template get_label<MemorySpace>();
          int n = snprintf(buffer, LEN, "DynRankView bounds error of view %s (",
@@ -293,7 +293,7 @@ KOKKOS_INLINE_FUNCTION void dyn_rank_view_verify_operator_bounds(
                                                 args...);
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
 
-    KOKKOS_IF_DEVICE(
+    KOKKOS_IF_ON_DEVICE(
         ((void)tracker; Kokkos::abort("DynRankView bounds error");))
   }
 }

@@ -784,10 +784,10 @@ class MemoryPool {
 
   template <class MemorySpace>
   static KOKKOS_FUNCTION constexpr bool may_access() {
-    KOKKOS_IF_HOST((return SpaceAccessibility<DefaultHostExecutionSpace,
-                                              MemorySpace>::accessible;))
-    KOKKOS_IF_DEVICE((return SpaceAccessibility<DefaultExecutionSpace,
-                                                MemorySpace>::accessible;))
+    KOKKOS_IF_ON_HOST((return SpaceAccessibility<DefaultHostExecutionSpace,
+                                                 MemorySpace>::accessible;))
+    KOKKOS_IF_ON_DEVICE((return SpaceAccessibility<DefaultExecutionSpace,
+                                                   MemorySpace>::accessible;))
   }
 
   KOKKOS_INLINE_FUNCTION

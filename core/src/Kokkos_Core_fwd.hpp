@@ -209,10 +209,10 @@ struct RuntimeCheckMemoryAccessViolation<AccessSpace, MemorySpace, false> {
 // will occur
 template <class MemorySpace>
 KOKKOS_FUNCTION void runtime_check_memory_access_violation() {
-  KOKKOS_IF_HOST((
+  KOKKOS_IF_ON_HOST((
       RuntimeCheckMemoryAccessViolation<MemorySpace, DefaultHostExecutionSpace>(
           "ERROR: attempt to access inaccessible memory space");))
-  KOKKOS_IF_DEVICE(
+  KOKKOS_IF_ON_DEVICE(
       (RuntimeCheckMemoryAccessViolation<MemorySpace, DefaultExecutionSpace>(
            "ERROR: attempt to access inaccessible memory space");))
 }
@@ -222,10 +222,10 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation() {
 template <class MemorySpace>
 KOKKOS_FUNCTION void runtime_check_memory_access_violation(
     char const *const msg) {
-  KOKKOS_IF_HOST((
+  KOKKOS_IF_ON_HOST((
       (void)RuntimeCheckMemoryAccessViolation<MemorySpace,
                                               DefaultHostExecutionSpace>(msg);))
-  KOKKOS_IF_DEVICE((
+  KOKKOS_IF_ON_DEVICE((
       (void)
           RuntimeCheckMemoryAccessViolation<MemorySpace, DefaultExecutionSpace>(
               msg);))

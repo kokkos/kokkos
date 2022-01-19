@@ -691,7 +691,7 @@ class UniqueToken<Threads, UniqueTokenScope::Instance> {
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
-    KOKKOS_IF_HOST((
+    KOKKOS_IF_ON_HOST((
         if (m_buffer == nullptr) {
           return Threads::impl_thread_pool_rank();
         } else {
@@ -707,17 +707,17 @@ class UniqueToken<Threads, UniqueTokenScope::Instance> {
           return result.first;
         }))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
   void release(int i) const noexcept {
-    KOKKOS_IF_HOST((if (m_buffer != nullptr) {
+    KOKKOS_IF_ON_HOST((if (m_buffer != nullptr) {
       ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
     }))
 
-    KOKKOS_IF_DEVICE(((void)i;))
+    KOKKOS_IF_ON_DEVICE(((void)i;))
   }
 };
 
@@ -735,17 +735,17 @@ class UniqueToken<Threads, UniqueTokenScope::Global> {
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int size() const noexcept {
-    KOKKOS_IF_HOST((return Threads::impl_thread_pool_size();))
+    KOKKOS_IF_ON_HOST((return Threads::impl_thread_pool_size();))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
-    KOKKOS_IF_HOST((return Threads::impl_thread_pool_rank();))
+    KOKKOS_IF_ON_HOST((return Threads::impl_thread_pool_rank();))
 
-    KOKKOS_IF_DEVICE((return 0;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   /// \brief release a value acquired by generate
