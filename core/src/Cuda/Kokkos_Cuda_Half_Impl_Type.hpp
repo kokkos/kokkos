@@ -58,7 +58,7 @@
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
-#define KOKKOS_CUDA_IMPL_HALF_TYPE_DEFINED
+#define KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 
 namespace Kokkos {
 namespace Impl {

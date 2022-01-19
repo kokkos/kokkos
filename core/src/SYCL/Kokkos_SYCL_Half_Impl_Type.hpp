@@ -53,8 +53,7 @@
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
-#define KOKKOS_SYCL_IMPL_HALF_TYPE_DEFINED
-#define KOKKOS_SYCL_HALF_IS_STORAGE_ONLY
+#define KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
 namespace Kokkos {
 namespace Impl {

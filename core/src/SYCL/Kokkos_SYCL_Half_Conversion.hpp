@@ -45,7 +45,7 @@
 #ifndef KOKKOS_SYCL_HALF_HPP_
 #define KOKKOS_SYCL_HALF_HPP_
 
-#ifdef KOKKOS_SYCL_IMPL_HALF_TYPE_DEFINED
+#ifdef KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
 #include <Kokkos_NumericTraits.hpp>  // reduction_identity
 
@@ -154,5 +154,5 @@ struct reduction_identity<Kokkos::Experimental::half_t> {
 };
 
 }  // namespace Kokkos
-#endif  // KOKKOS_SYCL_IMPL_HALF_TYPE_DEFINED
+#endif  // KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 #endif
