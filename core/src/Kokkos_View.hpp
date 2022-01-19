@@ -1472,6 +1472,11 @@ class View : public ViewTraits<DataType, Properties...> {
         .template get_label<typename traits::memory_space>();
   }
 
+  enum check_input_args: bool { 
+    yes = true, 
+    no = false
+  };
+  
   //----------------------------------------
   // Allocation according to allocation properties and array layout
 
@@ -1481,7 +1486,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      int check_input_args = 0)
+      bool check_args = check_input_args::no /*Omit check input args per default*/)
       : m_track(), m_map() {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
@@ -1532,7 +1537,7 @@ class View : public ViewTraits<DataType, Properties...> {
 #endif
     //------------------------------------------------------------
 
-    if (check_input_args) {
+    if (check_args) {
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
       size_t i2 = arg_layout.dimension[2];
@@ -1582,7 +1587,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      int check_input_args = 0)
+      bool check_args = check_input_args::no)
       : m_track()  // No memory tracking
         ,
         m_map(arg_prop, arg_layout) {
@@ -1591,7 +1596,7 @@ class View : public ViewTraits<DataType, Properties...> {
                      typename Impl::ViewCtorProp<P...>::pointer_type>::value,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
-    static_cast<void>(check_input_args);
+    static_cast<void>(check_args);
   }
 
   // Simple dimension-only layout
@@ -1611,7 +1616,7 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             1) {}
+             check_input_args::yes) {}
 
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1629,7 +1634,7 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             1) {}
+                                           check_input_args::yes) {}
 
   // Allocate with label and layout
   template <typename Label>
@@ -1656,8 +1661,7 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7),
-             1) {
+                                           arg_N4, arg_N5, arg_N6, arg_N7), check_input_args::yes) {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not extent constructible. A layout object should "
                   "be passed too.\n");
@@ -1714,8 +1718,7 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(arg_ptr),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7),
-             1) {}
+                                           arg_N4, arg_N5, arg_N6, arg_N7), check_input_args::yes) {}
 
   explicit KOKKOS_INLINE_FUNCTION View(
       pointer_type arg_ptr, const typename traits::array_layout& arg_layout)
@@ -1782,8 +1785,7 @@ class View : public ViewTraits<DataType, Properties...> {
                          arg_N7)),
                      sizeof(typename traits::value_type)))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7),
-             1) {}
+                                           arg_N4, arg_N5, arg_N6, arg_N7), check_input_args::yes) {}
 };
 
 /** \brief Temporary free function rank()
@@ -2038,3 +2040,4 @@ using is_view KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::is_view instead!") =
 //----------------------------------------------------------------------------
 
 #endif /* #ifndef KOKKOS_VIEW_HPP */
+
