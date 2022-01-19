@@ -101,6 +101,11 @@ if [[ -z ${NVCC_WRAPPER_TMPDIR+x} ]]; then
 else
   temp_dir=${NVCC_WRAPPER_TMPDIR}
 fi
+mkdir -p ${temp_dir} ||
+   {
+   echo >&2  "ERROR: Failed to create temp directory ${temp_dir}"
+   exit 1
+   }
 
 # optimization flag added as a command-line argument
 optimization_flag=""
