@@ -125,12 +125,6 @@ struct AXPBY {
     double* y_ = y.data();
     double* z_ = z.data();
 
-    // Initialization
-#pragma omp target teams distribute parallel for is_device_ptr(x_, y_, z_)
-    for (int i = 0; i < N; ++i) {
-      z_[i] = x_[i] = y_[i] = 0;
-    }
-
     // Warmup
 #pragma omp target teams distribute parallel for is_device_ptr(x_, y_, z_)
     for (int i = 0; i < N; ++i) {
