@@ -119,6 +119,36 @@ struct AXPBY {
   }
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  double openmptarget_axpby(int R) {
+    double* x_ = x.data();
+    double* y_ = y.data();
+    double* z_ = z.data();
+
+    // Initialization
+#pragma omp target teams distribute parallel for is_device_ptr(x_, y_, z_)
+    for (int i = 0; i < N; ++i) {
+      z_[i] = x_[i] = y_[i] = 0;
+    }
+
+    // Warmup
+#pragma omp target teams distribute parallel for is_device_ptr(x_, y_, z_)
+    for (int i = 0; i < N; ++i) {
+      z_[i] = x_[i] + y_[i];
+    }
+
+    Kokkos::Timer timer;
+    for (int r = 0; r < R; r++) {
+#pragma omp target teams distribute parallel for is_device_ptr(x_, y_, z_)
+      for (int i = 0; i < N; ++i) {
+        z_[i] = x_[i] + y_[i];
+      }
+    }
+    double time = timer.seconds();
+    return time;
+  }
+#endif
+
   void run_test(int R) {
     double bytes_moved = 1. * sizeof(double) * N * 3 * R;
     double GB          = bytes_moved / 1024 / 1024 / 1024;
@@ -127,6 +157,11 @@ struct AXPBY {
 #ifdef KOKKOS_ENABLE_SYCL
     double time_sycl = sycl_axpby(R);
     printf("AXPBY SYCL: %e s %e GB/s\n", time_sycl, GB / time_sycl);
+#endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    double time_openmptarget = openmptarget_axpby(R);
+    printf("AXPBY OpenMPTarget: %e s %e GB/s\n", time_openmptarget,
+           GB / time_openmptarget);
 #endif
   }
 };

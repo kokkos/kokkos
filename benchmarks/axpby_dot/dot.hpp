@@ -86,7 +86,8 @@ struct DOT {
       auto result_ptr = static_cast<double*>(
           sycl::malloc(sizeof(result), sycl_queue, sycl::usm::alloc::shared));
       sycl_queue.submit([&](cl::sycl::handler& cgh) {
-        auto reduction = cl::sycl::ext::oneapi::reduction(result_ptr, std::plus<>());
+        auto reduction =
+            cl::sycl::ext::oneapi::reduction(result_ptr, std::plus<>());
         cgh.parallel_for(cl::sycl::nd_range<1>(N, 128), reduction,
                          [=](cl::sycl::nd_item<1> itemId, auto& sum) {
                            const int i = itemId.get_global_id();
@@ -104,7 +105,8 @@ struct DOT {
       auto result_ptr = static_cast<double*>(
           sycl::malloc(sizeof(result), sycl_queue, sycl::usm::alloc::shared));
       sycl_queue.submit([&](cl::sycl::handler& cgh) {
-        auto reduction = cl::sycl::ext::oneapi::reduction(result_ptr, std::plus<>());
+        auto reduction =
+            cl::sycl::ext::oneapi::reduction(result_ptr, std::plus<>());
         cgh.parallel_for(cl::sycl::nd_range<1>(N, 128), reduction,
                          [=](cl::sycl::nd_item<1> itemId, auto& sum) {
                            const int i = itemId.get_global_id();
@@ -120,6 +122,34 @@ struct DOT {
   }
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  double openmptarget_dot(int R) {
+    DOT f(*this);
+    const auto y_ = y.data();
+    const auto x_ = x.data();
+
+    // Warmup
+    {
+      double result = 0.;
+#pragma omp target teams distribute parallel for is_device_ptr(x_, y_)
+      for (int i = 0; i < N; ++i) {
+        result += x_[i] * y_[i];
+      }
+    }
+
+    Kokkos::Timer timer;
+    for (int r = 0; r < R; r++) {
+      double result = 0.;
+#pragma omp target teams distribute parallel for is_device_ptr(x_, y_)
+      for (int i = 0; i < N; ++i) {
+        result += x_[i] * y_[i];
+      }
+    }
+    double time = timer.seconds();
+    return time;
+  }
+#endif
+
   void run_test(int R) {
     double bytes_moved = 1. * sizeof(double) * N * 2 * R;
     double GB          = bytes_moved / 1024 / 1024 / 1024;
@@ -128,6 +158,11 @@ struct DOT {
 #ifdef KOKKOS_ENABLE_SYCL
     double time_sycl = sycl_dot(R);
     printf("DOT SYCL: %e s %e GB/s\n", time_sycl, GB / time_sycl);
+#endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    double time_openmptarget = openmptarget_dot(R);
+    printf("DOT OpenMPTarget: %e s %e GB/s\n", time_openmptarget,
+           GB / time_openmptarget);
 #endif
   }
 };
