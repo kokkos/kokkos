@@ -13,28 +13,37 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 
 template <class MemoryOrder>
-void atomic_thread_fence(MemoryOrder, MemoryScopeCaller) {}
+DESUL_INLINE_FUNCTION void atomic_thread_fence(MemoryOrder, MemoryScopeCaller) {}
 
-template <typename T, class MemoryOrder>
-T atomic_exchange(T* dest,
-                  Impl::dont_deduce_this_parameter_t<const T> value,
-                  MemoryOrder,
-                  MemoryScopeCaller) {
-  T return_val = *dest;
-  *dest = value;
-  return return_val;
-}
+#define DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MEMORY_ORDER)                                \
+  template <typename T>                                                                \
+  DESUL_INLINE_FUNCTION T atomic_exchange(T* dest,                                     \
+                                          Impl::dont_deduce_this_parameter_t<T> value, \
+                                          MEMORY_ORDER,                                \
+                                          MemoryScopeCaller) {                         \
+    T return_val = *dest;                                                              \
+    *dest = value;                                                                     \
+    return return_val;                                                                 \
+  }                                                                                    \
+                                                                                       \
+  template <typename T>                                                                \
+  DESUL_INLINE_FUNCTION T atomic_compare_exchange(                                     \
+      T* dest,                                                                         \
+      Impl::dont_deduce_this_parameter_t<T> compare,                                   \
+      Impl::dont_deduce_this_parameter_t<T> value,                                     \
+      MEMORY_ORDER,                                                                    \
+      MemoryScopeCaller) {                                                             \
+    T current_val = *dest;                                                             \
+    if (current_val == compare) *dest = value;                                         \
+    return current_val;                                                                \
+  }
 
-template <typename T, class MemoryOrder>
-T atomic_compare_exchange(T* dest,
-                          Impl::dont_deduce_this_parameter_t<const T> compare,
-                          Impl::dont_deduce_this_parameter_t<const T> value,
-                          MemoryOrder,
-                          MemoryScopeCaller) {
-  T current_val = *dest;
-  if (current_val == compare) *dest = value;
-  return current_val;
-}
+DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MemoryOrderSeqCst)
+DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MemoryOrderAcqRel)
+DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MemoryOrderRelease)
+DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MemoryOrderAcquire)
+DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MemoryOrderRelaxed)
 
+#undef DESUL_ATOMIC_EXCHANGE_SCOPECALLER
 }  // namespace desul
 #endif
