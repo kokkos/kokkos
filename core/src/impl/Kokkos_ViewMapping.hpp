@@ -642,25 +642,20 @@ struct SubviewExtents {
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
   }
 
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   template <size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION void error(const ViewDimension<DimArgs...>& dim,
                                          Args... args) const {
-    enum { LEN = 1024 };
-    char buffer[LEN];
+    KOKKOS_IF_ON_HOST(
+        (enum {LEN = 1024}; char buffer[LEN];
 
-    const int n = snprintf(buffer, LEN, "Kokkos::subview bounds error (");
-    error(buffer + n, LEN - n, 0, 0, dim, args...);
+         const int n = snprintf(buffer, LEN, "Kokkos::subview bounds error (");
+         error(buffer + n, LEN - n, 0, 0, dim, args...);
 
-    Kokkos::Impl::throw_runtime_exception(std::string(buffer));
+         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+
+    KOKKOS_IF_ON_DEVICE(
+        ((void)dim; Kokkos::abort("Kokkos::subview bounds error");))
   }
-#else
-  template <size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION void error(const ViewDimension<DimArgs...>&,
-                                         Args...) const {
-    Kokkos::abort("Kokkos::subview bounds error");
-  }
-#endif
 
 #else
 
@@ -3966,27 +3961,24 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     Kokkos::Impl::ViewTracker<ViewType> const& tracker, const MapType& map,
     Args... args) {
   if (!view_verify_operator_bounds<0>(map, args...)) {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    enum { LEN = 1024 };
-    char buffer[LEN];
-    const std::string label =
-        tracker.m_tracker.template get_label<MemorySpace>();
-    int n =
-        snprintf(buffer, LEN, "View bounds error of view %s (", label.c_str());
-    view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
-    Kokkos::Impl::throw_runtime_exception(std::string(buffer));
-#else
-    /* Check #1: is there a SharedAllocationRecord?
-       (we won't use it, but if its not there then there isn't
-        a corresponding SharedAllocationHeader containing a label).
-       This check should cover the case of Views that don't
-       have the Unmanaged trait but were initialized by pointer. */
-    if (tracker.m_tracker.has_record()) {
-      operator_bounds_error_on_device(map);
-    } else {
-      Kokkos::abort("View bounds error");
-    }
-#endif
+    KOKKOS_IF_ON_HOST(
+        (enum {LEN = 1024}; char buffer[LEN];
+         const std::string label =
+             tracker.m_tracker.template get_label<MemorySpace>();
+         int n = snprintf(buffer, LEN, "View bounds error of view %s (",
+                          label.c_str());
+         view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
+         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+
+    KOKKOS_IF_ON_DEVICE((
+        /* Check #1: is there a SharedAllocationRecord?
+           (we won't use it, but if its not there then there isn't
+            a corresponding SharedAllocationHeader containing a label).
+           This check should cover the case of Views that don't
+           have the Unmanaged trait but were initialized by pointer. */
+        if (tracker.m_tracker.has_record()) {
+          operator_bounds_error_on_device(map);
+        } else { Kokkos::abort("View bounds error"); }))
   }
 }
 

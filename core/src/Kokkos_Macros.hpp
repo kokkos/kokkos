@@ -80,7 +80,7 @@
  *  KOKKOS_COMPILER_PGI
  *  KOKKOS_COMPILER_MSVC
  *
- *  Macros for which compiler extension to use for atomics on intrinsice types
+ *  Macros for which compiler extension to use for atomics on intrinsic types
  *
  *  KOKKOS_ENABLE_CUDA_ATOMICS
  *  KOKKOS_ENABLE_GNU_ATOMICS
@@ -501,6 +501,69 @@
 
 //----------------------------------------------------------------------------
 
+// Remove surrounding parentheses if present
+#define KOKKOS_IMPL_STRIP_PARENS(X) KOKKOS_IMPL_ESC(KOKKOS_IMPL_ISH X)
+#define KOKKOS_IMPL_ISH(...) KOKKOS_IMPL_ISH __VA_ARGS__
+#define KOKKOS_IMPL_ESC(...) KOKKOS_IMPL_ESC_(__VA_ARGS__)
+#define KOKKOS_IMPL_ESC_(...) KOKKOS_IMPL_VAN_##__VA_ARGS__
+#define KOKKOS_IMPL_VAN_KOKKOS_IMPL_ISH
+
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVHPC)
+#include <nv/target>
+#define KOKKOS_IF_ON_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
+#define KOKKOS_IF_ON_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#ifdef KOKKOS_COMPILER_NVHPC
+#define KOKKOS_IF_ON_DEVICE(CODE)   \
+  if (__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
+  }
+#define KOKKOS_IF_ON_HOST(CODE)      \
+  if (!__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)   \
+  }
+#else
+// Base function.
+static constexpr bool kokkos_omp_on_host() { return true; }
+
+#pragma omp begin declare variant match(device = {kind(host)})
+static constexpr bool kokkos_omp_on_host() { return true; }
+#pragma omp end declare variant
+
+#pragma omp begin declare variant match(device = {kind(nohost)})
+static constexpr bool kokkos_omp_on_host() { return false; }
+#pragma omp end declare variant
+
+#define KOKKOS_IF_ON_DEVICE(CODE)        \
+  if constexpr (!kokkos_omp_on_host()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)       \
+  }
+#define KOKKOS_IF_ON_HOST(CODE)         \
+  if constexpr (kokkos_omp_on_host()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)      \
+  }
+#endif
+#endif
+
+#if !defined(KOKKOS_IF_ON_HOST) && !defined(KOKKOS_IF_ON_DEVICE)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
+    defined(__SYCL_DEVICE_ONLY__)
+#define KOKKOS_IF_ON_DEVICE(CODE) \
+  { KOKKOS_IMPL_STRIP_PARENS(CODE) }
+#define KOKKOS_IF_ON_HOST(CODE) \
+  {}
+#else
+#define KOKKOS_IF_ON_DEVICE(CODE) \
+  {}
+#define KOKKOS_IF_ON_HOST(CODE) \
+  { KOKKOS_IMPL_STRIP_PARENS(CODE) }
+#endif
+#endif
+
+//----------------------------------------------------------------------------
+
 #if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || \
     (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
 #if defined(KOKKOS_ENABLE_PERFORMANCE_POSIX_MEMALIGN)
@@ -509,8 +572,8 @@
 #endif
 
 //----------------------------------------------------------------------------
-// If compiling with CUDA, we must use relocateable device code
-// to enable the task policy.
+// If compiling with CUDA, we must use relocatable device code to enable the
+// task policy.
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)

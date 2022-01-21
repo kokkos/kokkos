@@ -284,18 +284,17 @@ KOKKOS_INLINE_FUNCTION void dyn_rank_view_verify_operator_bounds(
   }
 
   if (!dyn_rank_view_verify_operator_bounds<0>(rank, map, args...)) {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    enum { LEN = 1024 };
-    char buffer[LEN];
-    const std::string label = tracker.template get_label<MemorySpace>();
-    int n = snprintf(buffer, LEN, "DynRankView bounds error of view %s (",
-                     label.c_str());
-    dyn_rank_view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
-    Kokkos::Impl::throw_runtime_exception(std::string(buffer));
-#else
-    (void)tracker;
-    Kokkos::abort("DynRankView bounds error");
-#endif
+    KOKKOS_IF_ON_HOST(
+        (enum {LEN = 1024}; char buffer[LEN];
+         const std::string label = tracker.template get_label<MemorySpace>();
+         int n = snprintf(buffer, LEN, "DynRankView bounds error of view %s (",
+                          label.c_str());
+         dyn_rank_view_error_operator_bounds<0>(buffer + n, LEN - n, map,
+                                                args...);
+         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+
+    KOKKOS_IF_ON_DEVICE(
+        ((void)tracker; Kokkos::abort("DynRankView bounds error");))
   }
 }
 
@@ -576,18 +575,22 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 
 // rank of the calling operator - included as first argument in ARG
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                          \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             typename traits::memory_space>::check();  \
-  Kokkos::Impl::dyn_rank_view_verify_operator_bounds<                  \
-      typename traits::memory_space>                                   \
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                             \
+  Kokkos::Impl::runtime_check_memory_access_violation<                    \
+      typename traits::memory_space>(                                     \
+      "Kokkos::DynRankView ERROR: attempt to access inaccessible memory " \
+      "space");                                                           \
+  Kokkos::Impl::dyn_rank_view_verify_operator_bounds<                     \
+      typename traits::memory_space>                                      \
       ARG;
 
 #else
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                          \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             typename traits::memory_space>::check();
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                             \
+  Kokkos::Impl::runtime_check_memory_access_violation<                    \
+      typename traits::memory_space>(                                     \
+      "Kokkos::DynRankView ERROR: attempt to access inaccessible memory " \
+      "space");
 
 #endif
 

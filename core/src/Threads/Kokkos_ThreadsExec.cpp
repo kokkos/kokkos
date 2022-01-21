@@ -775,12 +775,7 @@ Threads &Threads::impl_instance(int) {
   return t;
 }
 
-int Threads::impl_thread_pool_size(int depth) {
-  return Impl::s_thread_pool_size[depth];
-}
-
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-int Threads::impl_thread_pool_rank() {
+int Threads::impl_thread_pool_rank_host() {
   const std::thread::id pid = std::this_thread::get_id();
   int i                     = 0;
   while ((i < Impl::s_thread_pool_size[0]) && (pid != Impl::s_threads_pid[i])) {
@@ -788,7 +783,10 @@ int Threads::impl_thread_pool_rank() {
   }
   return i;
 }
-#endif
+
+int Threads::impl_thread_pool_size(int depth) {
+  return Impl::s_thread_pool_size[depth];
+}
 
 const char *Threads::name() { return "Threads"; }
 
