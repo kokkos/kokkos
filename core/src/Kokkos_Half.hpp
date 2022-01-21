@@ -50,12 +50,6 @@
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
 #include <string>
 
-////////////////////////////////////////////////////////////////////////////////
-///////// Include special backend specific headers and impl types here /////////
-#include <Cuda/Kokkos_Cuda_Half_Impl_Type.hpp>
-#include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
-////////////////////////////////////////////////////////////////////////////////
-
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 
 // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH: A macro to select which
@@ -913,14 +907,6 @@ cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
-////////////////////////////////////////////////////////////////////////////////
-////// Include special backend specific cast routines and identities here //////
-#include <Cuda/Kokkos_Cuda_Half_Conversion.hpp>
-#include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>
-////////////////////////////////////////////////////////////////////////////////
-
-// Potentially include special compiler specific versions here
-// e.g. for Intel
 #endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
 
 // If none of the above actually did anything and defined a half precision type

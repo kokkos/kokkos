@@ -50,11 +50,9 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-// Fundamental type description for half precision
-// Should not rely on other backend infrastructure
-#include <Kokkos_Half.hpp>
 #include <KokkosCore_Config_DeclareBackend.hpp>
 
+#include <Kokkos_Half.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_LogicalSpaces.hpp>
 #include <Kokkos_Pair.hpp>
