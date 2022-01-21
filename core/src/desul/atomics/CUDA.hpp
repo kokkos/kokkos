@@ -361,27 +361,28 @@ namespace desul {
   }
   DESUL_IMPL_CUDA_HOST_ATOMIC_INC(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice); // only for ASM?
 
-  #define DESUL_IMPL_CUDA_HOST_ATOMIC_INC_MOD(TYPE,ORDER,SCOPE) \
-    inline TYPE atomic_fetch_inc_mod(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
-    using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
-    cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
-    cas_t assume = oldval; \
-    do { \
-      assume = oldval; \
-      TYPE newval = (reinterpret_cast<TYPE&>(assume) >= val) ? static_cast<TYPE>(0) : reinterpret_cast<TYPE&>(assume) + static_cast<TYPE>(1); \
-      oldval = desul::atomic_compare_exchange(reinterpret_cast<cas_t*>(dest), assume, reinterpret_cast<cas_t&>(newval), order, scope); \
-    } while (assume != oldval); \
-    return reinterpret_cast<TYPE&>(oldval); \
-  }
-  DESUL_IMPL_CUDA_HOST_ATOMIC_INC_MOD(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
-
   #define DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(TYPE,ORDER,SCOPE) \
     inline void atomic_dec(TYPE* const dest, ORDER order, SCOPE scope) { \
     (void) atomic_fetch_dec(dest, order, scope); \
   }
   DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(unsigned,MemoryOrderRelaxed,MemoryScopeDevice); // only for ASM?
 
-  #define DESUL_IMPL_CUDA_HOST_ATOMIC_DEC_MOD(TYPE,ORDER,SCOPE) \
+#endif // DESUL_HAVE_CUDA_ATOMICS_ASM
+
+#define DESUL_IMPL_CUDA_HOST_ATOMIC_INC_MOD(TYPE,ORDER,SCOPE) \
+  inline TYPE atomic_fetch_inc_mod(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
+  using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
+  cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
+  cas_t assume = oldval; \
+  do { \
+    assume = oldval; \
+    TYPE newval = (reinterpret_cast<TYPE&>(assume) >= val) ? static_cast<TYPE>(0) : reinterpret_cast<TYPE&>(assume) + static_cast<TYPE>(1); \
+    oldval = desul::atomic_compare_exchange(reinterpret_cast<cas_t*>(dest), assume, reinterpret_cast<cas_t&>(newval), order, scope); \
+  } while (assume != oldval); \
+  return reinterpret_cast<TYPE&>(oldval); \
+}
+DESUL_IMPL_CUDA_HOST_ATOMIC_INC_MOD(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
+#define DESUL_IMPL_CUDA_HOST_ATOMIC_DEC_MOD(TYPE,ORDER,SCOPE) \
     inline TYPE atomic_fetch_dec_mod(TYPE* dest, TYPE val, ORDER order, SCOPE scope) { \
     using cas_t = typename Impl::atomic_compare_exchange_type<sizeof(TYPE)>::type; \
     cas_t oldval = reinterpret_cast<cas_t&>(*dest); \
@@ -394,8 +395,6 @@ namespace desul {
     return reinterpret_cast<TYPE&>(oldval); \
   }
   DESUL_IMPL_CUDA_HOST_ATOMIC_DEC_MOD(unsigned int,MemoryOrderRelaxed,MemoryScopeDevice);
-
-#endif // DESUL_HAVE_CUDA_ATOMICS_ASM
 
   #define DESUL_IMPL_CUDA_HOST_ATOMIC_FETCH_ADD(TYPE,ORDER,SCOPE) \
     inline TYPE atomic_fetch_add(TYPE* const dest, TYPE val, ORDER order, SCOPE scope) { \
