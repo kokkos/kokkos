@@ -3307,9 +3307,9 @@ create_mirror(
   return Impl::create_mirror(v, wi);
 }
 
-template <class Space, class T, class... P>
+template <class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 std::enable_if_t<
-    Kokkos::is_space<Space>::value &&
     std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
     typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(
@@ -3317,9 +3317,9 @@ create_mirror(
   return Impl::create_mirror(space, v);
 }
 
-template <class Space, class T, class... P>
+template <class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 std::enable_if_t<
-    Kokkos::is_space<Space>::value &&
     std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
     typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(
