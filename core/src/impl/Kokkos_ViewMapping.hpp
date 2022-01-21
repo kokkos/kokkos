@@ -653,8 +653,9 @@ struct SubviewExtents {
 
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
 
-    KOKKOS_IF_ON_DEVICE(
-        ((void)dim; Kokkos::abort("Kokkos::subview bounds error");))
+    KOKKOS_IF_ON_DEVICE(((void)dim;
+                         Kokkos::abort("Kokkos::subview bounds error");
+                         [](Args...) {}(args...);))
   }
 
 #else
