@@ -160,7 +160,6 @@ pipeline {
                         }
                     }
                 }
-                /*
                 stage('OPENMPTARGET-ROCm-4.5') {
                     agent {
                         dockerfile {
@@ -184,7 +183,7 @@ pipeline {
                               cmake \
                                 -Bbuild \
                                 -DCMAKE_BUILD_TYPE=Debug \
-                                -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/clang++ \
+                                -DCMAKE_CXX_COMPILER=amdclang++ \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
@@ -203,7 +202,6 @@ pipeline {
                         }
                     }
                 }
-                */
                 stage('OPENMPTARGET-Clang') {
                     agent {
                         dockerfile {
