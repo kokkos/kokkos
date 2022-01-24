@@ -356,8 +356,7 @@ class ViewMapping<Traits, Kokkos::Array<>> {
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
     using functor_type =
-        ViewValueFunctor<Kokkos::Device<execution_space, memory_space>,
-                         scalar_type>;
+        ViewValueFunctor<typename Traits::device_type, scalar_type>;
     using record_type =
         Kokkos::Impl::SharedAllocationRecord<memory_space, functor_type>;
 
