@@ -301,8 +301,7 @@ class Bitset {
  private:
   unsigned m_size;
   unsigned m_last_block_mask;
-  View<unsigned*, typename Device::memory_space, MemoryTraits<RandomAccess> >
-      m_blocks;
+  View<unsigned*, Device, MemoryTraits<RandomAccess> > m_blocks;
 
  private:
   template <typename DDevice>
@@ -383,9 +382,7 @@ class ConstBitset {
 
  private:
   unsigned m_size;
-  View<const unsigned*, typename Device::memory_space,
-       MemoryTraits<RandomAccess> >
-      m_blocks;
+  View<const unsigned*, Device, MemoryTraits<RandomAccess> > m_blocks;
 
  private:
   template <typename DDevice>
