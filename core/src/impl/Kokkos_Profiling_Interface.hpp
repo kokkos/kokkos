@@ -58,8 +58,6 @@ namespace Tools {
 namespace Experimental {
 
 constexpr const uint32_t NumReservedDeviceIDs = 1;
-constexpr const size_t instance_bits    = 24;
-constexpr const size_t device_type_bits = 7;
 
 enum SpecialSynchronizationCases : int {
   GlobalDeviceSynchronization     = 1,

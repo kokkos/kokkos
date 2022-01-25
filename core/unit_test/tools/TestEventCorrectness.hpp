@@ -230,22 +230,23 @@ TEST(kokkosp, test_multiple_default_instances) {
 }
 
 /**
- * Test that device_id() and identifier_from_devid(id) are reciproce 
+ * Test that device_id() and identifier_from_devid(id) are reciproce
  * operations
  */
 TEST(kokkosp, test_id_gen) {
   using namespace Kokkos::Tools::Experimental;
   using Kokkos::Tools::Experimental::DeviceTypeTraits;
-  test_wrapper([&](){
+  test_wrapper([&]() {
     Kokkos::DefaultExecutionSpace ex;
-    auto id = device_id(ex);
-    auto id_ref = identifier_from_devid(id);
-    auto success =
-        (id_ref.instance_id == ex.impl_instance_id()) &&
-        (id_ref.device_id   == static_cast<uint32_t> (DeviceTypeTraits<Kokkos::DefaultExecutionSpace>::id));
+    auto id      = device_id(ex);
+    auto id_ref  = identifier_from_devid(id);
+    auto success = (id_ref.instance_id == ex.impl_instance_id()) &&
+                   (id_ref.device_id ==
+                    static_cast<uint32_t>(
+                        DeviceTypeTraits<Kokkos::DefaultExecutionSpace>::id));
     ASSERT_TRUE(success);
   });
-}  
+}
 
 /**
  * Test that fencing and kernels yield events on the correct device ID's
