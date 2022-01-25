@@ -462,13 +462,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   q.get_device(),
                   sycl::range<3>(m_team_size, m_vector_size, 1));
       auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
-      if (max_sg_size % final_vector_size != 0) {
-        std::stringstream out;
-        out << "The maximum subgroup size (" << max_sg_size
-            << ") for this kernel is not divisible by the vector_size ("
-            << final_vector_size << "). Choose a smaller vector_size!\n";
-        Kokkos::Impl::throw_runtime_exception(out.str());
-      }
       // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
       // be used gives a runtime error.
       // cgh.use_kernel_bundle(kernel_bundle);
@@ -846,13 +839,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             sycl::info::kernel_device_specific::max_sub_group_size>(
             q.get_device(), sycl::range<3>(m_team_size, m_vector_size, 1));
         auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
-        if (max_sg_size % final_vector_size != 0) {
-          std::stringstream out;
-          out << "The maximum subgroup size (" << max_sg_size
-              << ") for this kernel is not divisible by the vector_size ("
-              << final_vector_size << "). Choose a smaller vector_size!\n";
-          Kokkos::Impl::throw_runtime_exception(out.str());
-        }
         // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
         // be used gives a runtime error.
 
