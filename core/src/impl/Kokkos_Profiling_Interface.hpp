@@ -58,6 +58,8 @@ namespace Tools {
 namespace Experimental {
 
 constexpr const uint32_t NumReservedDeviceIDs = 1;
+constexpr const size_t instance_bits    = 24;
+constexpr const size_t device_type_bits = 7;
 
 enum SpecialSynchronizationCases : int {
   GlobalDeviceSynchronization     = 1,
@@ -100,21 +102,19 @@ inline ExecutionSpaceIdentifier identifier_from_devid(const uint32_t in) {
   // out.type = in >> 24;
   // out.device_id = in >> 17;
   // out.instance_id = ((uint32_t(-1)) << 17 ) & in;
-  return {devicetype_from_uint32t(in >> 24),     /*First 9 bits*/
-          (~((uint32_t(-1)) << 7)) & (in >> 17), /*Next 7 bits*/
+  return {devicetype_from_uint32t(in >> 24),     /*First 8 bits*/
+          (~((uint32_t(-1)) << 7)) & (in >> 17), /*Next 7 bits */
           (~((uint32_t(-1)) << 17)) & in};       /*Last 17 bits*/
 }
 
 template <typename ExecutionSpace>
 struct DeviceTypeTraits;
 
-constexpr const size_t device_type_bits = 8;
-constexpr const size_t instance_bits    = 24;
 template <typename ExecutionSpace>
 constexpr uint32_t device_id_root() {
   constexpr auto device_id =
       static_cast<uint32_t>(DeviceTypeTraits<ExecutionSpace>::id);
-  return (device_id << instance_bits);
+  return (device_id << 17);
 }
 template <typename ExecutionSpace>
 inline uint32_t device_id(ExecutionSpace const& space) noexcept {
