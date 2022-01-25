@@ -279,9 +279,8 @@ class UnorderedMap {
       is_insertable_map, View<size_type *, device_type>,
       View<const size_type *, device_type, MemoryTraits<RandomAccess>>>;
 
-  using bitset_type =
-      std::conditional_t<is_insertable_map, Bitset<execution_space>,
-                         ConstBitset<execution_space>>;
+  using bitset_type = std::conditional_t<is_insertable_map, Bitset<Device>,
+                                         ConstBitset<Device>>;
 
   enum { modified_idx = 0, erasable_idx = 1, failed_insert_idx = 2 };
   enum { num_scalars = 3 };

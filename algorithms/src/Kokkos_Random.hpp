@@ -889,7 +889,7 @@ template <class DeviceType = Kokkos::DefaultExecutionSpace>
 class Random_XorShift64_Pool {
  private:
   using execution_space = typename DeviceType::execution_space;
-  using locks_type      = View<int**, execution_space>;
+  using locks_type      = View<int**, DeviceType>;
   using state_data_type = View<uint64_t**, DeviceType>;
   locks_type locks_;
   state_data_type state_;
@@ -1137,7 +1137,7 @@ template <class DeviceType = Kokkos::DefaultExecutionSpace>
 class Random_XorShift1024_Pool {
  private:
   using execution_space = typename DeviceType::execution_space;
-  using locks_type      = View<int**, execution_space>;
+  using locks_type      = View<int**, DeviceType>;
   using int_view_type   = View<int**, DeviceType>;
   using state_data_type = View<uint64_t * [16], DeviceType>;
 

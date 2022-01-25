@@ -144,7 +144,7 @@ struct UnorderedMapHistogram {
   using execution_space = typename map_type::execution_space;
   using size_type       = typename map_type::size_type;
 
-  using histogram_view      = View<int[100], execution_space>;
+  using histogram_view      = View<int[100], typename map_type::device_type>;
   using host_histogram_view = typename histogram_view::HostMirror;
 
   map_type m_map;
