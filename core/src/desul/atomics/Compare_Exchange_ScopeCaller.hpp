@@ -15,27 +15,21 @@ namespace desul {
 template <class MemoryOrder>
 DESUL_INLINE_FUNCTION void atomic_thread_fence(MemoryOrder, MemoryScopeCaller) {}
 
-#define DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MEMORY_ORDER)                                \
-  template <typename T>                                                                \
-  DESUL_INLINE_FUNCTION T atomic_exchange(T* dest,                                     \
-                                          Impl::dont_deduce_this_parameter_t<T> value, \
-                                          MEMORY_ORDER,                                \
-                                          MemoryScopeCaller) {                         \
-    T return_val = *dest;                                                              \
-    *dest = value;                                                                     \
-    return return_val;                                                                 \
-  }                                                                                    \
-                                                                                       \
-  template <typename T>                                                                \
-  DESUL_INLINE_FUNCTION T atomic_compare_exchange(                                     \
-      T* dest,                                                                         \
-      Impl::dont_deduce_this_parameter_t<T> compare,                                   \
-      Impl::dont_deduce_this_parameter_t<T> value,                                     \
-      MEMORY_ORDER,                                                                    \
-      MemoryScopeCaller) {                                                             \
-    T current_val = *dest;                                                             \
-    if (current_val == compare) *dest = value;                                         \
-    return current_val;                                                                \
+#define DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MEMORY_ORDER)               \
+  template <typename T>                                               \
+  DESUL_INLINE_FUNCTION T atomic_exchange(                            \
+      T* dest, T value, MEMORY_ORDER, MemoryScopeCaller) {            \
+    T return_val = *dest;                                             \
+    *dest = value;                                                    \
+    return return_val;                                                \
+  }                                                                   \
+                                                                      \
+  template <typename T>                                               \
+  DESUL_INLINE_FUNCTION T atomic_compare_exchange(                    \
+      T* dest, T compare, T value, MEMORY_ORDER, MemoryScopeCaller) { \
+    T current_val = *dest;                                            \
+    if (current_val == compare) *dest = value;                        \
+    return current_val;                                               \
   }
 
 DESUL_ATOMIC_EXCHANGE_SCOPECALLER(MemoryOrderSeqCst)
