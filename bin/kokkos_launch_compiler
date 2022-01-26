@@ -66,7 +66,7 @@ CXX_COMPILER=${1}
 shift
 
 # escape $
-target=("${@/\$/\\\$}")
+command=("${@/\$/\\\$}")
 
 # NOTE: in below, ${KOKKOS_COMPILER} is usually nvcc_wrapper
 #
@@ -86,9 +86,9 @@ target=("${@/\$/\\\$}")
 # results in this command being executed:
 #       ${KOKKOS_COMPILER} -c file.cpp -o file.o
 if [[ "${KOKKOS_DEPENDENCE}" -eq "0" || "${CXX_COMPILER}" != "${1}" ]]; then
-    debug-message ${target[*]}
+    debug-message ${command[*]}
     # the command does not depend on Kokkos so just execute the command w/o re-directing to ${KOKKOS_COMPILER}
-    eval ${target[*]}
+    eval ${command[*]}
 else
     # the executable is the C++ compiler, so we need to re-direct to ${KOKKOS_COMPILER}
     if [ ! -f "${KOKKOS_COMPILER}" ]; then
@@ -116,9 +116,9 @@ else
     fi
 
     # discard the compiler from the command
-    target=("${target[@]:1}")
+    command=("${command[@]:1}")
 
-    debug-message ${KOKKOS_COMPILER} ${target[*]}
+    debug-message ${KOKKOS_COMPILER} ${command[*]}
     # execute ${KOKKOS_COMPILER} (again, usually nvcc_wrapper)
-    ${KOKKOS_COMPILER} ${target[*]}
+    ${KOKKOS_COMPILER} ${command[*]}
 fi
