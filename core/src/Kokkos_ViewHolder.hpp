@@ -102,7 +102,7 @@ class ConstViewHolderImplBase {
   std::string label() const { return m_label; }
 
   size_t data_type_size() const { return m_data_type_size; }
-  bool is_hostspace() const noexcept { return m_is_hostspace; }
+  bool is_host_space() const noexcept { return m_is_host_space; }
 
   virtual void deep_copy_to_buffer(unsigned char *buff) = 0;
   virtual ConstViewHolderImplBase *clone() const        = 0;
@@ -110,13 +110,13 @@ class ConstViewHolderImplBase {
  protected:
   ConstViewHolderImplBase(std::size_t span, bool span_is_contiguous,
                           const void *data, std::string label,
-                          std::size_t data_type_size, bool is_hostspace)
+                          std::size_t data_type_size, bool is_host_space)
       : m_span(span),
         m_span_is_contiguous(span_is_contiguous),
         m_data(data),
         m_label(std::move(label)),
         m_data_type_size(data_type_size),
-        m_is_hostspace(is_hostspace) {}
+        m_is_host_space(is_host_space) {}
 
  private:
   size_t m_span             = 0;
@@ -124,7 +124,7 @@ class ConstViewHolderImplBase {
   const void *m_data        = nullptr;
   std::string m_label;
   size_t m_data_type_size = 0;
-  bool m_is_hostspace     = false;
+  bool m_is_host_space     = false;
 };
 
 class ViewHolderImplBase {
@@ -137,7 +137,7 @@ class ViewHolderImplBase {
   std::string label() const { return m_label; }
 
   size_t data_type_size() const { return m_data_type_size; }
-  bool is_hostspace() const noexcept { return m_is_hostspace; }
+  bool is_host_space() const noexcept { return m_is_host_space; }
 
   virtual void deep_copy_to_buffer(unsigned char *buff)   = 0;
   virtual void deep_copy_from_buffer(unsigned char *buff) = 0;
@@ -146,13 +146,13 @@ class ViewHolderImplBase {
  protected:
   ViewHolderImplBase(std::size_t span, bool span_is_contiguous, void *data,
                      std::string label, std::size_t data_type_size,
-                     bool is_hostspace)
+                     bool is_host_space)
       : m_span(span),
         m_span_is_contiguous(span_is_contiguous),
         m_data(data),
         m_label(std::move(label)),
         m_data_type_size(data_type_size),
-        m_is_hostspace(is_hostspace) {}
+        m_is_host_space(is_host_space) {}
 
  private:
   size_t m_span             = 0;
@@ -160,7 +160,7 @@ class ViewHolderImplBase {
   void *m_data              = nullptr;
   std::string m_label;
   size_t m_data_type_size = 0;
-  bool m_is_hostspace     = false;
+  bool m_is_host_space     = false;
 };
 
 template <typename SrcViewType, typename DstViewType, typename Enabled = void>
