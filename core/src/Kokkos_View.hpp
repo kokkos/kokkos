@@ -1442,17 +1442,13 @@ class View : public ViewTraits<DataType, Properties...> {
 
   KOKKOS_FUNCTION
   View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    hooks_policy::copy_construct(*this, other);
-#endif
+    KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
 
   KOKKOS_FUNCTION
   View(View&& other)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    hooks_policy::move_construct(*this, other);
-#endif
+    KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
 
   KOKKOS_FUNCTION
@@ -1460,9 +1456,7 @@ class View : public ViewTraits<DataType, Properties...> {
     m_map   = other.m_map;
     m_track = other.m_track;
 
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    hooks_policy::copy_assign(*this, other);
-#endif
+    KOKKOS_IF_ON_HOST((hooks_policy::copy_assign(*this, other);))
 
     return *this;
   }
@@ -1472,9 +1466,7 @@ class View : public ViewTraits<DataType, Properties...> {
     m_map   = std::move(other.m_map);
     m_track = std::move(other.m_track);
 
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    hooks_policy::move_assign(*this, other);
-#endif
+    KOKKOS_IF_ON_HOST((hooks_policy::move_assign(*this, other);))
 
     return *this;
   }
