@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXPERIMENTAL_ACCESSORHOOKS_HPP
-#define KOKKOS_EXPERIMENTAL_ACCESSORHOOKS_HPP
+#ifndef KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
+#define KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
 
 #include <Kokkos_Core_fwd.hpp>
 #include <functional>
@@ -55,7 +55,7 @@ namespace Experimental {
 class ViewHolder;
 class ConstViewHolder;
 
-namespace Detail {
+namespace Impl {
 template <typename View>
 using copy_subscription_function_type = void (*)(View &, const View &);
 
@@ -109,7 +109,7 @@ struct move_assign_invoker {
     Subscriber::move_assigned(self, other);
   }
 };
-}  // namespace Detail
+}  // namespace Impl
 
 struct EmptyViewHooks {
   using hooks_policy = EmptyViewHooks;
@@ -130,23 +130,23 @@ struct SubscribableViewHooks {
 
   template <typename View>
   static void copy_construct(View &self, const View &other) {
-    Detail::invoke_subscriber_impl<Detail::copy_constructor_invoker,
-                                   Subscribers...>::invoke(self, other);
+    Impl::invoke_subscriber_impl<Impl::copy_constructor_invoker,
+                                 Subscribers...>::invoke(self, other);
   }
   template <typename View>
   static void copy_assign(View &self, const View &other) {
-    Detail::invoke_subscriber_impl<Detail::copy_assign_invoker,
-                                   Subscribers...>::invoke(self, other);
+    Impl::invoke_subscriber_impl<Impl::copy_assign_invoker,
+                                 Subscribers...>::invoke(self, other);
   }
   template <typename View>
   static void move_construct(View &self, const View &other) {
-    Detail::invoke_subscriber_impl<Detail::move_constructor_invoker,
-                                   Subscribers...>::invoke(self, other);
+    Impl::invoke_subscriber_impl<Impl::move_constructor_invoker,
+                                 Subscribers...>::invoke(self, other);
   }
   template <typename View>
   static void move_assign(View &self, const View &other) {
-    Detail::invoke_subscriber_impl<Detail::move_assign_invoker,
-                                   Subscribers...>::invoke(self, other);
+    Impl::invoke_subscriber_impl<Impl::move_assign_invoker,
+                                 Subscribers...>::invoke(self, other);
   }
 };
 
@@ -185,4 +185,4 @@ using DefaultViewHooks = EmptyViewHooks;
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#endif  // KOKKOS_EXPERIMENTAL_ACCESSORHOOKS_HPP
+#endif  // KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
