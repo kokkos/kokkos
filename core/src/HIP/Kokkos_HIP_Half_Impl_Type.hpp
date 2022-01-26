@@ -42,27 +42,22 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_HPP
-#define KOKKOS_HIP_HPP
+#ifndef KOKKOS_HIP_HALF_IMPL_TYPE_HPP_
+#define KOKKOS_HIP_HALF_IMPL_TYPE_HPP_
 
-#include <Kokkos_Core_fwd.hpp>
+#include <hip/hip_fp16.h>
 
-#if defined(KOKKOS_ENABLE_HIP)
+#ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
+// Make sure no one else tries to define half_t
+#define KOKKOS_IMPL_HALF_TYPE_DEFINED
+#define KOKKOS_IMPL_HIP_HALF_TYPE_DEFINED
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#include <Kokkos_HIP_Space.hpp>
-#include <Kokkos_Parallel.hpp>
-
-#include <HIP/Kokkos_HIP_Half_Impl_Type.hpp>
-#include <HIP/Kokkos_HIP_Half_Conversion.hpp>
-#include <HIP/Kokkos_HIP_Instance.hpp>
-#include <HIP/Kokkos_HIP_MDRangePolicy.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Range.hpp>
-#include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Team.hpp>
-#include <HIP/Kokkos_HIP_UniqueToken.hpp>
-
-#endif
-#endif
+namespace Kokkos {
+namespace Impl {
+struct half_impl_t {
+  using type = __half;
+};
+}  // namespace Impl
+}  // namespace Kokkos
+#endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
+#endif  // KOKKOS_ENABLE_HIP
