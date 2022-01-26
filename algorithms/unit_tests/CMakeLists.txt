@@ -125,8 +125,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsNumerics
 	StdAlgorithmsAdjacentDifference
 	StdAlgorithmsExclusiveScan
-	StdAlgorithmsTransformExclusiveScan
 	StdAlgorithmsInclusiveScan
+	StdAlgorithmsTransformUnaryOp
+	StdAlgorithmsTransformExclusiveScan
 	StdAlgorithmsTransformInclusiveScan
 	)
       list(APPEND STDALGO_SOURCES_E Test${Name}.cpp)
@@ -150,3 +151,8 @@ foreach(ID A;B;C;D;E)
     ${STDALGO_SOURCES_${ID}}
     )
 endforeach()
+
+KOKKOS_ADD_EXECUTABLE(
+  UnitTest_StdAlgoCompileOnly
+  SOURCES TestStdAlgorithmsCompileOnly.cpp
+)

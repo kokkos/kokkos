@@ -1096,18 +1096,23 @@ auto fill_n(const std::string& label, const ExecutionSpace& ex,
 // -------------------
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class UnaryOperation>
-OutputIterator transform(const ExecutionSpace& ex, InputIterator first1,
-                         InputIterator last1, OutputIterator d_first,
-                         UnaryOperation unary_op) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      InputIterator, OutputIterator>::value,
+                  OutputIterator>
+transform(const ExecutionSpace& ex, InputIterator first1, InputIterator last1,
+          OutputIterator d_first, UnaryOperation unary_op) {
   return Impl::transform_impl("Kokkos::transform_iterator_api_default", ex,
                               first1, last1, d_first, std::move(unary_op));
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class UnaryOperation>
-OutputIterator transform(const std::string& label, const ExecutionSpace& ex,
-                         InputIterator first1, InputIterator last1,
-                         OutputIterator d_first, UnaryOperation unary_op) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      InputIterator, OutputIterator>::value,
+                  OutputIterator>
+transform(const std::string& label, const ExecutionSpace& ex,
+          InputIterator first1, InputIterator last1, OutputIterator d_first,
+          UnaryOperation unary_op) {
   return Impl::transform_impl(label, ex, first1, last1, d_first,
                               std::move(unary_op));
 }
@@ -1141,9 +1146,12 @@ auto transform(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class InputIterator1, class InputIterator2,
           class OutputIterator, class BinaryOperation>
-OutputIterator transform(const ExecutionSpace& ex, InputIterator1 first1,
-                         InputIterator1 last1, InputIterator2 first2,
-                         OutputIterator d_first, BinaryOperation binary_op) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      InputIterator1, InputIterator2, OutputIterator>::value,
+                  OutputIterator>
+transform(const ExecutionSpace& ex, InputIterator1 first1, InputIterator1 last1,
+          InputIterator2 first2, OutputIterator d_first,
+          BinaryOperation binary_op) {
   return Impl::transform_impl("Kokkos::transform_iterator_api_default", ex,
                               first1, last1, first2, d_first,
                               std::move(binary_op));
@@ -1151,10 +1159,12 @@ OutputIterator transform(const ExecutionSpace& ex, InputIterator1 first1,
 
 template <class ExecutionSpace, class InputIterator1, class InputIterator2,
           class OutputIterator, class BinaryOperation>
-OutputIterator transform(const std::string& label, const ExecutionSpace& ex,
-                         InputIterator1 first1, InputIterator1 last1,
-                         InputIterator2 first2, OutputIterator d_first,
-                         BinaryOperation binary_op) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      InputIterator1, InputIterator2, OutputIterator>::value,
+                  OutputIterator>
+transform(const std::string& label, const ExecutionSpace& ex,
+          InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
+          OutputIterator d_first, BinaryOperation binary_op) {
   return Impl::transform_impl(label, ex, first1, last1, first2, d_first,
                               std::move(binary_op));
 }
