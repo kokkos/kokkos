@@ -128,8 +128,18 @@ struct DynamicViewHooks {
   static callback_overload_set copy_assignment_set;
   static callback_overload_set move_constructor_set;
   static callback_overload_set move_assignment_set;
-  static thread_local bool reentrant;  // don't enter *any* callback while in a
-  // callback on this thread
+
+  /**
+   * Mark whether or not we are currently in a dynamic view hook.
+   * Because ViewHolder itself copies a view, we need to suppress
+   * recursively entering the view hooks while we area already handling one.
+   *
+   * This is thread_local because it should only apply to a specific thread;
+   * that is, we don't care about multiple threads calling the dynamic view
+   * hook. It's the user's responsibility to make sure that the hook
+   * is thread-safe.
+   */
+  static thread_local bool reentrant;
 };
 
 namespace Impl {
@@ -148,11 +158,10 @@ struct DynamicViewHooksCaller<
     typename std::enable_if<!std::is_same<typename Traits::memory_space,
                                           AnonymousSpace>::value>::type> {
   static void call_copy_construct_hooks(ViewType &view) {
-    static thread_local bool reentrant = false;
-    if (!reentrant) {
-      reentrant = true;
+    if (!DynamicViewHooks::reentrant) {
+      DynamicViewHooks::reentrant = true;
       DynamicViewHooks::copy_constructor_set.call(view);
-      reentrant = false;
+      DynamicViewHooks::reentrant = false;
     }
   }
 
