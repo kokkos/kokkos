@@ -50,6 +50,8 @@
 // Needed for 'is_space<S>::host_mirror_space
 #include <Kokkos_Core_fwd.hpp>
 
+#include <Kokkos_DetectionIdiom.hpp>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -146,24 +148,21 @@ struct LaunchBounds {
 
 namespace Kokkos {
 
-#define KOKKOS_IMPL_IS_CONCEPT(CONCEPT)                                        \
-  template <typename T>                                                        \
-  struct is_##CONCEPT {                                                        \
-   private:                                                                    \
-    template <typename, typename = std::true_type>                             \
-    struct have : std::false_type {};                                          \
-    template <typename U>                                                      \
-    struct have<U, typename std::is_base_of<typename U::CONCEPT, U>::type>     \
-        : std::true_type {};                                                   \
-    template <typename U>                                                      \
-    struct have<U,                                                             \
-                typename std::is_base_of<typename U::CONCEPT##_type, U>::type> \
-        : std::true_type {};                                                   \
-                                                                               \
-   public:                                                                     \
-    static constexpr bool value =                                              \
-        is_##CONCEPT::template have<typename std::remove_cv<T>::type>::value;  \
-    constexpr operator bool() const noexcept { return value; }                 \
+#define KOKKOS_IMPL_IS_CONCEPT(CONCEPT)                                    \
+  template <typename T>                                                    \
+  struct is_##CONCEPT {                                                    \
+   private:                                                                \
+    template <typename U>                                                  \
+    using have_t = typename std::is_base_of<typename U::CONCEPT, U>::type; \
+    template <typename U>                                                  \
+    using have_type_t =                                                    \
+        typename std::is_base_of<typename U::CONCEPT##_type, U>::type;     \
+                                                                           \
+   public:                                                                 \
+    static constexpr bool value =                                          \
+        detected_or_t<std::false_type, have_t, T>::value ||                \
+        detected_or_t<std::false_type, have_type_t, T>::value;             \
+    constexpr operator bool() const noexcept { return value; }             \
   };
 
 // Public concept:
