@@ -690,7 +690,8 @@ struct Random_UniqueIndex<Kokkos::Experimental::HIP, MemorySpace> {
 #ifdef KOKKOS_ENABLE_SYCL
 template <class MemorySpace>
 struct Random_UniqueIndex<Kokkos::Experimental::SYCL, MemorySpace> {
-  using locks_view_type = View<int**, Kokkos::Experimental::SYCL, MemorySpace>;
+  using locks_view_type =
+      View<int**, Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
     auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
@@ -728,8 +729,7 @@ template <class MemorySpace>
 struct Random_UniqueIndex<Kokkos::Experimental::OpenMPTarget, MemorySpace> {
   using locks_view_type =
       View<int**,
-           Kokkos::Device<Kokkos::Experimental::OpenMPTarget::device_type,
-                          MemorySpace>>;
+           Kokkos::Device<Kokkos::Experimental::OpenMPTarget, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks) {
     const int team_size = omp_get_num_threads();
