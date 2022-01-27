@@ -202,10 +202,6 @@ KOKKOS_SETUP_BUILD_ENVIRONMENT()
 # 7) Export and install targets
 
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-# Workaround for building position independent code.
-IF(BUILD_SHARED_LIBS)
-  SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
-ENDIF()
 
 SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
 SET(KOKKOS_INT_LIBRARIES kokkos kokkoscore kokkoscontainers kokkosalgorithms)
