@@ -617,13 +617,13 @@ struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenMPTarget>
     : std::false_type {};
 #endif
 
-template <class ExecutionSpace, class MemorySpace>
+template <class DeviceType>
 struct Random_UniqueIndex {
-  using locks_view_type =
-      View<int**, Kokkos::Device<ExecutionSpace, MemorySpace>>;
+  using locks_view_type = View<int**, DeviceType>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type) {
-    KOKKOS_IF_ON_HOST((return ExecutionSpace::impl_hardware_thread_id();))
+    KOKKOS_IF_ON_HOST(
+        (return DeviceType::execution_space::impl_hardware_thread_id();))
 
     KOKKOS_IF_ON_DEVICE((return 0;))
   }
@@ -631,7 +631,7 @@ struct Random_UniqueIndex {
 
 #ifdef KOKKOS_ENABLE_CUDA
 template <class MemorySpace>
-struct Random_UniqueIndex<Kokkos::Cuda, MemorySpace> {
+struct Random_UniqueIndex<Kokkos::Device<Kokkos::Cuda, MemorySpace>> {
   using locks_view_type =
       View<int**, Kokkos::Device<Kokkos::Cuda, MemorySpace>>;
   KOKKOS_FUNCTION
@@ -660,7 +660,8 @@ struct Random_UniqueIndex<Kokkos::Cuda, MemorySpace> {
 
 #ifdef KOKKOS_ENABLE_HIP
 template <class MemorySpace>
-struct Random_UniqueIndex<Kokkos::Experimental::HIP, MemorySpace> {
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>> {
   using locks_view_type =
       View<int**, Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>>;
   KOKKOS_FUNCTION
@@ -689,7 +690,8 @@ struct Random_UniqueIndex<Kokkos::Experimental::HIP, MemorySpace> {
 
 #ifdef KOKKOS_ENABLE_SYCL
 template <class MemorySpace>
-struct Random_UniqueIndex<Kokkos::Experimental::SYCL, MemorySpace> {
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>> {
   using locks_view_type =
       View<int**, Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>>;
   KOKKOS_FUNCTION
@@ -726,7 +728,8 @@ struct Random_UniqueIndex<Kokkos::Experimental::SYCL, MemorySpace> {
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 template <class MemorySpace>
-struct Random_UniqueIndex<Kokkos::Experimental::OpenMPTarget, MemorySpace> {
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::OpenMPTarget, MemorySpace>> {
   using locks_view_type =
       View<int**,
            Kokkos::Device<Kokkos::Experimental::OpenMPTarget, MemorySpace>>;
@@ -971,9 +974,7 @@ class Random_XorShift64_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64<DeviceType> get_state() const {
-    const int i = Impl::Random_UniqueIndex<
-        execution_space,
-        typename device_type::memory_space>::get_state_idx(locks_);
+    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift64<DeviceType>(state_(i, 0), i);
   }
 
@@ -1232,9 +1233,7 @@ class Random_XorShift1024_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024<DeviceType> get_state() const {
-    const int i = Impl::Random_UniqueIndex<
-        execution_space,
-        typename device_type::memory_space>::get_state_idx(locks_);
+    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
   };
 
