@@ -518,7 +518,7 @@ struct rand<Generator, double> {
 };
 
 template <class Generator>
-struct rand<Generator, Kokkos::complex<float> > {
+struct rand<Generator, Kokkos::complex<float>> {
   KOKKOS_INLINE_FUNCTION
   static Kokkos::complex<float> max() {
     return Kokkos::complex<float>(1.0, 1.0);
@@ -547,7 +547,7 @@ struct rand<Generator, Kokkos::complex<float> > {
 };
 
 template <class Generator>
-struct rand<Generator, Kokkos::complex<double> > {
+struct rand<Generator, Kokkos::complex<double>> {
   KOKKOS_INLINE_FUNCTION
   static Kokkos::complex<double> max() {
     return Kokkos::complex<double>(1.0, 1.0);
@@ -636,21 +636,23 @@ struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenMPTarget>
     : std::false_type {};
 #endif
 
-template <class ExecutionSpace>
+template <class DeviceType>
 struct Random_UniqueIndex {
-  using locks_view_type = View<int**, ExecutionSpace>;
+  using locks_view_type = View<int**, DeviceType>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type) {
-    KOKKOS_IF_ON_HOST((return ExecutionSpace::impl_hardware_thread_id();))
+    KOKKOS_IF_ON_HOST(
+        (return DeviceType::execution_space::impl_hardware_thread_id();))
 
     KOKKOS_IF_ON_DEVICE((return 0;))
   }
 };
 
 #ifdef KOKKOS_ENABLE_CUDA
-template <>
-struct Random_UniqueIndex<Kokkos::Cuda> {
-  using locks_view_type = View<int**, Kokkos::Cuda>;
+template <class MemorySpace>
+struct Random_UniqueIndex<Kokkos::Device<Kokkos::Cuda, MemorySpace>> {
+  using locks_view_type =
+      View<int**, Kokkos::Device<Kokkos::Cuda, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
 #ifdef __CUDA_ARCH__
@@ -676,9 +678,11 @@ struct Random_UniqueIndex<Kokkos::Cuda> {
 #endif
 
 #ifdef KOKKOS_ENABLE_HIP
-template <>
-struct Random_UniqueIndex<Kokkos::Experimental::HIP> {
-  using locks_view_type = View<int**, Kokkos::Experimental::HIP>;
+template <class MemorySpace>
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>> {
+  using locks_view_type =
+      View<int**, Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
 #ifdef __HIP_DEVICE_COMPILE__
@@ -704,9 +708,11 @@ struct Random_UniqueIndex<Kokkos::Experimental::HIP> {
 #endif
 
 #ifdef KOKKOS_ENABLE_SYCL
-template <>
-struct Random_UniqueIndex<Kokkos::Experimental::SYCL> {
-  using locks_view_type = View<int**, Kokkos::Experimental::SYCL>;
+template <class MemorySpace>
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>> {
+  using locks_view_type =
+      View<int**, Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
     auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
@@ -740,9 +746,12 @@ struct Random_UniqueIndex<Kokkos::Experimental::SYCL> {
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <>
-struct Random_UniqueIndex<Kokkos::Experimental::OpenMPTarget> {
-  using locks_view_type = View<int**, Kokkos::Experimental::OpenMPTarget>;
+template <class MemorySpace>
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::OpenMPTarget, MemorySpace>> {
+  using locks_view_type =
+      View<int**,
+           Kokkos::Device<Kokkos::Experimental::OpenMPTarget, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks) {
     const int team_size = omp_get_num_threads();
@@ -906,10 +915,13 @@ class Random_XorShift64 {
 
 template <class DeviceType = Kokkos::DefaultExecutionSpace>
 class Random_XorShift64_Pool {
+ public:
+  using device_type = typename DeviceType::device_type;
+
  private:
-  using execution_space = typename DeviceType::execution_space;
-  using locks_type      = View<int**, DeviceType>;
-  using state_data_type = View<uint64_t**, DeviceType>;
+  using execution_space = typename device_type::execution_space;
+  using locks_type      = View<int**, device_type>;
+  using state_data_type = View<uint64_t**, device_type>;
   locks_type locks_;
   state_data_type state_;
   int num_states_;
@@ -917,7 +929,6 @@ class Random_XorShift64_Pool {
 
  public:
   using generator_type = Random_XorShift64<DeviceType>;
-  using device_type    = DeviceType;
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64_Pool() {
@@ -982,8 +993,7 @@ class Random_XorShift64_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64<DeviceType> get_state() const {
-    const int i =
-        Impl::Random_UniqueIndex<execution_space>::get_state_idx(locks_);
+    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift64<DeviceType>(state_(i, 0), i);
   }
 
@@ -1154,11 +1164,14 @@ class Random_XorShift1024 {
 
 template <class DeviceType = Kokkos::DefaultExecutionSpace>
 class Random_XorShift1024_Pool {
+ public:
+  using device_type = typename DeviceType::device_type;
+
  private:
-  using execution_space = typename DeviceType::execution_space;
-  using locks_type      = View<int**, DeviceType>;
-  using int_view_type   = View<int**, DeviceType>;
-  using state_data_type = View<uint64_t * [16], DeviceType>;
+  using execution_space = typename device_type::execution_space;
+  using locks_type      = View<int**, device_type>;
+  using int_view_type   = View<int**, device_type>;
+  using state_data_type = View<uint64_t * [16], device_type>;
 
   locks_type locks_;
   state_data_type state_;
@@ -1169,8 +1182,6 @@ class Random_XorShift1024_Pool {
 
  public:
   using generator_type = Random_XorShift1024<DeviceType>;
-
-  using device_type = DeviceType;
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024_Pool() { num_states_ = 0; }
@@ -1241,8 +1252,7 @@ class Random_XorShift1024_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024<DeviceType> get_state() const {
-    const int i =
-        Impl::Random_UniqueIndex<execution_space>::get_state_idx(locks_);
+    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
   };
 
