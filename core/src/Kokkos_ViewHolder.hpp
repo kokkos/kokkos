@@ -258,71 +258,50 @@ class ViewHolderImpl<View, typename std::enable_if<std::is_const<
 };
 }  // namespace Impl
 
-class ConstViewHolder {
+template< bool IsConst >
+class BasicViewHolder {
  public:
-  ConstViewHolder() = default;
 
-  ConstViewHolder(const ConstViewHolder &other)
+  using value_type = std::conditional_t< IsConst,
+        Impl::ConstViewHolderImplBase,
+        Impl::ViewHolderImplBase >;
+
+  BasicViewHolder() = default;
+
+  BasicViewHolder(const BasicViewHolder &other)
       : m_impl(other.m_impl ? other.m_impl->clone() : nullptr) {}
 
-  ConstViewHolder(ConstViewHolder &&other) { std::swap(m_impl, other.m_impl); }
+  BasicViewHolder(BasicViewHolder &&other) { std::swap(m_impl, other.m_impl); }
 
-  ConstViewHolder &operator=(const ConstViewHolder &other) {
-    m_impl = std::unique_ptr<Impl::ConstViewHolderImplBase>(
+  BasicViewHolder &operator=(const BasicViewHolder &other) {
+    m_impl = std::unique_ptr<value_type>(
         other.m_impl ? other.m_impl->clone() : nullptr);
     return *this;
   }
 
-  ConstViewHolder &operator=(ConstViewHolder &&other) {
+  BasicViewHolder &operator=(BasicViewHolder &&other) {
     std::swap(m_impl, other.m_impl);
     return *this;
   }
 
-  const void *data() const { return m_impl ? m_impl->data() : nullptr; }
+  std::conditional_t< IsConst,
+      const void *,
+      void * >
+  data() const { return m_impl ? m_impl->data() : nullptr; }
 
  private:
   template <typename V>
   friend auto make_view_holder(const V &view);
 
   template <typename... Args>
-  explicit ConstViewHolder(const View<Args...> &view)
+  explicit BasicViewHolder(const View<Args...> &view)
       : m_impl(std::make_unique<Impl::ViewHolderImpl<View<Args...>>>(view)) {}
 
-  std::unique_ptr<Impl::ConstViewHolderImplBase> m_impl;
+  std::unique_ptr<value_type> m_impl;
 };
 
-class ViewHolder {
- public:
-  ViewHolder() = default;
-
-  ViewHolder(const ViewHolder &other)
-      : m_impl(other.m_impl ? other.m_impl->clone() : nullptr) {}
-
-  ViewHolder(ViewHolder &&other) { std::swap(m_impl, other.m_impl); }
-
-  ViewHolder &operator=(const ViewHolder &other) {
-    m_impl = std::unique_ptr<Impl::ViewHolderImplBase>(
-        other.m_impl ? other.m_impl->clone() : nullptr);
-    return *this;
-  }
-
-  ViewHolder &operator=(ViewHolder &&other) {
-    std::swap(m_impl, other.m_impl);
-    return *this;
-  }
-
-  void *data() const { return m_impl ? m_impl->data() : nullptr; }
-
- private:
-  template <typename V>
-  friend auto make_view_holder(const V &view);
-
-  template <typename... Args>
-  explicit ViewHolder(const View<Args...> &view)
-      : m_impl(std::make_unique<Impl::ViewHolderImpl<View<Args...>>>(view)) {}
-
-  std::unique_ptr<Impl::ViewHolderImplBase> m_impl;
-};
+using ConstViewHolder = BasicViewHolder< true >;
+using ViewHolder = BasicViewHolder< false >;
 
 template <typename V>
 auto make_view_holder(const V &view) {

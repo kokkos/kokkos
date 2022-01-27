@@ -52,9 +52,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-class ViewHolder;
-class ConstViewHolder;
-
 namespace Impl {
 template <typename View>
 using copy_subscription_function_type = void (*)(View &, const View &);
