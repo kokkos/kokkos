@@ -485,4 +485,4 @@ void modifying_seq_ops() {
 }  // namespace stdalgos
 }  // namespace Test
 
-int main(int argc, char *argv[]) { return 0; }
+int main() { return 0; }
