@@ -155,82 +155,81 @@ Kokkos::View<T *> in2("in2", 10);
 Kokkos::DefaultExecutionSpace execution_space;
 std::string const label = "trivial";
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE(ALGO)                     \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1)); \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE(ALGO)                   \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1)); \
   (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB(ALGO)                   \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2));                                        \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1),   \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB(ALGO)                 \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2));                                      \
+  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(ALGO)                  \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), KE::end(in2));                          \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1),   \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(ALGO)                \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), KE::end(in2));                        \
+  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2), KE::end(in2));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_B_ANY(ALGO, ARG)    \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), ARG); \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_B_ANY(ALGO, ARG)  \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), ARG); \
   (void)KE::ALGO(label, execution_space, KE::begin(in1), ARG);
 
 #define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_B_ANY_ANY(ALGO, ARG1, ARG2) \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), ARG1, ARG2);  \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), ARG1, ARG2);    \
   (void)KE::ALGO(label, execution_space, KE::begin(in1), ARG1, ARG2);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(ALGO, ARG1)          \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), \
-                 ARG1);                                                  \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(ALGO, ARG1)               \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), ARG1); \
   (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY(ALGO, ARG1, ARG2)      \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), ARG1, \
-                 ARG2);                                                        \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1,   \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY(ALGO, ARG1, ARG2)    \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), ARG1, \
+                 ARG2);                                                      \
+  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1, \
                  ARG2);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY_ANY(ALGO, ARG1, ARG2,  \
-                                                            ARG3)              \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), ARG1, \
-                 ARG2, ARG3);                                                  \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1,   \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY_ANY(ALGO, ARG1, ARG2, \
+                                                            ARG3)             \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), ARG1,  \
+                 ARG2, ARG3);                                                 \
+  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1,  \
                  ARG2, ARG3);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB_ANY(ALGO, ARG)          \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), ARG);                                   \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1),   \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB_ANY(ALGO, ARG)        \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), ARG);                                 \
+  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2), ARG);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(ALGO, ARG)         \
-  (void)KE::ALGO(execution_space, /*----*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), KE::end(in2), ARG);                     \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1),   \
+#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(ALGO, ARG)       \
+  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), KE::end(in2), ARG);                   \
+  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2), KE::end(in2), ARG);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW(ALGO)   \
-  (void)KE::ALGO(execution_space, /*----*/ in1); \
+#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW(ALGO) \
+  (void)KE::ALGO(execution_space, /*--*/ in1); \
   (void)KE::ALGO(label, execution_space, in1);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(ALGO)   \
-  (void)KE::ALGO(execution_space, /*----*/ in1, in2); \
+#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(ALGO) \
+  (void)KE::ALGO(execution_space, /*--*/ in1, in2); \
   (void)KE::ALGO(label, execution_space, in1, in2);
 
 #define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(ALGO, ARG) \
-  (void)KE::ALGO(execution_space, /*----*/ in1, ARG);   \
+  (void)KE::ALGO(execution_space, /*--*/ in1, ARG);     \
   (void)KE::ALGO(label, execution_space, in1, ARG);
 
 #define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(ALGO, ARG) \
-  (void)KE::ALGO(execution_space, /*----*/ in1, in2, ARG);   \
+  (void)KE::ALGO(execution_space, /*--*/ in1, in2, ARG);     \
   (void)KE::ALGO(label, execution_space, in1, in2, ARG);
 
 #define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY(ALGO, ARG1, ARG2) \
-  (void)KE::ALGO(execution_space, /*----*/ in1, ARG1, ARG2);       \
+  (void)KE::ALGO(execution_space, /*--*/ in1, ARG1, ARG2);         \
   (void)KE::ALGO(label, execution_space, in1, ARG1, ARG2);
 
 #define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY_ANY(ALGO, ARG1, ARG2, ARG3) \
-  (void)KE::ALGO(execution_space, /*----*/ in1, ARG1, ARG2, ARG3);           \
+  (void)KE::ALGO(execution_space, /*--*/ in1, ARG1, ARG2, ARG3);             \
   (void)KE::ALGO(label, execution_space, in1, ARG1, ARG2, ARG3);
 
 void non_modifying_seq_ops() {
