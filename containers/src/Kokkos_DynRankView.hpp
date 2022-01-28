@@ -245,7 +245,7 @@ KOKKOS_INLINE_FUNCTION bool dyn_rank_view_verify_operator_bounds(
     return (size_t(i) < map.extent(R)) &&
            dyn_rank_view_verify_operator_bounds<R + 1>(rank, map, args...);
   } else if (i != 0) {
-    printf(
+    KOKKOS_IMPL_DO_NOT_USE_PRINTF(
         "DynRankView Debug Bounds Checking Error: at rank %u\n  Extra "
         "arguments beyond the rank must be zero \n",
         R);

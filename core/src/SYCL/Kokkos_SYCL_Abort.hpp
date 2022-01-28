@@ -54,7 +54,7 @@ namespace Impl {
 
 inline void sycl_abort(char const* msg) {
 #ifdef NDEBUG
-  printf("Aborting with message %s.\n", msg);
+  KOKKOS_IMPL_DO_NOT_USE_PRINTF("Aborting with message %s.\n", msg);
 #else
   // Choosing "" here causes problems but a single whitespace character works.
   const char* empty = " ";

@@ -901,28 +901,28 @@ struct TestAbsoluteValueFunction {
     using Kokkos::Experimental::abs;
     if (abs(1) != 1 || abs(-1) != 1) {
       ++e;
-      printf("failed abs(int)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(int)\n");
     }
     if (abs(2l) != 2l || abs(-2l) != 2l) {
       ++e;
-      printf("failed abs(long int)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long int)\n");
     }
     if (abs(3ll) != 3ll || abs(-3ll) != 3ll) {
       ++e;
-      printf("failed abs(long long int)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long long int)\n");
     }
     if (abs(4.f) != 4.f || abs(-4.f) != 4.f) {
       ++e;
-      printf("failed abs(float)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(float)\n");
     }
     if (abs(5.) != 5. || abs(-5.) != 5.) {
       ++e;
-      printf("failed abs(double)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double)\n");
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     if (abs(6.l) != 6.l || abs(-6.l) != 6.l) {
       ++e;
-      printf("failed abs(long double)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long double)\n");
     }
 #endif
     // special values
@@ -934,7 +934,8 @@ struct TestAbsoluteValueFunction {
 #endif
     ) {
       ++e;
-      printf("failed abs(floating_point) special values\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "failed abs(floating_point) special values\n");
     }
 
     static_assert(std::is_same<decltype(abs(1)), int>::value, "");
@@ -966,7 +967,7 @@ struct TestIsNaN {
     using Kokkos::Experimental::signaling_NaN;
     if (isnan(1) || isnan(INT_MAX)) {
       ++e;
-      printf("failed isnan(integral)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(integral)\n");
     }
     if (isnan(2.f)
 #ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
@@ -976,7 +977,7 @@ struct TestIsNaN {
 
     ) {
       ++e;
-      printf("failed isnan(float)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(float)\n");
     }
     if (isnan(3.)
 #ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
@@ -985,7 +986,7 @@ struct TestIsNaN {
 #endif
     ) {
       ++e;
-      printf("failed isnan(double)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(double)\n");
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     if (isnan(4.l)
@@ -995,7 +996,7 @@ struct TestIsNaN {
 #endif
     ) {
       ++e;
-      printf("failed isnan(long double)\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(long double)\n");
     }
 #endif
     // special values
@@ -1005,7 +1006,8 @@ struct TestIsNaN {
 #endif
     ) {
       ++e;
-      printf("failed isnan(floating_point) special values\n");
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "failed isnan(floating_point) special values\n");
     }
 
     static_assert(std::is_same<decltype(isnan(1)), bool>::value, "");

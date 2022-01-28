@@ -569,7 +569,7 @@ class UnorderedMap {
           // Previously claimed an unused entry that was not inserted.
           // Release this unused entry immediately.
           if (!m_available_indexes.reset(new_index)) {
-            printf("Unable to free existing\n");
+            KOKKOS_IMPL_DO_NOT_USE_PRINTF("Unable to free existing\n");
           }
         }
 
