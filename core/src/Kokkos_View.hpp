@@ -652,8 +652,7 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible HostMirror view */
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
-           typename traits::host_mirror_space,
-           typename traits::hooks_policy>;
+           typename traits::host_mirror_space, typename traits::hooks_policy>;
 
   /** \brief Unified types */
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;

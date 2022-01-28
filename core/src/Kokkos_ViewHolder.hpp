@@ -124,7 +124,7 @@ class ConstViewHolderImplBase {
   const void *m_data        = nullptr;
   std::string m_label;
   size_t m_data_type_size = 0;
-  bool m_is_host_space     = false;
+  bool m_is_host_space    = false;
 };
 
 class ViewHolderImplBase {
@@ -160,7 +160,7 @@ class ViewHolderImplBase {
   void *m_data              = nullptr;
   std::string m_label;
   size_t m_data_type_size = 0;
-  bool m_is_host_space     = false;
+  bool m_is_host_space    = false;
 };
 
 template <typename SrcViewType, typename DstViewType, typename Enabled = void>
@@ -178,9 +178,9 @@ struct ViewHolderImplDeepCopyImpl {
 };
 
 template <typename SrcViewType, typename DstViewType>
-struct ViewHolderImplDeepCopyImpl<
-    SrcViewType, DstViewType,
-    std::enable_if_t<is_always_assignable_impl<DstViewType, SrcViewType>::value>> {
+struct ViewHolderImplDeepCopyImpl<SrcViewType, DstViewType,
+                                  std::enable_if_t<is_always_assignable_impl<
+                                      DstViewType, SrcViewType>::value>> {
   static void copy_to_unmanaged(SrcViewType &_src, void *_buff) {
     auto dst = make_unmanaged_view_like(_src, _buff);
     deep_copy(dst, _src);
@@ -255,13 +255,11 @@ class ViewHolderImpl<View, typename std::enable_if<std::is_const<
 };
 }  // namespace Impl
 
-template< bool IsConst >
+template <bool IsConst>
 class BasicViewHolder {
  public:
-
-  using value_type = std::conditional_t< IsConst,
-        Impl::ConstViewHolderImplBase,
-        Impl::ViewHolderImplBase >;
+  using value_type = std::conditional_t<IsConst, Impl::ConstViewHolderImplBase,
+                                        Impl::ViewHolderImplBase>;
 
   BasicViewHolder() = default;
 
@@ -271,8 +269,8 @@ class BasicViewHolder {
   BasicViewHolder(BasicViewHolder &&other) { std::swap(m_impl, other.m_impl); }
 
   BasicViewHolder &operator=(const BasicViewHolder &other) {
-    m_impl = std::unique_ptr<value_type>(
-        other.m_impl ? other.m_impl->clone() : nullptr);
+    m_impl = std::unique_ptr<value_type>(other.m_impl ? other.m_impl->clone()
+                                                      : nullptr);
     return *this;
   }
 
@@ -281,10 +279,9 @@ class BasicViewHolder {
     return *this;
   }
 
-  std::conditional_t< IsConst,
-      const void *,
-      void * >
-  data() const { return m_impl ? m_impl->data() : nullptr; }
+  std::conditional_t<IsConst, const void *, void *> data() const {
+    return m_impl ? m_impl->data() : nullptr;
+  }
 
  private:
   template <typename V>
@@ -297,8 +294,8 @@ class BasicViewHolder {
   std::unique_ptr<value_type> m_impl;
 };
 
-using ConstViewHolder = BasicViewHolder< true >;
-using ViewHolder = BasicViewHolder< false >;
+using ConstViewHolder = BasicViewHolder<true>;
+using ViewHolder      = BasicViewHolder<false>;
 
 template <typename V>
 auto make_view_holder(const V &view) {
