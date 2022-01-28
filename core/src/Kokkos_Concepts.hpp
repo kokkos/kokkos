@@ -148,21 +148,20 @@ struct LaunchBounds {
 
 namespace Kokkos {
 
-#define KOKKOS_IMPL_IS_CONCEPT(CONCEPT)                                    \
-  template <typename T>                                                    \
-  struct is_##CONCEPT {                                                    \
-   private:                                                                \
-    template <typename U>                                                  \
-    using have_t = typename std::is_base_of<typename U::CONCEPT, U>::type; \
-    template <typename U>                                                  \
-    using have_type_t =                                                    \
-        typename std::is_base_of<typename U::CONCEPT##_type, U>::type;     \
-                                                                           \
-   public:                                                                 \
-    static constexpr bool value =                                          \
-        detected_or_t<std::false_type, have_t, T>::value ||                \
-        detected_or_t<std::false_type, have_type_t, T>::value;             \
-    constexpr operator bool() const noexcept { return value; }             \
+#define KOKKOS_IMPL_IS_CONCEPT(CONCEPT)                        \
+  template <typename T>                                        \
+  struct is_##CONCEPT {                                        \
+   private:                                                    \
+    template <typename U>                                      \
+    using have_t = typename U::CONCEPT;                        \
+    template <typename U>                                      \
+    using have_type_t = typename U::CONCEPT##_type;            \
+                                                               \
+   public:                                                     \
+    static constexpr bool value =                              \
+        std::is_base_of<detected_t<have_t, T>, T>::value ||    \
+        std::is_base_of<detected_t<have_type_t, T>, T>::value; \
+    constexpr operator bool() const noexcept { return value; } \
   };
 
 // Public concept:
