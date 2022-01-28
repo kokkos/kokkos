@@ -42,39 +42,17 @@
 //@HEADER
 */
 
-#include <cstdio>
+#ifndef KOKKOS_SETUP_SYCL_HPP_
+#define KOKKOS_SETUP_SYCL_HPP_
 
-#include <gtest/gtest.h>
+#include <CL/sycl.hpp>
 
-#include <Kokkos_Core.hpp>
-
-namespace Test {
-
-namespace {
-
-struct StructCopy {
-  Kokkos::DefaultExecutionSpace device;
-  Kokkos::DefaultHostExecutionSpace host;
-};
-
-template <class ExecutionSpace>
-void check_struct_copy() {
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-  // FIXME_OPENMPTARGET nvlink error: Undefined reference to
-  // '_ZSt25__throw_bad_function_callv' in
-  // '/tmp/TestOpenMPTarget_ExecutionSpace-434d81.cubin'
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-  StructCopy data;
-  parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(0, 1), KOKKOS_LAMBDA(int) {
-        StructCopy data2 = data;
-        KOKKOS_IMPL_DO_NOT_USE_PRINTF("%i \n", data2.device.in_parallel());
-      });
+#ifdef __SYCL_DEVICE_ONLY__
+#define KOKKOS_IMPL_DO_NOT_USE_PRINTF(format, ...)                \
+  do {                                                            \
+    const __attribute__((opencl_constant)) char fmt[] = (format); \
+    sycl::ext::oneapi::experimental::printf(fmt, ##__VA_ARGS__);  \
+  } while (0)
 #endif
+
 #endif
-}
-
-}  // namespace
-
-TEST(TEST_CATEGORY, copy_structure) { check_struct_copy<TEST_EXECSPACE>(); }
-}  // namespace Test

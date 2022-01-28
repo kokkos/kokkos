@@ -152,8 +152,10 @@ ENDIF()
 
 KOKKOS_DEVICE_OPTION(SYCL OFF DEVICE "Whether to build SYCL backend")
 
+## SYCL has extra setup requirements, turn on Kokkos_Setup_SYCL.hpp in macros
 IF (KOKKOS_ENABLE_SYCL)
   IF(KOKKOS_CXX_STANDARD LESS 17)
     MESSAGE(FATAL_ERROR "SYCL backend requires C++17 or newer!")
   ENDIF()
+  LIST(APPEND DEVICE_SETUP_LIST SYCL)
 ENDIF()
