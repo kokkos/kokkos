@@ -627,28 +627,33 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible view of array of scalar types */
   using array_type =
       View<typename traits::scalar_array_type, typename traits::array_layout,
-           typename traits::device_type, typename traits::memory_traits>;
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
   using const_type =
       View<typename traits::const_data_type, typename traits::array_layout,
-           typename traits::device_type, typename traits::memory_traits>;
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>;
 
   /** \brief  Compatible view of non-const data type */
   using non_const_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
-           typename traits::device_type, typename traits::memory_traits>;
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>;
 
   /** \brief  Compatible HostMirror view */
   using HostMirror =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
-                  typename traits::host_mirror_space::memory_space>>;
+                  typename traits::host_mirror_space::memory_space>,
+           typename traits::hooks_policy>;
 
   /** \brief  Compatible HostMirror view */
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
-           typename traits::host_mirror_space>;
+           typename traits::host_mirror_space,
+           typename traits::hooks_policy>;
 
   /** \brief Unified types */
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;
