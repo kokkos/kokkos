@@ -180,10 +180,7 @@ struct ViewHolderImplDeepCopyImpl {
 template <typename SrcViewType, typename DstViewType>
 struct ViewHolderImplDeepCopyImpl<
     SrcViewType, DstViewType,
-    std::enable_if_t<is_always_assignable_impl<
-        typename std::remove_reference<DstViewType>::type,
-        typename std::remove_const<
-            typename std::remove_reference<SrcViewType>::type>::type>::value>> {
+    std::enable_if_t<is_always_assignable_impl<DstViewType, SrcViewType>::value>> {
   static void copy_to_unmanaged(SrcViewType &_src, void *_buff) {
     auto dst = make_unmanaged_view_like(_src, _buff);
     deep_copy(dst, _src);
