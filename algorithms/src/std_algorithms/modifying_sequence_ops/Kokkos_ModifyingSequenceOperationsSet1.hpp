@@ -1252,7 +1252,7 @@ IteratorType generate_n(const ExecutionSpace& ex, IteratorType first,
 }
 
 template <class ExecutionSpace, class IteratorType, class Size, class Generator>
-IteratorType generate_n(const ExecutionSpace& ex, const std::string& label,
+IteratorType generate_n(const std::string& label, const ExecutionSpace& ex,
                         IteratorType first, Size count, Generator g) {
   Impl::generate_n_impl(label, ex, first, count, std::move(g));
   return first + count;
