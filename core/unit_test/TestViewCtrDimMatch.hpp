@@ -57,7 +57,7 @@ namespace Test {
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
 #define PARAM_0
-#define PARAM_1 1 
+#define PARAM_1 1
 #define PARAM_2 1, 1
 #define PARAM_3 1, 1, 1
 #define PARAM_4 1, 1, 1, 1

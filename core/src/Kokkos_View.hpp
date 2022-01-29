@@ -79,9 +79,10 @@ class ViewMapping {
 };
 
 template <typename IntType>
-KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
-    const IntType i0, const IntType i1, const IntType i2, const IntType i3,
-    const IntType i4, const IntType i5, const IntType i6, const IntType i7) {
+inline std::size_t count_valid_integers(const IntType i0, const IntType i1,
+                                        const IntType i2, const IntType i3,
+                                        const IntType i4, const IntType i5,
+                                        const IntType i6, const IntType i7) {
   static_assert(std::is_integral<IntType>::value,
                 "count_valid_integers() must have integer arguments.");
 
@@ -91,30 +92,12 @@ KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
          (i6 != KOKKOS_INVALID_INDEX) + (i7 != KOKKOS_INVALID_INDEX);
 }
 
-KOKKOS_INLINE_FUNCTION
-void runtime_check_rank_device(const size_t dyn_rank, const bool is_void_spec,
+inline void runtime_check_rank(const size_t dyn_rank, const bool is_void_spec,
                                const size_t i0, const size_t i1,
                                const size_t i2, const size_t i3,
                                const size_t i4, const size_t i5,
-                               const size_t i6, const size_t i7) {
-  if (is_void_spec) {
-    const size_t num_passed_args =
-        count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
-
-    if (num_passed_args != dyn_rank && is_void_spec) {
-      Kokkos::abort(
-          "Number of arguments passed to Kokkos::View() constructor must match "
-          "the dynamic rank of the view.");
-    }
-  }
-}
-
-inline void runtime_check_rank_host(const size_t dyn_rank,
-                                    const bool is_void_spec, const size_t i0,
-                                    const size_t i1, const size_t i2,
-                                    const size_t i3, const size_t i4,
-                                    const size_t i5, const size_t i6,
-                                    const size_t i7, const std::string& label) {
+                               const size_t i6, const size_t i7,
+                               const std::string& label) {
   if (is_void_spec) {
     const size_t num_passed_args =
         count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
@@ -130,66 +113,6 @@ inline void runtime_check_rank_host(const size_t dyn_rank,
   }
 }
 
-template <typename Traits, typename Layout>
-KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    Layout& layout, const std::string& label) {
-  size_t i0 = layout.dimension[0];
-  size_t i1 = layout.dimension[1];
-  size_t i2 = layout.dimension[2];
-  size_t i3 = layout.dimension[3];
-  size_t i4 = layout.dimension[4];
-  size_t i5 = layout.dimension[5];
-  size_t i6 = layout.dimension[6];
-  size_t i7 = layout.dimension[7];
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  KOKKOS_IMPL_IF_ON_HOST
-  Impl::runtime_check_rank_host(
-      Traits::rank_dynamic,
-      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
-      i4, i5, i6, i7, label);
-  else Impl::runtime_check_rank_device(
-      Traits::rank_dynamic,
-      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
-      i4, i5, i6, i7);
-#else
-  Impl::runtime_check_rank_host(
-      Traits::rank_dynamic,
-      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
-      i4, i5, i6, i7, label);
-#endif
-}
-
-template <typename Traits, typename Layout>
-KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    Layout& layout) {
-  size_t i0 = layout.dimension[0];
-  size_t i1 = layout.dimension[1];
-  size_t i2 = layout.dimension[2];
-  size_t i3 = layout.dimension[3];
-  size_t i4 = layout.dimension[4];
-  size_t i5 = layout.dimension[5];
-  size_t i6 = layout.dimension[6];
-  size_t i7 = layout.dimension[7];
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  KOKKOS_IMPL_IF_ON_HOST
-  Impl::runtime_check_rank_host(
-      Traits::rank_dynamic,
-      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
-      i4, i5, i6, i7, label);
-  else Impl::runtime_check_rank_device(
-      Traits::rank_dynamic,
-      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
-      i4, i5, i6, i7);
-#else
-  Impl::runtime_check_rank_device(
-      Traits::rank_dynamic,
-      std::is_same<typename Traits::specialize, void>::value, i0, i1, i2, i3,
-      i4, i5, i6, i7);
-
-#endif
-}
 } /* namespace Impl */
 } /* namespace Kokkos */
 
@@ -1610,15 +1533,23 @@ class View : public ViewTraits<DataType, Properties...> {
     //------------------------------------------------------------
 
     if (check_input_args) {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      size_t i0 = arg_layout.dimension[0];
+      size_t i1 = arg_layout.dimension[1];
+      size_t i2 = arg_layout.dimension[2];
+      size_t i3 = arg_layout.dimension[3];
+      size_t i4 = arg_layout.dimension[4];
+      size_t i5 = arg_layout.dimension[5];
+      size_t i6 = arg_layout.dimension[6];
+      size_t i7 = arg_layout.dimension[7];
+
       const std::string& alloc_name =
           static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
               prop_copy)
               .value;
-      Impl::runtime_check_rank<traits>(arg_layout, alloc_name.c_str());
-#else
-      Impl::runtime_check_rank<traits>(arg_layout);
-#endif
+      Impl::runtime_check_rank(
+          traits::rank_dynamic,
+          std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
+          i3, i4, i5, i6, i7, alloc_name.c_str());
     }
 
     Kokkos::Impl::SharedAllocationRecord<>* record =
