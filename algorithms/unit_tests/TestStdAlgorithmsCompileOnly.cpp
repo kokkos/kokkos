@@ -149,13 +149,13 @@ struct TrivialTransformReduceBinaryTransformer {
 namespace KE = Kokkos::Experimental;
 using KE::begin;
 using KE::end;
-using T = double;
+using count_type = std::size_t;
+using T          = double;
 Kokkos::View<T *> in1("in1", 10);
 Kokkos::View<T *> in2("in2", 10);
 Kokkos::View<T *> in3("in3", 10);
 Kokkos::DefaultExecutionSpace exe_space;
 std::string const label = "trivial";
-using count_type        = std::size_t;
 
 //
 // just iterators
