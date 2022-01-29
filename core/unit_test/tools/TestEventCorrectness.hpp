@@ -230,7 +230,7 @@ TEST(kokkosp, test_multiple_default_instances) {
 }
 
 /**
- * Test that device_id() and identifier_from_devid(id) are reciproce
+ * Test that device_id() and identifier_from_devid(id) are reciprocal
  * operations
  */
 TEST(kokkosp, test_id_gen) {
