@@ -152,286 +152,371 @@ using KE::end;
 using T = double;
 Kokkos::View<T *> in1("in1", 10);
 Kokkos::View<T *> in2("in2", 10);
-Kokkos::DefaultExecutionSpace execution_space;
+Kokkos::View<T *> in3("in3", 10);
+Kokkos::DefaultExecutionSpace exe_space;
 std::string const label = "trivial";
+using count_type        = std::size_t;
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE(ALGO)                   \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1)); \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1));
+//
+// just iterators
+//
+#define TEST_ALGO_MACRO_ITER_B1E1(ALGO)                           \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1)); \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB(ALGO)                 \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2));                                      \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
+#define TEST_ALGO_MACRO_ITER_B1E1B2(ALGO)                        \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2));                                \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(ALGO)                \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), KE::end(in2));                        \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
+#define TEST_ALGO_MACRO_ITER_B1E1B2E2(ALGO)                      \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), KE::end(in2));                  \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2), KE::end(in2));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_B_ANY(ALGO, ARG)  \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), ARG); \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), ARG);
+#define TEST_ALGO_MACRO_ITER_B1E1E2(ALGO)                        \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::end(in2));                                  \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), KE::end(in2));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_B_ANY_ANY(ALGO, ARG1, ARG2) \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), ARG1, ARG2);    \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), ARG1, ARG2);
+#define TEST_ALGO_MACRO_ITER_B1E1E2B3(ALGO)                                    \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), KE::end(in2), \
+                 KE::begin(in3));                                              \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), KE::end(in2), \
+                 KE::begin(in3));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(ALGO, ARG1)               \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), ARG1); \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1);
+#define TEST_ALGO_MACRO_ITER_B1E1E1B2(ALGO)                                    \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), KE::end(in1), \
+                 KE::begin(in2));                                              \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), KE::end(in1), \
+                 KE::begin(in2));
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY(ALGO, ARG1, ARG2)    \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), ARG1, \
-                 ARG2);                                                      \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1, \
-                 ARG2);
+//
+// iterators and params
+//
+#define TEST_ALGO_MACRO_ITER_B1_ANY(ALGO, ...)                   \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), __VA_ARGS__); \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), __VA_ARGS__);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY_ANY(ALGO, ARG1, ARG2, \
-                                                            ARG3)             \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), ARG1,  \
-                 ARG2, ARG3);                                                 \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), ARG1,  \
-                 ARG2, ARG3);
+#define TEST_ALGO_MACRO_ITER_B1E1_ANY(ALGO, ...)                               \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), __VA_ARGS__); \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), __VA_ARGS__);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB_ANY(ALGO, ARG)        \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), ARG);                                 \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), ARG);
+#define TEST_ALGO_MACRO_ITER_B1E1B2_ANY(ALGO, ...)               \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), __VA_ARGS__);                   \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), __VA_ARGS__);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(ALGO, ARG)       \
-  (void)KE::ALGO(execution_space, /*--*/ KE::begin(in1), KE::end(in1), \
-                 KE::begin(in2), KE::end(in2), ARG);                   \
-  (void)KE::ALGO(label, execution_space, KE::begin(in1), KE::end(in1), \
+#define TEST_ALGO_MACRO_ITER_B1_ARG_B2(ALGO, ARG)                        \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), ARG, KE::begin(in2)); \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), ARG, KE::begin(in2));
+
+#define TEST_ALGO_MACRO_ITER_B1E1B2B3_ANY(ALGO, ...)             \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), KE::begin(in3), __VA_ARGS__);   \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), KE::begin(in3), __VA_ARGS__);
+
+#define TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(ALGO, ARG)             \
+  (void)KE::ALGO(exe_space, /*--*/ KE::begin(in1), KE::end(in1), \
+                 KE::begin(in2), KE::end(in2), ARG);             \
+  (void)KE::ALGO(label, exe_space, KE::begin(in1), KE::end(in1), \
                  KE::begin(in2), KE::end(in2), ARG);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW(ALGO) \
-  (void)KE::ALGO(execution_space, /*--*/ in1); \
-  (void)KE::ALGO(label, execution_space, in1);
+//
+// views only
+//
+#define TEST_ALGO_MACRO_VIEW_V1(ALGO)    \
+  (void)KE::ALGO(exe_space, /*--*/ in1); \
+  (void)KE::ALGO(label, exe_space, in1);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(ALGO) \
-  (void)KE::ALGO(execution_space, /*--*/ in1, in2); \
-  (void)KE::ALGO(label, execution_space, in1, in2);
+#define TEST_ALGO_MACRO_VIEW_V1V2(ALGO)       \
+  (void)KE::ALGO(exe_space, /*--*/ in1, in2); \
+  (void)KE::ALGO(label, exe_space, in1, in2);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(ALGO, ARG) \
-  (void)KE::ALGO(execution_space, /*--*/ in1, ARG);     \
-  (void)KE::ALGO(label, execution_space, in1, ARG);
+#define TEST_ALGO_MACRO_VIEW_V1V2V3(ALGO)          \
+  (void)KE::ALGO(exe_space, /*--*/ in1, in2, in3); \
+  (void)KE::ALGO(label, exe_space, in1, in2, in3);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(ALGO, ARG) \
-  (void)KE::ALGO(execution_space, /*--*/ in1, in2, ARG);     \
-  (void)KE::ALGO(label, execution_space, in1, in2, ARG);
+//
+// views and params
+//
+#define TEST_ALGO_MACRO_VIEW_V1_ANY(ALGO, ...)        \
+  (void)KE::ALGO(exe_space, /*--*/ in1, __VA_ARGS__); \
+  (void)KE::ALGO(label, exe_space, in1, __VA_ARGS__);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY(ALGO, ARG1, ARG2) \
-  (void)KE::ALGO(execution_space, /*--*/ in1, ARG1, ARG2);         \
-  (void)KE::ALGO(label, execution_space, in1, ARG1, ARG2);
+#define TEST_ALGO_MACRO_VIEW_V1V2_ANY(ALGO, ...)           \
+  (void)KE::ALGO(exe_space, /*--*/ in1, in2, __VA_ARGS__); \
+  (void)KE::ALGO(label, exe_space, in1, in2, __VA_ARGS__);
 
-#define KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY_ANY(ALGO, ARG1, ARG2, ARG3) \
-  (void)KE::ALGO(execution_space, /*--*/ in1, ARG1, ARG2, ARG3);             \
-  (void)KE::ALGO(label, execution_space, in1, ARG1, ARG2, ARG3);
+#define TEST_ALGO_MACRO_VIEW_V1V2V3_ANY(ALGO, ...)              \
+  (void)KE::ALGO(exe_space, /*--*/ in1, in2, in3, __VA_ARGS__); \
+  (void)KE::ALGO(label, exe_space, in1, in2, in3, __VA_ARGS__);
+
+#define TEST_ALGO_MACRO_VIEW_V1_ARG_V2(ALGO, ARG)  \
+  (void)KE::ALGO(exe_space, /*--*/ in1, ARG, in2); \
+  (void)KE::ALGO(label, exe_space, in1, ARG, in2);
 
 void non_modifying_seq_ops() {
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(find, T{5});
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(find, T{5});
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(find, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(find, T{});
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(find_if,
-                                              TrivialUnaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(find_if, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(find_if, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(find_if, TrivialUnaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(find_if_not,
-                                              TrivialUnaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(find_if_not, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(find_if_not, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(find_if_not, TrivialUnaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(for_each, TimesTwoFunctor<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(for_each, TimesTwoFunctor<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(for_each, TimesTwoFunctor<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(for_each, TimesTwoFunctor<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_B_ANY_ANY(for_each_n, 3,
-                                                 TimesTwoFunctor<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY(for_each_n, 3, TimesTwoFunctor<T>());
+  TEST_ALGO_MACRO_ITER_B1_ANY(for_each_n, count_type{}, TimesTwoFunctor<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(for_each_n, count_type{}, TimesTwoFunctor<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(count_if,
-                                              TrivialUnaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(count_if, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(count_if, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(count_if, TrivialUnaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(count, T{22});
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(count, T{22});
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(count, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(count, T{});
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(mismatch);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(mismatch,
-                                                TrivialBinaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(mismatch);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(mismatch,
-                                            TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2E2(mismatch);
+  TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(mismatch, TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2(mismatch);
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(mismatch, TrivialBinaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(all_of,
-                                              TrivialUnaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(all_of, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(all_of, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(all_of, TrivialUnaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(any_of,
-                                              TrivialUnaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(any_of, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(any_of, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(any_of, TrivialUnaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(none_of,
-                                              TrivialUnaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(none_of, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(none_of, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(none_of, TrivialUnaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB(equal);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEB_ANY(equal,
-                                               TrivialBinaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(equal);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(equal, TrivialBinaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(equal);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(equal,
-                                                TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2(equal);
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(equal, TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2(equal);
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(equal, TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2E2(equal);
+  TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(equal, TrivialBinaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(lexicographical_compare);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(lexicographical_compare,
-                                                TrivialComparator<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(lexicographical_compare);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(lexicographical_compare,
-                                            TrivialComparator<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2E2(lexicographical_compare);
+  TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(lexicographical_compare,
+                                    TrivialComparator<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2(lexicographical_compare);
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(lexicographical_compare,
+                                TrivialComparator<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE(adjacent_find);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW(adjacent_find);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY(adjacent_find,
-                                              TrivialBinaryFunctor<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY(adjacent_find,
-                                       TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_ITER_B1E1(adjacent_find);
+  TEST_ALGO_MACRO_VIEW_V1(adjacent_find);
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(adjacent_find, TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(adjacent_find, TrivialBinaryFunctor<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(search);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(search);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(search,
-                                                TrivialBinaryFunctor<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(search, TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2E2(search);
+  TEST_ALGO_MACRO_VIEW_V1V2(search);
+  TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(search, TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(search, TrivialBinaryFunctor<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(find_first_of);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(find_first_of);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(find_first_of,
-                                                TrivialBinaryFunctor<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(find_first_of,
-                                            TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2E2(find_first_of);
+  TEST_ALGO_MACRO_VIEW_V1V2(find_first_of);
+  TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(find_first_of, TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(find_first_of, TrivialBinaryFunctor<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY(search_n, 2, T{22});
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY(search_n, 2, T{22});
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BE_ANY_ANY_ANY(
-      search_n, 2, T{22}, TrivialBinaryPredicate<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_ANY_ANY_ANY(search_n, 2, T{22},
-                                               TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(search_n, count_type{}, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(search_n, count_type{}, T{});
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(search_n, count_type{}, T{},
+                                TrivialBinaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1_ANY(search_n, count_type{}, T{},
+                              TrivialBinaryPredicate<T>());
 
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE(find_end);
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW(find_end);
-  KOKKOS_TEST_ALGORITHM_MACRO_ITERATOR_BEBE_ANY(find_end,
-                                                TrivialBinaryFunctor<T>());
-  KOKKOS_TEST_ALGORITHM_MACRO_VIEW_VIEW_ANY(find_end,
-                                            TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2E2(find_end);
+  TEST_ALGO_MACRO_VIEW_V1V2(find_end);
+  TEST_ALGO_MACRO_ITER_B1E1B2E2_ANY(find_end, TrivialBinaryFunctor<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(find_end, TrivialBinaryFunctor<T>());
 }
 
 void modifying_seq_ops() {
-  //     auto r = KE::replace_copy("shouldwork", execution_space, in1,
-  //     in2, 3.0, 11.0); auto r = KE::replace_copy_if("shouldwork",
-  //     execution_space, in1, in2,
-  //                                  TrivialUnaryPredicate<T>(), 11.0);
-  //     KE::replace("shouldwork", execution_space, in1, 3.0, 11.0);
-  //     KE::replace_if("shouldwork", execution_space, in1,
-  //                    TrivialUnaryPredicate<T>(), 11.0);
-  //     auto r = KE::copy("shouldwork", execution_space, in1, in2);
-  //     auto r = KE::copy_n("shouldwork", execution_space, in1, 3, in2);
-  //     auto r = KE::copy_backward("shouldwork", execution_space, in1, in2);
-  //     auto r = KE::copy_if("shouldwork", execution_space, in1, in2,
-  //                          TrivialUnaryPredicate<T>());
-  //     KE::fill("shouldwork", execution_space, in1, 22.0);
-  //     auto r = KE::fill_n("shouldwork", execution_space, in1, 5, 22.0);
-  //     KE::transform("shouldwork", execution_space, in1, in2, out, func);
-  //     KE::generate("shouldwork", execution_space, in1,
-  //     TrivialGenerator<T>()); KE::generate_n("shouldwork", execution_space,
-  //     in1, 5,
-  //                    TrivialGenerator<T>());
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(replace_copy, T{}, T{});
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(replace_copy, T{}, T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(replace_copy_if, TrivialUnaryPredicate<T>(),
+                                  T{});
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(replace_copy_if, TrivialUnaryPredicate<T>(),
+                                T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(replace, T{}, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(replace, T{}, T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(replace_if, TrivialUnaryPredicate<T>(), T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(replace_if, TrivialUnaryPredicate<T>(), T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2(copy);
+  TEST_ALGO_MACRO_VIEW_V1V2(copy);
+
+  TEST_ALGO_MACRO_ITER_B1_ARG_B2(copy_n, count_type{});
+  TEST_ALGO_MACRO_VIEW_V1_ARG_V2(copy_n, count_type{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2(copy_backward);
+  TEST_ALGO_MACRO_VIEW_V1V2(copy_backward);
+
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(copy_if, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(copy_if, TrivialUnaryPredicate<T>());
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(fill, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(fill, T{});
+
+  TEST_ALGO_MACRO_ITER_B1_ANY(fill_n, count_type{}, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(fill_n, count_type{}, T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(transform, TrivialUnaryFunctor<T>{});
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(transform, TrivialUnaryFunctor<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(transform, TrivialUnaryFunctor<T>{});
+  TEST_ALGO_MACRO_ITER_B1E1B2B3_ANY(transform, TrivialBinaryFunctor<T>{});
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(transform, TrivialUnaryFunctor<T>{});
+  TEST_ALGO_MACRO_VIEW_V1V2V3_ANY(transform, TrivialBinaryFunctor<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(generate, TrivialGenerator<T>{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(generate, TrivialGenerator<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1_ANY(generate_n, count_type{}, TrivialGenerator<T>{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(generate_n, count_type{}, TrivialGenerator<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2(reverse_copy);
+  TEST_ALGO_MACRO_VIEW_V1V2(reverse_copy);
+
+  TEST_ALGO_MACRO_ITER_B1E1(reverse);
+  TEST_ALGO_MACRO_VIEW_V1(reverse);
+
+  TEST_ALGO_MACRO_ITER_B1E1B2(move);
+  TEST_ALGO_MACRO_VIEW_V1V2(move);
+
+  TEST_ALGO_MACRO_ITER_B1E1E2(move_backward);
+  TEST_ALGO_MACRO_VIEW_V1V2(move_backward);
+
+  TEST_ALGO_MACRO_ITER_B1E1B2(swap_ranges);
+  TEST_ALGO_MACRO_VIEW_V1V2(swap_ranges);
+
+  TEST_ALGO_MACRO_ITER_B1E1(unique);
+  TEST_ALGO_MACRO_VIEW_V1(unique);
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(unique, TrivialBinaryPredicate<T>{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(unique, TrivialBinaryPredicate<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2(unique_copy);
+  TEST_ALGO_MACRO_VIEW_V1V2(unique_copy);
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(unique_copy, TrivialBinaryPredicate<T>{});
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(unique_copy, TrivialBinaryPredicate<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1E1E2(rotate);
+  TEST_ALGO_MACRO_VIEW_V1_ANY(rotate, count_type{});
+
+  TEST_ALGO_MACRO_ITER_B1E1E1B2(rotate_copy);
+  TEST_ALGO_MACRO_VIEW_V1_ARG_V2(rotate_copy, count_type{});
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(remove_if, TrivialUnaryPredicate<T>{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(remove_if, TrivialUnaryPredicate<T>{});
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(remove, T{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(remove, T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(remove_copy, T{});
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(remove_copy, T{});
+
+  TEST_ALGO_MACRO_ITER_B1E1B2_ANY(remove_copy_if, TrivialUnaryPredicate<T>());
+  TEST_ALGO_MACRO_VIEW_V1V2_ANY(remove_copy_if, TrivialUnaryPredicate<T>());
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(shift_left, count_type{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(shift_left, count_type{});
+
+  TEST_ALGO_MACRO_ITER_B1E1_ANY(shift_right, count_type{});
+  TEST_ALGO_MACRO_VIEW_V1_ANY(shift_right, count_type{});
 }
 
-//     auto r = KE::is_sorted_until("shouldwork", execution_space, in1);
+//     auto r = KE::is_sorted_until("shouldwork", exe_space, in1);
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
-//     auto r = KE::is_sorted_until("shouldwork", execution_space, in1,
+//     auto r = KE::is_sorted_until("shouldwork", exe_space, in1,
 //                                  TrivialComparator<T>());
 // #endif
 
 //   {
-//     auto r = KE::is_sorted("shouldwork", execution_space, in1);
+//     auto r = KE::is_sorted("shouldwork", exe_space, in1);
 //   }
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::is_sorted("shouldwork", execution_space, in1,
+//     auto r = KE::is_sorted("shouldwork", exe_space, in1,
 //                            TrivialComparator<T>());
 //   }
 // #endif
 
 //   {
-//     auto r = KE::min_element("shouldwork", execution_space, in1);
+//     auto r = KE::min_element("shouldwork", exe_space, in1);
 //   }
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::min_element("shouldwork", execution_space, in1,
+//     auto r = KE::min_element("shouldwork", exe_space, in1,
 //                              TrivialComparator<T>());
 //   }
 // #endif
 
 //   {
-//     auto r = KE::max_element("shouldwork", execution_space, in1);
+//     auto r = KE::max_element("shouldwork", exe_space, in1);
 //   }
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
-//     auto r = KE::max_element("shouldwork", execution_space, in1,
+//     auto r = KE::max_element("shouldwork", exe_space, in1,
 //                              TrivialComparator<T>());
 // #endif
 
 //   {
-//     auto r = KE::minmax_element("shouldwork", execution_space, in1);
+//     auto r = KE::minmax_element("shouldwork", exe_space, in1);
 //   }
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::minmax_element("shouldwork", execution_space, in1,
+//     auto r = KE::minmax_element("shouldwork", exe_space, in1,
 //                                 TrivialComparator<T>());
 
 // #endif
 
 //   {
-//     auto r = KE::is_partitioned("shouldwork", execution_space, in1,
+//     auto r = KE::is_partitioned("shouldwork", exe_space, in1,
 //                                 TrivialUnaryPredicate<T>());
 //   }
 
 //   {
-//     auto r = KE::partition_copy("shouldwork", execution_space, in1, in2, in3,
+//     auto r = KE::partition_copy("shouldwork", exe_space, in1, in2, in3,
 //                                 TrivialUnaryPredicate<T>());
 //   }
 
 //   {
-//     auto r = KE::partition_point("shouldwork", execution_space, in1,
+//     auto r = KE::partition_point("shouldwork", exe_space, in1,
 //                                  TrivialUnaryPredicate<T>());
 //}
 
 //   {
-//     auto r = KE::adjacent_difference("shouldwork", execution_space, in1,
+//     auto r = KE::adjacent_difference("shouldwork", exe_space, in1,
 //     in2);
 //   }
 
 //   {
-//     auto r = KE::adjacent_difference("shouldwork", execution_space, in1, in2,
+//     auto r = KE::adjacent_difference("shouldwork", exe_space, in1, in2,
 //                                      TrivialBinaryFunctor<T>());
 //   }
 
 //   {
-//     auto r = KE::exclusive_scan("shouldwork", execution_space, in1,
+//     auto r = KE::exclusive_scan("shouldwork", exe_space, in1,
 //     in2, 3.3);
 //   }
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::transform_exclusive_scan("shouldwork", execution_space, in1,
+//     auto r = KE::transform_exclusive_scan("shouldwork", exe_space, in1,
 //                                           in2, 3.3,
 //                                           TrivialBinaryFunctor<T>(),
 //                                           TrivialUnaryFunctor<T>());
@@ -439,12 +524,12 @@ void modifying_seq_ops() {
 // #endif
 
 //   {
-//     auto r = KE::inclusive_scan("shouldwork", execution_space, in1, in2);
+//     auto r = KE::inclusive_scan("shouldwork", exe_space, in1, in2);
 //   }
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::transform_inclusive_scan("shouldwork", execution_space, in1,
+//     auto r = KE::transform_inclusive_scan("shouldwork", exe_space, in1,
 //                                           in2, TrivialBinaryFunctor<T>(),
 //                                           TrivialUnaryFunctor<T>());
 //   }
@@ -452,30 +537,30 @@ void modifying_seq_ops() {
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::reduce("shouldwork", execution_space, in1);
+//     auto r = KE::reduce("shouldwork", exe_space, in1);
 //   }
 
 //   {
-//     auto r = KE::reduce("shouldwork", execution_space, in1, 33.0,
+//     auto r = KE::reduce("shouldwork", exe_space, in1, 33.0,
 //                         TrivialReduceJoinFunctor<T>());
 //   }
 // #endif
 
 // #ifndef KOKKOS_ENABLE_OPENMPTARGET
 //   {
-//     auto r = KE::transform_reduce("shouldwork", execution_space, in1,
+//     auto r = KE::transform_reduce("shouldwork", exe_space, in1,
 //     in2, 33.0);
 //   }
 
 //   {
-//     auto r = KE::transform_reduce("shouldwork", execution_space, in1,
+//     auto r = KE::transform_reduce("shouldwork", exe_space, in1,
 //     in2, 33.0,
 //                                   TrivialReduceJoinFunctor<T>(),
 //                                   TrivialTransformReduceBinaryTransformer<T>());
 //   }
 
 //   {
-//     auto r = KE::transform_reduce("shouldwork", execution_space, in1, 33.0,
+//     auto r = KE::transform_reduce("shouldwork", exe_space, in1, 33.0,
 //                                   TrivialReduceJoinFunctor<T>(),
 //                                   TrivialTransformReduceUnnaryTransformer<T>());
 //   }
