@@ -91,7 +91,12 @@ namespace Experimental {
 #if defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE sycl
 #else
+#if defined(KOKKOS_COMPILER_NVCC) && defined(__GNUC__) && (__GNUC__ < 6) && \
+    !defined(__clang__)
+#define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
+#else
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE std
+#endif
 #endif
 
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                                 \
