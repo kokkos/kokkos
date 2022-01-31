@@ -353,9 +353,15 @@ struct test_random_scalar {
           variance_expect / (result.variance / num_draws / 3) - 1.0;
       double covariance_eps =
           result.covariance / num_draws / 2 / variance_expect;
-      EXPECT_LT(std::abs(mean_eps), tolerance);
-      EXPECT_LT(std::abs(variance_eps), 1.5 * tolerance);
-      EXPECT_LT(std::abs(covariance_eps), 2.0 * tolerance);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+      if (!std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+#endif
+        EXPECT_LT(std::abs(mean_eps), tolerance);
+        EXPECT_LT(std::abs(variance_eps), 1.5 * tolerance);
+        EXPECT_LT(std::abs(covariance_eps), 2.0 * tolerance);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+      }
+#endif
     }
     {
       cout << " -- Testing 1-D histogram" << endl;
@@ -387,16 +393,14 @@ struct test_random_scalar {
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-      if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
-        mean_eps_expect       = 0.019;
-        variance_eps_expect   = 1.0;
-        covariance_eps_expect = 2.8e4;
+      if (!std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+#endif
+        EXPECT_LT(std::abs(mean_eps), mean_eps_expect);
+        EXPECT_LT(std::abs(variance_eps), variance_eps_expect);
+        EXPECT_LT(std::abs(covariance_eps), covariance_eps_expect);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
-
-      EXPECT_LT(std::abs(mean_eps), mean_eps_expect);
-      EXPECT_LT(std::abs(variance_eps), variance_eps_expect);
-      EXPECT_LT(std::abs(covariance_eps), covariance_eps_expect);
 
       cout << "Density 1D: " << mean_eps << " " << variance_eps << " "
            << (result.covariance / HIST_DIM1D / HIST_DIM1D) << " || "
@@ -433,14 +437,14 @@ struct test_random_scalar {
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-      if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
-        variance_factor = 15.1;
+      if (!std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+#endif
+        EXPECT_LT(std::abs(mean_eps), tolerance);
+        EXPECT_LT(std::abs(variance_eps), variance_factor);
+        EXPECT_LT(std::abs(covariance_eps), variance_factor);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
-
-      EXPECT_LT(std::abs(mean_eps), tolerance);
-      EXPECT_LT(std::abs(variance_eps), variance_factor);
-      EXPECT_LT(std::abs(covariance_eps), variance_factor);
 
       cout << "Density 3D: " << mean_eps << " " << variance_eps << " "
            << result.covariance / HIST_DIM1D / HIST_DIM1D << " || " << tolerance
