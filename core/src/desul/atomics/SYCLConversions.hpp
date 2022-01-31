@@ -85,7 +85,7 @@ template <class T,
           class MemoryScope,
           sycl::access::address_space AddressSpace>
 using sycl_atomic_ref =
-    sycl::ext::oneapi::atomic_ref<T,
+    sycl::atomic_ref<T,
                                   DesulToSYCLMemoryOrder<MemoryOrder>::value,
                                   DesulToSYCLMemoryScope<MemoryScope>::value,
                                   AddressSpace>;

@@ -262,9 +262,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << device.get_info<device::is_linker_available>()
             << "\nQueue Profiling: "
             << device.get_info<device::queue_profiling>()
-            << "\nBuilt In Kernels: "
-            << Container<std::vector<std::string>>(
-                   device.get_info<device::built_in_kernels>())
             << "\nVendor: " << device.get_info<device::vendor>()
             << "\nProfile: " << device.get_info<device::profile>()
             << "\nVersion: " << device.get_info<device::version>()
