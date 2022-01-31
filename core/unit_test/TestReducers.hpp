@@ -398,9 +398,9 @@ struct TestReducers {
       ASSERT_EQ(prod_scalar, reference_prod);
 
       prod_scalar = init;
-      /*Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace, ReducerTag>(0, N),
-                              f_tag, reducer_scalar);*/
-      //ASSERT_EQ(prod_scalar, reference_prod);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace, ReducerTag>(0, N),
+                              f_tag, reducer_scalar);
+      ASSERT_EQ(prod_scalar, reference_prod);
 
       Scalar prod_scalar_view = reducer_scalar.reference();
       ASSERT_EQ(prod_scalar_view, reference_prod);
@@ -468,6 +468,10 @@ struct TestReducers {
       Scalar min_scalar = init;
       Kokkos::Min<Scalar> reducer_scalar(min_scalar);
 
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
+                              reducer_scalar);
+      ASSERT_EQ(min_scalar, reference_min);
+
       min_scalar = init;
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace, ReducerTag>(0, N),
                               f_tag, reducer_scalar);
@@ -514,6 +518,10 @@ struct TestReducers {
     {
       Scalar max_scalar = init;
       Kokkos::Max<Scalar> reducer_scalar(max_scalar);
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
+                              reducer_scalar);
+      ASSERT_EQ(max_scalar, reference_max);
 
       max_scalar = init;
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace, ReducerTag>(0, N),

@@ -364,7 +364,6 @@ struct reduction_identity<signed char> {
   }
 };
 
-// 4707 fix; effectively reverting much of PR #4352 
 template <>
 struct reduction_identity<bool> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static bool lor() {
