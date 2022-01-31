@@ -434,7 +434,7 @@ struct test_random_scalar {
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
       if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
-        variance_factor = 15.01;
+        variance_factor = 15.07;
       }
 #endif
 
