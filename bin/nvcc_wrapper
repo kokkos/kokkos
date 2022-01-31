@@ -264,7 +264,12 @@ do
         shift
         ;;
       *)
-        xcompiler_args="$xcompiler_args $1"
+        if [ $first_xcompiler_arg -eq 1 ]; then
+          xcompiler_args="$1"
+          first_xcompiler_arg=0
+        else
+          xcompiler_args="$xcompiler_args,$1"
+        fi
         ;;
       esac
     fi
@@ -289,16 +294,22 @@ do
         cuda_args="$cuda_args$kind"
         ;;
       *)
-        if [ $first_werror_host -ne 0 ]; then
-          xcompiler_args="$xcompiler_args -Werror="
-          first_werror_host=0
-        else
-          xcompiler_args="$xcompiler_args,"
+        if [ $first_werror_host -eq 0 ]; then
+            xcompiler_args_werror="${xcompiler_args_werror},"
         fi
-        xcompiler_args="$xcompiler_args$kind"
+        first_werror_host=0
+        xcompiler_args_werror="$xcompiler_args_werror-Werror=$kind"
         ;;
       esac
     done
+    if [ $first_werror_host -eq 0 ]; then
+      if [ $first_xcompiler_arg -eq 1 ]; then
+        xcompiler_args="$xcompiler_args_werror"
+        first_xcompiler_arg=0
+      else
+        xcompiler_args="$xcompiler_args,$xcompiler_args_werror"
+      fi
+    fi
     ;;
   # End of Werror handling
   #Handle unsupported standard flags
