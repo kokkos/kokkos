@@ -238,7 +238,7 @@ do
   -maxrregcount=*|--maxrregcount=*|-time=*|-Xptxas=*)
     cuda_args="$cuda_args $1"
     ;;
-  -maxrregcount|--default-stream|-Xnvlink|--fmad|-cudart|--cudart|-include|-time|-Xptxas)
+  -maxrregcount|--default-stream|-Xnvlink|--fmad|-cudart|--cudart|-include|-time|-Werror|--Werror|-Xptxas)
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
