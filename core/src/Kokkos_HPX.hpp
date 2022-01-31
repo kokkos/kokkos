@@ -378,15 +378,17 @@ class HPX {
     return std::vector<HPX>();
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename F>
-  static void partition_master(F const &, int requested_num_partitions = 0,
-                               int = 0) {
+  KOKKOS_DEPRECATED static void partition_master(
+      F const &, int requested_num_partitions = 0, int = 0) {
     if (requested_num_partitions > 1) {
       Kokkos::abort(
           "Kokkos::Experimental::HPX::partition_master: can't partition an "
           "HPX instance\n");
     }
   }
+#endif
 
   static int concurrency();
   static void impl_initialize(int thread_count);

@@ -90,8 +90,11 @@ class OpenMPExec {
 
   void clear_thread_data();
 
-  static void validate_partition(const int nthreads, int& num_partitions,
-                                 int& partition_size);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  KOKKOS_DEPRECATED static void validate_partition(const int nthreads,
+                                                   int& num_partitions,
+                                                   int& partition_size);
+#endif
 
  private:
   OpenMPExec(int arg_pool_size)
@@ -105,7 +108,9 @@ class OpenMPExec {
   HostThreadTeamData* m_pool[MAX_THREAD_COUNT];
 
  public:
-  static void verify_is_master(const char* const);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  KOKKOS_DEPRECATED static void verify_is_master(const char* const);
+#endif
 
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
@@ -163,9 +168,10 @@ inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <typename F>
-void OpenMP::partition_master(F const& f, int num_partitions,
-                              int partition_size) {
+KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
+                                                int partition_size) {
 #if _OPENMP >= 201511
   if (omp_get_max_active_levels() > 1) {
 #else
@@ -216,6 +222,7 @@ void OpenMP::partition_master(F const& f, int num_partitions,
     f(0, 1);
   }
 }
+#endif
 
 namespace Experimental {
 
