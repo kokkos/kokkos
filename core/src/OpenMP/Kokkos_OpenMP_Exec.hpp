@@ -108,9 +108,7 @@ class OpenMPExec {
   HostThreadTeamData* m_pool[MAX_THREAD_COUNT];
 
  public:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED static void verify_is_master(const char* const);
-#endif
+  static void verify_is_master(const char* const);
 
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
