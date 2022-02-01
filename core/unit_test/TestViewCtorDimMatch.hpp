@@ -75,6 +75,10 @@ namespace Test {
 
 using DType = int;
 
+// Skip test execution when KOKKOS_ENABLE_OPENMPTARGET is enabled until
+// Kokkos::abort() aborts properly on that backend
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#else
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   using DType_0 = DType;
   using DType_1 = DType *;
@@ -392,6 +396,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 6);
   }
 }
+#endif  // KOKKOS_ENABLE_OPENMPTARGET
 
 #undef PARAM_0
 #undef PARAM_1
