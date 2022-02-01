@@ -98,8 +98,12 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
     bool done                = false;
     while (active != done_active) {
       if (!done) {
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
         desul::atomic_thread_fence(desul::MemoryOrderAcquire(),
                                    desul::MemoryScopeDevice());
+#else
+        Kokkos::memory_fence();
+#endif
         if (Kokkos::atomic_compare_exchange(&m_locks(idx), 0, 1) == 0) {
           done = true;
         } else {
@@ -124,8 +128,12 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
   /// \brief release an acquired value
   KOKKOS_INLINE_FUNCTION
   void release(size_type idx) const noexcept {
-    desul::atomic_thread_fence(desul::MemoryOrderAcquire(),
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+    desul::atomic_thread_fence(desul::MemoryOrderRelease(),
                                desul::MemoryScopeDevice());
+#else
+    Kokkos::memory_fence();
+#endif
     (void)Kokkos::atomic_exchange(&m_locks(idx), 0);
   }
 };
