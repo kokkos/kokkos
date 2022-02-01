@@ -146,9 +146,7 @@ struct TrivialTransformReduceBinaryTransformer {
 // so that even if one runs the executable,
 // nothing is run anyway
 
-namespace KE = Kokkos::Experimental;
-using KE::begin;
-using KE::end;
+namespace KE     = Kokkos::Experimental;
 using count_type = std::size_t;
 using T          = double;
 Kokkos::View<T *> in1("in1", 10);
