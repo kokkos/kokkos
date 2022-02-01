@@ -51,7 +51,6 @@
 #include <Kokkos_CudaSpace.hpp>
 #include <Kokkos_UniqueToken.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
-#include <impl/Kokkos_ConcurrentBitset.hpp>
 
 namespace Kokkos {
 namespace Experimental {
