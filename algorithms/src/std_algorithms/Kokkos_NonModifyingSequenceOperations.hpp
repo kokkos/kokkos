@@ -1716,31 +1716,43 @@ bool none_of(const std::string& label, const ExecutionSpace& ex,
 // equal public API
 // ----------------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
-           IteratorType2 first2) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
+      IteratorType2 first2) {
   return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-bool equal(const std::string& label, const ExecutionSpace& ex,
-           IteratorType1 first1, IteratorType1 last1, IteratorType2 first2) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
+      IteratorType1 last1, IteratorType2 first2) {
   return Impl::equal_impl(label, ex, first1, last1, first2);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
-           IteratorType2 first2, BinaryPredicateType predicate) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
+      IteratorType2 first2, BinaryPredicateType predicate) {
   return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2, std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-bool equal(const std::string& label, const ExecutionSpace& ex,
-           IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
-           BinaryPredicateType predicate) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
+      IteratorType1 last1, IteratorType2 first2,
+      BinaryPredicateType predicate) {
   return Impl::equal_impl(label, ex, first1, last1, first2,
                           std::move(predicate));
 }
@@ -1802,33 +1814,44 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
-           IteratorType2 first2, IteratorType2 last2) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
+      IteratorType2 first2, IteratorType2 last2) {
   return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2, last2);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-bool equal(const std::string& label, const ExecutionSpace& ex,
-           IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
-           IteratorType2 last2) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
+      IteratorType1 last1, IteratorType2 first2, IteratorType2 last2) {
   return Impl::equal_impl(label, ex, first1, last1, first2, last2);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
-           IteratorType2 first2, IteratorType2 last2,
-           BinaryPredicateType predicate) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
+      IteratorType2 first2, IteratorType2 last2,
+      BinaryPredicateType predicate) {
   return Impl::equal_impl("Kokkos::equal_iterator_api_default", ex, first1,
                           last1, first2, last2, std::move(predicate));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-bool equal(const std::string& label, const ExecutionSpace& ex,
-           IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
-           IteratorType2 last2, BinaryPredicateType predicate) {
+std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
+                      IteratorType1, IteratorType2>::value,
+                  bool>
+equal(const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
+      IteratorType1 last1, IteratorType2 first2, IteratorType2 last2,
+      BinaryPredicateType predicate) {
   return Impl::equal_impl(label, ex, first1, last1, first2, last2,
                           std::move(predicate));
 }
