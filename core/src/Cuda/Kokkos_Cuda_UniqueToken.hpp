@@ -60,7 +60,7 @@ namespace Experimental {
 template <>
 class UniqueToken<Cuda, UniqueTokenScope::Global> {
  protected:
-  uint32_t volatile* m_buffer;
+  Kokkos::View<uint32_t*, Kokkos::CudaSpace> m_locks;
   uint32_t m_count;
 
  public:
@@ -88,22 +88,46 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   size_type acquire() const {
-    const Kokkos::pair<int, int> result =
-        Kokkos::Impl::concurrent_bitset::acquire_bounded(
-            m_buffer, m_count, Kokkos::Impl::clock_tic() % m_count);
-
-    if (result.first < 0) {
-      Kokkos::abort(
-          "UniqueToken<Cuda> failure to acquire tokens, no tokens available");
+#ifdef __CUDA_ARCH__
+    int idx = blockIdx.x * (blockDim.x * blockDim.y) +
+              threadIdx.y * blockDim.x + threadIdx.x;
+    idx = idx % m_count;
+#if __CUDA_ARCH__ < 700
+    unsigned int mask        = __activemask();
+    unsigned int active      = __ballot_sync(mask, 1);
+    unsigned int done_active = 0;
+    bool done                = false;
+    while (active != done_active) {
+      if (!done) {
+        desul::atomic_thread_fence(desul::MemoryOrderAcquire(),
+                                   desul::MemoryScopeDevice());
+        if (Kokkos::atomic_compare_exchange(&m_locks(idx), 0, 1) == 0) {
+          done = true;
+        } else {
+          idx += blockDim.y * blockDim.x + 1;
+          idx = idx % m_count;
+        }
+      }
+      done_active = __ballot_sync(mask, done ? 1 : 0);
     }
-
-    return result.first;
+#else
+    while (Kokkos::atomic_compare_exchange(&m_locks(idx), 0, 1) == 1) {
+      idx += blockDim.y * blockDim.x + 1;
+      idx = idx % m_count;
+    }
+#endif
+    return idx;
+#else
+    return 0;
+#endif
   }
 
   /// \brief release an acquired value
   KOKKOS_INLINE_FUNCTION
-  void release(size_type i) const noexcept {
-    Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
+  void release(size_type idx) const noexcept {
+    desul::atomic_thread_fence(desul::MemoryOrderAcquire(),
+                               desul::MemoryScopeDevice());
+    (void)Kokkos::atomic_exchange(&m_locks(idx), 0);
   }
 };
 
@@ -117,12 +141,10 @@ class UniqueToken<Cuda, UniqueTokenScope::Instance>
   explicit UniqueToken(execution_space const& arg = execution_space())
       : UniqueToken<Cuda, UniqueTokenScope::Global>(arg) {}
 
-  UniqueToken(size_type max_size, execution_space const& = execution_space())
-      : m_buffer_view(
-            "UniqueToken::m_buffer_view",
-            ::Kokkos::Impl::concurrent_bitset::buffer_bound(max_size)) {
-    m_buffer = m_buffer_view.data();
-    m_count  = max_size;
+  UniqueToken(size_type max_size, execution_space const& = execution_space()) {
+    m_locks = Kokkos::View<uint32_t*, Kokkos::CudaSpace>(
+        "Kokkos::UniqueToken::m_locks", max_size);
+    m_count = max_size;
   }
 };
 

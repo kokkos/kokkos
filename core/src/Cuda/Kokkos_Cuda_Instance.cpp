@@ -1003,8 +1003,9 @@ namespace Experimental {
 
 UniqueToken<Kokkos::Cuda, Kokkos::Experimental::UniqueTokenScope::Global>::
     UniqueToken(Kokkos::Cuda const &)
-    : m_buffer(
-          Kokkos::Impl::CudaInternal::singleton().m_scratchConcurrentBitset),
+    : m_locks(Kokkos::View<uint32_t *, Kokkos::CudaSpace>(
+          "Kokkos::UniqueToken::m_locks",
+          Kokkos::Impl::CudaInternal::singleton().m_maxConcurrency)),
       m_count(Kokkos::Impl::CudaInternal::singleton().m_maxConcurrency) {}
 
 }  // namespace Experimental
