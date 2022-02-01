@@ -280,6 +280,7 @@ do
     kinds=(${kinds_str//,/ })
     first_werror_cuda=1
     first_werror_host=1
+    xcompiler_args_werror=
     # loop over all kinds that are sparated via ','
     for kind in "${kinds[@]}"
     do
