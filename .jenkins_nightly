@@ -1,0 +1,34 @@
+pipeline {
+    agent none
+
+    options {
+        timeout(time: 6, unit: 'HOURS')
+    }
+
+    stages {
+        stage('Build') {
+            parallel {
+                stage('spack') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.spack'
+                            dir 'scripts/docker'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        sh '''
+                          rm -rf spack && \
+                          git clone https://github.com/spack/spack.git && \
+                          . ./spack/share/spack/setup-env.sh && \
+                          spack install kokkos@develop+tests && \
+                          spack load cmake && \
+                          spack test run kokkos && \
+                          spack test results -l
+                          '''
+                    }      
+                }
+            }
+        }
+    }
+}
