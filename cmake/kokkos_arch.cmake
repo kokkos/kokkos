@@ -211,7 +211,7 @@ IF (KOKKOS_ARCH_A64FX)
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.2-a+sve
     Clang   -march=armv8.2-a+sve -msve-vector-bits=512
-    GCC     -march=armv8.2-a+sve -msve-vector-bits=512
+    GNU     -march=armv8.2-a+sve -msve-vector-bits=512
   )
 ENDIF()
 
