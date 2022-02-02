@@ -998,19 +998,6 @@ void CudaSpaceInitializer::print_configuration(std::ostream &msg,
 
 }  // namespace Kokkos
 
-namespace Kokkos {
-namespace Experimental {
-
-UniqueToken<Kokkos::Cuda, Kokkos::Experimental::UniqueTokenScope::Global>::
-    UniqueToken(Kokkos::Cuda const &)
-    : m_locks(Kokkos::View<uint32_t *, Kokkos::CudaSpace>(
-          "Kokkos::UniqueToken::m_locks",
-          Kokkos::Impl::CudaInternal::singleton().m_maxConcurrency)),
-      m_count(Kokkos::Impl::CudaInternal::singleton().m_maxConcurrency) {}
-
-}  // namespace Experimental
-}  // namespace Kokkos
-
 #else
 
 void KOKKOS_CORE_SRC_CUDA_IMPL_PREVENT_LINK_ERROR() {}
