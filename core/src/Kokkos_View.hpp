@@ -1520,21 +1520,6 @@ class View : public ViewTraits<DataType, Properties...> {
     // Copy the input allocation properties with possibly defaulted properties
     alloc_prop prop_copy(arg_prop);
 
-//------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
-    // If allocating in CudaUVMSpace must fence before and after
-    // the allocation to protect against possible concurrent access
-    // on the CPU and the GPU.
-    // Fence using the trait's execution space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from using Kokkos::Cuda directly.
-    if (std::is_same<Kokkos::CudaUVMSpace,
-                     typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence(
-          "Kokkos::View<...>::View: fence before allocating UVM");
-    }
-#endif
-    //------------------------------------------------------------
-
     if (check_args) {
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
@@ -1554,6 +1539,21 @@ class View : public ViewTraits<DataType, Properties...> {
           std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
           i3, i4, i5, i6, i7, alloc_name.c_str());
     }
+
+//------------------------------------------------------------
+#if defined(KOKKOS_ENABLE_CUDA)
+    // If allocating in CudaUVMSpace must fence before and after
+    // the allocation to protect against possible concurrent access
+    // on the CPU and the GPU.
+    // Fence using the trait's execution space (which will be Kokkos::Cuda)
+    // to avoid incomplete type errors from using Kokkos::Cuda directly.
+    if (std::is_same<Kokkos::CudaUVMSpace,
+                     typename traits::device_type::memory_space>::value) {
+      typename traits::device_type::memory_space::execution_space().fence(
+          "Kokkos::View<...>::View: fence before allocating UVM");
+    }
+#endif
+    //------------------------------------------------------------
 
     Kokkos::Impl::SharedAllocationRecord<>* record =
         m_map.allocate_shared(prop_copy, arg_layout);
