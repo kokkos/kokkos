@@ -498,8 +498,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   __device__ inline void operator()() const {
     // Iterate this block through the league
-    int64_t threadid = 0;
-    if (m_scratch_size[1] > 0) {
+    int64_t threadid            = 0;
+    const int scratch_size_l1   = m_scratch_size[1];
+    const int shmem_begin       = m_shmem_begin;
+    const int shmem_size        = m_shmem_size;
+    void* scratch_level_1_ptr   = nullptr;
+    const size_type league_size = m_league_size;
+    int const int_league_size   = static_cast<int>(league_size);
+    void* __restrict__ const shmem_ptr =
+        ::Kokkos::Experimental::kokkos_impl_hip_shared_memory<void>();
+    if (scratch_size_l1 > 0) {
       __shared__ int64_t base_thread_id;
       if (threadIdx.x == 0 && threadIdx.y == 0) {
         threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
@@ -522,21 +530,19 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         base_thread_id = threadid;
       }
       __syncthreads();
-      threadid = base_thread_id;
+      threadid            = base_thread_id;
+      scratch_level_1_ptr = static_cast<void*>(
+          static_cast<char*>(m_scratch_ptr[1]) +
+          ptrdiff_t(threadid / (blockDim.x * blockDim.y)) * scratch_size_l1);
     }
 
-    int const int_league_size = static_cast<int>(m_league_size);
     for (int league_rank = blockIdx.x; league_rank < int_league_size;
          league_rank += gridDim.x) {
       this->template exec_team<work_tag>(typename Policy::member_type(
-          ::Kokkos::Experimental::kokkos_impl_hip_shared_memory<void>(),
-          m_shmem_begin, m_shmem_size,
-          static_cast<void*>(static_cast<char*>(m_scratch_ptr[1]) +
-                             ptrdiff_t(threadid / (blockDim.x * blockDim.y)) *
-                                 m_scratch_size[1]),
-          m_scratch_size[1], league_rank, m_league_size));
+          shmem_ptr, shmem_begin, shmem_size, scratch_level_1_ptr,
+          scratch_size_l1, league_rank, league_size));
     }
-    if (m_scratch_size[1] > 0) {
+    if (scratch_size_l1 > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0)
         Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid] = 0;
