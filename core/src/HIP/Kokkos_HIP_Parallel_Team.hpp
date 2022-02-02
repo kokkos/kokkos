@@ -53,6 +53,7 @@
 #include <HIP/Kokkos_HIP_Locks.hpp>
 #include <HIP/Kokkos_HIP_Team.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
+#include <Kokkos_MinMaxClamp.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -449,6 +450,42 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   }
 };
 
+__device__ inline int64_t hip_get_scratch_index(
+    Experimental::HIP::size_type league_size, int32_t* scratch_locks) {
+  int64_t threadid = 0;
+  __shared__ int64_t base_thread_id;
+  if (threadIdx.x == 0 && threadIdx.y == 0) {
+    int64_t const wraparound_len = Kokkos::Experimental::min(
+        int64_t(league_size),
+        (int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n)) /
+            (blockDim.x * blockDim.y));
+    threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
+    threadid *= blockDim.x * blockDim.y;
+    int done = 0;
+    while (!done) {
+      done = (0 == atomicCAS(&scratch_locks[threadid], 0, 1));
+      if (!done) {
+        threadid += blockDim.x * blockDim.y;
+        if (int64_t(threadid + blockDim.x * blockDim.y) >=
+            wraparound_len * blockDim.x * blockDim.y)
+          threadid = 0;
+      }
+    }
+    base_thread_id = threadid;
+  }
+  __syncthreads();
+  threadid = base_thread_id;
+  return threadid;
+}
+
+__device__ inline void hip_release_scratch_index(int32_t* scratch_locks,
+                                                 int64_t threadid) {
+  __syncthreads();
+  if (threadIdx.x == 0 && threadIdx.y == 0) {
+    scratch_locks[threadid] = 0;
+  }
+}
+
 template <typename FunctorType, typename... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Experimental::HIP> {
@@ -477,9 +514,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_size;
   void* m_scratch_ptr[2];
   int m_scratch_size[2];
+  int32_t* m_scratch_locks;
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_scratch_lock;
+  std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <typename TagType>
   __device__ inline
@@ -500,29 +538,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Iterate this block through the league
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      __shared__ int64_t base_thread_id;
-      if (threadIdx.x == 0 && threadIdx.y == 0) {
-        threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
-                   (Kokkos::Impl::g_device_hip_lock_arrays.n /
-                    (blockDim.x * blockDim.y));
-        threadid *= blockDim.x * blockDim.y;
-        int done = 0;
-        while (!done) {
-          done = (0 ==
-                  atomicCAS(
-                      &Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid],
-                      0, 1));
-          if (!done) {
-            threadid += blockDim.x * blockDim.y;
-            if (int64_t(threadid + blockDim.x * blockDim.y) >=
-                int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n))
-              threadid = 0;
-          }
-        }
-        base_thread_id = threadid;
-      }
-      __syncthreads();
-      threadid = base_thread_id;
+      threadid = hip_get_scratch_index(m_league_size, m_scratch_locks);
     }
 
     int const int_league_size = static_cast<int>(m_league_size);
@@ -537,9 +553,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_scratch_size[1], league_rank, m_league_size));
     }
     if (m_scratch_size[1] > 0) {
-      __syncthreads();
-      if (threadIdx.x == 0 && threadIdx.y == 0)
-        Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid] = 0;
+      hip_release_scratch_index(m_scratch_locks, threadid);
     }
   }
 
@@ -565,9 +579,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock(m_policy.space()
-                           .impl_internal_space_instance()
-                           ->m_team_scratch_mutex) {
+        m_scratch_lock_guard(m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->m_team_scratch_mutex) {
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelForTag());
@@ -578,6 +592,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
          FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
     m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks =
+        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
@@ -673,12 +689,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type m_shmem_size;
   void* m_scratch_ptr[2];
   int m_scratch_size[2];
+  int32_t* m_scratch_locks;
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_scratch_lock;
+  std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <class TagType>
   __device__ inline
@@ -717,29 +734,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   __device__ inline void operator()() const {
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      __shared__ int64_t base_thread_id;
-      if (threadIdx.x == 0 && threadIdx.y == 0) {
-        threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
-                   (Kokkos::Impl::g_device_hip_lock_arrays.n /
-                    (blockDim.x * blockDim.y));
-        threadid *= blockDim.x * blockDim.y;
-        int done = 0;
-        while (!done) {
-          done = (0 ==
-                  atomicCAS(
-                      &Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid],
-                      0, 1));
-          if (!done) {
-            threadid += blockDim.x * blockDim.y;
-            if (static_cast<int64_t>(threadid + blockDim.x * blockDim.y) >=
-                static_cast<int64_t>(Kokkos::Impl::g_device_hip_lock_arrays.n))
-              threadid = 0;
-          }
-        }
-        base_thread_id = threadid;
-      }
-      __syncthreads();
-      threadid = base_thread_id;
+      threadid = hip_get_scratch_index(m_league_size, m_scratch_locks);
     }
 
     using ReductionTag = std::conditional_t<UseShflReduction, ShflReductionTag,
@@ -747,10 +742,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     run(ReductionTag{}, threadid);
 
     if (m_scratch_size[1] > 0) {
-      __syncthreads();
-      if (threadIdx.x == 0 && threadIdx.y == 0) {
-        Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid] = 0;
-      }
+      hip_release_scratch_index(m_scratch_locks, threadid);
     }
   }
 
@@ -921,9 +913,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock(m_policy.space()
-                           .impl_internal_space_instance()
-                           ->m_team_scratch_mutex) {
+        m_scratch_lock_guard(m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->m_team_scratch_mutex) {
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelReduceTag());
@@ -940,6 +932,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks =
+        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
     m_scratch_ptr[1] =
         m_team_size <= 0
             ? nullptr
@@ -1017,9 +1011,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock(m_policy.space()
-                           .impl_internal_space_instance()
-                           ->m_team_scratch_mutex) {
+        m_scratch_lock_guard(m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->m_team_scratch_mutex) {
     m_team_size = m_team_size >= 0
                       ? m_team_size
                       : arg_policy.team_size_recommended(arg_functor, reducer,

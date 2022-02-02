@@ -323,6 +323,11 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
   }
+
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipMalloc(&m_scratch_locks, sizeof(int32_t) * HIP::concurrency()));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * HIP::concurrency()));
 }
 
 //----------------------------------------------------------------------------
@@ -432,6 +437,9 @@ void HIPInternal::finalize() {
     m_stream                    = nullptr;
     m_team_scratch_current_size = 0;
     m_team_scratch_ptr          = nullptr;
+
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
+    m_scratch_locks = nullptr;
   }
   if (nullptr != d_driverWorkArray) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
