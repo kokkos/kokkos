@@ -124,7 +124,12 @@ struct TestMDRange_ReduceArray_2D {
       parallel_for(range_init, functor);  // Init the view to 3's
 
       double sums[array_size];
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+      double *sums_ptr = sums;
+      parallel_reduce(range, functor, sums_ptr);
+#else
       parallel_reduce(range, functor, sums);
+#endif
 
       // Check output
       // printf("Array Reduce result. N0 = %d  N1 = %d  N0*N1 = %d  sums[0] =
