@@ -83,6 +83,45 @@ pipeline {
                           '''
                     }      
                 }
+
+                stage('spack-rocm') {
+                    agent {
+                        docker {
+                          image 'ubuntu:20.04'
+                          label 'rocm-docker'
+                        }
+                    }
+                    steps {
+                        sh '''
+                          DEBIAN_FRONTEND=noninteractive && \
+                          apt-get update && apt-get upgrade -y && apt-get install -y \
+                          build-essential \
+                          wget \
+                          git \
+                          bc \
+                          python-dev \
+                          unzip \
+                          && \
+                          apt-get clean && rm -rf /var/lib/apt/lists/*
+                          
+                          KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+                          KEYDUMP_FILE=keydump && \
+                          wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
+                          wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
+                          gpg --import ${KEYDUMP_FILE} && \
+                          gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
+                          rm ${KEYDUMP_FILE}*
+
+                          rm -rf spack && \
+                          git clone https://github.com/spack/spack.git && \
+                          . ./spack/share/spack/setup-env.sh && \
+                          spack install kokkos@develop+rocm+tests && \
+                          spack load cmake && \
+                          spack test run kokkos && \
+                          spack test results -l
+                          '''
+                    }      
+                }
             }
         }
     }
