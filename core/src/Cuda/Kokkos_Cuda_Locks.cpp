@@ -50,8 +50,7 @@
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 namespace Kokkos {
 namespace Impl {
-__device__ __constant__ CudaLockArrays g_device_cuda_lock_arrays = {nullptr,
-                                                                    nullptr, 0};
+__device__ __constant__ CudaLockArrays g_device_cuda_lock_arrays = {nullptr, 0};
 }
 }  // namespace Kokkos
 #endif
