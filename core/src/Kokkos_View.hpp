@@ -1472,7 +1472,7 @@ class View : public ViewTraits<DataType, Properties...> {
         .template get_label<typename traits::memory_space>();
   }
 
-  enum check_input_args : bool { yes = true, no = false };
+  enum class check_input_args : bool { yes = true, no = false };
 
   //----------------------------------------
   // Allocation according to allocation properties and array layout
@@ -1483,7 +1483,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      bool check_args =
+      check_input_args check_args =
           check_input_args::no /*Omit check input args per default*/)
       : m_track(), m_map() {
     // Append layout and spaces if not input
@@ -1520,7 +1520,7 @@ class View : public ViewTraits<DataType, Properties...> {
     // Copy the input allocation properties with possibly defaulted properties
     alloc_prop prop_copy(arg_prop);
 
-    if (check_args) {
+    if (check_args == check_input_args::yes) {
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
       size_t i2 = arg_layout.dimension[2];
@@ -1585,7 +1585,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      bool check_args = check_input_args::no)
+      check_input_args check_args = check_input_args::no)
       : m_track()  // No memory tracking
         ,
         m_map(arg_prop, arg_layout) {
