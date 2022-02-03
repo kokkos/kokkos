@@ -95,7 +95,10 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
     bool done                = false;
     while (active != done_active) {
       if (!done) {
-        if (Kokkos::atomic_compare_exchange(&m_locks(idx), 0, 1) == 0) {
+        // Using m_locks(idx) fails self containment test of Kokkos_HIP.hpp
+        // That failure stems from the space access verification because the
+        // Host execution space is not defined
+        if (Kokkos::atomic_compare_exchange(m_locks.data() + idx, 0, 1) == 0) {
           done = true;
         } else {
           idx += blockDim.y * blockDim.x + 1;
@@ -104,7 +107,6 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
       }
       done_active = __ballot(done ? 1 : 0);
     }
-    return idx;
 
 // Make sure that all writes in the previous lock owner are visible to me
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
@@ -113,6 +115,7 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
 #else
     Kokkos::memory_fence();
 #endif
+    return idx;
   }
 
  public:
@@ -133,7 +136,7 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
 #else
     Kokkos::memory_fence();
 #endif
-    (void)Kokkos::atomic_exchange(&m_locks(idx), 0);
+    (void)Kokkos::atomic_exchange(m_locks.data() + idx, 0);
   }
 };
 
