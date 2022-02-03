@@ -44,6 +44,7 @@ pipeline {
                           spack test results -l
                           '''
                     }      
+                }    
 
                 stage('spack-cuda') {
                     agent {
