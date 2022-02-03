@@ -83,7 +83,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const FunctorType& functor, const Member ibeg, const Member iend) {
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
+    for (auto iwork = ibeg; iwork < iend; ++iwork) {
       functor(iwork);
     }
   }
@@ -93,7 +93,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
       const FunctorType& functor, const Member ibeg, const Member iend) {
     const TagType t{};
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
+    for (auto iwork = ibeg; iwork < iend; ++iwork) {
       functor(t, iwork);
     }
   }
@@ -117,13 +117,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   typename std::enable_if<std::is_same<typename Policy::schedule_type::type,
                                        Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-    auto ibeg = m_policy.begin();
-    auto iend = m_policy.end();
-
 #pragma omp parallel for schedule(dynamic, m_policy.chunk_size()) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
       ParallelFor::template exec_work<WorkTag>(m_functor, iwork);
     }
   }
@@ -132,13 +129,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   typename std::enable_if<!std::is_same<typename Policy::schedule_type::type,
                                         Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-    auto ibeg = m_policy.begin();
-    auto iend = m_policy.end();
-
 #pragma omp parallel for schedule(static, m_policy.chunk_size()) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
       ParallelFor::template exec_work<WorkTag>(m_functor, iwork);
     }
   }
@@ -230,13 +224,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   typename std::enable_if<std::is_same<typename Policy::schedule_type::type,
                                        Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-    auto ibeg = m_policy.begin();
-    auto iend = m_policy.end();
-
 #pragma omp parallel for schedule(dynamic, m_policy.chunk_size()) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
       exec_work(m_mdr_policy, m_functor, iwork);
     }
   }
@@ -245,13 +236,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   typename std::enable_if<!std::is_same<typename Policy::schedule_type::type,
                                         Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-    auto ibeg = m_policy.begin();
-    auto iend = m_policy.end();
-
 #pragma omp parallel for schedule(dynamic, m_policy.chunk_size()) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
       exec_work(m_mdr_policy, m_functor, iwork);
     }
   }
