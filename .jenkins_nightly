@@ -62,6 +62,7 @@ pipeline {
                           git \
                           bc \
                           python-dev \
+                          gfrortran \
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
                           
@@ -101,6 +102,7 @@ pipeline {
                           bc \
                           python-dev \
                           unzip \
+                          udev \
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
                           
