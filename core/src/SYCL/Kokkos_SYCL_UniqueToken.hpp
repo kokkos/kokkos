@@ -84,7 +84,8 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
   UniqueToken(size_type max_size,
               execution_space const& arg = execution_space())
       : m_locks(Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
-            "Kokkos::UniqueToken::m_locks", max_size)) {}
+            Kokkos::view_alloc(arg, "Kokkos::UniqueToken::m_locks"),
+            max_size)) {}
 
  private:
   /// \brief acquire value such that 0 <= value < size()
