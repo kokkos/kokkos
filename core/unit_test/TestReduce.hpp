@@ -521,11 +521,19 @@ class TestReduceDynamicView {
 
       std::string str("TestKernelReduce");
       if (count % 2 == 0) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
         Kokkos::parallel_reduce(nw, functor_type(nw, count),
                                 host_result.data());
+#else
+        Kokkos::parallel_reduce(nw, functor_type(nw, count), host_result);
+#endif
       } else {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
         Kokkos::parallel_reduce(str, nw, functor_type(nw, count),
                                 host_result.data());
+#else
+        Kokkos::parallel_reduce(str, nw, functor_type(nw, count), host_result);
+#endif
       }
 
       for (unsigned j = 0; j < count; ++j) {
@@ -541,8 +549,8 @@ class TestReduceDynamicView {
 
 // FIXME_OPENMPTARGET : The feature works with LLVM/13 on NVIDIA
 // architectures. The jenkins currently tests with LLVM/12.
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
-    (KOKKOS_COMPILER_CLANG >= 1300)
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    (defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300))
 TEST(TEST_CATEGORY, int64_t_reduce) {
   TestReduce<int64_t, TEST_EXECSPACE>(0);
   TestReduce<int64_t, TEST_EXECSPACE>(1000000);
