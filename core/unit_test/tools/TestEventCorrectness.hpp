@@ -230,6 +230,25 @@ TEST(kokkosp, test_multiple_default_instances) {
 }
 
 /**
+ * Test that device_id() and identifier_from_devid(id) are reciprocal
+ * operations
+ */
+TEST(kokkosp, test_id_gen) {
+  using namespace Kokkos::Tools::Experimental;
+  using Kokkos::Tools::Experimental::DeviceTypeTraits;
+  test_wrapper([&]() {
+    Kokkos::DefaultExecutionSpace ex;
+    auto id      = device_id(ex);
+    auto id_ref  = identifier_from_devid(id);
+    auto success = (id_ref.instance_id == ex.impl_instance_id()) &&
+                   (id_ref.device_id ==
+                    static_cast<uint32_t>(
+                        DeviceTypeTraits<Kokkos::DefaultExecutionSpace>::id));
+    ASSERT_TRUE(success);
+  });
+}
+
+/**
  * Test that fencing and kernels yield events on the correct device ID's
  */
 TEST(kokkosp, test_kernel_sequence) {
@@ -442,13 +461,9 @@ TEST(kokkosp, raw_allocation) {
         if (alloc.ptr != free.ptr) {
           return MatchDiagnostic{false, {"No match on pointers"}};
         }
-        /**
-         * Note: this is broken in develop, need to fix in a followup
-         *
         if (free.name != "dogs") {
           return MatchDiagnostic{false, {"No match on free name"}};
         }
-        */
         if (free.size != 1000) {
           return MatchDiagnostic{false, {"No match on free size"}};
         }
@@ -477,14 +492,9 @@ TEST(kokkosp, view) {
         if (alloc.ptr != free.ptr) {
           return MatchDiagnostic{false, {"No match on pointers"}};
         }
-        /**
-         * Note: this is broken in develop, need to fix in a followup
-         *
         if (free.name != "dogs") {
           return MatchDiagnostic{false, {"No match on free name"}};
         }
-        */
-
         if (free.size != 1000 * sizeof(float)) {
           return MatchDiagnostic{false, {"No match on free size"}};
         }

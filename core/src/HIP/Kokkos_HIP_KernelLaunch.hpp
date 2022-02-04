@@ -83,7 +83,7 @@ namespace Impl {
 // The hip_parallel_launch_*_memory code is identical to the cuda code
 template <typename DriverType>
 __global__ static void hip_parallel_launch_constant_memory() {
-  const DriverType &driver = *(reinterpret_cast<const DriverType *>(
+  const DriverType &driver = *(reinterpret_cast<const DriverType *__restrict__>(
       kokkos_impl_hip_constant_memory_buffer));
 
   driver();
@@ -92,7 +92,7 @@ __global__ static void hip_parallel_launch_constant_memory() {
 template <typename DriverType, unsigned int maxTperB, unsigned int minBperSM>
 __global__ __launch_bounds__(
     maxTperB, minBperSM) static void hip_parallel_launch_constant_memory() {
-  const DriverType &driver = *(reinterpret_cast<const DriverType *>(
+  const DriverType &driver = *(reinterpret_cast<const DriverType *__restrict__>(
       kokkos_impl_hip_constant_memory_buffer));
 
   driver();
@@ -100,31 +100,29 @@ __global__ __launch_bounds__(
 
 template <class DriverType>
 __global__ static void hip_parallel_launch_local_memory(
-    const DriverType *driver) {
+    const DriverType *__restrict__ driver) {
   // FIXME_HIP driver() pass by copy
   driver->operator()();
 }
 
 template <class DriverType, unsigned int maxTperB, unsigned int minBperSM>
-__global__ __launch_bounds__(
-    maxTperB,
-    minBperSM) static void hip_parallel_launch_local_memory(const DriverType
-                                                                *driver) {
+__global__
+__launch_bounds__(maxTperB, minBperSM) static void hip_parallel_launch_local_memory(
+    const DriverType *__restrict__ driver) {
   // FIXME_HIP driver() pass by copy
   driver->operator()();
 }
 
 template <typename DriverType>
 __global__ static void hip_parallel_launch_global_memory(
-    const DriverType *driver) {
+    const DriverType *__restrict__ driver) {
   driver->operator()();
 }
 
 template <typename DriverType, unsigned int maxTperB, unsigned int minBperSM>
-__global__ __launch_bounds__(
-    maxTperB,
-    minBperSM) static void hip_parallel_launch_global_memory(const DriverType
-                                                                 *driver) {
+__global__
+__launch_bounds__(maxTperB, minBperSM) static void hip_parallel_launch_global_memory(
+    const DriverType *__restrict__ driver) {
   driver->operator()();
 }
 
@@ -515,6 +513,10 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                          const dim3 &block, const int shmem,
                          const HIPInternal *hip_instance,
                          const bool prefer_shmem) {
+#ifndef KOKKOS_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS
+  HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
+      driver, grid, block, shmem, hip_instance, prefer_shmem);
+#else
   // FIXME_HIP - could be if constexpr for c++17
   if (!HIPParallelLaunch<DriverType, LaunchBounds,
                          LaunchMechanism>::default_launchbounds()) {
@@ -538,6 +540,7 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                                          hip_instance, prefer_shmem);
     }
   }
+#endif
 }
 }  // namespace Impl
 }  // namespace Experimental

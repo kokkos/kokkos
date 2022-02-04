@@ -65,7 +65,6 @@ struct in_place_shfl_op {
     return *static_cast<Derived const*>(this);
   }
 
-  // FIXME_HIP depends on UB
   // sizeof(Scalar) < sizeof(int) case
   template <class Scalar>
   // requires _assignable_from_bits<Scalar>
@@ -76,17 +75,19 @@ struct in_place_shfl_op {
     union conv_type {
       Scalar orig;
       shfl_type conv;
+      // This should be fine, members get explicitly reset, which changes the
+      // active member
+      KOKKOS_FUNCTION conv_type() { conv = 0; }
     };
     conv_type tmp_in;
     tmp_in.orig = in;
-    conv_type tmp_out;
-    tmp_out.conv = tmp_in.conv;
+    shfl_type tmp_out;
+    tmp_out = reinterpret_cast<shfl_type&>(tmp_in.orig);
     conv_type res;
     //------------------------------------------------
-    res.conv = self().do_shfl_op(
-        reinterpret_cast<shfl_type const&>(tmp_out.conv), lane_or_delta, width);
+    res.conv = self().do_shfl_op(tmp_out, lane_or_delta, width);
     //------------------------------------------------
-    out = res.orig;
+    out = reinterpret_cast<Scalar&>(res.conv);
   }
 
   // sizeof(Scalar) == sizeof(int) case

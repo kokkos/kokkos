@@ -2889,6 +2889,10 @@ bool size_mismatch(const ViewType& view, unsigned int max_extent,
     if (new_extents[dim] != view.extent(dim)) {
       return true;
     }
+  for (unsigned int dim = max_extent; dim < 8; ++dim)
+    if (new_extents[dim] != KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+      return true;
+    }
   return false;
 }
 
@@ -3295,23 +3299,30 @@ create_mirror(Kokkos::View<T, P...> const& v) {
 }
 
 template <class T, class... P>
-typename Kokkos::View<T, P...>::HostMirror create_mirror(
-    Kokkos::Impl::WithoutInitializing_t wi, Kokkos::View<T, P...> const& v) {
+std::enable_if_t<
+    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
+    typename Kokkos::View<T, P...>::HostMirror>
+create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
+              Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(v, wi);
 }
 
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
-typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
-    Space const& space, Kokkos::View<T, P...> const& v) {
+std::enable_if_t<
+    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
+    typename Impl::MirrorType<Space, T, P...>::view_type>
+create_mirror(Space const& space, Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(space, v);
 }
 
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
-typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
-    Kokkos::Impl::WithoutInitializing_t wi, Space const& space,
-    Kokkos::View<T, P...> const& v) {
+std::enable_if_t<
+    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
+    typename Impl::MirrorType<Space, T, P...>::view_type>
+create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const& space,
+              Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(space, v, wi);
 }
 

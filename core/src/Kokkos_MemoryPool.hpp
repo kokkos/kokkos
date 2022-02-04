@@ -538,7 +538,7 @@ class MemoryPool {
 #else
     const uint32_t block_id_hint =
         (uint32_t)(Kokkos::Impl::clock_tic()
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
+#ifdef __CUDA_ARCH__  // FIXME_CUDA
                    // Spread out potentially concurrent access
                    // by threads within a warp or thread block.
                    + (threadIdx.x + blockDim.x * threadIdx.y)
@@ -789,9 +789,16 @@ class MemoryPool {
     block_count_capacity = 0;
     block_count_used     = 0;
 
-    if (Kokkos::Impl::MemorySpaceAccess<
-            Kokkos::Impl::ActiveExecutionMemorySpace,
-            base_memory_space>::accessible) {
+    bool can_access_state_array = []() {
+      KOKKOS_IF_ON_HOST(
+          (return SpaceAccessibility<DefaultHostExecutionSpace,
+                                     base_memory_space>::accessible;))
+      KOKKOS_IF_ON_DEVICE(
+          (return SpaceAccessibility<DefaultExecutionSpace,
+                                     base_memory_space>::accessible;))
+    }();
+
+    if (can_access_state_array) {
       // Can access the state array
 
       const uint32_t state =

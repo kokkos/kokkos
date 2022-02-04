@@ -42,15 +42,15 @@
 //@HEADER
 */
 
-#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 
-#include <ostream>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Stacktrace.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 //----------------------------------------------------------------------------
@@ -59,18 +59,22 @@
 namespace Kokkos {
 namespace Impl {
 void traceback_callstack(std::ostream &msg) {
-  msg << std::endl << "Traceback functionality not available" << std::endl;
+#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
+  msg << "\nBacktrace:\n";
+  save_stacktrace();
+  print_demangled_saved_stacktrace(msg);
+#else
+  msg << "\nTraceback functionality not available\n";
+#endif
 }
 
 void throw_runtime_exception(const std::string &msg) {
-  std::ostringstream o;
-  o << msg;
-  traceback_callstack(o);
-  throw std::runtime_error(o.str());
+  throw std::runtime_error(msg);
 }
+
 void host_abort(const char *const message) {
-  fwrite(message, 1, strlen(message), stderr);
-  fflush(stderr);
+  std::cerr << message;
+  traceback_callstack(std::cerr);
   ::abort();
 }
 

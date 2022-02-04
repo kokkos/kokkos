@@ -204,7 +204,7 @@ class SYCLInternal {
   // An indirect kernel is one where the functor to be executed is explicitly
   // copied to USM memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
-  using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::device>;
+  using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::host>;
   IndirectKernelMem& get_indirect_kernel_mem();
 
   bool was_finalized = false;
@@ -244,13 +244,59 @@ class SYCLInternal {
   }
 };
 
+// FIXME_SYCL the limit is 2048 bytes for all arguments handed to a kernel,
+// assume for now that the rest doesn't need more than 248 bytes.
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage,
-          bool is_memcpyable = std::is_trivially_copyable_v<Functor>>
+          bool ManualCopy = (sizeof(Functor) >= 1800)>
 class SYCLFunctionWrapper;
+#else
+template <typename Functor, typename Storage,
+          bool ManualCopy = (sizeof(Functor) >= 1800 ||
+                             !std::is_trivially_copyable_v<Functor>)>
+class SYCLFunctionWrapper;
+#endif
 
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename Functor, typename Storage>
-class SYCLFunctionWrapper<Functor, Storage, true> {
-  const Functor& m_functor;
+class SYCLFunctionWrapper<Functor, Storage, false> {
+  // We need a union here so that we can avoid calling a constructor for m_f
+  // and can controll all the special member functions.
+  union TrivialWrapper {
+    TrivialWrapper(){};
+
+    TrivialWrapper(const Functor& f) { std::memcpy(&m_f, &f, sizeof(m_f)); }
+
+    TrivialWrapper(const TrivialWrapper& other) {
+      std::memcpy(&m_f, &other.m_f, sizeof(m_f));
+    }
+    TrivialWrapper(TrivialWrapper&& other) {
+      std::memcpy(&m_f, &other.m_f, sizeof(m_f));
+    }
+    TrivialWrapper& operator=(const TrivialWrapper& other) {
+      std::memcpy(&m_f, &other.m_f, sizeof(m_f));
+      return *this;
+    }
+    TrivialWrapper& operator=(TrivialWrapper&& other) {
+      std::memcpy(&m_f, &other.m_f, sizeof(m_f));
+      return *this;
+    }
+    ~TrivialWrapper(){};
+
+    Functor m_f;
+  } m_functor;
+
+ public:
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
+
+  const Functor& get_functor() const { return m_functor.m_f; }
+
+  static void register_event(Storage&, sycl::event){};
+};
+#else
+template <typename Functor, typename Storage>
+class SYCLFunctionWrapper<Functor, Storage, false> {
+  const Functor m_functor;
   Storage& m_storage;
 
  public:
@@ -263,10 +309,11 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
 
   void register_event(sycl::event){};
 };
+#endif
 
 template <typename Functor, typename Storage>
-class SYCLFunctionWrapper<Functor, Storage, false> {
-  const Functor& m_kernelFunctor;
+class SYCLFunctionWrapper<Functor, Storage, true> {
+  std::reference_wrapper<const Functor> m_kernelFunctor;
   Storage& m_storage;
 
  public:
@@ -274,7 +321,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
       : m_kernelFunctor(storage.copy_from(functor)), m_storage(storage) {}
 
   std::reference_wrapper<const Functor> get_functor() const {
-    return {m_kernelFunctor};
+    return m_kernelFunctor;
   }
 
   sycl::event get_copy_event() const { return m_storage.get_copy_event(); }
@@ -291,4 +338,17 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
+template <typename Functor, typename Storage>
+struct sycl::is_device_copyable<
+    Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>>
+    : std::true_type {};
+
+template <typename Functor, typename Storage>
+struct sycl::is_device_copyable<
+    const Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage,
+                                                          false>>
+    : std::true_type {};
+#endif
 #endif

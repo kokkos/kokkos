@@ -468,6 +468,7 @@ TEST(TEST_CATEGORY, complex_issue_3865) {
   TestBugPowAndLogComplex<TEST_EXECSPACE>();
 }
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
 TEST(TEST_CATEGORY, complex_issue_3867) {
   ASSERT_EQ(Kokkos::pow(Kokkos::complex<double>(2., 1.), 3.),
             Kokkos::pow(Kokkos::complex<double>(2., 1.), 3));
@@ -523,6 +524,7 @@ TEST(TEST_CATEGORY, complex_issue_3867) {
 
 #undef CHECK_POW_COMPLEX_PROMOTION
 }
+#endif
 
 TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
 #define STATIC_ASSERT(cond) static_assert(cond, "")

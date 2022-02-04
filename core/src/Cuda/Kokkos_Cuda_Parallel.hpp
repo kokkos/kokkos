@@ -1228,7 +1228,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -1246,7 +1248,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 };
 
 // MDRangePolicy impl
@@ -1547,7 +1551,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -1561,7 +1567,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {}
+        m_unified_space(nullptr) {
+    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+  }
 };
 
 //----------------------------------------------------------------------------
@@ -2702,234 +2710,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_run_serial(Kokkos::Impl::CudaInternal::cuda_use_serial_execution())
 #endif
   {
-  }
-};
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
-namespace Impl {
-template <class FunctorType, class ExecPolicy, class ValueType,
-          class Tag = typename ExecPolicy::work_tag>
-struct CudaFunctorAdapter {
-  const FunctorType f;
-  using value_type = ValueType;
-  CudaFunctorAdapter(const FunctorType& f_) : f(f_) {}
-
-  __device__ inline void operator()(typename ExecPolicy::work_tag,
-                                    const typename ExecPolicy::member_type& i,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals third argument
-    // type of FunctorType::operator()
-    f(typename ExecPolicy::work_tag(), i, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::work_tag,
-                                    const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals third argument
-    // type of FunctorType::operator()
-    f(typename ExecPolicy::work_tag(), i, j, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::work_tag,
-                                    const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals third argument
-    // type of FunctorType::operator()
-    f(typename ExecPolicy::work_tag(), i, j, k, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::work_tag,
-                                    const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    const typename ExecPolicy::member_type& l,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals third argument
-    // type of FunctorType::operator()
-    f(typename ExecPolicy::work_tag(), i, j, k, l, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::work_tag,
-                                    const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    const typename ExecPolicy::member_type& l,
-                                    const typename ExecPolicy::member_type& m,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals third argument
-    // type of FunctorType::operator()
-    f(typename ExecPolicy::work_tag(), i, j, k, l, m, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::work_tag,
-                                    const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    const typename ExecPolicy::member_type& l,
-                                    const typename ExecPolicy::member_type& m,
-                                    const typename ExecPolicy::member_type& n,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals third argument
-    // type of FunctorType::operator()
-    f(typename ExecPolicy::work_tag(), i, j, k, l, m, n, val);
-  }
-};
-
-template <class FunctorType, class ExecPolicy, class ValueType>
-struct CudaFunctorAdapter<FunctorType, ExecPolicy, ValueType, void> {
-  const FunctorType f;
-  using value_type = ValueType;
-  CudaFunctorAdapter(const FunctorType& f_) : f(f_) {}
-
-  __device__ inline void operator()(const typename ExecPolicy::member_type& i,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, val);
-  }
-
-  __device__ inline void operator()(const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, val);
-  }
-
-  __device__ inline void operator()(const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, val);
-  }
-
-  __device__ inline void operator()(const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    const typename ExecPolicy::member_type& l,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, l, val);
-  }
-
-  __device__ inline void operator()(const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    const typename ExecPolicy::member_type& l,
-                                    const typename ExecPolicy::member_type& m,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, l, m, val);
-  }
-
-  __device__ inline void operator()(const typename ExecPolicy::member_type& i,
-                                    const typename ExecPolicy::member_type& j,
-                                    const typename ExecPolicy::member_type& k,
-                                    const typename ExecPolicy::member_type& l,
-                                    const typename ExecPolicy::member_type& m,
-                                    const typename ExecPolicy::member_type& n,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, l, m, n, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::member_type& i,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::member_type& i,
-                                    typename ExecPolicy::member_type& j,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::member_type& i,
-                                    typename ExecPolicy::member_type& j,
-                                    typename ExecPolicy::member_type& k,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::member_type& i,
-                                    typename ExecPolicy::member_type& j,
-                                    typename ExecPolicy::member_type& k,
-                                    typename ExecPolicy::member_type& l,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, l, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::member_type& i,
-                                    typename ExecPolicy::member_type& j,
-                                    typename ExecPolicy::member_type& k,
-                                    typename ExecPolicy::member_type& l,
-                                    typename ExecPolicy::member_type& m,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, l, m, val);
-  }
-
-  __device__ inline void operator()(typename ExecPolicy::member_type& i,
-                                    typename ExecPolicy::member_type& j,
-                                    typename ExecPolicy::member_type& k,
-                                    typename ExecPolicy::member_type& l,
-                                    typename ExecPolicy::member_type& m,
-                                    typename ExecPolicy::member_type& n,
-                                    ValueType& val) const {
-    // Insert Static Assert with decltype on ValueType equals second argument
-    // type of FunctorType::operator()
-    f(i, j, k, l, m, n, val);
-  }
-};
-
-template <class FunctorType, class ResultType, class Tag,
-          bool Enable = IsNonTrivialReduceFunctor<FunctorType>::value>
-struct FunctorReferenceType {
-  using reference_type = ResultType&;
-};
-
-template <class FunctorType, class ResultType, class Tag>
-struct FunctorReferenceType<FunctorType, ResultType, Tag, true> {
-  using reference_type =
-      typename Kokkos::Impl::FunctorValueTraits<FunctorType,
-                                                Tag>::reference_type;
-};
-
-template <class FunctorTypeIn, class ExecPolicy, class ValueType>
-struct ParallelReduceFunctorType<FunctorTypeIn, ExecPolicy, ValueType, Cuda> {
-  enum {
-    FunctorHasValueType = IsNonTrivialReduceFunctor<FunctorTypeIn>::value
-  };
-  using functor_type = typename Kokkos::Impl::if_c<
-      FunctorHasValueType, FunctorTypeIn,
-      Impl::CudaFunctorAdapter<FunctorTypeIn, ExecPolicy, ValueType>>::type;
-  static functor_type functor(const FunctorTypeIn& functor_in) {
-    return Impl::if_c<FunctorHasValueType, FunctorTypeIn, functor_type>::select(
-        functor_in, functor_type(functor_in));
   }
 };
 

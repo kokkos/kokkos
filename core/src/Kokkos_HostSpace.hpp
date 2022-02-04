@@ -261,14 +261,10 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const Kokkos::HostSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size) {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
-#else
-    (void)arg_space;
-    (void)arg_label;
-    (void)arg_alloc_size;
-    return (SharedAllocationRecord*)0;
-#endif
+    KOKKOS_IF_ON_HOST((return new SharedAllocationRecord(arg_space, arg_label,
+                                                         arg_alloc_size);))
+    KOKKOS_IF_ON_DEVICE(((void)arg_space; (void)arg_label; (void)arg_alloc_size;
+                         return nullptr;))
   }
 };
 

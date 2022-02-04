@@ -366,20 +366,6 @@ struct reduction_identity<signed char> {
 
 template <>
 struct reduction_identity<bool> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool sum() {
-    return static_cast<bool>(false);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool prod() {
-    return static_cast<bool>(true);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool max() { return false; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool min() { return true; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool bor() {
-    return static_cast<bool>(false);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool band() {
-    return static_cast<bool>(true);
-  }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static bool lor() {
     return static_cast<bool>(false);
   }
@@ -652,24 +638,15 @@ struct reduction_identity<double> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() { return DBL_MAX; }
 };
 
-#if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
-    !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
+// No __host__ __device__ annotation because long double treated as double in
+// device code.  May be revisited later if that is not true any more.
 template <>
 struct reduction_identity<long double> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long double sum() {
-    return static_cast<long double>(0.0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long double prod() {
-    return static_cast<long double>(1.0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long double max() {
-    return -LDBL_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long double min() {
-    return LDBL_MAX;
-  }
+  constexpr static long double sum() { return static_cast<long double>(0.0); }
+  constexpr static long double prod() { return static_cast<long double>(1.0); }
+  constexpr static long double max() { return -LDBL_MAX; }
+  constexpr static long double min() { return LDBL_MAX; }
 };
-#endif
 
 }  // namespace Kokkos
 
