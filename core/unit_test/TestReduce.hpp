@@ -520,20 +520,26 @@ class TestReduceDynamicView {
       // Test result to host pointer:
 
       std::string str("TestKernelReduce");
-      if (count % 2 == 0) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+      if (count % 2 == 0) {
         Kokkos::parallel_reduce(nw, functor_type(nw, count),
                                 host_result.data());
-#else
-        Kokkos::parallel_reduce(nw, functor_type(nw, count), host_result);
-#endif
       } else {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
         Kokkos::parallel_reduce(str, nw, functor_type(nw, count),
                                 host_result.data());
-#else
-        Kokkos::parallel_reduce(str, nw, functor_type(nw, count), host_result);
+      }
+
+      for (unsigned j = 0; j < count; ++j) {
+        const uint64_t correct = 0 == j % 3 ? nw : nsum;
+        ASSERT_EQ(host_result(j), (ScalarType)correct);
+        host_result(j) = 0;
+      }
 #endif
+
+      if (count % 2 == 0) {
+        Kokkos::parallel_reduce(nw, functor_type(nw, count), host_result);
+      } else {
+        Kokkos::parallel_reduce(str, nw, functor_type(nw, count), host_result);
       }
 
       for (unsigned j = 0; j < count; ++j) {

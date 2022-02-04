@@ -127,9 +127,10 @@ struct TestMDRange_ReduceArray_2D {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
       double *sums_ptr = sums;
       parallel_reduce(range, functor, sums_ptr);
-#else
-      parallel_reduce(range, functor, sums);
+      ASSERT_EQ(sums[0], 6 * N0 * N1);
+      ASSERT_EQ(sums[1], 3 * N0 * N1);
 #endif
+      parallel_reduce(range, functor, sums);
 
       // Check output
       // printf("Array Reduce result. N0 = %d  N1 = %d  N0*N1 = %d  sums[0] =
