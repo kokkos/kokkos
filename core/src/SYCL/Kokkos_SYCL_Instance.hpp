@@ -326,9 +326,7 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
 
   sycl::event get_copy_event() const { return m_storage.get_copy_event(); }
 
-  void register_event(sycl::event event) {
-    m_storage.register_event(event);
-  }
+  void register_event(sycl::event event) { m_storage.register_event(event); }
 };
 
 template <typename Functor, typename Storage>

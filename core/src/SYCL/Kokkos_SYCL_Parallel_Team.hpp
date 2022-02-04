@@ -415,10 +415,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::scoped_lock<std::mutex> m_scratch_lock;
 
   template <typename FunctorWrapper>
-  sycl::event sycl_direct_launch(const Policy& policy,
-                                 const FunctorWrapper& functor_wrapper,
-                                 const std::vector<sycl::event>& memcpy_events
-                                ) const {
+  sycl::event sycl_direct_launch(
+      const Policy& policy, const FunctorWrapper& functor_wrapper,
+      const std::vector<sycl::event>& memcpy_events) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -492,7 +491,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_functor, indirectKernelMem);
 
     sycl::event event = sycl_direct_launch(m_policy, functor_wrapper,
-                           {functor_wrapper.get_copy_event()});
+                                           {functor_wrapper.get_copy_event()});
     functor_wrapper.register_event(event);
   }
 
@@ -592,11 +591,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   template <typename PolicyType, typename FunctorWrapper,
             typename ReducerWrapper>
-  sycl::event sycl_direct_launch(const PolicyType& policy,
-                                 const FunctorWrapper& functor_wrapper,
-                                 const ReducerWrapper& reducer_wrapper,
-                                 const std::vector<sycl::event>& memcpy_events
-                                ) const {
+  sycl::event sycl_direct_launch(
+      const PolicyType& policy, const FunctorWrapper& functor_wrapper,
+      const ReducerWrapper& reducer_wrapper,
+      const std::vector<sycl::event>& memcpy_events) const {
     using ReducerConditional =
         Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                            FunctorType, ReducerType>;
@@ -876,7 +874,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             reduction_lambda);
       });
       last_reduction_event       = q.ext_oneapi_submit_barrier(
-          std::vector<sycl::event>{parallel_reduce_event});
+                std::vector<sycl::event>{parallel_reduce_event});
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
@@ -909,8 +907,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl::event event =
-        sycl_direct_launch(m_policy, functor_wrapper, reducer_wrapper,
+    sycl::event event = sycl_direct_launch(
+        m_policy, functor_wrapper, reducer_wrapper,
         {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
     functor_wrapper.register_event(event);
     reducer_wrapper.register_event(event);

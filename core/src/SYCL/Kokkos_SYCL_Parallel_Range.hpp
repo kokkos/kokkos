@@ -120,9 +120,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    sycl::event event =
-        sycl_direct_launch(m_policy, functor_wrapper,
-                           {functor_wrapper.get_copy_event()});
+    sycl::event event = sycl_direct_launch(m_policy, functor_wrapper,
+                                           {functor_wrapper.get_copy_event()});
     functor_wrapper.register_event(event);
   }
 
@@ -224,7 +223,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <typename FunctorWrapper>
-  sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
+  sycl::event sycl_direct_launch(
+      const FunctorWrapper& functor_wrapper,
       const std::vector<sycl::event>& memcpy_events) const {
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -287,8 +287,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    sycl::event event = sycl_direct_launch(functor_wrapper,
-                                          {functor_wrapper.get_copy_event()});
+    sycl::event event =
+        sycl_direct_launch(functor_wrapper, {functor_wrapper.get_copy_event()});
     functor_wrapper.register_event(event);
   }
 
