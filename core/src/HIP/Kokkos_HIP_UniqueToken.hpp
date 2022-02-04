@@ -64,9 +64,13 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
   using execution_space = HIP;
   using size_type       = int32_t;
 
-  explicit UniqueToken(execution_space const& = execution_space())
+  explicit UniqueToken()
       : m_locks(View<uint32_t*, HIPSpace>("Kokkos::UniqueToken::m_locks",
                                           HIP().concurrency())) {}
+  explicit UniqueToken(execution_space const& exec)
+      : m_locks(View<uint32_t*, HIPSpace>(
+            Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"),
+            HIP().concurrency())) {}
 
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken(const UniqueToken&) = default;
@@ -144,12 +148,17 @@ template <>
 class UniqueToken<HIP, UniqueTokenScope::Instance>
     : public UniqueToken<HIP, UniqueTokenScope::Global> {
  public:
-  explicit UniqueToken(execution_space const& arg = execution_space())
+  explicit UniqueToken() : UniqueToken<HIP, UniqueTokenScope::Global>() {}
+  explicit UniqueToken(execution_space const& arg)
       : UniqueToken<HIP, UniqueTokenScope::Global>(arg) {}
 
-  UniqueToken(size_type max_size, execution_space const& = execution_space()) {
+  UniqueToken(size_type max_size) {
     m_locks =
         View<uint32_t*, HIPSpace>("Kokkos::UniqueToken::m_locks", max_size);
+  }
+  UniqueToken(size_type max_size, execution_space const& exec) {
+    m_locks = View<uint32_t*, HIPSpace>(
+        Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"), max_size);
   }
 };
 
