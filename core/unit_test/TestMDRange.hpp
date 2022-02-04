@@ -130,6 +130,7 @@ struct TestMDRange_ReduceArray_2D {
       ASSERT_EQ(sums[0], 6 * N0 * N1);
       ASSERT_EQ(sums[1], 3 * N0 * N1);
 #endif
+      Kokkos::fence("Fence before accessing result on the host");
       parallel_reduce(range, functor, sums);
 
       // Check output

@@ -541,6 +541,7 @@ class TestReduceDynamicView {
       } else {
         Kokkos::parallel_reduce(str, nw, functor_type(nw, count), host_result);
       }
+      Kokkos::fence("Fence before accessing result on the host");
 
       for (unsigned j = 0; j < count; ++j) {
         const uint64_t correct = 0 == j % 3 ? nw : nsum;
