@@ -484,7 +484,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             });
       });
       last_reduction_event       = q.ext_oneapi_submit_barrier(
-                std::vector<sycl::event>{parallel_reduce_event});
+          std::vector<sycl::event>{parallel_reduce_event});
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
@@ -832,7 +832,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         });
       });
       last_reduction_event       = q.ext_oneapi_submit_barrier(
-                std::vector<sycl::event>{parallel_reduce_event});
+          std::vector<sycl::event>{parallel_reduce_event});
     }
 
     // At this point, the reduced value is written to the entry in results_ptr

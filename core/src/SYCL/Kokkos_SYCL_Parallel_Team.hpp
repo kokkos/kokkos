@@ -874,7 +874,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             reduction_lambda);
       });
       last_reduction_event       = q.ext_oneapi_submit_barrier(
-                std::vector<sycl::event>{parallel_reduce_event});
+          std::vector<sycl::event>{parallel_reduce_event});
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
