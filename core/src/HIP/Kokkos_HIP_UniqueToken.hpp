@@ -89,10 +89,10 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
   size_type impl_acquire() const {
     int idx = blockIdx.x * (blockDim.x * blockDim.y) +
               threadIdx.y * blockDim.x + threadIdx.x;
-    idx                      = idx % size();
-    unsigned int active      = __ballot(1);
-    unsigned int done_active = 0;
-    bool done                = false;
+    idx                            = idx % size();
+    unsigned long long active      = __ballot(1);
+    unsigned long long done_active = 0;
+    bool done                      = false;
     while (active != done_active) {
       if (!done) {
         // Using m_locks(idx) fails self containment test of Kokkos_HIP.hpp
