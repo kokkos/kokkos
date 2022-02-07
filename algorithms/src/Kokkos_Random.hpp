@@ -1274,285 +1274,32 @@ namespace Impl {
 
 template <class ViewType, class RandomPool, int loops, int rank,
           class IndexType>
-struct fill_random_functor_range;
-template <class ViewType, class RandomPool, int loops, int rank,
-          class IndexType>
 struct fill_random_functor_begin_end;
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 0, IndexType> {
+struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 0,
+                                     IndexType> {
   using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
-  typename ViewType::const_value_type range;
+  typename ViewType::const_value_type begin, end;
 
   using Rand = rand<typename RandomPool::generator_type,
                     typename ViewType::non_const_value_type>;
 
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
+  fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
+                                typename ViewType::const_value_type begin_,
+                                typename ViewType::const_value_type end_)
+      : a(a_), rand_pool(rand_pool_), begin(begin_), end(end_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType&) const {
+  void operator()(IndexType) const {
     typename RandomPool::generator_type gen = rand_pool.get_state();
-    a()                                     = Rand::draw(gen, range);
+    a()                                     = Rand::draw(gen, begin, end);
     rand_pool.free_state(gen);
   }
 };
 
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 1, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const IndexType& i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0)))
-        a(idx) = Rand::draw(gen, range);
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 2, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          a(idx, k) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 3, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          for (IndexType l = 0; l < static_cast<IndexType>(a.extent(2)); l++)
-            a(idx, k, l) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 4, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          for (IndexType l = 0; l < static_cast<IndexType>(a.extent(2)); l++)
-            for (IndexType m = 0; m < static_cast<IndexType>(a.extent(3)); m++)
-              a(idx, k, l, m) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 5, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          for (IndexType l = 0; l < static_cast<IndexType>(a.extent(2)); l++)
-            for (IndexType m = 0; m < static_cast<IndexType>(a.extent(3)); m++)
-              for (IndexType n = 0; n < static_cast<IndexType>(a.extent(4));
-                   n++)
-                a(idx, k, l, m, n) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 6, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          for (IndexType l = 0; l < static_cast<IndexType>(a.extent(2)); l++)
-            for (IndexType m = 0; m < static_cast<IndexType>(a.extent(3)); m++)
-              for (IndexType n = 0; n < static_cast<IndexType>(a.extent(4));
-                   n++)
-                for (IndexType o = 0; o < static_cast<IndexType>(a.extent(5));
-                     o++)
-                  a(idx, k, l, m, n, o) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 7, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          for (IndexType l = 0; l < static_cast<IndexType>(a.extent(2)); l++)
-            for (IndexType m = 0; m < static_cast<IndexType>(a.extent(3)); m++)
-              for (IndexType n = 0; n < static_cast<IndexType>(a.extent(4));
-                   n++)
-                for (IndexType o = 0; o < static_cast<IndexType>(a.extent(5));
-                     o++)
-                  for (IndexType p = 0; p < static_cast<IndexType>(a.extent(6));
-                       p++)
-                    a(idx, k, l, m, n, o, p) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
-
-template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_range<ViewType, RandomPool, loops, 8, IndexType> {
-  using execution_space = typename ViewType::execution_space;
-  ViewType a;
-  RandomPool rand_pool;
-  typename ViewType::const_value_type range;
-
-  using Rand = rand<typename RandomPool::generator_type,
-                    typename ViewType::non_const_value_type>;
-
-  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
-                            typename ViewType::const_value_type range_)
-      : a(a_), rand_pool(rand_pool_), range(range_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(IndexType i) const {
-    typename RandomPool::generator_type gen = rand_pool.get_state();
-    for (IndexType j = 0; j < loops; j++) {
-      const IndexType idx = i * loops + j;
-      if (idx < static_cast<IndexType>(a.extent(0))) {
-        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
-          for (IndexType l = 0; l < static_cast<IndexType>(a.extent(2)); l++)
-            for (IndexType m = 0; m < static_cast<IndexType>(a.extent(3)); m++)
-              for (IndexType n = 0; n < static_cast<IndexType>(a.extent(4));
-                   n++)
-                for (IndexType o = 0; o < static_cast<IndexType>(a.extent(5));
-                     o++)
-                  for (IndexType p = 0; p < static_cast<IndexType>(a.extent(6));
-                       p++)
-                    for (IndexType q = 0;
-                         q < static_cast<IndexType>(a.extent(7)); q++)
-                      a(idx, k, l, m, n, o, p, q) = Rand::draw(gen, range);
-      }
-    }
-    rand_pool.free_state(gen);
-  }
-};
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 1,
                                      IndexType> {
@@ -1822,23 +1569,10 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 8,
   }
 };
 
-}  // namespace Impl
-
 template <class ViewType, class RandomPool, class IndexType = int64_t>
-void impl_fill_random(ViewType a, RandomPool g,
-                      typename ViewType::const_value_type range) {
-  int64_t LDA = a.extent(0);
-  if (LDA > 0)
-    parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
-                 Impl::fill_random_functor_range<ViewType, RandomPool, 128,
-                                                 ViewType::Rank, IndexType>(
-                     a, g, range));
-}
-
-template <class ViewType, class RandomPool, class IndexType = int64_t>
-void impl_fill_random(ViewType a, RandomPool g,
-                      typename ViewType::const_value_type begin,
-                      typename ViewType::const_value_type end) {
+void fill_random(ViewType a, RandomPool g,
+                 typename ViewType::const_value_type begin,
+                 typename ViewType::const_value_type end) {
   int64_t LDA = a.extent(0);
   if (LDA > 0)
     parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
@@ -1847,23 +1581,48 @@ void impl_fill_random(ViewType a, RandomPool g,
                      a, g, begin, end));
 }
 
+}  // namespace Impl
+
 template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
-                 typename ViewType::const_value_type range) {
+                 typename ViewType::const_value_type begin,
+                 typename ViewType::const_value_type end) {
   switch (rank(a)) {
-    case 0: impl_fill_random(Impl::as_view_of_rank_n<0>(a), g, range); break;
-    case 1: impl_fill_random(Impl::as_view_of_rank_n<1>(a), g, range); break;
-    case 2: impl_fill_random(Impl::as_view_of_rank_n<2>(a), g, range); break;
-    case 3: impl_fill_random(Impl::as_view_of_rank_n<3>(a), g, range); break;
-    case 4: impl_fill_random(Impl::as_view_of_rank_n<4>(a), g, range); break;
-    case 5: impl_fill_random(Impl::as_view_of_rank_n<5>(a), g, range); break;
-    case 6: impl_fill_random(Impl::as_view_of_rank_n<6>(a), g, range); break;
-    case 7: impl_fill_random(Impl::as_view_of_rank_n<7>(a), g, range); break;
+    case 0:
+      Impl::fill_random(Impl::as_view_of_rank_n<0>(a), g, begin, end);
+      break;
+    case 1:
+      Impl::fill_random(Impl::as_view_of_rank_n<1>(a), g, begin, end);
+      break;
+    case 2:
+      Impl::fill_random(Impl::as_view_of_rank_n<2>(a), g, begin, end);
+      break;
+    case 3:
+      Impl::fill_random(Impl::as_view_of_rank_n<3>(a), g, begin, end);
+      break;
+    case 4:
+      Impl::fill_random(Impl::as_view_of_rank_n<4>(a), g, begin, end);
+      break;
+    case 5:
+      Impl::fill_random(Impl::as_view_of_rank_n<5>(a), g, begin, end);
+      break;
+    case 6:
+      Impl::fill_random(Impl::as_view_of_rank_n<6>(a), g, begin, end);
+      break;
+    case 7:
+      Impl::fill_random(Impl::as_view_of_rank_n<7>(a), g, begin, end);
+      break;
     default:
       Kokkos::Impl::throw_runtime_exception(
           "Calling fill_random with a view of unexpected rank " +
           std::to_string(rank(a)));
   }
+}
+
+template <class ViewType, class RandomPool, class IndexType = int64_t>
+void fill_random(ViewType a, RandomPool g,
+                 typename ViewType::const_value_type range) {
+  fill_random(a, g, 0, range);
 }
 
 }  // namespace Kokkos
