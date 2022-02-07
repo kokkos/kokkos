@@ -1280,6 +1280,28 @@ template <class ViewType, class RandomPool, int loops, int rank,
 struct fill_random_functor_begin_end;
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
+struct fill_random_functor_range<ViewType, RandomPool, loops, 0, IndexType> {
+  using execution_space = typename ViewType::execution_space;
+  ViewType a;
+  RandomPool rand_pool;
+  typename ViewType::const_value_type range;
+
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
+
+  fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
+                            typename ViewType::const_value_type range_)
+      : a(a_), rand_pool(rand_pool_), range(range_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const IndexType&) const {
+    typename RandomPool::generator_type gen = rand_pool.get_state();
+    a()                                     = Rand::draw(gen, range);
+    rand_pool.free_state(gen);
+  }
+};
+
+template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 1, IndexType> {
   using execution_space = typename ViewType::execution_space;
   ViewType a;
