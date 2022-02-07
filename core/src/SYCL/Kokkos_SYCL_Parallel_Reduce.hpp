@@ -363,7 +363,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         const auto begin = policy.begin();
 
-        if (first_run) cgh.depends_on(memcpy_events);
+        cgh.depends_on(memcpy_events);
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
@@ -706,7 +706,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
         const BarePolicy bare_policy = m_policy;
 
-        if (first_run) cgh.depends_on(memcpy_events);
+        cgh.depends_on(memcpy_events);
 
         cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
           const auto local_id          = item.get_local_linear_id();

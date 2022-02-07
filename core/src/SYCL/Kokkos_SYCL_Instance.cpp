@@ -309,7 +309,7 @@ SYCLInternal::IndirectKernelMem& SYCLInternal::get_indirect_kernel_mem() {
   // Thread safety: atomically increment round robin variable
   // NB: atomic_wrapping_fetch_inc returns values in range [0-N], not
   // [0-N) as might be expected.
-  size_t next_pool = desul::atomic_wrapping_fetch_inc(
+  size_t next_pool = desul::atomic_fetch_inc_mod(
       &m_pool_next, m_usm_pool_size - 1, desul::MemoryOrderRelaxed(),
       desul::MemoryScopeDevice());
   return m_indirectKernelMem[next_pool];

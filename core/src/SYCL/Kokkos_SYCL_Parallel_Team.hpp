@@ -865,7 +865,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
         auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
 
-        if (first_run) cgh.depends_on(memcpy_events);
+        cgh.depends_on(memcpy_events);
 
         cgh.parallel_for(
             sycl::nd_range<2>(
