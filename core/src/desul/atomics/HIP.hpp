@@ -109,7 +109,6 @@ DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP(dec_mod, unsigned int)
 #undef DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP_INTEGRAL
 #undef DESUL_IMPL_HIP_DEVICE_ATOMIC_FETCH_OP
 
-
 // 2/ host-side fallback implementation for atomic functions not provided by GCC
 
 #define DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_FUN(OP_LOWERCASE, OP_PASCAL_CASE, TYPE) \
@@ -177,7 +176,6 @@ DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT(unsigned long long)
 
 #undef DESUL_IMPL_HIP_HOST_FALLBACK_ATOMIC_INCREMENT_DECREMENT
 
-
 // 3/ device-side fallback implementation for atomic functions defined in GCC overload
 // set
 
@@ -222,4 +220,3 @@ DESUL_IMPL_HIP_DEVICE_FALLBACK_ATOMIC_FUN(nand, Nand)
 
 #endif
 #endif
-

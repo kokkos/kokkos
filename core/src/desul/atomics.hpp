@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul

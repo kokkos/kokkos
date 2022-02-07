@@ -1,3 +1,5 @@
-DisableFormat: true
-SortIncludes: false
+BasedOnStyle: google
+BinPackParameters: false
+BinPackArguments: false
+ColumnLimit: 88
 

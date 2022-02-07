@@ -8,8 +8,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <cinttypes>
 #include <desul/atomics/Lock_Array.hpp>
-#include <string>
 #include <sstream>
+#include <string>
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
 #ifdef DESUL_HIP_RDC
@@ -45,27 +45,29 @@ int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 namespace {
 
 void check_error_and_throw_hip(hipError_t e, const std::string msg) {
-  if(e != hipSuccess) {
+  if (e != hipSuccess) {
     std::ostringstream out;
     out << "Desul::Error: " << msg << " error(" << hipGetErrorName(e)
-                  << "): " << hipGetErrorString(e);
+        << "): " << hipGetErrorString(e);
     throw std::runtime_error(out.str());
   }
 }
 
-}
+}  // namespace
 
-template<typename T>
+template <typename T>
 void init_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
 
   auto error_malloc1 = hipMalloc(&HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
-            sizeof(int32_t) * (HIP_SPACE_ATOMIC_MASK + 1));
-  check_error_and_throw_hip(error_malloc1, "init_lock_arrays_hip: hipMalloc device locks");
+                                 sizeof(int32_t) * (HIP_SPACE_ATOMIC_MASK + 1));
+  check_error_and_throw_hip(error_malloc1,
+                            "init_lock_arrays_hip: hipMalloc device locks");
 
   auto error_malloc2 = hipHostMalloc(&HIP_SPACE_ATOMIC_LOCKS_NODE_h,
-                sizeof(int32_t) * (HIP_SPACE_ATOMIC_MASK + 1));
-  check_error_and_throw_hip(error_malloc2, "init_lock_arrays_hip: hipMallocHost host locks");
+                                     sizeof(int32_t) * (HIP_SPACE_ATOMIC_MASK + 1));
+  check_error_and_throw_hip(error_malloc2,
+                            "init_lock_arrays_hip: hipMallocHost host locks");
 
   auto error_sync1 = hipDeviceSynchronize();
   DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
@@ -77,7 +79,7 @@ void init_lock_arrays_hip() {
   check_error_and_throw_hip(error_sync2, "init_lock_arrays_hip: post init");
 }
 
-template<typename T>
+template <typename T>
 void finalize_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
   auto error_free1 = hipFree(HIP_SPACE_ATOMIC_LOCKS_DEVICE_h);
@@ -98,4 +100,3 @@ template void finalize_lock_arrays_hip<int>();
 
 }  // namespace desul
 #endif
-
