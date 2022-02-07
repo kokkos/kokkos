@@ -1825,8 +1825,8 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 8,
 }  // namespace Impl
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
-void fill_random(ViewType a, RandomPool g,
-                 typename ViewType::const_value_type range) {
+void impl_fill_random(ViewType a, RandomPool g,
+                      typename ViewType::const_value_type range) {
   int64_t LDA = a.extent(0);
   if (LDA > 0)
     parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
@@ -1836,9 +1836,9 @@ void fill_random(ViewType a, RandomPool g,
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
-void fill_random(ViewType a, RandomPool g,
-                 typename ViewType::const_value_type begin,
-                 typename ViewType::const_value_type end) {
+void impl_fill_random(ViewType a, RandomPool g,
+                      typename ViewType::const_value_type begin,
+                      typename ViewType::const_value_type end) {
   int64_t LDA = a.extent(0);
   if (LDA > 0)
     parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
@@ -1846,6 +1846,26 @@ void fill_random(ViewType a, RandomPool g,
                                                      ViewType::Rank, IndexType>(
                      a, g, begin, end));
 }
+
+template <class ViewType, class RandomPool, class IndexType = int64_t>
+void fill_random(ViewType a, RandomPool g,
+                 typename ViewType::const_value_type range) {
+  switch (rank(a)) {
+    case 0: impl_fill_random(Impl::as_view_of_rank_n<0>(a), g, range); break;
+    case 1: impl_fill_random(Impl::as_view_of_rank_n<1>(a), g, range); break;
+    case 2: impl_fill_random(Impl::as_view_of_rank_n<2>(a), g, range); break;
+    case 3: impl_fill_random(Impl::as_view_of_rank_n<3>(a), g, range); break;
+    case 4: impl_fill_random(Impl::as_view_of_rank_n<4>(a), g, range); break;
+    case 5: impl_fill_random(Impl::as_view_of_rank_n<5>(a), g, range); break;
+    case 6: impl_fill_random(Impl::as_view_of_rank_n<6>(a), g, range); break;
+    case 7: impl_fill_random(Impl::as_view_of_rank_n<7>(a), g, range); break;
+    default:
+      Kokkos::Impl::throw_runtime_exception(
+          "Calling fill_random with a view of unexpected rank " +
+          std::to_string(rank(a)));
+  }
+}
+
 }  // namespace Kokkos
 
 #endif
