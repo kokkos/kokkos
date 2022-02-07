@@ -58,7 +58,7 @@ struct TestSharedAtomicsFunctor {
 
   KOKKOS_INLINE_FUNCTION void operator()(
       const typename Kokkos::TeamPolicy<ExecutionSpace>::member_type t) const {
-    int* x = (int*)t.team_shmem().get_shmem(sizeof(int));
+    int* x = static_cast<int*>(t.team_shmem().get_shmem(sizeof(int)));
     Kokkos::single(Kokkos::PerTeam(t), [&]() { *x = 0; });
     t.team_barrier();
     Kokkos::atomic_add(x, 1);
