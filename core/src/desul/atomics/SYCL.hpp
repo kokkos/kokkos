@@ -22,8 +22,7 @@ namespace desul {
   TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
     Impl::sycl_atomic_ref<TYPE,                                                    \
                           MemoryOrder,                                             \
-                          MemoryScopeDevice,                                       \
-                          sycl::access::address_space::generic_space>               \
+                          MemoryScopeDevice>                                       \
         dest_ref(*dest);                                                           \
     return dest_ref.fetch_##OPER(val);                                             \
   }                                                                                \
@@ -31,8 +30,7 @@ namespace desul {
   TYPE atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore) {   \
     Impl::sycl_atomic_ref<TYPE,                                                    \
                           MemoryOrder,                                             \
-                          MemoryScopeCore,                                         \
-                          sycl::access::address_space::generic_space>               \
+                          MemoryScopeCore>                                         \
         dest_ref(*dest);                                                           \
     return dest_ref.fetch_##OPER(val);                                             \
   }

@@ -82,13 +82,12 @@ struct DesulToSYCLMemoryScope<MemoryScopeSystem, extended_namespace> {
 
 template <class T,
           class MemoryOrder,
-          class MemoryScope,
-          sycl::access::address_space AddressSpace>
+          class MemoryScope>
 using sycl_atomic_ref =
     sycl::atomic_ref<T,
                                   DesulToSYCLMemoryOrder<MemoryOrder>::value,
                                   DesulToSYCLMemoryScope<MemoryScope>::value,
-                                  AddressSpace>;
+                                  sycl::access::address_space::generic_space>;
 
 }  // namespace Impl
 }  // namespace desul

@@ -34,8 +34,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
                 "this function assumes an unsigned int is 32-bit");
   Impl::sycl_atomic_ref<unsigned int,
                         MemoryOrder,
-                        MemoryScope,
-                        sycl::access::address_space::generic_space>
+                        MemoryScope>
   dest_ref(*reinterpret_cast<unsigned int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned int*>(&compare),
                                    *reinterpret_cast<unsigned int*>(&value));
@@ -48,8 +47,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
                 "this function assumes an unsigned long long is 64-bit");
   Impl::sycl_atomic_ref<unsigned long long int,
                         MemoryOrder,
-                        MemoryScope,
-                        sycl::access::address_space::generic_space>
+                        MemoryScope>
   dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned long long int*>(&compare),
                                    *reinterpret_cast<unsigned long long int*>(&value));
@@ -65,8 +63,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(T* const dest,
                 "this function assumes an unsigned int is 32-bit");
   Impl::sycl_atomic_ref<unsigned int,
                         MemoryOrder,
-                        MemoryScope,
-                        sycl::access::address_space::generic_space>
+                        MemoryScope>
   dest_ref(*reinterpret_cast<unsigned int*>(dest));
   unsigned int return_val = dest_ref.exchange(*reinterpret_cast<unsigned int*>(&value));
   return reinterpret_cast<T&>(return_val);
@@ -80,8 +77,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(T* const dest,
                 "this function assumes an unsigned long long is 64-bit");
   Impl::sycl_atomic_ref<unsigned long long int,
                         MemoryOrder,
-                        MemoryScope,
-                        sycl::access::address_space::generic_space>
+                        MemoryScope>
   dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
   unsigned long long int return_val =
       dest_ref.exchange(reinterpret_cast<unsigned long long int&>(value));
