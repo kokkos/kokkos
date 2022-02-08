@@ -84,7 +84,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   template <typename Functor>
   static sycl::event sycl_direct_launch(
       const Policy& policy, const Functor& functor,
-      const std::vector<sycl::event>& memcpy_events) {
+      const sycl::event& memcpy_event) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -95,7 +95,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                               functor};
       sycl::range<1> range(policy.end() - policy.begin());
-      cgh.depends_on(memcpy_events);
+      cgh.depends_on(memcpy_event);
       cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
           range, f);
     });
@@ -121,7 +121,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     sycl::event event = sycl_direct_launch(m_policy, functor_wrapper,
-                                           {functor_wrapper.get_copy_event()});
+                                           functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
   }
 
@@ -225,7 +225,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(
       const FunctorWrapper& functor_wrapper,
-      const std::vector<sycl::event>& memcpy_events) const {
+      const sycl::event& memcpy_event) const {
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
@@ -243,7 +243,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
           sycl::range<3>{global_range[2], global_range[1], global_range[0]},
           sycl::range<3>{local_range[2], local_range[1], local_range[0]}};
 
-      cgh.depends_on(memcpy_events);
+      cgh.depends_on(memcpy_event);
       cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy](
                                                sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
@@ -288,7 +288,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     sycl::event event =
-        sycl_direct_launch(functor_wrapper, {functor_wrapper.get_copy_event()});
+        sycl_direct_launch(functor_wrapper, functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
   }
 

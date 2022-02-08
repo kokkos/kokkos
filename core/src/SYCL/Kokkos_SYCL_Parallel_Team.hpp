@@ -417,7 +417,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(
       const Policy& policy, const FunctorWrapper& functor_wrapper,
-      const std::vector<sycl::event>& memcpy_events) const {
+      const sycl::event& memcpy_events) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -491,7 +491,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_functor, indirectKernelMem);
 
     sycl::event event = sycl_direct_launch(m_policy, functor_wrapper,
-                                           {functor_wrapper.get_copy_event()});
+                                           functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
   }
 
