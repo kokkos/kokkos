@@ -415,9 +415,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::scoped_lock<std::mutex> m_scratch_lock;
 
   template <typename FunctorWrapper>
-  sycl::event sycl_direct_launch(
-      const Policy& policy, const FunctorWrapper& functor_wrapper,
-      const sycl::event& memcpy_events) const {
+  sycl::event sycl_direct_launch(const Policy& policy,
+                                 const FunctorWrapper& functor_wrapper,
+                                 const sycl::event& memcpy_events) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
