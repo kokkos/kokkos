@@ -1587,36 +1587,8 @@ template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
-  switch (rank(a)) {
-    case 0:
-      Impl::fill_random(Impl::as_view_of_rank_n<0>(a), g, begin, end);
-      break;
-    case 1:
-      Impl::fill_random(Impl::as_view_of_rank_n<1>(a), g, begin, end);
-      break;
-    case 2:
-      Impl::fill_random(Impl::as_view_of_rank_n<2>(a), g, begin, end);
-      break;
-    case 3:
-      Impl::fill_random(Impl::as_view_of_rank_n<3>(a), g, begin, end);
-      break;
-    case 4:
-      Impl::fill_random(Impl::as_view_of_rank_n<4>(a), g, begin, end);
-      break;
-    case 5:
-      Impl::fill_random(Impl::as_view_of_rank_n<5>(a), g, begin, end);
-      break;
-    case 6:
-      Impl::fill_random(Impl::as_view_of_rank_n<6>(a), g, begin, end);
-      break;
-    case 7:
-      Impl::fill_random(Impl::as_view_of_rank_n<7>(a), g, begin, end);
-      break;
-    default:
-      Kokkos::Impl::throw_runtime_exception(
-          "Calling fill_random with a view of unexpected rank " +
-          std::to_string(rank(a)));
-  }
+  Impl::apply_to_view_of_static_rank(
+      [&](auto a) { Impl::fill_random(a, g, begin, end); }, a);
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
