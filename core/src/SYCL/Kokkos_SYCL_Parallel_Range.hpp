@@ -99,9 +99,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
           range, f);
     });
-    // This barrier will prevent q.memcpy for subsequent kernels from being
-    // brought forward in time. This is not likely to be critical to the
-    // performance gained by multi-buffering but it's worth considering.
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
@@ -264,9 +261,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .exec_range();
       });
     });
-    // This barrier would prevent q.memcpy for subsequent kernels from being
-    // brought forward in time.
-    // q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
+    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
     return parallel_for_event;
   }
