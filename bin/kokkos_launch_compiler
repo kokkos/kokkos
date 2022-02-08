@@ -65,9 +65,6 @@ CXX_COMPILER=${1}
 # remove the expected C++ compiler from the arguments
 shift
 
-# escape $
-command=("${@/\$/\\\$}")
-
 # NOTE: in below, ${KOKKOS_COMPILER} is usually nvcc_wrapper
 #
 # after the above shifts, $1 is now the exe for the compile or link command, e.g.
@@ -86,9 +83,9 @@ command=("${@/\$/\\\$}")
 # results in this command being executed:
 #       ${KOKKOS_COMPILER} -c file.cpp -o file.o
 if [[ "${KOKKOS_DEPENDENCE}" -eq "0" || "${CXX_COMPILER}" != "${1}" ]]; then
-    debug-message ${command[*]}
+    debug-message "$@"
     # the command does not depend on Kokkos so just execute the command w/o re-directing to ${KOKKOS_COMPILER}
-    eval ${command[*]}
+    exec "$@"
 else
     # the executable is the C++ compiler, so we need to re-direct to ${KOKKOS_COMPILER}
     if [ ! -f "${KOKKOS_COMPILER}" ]; then
@@ -116,9 +113,9 @@ else
     fi
 
     # discard the compiler from the command
-    command=("${command[@]:1}")
+    shift
 
-    debug-message ${KOKKOS_COMPILER} ${command[*]}
+    debug-message ${KOKKOS_COMPILER} "$@"
     # execute ${KOKKOS_COMPILER} (again, usually nvcc_wrapper)
-    ${KOKKOS_COMPILER} ${command[*]}
+    ${KOKKOS_COMPILER} "$@"
 fi
