@@ -1588,7 +1588,7 @@ void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
   Impl::apply_to_view_of_static_rank(
-      [&](auto a) { Impl::fill_random(a, g, begin, end); }, a);
+      [&](auto dst) { Impl::fill_random(dst, g, begin, end); }, a);
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>

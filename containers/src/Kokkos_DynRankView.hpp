@@ -1735,7 +1735,7 @@ inline void deep_copy(
       "deep_copy requires non-const type");
 
   Impl::apply_to_view_of_static_rank(
-      [=](auto dst) { deep_copy(e, dst, value); }, dst);
+      [=](auto view) { deep_copy(e, view, value); }, dst);
 }
 
 template <class DT, class... DP>
@@ -1745,7 +1745,7 @@ inline void deep_copy(
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
-  Impl::apply_to_view_of_static_rank([=](auto dst) { deep_copy(dst, value); },
+  Impl::apply_to_view_of_static_rank([=](auto view) { deep_copy(view, value); },
                                      dst);
 }
 
