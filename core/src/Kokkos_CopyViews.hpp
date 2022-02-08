@@ -3427,6 +3427,7 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     typename std::enable_if<
+        std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
         !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
