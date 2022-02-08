@@ -1870,6 +1870,11 @@ as_view_of_rank_n(View<T, Args...>) {
   return {};
 }
 
+template <typename Function, typename... Args>
+void apply_to_view_of_static_rank(Function&& f, View<Args...> a) {
+  f(a);
+}
+
 }  // namespace Impl
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
