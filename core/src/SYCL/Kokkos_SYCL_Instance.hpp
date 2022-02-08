@@ -291,23 +291,24 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
 
   const Functor& get_functor() const { return m_functor.m_f; }
 
-  static void register_event(Storage&, sycl::event){};
+  sycl::event get_copy_event() const { return {}; }
+
+  static void register_event(sycl::event){}
 };
 #else
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
   const Functor m_functor;
-  std::reference_wrapper<Storage> m_storage;
 
  public:
   SYCLFunctionWrapper(const Functor& functor, Storage& storage)
-      : m_functor(functor), m_storage(storage) {}
+      : m_functor(functor) {}
 
   const Functor& get_functor() const { return m_functor; }
 
   sycl::event get_copy_event() const { return {}; }
 
-  void register_event(sycl::event){};
+  static void register_event(sycl::event){}
 };
 #endif
 
