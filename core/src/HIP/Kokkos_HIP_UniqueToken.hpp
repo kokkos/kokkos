@@ -45,8 +45,6 @@
 #ifndef KOKKOS_HIP_UNIQUE_TOKEN_HPP
 #define KOKKOS_HIP_UNIQUE_TOKEN_HPP
 
-#include <Kokkos_Macros.hpp>
-
 #include <Kokkos_HIP_Space.hpp>
 #include <Kokkos_UniqueToken.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>

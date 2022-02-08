@@ -66,12 +66,10 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
   using size_type       = int32_t;
 
   explicit UniqueToken()
-      : m_locks(Kokkos::View<uint32_t*, Kokkos::CudaSpace>(
-            "Kokkos::UniqueToken::m_locks", Kokkos::Cuda().concurrency())) {}
+      : m_locks("Kokkos::UniqueToken::m_locks", Kokkos::Cuda().concurrency()) {}
   explicit UniqueToken(execution_space const& exec)
-      : m_locks(Kokkos::View<uint32_t*, Kokkos::CudaSpace>(
-            Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"),
-            Kokkos::Cuda().concurrency())) {}
+      : m_locks(Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"),
+                Kokkos::Cuda().concurrency()) {}
 
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken(const UniqueToken&) = default;
