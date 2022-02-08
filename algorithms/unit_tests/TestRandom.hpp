@@ -511,29 +511,34 @@ void test_random(unsigned int num_draws) {
 }
 
 template <class ExecutionSpace, class Pool>
-void test_dynrankview(int n) {
-  Kokkos::DynRankView<double, ExecutionSpace> A("a", n);
-  Pool random(13);
-  double min = 10.;
-  double max = 100.;
-  Kokkos::fill_random(A, random, min, max);
-
+struct TestDynRankView {
   using ReducerType      = Kokkos::MinMax<double, Kokkos::HostSpace>;
   using ReducerValueType = typename ReducerType::value_type;
 
-  ReducerValueType val;
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecutionSpace>(0, n),
-      KOKKOS_LAMBDA(int i, ReducerValueType& update) {
-        if (A(i) < update.min_val) update.min_val = A(i);
-        if (A(i) > update.max_val) update.max_val = A(i);
-      },
-      ReducerType(val));
+  Kokkos::DynRankView<double, ExecutionSpace> A;
 
-  Kokkos::fence();
-  ASSERT_GE(val.min_val, min);
-  ASSERT_LE(val.max_val, max);
-}
+  TestDynRankView(int n) : A("a", n) {}
+
+  KOKKOS_FUNCTION void operator()(int i, ReducerValueType& update) const {
+    if (A(i) < update.min_val) update.min_val = A(i);
+    if (A(i) > update.max_val) update.max_val = A(i);
+  }
+
+  void run() {
+    Pool random(13);
+    double min = 10.;
+    double max = 100.;
+    Kokkos::fill_random(A, random, min, max);
+
+    ReducerValueType val;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, A.size()),
+                            *this, ReducerType(val));
+
+    Kokkos::fence();
+    ASSERT_GE(val.min_val, min);
+    ASSERT_LE(val.max_val, max);
+  }
+};
 }  // namespace Impl
 
 template <typename ExecutionSpace>
@@ -548,8 +553,9 @@ void test_random_xorshift64() {
   Impl::test_random<Kokkos::Random_XorShift64_Pool<
       Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
-  Impl::test_dynrankview<ExecutionSpace,
-                         Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000);
+  Impl::TestDynRankView<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000)
+      .run();
 }
 
 template <typename ExecutionSpace>
@@ -565,9 +571,9 @@ void test_random_xorshift1024() {
   Impl::test_random<Kokkos::Random_XorShift1024_Pool<
       Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
-  Impl::test_dynrankview<ExecutionSpace,
-                         Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(
-      10000);
+  Impl::TestDynRankView<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(10000)
+      .run();
 }
 }  // namespace Test
 
