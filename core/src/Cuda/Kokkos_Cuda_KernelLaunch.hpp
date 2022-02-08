@@ -176,16 +176,19 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
 #ifndef KOKKOS_ARCH_KEPLER
 
   // On Kepler the L1 has no benefit since it doesn't cache reads
+  // Use `cudaFuncSetAttribute` call from cuda to set the SharedMemoryCarveout
+  // preference.
   auto set_cache_config = [&] {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-        func, (prefer_shmem == KokkosCachePreferL1)
-                  ? cudaFuncCachePreferL1
-                  : (prefer_shmem == KokkosCachePreferShared)
-                        ? cudaFuncCachePreferShared
-                        : cudaFuncCachePreferEqual));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttribute(
+        func, cudaFuncAttributePreferredSharedMemoryCarveout,
+        (prefer_shmem == CachePreference::KokkosCachePreferL1)
+            ? 25
+            : (prefer_shmem == CachePreference::KokkosCachePreferShared) ? 75
+                                                                         : 50));
+
     return prefer_shmem;
   };
-  static bool cache_config_preference_cached = set_cache_config();
+  static int cache_config_preference_cached = set_cache_config();
   if (cache_config_preference_cached != prefer_shmem) {
     cache_config_preference_cached = set_cache_config();
   }
@@ -253,11 +256,11 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   // shared memory, set cudaFuncCachePreferL1, if it's greater than half set
   // cudaFuncCachePreferEqual else set cudaFuncCachePreferShared.
   if (dynamic_shmem / 2 > shmem)
-    prefer_shmem = KokkosCachePreferL1;
+    prefer_shmem = CachePreference::KokkosCachePreferL1;
   else if (dynamic_shmem > shmem) {
-    prefer_shmem = KokkosCachePreferEqual;
+    prefer_shmem = CachePreference::KokkosCachePreferEqual;
   } else
-    prefer_shmem = KokkosCachePreferShared;
+    prefer_shmem = CachePreference::KokkosCachePreferShared;
 }
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
