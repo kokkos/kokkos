@@ -313,17 +313,17 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(llrint)
 // scalbn
 // scalbln
 // ilog
-// logb
-// nextafter
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(logb)
+KOKKOS_IMPL_MATH_BINARY_FUNCTION(nextafter)
 // nexttoward
-// copysign
+KOKKOS_IMPL_MATH_BINARY_FUNCTION(copysign)
 // Classification and comparison
 // fpclassify
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isfinite)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isinf)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 // isnormal
-// signbit
+KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 // isgreater
 // isgreaterequal
 // isless
