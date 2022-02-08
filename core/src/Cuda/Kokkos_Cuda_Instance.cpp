@@ -756,7 +756,7 @@ void CudaInternal::finalize() {
       m_team_scratch_ptr[i]          = nullptr;
     }
 
-    cudaFree(m_scratch_locks);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratch_locks));
     m_scratch_locks = nullptr;
   }
 
