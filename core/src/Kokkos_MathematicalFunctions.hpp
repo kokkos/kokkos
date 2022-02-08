@@ -238,8 +238,10 @@ inline long double abs(long double x) {
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
-KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
+// remquo
+// fma
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmax)
+KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fdim)
 #ifndef KOKKOS_ENABLE_SYCL
 KOKKOS_INLINE_FUNCTION float nanf(char const* arg) { return ::nanf(arg); }
@@ -253,11 +255,6 @@ KOKKOS_INLINE_FUNCTION float nanf(char const*) { return sycl::nan(0u); }
 KOKKOS_INLINE_FUNCTION double nan(char const*) { return sycl::nan(0ul); }
 #endif
 inline long double nanl(char const* arg) { return ::nanl(arg); }
-// Power functions
-KOKKOS_IMPL_MATH_BINARY_FUNCTION(pow)
-KOKKOS_IMPL_MATH_UNARY_FUNCTION(sqrt)
-KOKKOS_IMPL_MATH_UNARY_FUNCTION(cbrt)
-KOKKOS_IMPL_MATH_BINARY_FUNCTION(hypot)
 // Exponential functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp2)
@@ -266,6 +263,11 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(log)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(log10)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(log2)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(log1p)
+// Power functions
+KOKKOS_IMPL_MATH_BINARY_FUNCTION(pow)
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(sqrt)
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(cbrt)
+KOKKOS_IMPL_MATH_BINARY_FUNCTION(hypot)
 // Trigonometric functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sin)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(cos)
@@ -290,14 +292,40 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(lgamma)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(ceil)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(floor)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(trunc)
-// FIXME_SYCL not available as of current SYCL specification v1.2.1
-#ifndef KOKKOS_ENABLE_SYCL
+// round
+// lround
+// llround
+// FIXME_SYCL not available as of current SYCL 2020 specification (revision 4)
+#ifndef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 #endif
+// rint
+// lrint
+// llrint
+// Floating point manipulation functions
+// frexp
+// ldexp
+// modf
+// scalbn
+// scalbln
+// ilog
+// logb
+// nextafter
+// nexttoward
+// copysign
 // Classification and comparison
+// fpclassify
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isfinite)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isinf)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
+// isnormal
+// signbit
+// isgreater
+// isgreaterequal
+// isless
+// islessequal
+// islessgreater
+// isunordered
 
 #undef KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION
