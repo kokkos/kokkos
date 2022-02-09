@@ -150,8 +150,11 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
-    m_indirectKernelMem.reset(*m_queue, m_instance_id);
-    m_indirectReducerMem.reset(*m_queue, m_instance_id);
+
+    for (auto& usm_mem : m_indirectKernelMem) {
+      usm_mem.reset(*m_queue, m_instance_id);
+    }
+
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -213,8 +216,7 @@ void SYCLInternal::finalize() {
   m_team_scratch_current_size = 0;
   m_team_scratch_ptr          = nullptr;
 
-  m_indirectKernelMem.reset();
-  m_indirectReducerMem.reset();
+  for (auto& usm_mem : m_indirectKernelMem) usm_mem.reset();
   // guard erasing from all_queues
   {
     std::scoped_lock lock(mutex);
@@ -302,6 +304,17 @@ template void SYCLInternal::fence_helper<sycl::event>(sycl::event&,
                                                       const std::string&,
                                                       uint32_t);
 
+// This function cycles through a pool of USM allocations for functors
+SYCLInternal::IndirectKernelMem& SYCLInternal::get_indirect_kernel_mem() {
+  // Thread safety: atomically increment round robin variable
+  // NB: atomic_fetch_inc_mod returns values in range [0-N], not
+  // [0-N) as might be expected.
+  size_t next_pool = desul::atomic_fetch_inc_mod(
+      &m_pool_next, m_usm_pool_size - 1, desul::MemoryOrderRelaxed(),
+      desul::MemoryScopeDevice());
+  return m_indirectKernelMem[next_pool];
+}
+
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
   assert(m_q);
@@ -315,7 +328,9 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
         AllocationSpace(*m_q), "Kokkos::Experimental::SYCL::USMObjectMem", n);
     Record::increment(r);
 
-    m_data     = r->data();
+    m_data = r->data();
+    if constexpr (sycl::usm::alloc::device == Kind)
+      m_staging.reset(new char[n]);
     m_capacity = n;
   }
 
