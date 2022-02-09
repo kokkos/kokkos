@@ -52,8 +52,7 @@ std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
 std::mutex SYCLInternal::mutex;
 
 SYCLInternal::~SYCLInternal() {
-  if (!was_finalized || m_scratchSpace || m_scratchFlags ||
-      m_scratchConcurrentBitset) {
+  if (!was_finalized || m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
                  "Kokkos::Experimental::SYCL::finalize()"
               << std::endl;
@@ -139,13 +138,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
                            "Kokkos::Experimental::SYCL::InternalScratchBitset",
                            sizeof(uint32_t) * buffer_bound);
       Record::increment(r);
-      m_scratchConcurrentBitset = reinterpret_cast<uint32_t*>(r->data());
-      auto event                = m_queue->memset(m_scratchConcurrentBitset, 0,
-                                   sizeof(uint32_t) * buffer_bound);
-      fence(event,
-            "Kokkos::Experimental::SYCLInternal::initialize: fence after "
-            "initializing m_scratchConcurrentBitset",
-            m_instance_id);
     }
 
     m_maxShmemPerBlock =
@@ -206,9 +198,6 @@ void SYCLInternal::finalize() {
   m_scratchSpace      = nullptr;
   m_scratchFlagsCount = 0;
   m_scratchFlags      = nullptr;
-
-  RecordSYCL::decrement(RecordSYCL::get_record(m_scratchConcurrentBitset));
-  m_scratchConcurrentBitset = nullptr;
 
   if (m_team_scratch_current_size > 0)
     Kokkos::kokkos_free<Kokkos::Experimental::SYCLDeviceUSMSpace>(
