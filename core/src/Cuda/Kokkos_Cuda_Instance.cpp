@@ -131,6 +131,17 @@ int cuda_kernel_arch() {
 
 }  // namespace
 
+Kokkos::View<uint32_t *, Kokkos::CudaSpace> cuda_global_unique_token_locks(
+    bool deallocate) {
+  static Kokkos::View<uint32_t *, Kokkos::CudaSpace> locks =
+      Kokkos::View<uint32_t *, Kokkos::CudaSpace>();
+  if (!deallocate && locks.extent(0) == 0)
+    locks = Kokkos::View<uint32_t *, Kokkos::CudaSpace>(
+        "Kokkos::UniqueToken<Cuda>::m_locks", Kokkos::Cuda().concurrency());
+  if (deallocate) locks = Kokkos::View<uint32_t *, Kokkos::CudaSpace>();
+  return locks;
+}
+
 void cuda_device_synchronize(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
@@ -710,6 +721,7 @@ void CudaInternal::finalize() {
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     // Only finalize this if we're the singleton
     if (this == &singleton()) {
+      (void)Impl::cuda_global_unique_token_locks(true);
       Impl::finalize_host_cuda_lock_arrays();
     }
 
@@ -994,8 +1006,8 @@ void CudaSpaceInitializer::print_configuration(std::ostream &msg,
   msg << "\nCuda Runtime Configuration:" << std::endl;
   Cuda::print_configuration(msg, detail);
 }
-}  // namespace Impl
 
+}  // namespace Impl
 }  // namespace Kokkos
 
 #else

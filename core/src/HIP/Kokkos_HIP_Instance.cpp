@@ -69,6 +69,23 @@ __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
 #endif
 
 namespace Kokkos {
+namespace Impl {
+Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>
+hip_global_unique_token_locks(bool deallocate) {
+  static Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace> locks =
+      Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>();
+  if (!deallocate && locks.extent(0) == 0)
+    locks = Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>(
+        "Kokkos::UniqueToken<HIP>::m_locks",
+        Kokkos::Experimental::HIP().concurrency());
+  if (deallocate)
+    locks = Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>();
+  return locks;
+}
+}  // namespace Impl
+}  // namespace Kokkos
+
+namespace Kokkos {
 namespace Experimental {
 namespace {
 class HIPInternalDevices {
@@ -403,7 +420,11 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
+
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
+    if (this == &singleton())
+      (void)Kokkos::Impl::hip_global_unique_token_locks(true);
+
     using RecordHIP =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;
 

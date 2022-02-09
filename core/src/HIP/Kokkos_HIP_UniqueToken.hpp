@@ -50,9 +50,18 @@
 #include <impl/Kokkos_SharedAlloc.hpp>
 
 namespace Kokkos {
+
+namespace Impl {
+Kokkos::View<uint32_t*, Kokkos::Experimental::HIPSpace>
+hip_global_unique_token_locks(bool deallocate = false);
+}
+
 namespace Experimental {
 
 // both global and instance Unique Tokens are implemented in the same way
+// the global version has one shared static lock array underneath
+// but it can't be a static member variable since we need to acces it on device
+// and we share the implementation with the instance version
 template <>
 class UniqueToken<HIP, UniqueTokenScope::Global> {
  protected:
@@ -62,14 +71,21 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
   using execution_space = HIP;
   using size_type       = int32_t;
 
-  explicit UniqueToken()
-      : m_locks(View<uint32_t*, HIPSpace>("Kokkos::UniqueToken::m_locks",
-                                          HIP().concurrency())) {}
-  explicit UniqueToken(execution_space const& exec)
-      : m_locks(View<uint32_t*, HIPSpace>(
-            Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"),
-            HIP().concurrency())) {}
+  explicit UniqueToken(execution_space const& = HIP())
+      : m_locks(Kokkos::Impl::hip_global_unique_token_locks()) {}
 
+ protected:
+  // These are constructors for the Instance version
+  UniqueToken(size_type max_size) {
+    m_locks = Kokkos::View<uint32_t*, HIPSpace>("Kokkos::UniqueToken::m_locks",
+                                                max_size);
+  }
+  UniqueToken(size_type max_size, execution_space const& exec) {
+    m_locks = Kokkos::View<uint32_t*, HIPSpace>(
+        Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"), max_size);
+  }
+
+ public:
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken(const UniqueToken&) = default;
 
@@ -146,18 +162,19 @@ template <>
 class UniqueToken<HIP, UniqueTokenScope::Instance>
     : public UniqueToken<HIP, UniqueTokenScope::Global> {
  public:
-  explicit UniqueToken() : UniqueToken<HIP, UniqueTokenScope::Global>() {}
+  // The instance version will forward to protected constructor which creates
+  // a lock array per instance
+  explicit UniqueToken()
+      : UniqueToken<HIP, UniqueTokenScope::Global>(
+            Kokkos::Experimental::HIP().concurrency()) {}
   explicit UniqueToken(execution_space const& arg)
-      : UniqueToken<HIP, UniqueTokenScope::Global>(arg) {}
-
-  UniqueToken(size_type max_size) {
-    m_locks =
-        View<uint32_t*, HIPSpace>("Kokkos::UniqueToken::m_locks", max_size);
-  }
-  UniqueToken(size_type max_size, execution_space const& exec) {
-    m_locks = View<uint32_t*, HIPSpace>(
-        Kokkos::view_alloc(exec, "Kokkos::UniqueToken::m_locks"), max_size);
-  }
+      : UniqueToken<HIP, UniqueTokenScope::Global>(
+            Kokkos::Experimental::HIP().concurrency(), arg) {}
+  UniqueToken(size_type max_size)
+      : UniqueToken<HIP, UniqueTokenScope::Global>(max_size) {}
+  UniqueToken(size_type max_size,
+              execution_space const& arg = execution_space())
+      : UniqueToken<HIP, UniqueTokenScope::Global>(max_size, arg) {}
 };
 
 }  // namespace Experimental
