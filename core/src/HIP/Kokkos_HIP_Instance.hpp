@@ -135,6 +135,7 @@ class HIPInternal {
   mutable int64_t m_team_scratch_current_size = 0;
   mutable void *m_team_scratch_ptr            = nullptr;
   mutable std::mutex m_team_scratch_mutex;
+  std::int32_t *m_scratch_locks;
 
   bool was_finalized = false;
 

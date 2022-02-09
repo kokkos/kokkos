@@ -568,6 +568,11 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
   }
+
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMalloc(&m_scratch_locks, sizeof(int32_t) * m_maxConcurrency));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMemset(m_scratch_locks, 0, sizeof(int32_t) * m_maxConcurrency));
 }
 
 //----------------------------------------------------------------------------
@@ -750,6 +755,9 @@ void CudaInternal::finalize() {
       m_team_scratch_current_size[i] = 0;
       m_team_scratch_ptr[i]          = nullptr;
     }
+
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratch_locks));
+    m_scratch_locks = nullptr;
   }
 
   // only destroy these if we're finalizing the singleton
