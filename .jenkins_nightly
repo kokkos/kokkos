@@ -62,7 +62,7 @@ pipeline {
                           git \
                           bc \
                           python-dev \
-                          gfrortran \
+                          gfortran \
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
                           
