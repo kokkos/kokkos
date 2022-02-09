@@ -1031,8 +1031,8 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   using T = double;
   using namespace VectorScanReducer;
 
-  constexpr int n              = 1000000;
-  constexpr int n_vector_range = 100;
+  static constexpr int n              = 1000000;
+  static constexpr int n_vector_range = 100;
   (void)n;
   (void)n_vector_range;
 
