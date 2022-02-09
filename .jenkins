@@ -26,16 +26,15 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
-                              ../gnu_generate_makefile.bash \
-                                --with-options=compiler_warnings \
-                                --cxxflags="-Werror" \
-                                --cxxstandard=c++14 \
-                                --with-cuda \
-                                --with-cuda-options=enable_lambda \
-                                --arch=Volta70 \
+                        sh '''cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_INSTALL_TESTING=ON \
                               .. && \
-                              make test -j8'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
