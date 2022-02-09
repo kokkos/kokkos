@@ -557,8 +557,9 @@ class TestReduceDynamicView {
 // FIXME_SYCL
 // FIXME_OPENMPTARGET : The feature works with LLVM/13 on NVIDIA
 // architectures. The jenkins currently tests with LLVM/12.
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-    (defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300))
+#if !defined(KOKKOS_ENABLE_SYCL) &&          \
+    (!defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+     defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300))
 TEST(TEST_CATEGORY, int64_t_reduce) {
   TestReduce<int64_t, TEST_EXECSPACE>(0);
   TestReduce<int64_t, TEST_EXECSPACE>(1000000);
