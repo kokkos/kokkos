@@ -299,7 +299,7 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(round)
 #ifndef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 #endif
-KOKKOS_IMPL_MATH_UNARY_FUNCTION(rint)
+// rint
 // lrint
 // llrint
 // Floating point manipulation functions

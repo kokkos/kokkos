@@ -369,7 +369,6 @@ DEFINE_UNARY_FUNCTION_EVAL(round, 1);
 #ifndef KOKKOS_ENABLE_SYCL
 DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 2);
 #endif
-DEFINE_UNARY_FUNCTION_EVAL(rint, 1);
 
 DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 
@@ -905,18 +904,6 @@ TEST(TEST_CATEGORY,
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(nearbyint)({12.3l, 4.56l, 789.l});
 #endif
-#endif
-
-  TEST_MATH_FUNCTION(rint)({-3, -2, -1, 0, 1});
-  TEST_MATH_FUNCTION(rint)({-3l, -2l, -1l, 0l, 1l});
-  TEST_MATH_FUNCTION(rint)({-3ll, -2ll, -1ll, 0ll, 1ll});
-  TEST_MATH_FUNCTION(rint)({2u, 3u, 4u, 5u, 6u});
-  TEST_MATH_FUNCTION(rint)({2ul, 3ul, 4ul, 5ul, 6ul});
-  TEST_MATH_FUNCTION(rint)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_MATH_FUNCTION(rint)({2.3f, 2.5f, 3.5f, -2.3f, -2.5f, -3.5f, -0.0f});
-  TEST_MATH_FUNCTION(rint)({2.3, 2.5, 3.5, -2.3, -2.5, -3.5, -0.0});
-#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(rint)({2.3l, 2.5l, 3.5l, -2.3l, -2.5l, -3.5l, -0.0l});
 #endif
 }
 
