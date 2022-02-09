@@ -301,8 +301,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
   const Functor m_functor;
 
  public:
-  SYCLFunctionWrapper(const Functor& functor, Storage& storage)
-      : m_functor(functor) {}
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
 
   const Functor& get_functor() const { return m_functor; }
 
