@@ -116,7 +116,8 @@ pipeline {
                           rm ${KEYDUMP_FILE}*
 
                           rm -rf spack && \
-                          git clone https://github.com/spack/spack.git && \
+                          git clone https://github.com/Rombur/spack.git && \
+                          cd clone && git checkout kokkos_rocm && cd .. && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack install kokkos@develop+rocm+tests && \
                           spack load cmake && \
