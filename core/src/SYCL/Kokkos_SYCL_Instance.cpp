@@ -51,6 +51,17 @@ namespace Impl {
 std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
 std::mutex SYCLInternal::mutex;
 
+Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> sycl_global_unique_token_locks(
+    bool deallocate) {
+  static Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> locks =
+      Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>();
+  if (!deallocate && locks.extent(0) == 0)
+    locks = Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
+        "Kokkos::UniqueToken<SYCL>::m_locks", SYCL().concurrency());
+  if (deallocate) locks = Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>();
+  return locks;
+}
+
 SYCLInternal::~SYCLInternal() {
   if (!was_finalized || m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
@@ -187,6 +198,10 @@ void SYCLInternal::finalize() {
                       "Kokkos::SYCLInternal::finalize: fence on finalization",
                       m_instance_id);
   was_finalized = true;
+
+  // The global_unique_token_locks array is static and should only be
+  // deallocated once by the defualt instance
+  if (this == &singleton()) Impl::sycl_global_unique_token_locks(true);
 
   using RecordSYCL = Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>;
   if (nullptr != m_scratchSpace)

@@ -52,7 +52,15 @@
 namespace Kokkos {
 namespace Experimental {
 
+namespace Impl {
+Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> sycl_global_unique_token_locks(
+    bool deallocate = false);
+}
+
 // both global and instance Unique Tokens are implemented in the same way
+// the global version has one shared static lock array underneath
+// but it can't be a static member variable since we need to acces it on device
+// and we share the implementation with the instance version
 template <>
 class UniqueToken<SYCL, UniqueTokenScope::Global> {
   Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> m_locks;
@@ -62,7 +70,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
   using size_type       = int32_t;
 
   explicit UniqueToken(execution_space const& arg = execution_space())
-      : UniqueToken(SYCL().concurrency(), arg) {}
+      : m_locks(Impl::sycl_global_unique_token_locks()) {}
 
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken(const UniqueToken&) = default;
@@ -81,6 +89,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
   size_type size() const noexcept { return m_locks.extent(0); }
 
  protected:
+  // Constructors for the Instance version
   UniqueToken(size_type max_size,
               execution_space const& arg = execution_space())
       : m_locks(Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
@@ -145,7 +154,8 @@ class UniqueToken<SYCL, UniqueTokenScope::Instance>
     : public UniqueToken<SYCL, UniqueTokenScope::Global> {
  public:
   explicit UniqueToken(execution_space const& arg = execution_space())
-      : UniqueToken<SYCL, UniqueTokenScope::Global>(arg) {}
+      : UniqueToken<SYCL, UniqueTokenScope::Global>(
+            Kokkos::Experimental::SYCL().concurrency(), arg) {}
 
   UniqueToken(size_type max_size,
               execution_space const& arg = execution_space())
