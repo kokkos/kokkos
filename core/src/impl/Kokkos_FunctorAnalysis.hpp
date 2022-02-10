@@ -314,8 +314,6 @@ struct FunctorAnalysis {
 
   //----------------------------------------
 
-  //  using candidate_type = typename FunctorValueTraits<Functor,
-  //  Tag>::value_type;
   using candidate_type = typename deduce_value_type<Functor>::type;
 
   enum {
@@ -333,10 +331,6 @@ struct FunctorAnalysis {
                                 Kokkos::DefaultExecutionSpace>::type>::type;
 
   using value_type = typename std::remove_extent<candidate_type>::type;
-  /*  static_assert(
-        std::is_same<typename FunctorValueTraits<Functor, Tag>::value_type,
-                     value_type>::value,
-        "");*/
 
   static_assert(!std::is_const<value_type>::value,
                 "Kokkos functor operator reduce argument cannot be const");
@@ -402,21 +396,6 @@ struct FunctorAnalysis {
   }
 
  private:
-  enum INTERFACE : int {
-    DISABLE           = 0,
-    NO_TAG_NOT_ARRAY  = 1,
-    NO_TAG_IS_ARRAY   = 2,
-    HAS_TAG_NOT_ARRAY = 3,
-    HAS_TAG_IS_ARRAY  = 4,
-    DEDUCED =
-        std::is_same<PatternInterface, FOR>::value
-            ? DISABLE
-            : (std::is_same<Tag, void>::value
-                   ? (candidate_is_array ? NO_TAG_IS_ARRAY : NO_TAG_NOT_ARRAY)
-                   : (candidate_is_array ? HAS_TAG_IS_ARRAY
-                                         : HAS_TAG_NOT_ARRAY))
-  };
-
   //----------------------------------------
   // parallel_reduce join operator
 
@@ -785,23 +764,6 @@ struct FunctorAnalysis {
   struct Reducer {
    private:
     Functor const* const m_functor;
-    ValueType* const m_result;
-
-    template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr
-        typename std::enable_if<IsArray,
-                                typename FunctorAnalysis::ValueType*>::type
-        ref() const noexcept {
-      return m_result;
-    }
-
-    template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr
-        typename std::enable_if<!IsArray,
-                                typename FunctorAnalysis::ValueType&>::type
-        ref() const noexcept {
-      return *m_result;
-    }
 
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<IsArray, int>::type
@@ -823,15 +785,6 @@ struct FunctorAnalysis {
     using memory_space   = MemorySpace;
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
-    using special        = void;
-
-    KOKKOS_INLINE_FUNCTION constexpr value_type* data() const noexcept {
-      return m_result;
-    }
-
-    /*KOKKOS_INLINE_FUNCTION constexpr reference_type reference() const noexcept
-    { return Reducer::template ref<candidate_is_array>();
-    }*/
 
     template <bool is_array = candidate_is_array>
     KOKKOS_INLINE_FUNCTION static std::enable_if_t<is_array, reference_type>
@@ -865,18 +818,10 @@ struct FunctorAnalysis {
       DeduceJoin<>::join(m_functor, dst, src);
     }
 
-    template <bool is_array = candidate_is_array>
-    KOKKOS_INLINE_FUNCTION std::enable_if_t<is_array, reference_type> init(
-        ValueType* const dst) const noexcept {
+    KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const
+        noexcept {
       DeduceInit<>::init(m_functor, dst);
-      return dst;
-    }
-
-    template <bool is_array = candidate_is_array>
-    KOKKOS_INLINE_FUNCTION std::enable_if_t<!is_array, reference_type> init(
-        ValueType* const dst) const noexcept {
-      DeduceInit<>::init(m_functor, dst);
-      return *dst;
+      return reference(dst);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -888,14 +833,11 @@ struct FunctorAnalysis {
     Reducer(Reducer&&)      = default;
     Reducer& operator=(Reducer const&) = delete;
     Reducer& operator=(Reducer&&) = delete;
-
-    template <class S>
-    using rebind = Reducer<S>;
+    ~Reducer()                    = default;
 
     KOKKOS_INLINE_FUNCTION explicit constexpr Reducer(
-        Functor const* arg_functor =
-            0 /*, ValueType* arg_value = nullptr*/) noexcept
-        : m_functor(arg_functor), m_result(nullptr) {}
+        Functor const* arg_functor) noexcept
+        : m_functor(arg_functor) {}
   };
 };
 

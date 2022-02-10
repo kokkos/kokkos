@@ -569,9 +569,6 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
       functor, space_type{}, returnType1, returnType2, returnTypes...);
 
   using combined_functor_type = decltype(combined_functor);
-  /*  static_assert(
-        Impl::FunctorDeclaresValueType<combined_functor_type, void>::value,
-        "value_type not properly detected");*/
   using reduce_adaptor_t =
       Impl::ParallelReduceAdaptor<PolicyType, combined_functor_type,
                                   combined_reducer_type>;
