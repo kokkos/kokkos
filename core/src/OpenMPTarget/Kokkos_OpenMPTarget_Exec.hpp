@@ -50,6 +50,7 @@
 
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
+#include <impl/Kokkos_FunctorAdapter.hpp>
 
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical reducers. It avoids hitting the code path which we wanted to
