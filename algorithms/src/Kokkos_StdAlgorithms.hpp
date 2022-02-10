@@ -66,7 +66,8 @@
 // all_of, any_of, none_of
 // adjacent_find
 // lexicographical_compare
-// search, find_first_of, find_end, search_n
+// search, search_n
+// find_first_of, find_end
 #include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
 
 // replace, replace_copy_if, replace_copy, replace_if
@@ -80,6 +81,7 @@
 // unique, unique_copy
 // rotate, rotate_copy
 // remove, remove_if, remove_copy, remove_copy_if
+// shift_left, shift_right
 #include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
 
 // is_sorted_until, is_sorted
