@@ -798,10 +798,6 @@ struct FunctorAnalysis {
       return *dst;
     }
 
-    KOKKOS_INLINE_FUNCTION constexpr reference_type reference() const noexcept {
-      return Reducer::template ref<candidate_is_array>();
-    }
-
     KOKKOS_INLINE_FUNCTION constexpr int length() const noexcept {
       return Reducer::template len<candidate_is_array>();
     }
