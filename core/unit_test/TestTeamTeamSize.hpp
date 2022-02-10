@@ -182,14 +182,22 @@ TEST(TEST_CATEGORY, team_policy_max_recommended) {
 }
 
 template <typename TeamHandleType, typename ReducerValueType>
-struct SomeFunctorThatDoesNotDoMuchButCertainlyNotCallPrintf {
+struct MinMaxTeamLeagueRank {
   KOKKOS_FUNCTION void operator()(const TeamHandleType& team,
-                                  ReducerValueType&) const {}
+                                  ReducerValueType& update) const {
+    int const x = team.league_rank();
+    if (x < update.min_val) {
+      update.min_val = x;
+    }
+    if (x > update.max_val) {
+      update.max_val = x;
+    }
+  }
 };
 
 TEST(TEST_CATEGORY, team_policy_minmax_scalar_without_plus_equal_k) {
   using ExecSpace           = TEST_EXECSPACE;
-  using ReducerType         = Kokkos::MinMax<double, Kokkos::HostSpace>;
+  using ReducerType         = Kokkos::MinMax<int, Kokkos::HostSpace>;
   using ReducerValueType    = typename ReducerType::value_type;
   using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
   using TeamPolicyType = Kokkos::TeamPolicy<ExecSpace, DynamicScheduleType>;
@@ -200,11 +208,11 @@ TEST(TEST_CATEGORY, team_policy_minmax_scalar_without_plus_equal_k) {
   ReducerType reducer(val);
 
   TeamPolicyType p(num_teams, Kokkos::AUTO);
-  SomeFunctorThatDoesNotDoMuchButCertainlyNotCallPrintf<TeamHandleType,
-                                                        ReducerValueType>
-      f1;
+  MinMaxTeamLeagueRank<TeamHandleType, ReducerValueType> f1;
 
   Kokkos::parallel_reduce(p, f1, reducer);
+  ASSERT_EQ(val.min_val, 0);
+  ASSERT_EQ(val.max_val, num_teams - 1);
 }
 
 }  // namespace Test
