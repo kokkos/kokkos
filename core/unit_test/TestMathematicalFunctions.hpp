@@ -427,8 +427,6 @@ struct TestMathUnaryFunction : FloatingPointComparison {
   Arg val_[N];
   Ret res_[N];
   TestMathUnaryFunction(const Arg (&val)[N]) {
-    std::cout << math_function_name<Func>::name << "("
-              << type_helper<Arg>::name() << ")\n";
     std::copy(val, val + N, val_);
     std::transform(val, val + N, res_,
                    [](auto x) { return Func::eval_std(x); });
@@ -437,7 +435,9 @@ struct TestMathUnaryFunction : FloatingPointComparison {
   void run() {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
-    ASSERT_EQ(errors, 0);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int i, int& e) const {
     bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
@@ -468,15 +468,15 @@ struct TestMathBinaryFunction : FloatingPointComparison {
   Ret res_;
   TestMathBinaryFunction(Arg1 val1, Arg2 val2)
       : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
-    std::cout << math_function_name<Func>::name << "("
-              << type_helper<Arg1>::name() << ", " << type_helper<Arg2>::name()
-              << ")\n";
     run();
   }
   void run() {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
-    ASSERT_EQ(errors, 0);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
