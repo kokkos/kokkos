@@ -69,7 +69,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
   using execution_space = SYCL;
   using size_type       = int32_t;
 
-  explicit UniqueToken(execution_space const& arg = execution_space())
+  explicit UniqueToken(execution_space const& = execution_space())
       : m_locks(Impl::sycl_global_unique_token_locks()) {}
 
   KOKKOS_DEFAULTED_FUNCTION
