@@ -491,18 +491,10 @@ class HostThreadTeamMember {
   //--------------------------------------------------------------------------
 
   template <typename T>
-<<<<<<< HEAD
   KOKKOS_INLINE_FUNCTION void team_broadcast(T& value,
                                              const int source_team_rank) const
       noexcept {
     KOKKOS_IF_ON_HOST((if (1 < m_data.m_team_size) {
-=======
-  KOKKOS_INLINE_FUNCTION void team_broadcast(
-      T& value, const int source_team_rank) const noexcept
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  {
-    if (1 < m_data.m_team_size) {
->>>>>>> MD Team Policies Impl
       T volatile* const shared_value = (T*)m_data.team_reduce();
 
       // Don't overwrite shared memory until all threads arrive
@@ -529,19 +521,11 @@ class HostThreadTeamMember {
   //--------------------------------------------------------------------------
 
   template <class Closure, typename T>
-<<<<<<< HEAD
   KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, T& value,
                                              const int source_team_rank) const
       noexcept {
     KOKKOS_IF_ON_HOST((
         T volatile* const shared_value = (T*)m_data.team_reduce();
-=======
-  KOKKOS_INLINE_FUNCTION void team_broadcast(
-      Closure const& f, T& value, const int source_team_rank) const noexcept
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  {
-    T volatile* const shared_value = (T*)m_data.team_reduce();
->>>>>>> MD Team Policies Impl
 
         // Don't overwrite shared memory until all threads arrive
 
