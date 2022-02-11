@@ -596,8 +596,6 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(long double, max_exponent10);
   static_assert(Kokkos::Experimental::TRAIT<T>::value !=                       \
                     Kokkos::Experimental::TRAIT<T>::value,                     \
                 "");                                                           \
-  static_assert(                                                               \
-      std::numeric_limits<T>::TRAIT() != std::numeric_limits<T>::TRAIT(), ""); \
   static_assert(Kokkos::Experimental::TRAIT<T>::value !=                       \
                     std::numeric_limits<T>::TRAIT(),                           \
                 "")
