@@ -76,7 +76,8 @@ pipeline {
                           rm ${KEYDUMP_FILE}*
 
                           rm -rf spack && \
-                          git clone https://github.com/spack/spack.git && \
+                          git clone https://github.com/Rombur/spack.git && \
+                          cd spack && git checkout kokkos_rocm && cd .. && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack spec kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
                           spack install -v kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
