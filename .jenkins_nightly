@@ -121,7 +121,7 @@ pipeline {
                           cd spack && git checkout kokkos_rocm && cd .. && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack spec kokkos@develop+rocm+tests amdgpu_target=gfx908 && \
-                          spack install kokkos@develop+rocm+tests -v amdgpu_target=gfx908 && \
+                          spack install -v kokkos@develop+rocm+tests amdgpu_target=gfx908 && \
                           spack load cmake && \
                           spack test run kokkos && \
                           spack test results -l
