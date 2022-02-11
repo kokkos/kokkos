@@ -3,6 +3,9 @@ project(SpackTestGen)
 set(TEST_LIST_DEF ${CMAKE_CURRENT_SOURCE_DIR}/test_list.def)
 file(STRINGS ${TEST_LIST_DEF} TEST_FILES)
 
+set(CMAKE_CXX_STANDARD ${Kokkos_CXX_STANDARD})
+message(STATUS "C++ standard AAAAA ${Kokkos_CXX_STANDARD}")
+
 #Copy test source to Spack test directory
 foreach (TEST_FILE ${TEST_FILES})
   set(TEST_FILE_LOCATION ${SPACK_PACKAGE_SOURCE_DIR}/${TEST_FILE})
