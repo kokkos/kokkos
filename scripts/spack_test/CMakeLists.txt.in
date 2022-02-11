@@ -11,6 +11,7 @@ math(EXPR LEN "${LEN}-1")
 
 set(CMAKE_CXX_COMPILER ${Kokkos_CXX_COMPILER})
 set(CMAKE_CXX_STANDARD ${Kokkos_CXX_STANDARD})
+message(STATUS "C++ standard ${Kokkos_CXX_STANDARD}")
 
 foreach (it RANGE ${LEN}) 
   list(GET SRC_NAME_LIST ${it} src) 
