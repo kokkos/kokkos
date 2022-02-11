@@ -302,8 +302,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
 //----------------------------------------------------------------------------
 
 CudaInternal::~CudaInternal() {
-  if (m_stream || m_scratchSpace || m_scratchFlags || m_scratchUnified ||
-      m_scratchConcurrentBitset) {
+  if (m_stream || m_scratchSpace || m_scratchFlags || m_scratchUnified) {
     std::cerr << "Kokkos::Cuda ERROR: Failed to call Kokkos::Cuda::finalize()"
               << std::endl;
   }
@@ -323,7 +322,6 @@ CudaInternal::~CudaInternal() {
   m_scratchSpace            = nullptr;
   m_scratchFlags            = nullptr;
   m_scratchUnified          = nullptr;
-  m_scratchConcurrentBitset = nullptr;
   m_stream                  = nullptr;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -501,11 +499,6 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
                            sizeof(uint32_t) * buffer_bound);
 
       Record::increment(r);
-
-      m_scratchConcurrentBitset = reinterpret_cast<uint32_t *>(r->data());
-
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(m_scratchConcurrentBitset, 0,
-                                            sizeof(uint32_t) * buffer_bound));
     }
     //----------------------------------
 
@@ -732,7 +725,6 @@ void CudaInternal::finalize() {
     RecordCuda::decrement(RecordCuda::get_record(m_scratchFlags));
     RecordCuda::decrement(RecordCuda::get_record(m_scratchSpace));
     RecordHost::decrement(RecordHost::get_record(m_scratchUnified));
-    RecordCuda::decrement(RecordCuda::get_record(m_scratchConcurrentBitset));
     if (m_scratchFunctorSize > 0)
       RecordCuda::decrement(RecordCuda::get_record(m_scratchFunctor));
 
@@ -744,20 +736,19 @@ void CudaInternal::finalize() {
     if (m_manage_stream && m_stream != nullptr)
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(m_stream));
 
-    m_cudaDev                 = -1;
-    m_multiProcCount          = 0;
-    m_maxWarpCount            = 0;
-    m_maxBlock                = {0, 0, 0};
-    m_maxSharedWords          = 0;
-    m_scratchSpaceCount       = 0;
-    m_scratchFlagsCount       = 0;
-    m_scratchUnifiedCount     = 0;
-    m_streamCount             = 0;
-    m_scratchSpace            = nullptr;
-    m_scratchFlags            = nullptr;
-    m_scratchUnified          = nullptr;
-    m_scratchConcurrentBitset = nullptr;
-    m_stream                  = nullptr;
+    m_cudaDev             = -1;
+    m_multiProcCount      = 0;
+    m_maxWarpCount        = 0;
+    m_maxBlock            = {0, 0, 0};
+    m_maxSharedWords      = 0;
+    m_scratchSpaceCount   = 0;
+    m_scratchFlagsCount   = 0;
+    m_scratchUnifiedCount = 0;
+    m_streamCount         = 0;
+    m_scratchSpace        = nullptr;
+    m_scratchFlags        = nullptr;
+    m_scratchUnified      = nullptr;
+    m_stream              = nullptr;
     for (int i = 0; i < m_n_team_scratch; ++i) {
       m_team_scratch_current_size[i] = 0;
       m_team_scratch_ptr[i]          = nullptr;

@@ -152,25 +152,24 @@ void HIPInternal::print_configuration(std::ostream &s) const {
 //----------------------------------------------------------------------------
 
 HIPInternal::~HIPInternal() {
-  if (m_scratchSpace || m_scratchFlags || m_scratchConcurrentBitset) {
+  if (m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::HIP ERROR: Failed to call "
                  "Kokkos::Experimental::HIP::finalize()"
               << std::endl;
     std::cerr.flush();
   }
 
-  m_hipDev                  = -1;
-  m_hipArch                 = -1;
-  m_multiProcCount          = 0;
-  m_maxWarpCount            = 0;
-  m_maxSharedWords          = 0;
-  m_maxShmemPerBlock        = 0;
-  m_scratchSpaceCount       = 0;
-  m_scratchFlagsCount       = 0;
-  m_scratchSpace            = nullptr;
-  m_scratchFlags            = nullptr;
-  m_scratchConcurrentBitset = nullptr;
-  m_stream                  = nullptr;
+  m_hipDev            = -1;
+  m_hipArch           = -1;
+  m_multiProcCount    = 0;
+  m_maxWarpCount      = 0;
+  m_maxSharedWords    = 0;
+  m_maxShmemPerBlock  = 0;
+  m_scratchSpaceCount = 0;
+  m_scratchFlagsCount = 0;
+  m_scratchSpace      = nullptr;
+  m_scratchFlags      = nullptr;
+  m_stream            = nullptr;
 }
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
@@ -306,11 +305,6 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
                                          sizeof(uint32_t) * buffer_bound);
 
       Record::increment(r);
-
-      m_scratchConcurrentBitset = reinterpret_cast<uint32_t *>(r->data());
-
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchConcurrentBitset, 0,
-                                          sizeof(uint32_t) * buffer_bound));
     }
     //----------------------------------
 
@@ -430,7 +424,6 @@ void HIPInternal::finalize() {
 
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
-    RecordHIP::decrement(RecordHIP::get_record(m_scratchConcurrentBitset));
 
     if (m_team_scratch_current_size > 0)
       Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
@@ -449,7 +442,6 @@ void HIPInternal::finalize() {
     m_scratchFlagsCount         = 0;
     m_scratchSpace              = nullptr;
     m_scratchFlags              = nullptr;
-    m_scratchConcurrentBitset   = nullptr;
     m_stream                    = nullptr;
     m_team_scratch_current_size = 0;
     m_team_scratch_ptr          = nullptr;
