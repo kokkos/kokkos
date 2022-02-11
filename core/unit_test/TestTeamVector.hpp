@@ -1033,8 +1033,6 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
 
   static constexpr int n              = 1000000;
   static constexpr int n_vector_range = 100;
-  (void)n;
-  (void)n_vector_range;
 
   checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
             Kokkos::Prod<T, TEST_EXECSPACE>>()
