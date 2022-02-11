@@ -1537,7 +1537,7 @@ class View : public ViewTraits<DataType, Properties...> {
       Impl::runtime_check_rank(
           traits::rank_dynamic,
           std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
-          i3, i4, i5, i6, i7, alloc_name.c_str());
+          i3, i4, i5, i6, i7, alloc_name);
     }
 
 //------------------------------------------------------------
