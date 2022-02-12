@@ -90,8 +90,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
 
  protected:
   // Constructors for the Instance version
-  UniqueToken(size_type max_size,
-              execution_space const& arg = execution_space())
+  UniqueToken(size_type max_size, execution_space const& arg)
       : m_locks(Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
             Kokkos::view_alloc(arg, "Kokkos::UniqueToken::m_locks"),
             max_size)) {}
@@ -108,13 +107,13 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
     std::size_t blockDim[3] = {item.get_local_range(2), item.get_local_range(1),
                                item.get_local_range(0)};
 
-    int idx = (blockIdx[0] * (blockDim[0] * blockDim[1]) +
-               threadIdx[1] * blockDim[0] + threadIdx[0]) %
-              size();
+    int idx = blockIdx[0] * (blockDim[0] * blockDim[1]) +
+              threadIdx[1] * blockDim[0] + threadIdx[0];
+    idx %= size();
 
     while (Kokkos::atomic_compare_exchange(&m_locks(idx), 0, 1) == 1) {
       idx += blockDim[1] * blockDim[0] + 1;
-      idx = idx % size();
+      idx %= size();
     }
 
     // Make sure that all writes in the previous lock owner are visible to me
@@ -157,8 +156,11 @@ class UniqueToken<SYCL, UniqueTokenScope::Instance>
       : UniqueToken<SYCL, UniqueTokenScope::Global>(
             Kokkos::Experimental::SYCL().concurrency(), arg) {}
 
-  UniqueToken(size_type max_size,
-              execution_space const& arg = execution_space())
+  explicit UniqueToken(size_type max_size)
+      : UniqueToken<SYCL, UniqueTokenScope::Global>(max_size,
+                                                    execution_space()) {}
+
+  UniqueToken(size_type max_size, execution_space const& arg)
       : UniqueToken<SYCL, UniqueTokenScope::Global>(max_size, arg) {}
 };
 
