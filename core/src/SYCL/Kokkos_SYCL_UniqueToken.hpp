@@ -90,6 +90,10 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
 
  protected:
   // Constructors for the Instance version
+  UniqueToken(size_type max_size)
+      : m_locks(Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
+            "Kokkos::UniqueToken::m_locks", max_size)) {}
+
   UniqueToken(size_type max_size, execution_space const& arg)
       : m_locks(Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
             Kokkos::view_alloc(arg, "Kokkos::UniqueToken::m_locks"),
@@ -152,7 +156,11 @@ template <>
 class UniqueToken<SYCL, UniqueTokenScope::Instance>
     : public UniqueToken<SYCL, UniqueTokenScope::Global> {
  public:
-  explicit UniqueToken(execution_space const& arg = execution_space())
+  UniqueToken()
+      : UniqueToken<SYCL, UniqueTokenScope::Global>(
+            Kokkos::Experimental::SYCL().concurrency()) {}
+
+  explicit UniqueToken(execution_space const& arg)
       : UniqueToken<SYCL, UniqueTokenScope::Global>(
             Kokkos::Experimental::SYCL().concurrency(), arg) {}
 
