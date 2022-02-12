@@ -115,7 +115,6 @@ class CudaInternal {
   mutable size_type* m_scratchFlags;
   mutable size_type* m_scratchUnified;
   mutable size_type* m_scratchFunctor;
-  uint32_t* m_scratchConcurrentBitset;
   cudaStream_t m_stream;
   uint32_t m_instance_id;
   bool m_manage_stream;
@@ -184,7 +183,6 @@ class CudaInternal {
         m_scratchFlags(nullptr),
         m_scratchUnified(nullptr),
         m_scratchFunctor(nullptr),
-        m_scratchConcurrentBitset(nullptr),
         m_stream(nullptr),
         m_instance_id(
             Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(
