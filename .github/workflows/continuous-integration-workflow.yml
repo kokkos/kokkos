@@ -75,12 +75,15 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
       - name: Build
         run: |
+          source /opt/intel/oneapi/setvars.sh
           ccache -z
           cmake --build builddir --parallel 2
           ccache -s
       - name: Tests
         working-directory: builddir
-        run: ctest --output-on-failure
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          ctest --output-on-failure
       - name: Test DESTDIR Install
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install
@@ -88,6 +91,7 @@ jobs:
       - name: Test install
         working-directory: example/build_cmake_installed
         run: |
+          source /opt/intel/oneapi/setvars.sh
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir
           cmake --build builddir --target test
