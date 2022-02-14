@@ -165,8 +165,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Instance>
             Kokkos::Experimental::SYCL().concurrency(), arg) {}
 
   explicit UniqueToken(size_type max_size)
-      : UniqueToken<SYCL, UniqueTokenScope::Global>(max_size,
-                                                    execution_space()) {}
+      : UniqueToken<SYCL, UniqueTokenScope::Global>(max_size) {}
 
   UniqueToken(size_type max_size, execution_space const& arg)
       : UniqueToken<SYCL, UniqueTokenScope::Global>(max_size, arg) {}
