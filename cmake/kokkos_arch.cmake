@@ -671,6 +671,11 @@ IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
   SET(KOKKOS_ARCH_AMPERE ON)
 ENDIF()
 
+#Regardless of version, make sure we define the general architecture name
+IF (KOKKOS_ARCH_VEGA900 OR KOKKOS_ARCH_VEGA906 OR KOKKOS_ARCH_VEGA908 OR KOKKOS_ARCH_VEGA90A)
+  SET(KOKKOS_ARCH_VEGA ON)
+ENDIF()
+
 #CMake verbose is kind of pointless
 #Let's just always print things
 MESSAGE(STATUS "Built-in Execution Spaces:")
