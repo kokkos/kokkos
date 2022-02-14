@@ -52,7 +52,7 @@ jobs:
           restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{github.ref}}
       - name: maybe_install_opencl
         if: ${{ matrix.cxx == 'icpx' }}
-        run: sudo yum -y install ocl-icd
+        run: sudo yum -y install ocl-icd procps
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
@@ -73,13 +73,25 @@ jobs:
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
-      - name: Build
+      - name: Build(non-icpx)
+        if: ${{ matrix.cxx != 'icpx' }}
+        run: |
+          ccache -z
+          cmake --build builddir --parallel 2
+          ccache -s
+      - name: Tests(non-icpx)
+        if: ${{ matrix.cxx != 'icpx' }}
+        working-directory: builddir
+        run: ctest --output-on-failure
+      - name: Build(icpx)
+        if: ${{ matrix.cxx == 'icpx' }}
         run: |
           source /opt/intel/oneapi/setvars.sh
           ccache -z
           cmake --build builddir --parallel 2
           ccache -s
-      - name: Tests
+      - name: Tests(icpx)
+        if: ${{ matrix.cxx == 'icpx' }}
         working-directory: builddir
         run: |
           source /opt/intel/oneapi/setvars.sh
@@ -88,10 +100,19 @@ jobs:
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install
         run: sudo cmake --build builddir --target install
-      - name: Test install
+      - name: Test install(non-icpx)
+        if: ${{ matrix.cxx != 'icpx' }}
+        working-directory: example/build_cmake_installed
+        run: |
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake --build builddir
+          cmake --build builddir --target test
+      - name: Test install(icpx)
+        if: ${{ matrix.cxx == 'icpx' }}
         working-directory: example/build_cmake_installed
         run: |
           source /opt/intel/oneapi/setvars.sh
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir
           cmake --build builddir --target test
+
