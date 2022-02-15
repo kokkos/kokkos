@@ -82,6 +82,8 @@ pipeline {
                           spack spec kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
                           spack install -v kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
                           spack load cmake && \
+                          spack load kokkos-nvcc-wrapper && \
+                          spack load kokkos && \
                           spack test run kokkos && \
                           spack test results -l
                           '''
@@ -125,6 +127,7 @@ pipeline {
                           spack spec kokkos@develop+rocm+tests amdgpu_target=gfx908 && \
                           spack install -v kokkos@develop+rocm+tests amdgpu_target=gfx908 && \
                           spack load cmake && \
+                          spack load kokkos && \
                           spack test run kokkos && \
                           spack test results -l
                           '''
