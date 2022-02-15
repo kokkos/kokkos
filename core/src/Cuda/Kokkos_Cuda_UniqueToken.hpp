@@ -170,16 +170,15 @@ class UniqueToken<Cuda, UniqueTokenScope::Instance>
  public:
   // The instance version will forward to protected constructor which creates
   // a lock array per instance
-  explicit UniqueToken()
+  UniqueToken()
       : UniqueToken<Cuda, UniqueTokenScope::Global>(
             Kokkos::Cuda().concurrency()) {}
   explicit UniqueToken(execution_space const& arg)
       : UniqueToken<Cuda, UniqueTokenScope::Global>(
             Kokkos::Cuda().concurrency(), arg) {}
-  UniqueToken(size_type max_size)
+  explicit UniqueToken(size_type max_size)
       : UniqueToken<Cuda, UniqueTokenScope::Global>(max_size) {}
-  UniqueToken(size_type max_size,
-              execution_space const& arg = execution_space())
+  UniqueToken(size_type max_size, execution_space const& arg)
       : UniqueToken<Cuda, UniqueTokenScope::Global>(max_size, arg) {}
 };
 

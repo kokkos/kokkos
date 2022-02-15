@@ -78,11 +78,10 @@ class SYCLInternal {
   uint32_t m_maxConcurrency   = 0;
   uint64_t m_maxShmemPerBlock = 0;
 
-  uint32_t* m_scratchConcurrentBitset = nullptr;
-  std::size_t m_scratchSpaceCount     = 0;
-  size_type* m_scratchSpace           = nullptr;
-  std::size_t m_scratchFlagsCount     = 0;
-  size_type* m_scratchFlags           = nullptr;
+  std::size_t m_scratchSpaceCount = 0;
+  size_type* m_scratchSpace       = nullptr;
+  std::size_t m_scratchFlagsCount = 0;
+  size_type* m_scratchFlags       = nullptr;
   // mutex to access shared memory
   mutable std::mutex m_mutexScratchSpace;
 
