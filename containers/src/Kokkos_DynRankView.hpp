@@ -1701,6 +1701,24 @@ auto as_view_of_rank_n(DynRankView<T, Args...> v) {
   return View<typename RankDataType<T, N>::type, Args...>(v.data(), v.layout());
 }
 
+template <typename Function, typename... Args>
+void apply_to_view_of_static_rank(Function&& f, DynRankView<Args...> a) {
+  switch (rank(a)) {
+    case 0: f(as_view_of_rank_n<0>(a)); break;
+    case 1: f(as_view_of_rank_n<1>(a)); break;
+    case 2: f(as_view_of_rank_n<2>(a)); break;
+    case 3: f(as_view_of_rank_n<3>(a)); break;
+    case 4: f(as_view_of_rank_n<4>(a)); break;
+    case 5: f(as_view_of_rank_n<5>(a)); break;
+    case 6: f(as_view_of_rank_n<6>(a)); break;
+    case 7: f(as_view_of_rank_n<7>(a)); break;
+    default:
+      Kokkos::Impl::throw_runtime_exception(
+          "Trying to apply a function to a view of unexpected rank " +
+          std::to_string(rank(a)));
+  }
+}
+
 }  // namespace Impl
 
 /** \brief  Deep copy a value from Host memory into a view.  */
@@ -1716,21 +1734,8 @@ inline void deep_copy(
                    typename ViewTraits<DT, DP...>::value_type>::value,
       "deep_copy requires non-const type");
 
-  switch (dst.rank()) {
-    case 0: deep_copy(e, Impl::as_view_of_rank_n<0>(dst), value); break;
-    case 1: deep_copy(e, Impl::as_view_of_rank_n<1>(dst), value); break;
-    case 2: deep_copy(e, Impl::as_view_of_rank_n<2>(dst), value); break;
-    case 3: deep_copy(e, Impl::as_view_of_rank_n<3>(dst), value); break;
-    case 4: deep_copy(e, Impl::as_view_of_rank_n<4>(dst), value); break;
-    case 5: deep_copy(e, Impl::as_view_of_rank_n<5>(dst), value); break;
-    case 6: deep_copy(e, Impl::as_view_of_rank_n<6>(dst), value); break;
-    case 7: deep_copy(e, Impl::as_view_of_rank_n<7>(dst), value); break;
-    default:
-      Kokkos::Impl::throw_runtime_exception(
-          "Calling deep_copy with a destination DynRankView of unexpected "
-          "rank " +
-          std::to_string(dst.rank()));
-  }
+  Impl::apply_to_view_of_static_rank(
+      [=](auto view) { deep_copy(e, view, value); }, dst);
 }
 
 template <class DT, class... DP>
@@ -1740,21 +1745,8 @@ inline void deep_copy(
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
-  switch (dst.rank()) {
-    case 0: deep_copy(Impl::as_view_of_rank_n<0>(dst), value); break;
-    case 1: deep_copy(Impl::as_view_of_rank_n<1>(dst), value); break;
-    case 2: deep_copy(Impl::as_view_of_rank_n<2>(dst), value); break;
-    case 3: deep_copy(Impl::as_view_of_rank_n<3>(dst), value); break;
-    case 4: deep_copy(Impl::as_view_of_rank_n<4>(dst), value); break;
-    case 5: deep_copy(Impl::as_view_of_rank_n<5>(dst), value); break;
-    case 6: deep_copy(Impl::as_view_of_rank_n<6>(dst), value); break;
-    case 7: deep_copy(Impl::as_view_of_rank_n<7>(dst), value); break;
-    default:
-      Kokkos::Impl::throw_runtime_exception(
-          "Calling deep_copy with a destination DynRankView of unexpected "
-          "rank " +
-          std::to_string(dst.rank()));
-  }
+  Impl::apply_to_view_of_static_rank([=](auto view) { deep_copy(view, value); },
+                                     dst);
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */

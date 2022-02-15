@@ -47,6 +47,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
+#include <Kokkos_DynRankView.hpp>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -512,6 +513,36 @@ void test_random(unsigned int num_draws) {
   test_random_scalar<RandomGenerator, double> test_double(
       density_1d, density_3d, pool, num_draws);
 }
+
+template <class ExecutionSpace, class Pool>
+struct TestDynRankView {
+  using ReducerType      = Kokkos::MinMax<double, Kokkos::HostSpace>;
+  using ReducerValueType = typename ReducerType::value_type;
+
+  Kokkos::DynRankView<double, ExecutionSpace> A;
+
+  TestDynRankView(int n) : A("a", n) {}
+
+  KOKKOS_FUNCTION void operator()(int i, ReducerValueType& update) const {
+    if (A(i) < update.min_val) update.min_val = A(i);
+    if (A(i) > update.max_val) update.max_val = A(i);
+  }
+
+  void run() {
+    Pool random(13);
+    double min = 10.;
+    double max = 100.;
+    Kokkos::fill_random(A, random, min, max);
+
+    ReducerValueType val;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, A.size()),
+                            *this, ReducerType(val));
+
+    Kokkos::fence();
+    ASSERT_GE(val.min_val, min);
+    ASSERT_LE(val.max_val, max);
+  }
+};
 }  // namespace Impl
 
 template <typename ExecutionSpace>
@@ -526,6 +557,9 @@ void test_random_xorshift64() {
   Impl::test_random<Kokkos::Random_XorShift64_Pool<
       Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
+  Impl::TestDynRankView<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000)
+      .run();
 }
 
 template <typename ExecutionSpace>
@@ -541,6 +575,9 @@ void test_random_xorshift1024() {
   Impl::test_random<Kokkos::Random_XorShift1024_Pool<
       Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
+  Impl::TestDynRankView<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(10000)
+      .run();
 }
 }  // namespace Test
 
