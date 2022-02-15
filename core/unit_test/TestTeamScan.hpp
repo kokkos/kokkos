@@ -49,28 +49,6 @@
 #include <sstream>
 #include <type_traits>
 
-#if defined(__clang__)
-#define is_clang true
-#else
-#define is_clang false
-#endif
-
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-// for avoid pre-processor block
-namespace Kokkos {
-namespace Experimental {
-class OpenMPTarget;
-}
-}  // namespace Kokkos
-#endif
-
-#if !defined(KOKKOS_ENABLE_CUDA)
-// for avoid pre-processor block
-namespace Kokkos {
-class Cuda;
-}  // namespace Kokkos
-#endif
-
 namespace Test {
 
 template <class ExecutionSpace, class DataType>
