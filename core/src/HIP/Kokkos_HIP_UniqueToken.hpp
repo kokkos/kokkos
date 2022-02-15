@@ -103,8 +103,8 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
   size_type size() const noexcept { return m_locks.extent(0); }
 
  private:
-  KOKKOS_INLINE_FUNCTION
-  size_type impl_acquire() const {
+  // FIXME_HIP
+  KOKKOS_INLINE_FUNCTION size_type impl_acquire() const {
     int idx = blockIdx.x * (blockDim.x * blockDim.y) +
               threadIdx.y * blockDim.x + threadIdx.x;
     idx                            = idx % size();
