@@ -880,36 +880,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   }
 }
 
-template <Kokkos::Iterate direction, typename iType, typename TeamMemberType,
-          typename Closure>
-KOKKOS_INLINE_FUNCTION void operator_impl(
-    Impl::MDTeamThreadRangeBoundariesStruct<
-        direction, 2, iType, TeamMemberType> const& loop_boundaries,
-    Closure const& closure,
-    typename std::enable_if<
-        Impl::is_host_thread_team_member<TeamMemberType>::value>::type const** =
-        nullptr) {
-  if (direction == Kokkos::Iterate::Right) {
-    for (iType i = 0; i < loop_boundaries.threadDims[0]; ++i) {
-      for (iType j = 0; j < loop_boundaries.threadDims[1]; ++j) {
-        closure(i, j);
-      }
-    }
-  } else if (direction == Kokkos::Iterate::Left) {
-    for (iType i = loop_boundaries.threadDims[0]; i > 0;) {
-      --i;
-      auto l = [&](auto&& j) { closure(i, j); };
-      for (iType j = 0; j < loop_boundaries.threadDims[1]; ++j) {
-        closure(i, j);
-      }
-    }
-  } else {
-    Kokkos::abort(
-        "direction must be either Kokkos::Iterate::Left or "
-        "Kokkos::Iterator::Right");
-  }
-}
-
 template <size_t RemainingRank>
 struct ParallelForMDTeamThreadRangeHostImpl {
  private:

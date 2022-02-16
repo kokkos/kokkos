@@ -858,7 +858,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_3D_MDTeamThreadRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType***, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType***, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -905,7 +905,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDTeamThreadRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -954,7 +954,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_5D_MDTeamThreadRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1004,7 +1004,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_6D_MDTeamThreadRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1058,7 +1058,7 @@ struct TestMDTeamParallelReduce {
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDThreadVectorRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1117,7 +1117,7 @@ struct TestMDTeamParallelReduce {
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_5D_MDThreadVectorRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1178,7 +1178,7 @@ struct TestMDTeamParallelReduce {
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_6D_MDThreadVectorRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1241,7 +1241,7 @@ struct TestMDTeamParallelReduce {
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDTeamVectorRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1295,7 +1295,7 @@ struct TestMDTeamParallelReduce {
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_5D_MDTeamVectorRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1350,7 +1350,7 @@ struct TestMDTeamParallelReduce {
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_6D_MDTeamVectorRange(
       int* dims, const int initValue) {
-    using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
+    using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
     int leagueSize = dims[0];
     int n0         = dims[1];
@@ -1419,7 +1419,8 @@ constexpr auto Right = Kokkos::Iterate::Right;
 TEST(TEST_CATEGORY, MDTeamParallelFor) {
   using namespace MDTeamParallelism;
   // int dims[] = {16, 16, 16, 16, 16, 16, 16, 16};
-  int dims[]          = {4, 4, 4, 4, 4, 4, 4, 4};
+  int dims[] = {4, 4, 4, 4, 4, 4, 4, 4};
+
   const int initValue = 5;
 
   {
@@ -1556,7 +1557,7 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
     TestMDTeamParallelFor<TEST_EXECSPACE>::
         test_parallel_for_8D_MDTeamVectorRange<Right, Right>(dims, initValue);
   }
-}
+}  // namespace Test
 
 TEST(TEST_CATEGORY, MDTeamParallelReduce) {
   using namespace MDTeamParallelism;
