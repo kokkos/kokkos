@@ -87,8 +87,6 @@ template <class T, class U>
 using promote_2_t = typename promote_2<T, U>::type;
 }  // namespace Impl
 
-namespace Experimental {
-
 // NOTE long double overloads are not available on the device
 
 #if defined(KOKKOS_ENABLE_SYCL)
@@ -128,6 +126,11 @@ namespace Experimental {
   FUNC(T x) {                                                                 \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
     return FUNC(static_cast<double>(x));                                      \
+  }                                                                           \
+  namespace Experimental {                                                    \
+  using ::Kokkos::FUNC;                                                       \
+  using ::Kokkos::FUNC##f;                                                    \
+  using ::Kokkos::FUNC##l;                                                    \
   }
 
 // isinf, isnan, and isinfinite do not work on Windows with CUDA with std::
@@ -145,6 +148,9 @@ namespace Experimental {
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, bool> \
   FUNC(T x) {                                                               \
     return ::FUNC(static_cast<double>(x));                                  \
+  }                                                                         \
+  namespace Experimental {                                                  \
+  using ::Kokkos::FUNC;                                                     \
   }
 #else
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                              \
@@ -165,7 +171,11 @@ namespace Experimental {
   FUNC(T x) {                                                               \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
     return FUNC(static_cast<double>(x));                                    \
+  }                                                                         \
+  namespace Experimental {                                                  \
+  using ::Kokkos::FUNC;                                                     \
   }
+
 #endif
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)                          \
@@ -211,6 +221,11 @@ namespace Experimental {
     static_assert(std::is_same<Promoted, long double>::value, "");      \
     using std::FUNC;                                                    \
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));    \
+  }                                                                     \
+  namespace Experimental {                                              \
+  using ::Kokkos::FUNC;                                                 \
+  using ::Kokkos::FUNC##f;                                              \
+  using ::Kokkos::FUNC##l;                                              \
   }
 
 // Basic operations
@@ -238,6 +253,9 @@ inline long double abs(long double x) {
   using std::abs;
   return abs(x);
 }
+namespace Experimental {
+using ::Kokkos::abs;
+}
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
@@ -256,6 +274,11 @@ KOKKOS_INLINE_FUNCTION float nanf(char const*) { return sycl::nan(0u); }
 KOKKOS_INLINE_FUNCTION double nan(char const*) { return sycl::nan(0ul); }
 #endif
 inline long double nanl(char const* arg) { return ::nanl(arg); }
+namespace Experimental {
+using ::Kokkos::nan;
+using ::Kokkos::nanf;
+using ::Kokkos::nanl;
+}  // namespace Experimental
 // Power functions
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(pow)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sqrt)
@@ -307,7 +330,6 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
 
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif
