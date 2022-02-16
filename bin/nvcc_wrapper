@@ -255,7 +255,7 @@ do
   # -Werror not followed by any kind as mentioned above goes to host compiler without any arguments
   -Werror)
     if [ $# -gt 1 ]; then
-      kinds=(${2//,/ })
+      IFS="," read -r -a kinds <<< "$2"
       first_kind=${kinds[0]}
       # check if the first kind is one of the allowed ones, then this must be an nvcc list so put all of them to the cuda compiler
       case $first_kind in
@@ -276,8 +276,8 @@ do
     ;;
   # -Werror=kind,... will be split into two parts, those kinds that belong to nvcc (see above) go there, while all others go towards the host compiler
   -Werror=*)
-    kinds_str=(${1:8}) # strip -Werror=
-    kinds=(${kinds_str//,/ })
+    kinds_str="${1:8}" # strip -Werror=
+    IFS="," read -r -a kinds <<< ${kinds_str}
     first_werror_cuda=1
     first_werror_host=1
     xcompiler_args_werror=
