@@ -152,15 +152,6 @@ unsigned integral_power_of_two_that_contains(const unsigned N) {
 }
 
 }  // namespace Impl
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-
-KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION int log2(unsigned i) {
-  return Impl::int_log2(i);
-}
-
-#endif
-
 }  // namespace Kokkos
 
 #endif  // KOKKOS_BITOPS_HPP
