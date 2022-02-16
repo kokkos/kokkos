@@ -76,10 +76,13 @@ struct promote<float> {
 };
 template <class T>
 using promote_t = typename promote<T>::type;
-template <class T, class U>
+template <class T, class U,
+          bool = std::is_arithmetic<T>::value&& std::is_arithmetic<U>::value>
 struct promote_2 {
   using type = decltype(promote_t<T>() + promote_t<U>());
 };
+template <class T, class U>
+struct promote_2<T, U, false> {};
 template <class T, class U>
 using promote_2_t = typename promote_2<T, U>::type;
 }  // namespace Impl
