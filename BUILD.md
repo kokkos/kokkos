@@ -27,7 +27,7 @@ When configuring your project just set:
   -DKokkos_ROOT=${kokkos_install_prefix} \
   -DCMAKE_CXX_COMPILER=${compiler_used_to_build_kokkos}
 ````
-Note: You may need the following if using some versions of CMake (e.g. 3.12):
+Note: You may need the following for find_package() to recognize `Kokkos_ROOT`:
 ````cmake
 cmake_policy(SET CMP0074 NEW)
 ````
