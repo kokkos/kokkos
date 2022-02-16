@@ -140,9 +140,6 @@ set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MINOR} * 100 + ${Kokkos_VERSION_PATCH}")
 
-MESSAGE(STATUS "Setting policy CMP0074 to use <Package>_ROOT variables")
-CMAKE_POLICY(SET CMP0074 NEW)
-
 # Load either the real TriBITS or a TriBITS wrapper
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)

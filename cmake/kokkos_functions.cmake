@@ -224,12 +224,6 @@ MACRO(kokkos_import_tpl NAME)
     SET(TPL_IMPORTED_NAME Kokkos::${NAME})
   ENDIF()
 
-  # Even though this policy gets set in the top-level CMakeLists.txt,
-  # I have still been getting errors about ROOT variables being ignored
-  # I'm not sure if this is a scope issue - but make sure
-  # the policy is set before we do any find_package calls
-  CMAKE_POLICY(SET CMP0074 NEW)
-
   IF (KOKKOS_ENABLE_${NAME})
     #Tack on a TPL here to make sure we avoid using anyone else's find
     FIND_PACKAGE(TPL${NAME} REQUIRED MODULE)
