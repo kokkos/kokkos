@@ -114,7 +114,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erf(
   //      (1)  abs(z)<=2 - Power series, NBS Handbook, p. 298
   //      (2)  abs(z)>2 and x>1 - continued fraction, NBS Handbook, p. 298
   //      (3)  abs(z)>2 and 0<=x<=1 and abs(y)<6 - series, NBS Handbook, p. 299
-  //      (4)  abs(z)>2 and 0<=x<=1 and abs(y)>=6 - asymtotic expansion
+  //      (4)  abs(z)>2 and 0<=x<=1 and abs(y)>=6 - asymptotic expansion
   //  Error condition: abs(z^2) > 670 is a fatal overflow error
   using Kokkos::Experimental::cos;
   using Kokkos::Experimental::epsilon;
@@ -248,7 +248,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erf(
         if (z.real() < 0.0) cans = -cans;
       }       // end (abs(yp) < 6.0)
       else {  //(abs(YP)>=6.0)
-        // Asymtotic expansion for 0<=xp<=1 and abs(yp)>=6
+        // Asymptotic expansion for 0<=xp<=1 and abs(yp)>=6
         CmplxType rcz   = 0.5 / cz;
         CmplxType accum = CmplxType(1.0, 0.0);
         CmplxType term  = accum;
@@ -291,7 +291,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erfcx(
   //      (1)  abs(z)<=2 - Power series, NBS Handbook, p. 298
   //      (2)  abs(z)>2 and x>1 - continued fraction, NBS Handbook, p. 298
   //      (3)  abs(z)>2 and 0<=x<=1 and abs(y)<6 - series, NBS Handbook, p. 299
-  //      (4)  abs(z)>2 and 0<=x<=1 and abs(y)>=6 - asymtotic expansion
+  //      (4)  abs(z)>2 and 0<=x<=1 and abs(y)>=6 - asymptotic expansion
   // Error condition: abs(z^2) > 670 is a fatal overflow error when x<0
   using Kokkos::Experimental::cos;
   using Kokkos::Experimental::epsilon;
@@ -440,7 +440,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> erfcx(
           cans = cz * (1.0 + w) + rcz * CmplxType(s1, s2) / pi;
       }       // end (abs(yp) < 6.0)
       else {  //(abs(YP)>=6.0)
-        // Asymtotic expansion for 0<=xp<=1 and abs(yp)>=6
+        // Asymptotic expansion for 0<=xp<=1 and abs(yp)>=6
         CmplxType rcz   = 0.5 / cz;
         CmplxType accum = CmplxType(1.0, 0.0);
         CmplxType term  = accum;
