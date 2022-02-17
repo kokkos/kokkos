@@ -53,7 +53,6 @@ namespace Impl {
 
 template <class functor_type, class execution_space, class... policy_args>
 class WorkGraphExec;
-
 }
 }  // namespace Kokkos
 

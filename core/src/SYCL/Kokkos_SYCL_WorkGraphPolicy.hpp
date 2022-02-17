@@ -61,27 +61,30 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
   PolicyType m_policy;
   FunctorType m_functor;
 
-  template <typename Policy, typename Functor>
-  static void sycl_direct_launch(const Policy& policy, const Functor& functor) {
+  template <typename PolicyWrapper, typename FunctorWrapper>
+  static void sycl_direct_launch(const PolicyWrapper& policy_wrapper,
+                                 const FunctorWrapper& functor_wrapper) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space =
-        static_cast<const PolicyType&>(policy).space();
+        static_cast<const PolicyType&>(policy_wrapper.get_functor()).space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
     sycl::queue& q         = *instance.m_queue;
     const auto concurrency = space.concurrency();
 
-    q.submit([concurrency, functor, policy](sycl::handler& cgh) {
-      cgh.parallel_for(sycl::range<1>(concurrency), [=](sycl::item<1>) {
+    q.submit([&](sycl::handler& cgh) {
+      cgh.parallel_for(sycl::range<1>(999), [=](sycl::item<1> item) {
         for (std::int32_t w = PolicyType::END_TOKEN;
              PolicyType::COMPLETED_TOKEN !=
-             (w = static_cast<const PolicyType&>(policy).pop_work());) {
+             (w = static_cast<const PolicyType&>(policy_wrapper.get_functor())
+                      .pop_work());) {
           if (PolicyType::END_TOKEN != w) {
             if constexpr (std::is_same<WorkTag, void>::value)
-              functor(w);
+              functor_wrapper.get_functor()(w);
             else
-              functor(WorkTag(), w);
-            static_cast<const PolicyType&>(policy).completed_work(w);
+              functor_wrapper.get_functor(WorkTag(), w);
+            static_cast<const PolicyType&>(policy_wrapper.get_functor())
+                .completed_work(w);
           }
         }
       });
@@ -94,17 +97,16 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
         *m_policy.space().impl_internal_space_instance();
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectKernelMem = instance.m_indirectKernelMem;
+        indirectKernelMem = instance.get_indirect_kernel_mem();
     // slightly abuse m_indirectReducerMem for the policy here
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectPolicyMem = instance.m_indirectReducerMem;
+        indirectPolicyMem = instance.get_indirect_kernel_mem();
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     const auto policy_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_policy, indirectPolicyMem);
-    sycl_direct_launch(policy_wrapper.get_functor(),
-                       functor_wrapper.get_functor());
+    sycl_direct_launch(policy_wrapper, functor_wrapper);
   }
 
   inline ParallelFor(const FunctorType& arg_functor,
