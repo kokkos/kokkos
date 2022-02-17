@@ -29,11 +29,6 @@ SET(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-# Needed to simplify syntax of if statements
-CMAKE_POLICY(SET CMP0054 NEW)
-# Needed to make IN_LIST a valid operator
-CMAKE_POLICY(SET CMP0057 NEW)
-
 # Is this a build as part of Trilinos?
 IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON)
