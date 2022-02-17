@@ -295,7 +295,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     // Allocate scratch per active thread. Achieved by setting the first
     // parameter of `resize_scratch=1`.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType));
+    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType), -1);
     ValueType* scratch_ptr =
         static_cast<ValueType*>(OpenMPTargetExec::get_scratch_ptr());
 
@@ -766,7 +766,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1,
+                                     league_size);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
     FunctorType a_functor(m_functor);
@@ -857,7 +858,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
     OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L0, shmem_size_L1);
+                                     shmem_size_L0, shmem_size_L1, league_size);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();
@@ -917,7 +918,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
     OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L0, shmem_size_L1);
+                                     shmem_size_L0, shmem_size_L1, league_size);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     // Maximum active teams possible.
@@ -1051,7 +1052,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         FunctorValueTraits<FunctorType, TagType>::value_count(f);
 
     // Allocate scratch per active thread.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType));
+    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType), -1);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     // Enter this loop if the functor has an `init`
