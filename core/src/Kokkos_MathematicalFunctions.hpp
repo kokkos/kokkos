@@ -47,6 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <cmath>
+#include <cstdlib>
 #include <type_traits>
 
 #ifdef KOKKOS_ENABLE_SYCL
