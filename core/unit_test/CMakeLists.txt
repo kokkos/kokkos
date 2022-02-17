@@ -609,10 +609,6 @@ if(Kokkos_ENABLE_SYCL)
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexdouble.cpp
   )
 
-  list(REMOVE_ITEM SYCL_SOURCES2A
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_WorkGraph.cpp
-  )
-
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_SYCL1A
     SOURCES
