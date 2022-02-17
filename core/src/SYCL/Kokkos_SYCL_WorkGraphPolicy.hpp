@@ -69,11 +69,11 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
         static_cast<const PolicyType&>(policy_wrapper.get_functor()).space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    sycl::queue& q         = *instance.m_queue;
-    const auto concurrency = space.concurrency();
+    sycl::queue& q = *instance.m_queue;
+    //    const auto concurrency = space.concurrency();
 
     q.submit([&](sycl::handler& cgh) {
-      cgh.parallel_for(sycl::range<1>(999), [=](sycl::item<1> item) {
+      cgh.parallel_for(sycl::range<1>(999), [=](sycl::item<1>) {
         for (std::int32_t w = PolicyType::END_TOKEN;
              PolicyType::COMPLETED_TOKEN !=
              (w = static_cast<const PolicyType&>(policy_wrapper.get_functor())
