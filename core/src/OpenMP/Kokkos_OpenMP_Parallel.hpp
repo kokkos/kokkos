@@ -145,7 +145,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     }
 
     OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
-#ifdef KOKKOS_ENABLE_NATIVE_OPENMP
+#ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
 #else
     enum {
@@ -253,7 +253,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     }
 
     OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
-#ifdef KOKKOS_ENABLE_NATIVE_OPENMP
+#ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
 #else
     enum {
