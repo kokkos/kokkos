@@ -295,7 +295,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     // Allocate scratch per active thread. Achieved by setting the first
     // parameter of `resize_scratch=1`.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType), -1);
+    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
+                                     std::numeric_limits<int64_t>::max());
     ValueType* scratch_ptr =
         static_cast<ValueType*>(OpenMPTargetExec::get_scratch_ptr());
 
@@ -1052,7 +1053,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         FunctorValueTraits<FunctorType, TagType>::value_count(f);
 
     // Allocate scratch per active thread.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType), -1);
+    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
+                                     std::numeric_limits<int64_t>::max());
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     // Enter this loop if the functor has an `init`
