@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 # Disable in-source builds to prevent source tree corruption.
 if( "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}" )
@@ -27,11 +28,6 @@ SET(KOKKOS_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 SET(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-# Needed to simplify syntax of if statements
-CMAKE_POLICY(SET CMP0054 NEW)
-# Needed to make IN_LIST a valid operator
-CMAKE_POLICY(SET CMP0057 NEW)
 
 # Is this a build as part of Trilinos?
 IF(COMMAND TRIBITS_PACKAGE_DECL)
@@ -72,7 +68,6 @@ ENDFUNCTION()
 LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
-  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
   set(CMAKE_DISABLE_SOURCE_CHANGES ON)
   set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
