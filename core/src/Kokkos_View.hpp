@@ -811,8 +811,12 @@ class View : public ViewTraits<DataType, Properties...> {
   //------------------------------
   // Rank 0 operator()
 
+  template <int R = Rank>
   KOKKOS_FORCEINLINE_FUNCTION
-  reference_type operator()() const { return m_map.reference(); }
+      std::enable_if_t<(0 == Rank) && (R == Rank), reference_type>
+      operator()() const {
+    return m_map.reference();
+  }
   //------------------------------
   // Rank 1 operator()
 
