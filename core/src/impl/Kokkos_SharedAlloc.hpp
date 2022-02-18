@@ -86,9 +86,9 @@ class SharedAllocationHeader {
  public:
   /* Given user memory get pointer to the header */
   KOKKOS_INLINE_FUNCTION static const SharedAllocationHeader* get_header(
-      void* alloc_ptr) {
-    return reinterpret_cast<SharedAllocationHeader*>(
-        reinterpret_cast<char*>(alloc_ptr) - sizeof(SharedAllocationHeader));
+      void const* alloc_ptr) {
+    return static_cast<SharedAllocationHeader const*>(static_cast<void const*>(
+        static_cast<char const*>(alloc_ptr) - sizeof(SharedAllocationHeader)));
   }
 
   KOKKOS_INLINE_FUNCTION
