@@ -1883,160 +1883,145 @@ struct MirrorOffsetType {
 
 }  // namespace Impl
 
-template <class T, class... P>
+namespace Impl {
+template <class T, class... P, class... I>
 inline typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror
-create_mirror(
-    const Kokkos::Experimental::OffsetView<T, P...>& src,
-    typename std::enable_if<
-        !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                      Kokkos::LayoutStride>::value>::type* = nullptr) {
-  using src_type = Experimental::OffsetView<T, P...>;
-  using dst_type = typename src_type::HostMirror;
+create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
+              const I&... arg_prop) {
+  return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
+      Kokkos::create_mirror(arg_prop..., src.view()), src.begins());
+}
 
-  return dst_type(
-      Kokkos::Impl::ViewCtorProp<std::string>(
-          std::string(src.label()).append("_mirror")),
-      typename Kokkos::ViewTraits<T, P...>::array_layout(
-          src.extent(0), src.extent(1), src.extent(2), src.extent(3),
-          src.extent(4), src.extent(5), src.extent(6), src.extent(7)),
+template <class Space, class T, class... P, class... I>
+inline typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
+create_mirror(const Space&,
+              const Kokkos::Experimental::OffsetView<T, P...>& src,
+              const I&... arg_prop) {
+  return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
+      Kokkos::view_alloc(src.label(), arg_prop...), src.layout(),
       {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
        src.begin(5), src.begin(6), src.begin(7)});
 }
+}  // namespace Impl
 
+// Create a mirror in host space
 template <class T, class... P>
-inline typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror
-create_mirror(
-    const Kokkos::Experimental::OffsetView<T, P...>& src,
-    typename std::enable_if<
-        std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                     Kokkos::LayoutStride>::value>::type* = nullptr) {
-  using src_type = Experimental::OffsetView<T, P...>;
-  using dst_type = typename src_type::HostMirror;
-
-  Kokkos::LayoutStride layout;
-
-  layout.dimension[0] = src.extent(0);
-  layout.dimension[1] = src.extent(1);
-  layout.dimension[2] = src.extent(2);
-  layout.dimension[3] = src.extent(3);
-  layout.dimension[4] = src.extent(4);
-  layout.dimension[5] = src.extent(5);
-  layout.dimension[6] = src.extent(6);
-  layout.dimension[7] = src.extent(7);
-
-  layout.stride[0] = src.stride_0();
-  layout.stride[1] = src.stride_1();
-  layout.stride[2] = src.stride_2();
-  layout.stride[3] = src.stride_3();
-  layout.stride[4] = src.stride_4();
-  layout.stride[5] = src.stride_5();
-  layout.stride[6] = src.stride_6();
-  layout.stride[7] = src.stride_7();
-
-  return dst_type(std::string(src.label()).append("_mirror"), layout,
-                  {src.begin(0), src.begin(1), src.begin(2), src.begin(3),
-                   src.begin(4), src.begin(5), src.begin(6), src.begin(7)});
+inline auto create_mirror(
+    const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror(src);
 }
 
-// Create a mirror in a new space (specialization for different space)
+template <class T, class... P>
+inline auto create_mirror(
+    Kokkos::Impl::WithoutInitializing_t wi,
+    const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror(src, wi);
+}
+
+// Create a mirror in a new space
+template <class Space, class T, class... P>
+inline auto create_mirror(
+    const Space& space, const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror(space, src);
+}
+
 template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
-create_mirror(const Space&,
+create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
               const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
-      src.label(), src.layout(),
-      {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
-       src.begin(5), src.begin(6), src.begin(7)});
+  return Impl::create_mirror(space, src, wi);
 }
 
-template <class T, class... P>
-inline typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror
+namespace Impl {
+template <class T, class... P, class... I>
+inline std::enable_if_t<
+    (std::is_same<
+         typename Kokkos::Experimental::OffsetView<T, P...>::memory_space,
+         typename Kokkos::Experimental::OffsetView<
+             T, P...>::HostMirror::memory_space>::value &&
+     std::is_same<typename Kokkos::Experimental::OffsetView<T, P...>::data_type,
+                  typename Kokkos::Experimental::OffsetView<
+                      T, P...>::HostMirror::data_type>::value),
+    typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror>
 create_mirror_view(
     const typename Kokkos::Experimental::OffsetView<T, P...>& src,
-    typename std::enable_if<
-        (std::is_same<
-             typename Kokkos::Experimental::OffsetView<T, P...>::memory_space,
-             typename Kokkos::Experimental::OffsetView<
-                 T, P...>::HostMirror::memory_space>::value &&
-         std::is_same<
-             typename Kokkos::Experimental::OffsetView<T, P...>::data_type,
-             typename Kokkos::Experimental::OffsetView<
-                 T, P...>::HostMirror::data_type>::value)>::type* = nullptr) {
+    const I&...) {
   return src;
+}
+
+template <class T, class... P, class... I>
+inline std::enable_if_t<
+    !(std::is_same<
+          typename Kokkos::Experimental::OffsetView<T, P...>::memory_space,
+          typename Kokkos::Experimental::OffsetView<
+              T, P...>::HostMirror::memory_space>::value &&
+      std::is_same<
+          typename Kokkos::Experimental::OffsetView<T, P...>::data_type,
+          typename Kokkos::Experimental::OffsetView<
+              T, P...>::HostMirror::data_type>::value),
+    typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror>
+create_mirror_view(const Kokkos::Experimental::OffsetView<T, P...>& src,
+                   const I&... arg_prop) {
+  return Kokkos::create_mirror(arg_prop..., src);
+}
+
+template <class Space, class T, class... P, class... I>
+inline std::enable_if_t<
+    Impl::MirrorOffsetViewType<Space, T, P...>::is_same_memspace,
+    typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type>
+create_mirror_view(const Space&,
+                   const Kokkos::Experimental::OffsetView<T, P...>& src,
+                   const I&...) {
+  return src;
+}
+
+template <class Space, class T, class... P, class... I>
+std::enable_if_t<
+    !Impl::MirrorOffsetViewType<Space, T, P...>::is_same_memspace,
+    typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type>
+create_mirror_view(const Space& space,
+                   const Kokkos::Experimental::OffsetView<T, P...>& src,
+                   const I&... arg_prop) {
+  return Kokkos::create_mirror(arg_prop..., space, src);
+}
+}  // namespace Impl
+
+// Create a mirror view in host space
+template <class T, class... P>
+inline auto create_mirror_view(
+    const typename Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror_view(src);
 }
 
 template <class T, class... P>
-inline typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror
-create_mirror_view(
-    const Kokkos::Experimental::OffsetView<T, P...>& src,
-    typename std::enable_if<
-        !(std::is_same<
-              typename Kokkos::Experimental::OffsetView<T, P...>::memory_space,
-              typename Kokkos::Experimental::OffsetView<
-                  T, P...>::HostMirror::memory_space>::value &&
-          std::is_same<
-              typename Kokkos::Experimental::OffsetView<T, P...>::data_type,
-              typename Kokkos::Experimental::OffsetView<
-                  T, P...>::HostMirror::data_type>::value)>::type* = nullptr) {
-  return Kokkos::create_mirror(src);
+inline auto create_mirror_view(
+    Kokkos::Impl::WithoutInitializing_t wi,
+    const typename Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror_view(src, wi);
 }
 
-// Create a mirror view in a new space (specialization for same space)
+// Create a mirror view in a new space
+template <class Space, class T, class... P>
+inline auto create_mirror_view(
+    const Space& space, const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror_view(space, src);
+}
+
+template <class Space, class T, class... P>
+inline auto create_mirror_view(
+    Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
+    const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror_view(space, src, wi);
+}
+
+// Create a mirror view and deep_copy in a new space
 template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type
-create_mirror_view(const Space&,
-                   const Kokkos::Experimental::OffsetView<T, P...>& src,
-                   typename std::enable_if<Impl::MirrorOffsetViewType<
-                       Space, T, P...>::is_same_memspace>::type* = nullptr) {
-  return src;
+create_mirror_view_and_copy(
+    const Space& space, const Kokkos::Experimental::OffsetView<T, P...>& src,
+    std::string const& name = "") {
+  return {create_mirror_view_and_copy(space, src.view(), name), src.begins()};
 }
-
-// Create a mirror view in a new space (specialization for different space)
-template <class Space, class T, class... P>
-typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type
-create_mirror_view(const Space&,
-                   const Kokkos::Experimental::OffsetView<T, P...>& src,
-                   typename std::enable_if<!Impl::MirrorOffsetViewType<
-                       Space, T, P...>::is_same_memspace>::type* = nullptr) {
-  return typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type(
-      src.label(), src.layout(),
-      {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
-       src.begin(5), src.begin(6), src.begin(7)});
-}
-//
-//  // Create a mirror view and deep_copy in a new space (specialization for
-//  same space) template<class Space, class T, class ... P> typename
-//  Kokkos::Experimental::Impl::MirrorViewType<Space,T,P ...>::view_type
-//  create_mirror_view_and_copy(const Space& , const
-//  Kokkos::Experimental::OffsetView<T,P...> & src
-//                              , std::string const& name = ""
-//                                  , typename
-//                                  std::enable_if<Impl::MirrorViewType<Space,T,P
-//                                  ...>::is_same_memspace>::type* = nullptr) {
-//    (void)name;
-//    return src;
-//  }
-//
-//  // Create a mirror view and deep_copy in a new space (specialization for
-//  different space) template<class Space, class T, class ... P> typename
-//  Kokkos::Experimental::Impl::MirrorViewType<Space,T,P ...>::view_type
-//  create_mirror_view_and_copy(const Space& , const
-//  Kokkos::Experimental::OffsetView<T,P...> & src
-//                              , std::string const& name = ""
-//                                  , typename
-//                                  std::enable_if<!Impl::MirrorViewType<Space,T,P
-//                                  ...>::is_same_memspace>::type* = nullptr) {
-//    using Mirror = typename
-//    Kokkos::Experimental::Impl::MirrorViewType<Space,T,P ...>::view_type;
-//    std::string label = name.empty() ? src.label() : name;
-//    auto mirror = Mirror(view_alloc(WithoutInitializing, label), src.layout(),
-//                         { src.begin(0), src.begin(1), src.begin(2),
-//                         src.begin(3), src.begin(4),
-//                             src.begin(5), src.begin(6), src.begin(7) });
-//    deep_copy(mirror, src);
-//    return mirror;
-//  }
-
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
