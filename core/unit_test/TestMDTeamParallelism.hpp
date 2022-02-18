@@ -869,7 +869,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<3>>({0, 0, 0}, {leagueSize, n0, n1}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>>({0, 0, 0},
+                                                          {leagueSize, n0, n1}),
         KOKKOS_LAMBDA(const int i, const int j, const int k) {
           v(i, j, k) = fillFlattenedIndex(i, j, k);
         });
@@ -917,8 +918,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<4>>({0, 0, 0, 0},
-                                               {leagueSize, n0, n1, n2}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4>>(
+            {0, 0, 0, 0}, {leagueSize, n0, n1, n2}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l) {
           v(i, j, k, l) = fillFlattenedIndex(i, j, k, l);
         });
@@ -967,8 +968,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0, 0, 0, 0, 0},
-                                               {leagueSize, n0, n1, n2, n3}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<5>>(
+            {0, 0, 0, 0, 0}, {leagueSize, n0, n1, n2, n3}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                       const int m) {
           v(i, j, k, l, m) = fillFlattenedIndex(i, j, k, l, m);
@@ -1018,7 +1019,7 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<6>>(
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
             {0, 0, 0, 0, 0, 0}, {leagueSize, n0, n1, n2, n3, n4}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                       const int m, const int n) {
@@ -1070,8 +1071,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<4>>({0, 0, 0, 0},
-                                               {leagueSize, n0, n1, n2}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4>>(
+            {0, 0, 0, 0}, {leagueSize, n0, n1, n2}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l) {
           v(i, j, k, l) = fillFlattenedIndex(i, j, k, l);
         });
@@ -1130,8 +1131,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0, 0, 0, 0, 0},
-                                               {leagueSize, n0, n1, n2, n3}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<5>>(
+            {0, 0, 0, 0, 0}, {leagueSize, n0, n1, n2, n3}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                       const int m) {
           v(i, j, k, l, m) = fillFlattenedIndex(i, j, k, l, m);
@@ -1192,7 +1193,7 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<6>>(
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
             {0, 0, 0, 0, 0, 0}, {leagueSize, n0, n1, n2, n3, n4}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                       const int m, const int n) {
@@ -1253,8 +1254,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<4>>({0, 0, 0, 0},
-                                               {leagueSize, n0, n1, n2}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4>>(
+            {0, 0, 0, 0}, {leagueSize, n0, n1, n2}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l) {
           v(i, j, k, l) = fillFlattenedIndex(i, j, k, l);
         });
@@ -1308,8 +1309,8 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0, 0, 0, 0, 0},
-                                               {leagueSize, n0, n1, n2, n3}),
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<5>>(
+            {0, 0, 0, 0, 0}, {leagueSize, n0, n1, n2, n3}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                       const int m) {
           v(i, j, k, l, m) = fillFlattenedIndex(i, j, k, l, m);
@@ -1364,7 +1365,7 @@ struct TestMDTeamParallelReduce {
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4);
 
     Kokkos::parallel_for(
-        Kokkos::MDRangePolicy<Kokkos::Rank<6>>(
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
             {0, 0, 0, 0, 0, 0}, {leagueSize, n0, n1, n2, n3, n4}),
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                       const int m, const int n) {
