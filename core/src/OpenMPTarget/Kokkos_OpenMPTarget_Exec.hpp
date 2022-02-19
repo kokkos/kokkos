@@ -768,7 +768,7 @@ class OpenMPTargetExec {
   static void clear_lock_array();
   static void resize_scratch(int64_t team_reduce_bytes,
                              int64_t team_shared_bytes,
-                             int64_t thread_local_bytes);
+                             int64_t thread_local_bytes, int64_t league_size);
 
   static void* m_scratch_ptr;
   static int64_t m_scratch_size;
