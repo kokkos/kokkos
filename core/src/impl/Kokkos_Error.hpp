@@ -67,6 +67,32 @@ namespace Impl {
 
 [[noreturn]] void host_abort(const char *const);
 
+#if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
+
+#if defined(__APPLE__) || defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+// cuda_abort does not abort when building for macOS.
+// required to workaround failures in random number generator unit tests with
+// pre-volta architectures
+#define KOKKOS_IMPL_ABORT_NORETURN
+#else
+// cuda_abort aborts when building for other platforms than macOS
+#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
+#endif
+
+#elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
+// HIP aborts
+#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
+// FIXME_SYCL SYCL doesn't abort
+#define KOKKOS_IMPL_ABORT_NORETURN
+#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
+// Host aborts
+#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
+#else
+// Everything else does not abort
+#define KOKKOS_IMPL_ABORT_NORETURN
+#endif
+
 [[noreturn]] void throw_runtime_exception(const std::string &msg);
 
 void traceback_callstack(std::ostream &);
@@ -170,32 +196,6 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
-
-#if defined(__APPLE__) || defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-// cuda_abort does not abort when building for macOS.
-// required to workaround failures in random number generator unit tests with
-// pre-volta architectures
-#define KOKKOS_IMPL_ABORT_NORETURN
-#else
-// cuda_abort aborts when building for other platforms than macOS
-#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
-#endif
-
-#elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
-// HIP aborts
-#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
-// FIXME_SYCL SYCL doesn't abort
-#define KOKKOS_IMPL_ABORT_NORETURN
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
-// Host aborts
-#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
-#else
-// Everything else does not abort
-#define KOKKOS_IMPL_ABORT_NORETURN
-#endif
-
 namespace Kokkos {
 KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
     const char *const message) {
@@ -211,6 +211,8 @@ KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
   (void)message;  // FIXME_OPENMPTARGET
 #endif
 }
+
+#undef KOKKOS_IMPL_ABORT_NORETURN
 
 }  // namespace Kokkos
 
