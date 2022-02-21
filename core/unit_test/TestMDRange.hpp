@@ -385,7 +385,7 @@ struct TestMDRange_2D {
       parallel_reduce(
           "rank2-min-reducer", range,
           KOKKOS_LAMBDA(const int i, const int j, double &min_val) {
-            min_val = Kokkos::Experimental::fmin(v_in(i, j), min_val);
+            min_val = Kokkos::fmin(v_in(i, j), min_val);
           },
           reducer_scalar);
 
