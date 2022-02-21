@@ -1132,6 +1132,27 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
             {range0.first, range1.first, range2.first, range3.first,
              range4.first, range5.first, range6.first, range7.first}) {}
 
+  template <typename Label>
+  explicit inline OffsetView(
+      const Label& arg_label,
+      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
+                              const index_list_type>::type range0,
+      const index_list_type range1 = KOKKOS_INVALID_INDEX_RANGE,
+      const index_list_type range2 = KOKKOS_INVALID_INDEX_RANGE,
+      const index_list_type range3 = KOKKOS_INVALID_INDEX_RANGE,
+      const index_list_type range4 = KOKKOS_INVALID_INDEX_RANGE,
+      const index_list_type range5 = KOKKOS_INVALID_INDEX_RANGE,
+      const index_list_type range6 = KOKKOS_INVALID_INDEX_RANGE,
+      const index_list_type range7 = KOKKOS_INVALID_INDEX_RANGE)
+      : OffsetView(arg_label, range_type(range0.begin()[0], range0.begin()[1]),
+                   range_type(range1.begin()[0], range1.begin()[1]),
+                   range_type(range2.begin()[0], range2.begin()[1]),
+                   range_type(range3.begin()[0], range3.begin()[1]),
+                   range_type(range4.begin()[0], range4.begin()[1]),
+                   range_type(range5.begin()[0], range5.begin()[1]),
+                   range_type(range6.begin()[0], range6.begin()[1]),
+                   range_type(range7.begin()[0], range7.begin()[1])) {}
+
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
