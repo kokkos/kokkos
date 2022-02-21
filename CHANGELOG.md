@@ -4,92 +4,68 @@
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.5.00...3.6.00)
 
 ### Features:
-Kokkos: Allow overloads of create_mirror_view_and_copy() [\#4770](https://github.com/kokkos/kokkos/pull/4770)
-Implement fill_random for DynRankView [\#4763](https://github.com/kokkos/kokkos/pull/4763)
-Add math function long double overload on the host side [\#4712](https://github.com/kokkos/kokkos/pull/4712)
-Desul: Add ScopeCaller [\#4690](https://github.com/kokkos/kokkos/pull/4690)
-Algorithms: Add bhalf rand support [\#4653](https://github.com/kokkos/kokkos/pull/4653)
-Implement Kokkos::Experimental::{min,max,minmax}(std::initializer_list) [\#4629](https://github.com/kokkos/kokkos/pull/4629)
-Enable Desul atomics [\#4606](https://github.com/kokkos/kokkos/pull/4606)
-Add mathematical constants [\#4519](https://github.com/kokkos/kokkos/pull/4519)
-Allow Kokkos::create_mirror* to be used with WithoutInitializing [\#4486](https://github.com/kokkos/kokkos/pull/4486)
+- Implement `fill_random` for `DynRankView` [\#4763](https://github.com/kokkos/kokkos/pull/4763)
+- Add `bhalf_t` [\#4543](https://github.com/kokkos/kokkos/pull/4543) [\#4653](https://github.com/kokkos/kokkos/pull/4653)
+- Add mathematical constants [\#4519](https://github.com/kokkos/kokkos/pull/4519)
+- Allow `Kokkos::create_mirror*` to be used with `WithoutInitializing` [\#4486](https://github.com/kokkos/kokkos/pull/4486)
+- Implement `KOKKOS_IF_ON_{HOST,DEVICE}` macros [\#4660](https://github.com/kokkos/kokkos/pull/4660)
+
+- Add Kokkos::Experimental::{min,max,minmax,clamp}[\#4629](https://github.com/kokkos/kokkos/pull/4629) [clamp pr]
+
+#### Perf bug fix
+- Desul: Add ScopeCaller [\#4690](https://github.com/kokkos/kokkos/pull/4690)
+- Enable Desul atomics by default when using Makefiles [\#4606](https://github.com/kokkos/kokkos/pull/4606)
+- Unique token improvement [\#4741](https://github.com/kokkos/kokkos/pull/4741) [\#4748](https://github.com/kokkos/kokkos/pull/4748)
+
+#### Other improvements:
+- Add math function long double overload on the host side [\#4712](https://github.com/kokkos/kokkos/pull/4712)
 
 ### Deprecations:
-Array reductions with pointer return types [\#4756](https://github.com/kokkos/kokkos/pull/4756)
-Deprecate partition_master, validate_partition [\#4737](https://github.com/kokkos/kokkos/pull/4737)
-Deprecate Kokkos_ENABLE_PTHREAD in favor of Kokkos_ENABLE_THREADS [\#4619](https://github.com/kokkos/kokkos/pull/4619)
-Deprecate log2(unsigned) -> int [\#4595](https://github.com/kokkos/kokkos/pull/4595)
-Deprecate Kokkos::Impl::is_view [\#4592](https://github.com/kokkos/kokkos/pull/4592)
+- Array reductions with pointer return types [\#4756](https://github.com/kokkos/kokkos/pull/4756)
+- Deprecate `partition_master`, `validate_partition` [\#4737](https://github.com/kokkos/kokkos/pull/4737)
+- Deprecate `Kokkos_ENABLE_PTHREAD` in favor of `Kokkos_ENABLE_THREADS` [\#4619](https://github.com/kokkos/kokkos/pull/4619) ** pair with use std::threads **
+- Deprecate `log2(unsigned) -> int` (removing in next release) [\#4595](https://github.com/kokkos/kokkos/pull/4595)
+- Deprecate `Kokkos::Impl::is_view` [\#4592](https://github.com/kokkos/kokkos/pull/4592)
+- Deprecate `KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_*` macros and the `ActiveExecutionMemorySpace` alias [\#4668](https://github.com/kokkos/kokkos/issues/4668)
 
 ### Backends and Archs Enhancements:
 
 #### SYCL:
-Update required SYCL compiler version in CMake [\#4749](https://github.com/kokkos/kokkos/pull/4749)
-Update SYCL UniqueToken avoiding bitset [\#4748](https://github.com/kokkos/kokkos/pull/4748)
-Cap vector size to kernel maximum for SYCL [\#4704](https://github.com/kokkos/kokkos/pull/4704)
-Fix up compiling SYCL without NDEBUG [\#4680](https://github.com/kokkos/kokkos/pull/4680)
-Add a FIXME for SYCL and ThreadVectorRange parallel_for [\#4676](https://github.com/kokkos/kokkos/pull/4676)
-Use sycl::is_device_copyable (new) [\#4637](https://github.com/kokkos/kokkos/pull/4637)
-Replace SYCL workgroup barriers with SYCL2020 syntax [\#4636](https://github.com/kokkos/kokkos/pull/4636)
-Provide chunk_size for SYCL [\#4635](https://github.com/kokkos/kokkos/pull/4635)
-Enable more half tests for SYCL [\#4632](https://github.com/kokkos/kokkos/pull/4632)
-Address deprecations warnings with newest SYCL compiler release [\#4631](https://github.com/kokkos/kokkos/pull/4631)
-Use host-pinned memory for SYCL kernel memory [\#4627](https://github.com/kokkos/kokkos/pull/4627)
-Use shuffle-based algorithm for scalar reduction [\#4608](https://github.com/kokkos/kokkos/pull/4608)
-Implement pool of USM IndirectKernelMemory [\#4596](https://github.com/kokkos/kokkos/pull/4596)
-Use internal SYCL kernel range rounding for RangePolicy ParallelFor [\#4593](https://github.com/kokkos/kokkos/pull/4593)
-Improve check for compatibility of vector size and subgroup size in SYCL [\#4579](https://github.com/kokkos/kokkos/pull/4579)
-Address deprecations with latest SYCL [\#4495](https://github.com/kokkos/kokkos/pull/4495)
-Error in SYCL desul atomics due to compiler update [\#4493](https://github.com/kokkos/kokkos/pull/4493)
-Provide valid default team size for SYCL [\#4481](https://github.com/kokkos/kokkos/pull/4481)
+- Update required SYCL compiler version [\#4749](https://github.com/kokkos/kokkos/pull/4749)
+- Cap vector size to kernel maximum for SYCL [\#4704](https://github.com/kokkos/kokkos/pull/4704)
+- Improve check for compatibility of vector size and subgroup size in SYCL [\#4579](https://github.com/kokkos/kokkos/pull/4579)
+- Provide `chunk_size` for SYCL [\#4635](https://github.com/kokkos/kokkos/pull/4635)
+- Use host-pinned memory for SYCL kernel memory [\#4627](https://github.com/kokkos/kokkos/pull/4627)
+- Use shuffle-based algorithm for scalar reduction [\#4608](https://github.com/kokkos/kokkos/pull/4608)
+- Implement pool of USM IndirectKernelMemory [\#4596](https://github.com/kokkos/kokkos/pull/4596)
+- Provide valid default team size for SYCL [\#4481](https://github.com/kokkos/kokkos/pull/4481)
 
 #### CUDA:
-Avoid unused variables in Kokkos_Cuda_ReduceScan.hpp [\#4720](https://github.com/kokkos/kokkos/pull/4720)
-Missing include in cuda_compute_capability.cc [\#4620](https://github.com/kokkos/kokkos/pull/4620)
-Add checks for shmem usage in parallel_reduce [\#4548](https://github.com/kokkos/kokkos/pull/4548)
+- Add checks for shmem usage in `parallel_reduce` [\#4548](https://github.com/kokkos/kokkos/pull/4548)
 
 #### HIP:
-Enable Kokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS in CI when using C++14 [\#4702](https://github.com/kokkos/kokkos/pull/4702)
-Add support for fp16 in the HIP backend [\#4688](https://github.com/kokkos/kokkos/pull/4688)
-Disable multiple kernel instantiations when using HIP [\#4644](https://github.com/kokkos/kokkos/pull/4644)
-Document GFX90A AMD GPU architecture [\#4515](https://github.com/kokkos/kokkos/pull/4515)
-Fix HIP scratch use per instance and use partition_space in PerfTest_ExecSpacePartitioning.cpp [\#4439](https://github.com/kokkos/kokkos/pull/4439)
+- Add support for fp16 in the HIP backend [\#4688](https://github.com/kokkos/kokkos/pull/4688)
+- Disable multiple kernel instantiations when using HIP (configure with `-DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON` to use) [\#4644](https://github.com/kokkos/kokkos/pull/4644)
+- Fix HIP scratch use per instance [\#4439](https://github.com/kokkos/kokkos/pull/4439)
+- Change allocation header to 256B alignment for AMD VEGA architecture [\#4753](https://github.com/kokkos/kokkos/pull/4753)
 
 #### OpenMP:
-Fix thread deduction for OpenMP for thread_count==0 [\#4541](https://github.com/kokkos/kokkos/pull/4541)
+- Fix thread deduction for OpenMP for `thread_count==0` [\#4541](https://github.com/kokkos/kokkos/pull/4541)
 
 #### OpenMPTarget:
-OpenMPTarget: Update the size_type [\#4779](https://github.com/kokkos/kokkos/pull/4779)
-OpenMPTarget: Update LLVM version in the OpenMPTarget docker. [\#4742](https://github.com/kokkos/kokkos/pull/4742)
-Re-enable OPENMPTARGET-ROCM CI build [\#4709](https://github.com/kokkos/kokkos/pull/4709)
-OpenMPTarget: Update to LLVM/13 . [\#4545](https://github.com/kokkos/kokkos/pull/4545)
+- Update memory space `size_type` to improve performance (`size_t -> unsigned`) [\#4779](https://github.com/kokkos/kokkos/pull/4779)
 
+**bug fix**
+- Fix overflow for large requested scratch allocation [\#4551](https://github.com/kokkos/kokkos/pull/4551)
 #### Other Improvements:
-Clean up test team scan [\#4785](https://github.com/kokkos/kokkos/pull/4785)
-Add restrict to DriverTypes to help compiler prove member variable reads do not alias w/ global writes [\#4755](https://github.com/kokkos/kokkos/pull/4755)
-Change allocation header to 256B alignment [\#4753](https://github.com/kokkos/kokkos/pull/4753)
-Unique token improvement [\#4741](https://github.com/kokkos/kokkos/pull/4741)
-Specify device type everywhere in Kokkos_Random.hpp [\#4724](https://github.com/kokkos/kokkos/pull/4724)
-Reorganize includes for Kokkos_Half.hpp [\#4710](https://github.com/kokkos/kokkos/pull/4710)
-Replace wrapping_fetch_inc/dec with fetch_inc/dec_mod [\#4684](https://github.com/kokkos/kokkos/pull/4684)
-Kokkos::resize always error out for mismatch in runtime rank [\#4681](https://github.com/kokkos/kokkos/pull/4681)
-Avoid using execution_space as View template argument [\#4675](https://github.com/kokkos/kokkos/pull/4675)
-Print current call stack when calling Kokkos::abort() from the host [\#4672](https://github.com/kokkos/kokkos/pull/4672)
-Do not append stacktrace to the message when throwing a std::runtime_error [\#4671](https://github.com/kokkos/kokkos/pull/4671)
-Implement KOKKOS_IF_ON_{HOST,DEVICE} macros [\#4660](https://github.com/kokkos/kokkos/pull/4660)
-Detect mismatch of execution spaces in functors [\#4655](https://github.com/kokkos/kokkos/pull/4655)
-Make floating_point_wrapper backend agnostic [\#4650](https://github.com/kokkos/kokkos/pull/4650)
-Store label in SharedAllocationRecord [\#4647](https://github.com/kokkos/kokkos/pull/4647)
-Error out for const scalar return type in reduction [\#4645](https://github.com/kokkos/kokkos/pull/4645)
-Don't allow calling UnorderdMap::value_at for a set [\#4639](https://github.com/kokkos/kokkos/pull/4639)
-Make sure reduction array is valid before exiting team_reduction/scan [\#4628](https://github.com/kokkos/kokkos/pull/4628)
-Replace volatile_load [\#4588](https://github.com/kokkos/kokkos/pull/4588)
-Add KOKKOS_COMPILER_NVHPC macro, disable quiet_NaN and signaling_NaN [\#4586](https://github.com/kokkos/kokkos/pull/4586)
-Add subview coverage to TestScatterView [\#4587](https://github.com/kokkos/kokkos/pull/4587)
-tests for bool reduction [\#4575](https://github.com/kokkos/kokkos/pull/4575)
-Use all dimensions of m_maxBlock in Cuda and HIP [\#4559](https://github.com/kokkos/kokkos/pull/4559)
-Use std::size_t for requested scratch allocations in GPU backends [\#4551](https://github.com/kokkos/kokkos/pull/4551)
-Refactor half_t and add bhalf_t [\#4543](https://github.com/kokkos/kokkos/pull/4543)
+- Use device type as template argument in Containers and Algorithms [\#4724](https://github.com/kokkos/kokkos/pull/4724) [\#4675](https://github.com/kokkos/kokkos/pull/4675)
+- `Kokkos::resize` always error out for mismatch in runtime rank [\#4681](https://github.com/kokkos/kokkos/pull/4681)
+- Print current call stack when calling `Kokkos::abort()` from the host [\#4672](https://github.com/kokkos/kokkos/pull/4672) [\#4671](https://github.com/kokkos/kokkos/pull/4671)
+- Detect mismatch of execution spaces in functors [\#4655](https://github.com/kokkos/kokkos/pull/4655)
+- Improve view label access on host [\#4647](https://github.com/kokkos/kokkos/pull/4647)
+- Error out for `const` scalar return type in reduction [\#4645](https://github.com/kokkos/kokkos/pull/4645)
+- Don't allow calling `UnorderdMap::value_at` for a set [\#4639](https://github.com/kokkos/kokkos/pull/4639)
+- Add `KOKKOS_COMPILER_NVHPC` macro, disable `quiet_NaN` and `signaling_NaN` [\#4586](https://github.com/kokkos/kokkos/pull/4586)
 Lock constant memory in Cuda/HIP kernel launch with a mutex [\#4525](https://github.com/kokkos/kokkos/pull/4525)
 Kokkos_CopyViews: update local_deep_copy_contiguous signature [\#4520](https://github.com/kokkos/kokkos/pull/4520)
 Replace TeamThreadRange [\#4511](https://github.com/kokkos/kokkos/pull/4511)
