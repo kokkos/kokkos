@@ -93,6 +93,24 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+KOKKOS_IMPL_ABORT_NORETURN inline KOKKOS_IMPL_DEVICE_FUNCTION void device_abort(
+    const char *const msg) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  ::Kokkos::Impl::cuda_abort(msg);
+#elif defined(KOKKOS_ENABLE_HIP)
+  ::Kokkos::Impl::hip_abort(msg);
+#elif defined(KOKKOS_ENABLE_SYCL)
+  ::Kokkos::Impl::sycl_abort(msg);
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  // FIXME_OPENMPTARGET
+#else
+#error faulty logic
+#endif
+}
+#endif
+
 [[noreturn]] void throw_runtime_exception(const std::string &msg);
 
 void traceback_callstack(std::ostream &);
@@ -199,17 +217,8 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 namespace Kokkos {
 KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
     const char *const message) {
-#if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
-  Kokkos::Impl::cuda_abort(message);
-#elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
-  Kokkos::Impl::hip_abort(message);
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
-  Kokkos::Impl::sycl_abort(message);
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
-  Kokkos::Impl::host_abort(message);
-#else
-  (void)message;  // FIXME_OPENMPTARGET
-#endif
+  KOKKOS_IF_ON_HOST(::Kokkos::Impl::host_abort(message););
+  KOKKOS_IF_ON_DEVICE(::Kokkos::Impl::device_abort(message););
 }
 
 #undef KOKKOS_IMPL_ABORT_NORETURN
