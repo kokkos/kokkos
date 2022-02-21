@@ -84,4 +84,4 @@ jobs:
 
       - name: test_kokkos
         working-directory: kokkos/build
-        run: ctest -j2 --output-on-failure
+        run: ctest --timeout 2000 -j2 --output-on-failure
