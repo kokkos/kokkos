@@ -4278,37 +4278,6 @@ void ReportInvalidTestSuiteType(const char* test_suite_name,
 }
 }  // namespace internal
 
-namespace {
-
-// A predicate that checks the test name of a TestInfo against a known
-// value.
-//
-// This is used for implementation of the TestSuite class only.  We put
-// it in the anonymous namespace to prevent polluting the outer
-// namespace.
-//
-// TestNameIs is copyable.
-class TestNameIs {
- public:
-  // Constructor.
-  //
-  // TestNameIs has NO default constructor.
-  explicit TestNameIs(const char* name)
-      : name_(name) {}
-#if defined(__EDG__)
-#pragma diag_suppress declared_but_not_referenced
-#endif
-  // Returns true if and only if the test name of test_info matches name_.
-  bool operator()(const TestInfo * test_info) const {
-    return test_info && test_info->name() == name_;
-  }
-
- private:
-  std::string name_;
-};
-
-}  // namespace
-
 namespace internal {
 
 // This method expands all parameterized tests registered with macros TEST_P
