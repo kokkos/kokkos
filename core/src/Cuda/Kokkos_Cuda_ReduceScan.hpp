@@ -520,16 +520,16 @@ __device__ void cuda_intra_block_reduce_scan(
     const unsigned inner_mask =
         __ballot_sync(0xffffffff, (threadIdx.y < n_active_warps));
     if (threadIdx.y < n_active_warps) {
-      const bool is_full_warp =
+      const bool is_full_warp_inter =
           threadIdx.y < (blockDim.y >> CudaTraits::WarpIndexShift);
       const pointer_type tdata_inter =
           base_data +
-          value_count * (is_full_warp
+          value_count * (is_full_warp_inter
                              ? (threadIdx.y << CudaTraits::WarpIndexShift) +
                                    (CudaTraits::WarpSize - 1)
                              : blockDim.y - 1);
       const unsigned index_shift =
-          is_full_warp
+          is_full_warp_inter
               ? 0
               : blockDim.y - (threadIdx.y << CudaTraits::WarpIndexShift);
       const int rtid_inter = (threadIdx.y << CudaTraits::WarpIndexShift) +
