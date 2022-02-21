@@ -41,6 +41,7 @@ template <typename iType,
 using IndexRange = Kokkos::Array<iType, 2>;
 
 using index_list_type = std::initializer_list<int64_t>;
+using range_type      = std::pair<int64_t, int64_t>;
 
 //  template <typename iType,
 //    typename std::enable_if< std::is_integral<iType>::value &&
@@ -1108,6 +1109,36 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   explicit inline OffsetView(
       const Label& arg_label,
       typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
+                              const range_type>::type range0,
+      const range_type range1 = KOKKOS_INVALID_INDEX_RANGE,
+      const range_type range2 = KOKKOS_INVALID_INDEX_RANGE,
+      const range_type range3 = KOKKOS_INVALID_INDEX_RANGE,
+      const range_type range4 = KOKKOS_INVALID_INDEX_RANGE,
+      const range_type range5 = KOKKOS_INVALID_INDEX_RANGE,
+      const range_type range6 = KOKKOS_INVALID_INDEX_RANGE,
+      const range_type range7 = KOKKOS_INVALID_INDEX_RANGE
+
+      )
+      : OffsetView(
+            Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
+            typename traits::array_layout(range0.second - range0.first + 1,
+                                          range1.second - range1.first + 1,
+                                          range2.second - range2.first + 1,
+                                          range3.second - range3.first + 1,
+                                          range4.second - range4.first + 1,
+                                          range5.second - range5.first + 1,
+                                          range6.second - range6.first + 1,
+                                          range7.second - range7.first + 1),
+            {range0.first, range1.first, range2.first, range3.first,
+             range4.first, range5.first, range6.first, range7.first}) {}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  template <typename Label>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the constructor taking range_type arguments instead!")
+  explicit inline OffsetView(
+      const Label& arg_label,
+      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
                               const index_list_type>::type range0,
       const index_list_type range1 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range2 = KOKKOS_INVALID_INDEX_RANGE,
@@ -1115,22 +1146,16 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       const index_list_type range4 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range5 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range6 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range7 = KOKKOS_INVALID_INDEX_RANGE
-
-      )
-      : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
-                   typename traits::array_layout(
-                       range0.begin()[1] - range0.begin()[0] + 1,
-                       range1.begin()[1] - range1.begin()[0] + 1,
-                       range2.begin()[1] - range2.begin()[0] + 1,
-                       range3.begin()[1] - range3.begin()[0] + 1,
-                       range4.begin()[1] - range4.begin()[0] + 1,
-                       range5.begin()[1] - range5.begin()[0] + 1,
-                       range6.begin()[1] - range6.begin()[0] + 1,
-                       range7.begin()[1] - range7.begin()[0] + 1),
-                   {range0.begin()[0], range1.begin()[0], range2.begin()[0],
-                    range3.begin()[0], range4.begin()[0], range5.begin()[0],
-                    range6.begin()[0], range7.begin()[0]}) {}
+      const index_list_type range7 = KOKKOS_INVALID_INDEX_RANGE)
+      : OffsetView(arg_label, range_type(range0.begin()[0], range0.begin()[1]),
+                   range_type(range1.begin()[0], range1.begin()[1]),
+                   range_type(range2.begin()[0], range2.begin()[1]),
+                   range_type(range3.begin()[0], range3.begin()[1]),
+                   range_type(range4.begin()[0], range4.begin()[1]),
+                   range_type(range5.begin()[0], range5.begin()[1]),
+                   range_type(range6.begin()[0], range6.begin()[1]),
+                   range_type(range7.begin()[0], range7.begin()[1])) {}
+#endif
 
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION OffsetView(
