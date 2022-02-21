@@ -104,7 +104,7 @@ KOKKOS_IMPL_ABORT_NORETURN inline KOKKOS_IMPL_DEVICE_FUNCTION void device_abort(
 #elif defined(KOKKOS_ENABLE_SYCL)
   ::Kokkos::Impl::sycl_abort(msg);
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  // FIXME_OPENMPTARGET
+  printf("%s", msg);  // FIXME_OPENMPTARGET
 #else
 #error faulty logic
 #endif
