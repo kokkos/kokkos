@@ -600,6 +600,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_TeamScratchStreams.cpp
       hip/TestHIP_AsyncLauncher.cpp
       hip/TestHIP_BlocksizeDeduction.cpp
+      hip/TestHIP_MDTeamParallelism.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIPInterOpInit
