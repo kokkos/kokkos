@@ -44,6 +44,7 @@
 
 #include <gtest/gtest.h>
 
+#include <regex>
 #include <Kokkos_Core.hpp>
 
 TEST(TEST_CATEGORY_DEATH, abort_from_host) {
@@ -53,3 +54,105 @@ TEST(TEST_CATEGORY_DEATH, abort_from_host) {
   EXPECT_DEATH({ Kokkos::abort(msg); }, msg);
 }
 
+template <class ExecutionSpace>
+void test_abort_printing_to_stdout() {
+  ::testing::internal::CaptureStdout();
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+      KOKKOS_LAMBDA(int) { Kokkos::abort("move along nothing to see here"); });
+  Kokkos::fence();
+  auto const captured = ::testing::internal::GetCapturedStdout();
+  EXPECT_EQ(captured, "move along nothing to see here");
+}
+
+template <class ExecutionSpace>
+void test_abort_causing_abnormal_program_termination_but_ignoring_message() {
+  EXPECT_DEATH(
+      {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+            KOKKOS_LAMBDA(int) { Kokkos::abort("ignored"); });
+        Kokkos::fence();
+      },
+      ".*");
+}
+
+template <class ExecutionSpace>
+void test_abort_throwing_exception_and_printing_to_stderr() {
+  ::testing::internal::CaptureStderr();
+  EXPECT_THROW(
+      {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+            KOKKOS_LAMBDA(int) { Kokkos::abort("is anyone listening?"); });
+        Kokkos::fence();
+      },
+      std::runtime_error);
+  auto const captured = ::testing::internal::GetCapturedStderr();
+  // FIXME use EXPECT_THAT(captured, ::testing::ContainsRegex(...) with gMock
+  EXPECT_PRED1(
+      [](std::string const& s) {
+        return std::regex_search(s, std::regex("is anyone listening?"));
+      },
+      captured);
+}
+
+template <class ExecutionSpace>
+void test_abort_causing_abnormal_program_termination_and_printing() {
+  EXPECT_DEATH(
+      {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(0, 1), KOKKOS_LAMBDA(int) {
+              Kokkos::abort("Meurs, pourriture communiste !");
+            });
+        Kokkos::fence();
+      },
+      "Meurs, pourriture communiste !");
+}
+
+template <class ExecutionSpace>
+void test_abort_from_device() {
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>::value) {
+    test_abort_printing_to_stdout<ExecutionSpace>();
+  } else {
+    test_abort_causing_abnormal_program_termination_and_printing<
+        ExecutionSpace>();
+  }
+#elif defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::SYCL>::value) {
+#ifdef NDEBUG
+    test_abort_printing_to_stdout<ExecutionSpace>();
+#else
+    test_abort_causing_abnormal_program_termination_and_printing<
+        ExecutionSpace>();
+#endif
+  } else {
+    test_abort_causing_abnormal_program_termination_and_printing<
+        ExecutionSpace>();
+  }
+#elif defined(KOKKOS_ENABLE_HIP)  // FIXME_HIP
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value) {
+    test_abort_causing_abnormal_program_termination_but_ignoring_message<
+        ExecutionSpace>();
+  } else {
+    test_abort_causing_abnormal_program_termination_and_printing<
+        ExecutionSpace>();
+  }
+#elif defined(KOKKOS_ENABLE_CUDA)  // FIXME_CUDA
+  if (std::is_same<ExecutionSpace, Kokkos::Cuda>::value) {
+    test_abort_throwing_exception_and_printing_to_stderr<ExecutionSpace>();
+  } else {
+    test_abort_causing_abnormal_program_termination_and_printing<
+        ExecutionSpace>();
+  }
+#else
+  test_abort_causing_abnormal_program_termination_and_printing<
+      ExecutionSpace>();
+#endif
+}
+
+TEST(TEST_CATEGORY_DEATH, abort_from_device) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  test_abort_from_device<TEST_EXECSPACE>();
+}
