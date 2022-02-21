@@ -1,0 +1,87 @@
+name: github-Linux-hpx
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  hpx:
+    name: hpx
+    runs-on: [ubuntu-latest]
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2.2.0
+        with:
+          path: kokkos
+      - name: setup hpx dependencies
+        run: |
+          sudo apt update
+          sudo apt install \
+            clang \
+            hwloc \
+            libasio-dev \
+            libboost-all-dev \
+            ninja-build
+      - name: checkout hpx
+        uses: actions/checkout@v2.2.0
+        with:
+          repository: STELLAR-GROUP/hpx
+          ref: 1.7.1
+          path: hpx
+      - uses: actions/cache@v2
+        id:   cache-hpx
+        with:
+          path:         ./hpx/install
+          key:          kokkos-hwloc-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-hwloc-${{ github.ref }}
+      - name: configure hpx
+        if: steps.cache-hpx.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p hpx/{build,install}
+          cd hpx/build
+          cmake \
+            -GNinja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DHPX_WITH_UNITY_BUILD=ON \
+            -DHPX_WITH_MALLOC=system \
+            -DHPX_WITH_NETWORKING=OFF \
+            -DHPX_WITH_EXAMPLES=OFF \
+            -DHPX_WITH_TESTS=OFF \
+            ..
+      - name: build and install hpx
+        if: steps.cache-hpx.outputs.cache-hit != 'true'
+        working-directory: hpx/build
+        run: ninja install
+
+      - name: configure kokkos
+        run: |
+          mkdir -p kokkos/{build,install}
+          cd kokkos/build
+          cmake \
+            -GNinja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DHPX_ROOT=$PWD/../../hpx/install \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_HPX=ON \
+            -DKokkos_ENABLE_HPX_ASYNC_DISPATCH=ON \
+            -DKokkos_ENABLE_SERIAL=OFF \
+            -DKokkos_ENABLE_TESTS=ON \
+            ..
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos/build
+        run: ninja install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --timeout 2000 -j2 --output-on-failure
