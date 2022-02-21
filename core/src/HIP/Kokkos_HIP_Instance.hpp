@@ -120,9 +120,8 @@ class HIPInternal {
   std::size_t m_scratchSpaceCount = 0;
   std::size_t m_scratchFlagsCount = 0;
 
-  size_type *m_scratchSpace           = nullptr;
-  size_type *m_scratchFlags           = nullptr;
-  uint32_t *m_scratchConcurrentBitset = nullptr;
+  size_type *m_scratchSpace = nullptr;
+  size_type *m_scratchFlags = nullptr;
 
   hipDeviceProp_t m_deviceProp;
 
@@ -135,6 +134,7 @@ class HIPInternal {
   mutable int64_t m_team_scratch_current_size = 0;
   mutable void *m_team_scratch_ptr            = nullptr;
   mutable std::mutex m_team_scratch_mutex;
+  std::int32_t *m_scratch_locks;
 
   bool was_finalized = false;
 

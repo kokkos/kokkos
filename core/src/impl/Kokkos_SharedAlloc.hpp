@@ -65,8 +65,13 @@ class SharedAllocationHeader {
  private:
   using Record = SharedAllocationRecord<void, void>;
 
+#ifdef KOKKOS_ARCH_VEGA
+  static constexpr unsigned maximum_label_length =
+      (1u << 8 /* 256 */) - sizeof(Record*);
+#else
   static constexpr unsigned maximum_label_length =
       (1u << 7 /* 128 */) - sizeof(Record*);
+#endif
 
   template <class, class>
   friend class SharedAllocationRecord;
@@ -93,8 +98,13 @@ class SharedAllocationHeader {
 template <>
 class SharedAllocationRecord<void, void> {
  protected:
+#ifdef KOKKOS_ARCH_VEGA
+  static_assert(sizeof(SharedAllocationHeader) == (1u << 8 /* 256 */),
+                "sizeof(SharedAllocationHeader) != 256");
+#else
   static_assert(sizeof(SharedAllocationHeader) == (1u << 7 /* 128 */),
                 "sizeof(SharedAllocationHeader) != 128");
+#endif
 
   template <class, class>
   friend class SharedAllocationRecord;

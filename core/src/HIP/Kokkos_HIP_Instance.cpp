@@ -69,6 +69,23 @@ __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
 #endif
 
 namespace Kokkos {
+namespace Impl {
+Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>
+hip_global_unique_token_locks(bool deallocate) {
+  static Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace> locks =
+      Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>();
+  if (!deallocate && locks.extent(0) == 0)
+    locks = Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>(
+        "Kokkos::UniqueToken<HIP>::m_locks",
+        Kokkos::Experimental::HIP().concurrency());
+  if (deallocate)
+    locks = Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>();
+  return locks;
+}
+}  // namespace Impl
+}  // namespace Kokkos
+
+namespace Kokkos {
 namespace Experimental {
 namespace {
 class HIPInternalDevices {
@@ -135,25 +152,24 @@ void HIPInternal::print_configuration(std::ostream &s) const {
 //----------------------------------------------------------------------------
 
 HIPInternal::~HIPInternal() {
-  if (m_scratchSpace || m_scratchFlags || m_scratchConcurrentBitset) {
+  if (m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::HIP ERROR: Failed to call "
                  "Kokkos::Experimental::HIP::finalize()"
               << std::endl;
     std::cerr.flush();
   }
 
-  m_hipDev                  = -1;
-  m_hipArch                 = -1;
-  m_multiProcCount          = 0;
-  m_maxWarpCount            = 0;
-  m_maxSharedWords          = 0;
-  m_maxShmemPerBlock        = 0;
-  m_scratchSpaceCount       = 0;
-  m_scratchFlagsCount       = 0;
-  m_scratchSpace            = nullptr;
-  m_scratchFlags            = nullptr;
-  m_scratchConcurrentBitset = nullptr;
-  m_stream                  = nullptr;
+  m_hipDev            = -1;
+  m_hipArch           = -1;
+  m_multiProcCount    = 0;
+  m_maxWarpCount      = 0;
+  m_maxSharedWords    = 0;
+  m_maxShmemPerBlock  = 0;
+  m_scratchSpaceCount = 0;
+  m_scratchFlagsCount = 0;
+  m_scratchSpace      = nullptr;
+  m_scratchFlags      = nullptr;
+  m_stream            = nullptr;
 }
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
@@ -289,11 +305,6 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
                                          sizeof(uint32_t) * buffer_bound);
 
       Record::increment(r);
-
-      m_scratchConcurrentBitset = reinterpret_cast<uint32_t *>(r->data());
-
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchConcurrentBitset, 0,
-                                          sizeof(uint32_t) * buffer_bound));
     }
     //----------------------------------
 
@@ -323,6 +334,11 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipEventCreate(&constantMemReusable));
   }
+
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipMalloc(&m_scratch_locks, sizeof(int32_t) * HIP::concurrency()));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * HIP::concurrency()));
 }
 
 //----------------------------------------------------------------------------
@@ -403,13 +419,16 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
+
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
+    if (this == &singleton())
+      (void)Kokkos::Impl::hip_global_unique_token_locks(true);
+
     using RecordHIP =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;
 
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
-    RecordHIP::decrement(RecordHIP::get_record(m_scratchConcurrentBitset));
 
     if (m_team_scratch_current_size > 0)
       Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
@@ -428,10 +447,12 @@ void HIPInternal::finalize() {
     m_scratchFlagsCount         = 0;
     m_scratchSpace              = nullptr;
     m_scratchFlags              = nullptr;
-    m_scratchConcurrentBitset   = nullptr;
     m_stream                    = nullptr;
     m_team_scratch_current_size = 0;
     m_team_scratch_ptr          = nullptr;
+
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
+    m_scratch_locks = nullptr;
   }
   if (nullptr != d_driverWorkArray) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));

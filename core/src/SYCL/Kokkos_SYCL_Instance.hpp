@@ -78,11 +78,10 @@ class SYCLInternal {
   uint32_t m_maxConcurrency   = 0;
   uint64_t m_maxShmemPerBlock = 0;
 
-  uint32_t* m_scratchConcurrentBitset = nullptr;
-  std::size_t m_scratchSpaceCount     = 0;
-  size_type* m_scratchSpace           = nullptr;
-  std::size_t m_scratchFlagsCount     = 0;
-  size_type* m_scratchFlags           = nullptr;
+  std::size_t m_scratchSpaceCount = 0;
+  size_type* m_scratchSpace       = nullptr;
+  std::size_t m_scratchFlagsCount = 0;
+  size_type* m_scratchFlags       = nullptr;
   // mutex to access shared memory
   mutable std::mutex m_mutexScratchSpace;
 
@@ -149,12 +148,9 @@ class SYCLInternal {
       fence();
       reserve(sizeof(T));
       if constexpr (sycl::usm::alloc::device == Kind) {
-        sycl::event memcopied =
-            m_q->memcpy(m_data, std::addressof(t), sizeof(T));
-        SYCLInternal::fence(
-            memcopied,
-            "Kokkos::Experimental::SYCLInternal::USMObject fence after copy",
-            m_instance_id);
+        std::memcpy(static_cast<void*>(m_staging.get()), std::addressof(t),
+                    sizeof(T));
+        m_copy_event = m_q->memcpy(m_data, m_staging.get(), sizeof(T));
       } else
         std::memcpy(m_data, std::addressof(t), sizeof(T));
       return *reinterpret_cast<T*>(m_data);
@@ -176,6 +172,8 @@ class SYCLInternal {
       m_mutex.unlock();
     }
 
+    sycl::event get_copy_event() const { return m_copy_event; }
+
    private:
     // USMObjectMem class invariants
     // All four expressions below must evaluate to true:
@@ -187,8 +185,12 @@ class SYCLInternal {
     //  if m_data != nullptr then m_capacity != 0 && m_q != nullopt
     //  if m_data == nullptr then m_capacity == 0
 
+    sycl::event m_copy_event;
+
     std::optional<sycl::queue> m_q;
-    void* m_data      = nullptr;
+    void* m_data = nullptr;
+    std::unique_ptr<char[]> m_staging;
+
     size_t m_capacity = 0;
     sycl::event m_last_event;
 
@@ -202,10 +204,7 @@ class SYCLInternal {
   // copied to USM memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
   using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::host>;
-  IndirectKernelMem m_indirectKernelMem;
-
-  using IndirectReducerMem = USMObjectMem<sycl::usm::alloc::host>;
-  IndirectReducerMem m_indirectReducerMem;
+  IndirectKernelMem& get_indirect_kernel_mem();
 
   bool was_finalized = false;
 
@@ -227,6 +226,11 @@ class SYCLInternal {
   template <typename WAT>
   static void fence_helper(WAT& wat, const std::string& name,
                            uint32_t instance_id);
+
+  const static size_t m_usm_pool_size = 4;
+  std::vector<IndirectKernelMem> m_indirectKernelMem{m_usm_pool_size};
+
+  size_t m_pool_next{0};
 
  public:
   static void fence(sycl::queue& q, const std::string& name,
@@ -286,7 +290,9 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
 
   const Functor& get_functor() const { return m_functor.m_f; }
 
-  static void register_event(Storage&, sycl::event){};
+  sycl::event get_copy_event() const { return {}; }
+
+  static void register_event(sycl::event) {}
 };
 #else
 template <typename Functor, typename Storage>
@@ -298,24 +304,31 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
 
   const Functor& get_functor() const { return m_functor; }
 
-  static void register_event(Storage&, sycl::event){};
+  sycl::event get_copy_event() const { return {}; }
+
+  static void register_event(sycl::event) {}
 };
 #endif
 
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, true> {
   std::reference_wrapper<const Functor> m_kernelFunctor;
+  std::reference_wrapper<Storage> m_storage;
 
  public:
   SYCLFunctionWrapper(const Functor& functor, Storage& storage)
-      : m_kernelFunctor(storage.copy_from(functor)) {}
+      : m_kernelFunctor(storage.copy_from(functor)), m_storage(storage) {}
 
   std::reference_wrapper<const Functor> get_functor() const {
     return m_kernelFunctor;
   }
 
-  static void register_event(Storage& storage, sycl::event event) {
-    storage.register_event(event);
+  sycl::event get_copy_event() const {
+    return m_storage.get().get_copy_event();
+  }
+
+  void register_event(sycl::event event) {
+    m_storage.get().register_event(event);
   }
 };
 

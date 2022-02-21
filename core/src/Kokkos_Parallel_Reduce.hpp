@@ -1579,9 +1579,11 @@ template <class PolicyType, class FunctorType, class ReturnType>
 struct ParallelReduceAdaptor {
   using return_value_adapter =
       Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
-  static inline void execute(const std::string& label, const PolicyType& policy,
-                             const FunctorType& functor,
-                             ReturnType& return_value) {
+
+  static inline void execute_impl(const std::string& label,
+                                  const PolicyType& policy,
+                                  const FunctorType& functor,
+                                  ReturnType& return_value) {
     uint64_t kpID = 0;
 
     PolicyType inner_policy = policy;
@@ -1601,6 +1603,31 @@ struct ParallelReduceAdaptor {
         typename return_value_adapter::reducer_type>(inner_policy, functor,
                                                      label, kpID);
   }
+
+  static constexpr bool is_array_reduction =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
+                            FunctorType>::StaticValueSize == 0;
+
+  template <typename Dummy = ReturnType>
+  static inline std::enable_if_t<!(is_array_reduction &&
+                                   std::is_pointer<Dummy>::value)>
+  execute(const std::string& label, const PolicyType& policy,
+          const FunctorType& functor, ReturnType& return_value) {
+    execute_impl(label, policy, functor, return_value);
+  }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  template <typename Dummy = ReturnType>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Array reductions with a raw pointer return type a deprecated. Use a "
+      "Kokkos::View as return argument!")
+  static inline std::
+      enable_if_t<is_array_reduction && std::is_pointer<Dummy>::value> execute(
+          const std::string& label, const PolicyType& policy,
+          const FunctorType& functor, ReturnType& return_value) {
+    execute_impl(label, policy, functor, return_value);
+  }
+#endif
 };
 }  // namespace Impl
 

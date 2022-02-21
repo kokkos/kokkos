@@ -71,6 +71,7 @@ KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
 SET(COMPILE_ONLY_SOURCES
   TestDetectionIdiom.cpp
+  TestViewOperatorParens.cpp
   TestInterOp.cpp
   TestTypeList.cpp
 )

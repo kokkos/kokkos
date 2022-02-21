@@ -1,7 +1,7 @@
 # Default settings common options.
 
 KOKKOS_VERSION_MAJOR = 3
-KOKKOS_VERSION_MINOR = 5
+KOKKOS_VERSION_MINOR = 6
 KOKKOS_VERSION_PATCH = 99
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
@@ -470,7 +470,7 @@ ifneq ($(KOKKOS_CMAKE), yes)
   # CXXLDFLAGS is used together with CXXFLAGS in a combined compile/link command
   KOKKOS_CXXLDFLAGS = -L$(shell pwd)
 endif
-KOKKOS_LINK_FLAGS = 
+KOKKOS_LINK_FLAGS =
 KOKKOS_SRC =
 KOKKOS_HEADERS =
 
@@ -502,7 +502,7 @@ tmp := $(call kokkos_append_header,'$H''endif')
 tmp := $(call kokkos_append_header,"")
 tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION $(KOKKOS_VERSION)")
 tmp := $(call kokkos_append_header,"")
-	
+
 tmp := $(call kokkos_append_header,"/* Execution Spaces */")
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
@@ -1180,23 +1180,23 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   # Lets start with adding architecture defines
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA900), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HIP 900")
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA900")
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
     KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx900
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA906), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HIP 906")
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA906")
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
     KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx906
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA908), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HIP 908")
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA908")
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
     KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx908
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA90A), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HIP 90A")
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA90A")
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
     KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx90a
   endif
 
@@ -1434,14 +1434,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
   KOKKOS_TPL_LIBRARY_NAMES += hpx
 endif
 
-# Explicitly set the GCC Toolchain for Clang.
-ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-  KOKKOS_INTERNAL_GCC_PATH = $(shell which g++)
-  KOKKOS_INTERNAL_GCC_TOOLCHAIN = $(KOKKOS_INTERNAL_GCC_PATH:/bin/g++=)
-  KOKKOS_CXXFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
-  KOKKOS_LDFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
-endif
-
 # Don't include Kokkos_HBWSpace.cpp if not using MEMKIND to avoid a link warning.
 ifneq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp,$(KOKKOS_SRC))
@@ -1488,7 +1480,7 @@ libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
 	ranlib libkokkos.a
 
-print-cxx-flags: 
+print-cxx-flags:
 	echo "$(KOKKOS_CXXFLAGS)"
 
 KOKKOS_LINK_DEPENDS=libkokkos.a

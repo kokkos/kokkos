@@ -61,6 +61,7 @@
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
+#include <Kokkos_MinMaxClamp.hpp>
 #include <Kokkos_Vectorization.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -663,6 +664,42 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       : m_functor(arg_functor), m_rp(arg_policy) {}
 };
 
+__device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
+                                                 int32_t* scratch_locks) {
+  int64_t threadid = 0;
+  __shared__ int64_t base_thread_id;
+  if (threadIdx.x == 0 && threadIdx.y == 0) {
+    int64_t const wraparound_len = Kokkos::Experimental::min(
+        int64_t(league_size),
+        (int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n)) /
+            (blockDim.x * blockDim.y));
+    threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
+    threadid *= blockDim.x * blockDim.y;
+    int done = 0;
+    while (!done) {
+      done = (0 == atomicCAS(&scratch_locks[threadid], 0, 1));
+      if (!done) {
+        threadid += blockDim.x * blockDim.y;
+        if (int64_t(threadid + blockDim.x * blockDim.y) >=
+            wraparound_len * blockDim.x * blockDim.y)
+          threadid = 0;
+      }
+    }
+    base_thread_id = threadid;
+  }
+  __syncthreads();
+  threadid = base_thread_id;
+  return threadid;
+}
+
+__device__ inline void cuda_release_scratch_index(int32_t* scratch_locks,
+                                                  int64_t threadid) {
+  __syncthreads();
+  if (threadIdx.x == 0 && threadIdx.y == 0) {
+    scratch_locks[threadid] = 0;
+  }
+}
+
 template <class FunctorType, class... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Cuda> {
@@ -696,6 +733,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   void* m_scratch_ptr[2];
   int m_scratch_size[2];
   int m_scratch_pool_id = -1;
+  int32_t* m_scratch_locks;
 
   template <class TagType>
   __device__ inline
@@ -718,30 +756,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Iterate this block through the league
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      __shared__ int64_t base_thread_id;
-      if (threadIdx.x == 0 && threadIdx.y == 0) {
-        threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
-                   (Kokkos::Impl::g_device_cuda_lock_arrays.n /
-                    (blockDim.x * blockDim.y));
-        threadid *= blockDim.x * blockDim.y;
-        int done = 0;
-        while (!done) {
-          done =
-              (0 ==
-               atomicCAS(
-                   &Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],
-                   0, 1));
-          if (!done) {
-            threadid += blockDim.x * blockDim.y;
-            if (int64_t(threadid + blockDim.x * blockDim.y) >=
-                int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n))
-              threadid = 0;
-          }
-        }
-        base_thread_id = threadid;
-      }
-      __syncthreads();
-      threadid = base_thread_id;
+      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
     }
 
     const int int_league_size = (int)m_league_size;
@@ -755,9 +770,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_scratch_size[1], league_rank, m_league_size));
     }
     if (m_scratch_size[1] > 0) {
-      __syncthreads();
-      if (threadIdx.x == 0 && threadIdx.y == 0)
-        Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid] = 0;
+      cuda_release_scratch_index(m_scratch_locks, threadid);
     }
   }
 
@@ -802,6 +815,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
          FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
     m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks =
+        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
@@ -814,8 +829,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               .impl_internal_space_instance()
               ->resize_team_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (static_cast<std::int64_t>(Cuda::concurrency() /
-                                             (m_team_size * m_vector_size))));
+                  (std::min(
+                      static_cast<std::int64_t>(Cuda::concurrency() /
+                                                (m_team_size * m_vector_size)),
+                      static_cast<std::int64_t>(m_league_size))));
       m_scratch_ptr[1]  = scratch_ptr_id.first;
       m_scratch_pool_id = scratch_ptr_id.second;
     }
@@ -1638,6 +1655,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   void* m_scratch_ptr[2];
   int m_scratch_size[2];
   int m_scratch_pool_id = -1;
+  int32_t* m_scratch_locks;
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
@@ -1662,39 +1680,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   __device__ inline void operator()() const {
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      __shared__ int64_t base_thread_id;
-      if (threadIdx.x == 0 && threadIdx.y == 0) {
-        threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
-                   (Kokkos::Impl::g_device_cuda_lock_arrays.n /
-                    (blockDim.x * blockDim.y));
-        threadid *= blockDim.x * blockDim.y;
-        int done = 0;
-        while (!done) {
-          done =
-              (0 ==
-               atomicCAS(
-                   &Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid],
-                   0, 1));
-          if (!done) {
-            threadid += blockDim.x * blockDim.y;
-            if (int64_t(threadid + blockDim.x * blockDim.y) >=
-                int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n))
-              threadid = 0;
-          }
-        }
-        base_thread_id = threadid;
-      }
-      __syncthreads();
-      threadid = base_thread_id;
+      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
     }
 
     run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
                            DummySHMEMReductionType>::select(1, 1.0),
         threadid);
     if (m_scratch_size[1] > 0) {
-      __syncthreads();
-      if (threadIdx.x == 0 && threadIdx.y == 0)
-        Kokkos::Impl::g_device_cuda_lock_arrays.scratch[threadid] = 0;
+      cuda_release_scratch_index(m_scratch_locks, threadid);
     }
   }
 
@@ -1955,6 +1948,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks =
+        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
     if (m_team_size <= 0) {
       m_scratch_ptr[1] = nullptr;
     } else {
@@ -1963,8 +1958,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               .impl_internal_space_instance()
               ->resize_team_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (static_cast<std::int64_t>(Cuda::concurrency() /
-                                             (m_team_size * m_vector_size))));
+                  (std::min(
+                      static_cast<std::int64_t>(Cuda::concurrency() /
+                                                (m_team_size * m_vector_size)),
+                      static_cast<std::int64_t>(m_league_size))));
       m_scratch_ptr[1]  = scratch_ptr_id.first;
       m_scratch_pool_id = scratch_ptr_id.second;
     }
@@ -2067,8 +2064,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               .impl_internal_space_instance()
               ->resize_team_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (static_cast<std::int64_t>(Cuda::concurrency() /
-                                             (m_team_size * m_vector_size))));
+                  (std::min(
+                      static_cast<std::int64_t>(Cuda::concurrency() /
+                                                (m_team_size * m_vector_size)),
+                      static_cast<std::int64_t>(m_league_size))));
       m_scratch_ptr[1]  = scratch_ptr_id.first;
       m_scratch_pool_id = scratch_ptr_id.second;
     }

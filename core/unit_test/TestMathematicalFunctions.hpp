@@ -299,10 +299,10 @@ struct math_function_name;
   struct MathUnaryFunction_##FUNC {                                            \
     template <typename T>                                                      \
     static KOKKOS_FUNCTION auto eval(T x) {                                    \
-      static_assert(std::is_same<decltype(Kokkos::Experimental::FUNC((T)0)),   \
+      static_assert(std::is_same<decltype(Kokkos::FUNC((T)0)),                 \
                                  math_unary_function_return_type_t<T>>::value, \
                     "");                                                       \
-      return Kokkos::Experimental::FUNC(x);                                    \
+      return Kokkos::FUNC(x);                                                  \
     }                                                                          \
     template <typename T>                                                      \
     static auto eval_std(T x) {                                                \
@@ -379,10 +379,10 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
     template <typename T, typename U>                                    \
     static KOKKOS_FUNCTION auto eval(T x, U y) {                         \
       static_assert(                                                     \
-          std::is_same<decltype(Kokkos::Experimental::FUNC((T)0, (U)0)), \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),               \
                        math_binary_function_return_type_t<T, U>>::value, \
           "");                                                           \
-      return Kokkos::Experimental::FUNC(x, y);                           \
+      return Kokkos::FUNC(x, y);                                         \
     }                                                                    \
     template <typename T, typename U>                                    \
     static auto eval_std(T x, U y) {                                     \
@@ -433,8 +433,6 @@ struct TestMathUnaryFunction : FloatingPointComparison {
   Arg val_[N];
   Ret res_[N];
   TestMathUnaryFunction(const Arg (&val)[N]) {
-    std::cout << math_function_name<Func>::name << "("
-              << type_helper<Arg>::name() << ")\n";
     std::copy(val, val + N, val_);
     std::transform(val, val + N, res_,
                    [](auto x) { return Func::eval_std(x); });
@@ -443,7 +441,9 @@ struct TestMathUnaryFunction : FloatingPointComparison {
   void run() {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
-    ASSERT_EQ(errors, 0);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int i, int& e) const {
     bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
@@ -474,15 +474,15 @@ struct TestMathBinaryFunction : FloatingPointComparison {
   Ret res_;
   TestMathBinaryFunction(Arg1 val1, Arg2 val2)
       : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
-    std::cout << math_function_name<Func>::name << "("
-              << type_helper<Arg1>::name() << ", " << type_helper<Arg2>::name()
-              << ")\n";
     run();
   }
   void run() {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
-    ASSERT_EQ(errors, 0);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
@@ -953,7 +953,7 @@ struct TestAbsoluteValueFunction {
     ASSERT_EQ(errors, 0);
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    using Kokkos::Experimental::abs;
+    using Kokkos::abs;
     if (abs(1) != 1 || abs(-1) != 1) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(int)\n");
@@ -981,8 +981,8 @@ struct TestAbsoluteValueFunction {
     }
 #endif
     // special values
-    using Kokkos::Experimental::isinf;
-    using Kokkos::Experimental::isnan;
+    using Kokkos::isinf;
+    using Kokkos::isnan;
     if (abs(-0.) != 0.
 #ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
         || !isinf(abs(-INFINITY)) || !isnan(abs(-NAN))
@@ -1017,7 +1017,7 @@ struct TestIsNaN {
     ASSERT_EQ(errors, 0);
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    using Kokkos::Experimental::isnan;
+    using Kokkos::isnan;
     using Kokkos::Experimental::quiet_NaN;
     using Kokkos::Experimental::signaling_NaN;
     if (isnan(1) || isnan(INT_MAX)) {

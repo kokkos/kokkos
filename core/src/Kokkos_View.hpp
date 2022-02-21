@@ -811,8 +811,12 @@ class View : public ViewTraits<DataType, Properties...> {
   //------------------------------
   // Rank 0 operator()
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  reference_type operator()() const { return m_map.reference(); }
+  template <int R            = Rank,
+            class /*Enable*/ = std::enable_if_t<(0 == Rank) && (R == Rank)>>
+  KOKKOS_FORCEINLINE_FUNCTION reference_type operator()() const {
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track, m_map))
+    return m_map.reference();
+  }
   //------------------------------
   // Rank 1 operator()
 
@@ -1868,6 +1872,11 @@ as_view_of_rank_n(View<T, Args...>) {
   Kokkos::Impl::throw_runtime_exception(
       "Trying to get at a View of the wrong rank");
   return {};
+}
+
+template <typename Function, typename... Args>
+void apply_to_view_of_static_rank(Function&& f, View<Args...> a) {
+  f(a);
 }
 
 }  // namespace Impl
