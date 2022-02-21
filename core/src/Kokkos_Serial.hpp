@@ -935,7 +935,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const FunctorType m_functor;
   const Policy m_policy;
   const int m_league;
-  const int m_shared;
+  const size_t m_shared;
 
   template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(

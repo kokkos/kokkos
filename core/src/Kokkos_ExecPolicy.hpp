@@ -431,13 +431,13 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
 };
 
 struct PerTeamValue {
-  int value;
-  PerTeamValue(int arg);
+  size_t value;
+  PerTeamValue(size_t arg);
 };
 
 struct PerThreadValue {
-  int value;
-  PerThreadValue(int arg);
+  size_t value;
+  PerThreadValue(size_t arg);
 };
 
 template <class iType, class... Args>
@@ -470,14 +470,14 @@ extract_vector_length(iType, Args...) {
 
 }  // namespace Impl
 
-Impl::PerTeamValue PerTeam(const int& arg);
-Impl::PerThreadValue PerThread(const int& arg);
+Impl::PerTeamValue PerTeam(const size_t& arg);
+Impl::PerThreadValue PerThread(const size_t& arg);
 
 struct ScratchRequest {
   int level;
 
-  int per_team;
-  int per_thread;
+  size_t per_team;
+  size_t per_thread;
 
   inline ScratchRequest(const int& level_,
                         const Impl::PerTeamValue& team_value) {

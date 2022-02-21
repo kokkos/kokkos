@@ -699,7 +699,7 @@ struct HPXTeamMember {
       const TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
           &policy,
       const int team_rank, const int league_rank, void *scratch,
-      int scratch_size) noexcept
+      size_t scratch_size) noexcept
       : m_team_shared(scratch, scratch_size, scratch, scratch_size),
         m_league_size(policy.league_size()),
         m_league_rank(league_rank),
