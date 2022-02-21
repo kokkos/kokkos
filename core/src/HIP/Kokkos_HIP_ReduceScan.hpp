@@ -283,9 +283,8 @@ struct HIPReductionsFunctor<FunctorType, false> {
 //----------------------------------------------------------------------------
 /*
  *  Algorithmic constraints:
- *   (a) blockDim.y is a power of two
- *   (b) blockDim.y <= 1024
- *   (c) blockDim.x == blockDim.z == 1
+ *   (a) blockDim.y <= 1024
+ *   (b) blockDim.x == blockDim.z == 1
  */
 
 template <bool DoScan, class FunctorType>
@@ -294,60 +293,109 @@ __device__ void hip_intra_block_reduce_scan(
     typename FunctorType::pointer_type const base_data) {
   using pointer_type = typename FunctorType::pointer_type;
 
-  unsigned int const value_count   = functor.length();
-  unsigned int const BlockSizeMask = blockDim.y - 1;
-  int const WarpMask = Experimental::Impl::HIPTraits::WarpSize - 1;
+  const unsigned value_count = functor.length();
+  const unsigned not_less_power_of_two =
+      (1 << (Impl::int_log2(blockDim.y - 1) + 1));
+  const unsigned BlockSizeMask = not_less_power_of_two - 1;
+  // There is at most one warp that is neither completely full or empty.
+  // For that warp, we shift all indices logically to the end and ignore join
+  // operations with unassigned indices in the warp when performing the intra
+  // warp reduction/scan.
+  const bool is_full_warp =
+      (((threadIdx.y >> Experimental::Impl::HIPTraits::WarpIndexShift) + 1)
+       << Experimental::Impl::HIPTraits::WarpIndexShift) <= blockDim.y;
 
-  // Must have power of two thread count
-  if ((blockDim.y - 1) & blockDim.y) {
-    Kokkos::abort(
-        "HIP::hip_intra_block_reduce_scan requires power-of-two "
-        "blockDim.y\n");
-  }
+  const unsigned mapped_idx =
+      threadIdx.y + (is_full_warp
+                         ? 0
+                         : (not_less_power_of_two - blockDim.y) &
+                               (Experimental::Impl::HIPTraits::WarpSize - 1));
 
-  auto block_reduce_step =
-      [&functor, value_count](int const R, pointer_type const TD, int const S) {
-        if (R > ((1 << S) - 1)) {
-          functor.join(TD, (TD - (value_count << S)));
-        }
-      };
+  auto block_reduce_step = [&functor, value_count](
+                               int const R, pointer_type const TD, int const S,
+                               pointer_type memory_start, int index_shift) {
+    const auto join_ptr = TD - (value_count << S) + value_count * index_shift;
+    if (((R + 1) & ((1 << (S + 1)) - 1)) == 0 && join_ptr >= memory_start) {
+      ValueJoin::join(functor, TD, join_ptr);
+    }
+  };
 
-  {  // Intra-warp reduction:
-    const unsigned rtid_intra      = threadIdx.y & WarpMask;
-    const pointer_type tdata_intra = base_data + value_count * threadIdx.y;
+  auto block_scan_step = [&functor, value_count](
+                             int const R, pointer_type const TD, int const S,
+                             pointer_type memory_start, int index_shift) {
+    const auto N        = (1 << (S + 1));
+    const auto join_ptr = TD - (value_count << S) + value_count * index_shift;
+    if (R >= N && ((R + 1) & (N - 1)) == (N >> 1) && join_ptr >= memory_start) {
+      ValueJoin::join(functor, TD, join_ptr);
+    }
+  };
 
-    block_reduce_step(rtid_intra, tdata_intra, 0);
-    block_reduce_step(rtid_intra, tdata_intra, 1);
-    block_reduce_step(rtid_intra, tdata_intra, 2);
-    block_reduce_step(rtid_intra, tdata_intra, 3);
-    block_reduce_step(rtid_intra, tdata_intra, 4);
-    block_reduce_step(rtid_intra, tdata_intra, 5);
-  }
+  // Intra-warp reduction:
+  const pointer_type tdata_intra = base_data + value_count * threadIdx.y;
+  const pointer_type warp_start =
+      base_data +
+      value_count *
+          ((threadIdx.y >> Experimental::Impl::HIPTraits::WarpIndexShift)
+           << Experimental::Impl::HIPTraits::WarpIndexShift);
+  block_reduce_step(mapped_idx, tdata_intra, 0, warp_start, 0);
+  block_reduce_step(mapped_idx, tdata_intra, 1, warp_start, 0);
+  block_reduce_step(mapped_idx, tdata_intra, 2, warp_start, 0);
+  block_reduce_step(mapped_idx, tdata_intra, 3, warp_start, 0);
+  block_reduce_step(mapped_idx, tdata_intra, 4, warp_start, 0);
+  block_reduce_step(mapped_idx, tdata_intra, 5, warp_start, 0);
 
   __syncthreads();  // Wait for all warps to reduce
 
-  {  // Inter-warp reduce-scan by a single warp to avoid extra synchronizations
-    unsigned int const rtid_inter =
-        ((threadIdx.y + 1) << Experimental::Impl::HIPTraits::WarpIndexShift) -
-        1;
-
-    if (rtid_inter < blockDim.y) {
-      pointer_type const tdata_inter = base_data + value_count * rtid_inter;
+  // Inter-warp reduce-scan by a single warp to avoid extra synchronizations
+  {
+    // There is at most one warp where the memory address to be used is not
+    // (HIPTraits::WarpSize - 1) away from the warp start adress. For the
+    // following reduction, we shift all indices logically to the end of the
+    // next power-of-two to the number of warps.
+    const unsigned n_active_warps =
+        ((blockDim.y - 1) >> Experimental::Impl::HIPTraits::WarpIndexShift) + 1;
+    if (threadIdx.y < n_active_warps) {
+      const bool is_full_warp_inter =
+          threadIdx.y <
+          (blockDim.y >> Experimental::Impl::HIPTraits::WarpIndexShift);
+      pointer_type const tdata_inter =
+          base_data +
+          value_count *
+              (is_full_warp_inter
+                   ? (threadIdx.y
+                      << Experimental::Impl::HIPTraits::WarpIndexShift) +
+                         (Experimental::Impl::HIPTraits::WarpSize - 1)
+                   : blockDim.y - 1);
+      const unsigned index_shift =
+          is_full_warp_inter
+              ? 0
+              : blockDim.y - (threadIdx.y
+                              << Experimental::Impl::HIPTraits::WarpIndexShift);
+      const int rtid_inter =
+          (threadIdx.y << Experimental::Impl::HIPTraits::WarpIndexShift) +
+          (Experimental::Impl::HIPTraits::WarpSize - 1) - index_shift;
 
       if ((1 << 6) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 6);
+        block_reduce_step(rtid_inter, tdata_inter, 6, base_data, index_shift);
       }
       if ((1 << 7) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 7);
+        block_reduce_step(rtid_inter, tdata_inter, 7, base_data, index_shift);
       }
       if ((1 << 8) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 8);
+        block_reduce_step(rtid_inter, tdata_inter, 8, base_data, index_shift);
       }
       if ((1 << 9) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 9);
+        block_reduce_step(rtid_inter, tdata_inter, 9, base_data, index_shift);
       }
       if ((1 << 10) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 10);
+        block_reduce_step(rtid_inter, tdata_inter, 10, base_data, index_shift);
+      }
+
+      if (DoScan) {
+        block_scan_step(rtid_inter, tdata_inter, 9, base_data, index_shift);
+        block_scan_step(rtid_inter, tdata_inter, 8, base_data, index_shift);
+        block_scan_step(rtid_inter, tdata_inter, 7, base_data, index_shift);
+        block_scan_step(rtid_inter, tdata_inter, 6, base_data, index_shift);
       }
     }
   }
@@ -355,15 +403,17 @@ __device__ void hip_intra_block_reduce_scan(
   __syncthreads();  // Wait for inter-warp reduce-scan to complete
 
   if (DoScan) {
-    // Update all the values for the respective warps (except for the last one)
-    // by adding from the last value of the previous warp.
-    if (threadIdx.y >= Experimental::Impl::HIPTraits::WarpSize &&
-        (threadIdx.y & WarpMask) !=
-            Experimental::Impl::HIPTraits::WarpSize - 1) {
-      const int offset_to_previous_warp_total = (threadIdx.y & (~WarpMask)) - 1;
-      functor.join(base_data + value_count * threadIdx.y,
-                   base_data + value_count * offset_to_previous_warp_total);
-    }
+    block_scan_step(mapped_idx, tdata_intra, 5, warp_start, 0);
+    block_scan_step(mapped_idx, tdata_intra, 4, warp_start, 0);
+    block_scan_step(mapped_idx, tdata_intra, 3, warp_start, 0);
+    block_scan_step(mapped_idx, tdata_intra, 2, warp_start, 0);
+    block_scan_step(mapped_idx, tdata_intra, 1, warp_start, 0);
+    block_scan_step(mapped_idx, tdata_intra, 0, warp_start, 0);
+    // Update with total from previous warps
+    if (mapped_idx >= Experimental::Impl::HIPTraits::WarpSize &&
+        (mapped_idx & (Experimental::Impl::HIPTraits::WarpSize - 1)) !=
+            (Experimental::Impl::HIPTraits::WarpSize - 1))
+      ValueJoin::join(functor, tdata_intra, warp_start - value_count);
   }
 }
 
