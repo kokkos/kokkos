@@ -760,7 +760,6 @@ struct FunctorAnalysis {
                     !Kokkos::is_reducer<Functor>::value,
                 "Reducer must have a join member function!");
 
-  template <class MemorySpace = typename execution_space::memory_space>
   struct Reducer {
    private:
     Functor const* const m_functor;
@@ -782,7 +781,6 @@ struct FunctorAnalysis {
     using reducer        = Reducer;
     using value_type     = std::remove_const_t<FunctorAnalysis::value_type>;
     using pointer_type   = value_type*;
-    using memory_space   = MemorySpace;
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
 
