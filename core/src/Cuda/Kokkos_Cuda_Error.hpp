@@ -71,12 +71,6 @@ void cuda_stream_synchronize(const cudaStream_t stream,
                                             const char* file = nullptr,
                                             const int line   = 0);
 
-#ifdef KOKKOS_ENABLE_CXX17
-#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
-#else
-#define KOKKOS_IMPL_FALLTHROUGH
-#endif
-
 inline void cuda_internal_safe_call(cudaError e, const char* name,
                                     const char* file = nullptr,
                                     const int line   = 0) {
@@ -86,21 +80,19 @@ inline void cuda_internal_safe_call(cudaError e, const char* name,
   // 3. Any other error code -> throw a runtime error.
   switch (e) {
     case cudaSuccess: break;
-    case cudaErrorIllegalAddress: KOKKOS_IMPL_FALLTHROUGH
-    case cudaErrorAssert: KOKKOS_IMPL_FALLTHROUGH
-    case cudaErrorHardwareStackError: KOKKOS_IMPL_FALLTHROUGH
-    case cudaErrorIllegalInstruction: KOKKOS_IMPL_FALLTHROUGH
-    case cudaErrorMisalignedAddress: KOKKOS_IMPL_FALLTHROUGH
-    case cudaErrorInvalidAddressSpace: KOKKOS_IMPL_FALLTHROUGH
-    case cudaErrorInvalidPc: KOKKOS_IMPL_FALLTHROUGH
+    case cudaErrorIllegalAddress:
+    case cudaErrorAssert:
+    case cudaErrorHardwareStackError:
+    case cudaErrorIllegalInstruction:
+    case cudaErrorMisalignedAddress:
+    case cudaErrorInvalidAddressSpace:
+    case cudaErrorInvalidPc:
     case cudaErrorLaunchFailure:
       cuda_internal_error_abort(e, name, file, line);
       break;
     default: cuda_internal_error_throw(e, name, file, line); break;
   }
 }
-
-#undef KOKKOS_IMPL_FALLTHROUGH
 
 #define KOKKOS_IMPL_CUDA_SAFE_CALL(call) \
   Kokkos::Impl::cuda_internal_safe_call(call, #call, __FILE__, __LINE__)
