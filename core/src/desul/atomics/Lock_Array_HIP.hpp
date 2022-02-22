@@ -23,6 +23,8 @@ namespace Impl {
 
 #ifdef __HIP_DEVICE_COMPILE__
 #define DESUL_IMPL_BALLOT_MASK(x) __ballot(x)
+#else
+#define DESUL_IMPL_BALLOT_MASK(x) 0
 #endif
 
 /**
