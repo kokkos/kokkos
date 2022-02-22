@@ -1104,6 +1104,12 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     return m_track.template get_label<typename traits::memory_space>();
   }
 
+  // Choosing std::pair as type for the arguments allows constructing an
+  // OffsetView using list initialization syntax, e.g.,
+  //   OffsetView dummy("dummy", {-1, 3}, {-2,2});
+  // We could allow arbitrary types RangeType that support
+  // std::get<{0,1}>(RangeType const&) with std::tuple_size<RangeType>::value==2
+  // but this wouldn't allow using the syntax in the example above.
   template <typename Label>
   explicit inline OffsetView(
       const Label& arg_label,
