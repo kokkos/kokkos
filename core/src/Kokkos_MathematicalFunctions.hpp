@@ -143,7 +143,7 @@ using promote_2_t = typename promote_2<T, U>::type;
         using ::Kokkos::FUNC;                                                 \
         using ::Kokkos::FUNC##f;                                              \
         using ::Kokkos::FUNC##l;                                              \
-      });
+      })
 
 // isinf, isnan, and isinfinite do not work on Windows with CUDA with std::
 // getting warnings about calling host function in device function then
