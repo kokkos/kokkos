@@ -120,7 +120,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         LocalDeepCopy
         MinMaxClamp
         MathematicalConstants
-        MathematicalFunctions
+        MathematicalFunctions1
+        MathematicalFunctions2
         MDRange_a
         MDRange_b
         MDRange_c
