@@ -531,6 +531,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     SOURCES
     UnitTestMainInit.cpp
     ${OpenMPTarget_SOURCES}
+    openmptarget/TestOpenMPTarget_MDTeamParallelism.cpp
   )
 endif()
 

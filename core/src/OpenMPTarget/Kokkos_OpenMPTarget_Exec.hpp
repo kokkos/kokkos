@@ -51,6 +51,8 @@
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
 
+#include <iostream>
+
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical reducers. It avoids hitting the code path which we wanted to
 // write but doesn't work. undef'ed at the end.
@@ -1362,6 +1364,94 @@ TeamVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
                                                iType(arg_end));
 }
 
+template <Kokkos::Iterate Direction, typename... Ns>
+KOKKOS_INLINE_FUNCTION auto MDTeamThreadRange(
+    Impl::OpenMPTargetExecTeamMember const& member, Ns&&... ns) {
+  using execution_space =
+      typename Impl::OpenMPTargetExecTeamMember::execution_space;
+  using array_layout = typename execution_space::array_layout;
+  static constexpr Kokkos::Iterate outer_direction =
+      Direction == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : Direction;
+  using iType = std::common_type_t<Ns...>;
+
+  return Impl::MDTeamThreadRangeBoundariesStruct<
+      outer_direction, sizeof...(ns), iType, Impl::OpenMPTargetExecTeamMember>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
+template <typename... Ns>
+KOKKOS_INLINE_FUNCTION auto MDTeamThreadRange(
+    Impl::OpenMPTargetExecTeamMember const& member, Ns&&... ns) {
+  return MDTeamThreadRange<Kokkos::Iterate::Default>(member,
+                                                     static_cast<Ns&&>(ns)...);
+}
+
+template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+          typename... Ns>
+KOKKOS_INLINE_FUNCTION auto MDThreadVectorRange(
+    Impl::OpenMPTargetExecTeamMember const& member, Ns&&... ns) {
+  using execution_space =
+      typename Impl::OpenMPTargetExecTeamMember::execution_space;
+  using array_layout = typename execution_space::array_layout;
+  static constexpr Kokkos::Iterate outer_direction =
+      OuterDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : OuterDirection;
+  static constexpr Kokkos::Iterate inner_direction =
+      InnerDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : InnerDirection;
+  using iType = std::common_type_t<Ns...>;
+
+  return Impl::MDThreadVectorRangeBoundariesStruct<
+      outer_direction, inner_direction, sizeof...(ns), iType,
+      Impl::OpenMPTargetExecTeamMember>(member, static_cast<Ns&&>(ns)...);
+}
+
+template <typename... Ns>
+KOKKOS_INLINE_FUNCTION auto MDThreadVectorRange(
+    Impl::OpenMPTargetExecTeamMember const& member, Ns&&... ns) {
+  return MDThreadVectorRange<Kokkos::Iterate::Default,
+                             Kokkos::Iterate::Default>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
+template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+          typename... Ns>
+KOKKOS_INLINE_FUNCTION auto MDTeamVectorRange(
+    Impl::OpenMPTargetExecTeamMember const& member, Ns&&... ns) {
+  using execution_space =
+      typename Impl::OpenMPTargetExecTeamMember::execution_space;
+  using array_layout = typename execution_space::array_layout;
+  static constexpr Kokkos::Iterate outer_direction =
+      OuterDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : OuterDirection;
+  static constexpr Kokkos::Iterate inner_direction =
+      InnerDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : InnerDirection;
+  using iType = std::common_type_t<Ns...>;
+
+  return Impl::MDTeamVectorRangeBoundariesStruct<
+      outer_direction, inner_direction, sizeof...(ns), iType,
+      Impl::OpenMPTargetExecTeamMember>(member, static_cast<Ns&&>(ns)...);
+}
+
+template <typename... Ns>
+KOKKOS_INLINE_FUNCTION auto MDTeamVectorRange(
+    Impl::OpenMPTargetExecTeamMember const& member, Ns&&... ns) {
+  return MDTeamVectorRange<Kokkos::Iterate::Default, Kokkos::Iterate::Default>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember> PerTeam(
     const Impl::OpenMPTargetExecTeamMember& thread) {
@@ -1631,6 +1721,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
+  printf("terminating\n");
+  exit(0);
 #pragma omp simd
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
@@ -1893,6 +1985,629 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
   result.reference() = TeamVector_scratch[0];
 }
 #endif  // KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
+
+template <size_t RemainingRank>
+struct ParallelForMDTeamThreadRangeOMPTargetImpl {
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void next_rank(
+      Boundaries const& boundaries, Closure const& closure,
+      typename Boundaries::index_type i) {
+    auto newClosure = [i, &closure](auto... is) { closure(i, is...); };
+    ParallelForMDTeamThreadRangeOMPTargetImpl<RemainingRank -
+                                              1>::parallel_for_impl(boundaries,
+                                                                    newClosure);
+  }
+
+  static constexpr size_t remaining_rank = RemainingRank;
+
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
+      Boundaries const& boundaries, Closure const& closure) {
+    using index_type = typename Boundaries::index_type;
+    if (Boundaries::direction == Kokkos::Iterate::Right) {
+      for (index_type i = 0;
+           i < boundaries.threadDims[Boundaries::rank - RemainingRank]; ++i) {
+        next_rank(boundaries, closure, i);
+      }
+    }
+
+    if (Boundaries::direction == Kokkos::Iterate::Left) {
+      for (index_type i =
+               boundaries.threadDims[Boundaries::rank - RemainingRank];
+           i > 0; --i) {
+        next_rank(boundaries, closure, i - 1);
+      }
+    }
+  }
+};
+
+template <>
+struct ParallelForMDTeamThreadRangeOMPTargetImpl<0> {
+  static constexpr size_t remaining_rank = 0;
+
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
+      Boundaries const& boundaries, Closure const& closure) {
+    using index_type = typename Boundaries::index_type;
+
+    closure();
+  }
+};
+
+template <size_t Rank, typename Boundaries, typename Closure>
+KOKKOS_INLINE_FUNCTION static void parallel_for_thread_vector_start(
+    Boundaries const& boundaries, Closure const& closure) {
+  using index_type = typename Boundaries::index_type;
+
+  if (Boundaries::direction == Kokkos::Iterate::Right) {
+#pragma omp for nowait schedule(static, 1)
+    for (index_type i = 0; i < boundaries.threadDims[0]; ++i) {
+      ParallelForMDTeamThreadRangeOMPTargetImpl<Rank>::next_rank(boundaries,
+                                                                 closure, i);
+    }
+  }
+
+  if (Boundaries::direction == Kokkos::Iterate::Left) {
+#pragma omp for nowait schedule(static, 1)
+    for (index_type i = boundaries.threadDims[0]; i > 0; --i) {
+      ParallelForMDTeamThreadRangeOMPTargetImpl<Rank>::next_rank(
+          boundaries, closure, i - 1);
+    }
+  }
+}
+
+template <Kokkos::Iterate direction, size_t Rank, typename iType,
+          typename Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::MDTeamThreadRangeBoundariesStruct<
+        direction, Rank, iType, Impl::OpenMPTargetExecTeamMember> const&
+        loop_boundaries,
+    Closure const& closure) {
+  parallel_for_thread_vector_start<Rank>(loop_boundaries, closure);
+}
+
+namespace Impl {
+
+template <size_t RemainingRank>
+struct ParallelReduceMDTeamThreadRangeOMPTargetImpl {
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void next_rank(
+      Boundaries const& boundaries, Closure const& closure, ValueType& redValue,
+      typename Boundaries::index_type i) {
+    auto newClosure = [i, &closure](auto&... is) { closure(i, is...); };
+    ParallelReduceMDTeamThreadRangeOMPTargetImpl<
+        RemainingRank - 1>::parallel_reduce_impl(boundaries, newClosure,
+                                                 redValue);
+  }
+
+  static constexpr size_t remaining_rank = RemainingRank;
+
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void parallel_reduce_impl(
+      Boundaries const& boundaries, Closure const& closure,
+      ValueType& redValue) {
+    using index_type = typename Boundaries::index_type;
+
+    if (Boundaries::direction == Kokkos::Iterate::Right) {
+      for (index_type i = 0;
+           i < boundaries.threadDims[Boundaries::rank - RemainingRank]; ++i) {
+        next_rank(boundaries, closure, redValue, i);
+      }
+    }
+
+    if (Boundaries::direction == Kokkos::Iterate::Left) {
+      for (index_type i =
+               boundaries.threadDims[Boundaries::rank - RemainingRank];
+           i > 0; --i) {
+        next_rank(boundaries, closure, redValue, i - 1);
+      }
+    }
+  }
+};
+
+template <>
+struct ParallelReduceMDTeamThreadRangeOMPTargetImpl<0> {
+  static constexpr size_t remaining_rank = 0;
+
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void parallel_reduce_impl(
+      Boundaries const& boundaries, Closure const& closure,
+      ValueType& redValue) {
+    closure(redValue);
+  }
+};
+
+}  // namespace Impl
+
+template <Kokkos::Iterate Direction, size_t Rank, typename iType,
+          typename Closure, typename Reducer>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<Reducer>::value>
+parallel_reduce(Impl::MDTeamThreadRangeBoundariesStruct<
+                    Direction, Rank, iType,
+                    Impl::OpenMPTargetExecTeamMember> const& boundaries,
+                Closure const& closure, Reducer const& reducer) {
+  using ValueType = typename Reducer::value_type;
+
+  ValueType* teamThreadScratch =
+      static_cast<ValueType*>(boundaries.team_member.impl_reduce_scratch());
+
+#pragma omp barrier
+  ValueType tmp;
+  reducer.init(tmp);
+  teamThreadScratch[0] = tmp;
+#pragma omp barrier
+
+#pragma omp declare reduction(                                           \
+    omp_red_teamthread_reducer:ValueType                                 \
+    : Impl::OpenMPTargetReducerWrapper <Reducer>::join(omp_out, omp_in)) \
+    initializer(Impl::OpenMPTargetReducerWrapper <Reducer>::init(omp_priv))
+
+  const auto threadDim = boundaries.threadDims[0];
+  const auto inc =
+      (threadDim + omp_get_num_threads() - 1) / omp_get_num_threads();
+
+#pragma omp for reduction(omp_red_teamthread_reducer \
+                          : teamThreadScratch[:1]) schedule(static, 1)
+  for (auto i = 0; i < threadDim; i += inc) {
+    ValueType tmp2;
+    reducer.init(tmp2);
+
+    auto bound = std::min(i + inc, threadDim);
+
+    for (auto j = i; j < bound; ++j) {
+      Impl::ParallelReduceMDTeamThreadRangeOMPTargetImpl<Rank>::next_rank(
+          boundaries, closure, tmp2, j);
+    }
+
+    teamThreadScratch[0] = tmp2;
+  }
+
+  reducer.reference() = teamThreadScratch[0];
+}
+
+template <Kokkos::Iterate Direction, size_t Rank, typename iType,
+          typename Closure, typename ValueType>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(Impl::MDTeamThreadRangeBoundariesStruct<
+                    Direction, Rank, iType,
+                    Impl::OpenMPTargetExecTeamMember> const& boundaries,
+                Closure const& closure, ValueType& result) {
+  Sum<ValueType> reducer(result);
+  reducer.init(result);
+
+  parallel_reduce(boundaries, closure, reducer);
+}
+
+template <Kokkos::Iterate Direction, size_t RemainingRank>
+struct ParallelForMDThreadVectorRangeOMPTargetImpl {
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void next_rank(
+      Boundaries const& boundaries, Closure const& closure,
+      typename Boundaries::index_type i) {
+    auto newClosure = [i, &closure](auto... is) { closure(i, is...); };
+    ParallelForMDThreadVectorRangeOMPTargetImpl<
+        Boundaries::inner_direction,
+        RemainingRank - 1>::parallel_for_impl(boundaries, newClosure);
+  }
+
+  static constexpr Kokkos::Iterate direction = Direction;
+  static constexpr size_t remaining_rank     = RemainingRank;
+
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
+      Boundaries const& boundaries, Closure const& closure) {
+    using index_type = typename Boundaries::index_type;
+
+    if (Direction == Kokkos::Iterate::Right) {
+      for (index_type i = 0;
+           i < boundaries.taskDims[Boundaries::rank - RemainingRank]; ++i) {
+        next_rank(boundaries, closure, i);
+      }
+    }
+
+    if (Direction == Kokkos::Iterate::Left) {
+      for (index_type i = boundaries.taskDims[Boundaries::rank - RemainingRank];
+           i > 0;) {
+        next_rank(boundaries, closure, --i);
+      }
+    }
+  }
+};
+
+template <Kokkos::Iterate Direction>
+struct ParallelForMDThreadVectorRangeOMPTargetImpl<Direction, 0> {
+  static constexpr size_t remaining_rank = 0;
+
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
+      Boundaries const& boundaries, Closure const& closure) {
+    closure();
+  }
+};
+
+template <Kokkos::Iterate Direction, size_t Rank, typename Boundaries,
+          typename Closure>
+KOKKOS_INLINE_FUNCTION static void parallel_for_team_thread_start(
+    Boundaries const& boundaries, Closure const& closure) {
+  using index_type = typename Boundaries::index_type;
+
+  if (Direction == Kokkos::Iterate::Right) {
+#pragma omp simd
+    for (index_type i = 0; i < boundaries.taskDims[0]; ++i) {
+      ParallelForMDThreadVectorRangeOMPTargetImpl<Boundaries::inner_direction,
+                                                  Rank>::next_rank(boundaries,
+                                                                   closure, i);
+    }
+  }
+
+  if (Direction == Kokkos::Iterate::Left) {
+#pragma omp simd
+    for (index_type i = boundaries.taskDims[0]; i > 0; --i) {
+      ParallelForMDThreadVectorRangeOMPTargetImpl<Boundaries::inner_direction,
+                                                  Rank>::next_rank(boundaries,
+                                                                   closure,
+                                                                   i - 1);
+    }
+  }
+}
+
+template <Kokkos::Iterate outer_direction, Kokkos::Iterate inner_direction,
+          size_t Rank, typename iType, typename Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::MDThreadVectorRangeBoundariesStruct<
+        outer_direction, inner_direction, Rank, iType,
+        Impl::OpenMPTargetExecTeamMember> const& boundaries,
+    Closure const& closure) {
+  static_assert(outer_direction == Kokkos::Iterate::Left ||
+                    outer_direction == Kokkos::Iterate::Right,
+                "outer_direction must be Left or Right");
+  static_assert(inner_direction == Kokkos::Iterate::Left ||
+                    inner_direction == Kokkos::Iterate::Right,
+                "inner_direction must be Left or Right");
+
+  parallel_for_team_thread_start<outer_direction, Rank>(boundaries, closure);
+}
+
+namespace Impl {
+
+template <Kokkos::Iterate Direction, size_t RemainingRank>
+struct ParallelReduceMDThreadVectorRangeOMPTargetImpl {
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void next_rank(
+      Boundaries const& boundaries, Closure const& closure, ValueType& redValue,
+      typename Boundaries::index_type i) {
+    auto newClosure = [i, &closure](auto&... is) { closure(i, is...); };
+    ParallelReduceMDThreadVectorRangeOMPTargetImpl<
+        Boundaries::inner_direction,
+        RemainingRank - 1>::parallel_reduce_impl(boundaries, newClosure,
+                                                 redValue);
+  }
+
+  static constexpr Kokkos::Iterate direction = Direction;
+  static constexpr size_t remaining_rank     = RemainingRank;
+
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void parallel_reduce_impl(
+      Boundaries const& boundaries, Closure const& closure,
+      ValueType& redValue) {
+    using index_type = typename Boundaries::index_type;
+
+    if (Direction == Kokkos::Iterate::Right) {
+      for (index_type i = 0;
+           i < boundaries.taskDims[Boundaries::rank - RemainingRank]; ++i) {
+        next_rank(boundaries, closure, redValue, i);
+      }
+    }
+
+    if (Direction == Kokkos::Iterate::Left) {
+      for (index_type i = boundaries.taskDims[Boundaries::rank - RemainingRank];
+           i > 0;) {
+        next_rank(boundaries, closure, redValue, --i);
+      }
+    }
+  }
+};
+
+template <Kokkos::Iterate Direction>
+struct ParallelReduceMDThreadVectorRangeOMPTargetImpl<Direction, 0> {
+  static constexpr size_t remaining_rank = 0;
+
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void parallel_reduce_impl(
+      Boundaries const& boundaries, Closure const& closure,
+      ValueType& redValue) {
+    closure(redValue);
+  }
+};
+}  // namespace Impl
+
+template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+          size_t Rank, typename iType, typename Member, typename Closure,
+          typename Reducer>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<Reducer>::value>
+parallel_reduce(
+    Impl::MDThreadVectorRangeBoundariesStruct<
+        OuterDirection, InnerDirection, Rank, iType, Member> const& boundaries,
+    Closure const& closure, Reducer& reducer) {
+  using ValueType = typename Reducer::value_type;
+
+  static_assert(sizeof(ValueType) <=
+                Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
+
+#pragma omp declare reduction(                                           \
+    custom:ValueType                                                     \
+    : Impl::OpenMPTargetReducerWrapper <Reducer>::join(omp_out, omp_in)) \
+    initializer(Impl::OpenMPTargetReducerWrapper <Reducer>::init(omp_priv))
+
+  const auto threadDim = boundaries.threadDims[0];
+
+  ValueType vectorReduce;
+  Impl::OpenMPTargetReducerWrapper<Reducer>::init(vectorReduce);
+
+  if (OuterDirection == Kokkos::Iterate::Right) {
+#pragma omp simd reduction(custom : vectorReduce)
+    for (auto i = 0; i < threadDim; ++i) {
+      Impl::ParallelReduceMDThreadVectorRangeOMPTargetImpl<
+          OuterDirection, Rank>::next_rank(boundaries, closure, vectorReduce,
+                                           i);
+    }
+  }
+
+  if (OuterDirection == Kokkos::Iterate::Left) {
+#pragma omp simd reduction(custom : vectorReduce)
+    for (auto i = boundaries.threadDim; i > 0; --i) {
+      Impl::ParallelReduceMDThreadVectorRangeOMPTargetImpl<
+          OuterDirection, Rank>::next_rank(boundaries, closure, vectorReduce,
+                                           i - 1);
+    }
+  }
+
+  reducer.reference() = vectorReduce;
+}
+
+template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+          size_t Rank, typename iType, typename Member, typename Closure,
+          typename ValueType>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(
+    Impl::MDThreadVectorRangeBoundariesStruct<
+        OuterDirection, InnerDirection, Rank, iType, Member> const& boundaries,
+    Closure const& closure, ValueType& result) {
+  ValueType vectorReduce = ValueType();
+
+  const auto taskDim = boundaries.taskDims[0];
+
+  if constexpr (std::is_arithmetic<ValueType>::value) {
+#pragma omp simd reduction(+ : vectorReduce)
+    for (iType i = 0; i < taskDim; ++i) {
+      ValueType tmp = ValueType();
+      Impl::ParallelReduceMDThreadVectorRangeOMPTargetImpl<
+          OuterDirection, Rank>::next_rank(boundaries, closure, tmp, i);
+      vectorReduce += tmp;
+    }
+  } else {
+#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
+
+#pragma omp simd reduction(custom : vectorReduce)
+    for (iType i = 0; i < taskDim; ++i) {
+      Impl::ParallelReduceMDThreadVectorRangeOMPTargetImpl<
+          OuterDirection, Rank>::next_rank(boundaries, closure, vectorReduce,
+                                           i);
+    }
+  }
+
+  result = vectorReduce;
+}
+
+template <Kokkos::Iterate Direction, size_t RemainingRank>
+struct ParallelForMDTeamVectorRangeOMPTargetImpl {
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void next_rank(
+      Boundaries const& boundaries, Closure const& closure,
+      typename Boundaries::index_type i) {
+    auto newClosure = [i, &closure](auto... is) { closure(i, is...); };
+    ParallelForMDTeamVectorRangeOMPTargetImpl<
+        Boundaries::inner_direction,
+        RemainingRank - 1>::parallel_for_impl(boundaries, newClosure);
+  }
+
+  static constexpr Kokkos::Iterate direction = Direction;
+  static constexpr size_t remaining_rank     = RemainingRank;
+
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
+      Boundaries const& boundaries, Closure const& closure) {
+    using index_type = typename Boundaries::index_type;
+
+    if (Direction == Kokkos::Iterate::Right) {
+      for (index_type i = 0;
+           i < boundaries.threadDims[Boundaries::rank - RemainingRank]; ++i) {
+        next_rank(boundaries, closure, i);
+      }
+    }
+
+    if (Direction == Kokkos::Iterate::Left) {
+      for (index_type i =
+               boundaries.threadDims[Boundaries::rank - RemainingRank];
+           i > 0;) {
+        next_rank(boundaries, closure, --i);
+      }
+    }
+  }
+};
+
+template <Kokkos::Iterate Direction>
+struct ParallelForMDTeamVectorRangeOMPTargetImpl<Direction, 0> {
+  static constexpr size_t remaining_rank = 0;
+
+  template <typename Boundaries, typename Closure>
+  KOKKOS_INLINE_FUNCTION static void parallel_for_impl(
+      Boundaries const& /*boundaries*/, Closure const& closure) {
+    closure();
+  }
+};
+
+template <Kokkos::Iterate Direction, size_t Rank, typename Boundaries,
+          typename Closure>
+KOKKOS_INLINE_FUNCTION static void parallel_for_team_vector_start(
+    Boundaries const& boundaries, Closure const& closure) {
+  using index_type = typename Boundaries::index_type;
+
+  if (Direction == Kokkos::Iterate::Right) {
+#pragma omp for simd nowait schedule(static, 1)
+    for (index_type i = 0; i < boundaries.threadDims[0]; ++i) {
+      ParallelForMDTeamVectorRangeOMPTargetImpl<Boundaries::inner_direction,
+                                                Rank>::next_rank(boundaries,
+                                                                 closure, i);
+    }
+  }
+
+  if (Direction == Kokkos::Iterate::Left) {
+#pragma omp for simd nowait schedule(static, 1)
+    for (index_type i = boundaries.threadDims[0]; i > 0; --i) {
+      ParallelForMDTeamVectorRangeOMPTargetImpl<Boundaries::inner_direction,
+                                                Rank>::next_rank(boundaries,
+                                                                 closure,
+                                                                 i - 1);
+    }
+  }
+}
+
+template <Kokkos::Iterate outer_direction, Kokkos::Iterate inner_direction,
+          size_t Rank, typename iType, typename Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::MDTeamVectorRangeBoundariesStruct<
+        outer_direction, inner_direction, Rank, iType,
+        Impl::OpenMPTargetExecTeamMember> const& boundaries,
+    Closure const& closure) {
+  static_assert(outer_direction == Kokkos::Iterate::Left ||
+                    outer_direction == Kokkos::Iterate::Right,
+                "outer_direction must be Left or Right");
+  static_assert(inner_direction == Kokkos::Iterate::Left ||
+                    inner_direction == Kokkos::Iterate::Right,
+                "inner_direction must be Left or Right");
+
+  parallel_for_team_vector_start<outer_direction, Rank>(boundaries, closure);
+}
+
+namespace Impl {
+
+template <Kokkos::Iterate Direction, size_t RemainingRank>
+struct ParallelReduceMDTeamVectorRangeOMPTargetImpl {
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void next_rank(
+      Boundaries const& boundaries, Closure const& closure, ValueType& redValue,
+      typename Boundaries::index_type i) {
+    auto newClosure = [i, &closure](auto&... is) { closure(i, is...); };
+    ParallelReduceMDTeamVectorRangeOMPTargetImpl<
+        Boundaries::inner_direction,
+        RemainingRank - 1>::parallel_reduce_impl(boundaries, newClosure,
+                                                 redValue);
+  }
+
+  static constexpr Kokkos::Iterate direction = Direction;
+  static constexpr size_t remaining_rank     = RemainingRank;
+
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void parallel_reduce_impl(
+      Boundaries const& boundaries, Closure const& closure,
+      ValueType& redValue) {
+    using index_type = typename Boundaries::index_type;
+
+    if (Direction == Kokkos::Iterate::Right) {
+      for (index_type i = 0;
+           i < boundaries.threadDims[Boundaries::rank - RemainingRank]; ++i) {
+        next_rank(boundaries, closure, redValue, i);
+      }
+    }
+
+    if (Direction == Kokkos::Iterate::Left) {
+      for (index_type i =
+               boundaries.threadDims[Boundaries::rank - RemainingRank];
+           i > 0;) {
+        next_rank(boundaries, closure, redValue, --i);
+      }
+    }
+  }
+};
+
+template <Kokkos::Iterate Direction>
+struct ParallelReduceMDTeamVectorRangeOMPTargetImpl<Direction, 0> {
+  static constexpr size_t remaining_rank = 0;
+
+  template <typename Boundaries, typename Closure, typename ValueType>
+  KOKKOS_INLINE_FUNCTION static void parallel_reduce_impl(
+      Boundaries const& boundaries, Closure const& closure,
+      ValueType& redValue) {
+    closure(redValue);
+  }
+};
+}  // namespace Impl
+
+template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+          size_t Rank, typename iType, typename Member, typename Closure,
+          typename Reducer>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<Reducer>::value>
+parallel_reduce(
+    Impl::MDTeamVectorRangeBoundariesStruct<
+        OuterDirection, InnerDirection, Rank, iType, Member> const& boundaries,
+    Closure const& closure, Reducer& reducer) {
+  using ValueType = typename Reducer::value_type;
+
+  ValueType* teamVectorScratch =
+      static_cast<ValueType*>(boundaries.team_member.impl_reduce_scratch());
+
+#pragma omp declare reduction(                                           \
+    omp_red_teamthread_reducer:ValueType                                 \
+    : Impl::OpenMPTargetReducerWrapper <Reducer>::join(omp_out, omp_in)) \
+    initializer(Impl::OpenMPTargetReducerWrapper <Reducer>::init(omp_priv))
+
+#pragma omp barrier
+  ValueType tmp;
+  reducer.init(tmp);
+  teamVectorScratch[0] = tmp;
+#pragma omp barrier
+
+  const auto threadDim0 = boundaries.threadDims[0];
+  const auto threadDim1 = boundaries.threadDims[1];
+  const auto inc =
+      (threadDim0 + omp_get_num_threads() - 1) / omp_get_num_threads();
+
+#pragma omp for simd reduction(omp_red_teamthread_reducer \
+                               : teamVectorScratch[:1]) schedule(static, 1)
+  for (auto i = 0; i < threadDim0; i += inc) {
+    auto bound = std::min(i + inc, threadDim0);
+
+    for (auto j = i; j < bound; ++j) {
+      auto newClosure = [j, &closure](auto&... is) { closure(j, is...); };
+
+      for (auto k = 0; k < threadDim1; ++k) {
+        Impl::ParallelReduceMDTeamVectorRangeOMPTargetImpl<
+            OuterDirection, Rank - 1>::next_rank(boundaries, newClosure, tmp,
+                                                 k);
+      }
+    }
+
+    teamVectorScratch[0] = tmp;
+  }
+
+  reducer.reference() = teamVectorScratch[0];
+}
+
+template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+          size_t Rank, typename iType, typename Member, typename Closure,
+          typename ValueType>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(
+    Impl::MDTeamVectorRangeBoundariesStruct<
+        OuterDirection, InnerDirection, Rank, iType, Member> const& boundaries,
+    Closure const& closure, ValueType& result) {
+  Sum<ValueType> reducer(result);
+  reducer.init(result);
+
+  parallel_reduce(boundaries, closure, reducer);
+}
+
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
