@@ -446,19 +446,18 @@ struct FunctorAnalysis {
     using vref_type  = volatile ValueType&;
     using cvref_type = const volatile ValueType&;
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
-                                                             vref_type,
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, vref_type,
                                                              cvref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const,
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, vref_type,
+                                                          cvref_type));
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
                                                              vref_type,
                                                              cvref_type) const);
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
                                                           vref_type,
-                                                          cvref_type));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const, vref_type,
                                                           cvref_type));
 
     KOKKOS_INLINE_FUNCTION static void join(F const* const f,
@@ -473,19 +472,18 @@ struct FunctorAnalysis {
     using vref_type  = volatile ValueType*;
     using cvref_type = const volatile ValueType*;
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
-                                                             vref_type,
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, vref_type,
                                                              cvref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const,
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, vref_type,
+                                                          cvref_type));
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
                                                              vref_type,
                                                              cvref_type) const);
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
                                                           vref_type,
-                                                          cvref_type));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const, vref_type,
                                                           cvref_type));
 
     KOKKOS_INLINE_FUNCTION static void join(F const* const f,
@@ -555,16 +553,15 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_init_tag_function<F, /*is_array*/ false> {
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ValueType&)
+                                                     const);
+
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
                                                              ValueType&) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const,
-                                                             ValueType&) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ValueType&));
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          ValueType&));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const,
                                                           ValueType&));
 
     KOKKOS_INLINE_FUNCTION static void init(F const* const f, ValueType* dst) {
@@ -574,16 +571,15 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_init_tag_function<F, /*is_array*/ true> {
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ValueType*)
+                                                     const);
+
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
                                                              ValueType*) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const,
-                                                             ValueType*) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ValueType*));
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          ValueType*));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const,
                                                           ValueType*));
 
     KOKKOS_INLINE_FUNCTION static void init(F const* const f, ValueType* dst) {
@@ -651,16 +647,15 @@ struct FunctorAnalysis {
   // Has tag, not array
   template <class F>
   struct has_final_tag_function<F, /*is_array*/ false> {
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ValueType&)
+                                                     const);
+
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
                                                              ValueType&) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const,
-                                                             ValueType&) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ValueType&));
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          ValueType&));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const,
                                                           ValueType&));
 
     KOKKOS_INLINE_FUNCTION static void final(F const* const f, ValueType* dst) {
@@ -671,16 +666,15 @@ struct FunctorAnalysis {
   // Has tag, is array
   template <class F>
   struct has_final_tag_function<F, /*is_array*/ true> {
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ValueType*)
+                                                     const);
+
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
                                                              ValueType*) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const,
-                                                             ValueType*) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ValueType*));
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          ValueType*));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const,
                                                           ValueType*));
 
     KOKKOS_INLINE_FUNCTION static void final(F const* const f, ValueType* dst) {
