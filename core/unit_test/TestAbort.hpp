@@ -56,73 +56,76 @@ TEST(TEST_CATEGORY_DEATH, abort_from_host) {
 }
 
 template <class ExecutionSpace>
-void test_abort_printing_to_stdout() {
-  ::testing::internal::CaptureStdout();
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-      KOKKOS_LAMBDA(int) { Kokkos::abort("move along nothing to see here"); });
-  Kokkos::fence();
-  auto const captured = ::testing::internal::GetCapturedStdout();
-  EXPECT_EQ(captured, "move along nothing to see here");
-}
+struct TestAbortPrintingToStdout {
+  TestAbortPrintingToStdout() {
+    ::testing::internal::CaptureStdout();
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1), *this);
+    Kokkos::fence();
+    auto const captured = ::testing::internal::GetCapturedStdout();
+    EXPECT_EQ(captured, "move along nothing to see here");
+  }
+  KOKKOS_FUNCTION void operator()(int) const {
+    Kokkos::abort("move along nothing to see here");
+  }
+};
 
 template <class ExecutionSpace>
-void test_abort_causing_abnormal_program_termination_but_ignoring_message() {
-  EXPECT_DEATH(
-      {
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-            KOKKOS_LAMBDA(int) { Kokkos::abort("ignored"); });
-        Kokkos::fence();
-      },
-      ".*");
-}
+struct TestAbortCausingAbnormalProgramTerminationButIgnoringErrorMessage {
+  TestAbortCausingAbnormalProgramTerminationButIgnoringErrorMessage() {
+    EXPECT_DEATH(
+        {
+          Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+                               *this);
+          Kokkos::fence();
+        },
+        ".*");
+  }
+  KOKKOS_FUNCTION void operator()(int) const { Kokkos::abort("ignored"); }
+};
 
 template <class ExecutionSpace>
-void test_abort_causing_abnormal_program_termination_and_printing() {
-  EXPECT_DEATH(
-      {
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, 1), KOKKOS_LAMBDA(int) {
-              Kokkos::abort("Meurs, pourriture communiste !");
-            });
-        Kokkos::fence();
-      },
-      "Meurs, pourriture communiste !");
-}
+struct TestAbortCausingAbnormalProgramTerminationAndPrinting {
+  TestAbortCausingAbnormalProgramTerminationAndPrinting() {
+    EXPECT_DEATH(
+        {
+          Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+                               *this);
+          Kokkos::fence();
+        },
+        "Meurs, pourriture communiste !");
+  }
+  KOKKOS_FUNCTION void operator()(int) const {
+    Kokkos::abort("Meurs, pourriture communiste !");
+  }
+};
 
 template <class ExecutionSpace>
 void test_abort_from_device() {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>::value) {
-    test_abort_printing_to_stdout<ExecutionSpace>();
+    TestAbortPrintingToStdout<ExecutionSpace>();
   } else {
-    test_abort_causing_abnormal_program_termination_and_printing<
-        ExecutionSpace>();
+    TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
 #elif defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::SYCL>::value) {
 #ifdef NDEBUG
-    test_abort_printing_to_stdout<ExecutionSpace>();
+    TestAbortPrintingToStdout<ExecutionSpace>();
 #else
-    test_abort_causing_abnormal_program_termination_and_printing<
-        ExecutionSpace>();
+    TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
 #endif
   } else {
-    test_abort_causing_abnormal_program_termination_and_printing<
-        ExecutionSpace>();
+    TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
 #elif defined(KOKKOS_ENABLE_HIP)  // FIXME_HIP
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value) {
-    test_abort_causing_abnormal_program_termination_but_ignoring_message<
+    TestAbortCausingAbnormalProgramTerminationButIgnoringErrorMessage<
         ExecutionSpace>();
   } else {
-    test_abort_causing_abnormal_program_termination_and_printing<
-        ExecutionSpace>();
+    TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
 #else
-  test_abort_causing_abnormal_program_termination_and_printing<
-      ExecutionSpace>();
+  TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
 #endif
 }
 
