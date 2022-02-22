@@ -47,6 +47,7 @@
 #include <regex>
 #include <Kokkos_Core.hpp>
 
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
 TEST(TEST_CATEGORY_DEATH, abort_from_host) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
@@ -129,3 +130,4 @@ TEST(TEST_CATEGORY_DEATH, abort_from_device) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   test_abort_from_device<TEST_EXECSPACE>();
 }
+#endif
