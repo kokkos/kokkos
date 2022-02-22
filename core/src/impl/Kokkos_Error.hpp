@@ -82,7 +82,7 @@ namespace Impl {
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
 // HIP aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
-#elif defined(KOKKOS_ENABLE_SYCL)
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
 // FIXME_SYCL SYCL doesn't abort
 #define KOKKOS_IMPL_ABORT_NORETURN
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -93,10 +93,16 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
+#ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+#define KOKKOS_IMPL_ABORT_NORETURN_DEVICE
+#else
+#define KOKKOS_IMPL_ABORT_NORETURN_DEVICE KOKKOS_IMPL_ABORT_NORETURN
+#endif
+
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-KOKKOS_IMPL_ABORT_NORETURN inline KOKKOS_IMPL_DEVICE_FUNCTION void device_abort(
-    const char *const msg) {
+KOKKOS_IMPL_ABORT_NORETURN_DEVICE inline KOKKOS_IMPL_DEVICE_FUNCTION void
+device_abort(const char *const msg) {
 #if defined(KOKKOS_ENABLE_CUDA)
   ::Kokkos::Impl::cuda_abort(msg);
 #elif defined(KOKKOS_ENABLE_HIP)
