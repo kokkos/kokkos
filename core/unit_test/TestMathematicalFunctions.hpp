@@ -320,7 +320,7 @@ struct math_function_name;
   };                                                                           \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
-#ifdef KOKKOS_MATHEMATICAL_FUNCTIONS_SPLIT_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 // Generally the expected ULP error should come from here:
 // https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
 // For now 1s largely seem to work ...
@@ -350,7 +350,7 @@ DEFINE_UNARY_FUNCTION_EVAL(acosh, 2);
 DEFINE_UNARY_FUNCTION_EVAL(atanh, 2);
 #endif
 
-#ifdef KOKKOS_MATHEMATICAL_FUNCTIONS_SPLIT_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 #if defined(__APPLE__)
 // Apple's standard library implementation seems to have a poor implementation
 DEFINE_UNARY_FUNCTION_EVAL(erf, 5);
@@ -405,11 +405,11 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
   };                                                                     \
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
-#ifdef KOKKOS_MATHEMATICAL_FUNCTIONS_SPLIT_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 DEFINE_BINARY_FUNCTION_EVAL(pow, 2);
 DEFINE_BINARY_FUNCTION_EVAL(hypot, 2);
 #endif
-#ifdef KOKKOS_MATHEMATICAL_FUNCTIONS_SPLIT_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_BINARY_FUNCTION_EVAL(nextafter, 1);
 DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
 #endif
@@ -510,7 +510,7 @@ void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
       (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
 }
 
-#ifdef KOKKOS_MATHEMATICAL_FUNCTIONS_SPLIT_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 
 TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(sin)({true, false});
@@ -802,7 +802,7 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
 }
 #endif
 
-#ifdef KOKKOS_MATHEMATICAL_FUNCTIONS_SPLIT_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 
 TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erf)({-3, -2, -1, 0, 1});
