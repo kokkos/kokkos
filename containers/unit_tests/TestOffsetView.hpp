@@ -68,15 +68,15 @@ void test_offsetview_construction() {
   Kokkos::Experimental::index_list_type range0 = {-1, 3};
   Kokkos::Experimental::index_list_type range1 = {-2, 2};
 #else
-  Kokkos::Experimental::range_type range0 = {-1, 3};
-  Kokkos::Experimental::range_type range1 = {-2, 2};
+  std::pair<int64_t, int64_t> range0 = {-1, 3};
+  std::pair<int64_t, int64_t> range1 = {-2, 2};
 #endif
 
   {
     offset_view_type o1;
     ASSERT_FALSE(o1.is_allocated());
 
-    o1 = offset_view_type("o1", range0, range1);
+    o1 = offset_view_type("o1", {-1, 3}, {-2, 2});
     offset_view_type o2(o1);
     offset_view_type o3("o3", range0, range1);
 

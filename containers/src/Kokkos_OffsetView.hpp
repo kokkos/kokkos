@@ -25,10 +25,10 @@ template <class>
 struct is_offset_view : public std::false_type {};
 
 template <class D, class... P>
-struct is_offset_view<OffsetView<D, P...> > : public std::true_type {};
+struct is_offset_view<OffsetView<D, P...>> : public std::true_type {};
 
 template <class D, class... P>
-struct is_offset_view<const OffsetView<D, P...> > : public std::true_type {};
+struct is_offset_view<const OffsetView<D, P...>> : public std::true_type {};
 
 #define KOKKOS_INVALID_OFFSET int64_t(0x7FFFFFFFFFFFFFFFLL)
 #define KOKKOS_INVALID_INDEX_RANGE \
@@ -41,7 +41,6 @@ template <typename iType,
 using IndexRange = Kokkos::Array<iType, 2>;
 
 using index_list_type = std::initializer_list<int64_t>;
-using range_type      = std::pair<int64_t, int64_t>;
 
 //  template <typename iType,
 //    typename std::enable_if< std::is_integral<iType>::value &&
@@ -1109,14 +1108,14 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   explicit inline OffsetView(
       const Label& arg_label,
       typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              const range_type>::type range0,
-      const range_type range1 = KOKKOS_INVALID_INDEX_RANGE,
-      const range_type range2 = KOKKOS_INVALID_INDEX_RANGE,
-      const range_type range3 = KOKKOS_INVALID_INDEX_RANGE,
-      const range_type range4 = KOKKOS_INVALID_INDEX_RANGE,
-      const range_type range5 = KOKKOS_INVALID_INDEX_RANGE,
-      const range_type range6 = KOKKOS_INVALID_INDEX_RANGE,
-      const range_type range7 = KOKKOS_INVALID_INDEX_RANGE
+                              const std::pair<int64_t, int64_t>>::type range0,
+      const std::pair<int64_t, int64_t> range1 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range2 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range3 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range4 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range5 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range6 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE
 
       )
       : OffsetView(
@@ -1135,7 +1134,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename Label>
   KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use the constructor taking range_type arguments instead!")
+      "Use the constructor taking std::pair<int64_t, int64_t> arguments "
+      "instead!")
   explicit inline OffsetView(
       const Label& arg_label,
       typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
@@ -1147,14 +1147,17 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       const index_list_type range5 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range6 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range7 = KOKKOS_INVALID_INDEX_RANGE)
-      : OffsetView(arg_label, range_type(range0.begin()[0], range0.begin()[1]),
-                   range_type(range1.begin()[0], range1.begin()[1]),
-                   range_type(range2.begin()[0], range2.begin()[1]),
-                   range_type(range3.begin()[0], range3.begin()[1]),
-                   range_type(range4.begin()[0], range4.begin()[1]),
-                   range_type(range5.begin()[0], range5.begin()[1]),
-                   range_type(range6.begin()[0], range6.begin()[1]),
-                   range_type(range7.begin()[0], range7.begin()[1])) {}
+      : OffsetView(
+            arg_label,
+            std::pair<int64_t, int64_t>(range0.begin()[0], range0.begin()[1]),
+            std::pair<int64_t, int64_t>(range1.begin()[0], range1.begin()[1]),
+            std::pair<int64_t, int64_t>(range2.begin()[0], range2.begin()[1]),
+            std::pair<int64_t, int64_t>(range3.begin()[0], range3.begin()[1]),
+            std::pair<int64_t, int64_t>(range4.begin()[0], range4.begin()[1]),
+            std::pair<int64_t, int64_t>(range5.begin()[0], range5.begin()[1]),
+            std::pair<int64_t, int64_t>(range6.begin()[0], range6.begin()[1]),
+            std::pair<int64_t, int64_t>(range7.begin()[0], range7.begin()[1])) {
+  }
 #endif
 
   template <class... P>
@@ -1291,13 +1294,13 @@ Kokkos::Impl::ALL_t shift_input(const Kokkos::Impl::ALL_t arg,
 
 template <class T>
 KOKKOS_INLINE_FUNCTION typename std::enable_if<std::is_integral<T>::value,
-                                               Kokkos::pair<T, T> >::type
+                                               Kokkos::pair<T, T>>::type
 shift_input(const Kokkos::pair<T, T> arg, const int64_t offset) {
   return Kokkos::make_pair<T, T>(arg.first - offset, arg.second - offset);
 }
 template <class T>
 inline
-    typename std::enable_if<std::is_integral<T>::value, std::pair<T, T> >::type
+    typename std::enable_if<std::is_integral<T>::value, std::pair<T, T>>::type
     shift_input(const std::pair<T, T> arg, const int64_t offset) {
   return std::make_pair<T, T>(arg.first - offset, arg.second - offset);
 }
