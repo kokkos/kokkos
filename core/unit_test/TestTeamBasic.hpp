@@ -147,7 +147,11 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   const size_t per_team_bytes = per_team_extent * sizeof(double);
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(n_teams, 32);
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(
+      n_teams,
+      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value
+          ? 32
+          : 1);
 #else
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(n_teams, 1);
 #endif
