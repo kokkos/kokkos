@@ -77,7 +77,7 @@ pipeline {
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack spec kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
+                          spack spec kokkos@develop+cuda+wrapper+tests^cuda@11.6.0 cuda_arch=70 && \
                           spack install -v kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
                           spack load cmake && \
                           spack load kokkos-nvcc-wrapper && \
