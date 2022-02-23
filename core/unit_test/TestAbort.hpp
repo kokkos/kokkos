@@ -62,7 +62,9 @@ struct TestAbortPrintingToStdout {
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1), *this);
     Kokkos::fence();
     auto const captured = ::testing::internal::GetCapturedStdout();
-    EXPECT_EQ(captured, "move along nothing to see here");
+    EXPECT_TRUE(std::regex_search(captured,
+                                  std::regex("move along nothing to see here")))
+        << "here is what was printed to stdout \"" << captured << "\"";
   }
   KOKKOS_FUNCTION void operator()(int) const {
     Kokkos::abort("move along nothing to see here");
