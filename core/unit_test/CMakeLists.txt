@@ -176,6 +176,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
 
     SET(${Tag}_SOURCES2A)
     foreach(Name
+      Abort
       TeamBasic
       TeamReductionScan
       TeamScan

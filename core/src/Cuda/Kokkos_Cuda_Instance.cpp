@@ -184,6 +184,17 @@ void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
   throw_runtime_exception(out.str());
 }
 
+void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
+                               const int line) {
+  std::ostringstream out;
+  out << name << " error( " << cudaGetErrorName(e)
+      << "): " << cudaGetErrorString(e);
+  if (file) {
+    out << " " << file << ":" << line;
+  }
+  abort(out.str().c_str());
+}
+
 //----------------------------------------------------------------------------
 // Some significant cuda device properties:
 //
