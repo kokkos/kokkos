@@ -57,7 +57,6 @@
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Kokkos_MinMaxClamp.hpp>
-#include <Kokkos_Vectorization.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
@@ -107,8 +106,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() const {
-    using namespace std;
-
     if (m_rp.m_num_tiles == 0) return;
     const auto maxblocks = cuda_internal_maximum_grid_count();
     if (RP::rank == 2) {
@@ -263,9 +260,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   static constexpr bool UseShflReduction = false;
   //((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize)
   // Some crutch to do function overloading
- private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
 
  public:
   template <typename Policy, typename Functor>
@@ -292,13 +286,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline __device__ void operator()() const {
-    /*    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
-      DummySHMEMReductionType>::select(1,1.0) );
-      }
-
-      __device__ inline
-      void run(const DummySHMEMReductionType& ) const
-      {*/
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(
@@ -350,49 +337,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     }
   }
 
-  /*  __device__ inline
-     void run(const DummyShflReductionType&) const
-     {
-
-       value_type value;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &value);
-       // Number of blocks is bounded so that the reduction can be limited to
-     two passes.
-       // Each thread block is given an approximately equal amount of work to
-     perform.
-       // Accumulate the values for this block.
-       // The accumulation ordering does not match the final pass, but is
-     arithmatically equivalent.
-
-       const Member work_part =
-         ( ( m_policy.m_num_tiles + ( gridDim.x - 1 ) ) / gridDim.x ); //portion
-     of tiles handled by each block
-
-       this-> exec_range( value );
-
-       pointer_type const result = (pointer_type) (m_unified_space ?
-     m_unified_space : m_scratch_space) ;
-
-       int max_active_thread = work_part < blockDim.y ? work_part:blockDim.y;
-       max_active_thread = (max_active_thread ==
-     0)?blockDim.y:max_active_thread;
-
-       value_type init;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &init);
-       if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTagFwd>
-           (value,init,ValueJoin(ReducerConditional::select(m_functor ,
-     m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
-         const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
-         if(id==0) {
-           Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final(
-     ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
-           *result = value;
-         }
-       }
-     }
-  */
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
