@@ -36,8 +36,7 @@ pipeline {
                           rm ${KEYDUMP_FILE}*
 
                           rm -rf spack && \
-                          git clone https://github.com/Rombur/spack.git && \
-                          cd spack && git checkout kokkos_rocm && cd .. && \
+                          git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack install kokkos@develop+tests && \
                           spack load cmake && \
@@ -76,8 +75,7 @@ pipeline {
                           rm ${KEYDUMP_FILE}*
 
                           rm -rf spack && \
-                          git clone https://github.com/Rombur/spack.git && \
-                          cd spack && git checkout kokkos_rocm && cd .. && \
+                          git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack spec kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
                           spack install -v kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
@@ -121,11 +119,10 @@ pipeline {
                           rm ${KEYDUMP_FILE}*
 
                           rm -rf spack && \
-                          git clone https://github.com/Rombur/spack.git && \
-                          cd spack && git checkout kokkos_rocm && cd .. && \
+                          git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack spec kokkos@develop+rocm+tests amdgpu_target=gfx908 && \
-                          spack install -v kokkos@develop+rocm+tests amdgpu_target=gfx908 && \
+                          spack spec kokkos@develop+rocm+tests std=17 amdgpu_target=gfx908 && \
+                          spack install -v kokkos@develop+rocm+tests std=17 amdgpu_target=gfx908 && \
                           spack load cmake && \
                           spack load kokkos && \
                           spack test run kokkos && \
