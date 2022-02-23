@@ -10,6 +10,7 @@
 - Add mathematical constants [\#4519](https://github.com/kokkos/kokkos/pull/4519)
 - Allow `Kokkos::{create_mirror*,resize,realloc}` to be used with `WithoutInitializing` [\#4486](https://github.com/kokkos/kokkos/pull/4486) [\#4337](https://github.com/kokkos/kokkos/pull/4337)
 - Implement `KOKKOS_IF_ON_{HOST,DEVICE}` macros [\#4660](https://github.com/kokkos/kokkos/pull/4660)
+- Allow setting the CMake language for Kokkos [\#4323](https://github.com/kokkos/kokkos/pull/4323)
 
 #### Perf bug fix
 - Desul: Add ScopeCaller [\#4690](https://github.com/kokkos/kokkos/pull/4690)
@@ -50,6 +51,9 @@
 - Add generic `KOKKOS_ARCH_VEGA` macro [\#4782](https://github.com/kokkos/kokkos/pull/4782)
 - Require ROCm 4.5 [\#4689](https://github.com/kokkos/kokkos/pull/4689)
 
+### HPX:
+- Adapt to HPX 1.7.0 which is now required [\#4241](https://github.com/kokkos/kokkos/pull/4241)
+
 #### OpenMP:
 - Fix thread deduction for OpenMP for `thread_count==0` [\#4541](https://github.com/kokkos/kokkos/pull/4541)
 
@@ -57,6 +61,7 @@
 - Update memory space `size_type` to improve performance (`size_t -> unsigned`) [\#4779](https://github.com/kokkos/kokkos/pull/4779)
 
 #### Other Improvements:
+- Improve NVHPC support [\#4599](https://github.com/kokkos/kokkos/pull/4599)
 - Add `Kokkos::Experimental::{min,max,minmax,clamp}` [\#4629](https://github.com/kokkos/kokkos/pull/4629) [\#4506](https://github.com/kokkos/kokkos/pull/4506)
 - Use device type as template argument in Containers and Algorithms [\#4724](https://github.com/kokkos/kokkos/pull/4724) [\#4675](https://github.com/kokkos/kokkos/pull/4675)
 - Implement `Kokkos::sort` with execution space [\#4490](https://github.com/kokkos/kokkos/pull/4490)
