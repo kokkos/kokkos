@@ -343,22 +343,22 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
 
   //----------------------------------------
 
-  inline int team_size() const { return 1; }
-  inline bool impl_auto_team_size() const { return false; }
-  inline bool impl_auto_vector_length() const { return false; }
-  inline void impl_set_team_size(size_t) {}
-  inline void impl_set_vector_length(size_t) {}
-  inline int league_size() const { return m_league_size; }
-  inline size_t scratch_size(const int& level, int = 0) const {
+  int team_size() const { return 1; }
+  bool impl_auto_team_size() const { return false; }
+  bool impl_auto_vector_length() const { return false; }
+  void impl_set_team_size(size_t) {}
+  void impl_set_vector_length(size_t) {}
+  int league_size() const { return m_league_size; }
+  size_t scratch_size(const int& level, int = 0) const {
     return m_team_scratch_size[level] + m_thread_scratch_size[level];
   }
 
-  inline int impl_vector_length() const { return 1; }
-  inline static int vector_length_max() {
+  int impl_vector_length() const { return 1; }
+  static int vector_length_max() {
     return 1024;
   }  // Use arbitrary large number, is meant as a vectorizable length
 
-  inline static int scratch_size_max(int level) {
+  static int scratch_size_max(int level) {
     return (level == 0 ? 1024 * 32 : 20 * 1024 * 1024);
   }
   /** \brief  Specify league size, request team size */
@@ -416,36 +416,35 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
                            league_size_request, team_size_request,
                            vector_length_request) {}
 
-  inline int chunk_size() const { return m_chunk_size; }
+  int chunk_size() const { return m_chunk_size; }
 
   /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal& set_chunk_size(
-      typename traits::index_type chunk_size_) {
+  TeamPolicyInternal& set_chunk_size(typename traits::index_type chunk_size_) {
     m_chunk_size = chunk_size_;
     return *this;
   }
 
   /** \brief set per team scratch size for a specific level of the scratch
    * hierarchy */
-  inline TeamPolicyInternal& set_scratch_size(const int& level,
-                                              const PerTeamValue& per_team) {
+  TeamPolicyInternal& set_scratch_size(const int& level,
+                                       const PerTeamValue& per_team) {
     m_team_scratch_size[level] = per_team.value;
     return *this;
   }
 
   /** \brief set per thread scratch size for a specific level of the scratch
    * hierarchy */
-  inline TeamPolicyInternal& set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) {
+  TeamPolicyInternal& set_scratch_size(const int& level,
+                                       const PerThreadValue& per_thread) {
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
 
   /** \brief set per thread and per team scratch size for a specific level of
    * the scratch hierarchy */
-  inline TeamPolicyInternal& set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) {
+  TeamPolicyInternal& set_scratch_size(const int& level,
+                                       const PerTeamValue& per_team,
+                                       const PerThreadValue& per_thread) {
     m_team_scratch_size[level]   = per_team.value;
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
