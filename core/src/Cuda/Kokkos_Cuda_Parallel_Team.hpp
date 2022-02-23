@@ -67,11 +67,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
 
-#include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/KokkosExp_IterateTileGPU.hpp>
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 
 namespace Kokkos {
 
@@ -92,7 +88,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   friend class TeamPolicyInternal;
 
  private:
-  enum { MAX_WARP = 8 };
+  static constexpr int MAX_WARP = 8;
 
   typename traits::execution_space m_space;
   int m_league_size;
@@ -434,15 +430,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
 __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
                                                  int32_t* scratch_locks) {
   int64_t threadid = 0;
@@ -681,13 +668,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using size_type    = Cuda::size_type;
   using reducer_type = ReducerType;
 
-  enum : bool {
-    UseShflReduction = (true && (ValueTraits::StaticValueSize != 0))
-  };
+  static constexpr bool UseShflReduction =
+      (true && (ValueTraits::StaticValueSize != 0));
 
  private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
+  struct ShflReductionTag {};
+  struct SHMEMReductionTag {};
 
   // Algorithmic constraints: blockDim.y is a power of two AND blockDim.y ==
   // blockDim.z == 1 shared memory utilization:
@@ -740,16 +726,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
     }
 
-    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
-                           DummySHMEMReductionType>::select(1, 1.0),
-        threadid);
+    using ReductionTag = std::conditional_t<UseShflReduction, ShflReductionTag,
+                                            SHMEMReductionTag>;
+    run(ReductionTag{}, threadid);
     if (m_scratch_size[1] > 0) {
       cuda_release_scratch_index(m_scratch_locks, threadid);
     }
   }
 
-  __device__ inline void run(const DummySHMEMReductionType&,
-                             const int& threadid) const {
+  __device__ inline void run(SHMEMReductionTag&, const int& threadid) const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(
@@ -834,8 +819,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
   }
 
-  __device__ inline void run(const DummyShflReductionType&,
-                             const int& threadid) const {
+  __device__ inline void run(ShflReductionTag, const int& threadid) const {
     value_type value;
     ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &value);
 
@@ -866,17 +850,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
           ReducerConditional::select(m_functor, m_reducer), (void*)&value);
       *result = value;
-    } else if (
-        Impl::cuda_inter_block_reduction<FunctorType, ValueJoin, WorkTag>(
-            value, init,
-            ValueJoin(ReducerConditional::select(m_functor, m_reducer)),
-            m_scratch_space, result, m_scratch_flags, blockDim.y)
-        // This breaks a test
-        //   Kokkos::Impl::CudaReductionsFunctor<FunctorType,WorkTag,false,true>::scalar_inter_block_reduction(ReducerConditional::select(m_functor
-        //   , m_reducer) , blockIdx.x , gridDim.x ,
-        //              kokkos_impl_cuda_shared_memory<size_type>() ,
-        //              m_scratch_space , m_scratch_flags)
-    ) {
+    } else if (Impl::cuda_inter_block_reduction<FunctorType, ValueJoin,
+                                                WorkTag>(
+                   value, init,
+                   ValueJoin(ReducerConditional::select(m_functor, m_reducer)),
+                   m_scratch_space, result, m_scratch_flags, blockDim.y)) {
       const unsigned id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
         Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
