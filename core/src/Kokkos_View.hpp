@@ -1552,8 +1552,8 @@ class View : public ViewTraits<DataType, Properties...> {
 #endif
     //------------------------------------------------------------
 
-    Kokkos::Impl::SharedAllocationRecord<>* record =
-        m_map.allocate_shared(prop_copy, arg_layout);
+    Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
+        prop_copy, arg_layout, Impl::ViewCtorProp<P...>::has_execution_space);
 
 //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)
