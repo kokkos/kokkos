@@ -120,6 +120,7 @@ pipeline {
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack install gcc@10.3.0 && \
+                          spack load gcc@10.3.0 && \
                           spack compilers && \
                           spack spec kokkos@develop%gcc@10.3.0+cuda+wrapper+tests cuda_arch=70 && \
                           spack install -v kokkos@develop%gcc@10.3.0+cuda+wrapper+tests cuda_arch=70 && \
