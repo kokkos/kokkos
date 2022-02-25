@@ -60,6 +60,7 @@
 #include <impl/Kokkos_Tools.hpp>
 
 #include "impl/Kokkos_HostSpace_deepcopy.hpp"
+#include <impl/Kokkos_MemorySpace.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -138,9 +139,25 @@ class HostSpace {
   explicit HostSpace(const AllocationMechanism&);
 
   /**\brief  Allocate untracked memory in the space */
-  void* allocate(const size_t arg_alloc_size) const;
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace& exec_space,
+                 const size_t arg_alloc_size) const {
+    return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const {
+    return impl_allocate(/*exec_space, */ arg_label, arg_alloc_size,
+                         arg_logical_size);
+  }
+  void* allocate(const size_t arg_alloc_size) const {
+    return allocate("[unlabeled]", arg_alloc_size);
+  }
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size = 0) const {
+    return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
+  }
 
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
@@ -251,12 +268,41 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
       ;
   SharedAllocationRecord() = default;
 
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& exec_space, const Kokkos::HostSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &deallocate)
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::HostSpace, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(exec_space, arg_space,
+                                                 arg_label, arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*RecordBase::m_alloc_ptr,
+                                                    arg_label);
+  }
+
   SharedAllocationRecord(
       const Kokkos::HostSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &deallocate);
 
  public:
+  template <typename ExecutionSpace>
+  KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
+      const ExecutionSpace& exec_space, const Kokkos::HostSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size) {
+    KOKKOS_IF_ON_HOST(
+        (return new SharedAllocationRecord(exec_space, arg_space, arg_label,
+                                           arg_alloc_size);))
+    KOKKOS_IF_ON_DEVICE(((void)arg_space; (void)arg_label; (void)arg_alloc_size;
+                         return nullptr;))
+  }
+
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const Kokkos::HostSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size) {

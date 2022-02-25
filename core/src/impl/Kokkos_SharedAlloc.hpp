@@ -309,6 +309,16 @@ template <class MemorySpace, class DestroyFunctor>
 class SharedAllocationRecord
     : public SharedAllocationRecord<MemorySpace, void> {
  private:
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(const ExecutionSpace& exec_space,
+                         const MemorySpace& arg_space,
+                         const std::string& arg_label, const size_t arg_alloc)
+      /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
+      : SharedAllocationRecord<MemorySpace, void>(
+            exec_space, arg_space, arg_label, arg_alloc,
+            &Kokkos::Impl::deallocate<MemorySpace, DestroyFunctor>),
+        m_destroy() {}
+
   SharedAllocationRecord(const MemorySpace& arg_space,
                          const std::string& arg_label, const size_t arg_alloc)
       /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
@@ -332,6 +342,17 @@ class SharedAllocationRecord
       const size_t arg_alloc) {
     KOKKOS_IF_ON_HOST(
         (return new SharedAllocationRecord(arg_space, arg_label, arg_alloc);))
+    KOKKOS_IF_ON_DEVICE(
+        ((void)arg_space; (void)arg_label; (void)arg_alloc; return nullptr;))
+  }
+
+  template <typename ExecutionSpace>
+  KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
+      const ExecutionSpace& exec_space, const MemorySpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc) {
+    KOKKOS_IF_ON_HOST(
+        (return new SharedAllocationRecord(exec_space, arg_space, arg_label,
+                                           arg_alloc);))
     KOKKOS_IF_ON_DEVICE(
         ((void)arg_space; (void)arg_label; (void)arg_alloc; return nullptr;))
   }

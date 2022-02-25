@@ -198,12 +198,24 @@ void *CudaSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
 
+void *CudaSpace::allocate(const Cuda &exec_space, const char *arg_label,
+                          const size_t arg_alloc_size,
+                          const size_t arg_logical_size) const {
+  return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_logical_size);
+}
 void *CudaSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
   return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
 }
 void *CudaSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
+  return impl_allocate(Kokkos::Cuda{}, arg_label, arg_alloc_size,
+                       arg_logical_size, arg_handle);
+}
+void *CudaSpace::impl_allocate(
+    const Cuda &exec_space, const char *arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
@@ -213,8 +225,9 @@ void *CudaSpace::impl_allocate(
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
-    error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    cudaaStream_t stream = exec_space.get_stream();
+    error_code           = cudaMallocAsync(&ptr, arg_alloc_size, stream);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
   } else {
     error_code = cudaMalloc(&ptr, arg_alloc_size);
   }
@@ -239,6 +252,14 @@ void *CudaSpace::impl_allocate(
   return ptr;
 }
 
+void *CudaUVMSpace::allocate(const Cuda &, const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+void *CudaUVMSpace::allocate(const Cuda &, const char *arg_label,
+                             const size_t arg_alloc_size,
+                             const size_t arg_logical_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
+}
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
@@ -284,6 +305,15 @@ void *CudaUVMSpace::impl_allocate(
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
   return ptr;
+}
+void *CudaHostPinnedSpace::allocate(const Cuda &,
+                                    const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+void *CudaHostPinnedSpace::allocate(const Cuda &, const char *arg_label,
+                                    const size_t arg_alloc_size,
+                                    const size_t arg_logical_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
 }
 void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
@@ -519,13 +549,20 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
     const Kokkos::CudaSpace &arg_space, const std::string &arg_label,
     const size_t arg_alloc_size,
     const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+    : SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
+          Kokkos::Cuda{}, arg_space, arg_label, arg_alloc_size, arg_dealloc) {}
+
+SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
+    const Kokkos::Cuda &exec_space, const Kokkos::CudaSpace &arg_space,
+    const std::string &arg_label, const size_t arg_alloc_size,
+    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
 #endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
+          Impl::checked_allocation_with_header(exec_space, arg_space, arg_label,
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),
@@ -537,10 +574,10 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Cuda exec;
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
-      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-  exec.fence(
+  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec_space,
+                                               RecordBase::m_alloc_ptr, &header,
+                                               sizeof(SharedAllocationHeader));
+  exec_space.fence(
       "SharedAllocationRecord<Kokkos::CudaSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");
@@ -550,13 +587,23 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
     const Kokkos::CudaUVMSpace &arg_space, const std::string &arg_label,
     const size_t arg_alloc_size,
     const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+    : SharedAllocationRecord<Kokkos::CudaUVMSpace,
+                             void>::SharedAllocationRecord(Kokkos::Cuda{},
+                                                           arg_space, arg_label,
+                                                           arg_alloc_size,
+                                                           arg_dealloc) {}
+
+SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
+    const Kokkos::Cuda &exec_space, const Kokkos::CudaUVMSpace &arg_space,
+    const std::string &arg_label, const size_t arg_alloc_size,
+    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
 #endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
+          Impl::checked_allocation_with_header(exec_space, arg_space, arg_label,
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),
@@ -571,6 +618,18 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
         const Kokkos::CudaHostPinnedSpace &arg_space,
         const std::string &arg_label, const size_t arg_alloc_size,
         const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+    : SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
+                             void>::SharedAllocationRecord(Kokkos::Cuda{},
+                                                           arg_space, arg_label,
+                                                           arg_alloc_size,
+                                                           arg_dealloc) {}
+
+SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
+    SharedAllocationRecord(
+        const Kokkos::Cuda &exec_space,
+        const Kokkos::CudaHostPinnedSpace &arg_space,
+        const std::string &arg_label, const size_t arg_alloc_size,
+        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
@@ -578,7 +637,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
           &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
                                   void>::s_root_record,
 #endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
+          Impl::checked_allocation_with_header(exec_space, arg_space, arg_label,
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),

@@ -114,15 +114,6 @@ HostSpace::HostSpace(const HostSpace::AllocationMechanism &arg_alloc_mech)
   }
 }
 
-void *HostSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
-void *HostSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
-                          const size_t
-
-                              arg_logical_size) const {
-  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
-}
 void *HostSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size,

@@ -98,6 +98,10 @@ class CudaSpace {
   ~CudaSpace()                               = default;
 
   /**\brief  Allocate untracked memory in the cuda space */
+  void* allocate(const Cuda& exec_space, const size_t arg_alloc_size) const;
+  void* allocate(const Cuda& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -111,6 +115,11 @@ class CudaSpace {
  private:
   template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
+  void* impl_allocate(const Cuda& exec_space, const char* arg_label,
+                      const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -181,6 +190,11 @@ class CudaUVMSpace {
   ~CudaUVMSpace()                                  = default;
 
   /**\brief  Allocate untracked memory in the cuda space */
+  void* allocate(const Cuda& exec_space, const size_t arg_alloc_size) const;
+  void* allocate(const Cuda& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
+
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -255,6 +269,10 @@ class CudaHostPinnedSpace {
   ~CudaHostPinnedSpace()                                         = default;
 
   /**\brief  Allocate untracked memory in the space */
+  void* allocate(const Cuda&, const size_t arg_alloc_size) const;
+  void* allocate(const Cuda&, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -575,6 +593,11 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
+      const Kokkos::Cuda& exec_space, const Kokkos::CudaSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
+  SharedAllocationRecord(
       const Kokkos::CudaSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
@@ -624,6 +647,11 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
  protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
+
+  SharedAllocationRecord(
+      const Kokkos::Cuda& exec_space, const Kokkos::CudaUVMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 
   SharedAllocationRecord(
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
@@ -677,9 +705,15 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
+      const Kokkos::Cuda& exec_space,
       const Kokkos::CudaHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
+  SharedAllocationRecord(
+      const Kokkos::CudaHostPinnedSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 };
 
 }  // namespace Impl

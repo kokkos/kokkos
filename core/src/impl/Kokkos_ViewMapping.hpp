@@ -3401,9 +3401,14 @@ class ViewMapping<
         static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
             arg_prop)
             .value;
+    const execution_space& exec_space =
+        static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+            arg_prop)
+            .value;
     // Create shared memory tracking record with allocate memory from the memory
     // space
     record_type* const record = record_type::allocate(
+        exec_space,
         static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const&>(
             arg_prop)
             .value,
@@ -3418,12 +3423,8 @@ class ViewMapping<
       // The ViewValueFunctor has both value construction and destruction
       // operators.
       if (execution_space_specified) {
-        record->m_destroy = functor_type(
-            static_cast<
-                Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-                arg_prop)
-                .value,
-            (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
+        record->m_destroy = functor_type(exec_space, (value_type*)m_impl_handle,
+                                         m_impl_offset.span(), alloc_name);
       } else {
         record->m_destroy = functor_type((value_type*)m_impl_handle,
                                          m_impl_offset.span(), alloc_name);
