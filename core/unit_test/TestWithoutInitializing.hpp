@@ -116,48 +116,19 @@ TEST(TEST_CATEGORY, view_alloc) {
   using view_type = Kokkos::View<NonTriviallyCopyable*, TEST_EXECSPACE>;
   view_type outer_view;
 
-  if (Kokkos::Impl::MemorySpaceAccess<typename TEST_EXECSPACE::memory_space,
-                                      Kokkos::HostSpace>::accessible) {
-    auto success = validate_event_set(
-        [&]() {
-          view_type inner_view(Kokkos::view_alloc("bla"), 8);
-          // Avoid testing the destructor
-          outer_view = inner_view;
-        },
-        [&](BeginFenceEvent event) {
-          if (event.descriptor().find(
-                  "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
-              std::string::npos)
-            return MatchDiagnostic{true};
-          return MatchDiagnostic{false, {"Expected fence not found"}};
-        },
-        [&](EndFenceEvent) { return MatchDiagnostic{true}; });
-    ASSERT_TRUE(success);
-  } else {
-    auto success = validate_event_set(
-        [&]() {
-          view_type inner_view(Kokkos::view_alloc("bla"), 8);
-          // Avoid testing the destructor
-          outer_view = inner_view;
-        },
-        [&](BeginFenceEvent event) {
-          if (event.descriptor().find(
-                  "fence after copying header from HostSpace") !=
-              std::string::npos)
-            return MatchDiagnostic{true};
-          return MatchDiagnostic{false, {"Expected fence not found"}};
-        },
-        [&](EndFenceEvent) { return MatchDiagnostic{true}; },
-        [&](BeginFenceEvent event) {
-          if (event.descriptor().find(
-                  "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
-              std::string::npos)
-            return MatchDiagnostic{true};
-          return MatchDiagnostic{false, {"Expected fence not found"}};
-        },
-        [&](EndFenceEvent) { return MatchDiagnostic{true}; });
-    ASSERT_TRUE(success);
-  }
+  auto success = validate_existence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc("bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
 
@@ -173,31 +144,19 @@ TEST(TEST_CATEGORY, view_alloc_exec_space) {
   using view_type = Kokkos::View<NonTriviallyCopyable*, TEST_EXECSPACE>;
   view_type outer_view;
 
-  if (Kokkos::Impl::MemorySpaceAccess<typename TEST_EXECSPACE::memory_space,
-                                      Kokkos::HostSpace>::accessible) {
-    auto success = validate_event_set([&]() {
-      view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
-      // Avoid testing the destructor
-      outer_view = inner_view;
-    });
-    ASSERT_TRUE(success);
-  } else {
-    auto success = validate_event_set(
-        [&]() {
-          view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
-          // Avoid testing the destructor
-          outer_view = inner_view;
-        },
-        [&](BeginFenceEvent event) {
-          if (event.descriptor().find(
-                  "fence after copying header from HostSpace") !=
-              std::string::npos)
-            return MatchDiagnostic{true};
-          return MatchDiagnostic{false, {"Expected fence not found"}};
-        },
-        [&](EndFenceEvent) { return MatchDiagnostic{true}; });
-    ASSERT_TRUE(success);
-  }
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
 
@@ -213,31 +172,19 @@ TEST(TEST_CATEGORY, view_alloc_int) {
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
   view_type outer_view;
 
-  if (Kokkos::Impl::MemorySpaceAccess<typename TEST_EXECSPACE::memory_space,
-                                      Kokkos::HostSpace>::accessible) {
-    auto success = validate_event_set([&]() {
-      view_type inner_view("bla", 8);
-      // Avoid testing the destructor
-      outer_view = inner_view;
-    });
-    ASSERT_TRUE(success);
-  } else {
-    auto success = validate_event_set(
-        [&]() {
-          view_type inner_view("bla", 8);
-          // Avoid testing the destructor
-          outer_view = inner_view;
-        },
-        [&](BeginFenceEvent event) {
-          if (event.descriptor().find(
-                  "fence after copying header from HostSpace") !=
-              std::string::npos)
-            return MatchDiagnostic{true};
-          return MatchDiagnostic{false, {"Expected fence not found"}};
-        },
-        [&](EndFenceEvent) { return MatchDiagnostic{true}; });
-    ASSERT_TRUE(success);
-  }
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view("bla", 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
 
@@ -253,30 +200,18 @@ TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
   view_type outer_view;
 
-  if (Kokkos::Impl::MemorySpaceAccess<typename TEST_EXECSPACE::memory_space,
-                                      Kokkos::HostSpace>::accessible) {
-    auto success = validate_event_set([&]() {
-      view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
-      // Avoid testing the destructor
-      outer_view = inner_view;
-    });
-    ASSERT_TRUE(success);
-  } else {
-    auto success = validate_event_set(
-        [&]() {
-          view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
-          // Avoid testing the destructor
-          outer_view = inner_view;
-        },
-        [&](BeginFenceEvent event) {
-          if (event.descriptor().find(
-                  "fence after copying header from HostSpace") !=
-              std::string::npos)
-            return MatchDiagnostic{true};
-          return MatchDiagnostic{false, {"Expected fence not found"}};
-        },
-        [&](EndFenceEvent) { return MatchDiagnostic{true}; });
-    ASSERT_TRUE(success);
-  }
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
