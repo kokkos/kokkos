@@ -17,7 +17,7 @@ once, and just change a template parameter to get the optimal data
 layout for your hardware.  %Kokkos has back-ends for the following
 parallel programming models:
 
-- Kokkos::Threads: POSIX Threads (Pthreads)
+- Kokkos::Threads: C++11 Threads (std::thread)
 - Kokkos::OpenMP: OpenMP
 - Kokkos::Cuda: NVIDIA's CUDA programming model for graphics
   processing units (GPUs)

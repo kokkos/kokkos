@@ -1,5 +1,5 @@
-This is a fused source version of gtest 1.7.0. All that should be necessary to
-start using gtest in your package is to declare the dependency and include
+This is a fused source version of gtest (v1.11.0). All that should be necessary
+to start using gtest in your package is to declare the dependency and include
 gtest/gtest.h.
 
 However, because some of the packages that are developed in Sierra do not use a
@@ -9,5 +9,4 @@ created symlinks for the other gtest headers that they use to the fused source
 gtest.h. This will make it possible for them find the headers while still using
 the fuse source version. This should not have any ill effects since the header is
 protected and allows for only using the non-gtest.h headers in their files.
-
 

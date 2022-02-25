@@ -465,8 +465,9 @@ class TestScanTeam {
     functor_type functor;
 
     policy_type team_exec(nteam, 1);
-    team_exec = policy_type(
-        nteam, team_exec.team_size_max(functor, Kokkos::ParallelReduceTag()));
+    const auto team_size =
+        team_exec.team_size_max(functor, Kokkos::ParallelReduceTag());
+    team_exec = policy_type(nteam, team_size);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       int64_t accum = 0;
@@ -1530,7 +1531,7 @@ struct TestScratchAlignment {
             .set_scratch_size(0, Kokkos::PerTeam(shmem_size)),
         KOKKOS_LAMBDA(
             const typename Kokkos::TeamPolicy<ExecSpace>::member_type &team) {
-          if (allocate_small) ScratchViewInt p(team.team_scratch(0), 1);
+          if (allocate_small) ScratchViewInt(team.team_scratch(0), 1);
           ScratchView a(team.team_scratch(0), 11);
           if (ptrdiff_t(a.data()) % sizeof(TestScalar) != 0)
             Kokkos::abort("Error: invalid scratch view alignment\n");
