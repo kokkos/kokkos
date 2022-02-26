@@ -52,6 +52,7 @@
 #include <string>
 #include <cstdio>
 #include <cstdint>
+#include <type_traits>
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
@@ -69,6 +70,19 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/KokkosExp_IterateTileGPU.hpp>
+
+#define CUB_USE_COOPERATIVE_GROUPS
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/generate.h>
+#include <thrust/sort.h>
+#include <thrust/copy.h>
+#include <thrust/iterator/counting_iterator.h>
+#pragma GCC diagnostic pop
+#define KOKKOS_ENABLE_THRUST
+#undef CUB_USE_COOPERATIVE_GROUPS
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -873,7 +887,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+//-:/---------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
@@ -1141,6 +1155,212 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     return n;
   }
+  /*
+  // used for debugging
+  template <class TagType>
+  struct ThrustFunctorWrapper {
+    const FunctorType f;
+
+    KOKKOS_FUNCTION
+    ThrustFunctorWrapper(const FunctorType op) : f(op){};
+
+    template <class TagType_                      = TagType,
+              typename std::enable_if<std::is_same<TagType_, void>::value,
+                                      bool>::type = true>
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+        printf("something here? %d\n", i);
+      // value_type val = InitValueType();
+      value_type val = (value_type)0;  // for now, assuming no init value
+    //  __threadfence();
+      f(i, val);
+    //  __threadfence();
+      printf("i: %d\n", i);
+      printf("value: %d\n", val);
+      return val;
+    }
+
+    template <class TagType_                      = TagType,
+              typename std::enable_if<!std::is_same<TagType_, void>::value,
+                                      bool>::type = true>
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+      // value_type val = InitValueType();
+      value_type val = (value_type)0;  // for now, assuming no init value
+      f(TagType(), i, val);
+      return val;
+    }
+  };
+  */
+
+  static constexpr bool is_thrust_possible =
+      //! ReduceFunctorHasInit<FunctorType>::value &&
+      //! ReduceFunctorHasJoin<FunctorType>::value &&
+      !ReduceFunctorHasFinal<FunctorType>::value &&
+      !std::is_same<pointer_type, reference_type>::value &&
+      //! std::is_same<value_type, reference_type>::value &&
+      !Policy::is_graph_kernel::value;  // &&
+  // std::is_same<ReducerType, InvalidType>::value;
+
+  static constexpr bool is_thrust_using_no_join_init_red =
+      !ReduceFunctorHasInit<FunctorType>::value &&
+      !ReduceFunctorHasJoin<FunctorType>::value &&
+      std::is_same<ReducerType, InvalidType>::value;
+
+  template <class TagType>
+  struct ThrustFunctorWrapper {
+    const FunctorType f;
+    value_type init;
+
+    KOKKOS_FUNCTION
+    ThrustFunctorWrapper(const FunctorType op, value_type init)
+        : f(std::move(op)), init(std::move(init)){};
+
+    template <class TagType_                      = TagType,
+              typename std::enable_if<std::is_same<TagType_, void>::value,
+                                      bool>::type = true>
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+      value_type val = init;
+      f(i, val);
+      return val;
+    }
+
+    template <class TagType_                      = TagType,
+              typename std::enable_if<!std::is_same<TagType_, void>::value,
+                                      bool>::type = true>
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+      value_type val = init;
+      f(TagType(), i, val);
+      return val;
+    }
+  };
+
+  struct ThrustReducerWrapper {
+    // const FunctorType r;
+    const ValueJoin r;
+
+    KOKKOS_FUNCTION
+    // ThrustReducerWrapper(const FunctorType& op)
+    ThrustReducerWrapper(const ValueJoin& op) : r(std::move(op)){};
+
+    // KOKKOS_FUNCTION value_type operator()(volatile const  value_type& lhs,
+    // volatile const value_type& rhs) const {
+    KOKKOS_FUNCTION value_type operator()(
+        // const volatile value_type& lhs, const volatile value_type& rhs) const
+        // {
+        const value_type& lhs, const value_type& rhs) const {
+      value_type lhs_1{lhs};
+      value_type rhs_1{rhs};
+      r(lhs_1, rhs_1);
+      // r(lhs, rhs);
+      // return lhs;
+      return lhs_1;
+    }
+  };
+
+  struct ThrustHelper {
+    KOKKOS_FUNCTION
+    ThrustHelper(){};
+
+    KOKKOS_FUNCTION value_type operator()(const value_type& lhs,
+                                          const value_type& rhs) {
+      value_type tmp{};
+      tmp += lhs;
+      tmp += rhs;
+      return tmp;
+    }
+  };
+
+  template <bool try_regular>
+  inline std::enable_if_t<try_regular, bool> sum_thrust(
+      thrust::counting_iterator<index_type>& temp_iter_d,
+      thrust::counting_iterator<index_type>& temp_iter_end_d,
+      ThrustHelper& helping_functor, ThrustFunctorWrapper<WorkTag>& t_op) {
+    // printf("using regular\n");
+    //*m_result_ptr = thrust::transform_reduce(
+    //    thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init,
+    //    KOKKOS_LAMBDA (const value_type& lhs, const value_type& rhs) {
+    //      value_type tmp{};
+    //      tmp += lhs;
+    //      tmp += rhs;
+    //      return tmp;
+    *m_result_ptr =
+        thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
+                                 t_op, t_op.init, helping_functor);
+
+    return true;
+  }
+  template <bool try_regular>
+  inline std::enable_if_t<!try_regular, bool> sum_thrust(
+      thrust::counting_iterator<index_type>,
+      thrust::counting_iterator<index_type>, ThrustHelper,
+      ThrustFunctorWrapper<WorkTag>) {
+    // printf("using join/init/reducer\n");
+    return false;
+  }
+
+  template <bool try_thrust>
+  inline std::enable_if_t<!try_thrust, bool> thrust_execute(bool) {
+    return false;
+  }
+  template <bool try_thrust>
+  inline std::enable_if_t<try_thrust, bool> thrust_execute(
+      bool thrust_runtime_possible) {
+    if (!thrust_runtime_possible) {
+      return false;
+    }
+    // printf("using CUDA Thrust\n");
+
+    thrust::counting_iterator<index_type> temp_iter_d(m_policy.begin());
+
+    thrust::counting_iterator<index_type> temp_iter_end_d(m_policy.end());
+
+    // Used for debugging code
+    // printf("m_policy.begin(): %d\n", m_policy.begin());
+    // printf("m_policy.end(): %d\n", m_policy.end());
+
+    // value_type sum;
+
+    // if want to check for default constructible for complex types
+    // also needs an overloaded operator+ outside the struct scope
+    /*
+    if (!std::is_fundamental<value_type>::value &&
+        !std::is_default_constructible<value_type>::value){
+        printf("must be default constructible\n");
+    } else {
+        value_type init;
+    }
+    */
+    value_type init{};
+    if (ReduceFunctorHasInit<FunctorType>::value ||  // FunctorType for U Inits
+        ReduceFunctorHasInit<ReducerType>::value) {  // ReducerType for builtins
+      ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
+    }
+
+    ThrustFunctorWrapper<WorkTag> t_op(m_functor, init);
+    ThrustReducerWrapper r_op(
+        ValueJoin(ReducerConditional::select(m_functor, m_reducer)));
+    // or
+    // ThrustReducerWrapper r_op(ReducerConditional::select(m_functor,
+    // m_reducer));
+
+    ThrustHelper helping_functor{};  // this is needed because the lambda
+                                     // version was causing
+    // issues when CUDA_LAMBDA was set to OFF, so it needs to be a functor
+
+    m_policy.space().fence();
+
+    if (sum_thrust<is_thrust_using_no_join_init_red>(
+            temp_iter_d,
+            // temp_iter_end_d, t_op)) {
+            temp_iter_end_d, helping_functor, t_op)) {
+      // work done in SFINAE function above if it is using no join, init, or
+      // reducer
+    } else {
+      *m_result_ptr = thrust::transform_reduce(
+          thrust::device, temp_iter_d, temp_iter_end_d, t_op, t_op.init, r_op);
+    }
+
+    return true;
+  }
 
   inline void execute() {
     const index_type nwork     = m_policy.end() - m_policy.begin();
@@ -1151,6 +1371,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  Policy::is_graph_kernel::value ||
 #endif
                                  !std::is_same<ReducerType, InvalidType>::value;
+
+#ifdef KOKKOS_ENABLE_THRUST
+    if (thrust_execute<is_thrust_possible>(
+            (nwork > 0) && !std::is_same<pointer_type, reference_type>::value &&
+            m_result_ptr_host_accessible)) {
+      return;
+    }
+#endif
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
 
@@ -1202,7 +1430,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       if (!m_result_ptr_device_accessible) {
         m_policy.space().fence(
-            "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: Result "
+            "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: "
+            "Result "
             "Not Device Accessible");
 
         if (m_result_ptr) {
