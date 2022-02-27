@@ -52,12 +52,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-// move
-template <typename T>
-KOKKOS_INLINE_FUNCTION std::remove_reference_t<T>&& move(T&& t) {
-  return static_cast<std::remove_reference_t<T>&&>(t);
-}
-
 // swap
 template <class T>
 KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) noexcept {
