@@ -353,8 +353,8 @@ class SharedAllocationRecord
     KOKKOS_IF_ON_HOST(
         (return new SharedAllocationRecord(exec_space, arg_space, arg_label,
                                            arg_alloc);))
-    KOKKOS_IF_ON_DEVICE(
-        ((void)arg_space; (void)arg_label; (void)arg_alloc; return nullptr;))
+    KOKKOS_IF_ON_DEVICE(((void)exec_space; (void)arg_space; (void)arg_label;
+                         (void)arg_alloc; return nullptr;))
   }
 };
 
