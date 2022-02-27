@@ -76,17 +76,17 @@ struct MyMovableType {
 
 TEST(std_algorithms_mod_ops_test, move) {
   MyMovableType a;
-  using move_t = decltype(KE::move(a));
+  using move_t = decltype(std::move(a));
   static_assert(std::is_rvalue_reference<move_t>::value, "");
 
   // move constr
-  MyMovableType b(KE::move(a));
+  MyMovableType b(std::move(a));
   EXPECT_TRUE(b.m_value == 11);
   EXPECT_TRUE(a.m_value == -2);
 
   // move assign
   MyMovableType c;
-  c = KE::move(b);
+  c = std::move(b);
   EXPECT_TRUE(c.m_value == 11);
   EXPECT_TRUE(b.m_value == -4);
 }
@@ -98,9 +98,9 @@ struct StdAlgoModSeqOpsTestMove {
   KOKKOS_INLINE_FUNCTION
   void operator()(const int index) const {
     typename ViewType::value_type a{11};
-    using move_t = decltype(KE::move(a));
+    using move_t = decltype(std::move(a));
     static_assert(std::is_rvalue_reference<move_t>::value, "");
-    m_view(index) = KE::move(a);
+    m_view(index) = std::move(a);
   }
 
   StdAlgoModSeqOpsTestMove(ViewType view) : m_view(view) {}
