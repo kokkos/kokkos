@@ -110,6 +110,18 @@ class LogicalMemorySpace {
   LogicalMemorySpace(Args&&... args) : underlying_space((Args &&) args...) {}
 
   /**\brief  Allocate untracked memory in the space */
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace& exec_space,
+                 const size_t arg_alloc_size) const {
+    return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const {
+    return impl_allocate(exec_space, arg_label, arg_alloc_size,
+                         arg_logical_size);
+  }
   void* allocate(const size_t arg_alloc_size) const {
     return allocate("[unlabeled]", arg_alloc_size);
   }
@@ -138,6 +150,15 @@ class LogicalMemorySpace {
   friend class LogicalMemorySpace;
   friend class Kokkos::Impl::SharedAllocationRecord<memory_space, void>;
 
+  template <typename ExecutionSpace>
+  void* impl_allocate(const ExecutionSpace& exec_space, const char* arg_label,
+                      const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      Kokkos::Tools::SpaceHandle arg_handle =
+                          Kokkos::Tools::make_space_handle(name())) const {
+    return underlying_space.impl_allocate(exec_space, arg_label, arg_alloc_size,
+                                          arg_logical_size, arg_handle);
+  }
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       Kokkos::Tools::SpaceHandle arg_handle =
@@ -246,6 +267,31 @@ class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
                         sizeof(SharedAllocationHeader)));
   }
   SharedAllocationRecord() = default;
+
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& exec_space, const SpaceType& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &deallocate)
+      : SharedAllocationRecord<void, void>(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<SpaceType, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(exec_space, arg_space,
+                                                 arg_label, arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_space(arg_space) {
+    // Fill in the Header information
+    RecordBase::m_alloc_ptr->m_record =
+        static_cast<SharedAllocationRecord<void, void>*>(this);
+
+    strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
+            SharedAllocationHeader::maximum_label_length - 1);
+    // Set last element zero, in case c_str is too long
+    RecordBase::m_alloc_ptr
+        ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  }
 
   SharedAllocationRecord(
       const SpaceType& arg_space, const std::string& arg_label,

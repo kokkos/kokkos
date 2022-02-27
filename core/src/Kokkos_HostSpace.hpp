@@ -145,7 +145,7 @@ class HostSpace {
     return allocate(exec_space, "[unlabeled]", arg_alloc_size);
   }
   template <typename ExecutionSpace>
-  void* allocate(const ExecutionSpace& exec_space, const char* arg_label,
+  void* allocate(const ExecutionSpace& /* exec_space*/, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return impl_allocate(/*exec_space, */ arg_label, arg_alloc_size,
@@ -169,6 +169,15 @@ class HostSpace {
   template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
 
+  template <typename ExecutionSpace>
+  void* impl_allocate(const ExecutionSpace& /*exec_space*/,
+                      const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle arg_space_handle =
+                          Kokkos::Tools::make_space_handle(name())) const {
+    return impl_allocate(arg_label, arg_alloc_size, arg_logical_size,
+                         arg_space_handle);
+  }
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
