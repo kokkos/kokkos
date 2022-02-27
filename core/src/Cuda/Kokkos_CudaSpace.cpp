@@ -225,13 +225,14 @@ void *CudaSpace::impl_allocate(
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
-    cudaaStream_t stream = exec_space.get_stream();
-    error_code           = cudaMallocAsync(&ptr, arg_alloc_size, stream);
+    cudaStream_t stream = exec_space.cuda_stream();
+    error_code          = cudaMallocAsync(&ptr, arg_alloc_size, stream);
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
   } else {
     error_code = cudaMalloc(&ptr, arg_alloc_size);
   }
 #else
+  (void)exec_space;
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
 #endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
