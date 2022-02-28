@@ -648,10 +648,14 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  template <typename ExecutionSpace>
   SharedAllocationRecord(
-      const Kokkos::Cuda& exec_space, const Kokkos::CudaUVMSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
+      const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
 
   SharedAllocationRecord(
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
@@ -704,11 +708,14 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  template <typename ExecutionSpace>
   SharedAllocationRecord(
-      const Kokkos::Cuda& exec_space,
+      const ExecutionSpace& /*exec_space*/,
       const Kokkos::CudaHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
 
   SharedAllocationRecord(
       const Kokkos::CudaHostPinnedSpace& arg_space,
