@@ -117,7 +117,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   typename std::enable_if<std::is_same<typename Policy::schedule_type::type,
                                        Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-#pragma omp parallel for schedule(dynamic, m_policy.chunk_size()) \
+#pragma omp parallel for schedule(dynamic) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
@@ -129,7 +129,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   typename std::enable_if<!std::is_same<typename Policy::schedule_type::type,
                                         Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-#pragma omp parallel for schedule(static, m_policy.chunk_size()) \
+#pragma omp parallel for schedule(static) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
@@ -224,7 +224,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   typename std::enable_if<std::is_same<typename Policy::schedule_type::type,
                                        Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-#pragma omp parallel for schedule(dynamic, m_policy.chunk_size()) \
+#pragma omp parallel for schedule(dynamic) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
@@ -236,7 +236,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   typename std::enable_if<!std::is_same<typename Policy::schedule_type::type,
                                         Kokkos::Dynamic>::value>::type
   execute_parallel() const {
-#pragma omp parallel for schedule(dynamic, m_policy.chunk_size()) \
+#pragma omp parallel for schedule(dynamic) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
