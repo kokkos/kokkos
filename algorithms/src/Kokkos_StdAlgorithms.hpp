@@ -55,7 +55,7 @@
 // distance
 #include <std_algorithms/Kokkos_Distance.hpp>
 
-// move, swap, iter_swap
+// swap, iter_swap
 #include "std_algorithms/Kokkos_ModifyingOperations.hpp"
 
 // find, find_if, find_if_not
