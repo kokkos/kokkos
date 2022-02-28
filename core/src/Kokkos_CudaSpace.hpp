@@ -190,11 +190,6 @@ class CudaUVMSpace {
   ~CudaUVMSpace()                                  = default;
 
   /**\brief  Allocate untracked memory in the cuda space */
-  void* allocate(const Cuda& exec_space, const size_t arg_alloc_size) const;
-  void* allocate(const Cuda& exec_space, const char* arg_label,
-                 const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
-
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -269,10 +264,6 @@ class CudaHostPinnedSpace {
   ~CudaHostPinnedSpace()                                         = default;
 
   /**\brief  Allocate untracked memory in the space */
-  void* allocate(const Cuda&, const size_t arg_alloc_size) const;
-  void* allocate(const Cuda&, const char* arg_label,
-                 const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -591,6 +582,14 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
  protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
+
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& exec_space, const Kokkos::CudaSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
 
   SharedAllocationRecord(
       const Kokkos::Cuda& exec_space, const Kokkos::CudaSpace& arg_space,

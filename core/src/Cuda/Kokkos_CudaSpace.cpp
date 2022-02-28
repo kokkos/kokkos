@@ -253,14 +253,6 @@ void *CudaSpace::impl_allocate(
   return ptr;
 }
 
-void *CudaUVMSpace::allocate(const Cuda &, const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
-void *CudaUVMSpace::allocate(const Cuda &, const char *arg_label,
-                             const size_t arg_alloc_size,
-                             const size_t arg_logical_size) const {
-  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
-}
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
@@ -306,15 +298,6 @@ void *CudaUVMSpace::impl_allocate(
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
   return ptr;
-}
-void *CudaHostPinnedSpace::allocate(const Cuda &,
-                                    const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
-void *CudaHostPinnedSpace::allocate(const Cuda &, const char *arg_label,
-                                    const size_t arg_alloc_size,
-                                    const size_t arg_logical_size) const {
-  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
 }
 void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
