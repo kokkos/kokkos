@@ -585,7 +585,7 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
 
   template <typename ExecutionSpace>
   SharedAllocationRecord(
-      const ExecutionSpace& exec_space, const Kokkos::CudaSpace& arg_space,
+      const ExecutionSpace& /*exec_space*/, const Kokkos::CudaSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
       : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
