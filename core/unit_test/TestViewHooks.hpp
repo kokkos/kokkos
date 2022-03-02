@@ -144,7 +144,6 @@ void testViewHooksMoveAssign() {
 }
 }  // namespace TestViewHooks
 
-
 namespace Test {
 TEST(TEST_CATEGORY, view_hooks) {
   using ExecSpace = TEST_EXECSPACE;
