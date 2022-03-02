@@ -505,8 +505,11 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct DeduceJoinNoTag<F, decltype(has_join_no_tag_function<F>::enable_if(
-                                &F::join))>
+  struct DeduceJoinNoTag<
+      F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
+                                                   std::is_void<Tag>::value),
+                          decltype(has_join_no_tag_function<F>::enable_if(
+                              &F::join))>>
       : public has_join_no_tag_function<F> {
     enum : bool { value = true };
   };
@@ -515,7 +518,10 @@ struct FunctorAnalysis {
   struct DeduceJoin : public DeduceJoinNoTag<F> {};
 
   template <class F>
-  struct DeduceJoin<F, decltype(has_join_tag_function<F>::enable_if(&F::join))>
+  struct DeduceJoin<
+      F,
+      std::enable_if_t<!is_reducer<F>::value,
+                       decltype(has_join_tag_function<F>::enable_if(&F::join))>>
       : public has_join_tag_function<F> {
     enum : bool { value = true };
   };
@@ -596,8 +602,11 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct DeduceInitNoTag<F, decltype(has_init_no_tag_function<F>::enable_if(
-                                &F::init))>
+  struct DeduceInitNoTag<
+      F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
+                                                   std::is_void<Tag>::value),
+                          decltype(has_init_no_tag_function<F>::enable_if(
+                              &F::init))>>
       : public has_init_no_tag_function<F> {
     enum : bool { value = true };
   };
@@ -606,7 +615,10 @@ struct FunctorAnalysis {
   struct DeduceInit : public DeduceInitNoTag<F> {};
 
   template <class F>
-  struct DeduceInit<F, decltype(has_init_tag_function<F>::enable_if(&F::init))>
+  struct DeduceInit<
+      F,
+      std::enable_if_t<!is_reducer<F>::value,
+                       decltype(has_init_tag_function<F>::enable_if(&F::init))>>
       : public has_init_tag_function<F> {
     enum : bool { value = true };
   };
@@ -690,8 +702,11 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct DeduceFinalNoTag<F, decltype(has_final_no_tag_function<F>::enable_if(
-                                 &F::final))>
+  struct DeduceFinalNoTag<
+      F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
+                                                   std::is_void<Tag>::value),
+                          decltype(has_final_no_tag_function<F>::enable_if(
+                              &F::final))>>
       : public has_final_no_tag_function<F> {
     enum : bool { value = true };
   };
@@ -700,8 +715,9 @@ struct FunctorAnalysis {
   struct DeduceFinal : public DeduceFinalNoTag<F> {};
 
   template <class F>
-  struct DeduceFinal<F,
-                     decltype(has_final_tag_function<F>::enable_if(&F::final))>
+  struct DeduceFinal<F, std::enable_if_t<!is_reducer<F>::value,
+                                         decltype(has_final_tag_function<
+                                                  F>::enable_if(&F::final))>>
       : public has_final_tag_function<F> {
     enum : bool { value = true };
   };
