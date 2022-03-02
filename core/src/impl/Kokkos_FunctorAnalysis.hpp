@@ -117,8 +117,7 @@ struct FunctorAnalysis {
   };
 
   template <typename P>
-  struct has_work_tag<P,
-                      typename std::is_same<typename P::work_tag, void>::type> {
+  struct has_work_tag<P, typename std::is_void<typename P::work_tag>::type> {
     using type = typename P::work_tag;
     using wtag = typename P::work_tag;
   };
@@ -137,7 +136,7 @@ struct FunctorAnalysis {
 
   template <typename T>
   struct has_execution_space<
-      T, typename std::is_same<typename T::execution_space, void>::type> {
+      T, typename std::is_void<typename T::execution_space>::type> {
     using type = typename T::execution_space;
     enum : bool { value = true };
   };
@@ -159,8 +158,8 @@ struct FunctorAnalysis {
   };
 
   template <typename F>
-  struct has_value_type<
-      F, typename std::is_same<typename F::value_type, void>::type> {
+  struct has_value_type<F,
+                        typename std::is_void<typename F::value_type>::type> {
     using type = typename F::value_type;
 
     static_assert(!std::is_reference<type>::value &&
@@ -176,7 +175,7 @@ struct FunctorAnalysis {
 
   template <typename F, typename P = PatternInterface,
             typename V = typename has_value_type<F>::type,
-            bool T     = std::is_same<Tag, void>::value>
+            bool T     = std::is_void<Tag>::value>
   struct deduce_value_type {
     using type = V;
   };
@@ -317,7 +316,7 @@ struct FunctorAnalysis {
   using candidate_type = typename deduce_value_type<Functor>::type;
 
   enum {
-    candidate_is_void  = std::is_same<candidate_type, void>::value,
+    candidate_is_void  = std::is_void<candidate_type>::value,
     candidate_is_array = std::rank<candidate_type>::value == 1
   };
 
