@@ -51,6 +51,7 @@
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
+#include <iostream>
 #include <array>
 #include <utility>
 #include <tuple>
@@ -74,6 +75,8 @@ void request_output_values(size_t, size_t,
 VariableValue make_variable_value(size_t, int64_t);
 VariableValue make_variable_value(size_t, double);
 SetOrRange make_candidate_range(double lower, double upper, double step,
+                                bool openLower, bool openUpper);
+SetOrRange make_candidate_range(int64_t lower, int64_t upper, int64_t step,
                                 bool openLower, bool openUpper);
 size_t get_new_context_id();
 void begin_context(size_t context_id);
@@ -615,13 +618,85 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
   TunerType get_tuner() const { return tuner; }
 };
 
+namespace Impl {
+template <class>
+struct DirectlyTunableType {
+  using type                  = std::false_type;
+  constexpr static bool value = false;
+  constexpr static Kokkos::Tools::Experimental::ValueType tag =
+      Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
+  template <class Choice>
+  static std::vector<int64_t>& pick_vector(std::vector<int64_t>& indices,
+                                           std::vector<Choice>&) {
+    return indices;
+  }
+};
+
+template <>
+struct DirectlyTunableType<int64_t> {
+  using type                  = std::true_type;
+  static constexpr bool value = true;
+  constexpr static Kokkos::Tools::Experimental::ValueType tag =
+      Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
+  static int64_t translate(
+      const Kokkos::Tools::Experimental::VariableValue& in) {
+    return in.value.int_value;
+  }
+  template <class Choice>
+  static std::vector<Choice>& pick_vector(std::vector<int64_t>&,
+                                          std::vector<Choice>& choices) {
+    return choices;
+  }
+};
+template <>
+struct DirectlyTunableType<double> {
+  using type                  = std::true_type;
+  static constexpr bool value = true;
+  constexpr static Kokkos::Tools::Experimental::ValueType tag =
+      Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
+  static double translate(
+      const Kokkos::Tools::Experimental::VariableValue& in) {
+    return in.value.double_value;
+  }
+  template <class Choice>
+  static std::vector<Choice>& pick_vector(std::vector<int64_t>&,
+                                          std::vector<Choice>& choices) {
+    return choices;
+  }
+};
+
+template <typename Choice>
+const Choice& tuning_select(std::false_type, size_t context,
+                            size_t tuning_variable_id, const Choice&,
+                            const std::vector<Choice>& choices) {
+  VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));
+  request_output_values(context, 1, &value);
+  return choices[value.value.int_value];
+}
+template <typename Choice>
+const Choice tuning_select(std::true_type, size_t context,
+                           size_t tuning_variable_id,
+                           const Choice& default_value,
+                           const std::vector<Choice>&) {
+  VariableValue value = make_variable_value(tuning_variable_id, default_value);
+  request_output_values(context, 1, &value);
+  return Impl::DirectlyTunableType<Choice>::translate(value);
+}
+
+}  // namespace Impl
+
 template <class Choice>
 struct CategoricalTuner {
   using choice_list = std::vector<Choice>;
   choice_list choices;
   size_t context;
   size_t tuning_variable_id;
-  CategoricalTuner(std::string name, choice_list m_choices)
+  Choice default_value;
+  /** Note DZP: needed, but unfortunate, due to BlockSizeTuner. Code refactoring
+   * to avoid need for this would be good
+   */
+  CategoricalTuner() = default;
+  CategoricalTuner(std::string name, choice_list m_choices, const Choice& def)
       : choices(m_choices) {
     std::vector<int64_t> indices;
     for (typename decltype(choices)::size_type x = 0; x < choices.size(); ++x) {
@@ -631,15 +706,21 @@ struct CategoricalTuner {
     info.category      = StatisticalCategory::kokkos_value_categorical;
     info.valueQuantity = CandidateValueType::kokkos_value_set;
     info.type          = ValueType::kokkos_value_int64;
-    info.candidates    = make_candidate_set(indices.size(), indices.data());
+    auto& vec =
+        Impl::DirectlyTunableType<Choice>::pick_vector(indices, m_choices);
+    info.candidates    = make_candidate_set(indices.size(), vec.data());
     tuning_variable_id = declare_output_type(name, info);
+    default_value      = def;
   }
-  const Choice& begin() {
+  CategoricalTuner(std::string name, choice_list m_choices)
+      : CategoricalTuner(name, m_choices, m_choices[0]) {}
+
+  const auto begin() {
     context = get_new_context_id();
     begin_context(context);
-    VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));
-    request_output_values(context, 1, &value);
-    return choices[value.value.int_value];
+    return Impl::tuning_select(
+        typename Impl::DirectlyTunableType<Choice>::type{}, context,
+        tuning_variable_id, default_value, choices);
   }
   void end() { end_context(context); }
 };
@@ -649,6 +730,53 @@ auto make_categorical_tuner(std::string name, std::vector<Choice> choices)
     -> CategoricalTuner<Choice> {
   return CategoricalTuner<Choice>(name, choices);
 }
+template <typename Choice>
+auto make_categorical_tuner(std::string name, std::vector<Choice> choices,
+                            Choice default_value) -> CategoricalTuner<Choice> {
+  return CategoricalTuner<Choice>(name, choices, default_value);
+}
+
+struct BlockSizeTuner {
+  CategoricalTuner<int64_t> tuner;
+
+ private:
+  template <class Policy, class Functor, class Tag, class Calculator>
+  static CategoricalTuner<int64_t> make_tuner(const std::string& name,
+                                              const Policy& policy,
+                                              const Functor& functor, Tag tag,
+                                              Calculator& calc) {
+    auto max_block_size = calc.range_max_block_size(policy, functor, tag);
+    auto opt_block_size = calc.range_opt_block_size(policy, functor, tag);
+    std::vector<int64_t> valid_block_sizes;
+    for (int64_t block = max_block_size; block > 0; block -= 32) {
+      valid_block_sizes.push_back(block);
+    }
+    return make_categorical_tuner(name + "_block_sizes", valid_block_sizes,
+                                  opt_block_size);
+  }
+
+ public:
+  /** Note DZP: needed, but unfortunate. Code refactoring to avoid need for this
+   * would be good
+   */
+  BlockSizeTuner() = default;
+  template <class Policy, class Functor, class Tag, class Calculator>
+  BlockSizeTuner(const std::string& name, const Policy& policy,
+                 const Functor& functor, Tag tag, const Calculator& calc)
+      : tuner(make_tuner(name, policy, functor, tag, calc)) {
+    // std::cout << "Constructing for "<<name<<", "<<tuner.choices.size()<<"
+    // choices "<<std::endl; for(auto& val : tuner.choices){
+    //  std::cout << "Got value "<<val<<std::endl;
+    //}
+  }
+  template <class Policy>
+  void tune(Policy& in) {
+    in.impl_additional_data().block_size = tuner.begin();
+    // std::cout << "Returned size
+    // "<<in.impl_additional_data().block_size<<std::endl;
+  }
+  void end() { tuner.end(); }
+};
 
 }  // namespace Experimental
 }  // namespace Tools
