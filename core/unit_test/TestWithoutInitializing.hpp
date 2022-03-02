@@ -277,3 +277,69 @@ TEST(TEST_CATEGORY, resize_exec_space) {
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
+
+// FIXME_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
+TEST(TEST_CATEGORY, view_allocation_int) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  if (Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible)
+    return;
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::EnableAll());
+  using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_existence(
+      [&]() {
+        view_type inner_view(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "fence after copying header from HostSpace") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  if (Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible)
+    return;
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::EnableAll());
+  using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(Kokkos::WithoutInitializing,
+                                                TEST_EXECSPACE{}, "bla"),
+                             8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "fence after copying header from HostSpace") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+#endif
