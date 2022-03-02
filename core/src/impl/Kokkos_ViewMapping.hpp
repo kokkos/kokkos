@@ -2922,6 +2922,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
+      if (default_exec_space)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
       parallel_for_implementation(false);
     }
@@ -3035,6 +3037,8 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
+      if (default_exec_space)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
       parallel_for_implementation();
     }

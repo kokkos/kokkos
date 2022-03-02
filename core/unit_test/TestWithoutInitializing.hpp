@@ -172,7 +172,7 @@ TEST(TEST_CATEGORY, view_alloc_int) {
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
   view_type outer_view;
 
-  auto success = validate_absence(
+  auto success = validate_existence(
       [&]() {
         view_type inner_view("bla", 8);
         // Avoid testing the destructor
