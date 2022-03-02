@@ -60,8 +60,10 @@ struct TestViewHooks {
           Kokkos::Experimental::SubscribableViewHooks<TestSubscriber> >::value,
       "Must be a hooks policy");
 
-  using test_view_type = Kokkos::View<
-      double **, Kokkos::Experimental::SubscribableViewHooks<TestSubscriber>, device >;
+  using test_view_type =
+      Kokkos::View<double **,
+                   Kokkos::Experimental::SubscribableViewHooks<TestSubscriber>,
+                   device>;
 
   struct TestSubscriber {
     static test_view_type *self_ptr;
@@ -141,19 +143,19 @@ struct TestViewHooks {
 };
 
 template <class DeviceType>
-typename TestViewHooks<DeviceType>::test_view_type *
-TestViewHooks<DeviceType>::TestSubscriber::self_ptr = nullptr;
+typename TestViewHooks<DeviceType>::test_view_type
+    *TestViewHooks<DeviceType>::TestSubscriber::self_ptr = nullptr;
 
 template <class DeviceType>
-const typename TestViewHooks<DeviceType>::test_view_type *
-TestViewHooks<DeviceType>::TestSubscriber::other_ptr = nullptr;
+const typename TestViewHooks<DeviceType>::test_view_type
+    *TestViewHooks<DeviceType>::TestSubscriber::other_ptr = nullptr;
 
 TEST(TEST_CATEGORY, view_hooks) {
   using ExecSpace = TEST_EXECSPACE;
-  TestViewHooks< ExecSpace >::testViewHooksCopyConstruct();
-  TestViewHooks< ExecSpace >::testViewHooksMoveConstruct();
-  TestViewHooks< ExecSpace >::testViewHooksCopyAssign();
-  TestViewHooks< ExecSpace >::testViewHooksMoveAssign();
+  TestViewHooks<ExecSpace>::testViewHooksCopyConstruct();
+  TestViewHooks<ExecSpace>::testViewHooksMoveConstruct();
+  TestViewHooks<ExecSpace>::testViewHooksCopyAssign();
+  TestViewHooks<ExecSpace>::testViewHooksMoveAssign();
 }
 
 }  // namespace Test
