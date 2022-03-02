@@ -67,11 +67,14 @@ template <class ValueJoin, class ValueOps, typename WorkTag, typename ValueType,
           typename ReducerType, typename FunctorType, int dim>
 std::enable_if_t<
     !use_shuffle_based_algorithm<FunctorValueTraits<ReducerType, WorkTag>>>
-workgroup_reduction(
-    sycl::nd_item<dim>& item, sycl::local_ptr<ValueType> local_mem,
-    ValueType* results_ptr, ValueType* device_accessible_result_ptr,
-    const unsigned int value_count, const ReducerType& selected_reducer,
-    const FunctorType& functor, bool final, unsigned int max_size) {
+workgroup_reduction(sycl::nd_item<dim>& item,
+                    sycl::local_ptr<ValueType> local_mem,
+                    sycl::global_ptr<ValueType> results_ptr,
+                    sycl::global_ptr<ValueType> device_accessible_result_ptr,
+                    const unsigned int value_count,
+                    const ReducerType& selected_reducer,
+                    const FunctorType& functor, bool final,
+                    unsigned int max_size) {
   const auto local_id = item.get_local_linear_id();
 
   // Perform the actual workgroup reduction in each subgroup
@@ -147,8 +150,8 @@ std::enable_if_t<
     use_shuffle_based_algorithm<FunctorValueTraits<ReducerType, WorkTag>>>
 workgroup_reduction(sycl::nd_item<dim>& item,
                     sycl::local_ptr<ValueType> local_mem, ValueType local_value,
-                    ValueType* results_ptr,
-                    ValueType* device_accessible_result_ptr,
+                    sycl::global_ptr<ValueType> results_ptr,
+                    sycl::global_ptr<ValueType> device_accessible_result_ptr,
                     const ReducerType& selected_reducer,
                     const FunctorType& functor, bool final,
                     unsigned int max_size) {
@@ -302,11 +305,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             ReducerConditional::select(m_functor, m_reducer));
-    const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
-        sizeof(value_type) * std::max(value_count, 1u) * init_size));
-    value_type* device_accessible_result_ptr =
+    const auto results_ptr =
+        static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
+            sizeof(value_type) * std::max(value_count, 1u) * init_size));
+    sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
-    auto scratch_flags = static_cast<unsigned int*>(
+    auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
         instance.scratch_flags(sizeof(unsigned int)));
 
     sycl::event last_reduction_event;
@@ -335,8 +339,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             FunctorFinal<FunctorType, WorkTag>::final(
                 static_cast<const FunctorType&>(functor), results_ptr);
           if (device_accessible_result_ptr != nullptr)
-            ValueOps::copy(functor, &device_accessible_result_ptr[0],
-                           &results_ptr[0]);
+            ValueOps::copy(functor, device_accessible_result_ptr.get(),
+                           results_ptr.get());
         });
       });
       q.ext_oneapi_submit_barrier(
@@ -646,12 +650,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             ReducerConditional::select(m_functor, m_reducer));
-    // FIXME_SYCL only use the first half
-    const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
-        sizeof(value_type) * std::max(value_count, 1u) * init_size));
-    value_type* device_accessible_result_ptr =
+    const auto results_ptr =
+        static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
+            sizeof(value_type) * std::max(value_count, 1u) * init_size));
+    sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
-    auto scratch_flags = static_cast<unsigned int*>(
+    auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
         instance.scratch_flags(sizeof(unsigned int)));
 
     sycl::event last_reduction_event;
@@ -680,8 +684,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             FunctorFinal<FunctorType, WorkTag>::final(
                 static_cast<const FunctorType&>(functor), results_ptr);
           if (device_accessible_result_ptr)
-            ValueOps::copy(functor, &device_accessible_result_ptr[0],
-                           &results_ptr[0]);
+            ValueOps::copy(functor, device_accessible_result_ptr.get(),
+                           results_ptr.get());
         });
       });
       q.ext_oneapi_submit_barrier(

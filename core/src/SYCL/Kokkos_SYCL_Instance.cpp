@@ -172,8 +172,8 @@ void SYCLInternal::initialize(const sycl::queue& q) {
   m_team_scratch_ptr          = nullptr;
 }
 
-void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
-                                              bool force_shrink) {
+sycl::global_ptr<void> SYCLInternal::resize_team_scratch_space(
+    std::int64_t bytes, bool force_shrink) {
   if (m_team_scratch_current_size == 0) {
     m_team_scratch_current_size = bytes;
     m_team_scratch_ptr =
@@ -229,7 +229,7 @@ void SYCLInternal::finalize() {
   m_queue.reset();
 }
 
-void* SYCLInternal::scratch_space(const std::size_t size) {
+sycl::global_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   const size_type sizeScratchGrain =
       sizeof(Kokkos::Experimental::SYCL::size_type);
   if (verify_is_initialized("scratch_space") &&
@@ -255,7 +255,7 @@ void* SYCLInternal::scratch_space(const std::size_t size) {
   return m_scratchSpace;
 }
 
-void* SYCLInternal::scratch_flags(const std::size_t size) {
+sycl::global_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
   const size_type sizeScratchGrain =
       sizeof(Kokkos::Experimental::SYCL::size_type);
   if (verify_is_initialized("scratch_flags") &&
