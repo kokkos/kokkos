@@ -48,109 +48,112 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_View.hpp>
 
-namespace TestViewHooks {
-struct TestSubscriber;
+namespace Test {
+template <class DeviceType>
+struct TestViewHooks {
+  using device = DeviceType;
 
-static_assert(
-    Kokkos::Experimental::is_hooks_policy<
-        Kokkos::Experimental::SubscribableViewHooks<TestSubscriber> >::value,
-    "Must be a hooks policy");
+  struct TestSubscriber;
 
-using test_view_type =
-    Kokkos::View<double **,
-                 Kokkos::Experimental::SubscribableViewHooks<TestSubscriber> >;
+  static_assert(
+      Kokkos::Experimental::is_hooks_policy<
+          Kokkos::Experimental::SubscribableViewHooks<TestSubscriber> >::value,
+      "Must be a hooks policy");
 
-struct TestSubscriber {
-  static test_view_type *self_ptr;
-  static const test_view_type *other_ptr;
+  using test_view_type = Kokkos::View<
+      double **, Kokkos::Experimental::SubscribableViewHooks<TestSubscriber>, device >;
 
-  template <typename View>
-  static void copy_constructed(View &self, const View &other) {
-    self_ptr  = &self;
-    other_ptr = &other;
+  struct TestSubscriber {
+    static test_view_type *self_ptr;
+    static const test_view_type *other_ptr;
+
+    template <typename View>
+    static void copy_constructed(View &self, const View &other) {
+      self_ptr  = &self;
+      other_ptr = &other;
+    }
+
+    template <typename View>
+    static void move_constructed(View &self, const View &other) {
+      self_ptr  = &self;
+      other_ptr = &other;
+    }
+
+    template <typename View>
+    static void copy_assigned(View &self, const View &other) {
+      self_ptr  = &self;
+      other_ptr = &other;
+    }
+
+    template <typename View>
+    static void move_assigned(View &self, const View &other) {
+      self_ptr  = &self;
+      other_ptr = &other;
+    }
+
+    static void reset() {
+      self_ptr  = nullptr;
+      other_ptr = nullptr;
+    }
+  };
+
+  static void testViewHooksCopyConstruct() {
+    TestSubscriber::reset();
+    test_view_type testa;
+
+    test_view_type testb(testa);
+    EXPECT_EQ(TestSubscriber::self_ptr, &testb);
+    EXPECT_EQ(TestSubscriber::other_ptr, &testa);
   }
 
-  template <typename View>
-  static void move_constructed(View &self, const View &other) {
-    self_ptr  = &self;
-    other_ptr = &other;
+  static void testViewHooksMoveConstruct() {
+    TestSubscriber::reset();
+    test_view_type testa;
+
+    test_view_type testb(std::move(testa));
+    EXPECT_EQ(TestSubscriber::self_ptr, &testb);
+
+    // This is valid, even if the view is moved-from
+    EXPECT_EQ(TestSubscriber::other_ptr, &testa);
   }
 
-  template <typename View>
-  static void copy_assigned(View &self, const View &other) {
-    self_ptr  = &self;
-    other_ptr = &other;
+  static void testViewHooksCopyAssign() {
+    TestSubscriber::reset();
+    test_view_type testa;
+
+    test_view_type testb;
+    testb = testa;
+    EXPECT_EQ(TestSubscriber::self_ptr, &testb);
+    EXPECT_EQ(TestSubscriber::other_ptr, &testa);
   }
 
-  template <typename View>
-  static void move_assigned(View &self, const View &other) {
-    self_ptr  = &self;
-    other_ptr = &other;
-  }
+  static void testViewHooksMoveAssign() {
+    TestSubscriber::reset();
+    test_view_type testa;
 
-  static void reset() {
-    self_ptr  = nullptr;
-    other_ptr = nullptr;
+    test_view_type testb;
+    testb = std::move(testa);
+    EXPECT_EQ(TestSubscriber::self_ptr, &testb);
+
+    // This is valid, even if the view is moved-from
+    EXPECT_EQ(TestSubscriber::other_ptr, &testa);
   }
 };
 
-test_view_type *TestSubscriber::self_ptr        = nullptr;
-const test_view_type *TestSubscriber::other_ptr = nullptr;
+template <class DeviceType>
+typename TestViewHooks<DeviceType>::test_view_type *
+TestViewHooks<DeviceType>::TestSubscriber::self_ptr = nullptr;
 
 template <class DeviceType>
-void testViewHooksCopyConstruct() {
-  TestSubscriber::reset();
-  test_view_type testa;
+const typename TestViewHooks<DeviceType>::test_view_type *
+TestViewHooks<DeviceType>::TestSubscriber::other_ptr = nullptr;
 
-  test_view_type testb(testa);
-  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
-  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
-}
-
-template <class DeviceType>
-void testViewHooksMoveConstruct() {
-  TestSubscriber::reset();
-  test_view_type testa;
-
-  test_view_type testb(std::move(testa));
-  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
-
-  // This is valid, even if the view is moved-from
-  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
-}
-
-template <class DeviceType>
-void testViewHooksCopyAssign() {
-  TestSubscriber::reset();
-  test_view_type testa;
-
-  test_view_type testb;
-  testb = testa;
-  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
-  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
-}
-
-template <class DeviceType>
-void testViewHooksMoveAssign() {
-  TestSubscriber::reset();
-  test_view_type testa;
-
-  test_view_type testb;
-  testb = std::move(testa);
-  EXPECT_EQ(TestSubscriber::self_ptr, &testb);
-
-  // This is valid, even if the view is moved-from
-  EXPECT_EQ(TestSubscriber::other_ptr, &testa);
-}
-}  // namespace TestViewHooks
-
-namespace Test {
 TEST(TEST_CATEGORY, view_hooks) {
   using ExecSpace = TEST_EXECSPACE;
-  TestViewHooks::testViewHooksCopyConstruct<ExecSpace>();
-  TestViewHooks::testViewHooksMoveConstruct<ExecSpace>();
-  TestViewHooks::testViewHooksCopyAssign<ExecSpace>();
-  TestViewHooks::testViewHooksMoveAssign<ExecSpace>();
+  TestViewHooks< ExecSpace >::testViewHooksCopyConstruct();
+  TestViewHooks< ExecSpace >::testViewHooksMoveConstruct();
+  TestViewHooks< ExecSpace >::testViewHooksCopyAssign();
+  TestViewHooks< ExecSpace >::testViewHooksMoveAssign();
 }
 
 }  // namespace Test
