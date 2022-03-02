@@ -2993,11 +2993,19 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
                    size_t const arg_n, std::string arg_name)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
+      : space(arg_space),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(false) {}
 
   ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
                    std::string arg_name)
-      : space(ExecSpace{}), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
+      : space(ExecSpace{}),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(true) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
