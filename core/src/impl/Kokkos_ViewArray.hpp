@@ -379,12 +379,20 @@ class ViewMapping<Traits, Kokkos::Array<>> {
             arg_prop)
             .value;
     // Allocate memory from the memory space and create tracking record.
-    record_type *const record = record_type::allocate(
-        exec_space,
-        static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const &>(
-            arg_prop)
-            .value,
-        alloc_name, alloc_size);
+    record_type *record;
+    if (execution_space_specified)
+      record = record_type::allocate(
+          exec_space,
+          static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const &>(
+              arg_prop)
+              .value,
+          alloc_name, alloc_size);
+    else
+      record = record_type::allocate(
+          static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const &>(
+              arg_prop)
+              .value,
+          alloc_name, alloc_size);
 
     if (alloc_size) {
       m_impl_handle =

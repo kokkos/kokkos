@@ -334,13 +334,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   this->base_t::_fill_host_accessible_header_info(header, label);
 
   // Copy to device memory
-  Kokkos::Experimental::SYCL exec;
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
-      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-  exec.fence(
-      "SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, "
-      "void>::SharedAllocationRecord(): fence after copying header from "
-      "HostSpace");
+      exec_space, RecordBase::m_alloc_ptr, &header,
+      sizeof(SharedAllocationHeader));
 }
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::

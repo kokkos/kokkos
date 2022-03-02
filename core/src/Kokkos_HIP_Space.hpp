@@ -566,6 +566,12 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
                                arg_dealloc) {}
 
   SharedAllocationRecord(
+      const Kokkos::Experimental::HIP& exec_space,
+      const Kokkos::Experimental::HIPSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
+  SharedAllocationRecord(
       const Kokkos::Experimental::HIPSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
