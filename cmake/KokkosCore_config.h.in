@@ -118,7 +118,3 @@
 #cmakedefine KOKKOS_ARCH_VEGA906
 #cmakedefine KOKKOS_ARCH_VEGA908
 #cmakedefine KOKKOS_ARCH_VEGA90A
-
-/* Experimental Settings */
-#cmakedefine KOKKOS_ENABLE_EXPERIMENTAL_DEFAULT_DYNAMIC_VIEW_HOOKS
-

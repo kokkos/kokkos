@@ -524,7 +524,6 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 
 #include <impl/Kokkos_ViewMapping.hpp>
 #include <impl/Kokkos_ViewArray.hpp>
-#include <View/Hooks/Kokkos_DynamicViewHooks.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
