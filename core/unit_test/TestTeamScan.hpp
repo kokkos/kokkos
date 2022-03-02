@@ -93,7 +93,7 @@ struct TestTeamScan {
     a_d = view_type("a_d", M, N);
     a_r = view_type("a_r", M, N);
 
-    // Set team size explicitly to check whether non-power-of-two team sizes ca
+    // Set team size explicitly to check whether non-power-of-two team sizes can
     // be used.
     if (ExecutionSpace().concurrency() > 10000)
       Kokkos::parallel_for(policy_type(M, 127), *this);
