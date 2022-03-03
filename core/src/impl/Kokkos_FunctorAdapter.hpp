@@ -1559,6 +1559,42 @@ template <class FunctorType, class ArgTag,
           class Enable = void>
 struct FunctorValueJoin;
 
+
+  template <typename T>
+  struct alignas(T) volatile_wrapper {
+    T t;
+
+    // These should never be 'constructed', as such. Rather, they should always
+    // come from expressions like
+    // T* pt;
+    // auto vpt = reinterpret_cast<volatile_wrapper<T> *>(pt);
+    __device__ __host__ volatile_wrapper()                               = delete;
+    __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs) = delete;
+
+    __device__ __host__ void operator=(const volatile_wrapper<T>& rhs) {
+      set(rhs.get());
+    }
+
+    __device__ __host__ inline T get() const {
+      T ret;
+      auto vpt   = reinterpret_cast<const volatile char*>(&t);
+      auto p_ret = reinterpret_cast<char*>(&ret);
+      for (size_t i = 0; i < sizeof(T); ++i) {
+        p_ret[i] = vpt[i];
+      }
+      return ret;
+    }
+
+    __device__ __host__ inline void set(const T& s) {
+      auto vps = reinterpret_cast<const volatile char*>(&s);
+      auto pt  = reinterpret_cast<volatile char*>(&t);
+      for (size_t i = 0; i < sizeof(T); ++i) {
+        pt[i] = vps[i];
+      }
+    }
+  };
+
+
 /* No 'join' function provided, single value */
 template <class FunctorType, class ArgTag, class T, class Enable>
 struct FunctorValueJoin<FunctorType, ArgTag, T&, Enable> {
@@ -1568,10 +1604,26 @@ struct FunctorValueJoin<FunctorType, ArgTag, T&, Enable> {
   KOKKOS_FORCEINLINE_FUNCTION static void join(const FunctorType& /*f*/,
                                                volatile void* const lhs,
                                                const volatile void* const rhs) {
-    *((volatile T*)lhs) += *((const volatile T*)rhs);
+    T local_lhs, local_rhs;
+
+    local_lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))->get();
+    local_rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(rhs))->get();
+
+    local_lhs += local_rhs;
+
+    reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))->set(local_lhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()(volatile T& lhs, const volatile T& rhs) const { lhs += rhs; }
+  void operator()(volatile T& in_lhs, const volatile T& in_rhs) const {
+    T lhs, rhs;
+
+    lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_lhs))->get();
+    rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_rhs))->get();
+
+    lhs += rhs;
+
+    reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_lhs))->set(lhs);
+  }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()(T& lhs, const T& rhs) const { lhs += rhs; }
 };
@@ -1590,15 +1642,29 @@ struct FunctorValueJoin<FunctorType, ArgTag, T*, Enable> {
     const int n = FunctorValueTraits<FunctorType, ArgTag>::value_count(f_);
 
     for (int i = 0; i < n; ++i) {
-      ((volatile T*)lhs)[i] += ((const volatile T*)rhs)[i];
+      T local_lhs, local_rhs;
+
+      local_lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))[i].get();
+      local_rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(rhs))[i].get();
+
+      local_lhs += local_rhs;
+
+      reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))[i].set(local_lhs);
     }
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()(volatile T* const lhs, const volatile T* const rhs) const {
+  void operator()(volatile T* const in_lhs, const volatile T* const in_rhs) const {
     const int n = FunctorValueTraits<FunctorType, ArgTag>::value_count(f);
 
     for (int i = 0; i < n; ++i) {
-      lhs[i] += rhs[i];
+      T lhs, rhs;
+
+      lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(in_lhs))[i].get();
+      rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(in_rhs))[i].get();
+
+      lhs += rhs;
+
+      reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(in_lhs))[i].set(lhs);
     }
   }
   KOKKOS_FORCEINLINE_FUNCTION
@@ -1630,11 +1696,25 @@ struct FunctorValueJoin<
   KOKKOS_FORCEINLINE_FUNCTION static void join(const FunctorType& f_,
                                                volatile void* const lhs,
                                                const volatile void* const rhs) {
-    f_.join(ArgTag(), *((volatile T*)lhs), *((const volatile T*)rhs));
+    T local_lhs, local_rhs;
+
+    local_lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))->get();
+    local_rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(rhs))->get();
+
+    f_.join(ArgTag(), local_lhs, local_rhs);
+
+    reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))->set(local_lhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()(volatile T& lhs, const volatile T& rhs) const {
+  void operator()(volatile T& in_lhs, const volatile T& in_rhs) const {
+    T lhs, rhs;
+
+    lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_lhs))->get();
+    rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_rhs))->get();
+
     f.join(ArgTag(), lhs, rhs);
+
+    reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_lhs))->set(lhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()(T& lhs, const T& rhs) const { f.join(ArgTag(), lhs, rhs); }
@@ -1659,11 +1739,25 @@ struct FunctorValueJoin<
   KOKKOS_FORCEINLINE_FUNCTION static void join(const FunctorType& f_,
                                                volatile void* const lhs,
                                                const volatile void* const rhs) {
-    f_.join(*((volatile T*)lhs), *((const volatile T*)rhs));
+    T local_lhs, local_rhs;
+
+    local_lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))->get();
+    local_rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(rhs))->get();
+
+    f_.join(local_lhs, local_rhs);
+
+    reinterpret_cast<volatile_wrapper<T>*>(const_cast<void*>(lhs))->set(local_lhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()(volatile T& lhs, const volatile T& rhs) const {
+  void operator()(volatile T& in_lhs, const volatile T& in_rhs) const {
+    T lhs, rhs;
+
+    lhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_lhs))->get();
+    rhs = reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_rhs))->get();
+
     f.join(lhs, rhs);
+
+    reinterpret_cast<volatile_wrapper<T>*>(const_cast<T*>(&in_lhs))->set(lhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION
   void operator()(T& lhs, const T& rhs) const { f.join(lhs, rhs); }
