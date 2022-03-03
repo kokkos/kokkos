@@ -50,6 +50,7 @@
 #if defined(__HIPCC__)
 
 #include <HIP/Kokkos_HIP_Vectorization.hpp>
+#include <impl/Kokkos_FunctorAdapter.hpp>
 
 namespace Kokkos {
 namespace Impl {

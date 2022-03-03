@@ -64,7 +64,6 @@
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
@@ -519,9 +518,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                          void>;
 
   using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
-
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -573,13 +570,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             : pointer_type(
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
-    reference_type update =
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer), ptr);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
+
+    reference_type update = final_reducer.init(ptr);
 
     this->template exec<WorkTag>(update);
 
-    Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-        ReducerConditional::select(m_functor, m_reducer), ptr);
+    final_reducer.final(ptr);
   }
 
   template <class HostViewType>
@@ -627,8 +625,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
 
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
@@ -669,10 +665,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
-    reference_type update = ValueInit::init(
-        m_functor,
-        pointer_type(
-            internal_instance->m_thread_team_data.pool_reduce_local()));
+    typename Analysis::Reducer final_reducer(&m_functor);
+
+    reference_type update = final_reducer.init(pointer_type(
+        internal_instance->m_thread_team_data.pool_reduce_local()));
 
     this->template exec<WorkTag>(update);
   }
@@ -691,8 +687,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
-
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -735,10 +729,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
-    reference_type update = ValueInit::init(
-        m_functor,
-        pointer_type(
-            internal_instance->m_thread_team_data.pool_reduce_local()));
+    typename Analysis::Reducer final_reducer(&m_functor);
+
+    reference_type update = final_reducer.init(pointer_type(
+        internal_instance->m_thread_team_data.pool_reduce_local()));
 
     this->template exec<WorkTag>(update);
 
@@ -820,9 +814,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                          void>;
 
   using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
-                                   MDRangePolicy, FunctorType>;
-
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
+                                   MDRangePolicy, ReducerTypeFwd>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
@@ -876,13 +868,14 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             : pointer_type(
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
-    reference_type update =
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer), ptr);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
+
+    reference_type update = final_reducer.init(ptr);
 
     this->exec(update);
 
-    Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-        ReducerConditional::select(m_functor, m_reducer), ptr);
+    final_reducer.final(ptr);
   }
 
   template <class HostViewType>
@@ -998,9 +991,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   using Policy = TeamPolicyInternal<Kokkos::Serial, Properties...>;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
-
   using Member  = typename Policy::member_type;
   using WorkTag = typename Policy::work_tag;
 
@@ -1012,7 +1002,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
 
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -1065,13 +1056,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             : pointer_type(
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
-    reference_type update =
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer), ptr);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
+
+    reference_type update = final_reducer.init(ptr);
 
     this->template exec<WorkTag>(internal_instance->m_thread_team_data, update);
 
-    Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-        ReducerConditional::select(m_functor, m_reducer), ptr);
+    final_reducer.final(ptr);
   }
 
   template <class ViewType>

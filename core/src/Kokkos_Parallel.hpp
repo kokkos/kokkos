@@ -58,7 +58,6 @@
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 
 #include <cstddef>
 #include <type_traits>
