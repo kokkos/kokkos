@@ -1347,11 +1347,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                  static_chunk_size(get_hpx_adjusted_chunk_size(m_policy))),
              m_policy.begin(), m_policy.end(),
              reduction(final_value, identity,
-                       [this](value_type_wrapper &a,
-                              value_type_wrapper &b) -> value_type_wrapper & {
-                         ValueJoin::join(
-                             ReducerConditional::select(m_functor, m_reducer),
-                             a.pointer(), b.pointer());
+                       [final_reducer](
+                           value_type_wrapper &a,
+                           value_type_wrapper &b) -> value_type_wrapper & {
+                         final_reducer.join(a.pointer(), b.pointer());
                          return a;
                        }),
              [this](Member i, value_type_wrapper &update) {
@@ -1370,7 +1369,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-        [&buffer, &final_reducer ](const int t) noexcept {
+        [&buffer, final_reducer ](const int t) noexcept {
           final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
         });
 
@@ -1490,7 +1489,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-        [this, &buffer](std::size_t t) {
+        [&buffer, final_reducer](std::size_t t) {
           final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
         });
 
@@ -1508,8 +1507,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     for_loop(
         par.on(exec).with(static_chunk_size(1)), std::size_t(0),
-        num_worker_threads,
-        [this, &buffer, &final_reducer](const std::size_t t) {
+        num_worker_threads, [&buffer, final_reducer](const std::size_t t) {
           final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
         });
 
@@ -1652,7 +1650,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
         [this, &bar, &buffer, num_worker_threads, value_count, value_size,
-         &final_reducer](int t) {
+         final_reducer](int t) {
           reference_type update_sum =
               final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
 
@@ -1765,7 +1763,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
         [this, &bar, &buffer, num_worker_threads, value_count, value_size,
-         &final_reducer](int t) {
+         final_reducer](int t) {
           reference_type update_sum =
               final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
 
@@ -2058,7 +2056,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-        [this, &buffer](const std::size_t t) {
+        [&buffer, final_reducer](const std::size_t t) {
           final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
         });
 
@@ -2080,7 +2078,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-        [this, &buffer, &final_reducer](std::size_t const t) {
+        [&buffer, final_reducer](std::size_t const t) {
           final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
         });
 
