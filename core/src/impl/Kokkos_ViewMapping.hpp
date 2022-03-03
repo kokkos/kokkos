@@ -3412,12 +3412,11 @@ class ViewMapping<
 
     // Create shared memory tracking record with allocate memory from the memory
     // space
-    record_type* record;
-    if (execution_space_specified)
-      record =
-          record_type::allocate(exec_space, mem_space, alloc_name, alloc_size);
-    else
-      record = record_type::allocate(mem_space alloc_name, alloc_size);
+    record_type* const record =
+        execution_space_specified
+            ? record_type::allocate(exec_space, mem_space, alloc_name,
+                                    alloc_size)
+            : record_type::allocate(mem_space, alloc_name, alloc_size);
 
     m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
@@ -3427,13 +3426,12 @@ class ViewMapping<
       // Assume destruction is only required when construction is requested.
       // The ViewValueFunctor has both value construction and destruction
       // operators.
-      if (execution_space_specified) {
-        record->m_destroy = functor_type(exec_space, (value_type*)m_impl_handle,
-                                         m_impl_offset.span(), alloc_name);
-      } else {
-        record->m_destroy = functor_type((value_type*)m_impl_handle,
-                                         m_impl_offset.span(), alloc_name);
-      }
+      record->m_destroy =
+          execution_space_specified
+              ? functor_type(exec_space, (value_type*)m_impl_handle,
+                             m_impl_offset.span(), alloc_name)
+              : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
+                             alloc_name);
 
       // Construct values
       record->m_destroy.construct_shared_allocation();
