@@ -551,10 +551,10 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec_space,
-                                               RecordBase::m_alloc_ptr, &header,
-                                               sizeof(SharedAllocationHeader));
-  exec_space.fence(
+  Kokkos::Cuda exec;
+  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
+      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  exec.fence(
       "SharedAllocationRecord<Kokkos::CudaSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");
