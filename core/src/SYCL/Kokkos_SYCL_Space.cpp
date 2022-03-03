@@ -314,7 +314,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
     SharedAllocationRecord(
-        const Kokkos::Experimental::SYCL& exec_space,
+        const Kokkos::Experimental::SYCL& arg_exec_space,
         const Kokkos::Experimental::SYCLDeviceUSMSpace& space,
         const std::string& label, const size_t size,
         const SharedAllocationRecord<void, void>::function_type dealloc)
@@ -325,8 +325,8 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                                   void>::s_root_record,
 #endif
-          Kokkos::Impl::checked_allocation_with_header(exec_space, space, label,
-                                                       size),
+          Kokkos::Impl::checked_allocation_with_header(arg_exec_space, space,
+                                                       label, size),
           sizeof(SharedAllocationHeader) + size, dealloc, label),
       m_space(space) {
   SharedAllocationHeader header;
@@ -335,7 +335,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
 
   // Copy to device memory
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
-      exec_space, RecordBase::m_alloc_ptr, &header,
+      arg_exec_space, RecordBase::m_alloc_ptr, &header,
       sizeof(SharedAllocationHeader));
 }
 

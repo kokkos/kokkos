@@ -561,7 +561,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
 }
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
-    const Kokkos::Cuda &exec_space, const Kokkos::CudaSpace &arg_space,
+    const Kokkos::Cuda &arg_exec_space, const Kokkos::CudaSpace &arg_space,
     const std::string &arg_label, const size_t arg_alloc_size,
     const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
@@ -570,8 +570,8 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
 #endif
-          Impl::checked_allocation_with_header(exec_space, arg_space, arg_label,
-                                               arg_alloc_size),
+          Impl::checked_allocation_with_header(arg_exec_space, arg_space,
+                                               arg_label, arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),
       m_tex_obj(0),
@@ -582,7 +582,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec_space,
+  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(arg_exec_space,
                                                RecordBase::m_alloc_ptr, &header,
                                                sizeof(SharedAllocationHeader));
 }
