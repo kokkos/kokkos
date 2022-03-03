@@ -50,7 +50,6 @@
 
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Exec.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -258,9 +257,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
-
   using ReducerConditional =
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
@@ -270,9 +266,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                          void>;
 
   // Static Assert WorkTag void if ReducerType not InvalidType
-
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -306,12 +301,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
+
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                        m_result_ptr);
-        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-            ReducerConditional::select(m_functor, m_reducer), m_result_ptr);
+        final_reducer.init(m_result_ptr);
+        final_reducer.final(m_result_ptr);
       }
       return;
     }
@@ -345,9 +341,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
-      reference_type update =
-          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                          data.pool_reduce_local());
+      reference_type update = final_reducer.init(
+          reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       std::pair<int64_t, int64_t> range(0, 0);
 
@@ -368,12 +363,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      ValueJoin::join(ReducerConditional::select(m_functor, m_reducer), ptr,
-                      m_instance->get_thread_data(i)->pool_reduce_local());
+      final_reducer.join(
+          ptr, reinterpret_cast<pointer_type>(
+                   m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-        ReducerConditional::select(m_functor, m_reducer), ptr);
+    final_reducer.final(ptr);
 
     if (m_result_ptr) {
       const int n = Analysis::value_count(
@@ -431,9 +426,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
-  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
-                                   MDRangePolicy, FunctorType>;
-
   using ReducerConditional =
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
@@ -442,8 +434,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
 
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
+                                   MDRangePolicy, ReducerTypeFwd>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
@@ -488,6 +480,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                    0  // thread_local_bytes
     );
 
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
+
     const int pool_size = OpenMP::impl_thread_pool_size();
 #pragma omp parallel num_threads(pool_size)
     {
@@ -501,9 +496,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
-      reference_type update =
-          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                          data.pool_reduce_local());
+      reference_type update = final_reducer.init(
+          reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       std::pair<int64_t, int64_t> range(0, 0);
 
@@ -525,12 +519,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      ValueJoin::join(ReducerConditional::select(m_functor, m_reducer), ptr,
-                      m_instance->get_thread_data(i)->pool_reduce_local());
+      final_reducer.join(
+          ptr, reinterpret_cast<pointer_type>(
+                   m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-        ReducerConditional::select(m_functor, m_reducer), ptr);
+    final_reducer.final(ptr);
 
     if (m_result_ptr) {
       const int n = Analysis::value_count(
@@ -609,10 +603,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
-  using ValueOps  = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
-
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
@@ -658,12 +648,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
+      typename Analysis::Reducer final_reducer(&m_functor);
 
       const WorkRange range(m_policy, omp_get_thread_num(),
                             omp_get_num_threads());
 
-      reference_type update_sum =
-          ValueInit::init(m_functor, data.pool_reduce_local());
+      reference_type update_sum = final_reducer.init(
+          reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       ParallelScan::template exec_range<WorkTag>(
           m_functor, range.begin(), range.end(), update_sum, false);
@@ -681,9 +672,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
             for (int j = 0; j < value_count; ++j) {
               ptr[j + value_count] = ptr_prev[j + value_count];
             }
-            ValueJoin::join(m_functor, ptr + value_count, ptr_prev);
+            final_reducer.join(ptr + value_count, ptr_prev);
           } else {
-            ValueInit::init(m_functor, ptr + value_count);
+            final_reducer.init(ptr + value_count);
           }
 
           ptr_prev = ptr;
@@ -692,8 +683,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         data.pool_rendezvous_release();
       }
 
-      reference_type update_base = ValueOps::reference(
-          ((pointer_type)data.pool_reduce_local()) + value_count);
+      reference_type update_base = final_reducer.reference(
+          reinterpret_cast<pointer_type>(data.pool_reduce_local()) +
+          value_count);
 
       ParallelScan::template exec_range<WorkTag>(
           m_functor, range.begin(), range.end(), update_base, true);
@@ -722,10 +714,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
-
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
-  using ValueOps  = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -773,11 +761,12 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
+      typename Analysis::Reducer final_reducer(&m_functor);
 
       const WorkRange range(m_policy, omp_get_thread_num(),
                             omp_get_num_threads());
-      reference_type update_sum =
-          ValueInit::init(m_functor, data.pool_reduce_local());
+      reference_type update_sum = final_reducer.init(
+          reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       ParallelScanWithTotal::template exec_range<WorkTag>(
           m_functor, range.begin(), range.end(), update_sum, false);
@@ -795,9 +784,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
             for (int j = 0; j < value_count; ++j) {
               ptr[j + value_count] = ptr_prev[j + value_count];
             }
-            ValueJoin::join(m_functor, ptr + value_count, ptr_prev);
+            final_reducer.join(ptr + value_count, ptr_prev);
           } else {
-            ValueInit::init(m_functor, ptr + value_count);
+            final_reducer.init(ptr + value_count);
           }
 
           ptr_prev = ptr;
@@ -806,8 +795,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         data.pool_rendezvous_release();
       }
 
-      reference_type update_base = ValueOps::reference(
-          ((pointer_type)data.pool_reduce_local()) + value_count);
+      reference_type update_base = final_reducer.reference(
+          reinterpret_cast<pointer_type>(data.pool_reduce_local()) +
+          value_count);
 
       ParallelScanWithTotal::template exec_range<WorkTag>(
           m_functor, range.begin(), range.end(), update_base, true);
@@ -968,9 +958,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::OpenMP, Properties...>;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
-
   using WorkTag  = typename Policy::work_tag;
   using SchedTag = typename Policy::schedule_type::type;
   using Member   = typename Policy::member_type;
@@ -984,8 +971,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
 
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -1041,12 +1028,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
 
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
+
     if (m_policy.league_size() == 0 || m_policy.team_size() == 0) {
       if (m_result_ptr) {
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                        m_result_ptr);
-        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-            ReducerConditional::select(m_functor, m_reducer), m_result_ptr);
+        final_reducer.init(m_result_ptr);
+        final_reducer.final(m_result_ptr);
       }
       return;
     }
@@ -1083,9 +1071,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
 
       if (active) {
-        reference_type update =
-            ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                            data.pool_reduce_local());
+        reference_type update = final_reducer.init(
+            reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
         std::pair<int64_t, int64_t> range(0, 0);
 
@@ -1099,8 +1086,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
         } while (is_dynamic && 0 <= range.first);
       } else {
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                        data.pool_reduce_local());
+        final_reducer.init(
+            reinterpret_cast<pointer_type>(data.pool_reduce_local()));
       }
 
       data.disband_team();
@@ -1122,12 +1109,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      ValueJoin::join(ReducerConditional::select(m_functor, m_reducer), ptr,
-                      m_instance->get_thread_data(i)->pool_reduce_local());
+      final_reducer.join(
+          ptr, reinterpret_cast<pointer_type>(
+                   m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-        ReducerConditional::select(m_functor, m_reducer), ptr);
+    final_reducer.final(ptr);
 
     if (m_result_ptr) {
       const int n = Analysis::value_count(
