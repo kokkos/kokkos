@@ -1370,7 +1370,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     for_loop(
         par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
-        [ this, &buffer, &final_reducer ](const int t) noexcept {
+        [&buffer, &final_reducer ](const int t) noexcept {
           final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
         });
 
@@ -1378,7 +1378,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     for_loop_strided(
         par.on(exec), m_policy.begin(), m_policy.end(), chunk_size,
-        [this, &buffer, chunk_size, &final_reducer](const Member i_begin) {
+        [this, &buffer, chunk_size](const Member i_begin) {
           reference_type update = Analysis::Reducer::reference(
               reinterpret_cast<pointer_type>(buffer.get(
                   Kokkos::Experimental::HPX::impl_hardware_thread_id())));
