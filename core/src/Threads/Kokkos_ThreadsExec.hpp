@@ -264,9 +264,8 @@ class ThreadsExec {
       Impl::spinwait_while_equal<int>(fan.m_pool_state, ThreadsExec::Active);
 
       f.join(
-          reinterpret_cast<volatile typename FunctorType::value_type *>(
-              reduce_memory()),
-          reinterpret_cast<const volatile typename FunctorType::value_type *>(
+          reinterpret_cast<typename FunctorType::value_type *>(reduce_memory()),
+          reinterpret_cast<const typename FunctorType::value_type *>(
               fan.reduce_memory()));
     }
 
