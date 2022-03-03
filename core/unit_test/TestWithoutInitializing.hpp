@@ -105,12 +105,6 @@ struct NonTriviallyCopyable {
 }  // namespace
 
 TEST(TEST_CATEGORY, view_alloc) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
-    return;
-#endif
-
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   using view_type = Kokkos::View<NonTriviallyCopyable*, TEST_EXECSPACE>;
@@ -133,12 +127,6 @@ TEST(TEST_CATEGORY, view_alloc) {
 }
 
 TEST(TEST_CATEGORY, view_alloc_exec_space) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
-    return;
-#endif
-
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   using view_type = Kokkos::View<NonTriviallyCopyable*, TEST_EXECSPACE>;
@@ -161,12 +149,6 @@ TEST(TEST_CATEGORY, view_alloc_exec_space) {
 }
 
 TEST(TEST_CATEGORY, view_alloc_int) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
-    return;
-#endif
-
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
@@ -189,12 +171,6 @@ TEST(TEST_CATEGORY, view_alloc_int) {
 }
 
 TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
-    return;
-#endif
-
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
@@ -281,12 +257,6 @@ TEST(TEST_CATEGORY, resize_exec_space) {
 // FIXME_OPENMPTARGET
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, view_allocation_int) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
-    return;
-#endif
-
   if (Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible)
     return;
   using namespace Kokkos::Test::Tools;
@@ -312,12 +282,6 @@ TEST(TEST_CATEGORY, view_allocation_int) {
 }
 
 TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
-    return;
-#endif
-
   if (Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible)
     return;
   using namespace Kokkos::Test::Tools;
