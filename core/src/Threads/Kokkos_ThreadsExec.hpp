@@ -52,7 +52,6 @@
 
 #include <utility>
 #include <impl/Kokkos_Spinwait.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 
 #include <Kokkos_Atomic.hpp>
 
@@ -255,11 +254,8 @@ class ThreadsExec {
   //------------------------------------
   // All-thread functions:
 
-  template <class FunctorType, class ArgTag>
+  template <class FunctorType>
   inline void fan_in_reduce(const FunctorType &f) const {
-    using Join  = Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag>;
-    using Final = Kokkos::Impl::FunctorFinal<FunctorType, ArgTag>;
-
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
@@ -267,11 +263,16 @@ class ThreadsExec {
 
       Impl::spinwait_while_equal<int>(fan.m_pool_state, ThreadsExec::Active);
 
-      Join::join(f, reduce_memory(), fan.reduce_memory());
+      f.join(
+          reinterpret_cast<volatile typename FunctorType::value_type *>(
+              reduce_memory()),
+          reinterpret_cast<const volatile typename FunctorType::value_type *>(
+              fan.reduce_memory()));
     }
 
     if (!rev_rank) {
-      Final::final(f, reduce_memory());
+      f.final(reinterpret_cast<typename FunctorType::value_type *>(
+          reduce_memory()));
     }
 
     //  This thread has updated 'reduce_memory()' and upon returning
@@ -295,7 +296,7 @@ class ThreadsExec {
     }
   }
 
-  template <class FunctorType, class ArgTag>
+  template <class FunctorType>
   inline void scan_large(const FunctorType &f) {
     // Sequence of states:
     //  0) Active             : entry and exit state
@@ -304,14 +305,10 @@ class ThreadsExec {
     //  3) Rendezvous         : All threads inclusive scan value are available
     //  4) ScanCompleted      : exclusive scan value copied
 
-    using Traits = Kokkos::Impl::FunctorValueTraits<FunctorType, ArgTag>;
-    using Join   = Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag>;
-    using Init   = Kokkos::Impl::FunctorValueInit<FunctorType, ArgTag>;
-
-    using scalar_type = typename Traits::value_type;
+    using scalar_type = typename FunctorType::value_type;
 
     const int rev_rank   = m_pool_size - (m_pool_rank + 1);
-    const unsigned count = Traits::value_count(f);
+    const unsigned count = FunctorType::value_count(f);
 
     scalar_type *const work_value = (scalar_type *)reduce_memory();
 
@@ -322,7 +319,7 @@ class ThreadsExec {
 
       // Wait: Active -> ReductionAvailable (or ScanAvailable)
       Impl::spinwait_while_equal<int>(fan.m_pool_state, ThreadsExec::Active);
-      Join::join(f, work_value, fan.reduce_memory());
+      f.join(work_value, fan.reduce_memory());
     }
 
     // Copy reduction value to scan value before releasing from this phase.
@@ -344,8 +341,7 @@ class ThreadsExec {
         Impl::spinwait_while_equal<int>(th.m_pool_state,
                                         ThreadsExec::ReductionAvailable);
 
-        Join::join(f, work_value + count,
-                   ((scalar_type *)th.reduce_memory()) + count);
+        f.join(work_value + count, ((scalar_type *)th.reduce_memory()) + count);
       }
 
       // This thread has completed inclusive scan
@@ -385,7 +381,7 @@ class ThreadsExec {
         work_value[j] = src_value[j];
       }
     } else {
-      (void)Init::init(f, work_value);
+      f.init(work_value);
     }
 
     //--------------------------------
@@ -408,16 +404,12 @@ class ThreadsExec {
     }
   }
 
-  template <class FunctorType, class ArgTag>
+  template <class FunctorType>
   inline void scan_small(const FunctorType &f) {
-    using Traits = Kokkos::Impl::FunctorValueTraits<FunctorType, ArgTag>;
-    using Join   = Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag>;
-    using Init   = Kokkos::Impl::FunctorValueInit<FunctorType, ArgTag>;
-
-    using scalar_type = typename Traits::value_type;
+    using scalar_type = typename FunctorType::value_type;
 
     const int rev_rank   = m_pool_size - (m_pool_rank + 1);
-    const unsigned count = Traits::value_count(f);
+    const unsigned count = f.length();
 
     scalar_type *const work_value = (scalar_type *)reduce_memory();
 
@@ -449,9 +441,9 @@ class ThreadsExec {
           for (unsigned i = 0; i < count; ++i) {
             ptr[i] = ptr_prev[i + count];
           }
-          Join::join(f, ptr + count, ptr);
+          f.join(ptr + count, ptr);
         } else {
-          (void)Init::init(f, ptr);
+          f.init(ptr);
         }
         ptr_prev = ptr;
       }

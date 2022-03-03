@@ -50,8 +50,6 @@
 
 #include <Kokkos_Parallel.hpp>
 
-#include <impl/Kokkos_FunctorAdapter.hpp>
-
 #include <KokkosExp_MDRangePolicy.hpp>
 
 //----------------------------------------------------------------------------
@@ -384,13 +382,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
 
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-  using ValueInit  = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueFinal = Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>;
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                         Policy, ReducerTypeFwd>;
 
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -437,14 +433,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const ParallelReduce &self = *((const ParallelReduce *)arg);
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
+    typename Analysis::Reducer reducer(
+        &ReducerConditional::select(self.m_functor, self.m_reducer));
+
     ParallelReduce::template exec_range<WorkTag>(
         self.m_functor, range.begin(), range.end(),
-        ValueInit::init(
-            ReducerConditional::select(self.m_functor, self.m_reducer),
-            exec.reduce_memory()));
+        reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.template fan_in_reduce<ReducerTypeFwd, WorkTagFwd>(
-        ReducerConditional::select(self.m_functor, self.m_reducer));
+    exec.fan_in_reduce(reducer);
   }
 
   template <class Schedule>
@@ -460,10 +456,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     exec.reset_steal_target();
     exec.barrier();
 
-    long work_index       = exec.get_work_index();
-    reference_type update = ValueInit::init(
-        ReducerConditional::select(self.m_functor, self.m_reducer),
-        exec.reduce_memory());
+    long work_index = exec.get_work_index();
+    typename Analysis::Reducer reducer(
+        &ReducerConditional::select(self.m_functor, self.m_reducer));
+
+    reference_type update =
+        reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
     while (work_index != -1) {
       const Member begin =
           static_cast<Member>(work_index) * self.m_policy.chunk_size() +
@@ -477,22 +475,21 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       work_index = exec.get_work_index();
     }
 
-    exec.template fan_in_reduce<ReducerTypeFwd, WorkTagFwd>(
-        ReducerConditional::select(self.m_functor, self.m_reducer));
+    exec.fan_in_reduce(reducer);
   }
 
  public:
   inline void execute() const {
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                        m_result_ptr);
-        ValueFinal::final(ReducerConditional::select(m_functor, m_reducer),
-                          m_result_ptr);
+        typename Analysis::Reducer final_reducer(
+            &ReducerConditional::select(m_functor, m_reducer));
+        final_reducer.init(m_result_ptr);
+        final_reducer.final(m_result_ptr);
       }
     } else {
       ThreadsExec::resize_scratch(
-          ValueTraits::value_size(
+          Analysis::value_size(
               ReducerConditional::select(m_functor, m_reducer)),
           0);
 
@@ -504,7 +501,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         const pointer_type data =
             (pointer_type)ThreadsExec::root_reduce_scratch();
 
-        const unsigned n = ValueTraits::value_count(
+        const unsigned n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
         for (unsigned i = 0; i < n; ++i) {
           m_result_ptr[i] = data[i];
@@ -565,13 +562,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
 
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using value_type     = typename ValueTraits::value_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                         Policy, ReducerTypeFwd>;
+  using pointer_type   = typename Analysis::pointer_type;
+  using value_type     = typename Analysis::value_type;
+  using reference_type = typename Analysis::reference_type;
 
   using iterate_type =
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
@@ -607,14 +602,14 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const ParallelReduce &self = *((const ParallelReduce *)arg);
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
+    typename Analysis::Reducer reducer(
+        &ReducerConditional::select(self.m_functor, self.m_reducer));
+
     ParallelReduce::exec_range(
         self.m_mdr_policy, self.m_functor, range.begin(), range.end(),
-        ValueInit::init(
-            ReducerConditional::select(self.m_functor, self.m_reducer),
-            exec.reduce_memory()));
+        reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.template fan_in_reduce<ReducerTypeFwd, WorkTagFwd>(
-        ReducerConditional::select(self.m_functor, self.m_reducer));
+    exec.fan_in_reduce(reducer);
   }
 
   template <class Schedule>
@@ -628,10 +623,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     exec.reset_steal_target();
     exec.barrier();
 
-    long work_index       = exec.get_work_index();
-    reference_type update = ValueInit::init(
-        ReducerConditional::select(self.m_functor, self.m_reducer),
-        exec.reduce_memory());
+    long work_index = exec.get_work_index();
+    typename Analysis::Reducer reducer(
+        &ReducerConditional::select(self.m_functor, self.m_reducer));
+
+    reference_type update =
+        reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
     while (work_index != -1) {
       const Member begin =
           static_cast<Member>(work_index) * self.m_policy.chunk_size();
@@ -644,15 +641,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       work_index = exec.get_work_index();
     }
 
-    exec.template fan_in_reduce<ReducerTypeFwd, WorkTagFwd>(
-        ReducerConditional::select(self.m_functor, self.m_reducer));
+    exec.fan_in_reduce(reducer);
   }
 
  public:
   inline void execute() const {
     ThreadsExec::resize_scratch(
-        ValueTraits::value_size(
-            ReducerConditional::select(m_functor, m_reducer)),
+        Analysis::value_size(ReducerConditional::select(m_functor, m_reducer)),
         0);
 
     ThreadsExec::start(&ParallelReduce::exec, this);
@@ -663,7 +658,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       const pointer_type data =
           (pointer_type)ThreadsExec::root_reduce_scratch();
 
-      const unsigned n = ValueTraits::value_count(
+      const unsigned n = Analysis::value_count(
           ReducerConditional::select(m_functor, m_reducer));
       for (unsigned i = 0; i < n; ++i) {
         m_result_ptr[i] = data[i];
@@ -735,13 +730,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
 
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-  using ValueInit  = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueFinal = Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>;
-
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                         Policy, ReducerTypeFwd>;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -773,28 +765,28 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   static void exec(ThreadsExec &exec, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
+    typename Analysis::Reducer reducer(
+        &ReducerConditional::select(self.m_functor, self.m_reducer));
+
     ParallelReduce::template exec_team<WorkTag>(
         self.m_functor, Member(&exec, self.m_policy, self.m_shared),
-        ValueInit::init(
-            ReducerConditional::select(self.m_functor, self.m_reducer),
-            exec.reduce_memory()));
+        reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.template fan_in_reduce<ReducerTypeFwd, WorkTagFwd>(
-        ReducerConditional::select(self.m_functor, self.m_reducer));
+    exec.fan_in_reduce(reducer);
   }
 
  public:
   inline void execute() const {
     if (m_policy.league_size() * m_policy.team_size() == 0) {
       if (m_result_ptr) {
-        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                        m_result_ptr);
-        ValueFinal::final(ReducerConditional::select(m_functor, m_reducer),
-                          m_result_ptr);
+        typename Analysis::Reducer final_reducer(
+            &ReducerConditional::select(m_functor, m_reducer));
+        final_reducer.init(m_result_ptr);
+        final_reducer.final(m_result_ptr);
       }
     } else {
       ThreadsExec::resize_scratch(
-          ValueTraits::value_size(
+          Analysis::value_size(
               ReducerConditional::select(m_functor, m_reducer)),
           Policy::member_type::team_reduce_size() + m_shared);
 
@@ -806,7 +798,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const pointer_type data =
             (pointer_type)ThreadsExec::root_reduce_scratch();
 
-        const unsigned n = ValueTraits::value_count(
+        const unsigned n = Analysis::value_count(
             ReducerConditional::select(m_functor, m_reducer));
         for (unsigned i = 0; i < n; ++i) {
           m_result_ptr[i] = data[i];
@@ -866,15 +858,14 @@ template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Threads> {
  private:
-  using Policy      = Kokkos::RangePolicy<Traits...>;
-  using WorkRange   = typename Policy::WorkRange;
-  using WorkTag     = typename Policy::work_tag;
-  using Member      = typename Policy::member_type;
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
-  using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using Policy    = Kokkos::RangePolicy<Traits...>;
+  using WorkRange = typename Policy::WorkRange;
+  using WorkTag   = typename Policy::work_tag;
+  using Member    = typename Policy::member_type;
+  using Analysis  = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                         Policy, FunctorType>;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -913,14 +904,16 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
+    typename Analysis::Reducer final_reducer(&self.m_functor);
+
     reference_type update =
-        ValueInit::init(self.m_functor, exec.reduce_memory());
+        final_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
 
     ParallelScan::template exec_range<WorkTag>(self.m_functor, range.begin(),
                                                range.end(), update, false);
 
-    //  exec.template scan_large<FunctorType,WorkTag>( self.m_functor );
-    exec.template scan_small<FunctorType, WorkTag>(self.m_functor);
+    //  exec.template scan_large( final_reducer );
+    exec.scan_small(final_reducer);
 
     ParallelScan::template exec_range<WorkTag>(self.m_functor, range.begin(),
                                                range.end(), update, true);
@@ -930,7 +923,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    ThreadsExec::resize_scratch(2 * ValueTraits::value_size(m_functor), 0);
+    ThreadsExec::resize_scratch(2 * Analysis::value_size(m_functor), 0);
     ThreadsExec::start(&ParallelScan::exec, this);
     ThreadsExec::fence();
   }
@@ -943,15 +936,16 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Threads> {
  private:
-  using Policy      = Kokkos::RangePolicy<Traits...>;
-  using WorkRange   = typename Policy::WorkRange;
-  using WorkTag     = typename Policy::work_tag;
-  using Member      = typename Policy::member_type;
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
-  using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
+  using Policy    = Kokkos::RangePolicy<Traits...>;
+  using WorkRange = typename Policy::WorkRange;
+  using WorkTag   = typename Policy::work_tag;
+  using Member    = typename Policy::member_type;
 
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                         Policy, FunctorType>;
+
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -991,14 +985,16 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
+    typename Analysis::Reducer final_reducer(&self.m_functor);
+
     reference_type update =
-        ValueInit::init(self.m_functor, exec.reduce_memory());
+        final_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
 
     ParallelScanWithTotal::template exec_range<WorkTag>(
         self.m_functor, range.begin(), range.end(), update, false);
 
-    //  exec.template scan_large<FunctorType,WorkTag>( self.m_functor );
-    exec.template scan_small<FunctorType, WorkTag>(self.m_functor);
+    //  exec.template scan_large(final_reducer);
+    exec.scan_small(final_reducer);
 
     ParallelScanWithTotal::template exec_range<WorkTag>(
         self.m_functor, range.begin(), range.end(), update, true);
@@ -1012,7 +1008,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    ThreadsExec::resize_scratch(2 * ValueTraits::value_size(m_functor), 0);
+    ThreadsExec::resize_scratch(2 * Analysis::value_size(m_functor), 0);
     ThreadsExec::start(&ParallelScanWithTotal::exec, this);
     ThreadsExec::fence();
   }
