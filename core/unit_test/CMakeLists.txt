@@ -480,11 +480,17 @@ endif()
 
 if(Kokkos_ENABLE_HPX)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX
+    UnitTest_HPX1
     SOURCES
       UnitTestMainInit.cpp
-      ${HPX_SOURCES}
+      ${HPX_SOURCES1}
       hpx/TestHPX_Task.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX2
+    SOURCES
+      UnitTestMainInit.cpp
+      ${HPX_SOURCES2}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPXInterOp
