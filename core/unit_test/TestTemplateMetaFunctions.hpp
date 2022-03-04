@@ -43,6 +43,7 @@
 */
 
 #include <Kokkos_Core.hpp>
+#include <impl/Kokkos_FunctorAdapter.hpp>
 
 #define KOKKOS_PRAGMA_UNROLL(a)
 
