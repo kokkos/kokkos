@@ -16,7 +16,7 @@ jobs:
         include:
           - backend: "SERIAL"
             cmake_build_type: "RelWithDebInfo"
-          - backend: "PTHREAD"
+          - backend: "THREADS"
             cmake_build_type: "RelWithDebInfo"
           - backend: "SERIAL"
             cmake_build_type: "Debug"
