@@ -105,6 +105,7 @@ uint32_t MurmurHash3_x86_32(const void* key, int len, uint32_t seed) {
 
   uint32_t k1 = 0;
 
+  // TODO: update to [[fallthrough]]; when we switch to C++17
   switch (len & 3) {
     case 3: k1 ^= tail[2] << 16;
       // fall through
