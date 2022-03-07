@@ -257,7 +257,7 @@ TEST(TEST_CATEGORY, resize_exec_space) {
 // FIXME_OPENMPTARGET
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, view_allocation_int) {
-  if (Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible)
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace, typename TEST_EXECSPACE::memory_space>::accessible)
     return;
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::EnableAll());
