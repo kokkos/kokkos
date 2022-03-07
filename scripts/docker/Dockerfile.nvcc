@@ -3,6 +3,7 @@ FROM $BASE
 
 ARG ADDITIONAL_PACKAGES
 
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
         bc \
         wget \
