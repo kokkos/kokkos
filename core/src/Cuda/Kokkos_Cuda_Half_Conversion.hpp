@@ -60,7 +60,7 @@ half_t cast_to_half(half_t val) { return val; }
 // CUDA before 11.1 only has the half <-> float conversions marked host device
 // So we will largely convert to float on the host for conversion
 // But still call the correct functions on the device
-#if (CUDA_VERSION < 11100)
+#if (CUDA_VERSION < 11010)
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val) { return half_t(__float2half(val)); }
@@ -313,7 +313,7 @@ KOKKOS_INLINE_FUNCTION
 #endif
 
 /************************** bhalf conversions *********************************/
-#if CUDA_VERSION >= 11000 && CUDA_VERISON < 11200
+#if CUDA_VERSION >= 11000 && CUDA_VERSION < 11020
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 
@@ -438,9 +438,9 @@ KOKKOS_INLINE_FUNCTION
     cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
-#endif  // CUDA_VERSION >= 11000 && CUDA_VERISON < 11200
+#endif  // CUDA_VERSION >= 11000 && CUDA_VERSION < 11020
 
-#if CUDA_VERISON >= 11200
+#if CUDA_VERSION >= 11020
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 KOKKOS_INLINE_FUNCTION
@@ -521,7 +521,7 @@ KOKKOS_INLINE_FUNCTION
     cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
-#endif  // CUDA_VERSION >= 11200
+#endif  // CUDA_VERSION >= 11020
 }  // namespace Experimental
 
 #if (CUDA_VERSION >= 11000)
