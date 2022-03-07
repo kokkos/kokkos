@@ -46,7 +46,7 @@ pipeline {
                     }      
                 }    
 
-                stage('spack-cuda-11.5.1') {
+                stage('spack-cuda') {
                     agent {
                         docker {
                           image 'ubuntu:20.04'
@@ -77,55 +77,11 @@ pipeline {
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack spec kokkos@develop+cuda+wrapper+tests cuda_arch=70 ^cuda@11.5.1 && \
-                          spack install -v kokkos@develop+cuda+wrapper+tests cuda_arch=70 ^cuda@11.5.1 && \
+                          spack spec kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
+                          spack install -v kokkos@develop+cuda+wrapper+tests cuda_arch=70 && \
                           spack load cmake && \
                           spack load kokkos-nvcc-wrapper && \
-                          spack load kokkos && \
-                          spack test run kokkos && \
-                          spack test results -l
-                          '''
-                    }      
-                }
-
-                stage('spack-cuda-gcc-10.3.0') {
-                    agent {
-                        docker {
-                          image 'ubuntu:20.04'
-                          label 'nvidia-docker'
-                        }
-                    }
-                    steps {
-                        sh '''
-                          DEBIAN_FRONTEND=noninteractive && \
-                          apt-get update && apt-get upgrade -y && apt-get install -y \
-                          build-essential \
-                          wget \
-                          git \
-                          bc \
-                          python-dev \
-                          gfortran \
-                          && \
-                          apt-get clean && rm -rf /var/lib/apt/lists/*
-                          
-                          KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
-                          KEYDUMP_FILE=keydump && \
-                          wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
-                          wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
-                          gpg --import ${KEYDUMP_FILE} && \
-                          gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
-                          rm ${KEYDUMP_FILE}*
-
-                          rm -rf spack && \
-                          git clone https://github.com/spack/spack.git && \
-                          . ./spack/share/spack/setup-env.sh && \
-                          spack install gcc@10.3.0 && \
-                          spack load gcc@10.3.0 && \
-                          spack compilers && \
-                          spack spec kokkos@develop%gcc@10.3.0+cuda+wrapper+tests cuda_arch=70 && \
-                          spack install -v kokkos@develop%gcc@10.3.0+cuda+wrapper+tests cuda_arch=70 && \
-                          spack load cmake && \
-                          spack load kokkos-nvcc-wrapper && \
+                          spack load cuda && \
                           spack load kokkos && \
                           spack test run kokkos && \
                           spack test results -l
@@ -169,6 +125,7 @@ pipeline {
                           spack spec kokkos@develop+rocm+tests std=17 amdgpu_target=gfx908 && \
                           spack install -v kokkos@develop+rocm+tests std=17 amdgpu_target=gfx908 && \
                           spack load cmake && \
+                          spack load hip && \
                           spack load kokkos && \
                           spack test run kokkos && \
                           spack test results -l
