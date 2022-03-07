@@ -633,7 +633,16 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           value_type local_offset_value;
           if (i > 0) {
             local_offset_value = element_values(team_id, i - 1);
-            final_reducer.join(&local_offset_value, &offset_value);
+            // FIXME We should be able to just do
+            //   final_reducer.join(&local_offset_value, &offset_value);
+            // but we seem to memory illegaly on AMD GPUs
+            if constexpr (Analysis::has_join_member_function) {
+              if constexpr (std::is_void_v<WorkTag>)
+                a_functor.join(local_offset_value, offset_value);
+              else
+                a_functor.join(WorkTag{}, local_offset_value, offset_value);
+            } else
+              local_offset_value += offset_value;
           } else
             local_offset_value = offset_value;
           if (idx < N)
