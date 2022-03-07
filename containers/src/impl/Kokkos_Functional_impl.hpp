@@ -105,17 +105,19 @@ uint32_t MurmurHash3_x86_32(const void* key, int len, uint32_t seed) {
 
   uint32_t k1 = 0;
 
-  switch (len & 3) {
-    case 3: k1 ^= tail[2] << 16;
-    case 2: k1 ^= tail[1] << 8;
-    case 1:
-      k1 ^= tail[0];
-      k1 *= c1;
-      k1 = rotl32(k1, 15);
-      k1 *= c2;
-      h1 ^= k1;
-  };
-
+  const int len_and_3 = len & 3;
+  if (len_and_3 >= 1) {
+    if (len_and_3 >= 2) {
+      if (len_and_3 == 3) k1 ^= tail[2] << 16;
+      k1 ^= tail[1] << 8;
+    }
+    k1 ^= tail[0];
+    k1 *= c1;
+    k1 = rotl32(k1, 15);
+    k1 *= c2;
+    h1 ^= k1;
+  }
+  
   //----------
   // finalization
 
