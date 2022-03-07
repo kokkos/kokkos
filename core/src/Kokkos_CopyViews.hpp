@@ -2985,12 +2985,14 @@ impl_resize(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
   }
 }
 
-template <class ExecutionSpace, class T, class... P>
-inline typename std::enable_if<
+template <
+    class ExecutionSpace, class T, class... P,
+    typename Enable = std::enable_if_t<Kokkos::is_space<ExecutionSpace>::value>>
+inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutRight>::value>::type
+                 Kokkos::LayoutRight>::value>
 resize(const ExecutionSpace& exec_space, Kokkos::View<T, P...>& v,
        const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
