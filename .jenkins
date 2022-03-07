@@ -151,6 +151,96 @@ pipeline {
                         }
                     }
                 }
+                stage('CUDA-11.6.0-v4') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.6.0-devel-ubuntu20.04 --build-arg ADDITIONAL_PACKAGES="libhwloc-dev"'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                        }
+                    }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                        NVCC_WRAPPER_DEFAULT_COMPILER = 'g++'
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf install && mkdir -p install && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                               -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
+                               -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                               -DCMAKE_BUILD_TYPE:STRING=Debug \
+                               -DKokkos_CXX_STANDARD:STRING=17 \
+                               -DKokkos_ENABLE_DEBUG:BOOL=ON \
+                               -DKokkos_ENABLE_TESTS:BOOL=ON \
+                               -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
+                               -DKokkos_ENABLE_LIBDL:BOOL=ON \
+                               -DKokkos_ENABLE_SERIAL:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA_LAMBDA:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA_UVM:BOOL=OFF \
+                               -DKokkos_ENABLE_CUDA_LDG_INTRINSIC:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE:BOOL=OFF \
+                              .. && \
+                              make -j8 && ctest --verbose
+                            '''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
+                stage('CUDA-11.6.0-v5') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.6.0-devel-ubuntu20.04 --build-arg ADDITIONAL_PACKAGES="libhwloc-dev"'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                        }
+                    }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                        NVCC_WRAPPER_DEFAULT_COMPILER = 'g++'
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf install && mkdir -p install && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                               -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
+                               -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                               -DCMAKE_BUILD_TYPE:STRING=Debug \
+                               -DKokkos_CXX_STANDARD:STRING=17 \
+                               -DKokkos_ENABLE_DEBUG:BOOL=ON \
+                               -DKokkos_ENABLE_TESTS:BOOL=ON \
+                               -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
+                               -DKokkos_ENABLE_LIBDL:BOOL=ON \
+                               -DKokkos_ENABLE_SERIAL:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA_LAMBDA:BOOL=ON \
+                               -DKokkos_ENABLE_CUDA_UVM:BOOL=OFF \
+                               -DKokkos_ENABLE_CUDA_LDG_INTRINSIC:BOOL=OFF \
+                               -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE:BOOL=OFF \
+                              .. && \
+                              make -j8 && ctest --verbose
+                            '''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
             }
         }
     }
