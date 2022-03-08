@@ -92,7 +92,7 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     LIST(REMOVE_ITEM COMMON_WARNINGS "-Wsign-compare")
   ENDIF()
 
-  SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers"
+  SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers" "-Wimplicit-fallthrough"
     ${COMMON_WARNINGS})
 
   COMPILER_SPECIFIC_FLAGS(
