@@ -21,7 +21,7 @@ KOKKOS_DEPRECATED_LIST(DEVICES ENABLE)
 
 KOKKOS_DEVICE_OPTION(THREADS OFF HOST "Whether to build C++ threads backend")
 IF(Kokkos_ENABLE_PTHREAD)  # for backward compatibility
-  SET(Kokkos_ENABLE_THREADS ON CACHE BOOL "Whether to build C++ threads backend")
+  SET(Kokkos_ENABLE_THREADS ON CACHE BOOL "Whether to build C++ threads backend" FORCE)
   SET(KOKKOS_ENABLE_THREADS ON)
   LIST(APPEND KOKKOS_ENABLED_DEVICES THREADS)
   SET(KOKKOS_HAS_HOST ON)
