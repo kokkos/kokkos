@@ -507,11 +507,11 @@ class ParallelScanHIPBase {
                                                    sizeof(size_type)>
         word_count(Analysis::value_size(m_functor) / sizeof(size_type));
 
-    size_type* const shared_value =
+    pointer_type const shared_value = reinterpret_cast<pointer_type>(
         Kokkos::Experimental::kokkos_impl_hip_shared_memory<size_type>() +
-        word_count.value * threadIdx.y;
+        word_count.value * threadIdx.y);
 
-    final_reducer.init(reinterpret_cast<pointer_type>(shared_value));
+    final_reducer.init(shared_value);
 
     // Number of blocks is bounded so that the reduction can be limited to two
     // passes. Each thread block is given an approximately equal amount of work
@@ -523,9 +523,7 @@ class ParallelScanHIPBase {
     for (Member iwork = range.begin() + threadIdx.y, iwork_end = range.end();
          iwork < iwork_end; iwork += blockDim.y) {
       this->template exec_range<WorkTag>(
-          iwork,
-          final_reducer.reference(reinterpret_cast<pointer_type>(shared_value)),
-          false);
+          iwork, final_reducer.reference(shared_value), false);
     }
 
     // Reduce and scan, writing out scan of blocks' totals and block-groups'

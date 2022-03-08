@@ -448,35 +448,33 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
                         BlockSizeShift;
 
     {
-      void* const shared_ptr = shared_data + word_count.value * threadIdx.y;
-      /* reference_type shared_value = */ functor.init(
-          static_cast<pointer_type>(shared_ptr));
+      pointer_type const shared_ptr = reinterpret_cast<pointer_type>(
+          shared_data + word_count.value * threadIdx.y);
+      /* reference_type shared_value = */ functor.init(shared_ptr);
 
       for (size_type i = b; i < e; ++i) {
-        functor.join(
-            static_cast<pointer_type>(shared_ptr),
-            reinterpret_cast<pointer_type>(global_data + word_count.value * i));
+        functor.join(shared_ptr, reinterpret_cast<pointer_type>(
+                                     global_data + word_count.value * i));
       }
     }
 
     hip_intra_block_reduce_scan<DoScan>(functor, pointer_type(shared_data));
 
     if (DoScan) {
-      size_type* const shared_value =
-          shared_data +
+      pointer_type const shared_value =
+          reinterpret_cast<pointer_type> shared_data +
           word_count.value * (threadIdx.y ? threadIdx.y - 1 : blockDim.y);
 
       if (!threadIdx.y) {
-        functor.init(reinterpret_cast<pointer_type>(shared_value));
+        functor.init(shared_value);
       }
 
       // Join previous inclusive scan value to each member
       for (size_type i = b; i < e; ++i) {
-        size_type* const global_value = global_data + word_count.value * i;
-        functor.join(reinterpret_cast<pointer_type>(shared_value),
-                     reinterpret_cast<pointer_type>(global_value));
-        functor.copy(reinterpret_cast<pointer_type>(global_value),
-                     reinterpret_cast<pointer_type>(shared_value));
+        pointer_type const global_value =
+            reinterpret_cast<pointer_type>(global_data + word_count.value * i);
+        functor.join(shared_value, global_value);
+        functor.copy(global_value, shared_value);
       }
     }
   }
