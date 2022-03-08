@@ -462,9 +462,9 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
     hip_intra_block_reduce_scan<DoScan>(functor, pointer_type(shared_data));
 
     if (DoScan) {
-      pointer_type const shared_value =
-          reinterpret_cast<pointer_type> shared_data +
-          word_count.value * (threadIdx.y ? threadIdx.y - 1 : blockDim.y);
+      pointer_type const shared_value = reinterpret_cast<pointer_type>(
+          shared_data +
+          word_count.value * (threadIdx.y ? threadIdx.y - 1 : blockDim.y));
 
       if (!threadIdx.y) {
         functor.init(shared_value);
