@@ -1058,7 +1058,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     // Allocate scratch per active thread.
     OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
                                      league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    PointerType scratch_ptr =
+        static_cast<PointerType>(OpenMPTargetExec::get_scratch_ptr());
 
     // Enter this loop if the functor has an `init`
     if constexpr (HasInit) {

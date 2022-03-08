@@ -487,7 +487,12 @@ class TestScanTeam {
 
     functor_type functor;
 
+// FIXME_OPENMPTARGET
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    policy_type team_exec(nteam, 32);
+#else
     policy_type team_exec(nteam, 1);
+#endif
     const auto team_size =
         team_exec.team_size_max(functor, Kokkos::ParallelReduceTag());
     team_exec = policy_type(nteam, team_size);

@@ -855,15 +855,20 @@ class OpenMPTargetExecTeamMember {
     team_broadcast(value, thread_id);
   }
 
-  // FIXME_OPENMPTARGET this function has the wrong interface and currently
-  // ignores the reducer passed.
-  template <class ValueType, class JoinOp>
-  KOKKOS_INLINE_FUNCTION ValueType team_reduce(const ValueType& value,
-                                               const JoinOp&) const {
-#pragma omp barrier
+  template <typename ReducerType>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<is_reducer<ReducerType>::value>::type
+      team_reduce(ReducerType const& reducer) const noexcept {
+    team_reduce(reducer, reducer.reference());
+  }
 
-    using value_type = ValueType;
-    //    const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
+  template <typename ReducerType>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<is_reducer<ReducerType>::value>::type
+      team_reduce(ReducerType const& reducer,
+                  typename ReducerType::value_type& value) const noexcept {
+#pragma omp barrier
+    using value_type = typename ReducerType::value_type;
 
     // Make sure there is enough scratch space:
     using type = std::conditional_t<(sizeof(value_type) < TEAM_REDUCE_SIZE),
@@ -881,17 +886,16 @@ class OpenMPTargetExecTeamMember {
 
     for (int k = 0; k < m_team_size; k += n_values) {
       if ((k <= m_team_rank) && (k + n_values > m_team_rank))
-        team_scratch[m_team_rank % n_values] += value;
+        reducer.join(team_scratch[m_team_rank % n_values], value);
 #pragma omp barrier
     }
 
     for (int d = 1; d < n_values; d *= 2) {
       if ((m_team_rank + d < n_values) && (m_team_rank % (2 * d) == 0)) {
-        team_scratch[m_team_rank] += team_scratch[m_team_rank + d];
+        reducer.join(team_scratch[m_team_rank], team_scratch[m_team_rank + d]);
       }
 #pragma omp barrier
     }
-    return team_scratch[0];
   }
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
    *          with intra-team non-deterministic ordering accumulation.
