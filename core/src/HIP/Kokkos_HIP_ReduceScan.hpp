@@ -448,13 +448,14 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
                         BlockSizeShift;
 
     {
-      pointer_type const shared_ptr = reinterpret_cast<pointer_type>(
+      pointer_type const shared_data_thread = reinterpret_cast<pointer_type>(
           shared_data + word_count.value * threadIdx.y);
-      /* reference_type shared_value = */ functor.init(shared_ptr);
+      /* reference_type shared_value = */ functor.init(shared_data_thread);
 
       for (size_type i = b; i < e; ++i) {
-        functor.join(shared_ptr, reinterpret_cast<pointer_type>(
-                                     global_data + word_count.value * i));
+        functor.join(
+            shared_data_thread,
+            reinterpret_cast<pointer_type>(global_data + word_count.value * i));
       }
     }
 
