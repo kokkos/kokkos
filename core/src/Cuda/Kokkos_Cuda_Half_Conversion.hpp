@@ -50,6 +50,10 @@
 #include <Kokkos_Half.hpp>
 #include <Kokkos_NumericTraits.hpp>  // reduction_identity
 
+#if CUDA_VERSION >= 11020
+#include <cuda_bf16.h>
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
