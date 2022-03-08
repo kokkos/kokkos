@@ -855,6 +855,8 @@ class OpenMPTargetExecTeamMember {
     team_broadcast(value, thread_id);
   }
 
+  // FIXME_OPENMPTARGET this function has the wrong interface and currently
+  // ignores the reducer passed.
   template <class ValueType, class JoinOp>
   KOKKOS_INLINE_FUNCTION ValueType team_reduce(const ValueType& value,
                                                const JoinOp&) const {
