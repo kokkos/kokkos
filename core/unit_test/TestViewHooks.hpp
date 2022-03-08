@@ -51,8 +51,6 @@
 namespace Test {
 template <class DeviceType>
 struct TestViewHooks {
-  using device = DeviceType;
-
   struct TestSubscriber;
 
   static_assert(
@@ -63,7 +61,7 @@ struct TestViewHooks {
   using test_view_type =
       Kokkos::View<double **,
                    Kokkos::Experimental::SubscribableViewHooks<TestSubscriber>,
-                   device>;
+                   DeviceType>;
 
   struct TestSubscriber {
     static test_view_type *self_ptr;

@@ -45,10 +45,6 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
 #define KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
 
-#include <Kokkos_Core_fwd.hpp>
-#include <functional>
-#include <mutex>
-
 namespace Kokkos {
 namespace Experimental {
 
@@ -92,7 +88,7 @@ struct move_constructor_invoker {
 };
 
 template <typename Subscriber>
-struct copy_assign_invoker {
+struct copy_assignment_operator_invoker {
   template <typename View>
   static void call(View &self, const View &other) {
     Subscriber::copy_assigned(self, other);
@@ -100,7 +96,7 @@ struct copy_assign_invoker {
 };
 
 template <typename Subscriber>
-struct move_assign_invoker {
+struct move_assignment_operator_invoker {
   template <typename View>
   static void call(View &self, const View &other) {
     Subscriber::move_assigned(self, other);
@@ -132,7 +128,7 @@ struct SubscribableViewHooks {
   }
   template <typename View>
   static void copy_assign(View &self, const View &other) {
-    Impl::invoke_subscriber_impl<Impl::copy_assign_invoker,
+    Impl::invoke_subscriber_impl<Impl::copy_assignment_operator_invoker,
                                  Subscribers...>::invoke(self, other);
   }
   template <typename View>
@@ -142,7 +138,7 @@ struct SubscribableViewHooks {
   }
   template <typename View>
   static void move_assign(View &self, const View &other) {
-    Impl::invoke_subscriber_impl<Impl::move_assign_invoker,
+    Impl::invoke_subscriber_impl<Impl::move_assignment_operator_invoker,
                                  Subscribers...>::invoke(self, other);
   }
 };
