@@ -50,7 +50,7 @@
 #include <Kokkos_Half.hpp>
 #include <Kokkos_NumericTraits.hpp>  // reduction_identity
 
-#if CUDA_VERSION >= 11020
+#if CUDA_VERSION >= 11000
 #include <cuda_bf16.h>
 #endif
 
@@ -264,44 +264,44 @@ half_t cast_to_half(unsigned long val) {
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
 cast_from_half(half_t val) {
-  return __half2float(val);
+  return __half2float(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
 cast_from_half(half_t val) {
-  return __half2double(val);
+  return static_cast<double>(__half2float(__half(val)));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
 cast_from_half(half_t val) {
-  return __half2short_rz(val);
+  return __half2short_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned short>::value, T>
     cast_from_half(half_t val) {
-  return __half2ushort_rz(val);
+  return __half2ushort_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
 cast_from_half(half_t val) {
-  return __half2int_rz(val);
+  return __half2int_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned int>::value, T>
 cast_from_half(half_t val) {
-  return __half2uint_rz(val);
+  return __half2uint_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
 cast_from_half(half_t val) {
-  return __half2ll_rz(val);
+  return __half2ll_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
     cast_from_half(half_t val) {
-  return __half2ull_rz(val);
+  return __half2ull_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
@@ -317,7 +317,10 @@ KOKKOS_INLINE_FUNCTION
 #endif
 
 /************************** bhalf conversions *********************************/
-#if CUDA_VERSION >= 11000 && CUDA_VERSION < 11020
+// Go in this branch if CUDA version is >= 11.0.0 and less than 11.1.0 or if the
+// architecture is not Ampere
+#if CUDA_VERSION >= 11000 && \
+    (CUDA_VERSION < 11010 || !defined(KOKKOS_ARCH_AMPERE))
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 
@@ -442,9 +445,10 @@ KOKKOS_INLINE_FUNCTION
     cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
-#endif  // CUDA_VERSION >= 11000 && CUDA_VERSION < 11020
+#endif  // CUDA_VERSION >= 11000 && CUDA_VERSION < 11010
 
-#if CUDA_VERSION >= 11020
+#if CUDA_VERSION >= 11010 && \
+    ((defined(KOKKOS_ARCH_AMPERE80) || defined(KOKKOS_ARCH_AMPERE86)))
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 KOKKOS_INLINE_FUNCTION
@@ -475,44 +479,44 @@ bhalf_t cast_to_bhalf(unsigned long val) {
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162float(val);
+  return __bfloat162float(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162double(val);
+  return static_cast<double>(__bfloat162float(__nv_bfloat16(val)));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162short_rz(val);
+  return __bfloat162short_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned short>::value, T>
     cast_from_bhalf(bhalf_t val) {
-  return __bfloat162ushort_rz(val);
+  return __bfloat162ushort_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162int_rz(val);
+  return __bfloat162int_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned int>::value, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162uint_rz(val);
+  return __bfloat162uint_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162ll_rz(val);
+  return __bfloat162ll_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
     cast_from_bhalf(bhalf_t val) {
-  return __bfloat162ull_rz(val);
+  return __bfloat162ull_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
@@ -525,7 +529,7 @@ KOKKOS_INLINE_FUNCTION
     cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
-#endif  // CUDA_VERSION >= 11020
+#endif  // CUDA_VERSION >= 11010
 }  // namespace Experimental
 
 #if (CUDA_VERSION >= 11000)
