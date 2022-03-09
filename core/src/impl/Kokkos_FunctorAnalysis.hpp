@@ -55,6 +55,41 @@
 namespace Kokkos {
 namespace Impl {
 
+  template <typename T>
+  struct alignas(T) volatile_wrapper {
+    T t;
+
+    // These should never be 'constructed', as such. Rather, they should always
+    // come from expressions like
+    // T* pt;
+    // auto vpt = reinterpret_cast<volatile_wrapper<T> *>(pt);
+    __device__ __host__ volatile_wrapper()                               = delete;
+    __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs) = delete;
+
+    __device__ __host__ void operator=(const volatile_wrapper<T>& rhs) {
+      set(rhs.get());
+    }
+
+    __device__ __host__ inline T get() const {
+      T ret;
+      auto vpt   = reinterpret_cast<const volatile char*>(&t);
+      auto p_ret = reinterpret_cast<char*>(&ret);
+      for (size_t i = 0; i < sizeof(T); ++i) {
+        p_ret[i] = vpt[i];
+      }
+      return ret;
+    }
+
+    __device__ __host__ inline void set(const T& s) {
+      auto vps = reinterpret_cast<const volatile char*>(&s);
+      auto pt  = reinterpret_cast<volatile char*>(&t);
+      for (size_t i = 0; i < sizeof(T); ++i) {
+        pt[i] = vps[i];
+      }
+    }
+  };
+
+
 struct FunctorPatternInterface {
   struct FOR {};
   struct REDUCE {};
@@ -415,7 +450,12 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f,
                                             ValueType volatile* dst,
                                             ValueType volatile const* src) {
-      f->join(*dst, *src);
+      ValueType dst_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->get(),
+        src_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(src))->get();
+
+      f->join(dst_local, src_local);
+
+      reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->set(dst_local);
     }
   };
 
@@ -462,7 +502,12 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f,
                                             ValueType volatile* dst,
                                             ValueType volatile const* src) {
-      f->join(WTag(), *dst, *src);
+      ValueType dst_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->get(),
+        src_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(src))->get();
+
+      f->join(WTag(), dst_local, src_local);
+
+      reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->set(dst_local);
     }
   };
 
