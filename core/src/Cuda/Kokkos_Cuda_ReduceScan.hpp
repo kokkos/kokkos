@@ -539,6 +539,9 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
             : ((1 << width) - 1)
                   << ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
     const int lane_id = (threadIdx.y * blockDim.x + threadIdx.x) % 32;
+
+    __syncwarp(mask);
+
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
       if (lane_id + delta < 32) {
         ValueJoin::join(functor, value, value + delta);
