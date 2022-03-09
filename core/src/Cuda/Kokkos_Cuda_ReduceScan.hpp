@@ -548,7 +548,9 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
       }
       __syncwarp(mask);
     }
-    *value = *(value - lane_id);
+    if (lane_id != 0) {
+      *value = *(value - lane_id);
+    }
   }
 
   __device__ static inline void scalar_intra_block_reduction(
