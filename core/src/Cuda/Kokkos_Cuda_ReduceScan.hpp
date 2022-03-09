@@ -427,6 +427,9 @@ struct CudaReductionsFunctor<FunctorType, false, false> {
       scalar_intra_block_reduction(
           functor, value, false, shared_team_buffer_elements + (blockDim.y - 1),
           shared_elements, shared_team_buffer_elements);
+
+      __threadfence();
+      __syncthreads();
     }
     return is_last_block;
   }
