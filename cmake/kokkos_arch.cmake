@@ -92,8 +92,11 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     LIST(REMOVE_ITEM COMMON_WARNINGS "-Wsign-compare")
   ENDIF()
 
-  SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers" "-Wimplicit-fallthrough"
+  SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers"
     ${COMMON_WARNINGS})
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
+    LIST(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
+  ENDIF()
 
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID CMAKE_CXX_COMPILER_ID
