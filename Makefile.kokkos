@@ -183,6 +183,8 @@ KOKKOS_INTERNAL_COMPILER_INTEL_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VE
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Apple clang)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 KOKKOS_INTERNAL_COMPILER_GCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),GCC)
+# TODO fujitsu can emulate gcc or clang. Only clang mode works at the moment.
+KOKKOS_INTERNAL_COMPILER_FUJITSU     := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),FUJITSU)
 
 # Check Host Compiler if using NVCC through nvcc_wrapper
 ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
@@ -211,8 +213,23 @@ endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
   KOKKOS_INTENAL_COMPILER_CLANG = 0
 endif
+# Fujitsu passes also as clang and gcc respectively
+ifeq ($(KOKKOS_INTERNAL_COMPILER_FUJITSU), 1)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_GCC), 1)
+    # TODO  handle gcc flags and workaround for bug?
+    # fujitsu (gcc mode) is bugged, see https://github.com/kokkos/kokkos/issues/4730
+    $(warning Warning: ${CXX} in Trad Mode '-Nnoclang' (default) is not recommended. Use 'CXX = ${CXX} -Nclang' instead.)
+    # HACK since fujitsu only accepts some gcc flags, disable gcc here?
+    # KOKKOS_INTERNAL_COMPILER_GCC = 0
+  endif
+  # TODO handle clang flags
+  # warnings: works fine as is
+  # openmp: handled
+  #KOKKOS_INTERNAL_COMPILER_CLANG = 0
+endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+  # TODO empty variable if fujitsu (clang mode) passes as clang
   KOKKOS_INTERNAL_COMPILER_CLANG_VERSION := $(shell $(CXX) --version | grep version | cut -d ' ' -f3 | tr -d '.')
 
   ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
@@ -262,7 +279,12 @@ else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
     else
-    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_FUJITSU), 1)
+      # fujitsu (clang mode) fails with `=libomp`
+      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
+      else
+      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
+      endif
     endif
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
