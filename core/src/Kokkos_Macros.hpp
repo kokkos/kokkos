@@ -204,6 +204,16 @@
 //  of the supported OpenMP API version.
 #endif  // #if defined( _OPENMP )
 
+#if defined(KOKKOS_ENABLE_CXX17)
+#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
+#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
+#define KOKKOS_IMPL_FALLTHROUGH [[gnu::fallthrough]];
+#elif defined(KOKKOS_COMPILER_CLANG)
+#define KOKKOS_IMPL_FALLTHROUGH [[clang::fallthrough]];
+#else
+#define KOKKOS_IMPL_FALLTHROUGH
+#endif
+
 //----------------------------------------------------------------------------
 // Intel compiler macros
 
