@@ -70,26 +70,16 @@ template <class Reducer>
 struct OpenMPTargetReducerWrapper {
   using value_type = typename Reducer::value_type;
 
+  // Using a generic unknown Reducer for the OpenMPTarget backend is not
+  // implemented.
   KOKKOS_INLINE_FUNCTION
-  static void join(value_type&, const value_type&) {
-    printf(
-        "Using a generic unknown Reducer for the OpenMPTarget backend is not "
-        "implemented.");
-  }
+  static void join(value_type&, const value_type&) = delete;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type&, const volatile value_type&) {
-    printf(
-        "Using a generic unknown Reducer for the OpenMPTarget backend is not "
-        "implemented.");
-  }
+  static void join(volatile value_type&, const volatile value_type&) = delete;
 
   KOKKOS_INLINE_FUNCTION
-  static void init(value_type&) {
-    printf(
-        "Using a generic unknown Reducer for the OpenMPTarget backend is not "
-        "implemented.");
-  }
+  static void init(value_type&) = delete;
 };
 
 template <class Scalar, class Space>
@@ -865,13 +855,15 @@ class OpenMPTargetExecTeamMember {
     team_broadcast(value, thread_id);
   }
 
+  // FIXME_OPENMPTARGET this function has the wrong interface and currently
+  // ignores the reducer passed.
   template <class ValueType, class JoinOp>
   KOKKOS_INLINE_FUNCTION ValueType team_reduce(const ValueType& value,
-                                               const JoinOp& op_in) const {
+                                               const JoinOp&) const {
 #pragma omp barrier
 
     using value_type = ValueType;
-    const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
+    //    const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
 
     // Make sure there is enough scratch space:
     using type = std::conditional_t<(sizeof(value_type) < TEAM_REDUCE_SIZE),
@@ -1757,8 +1749,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const FunctorType& lambda) {
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
-  using value_type  = typename ValueTraits::value_type;
+  using Analysis   = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                         TeamPolicy<Experimental::OpenMPTarget>,
+                                         FunctorType>;
+  using value_type = typename Analysis::value_type;
 
   value_type scan_val = value_type();
 

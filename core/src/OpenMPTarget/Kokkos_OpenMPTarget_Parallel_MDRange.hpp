@@ -48,7 +48,6 @@
 #include <omp.h>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 
 // WORKAROUND OPENMPTARGET: sometimes tile sizes don't make it correctly,
 // this was tracked down to a bug in clang with regards of mapping structs
@@ -451,17 +450,17 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       std::conditional<std::is_same<InvalidType, ReducerType>::value,
                        FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using WorkTagFwd =
-      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
-                         void>;
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                         Policy, ReducerTypeFwd>;
 
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using reference_type = typename ValueTraits::reference_type;
-
-  enum { HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
+  enum {
+    HasJoin =
+        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
+                              FunctorType>::has_join_member_function
+  };
   enum { UseReducer = is_reducer_type<ReducerType>::value };
 
   const pointer_type m_result_ptr;
@@ -475,7 +474,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    execute_tile<Policy::rank, typename ValueTraits::value_type>(
+    execute_tile<Policy::rank, typename Analysis::value_type>(
         m_functor, m_policy, m_result_ptr);
   }
 
