@@ -99,7 +99,7 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBDL)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
 # On *nix-like systems (Linux, macOS) we need pthread for C++ std::thread
 IF (NOT WIN32)
-  KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
+  KOKKOS_LINK_TPL(kokkoscore PUBLIC THREADS)
 ENDIF()
 KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
 
