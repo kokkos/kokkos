@@ -437,7 +437,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               cgh);
 
       // Avoid capturing *this since it might not be trivially copyable
-      const auto shmem_begin    = m_shmem_begin;
+      const auto shmem_begin       = m_shmem_begin;
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
       sycl::global_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
@@ -631,7 +631,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 cgh);
 
         // Avoid capturing *this since it might not be trivially copyable
-        const auto shmem_begin    = m_shmem_begin;
+        const auto shmem_begin       = m_shmem_begin;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::global_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
@@ -684,7 +684,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 cgh);
 
         // Avoid capturing *this since it might not be trivially copyable
-        const auto shmem_begin    = m_shmem_begin;
+        const auto shmem_begin       = m_shmem_begin;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::global_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
