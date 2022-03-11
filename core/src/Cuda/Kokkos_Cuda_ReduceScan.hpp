@@ -479,7 +479,7 @@ __device__ void cuda_intra_block_reduce_scan(
                                pointer_type memory_start, int index_shift) {
     const auto join_ptr = TD - (value_count << S) + value_count * index_shift;
     if (((R + 1) & ((1 << (S + 1)) - 1)) == 0 && join_ptr >= memory_start) {
-      ValueJoin::join(functor, TD, join_ptr);
+      functor.join(TD, join_ptr);
     }
   };
 
@@ -489,7 +489,7 @@ __device__ void cuda_intra_block_reduce_scan(
     const auto N        = (1 << (S + 1));
     const auto join_ptr = TD - (value_count << S) + value_count * index_shift;
     if (R >= N && ((R + 1) & (N - 1)) == (N >> 1) && join_ptr >= memory_start) {
-      ValueJoin::join(functor, TD, join_ptr);
+      functor.join(TD, join_ptr);
     }
   };
 
@@ -590,7 +590,7 @@ __device__ void cuda_intra_block_reduce_scan(
     // Update with total from previous warps
     if (mapped_idx >= CudaTraits::WarpSize &&
         (mapped_idx & (CudaTraits::WarpSize - 1)) != (CudaTraits::WarpSize - 1))
-      ValueJoin::join(functor, tdata_intra, warp_start - value_count);
+      functor.join(tdata_intra, warp_start - value_count);
     __syncwarp(0xffffffff);
   }
 }

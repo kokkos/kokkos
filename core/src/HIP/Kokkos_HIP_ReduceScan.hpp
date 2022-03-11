@@ -310,7 +310,7 @@ __device__ void hip_intra_block_reduce_scan(
                                pointer_type memory_start, int index_shift) {
     const auto join_ptr = TD - (value_count << S) + value_count * index_shift;
     if (R > ((1 << S) - 1) && join_ptr >= memory_start) {
-      ValueJoin::join(functor, TD, join_ptr);
+      functor.join(TD, join_ptr);
     }
   };
 
@@ -397,8 +397,8 @@ __device__ void hip_intra_block_reduce_scan(
     if (threadIdx.y >= Experimental::Impl::HIPTraits::WarpSize &&
         !is_last_thread_in_warp) {
       const int offset_to_previous_warp_total = (threadIdx.y & (~WarpMask)) - 1;
-      ValueJoin::join(functor, base_data + value_count * threadIdx.y,
-                      base_data + value_count * offset_to_previous_warp_total);
+      functor.join(base_data + value_count * threadIdx.y,
+                   base_data + value_count * offset_to_previous_warp_total);
     }
   }
 }
