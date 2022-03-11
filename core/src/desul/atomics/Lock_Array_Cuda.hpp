@@ -1,4 +1,4 @@
-/*
+/* 
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -9,8 +9,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_LOCK_ARRAY_CUDA_HPP_
 #define DESUL_ATOMICS_LOCK_ARRAY_CUDA_HPP_
 
-#include "desul/atomics/Common.hpp"
 #include "desul/atomics/Macros.hpp"
+#include "desul/atomics/Common.hpp"
 
 #ifdef DESUL_HAVE_CUDA_ATOMICS
 
@@ -23,7 +23,7 @@ namespace Impl {
 #define DESUL_IMPL_BALLOT_MASK(m, x) __ballot_sync(m, x)
 #define DESUL_IMPL_ACTIVEMASK __activemask()
 #else
-#define DESUL_IMPL_BALLOT_MASK(m, x) m == 0 ? 0 : 1
+#define DESUL_IMPL_BALLOT_MASK(m, x) m==0?0:1
 #define DESUL_IMPL_ACTIVEMASK 0
 #endif
 
@@ -32,13 +32,14 @@ namespace Impl {
 extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h;
 extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h;
 
+
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
 ///        valid, initialized arrays.
 ///
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
 ///   snapshotted version while also linking against pure Desul
-template <typename /*AlwaysInt*/ = int>
+template<typename /*AlwaysInt*/ = int>
 void init_lock_arrays_cuda();
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
@@ -47,7 +48,7 @@ void init_lock_arrays_cuda();
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
 ///   snappshotted version while also linking against pure Desul
-template <typename T = int>
+template<typename T = int>
 void finalize_lock_arrays_cuda();
 
 }  // namespace Impl
@@ -149,12 +150,13 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
       cudaMemcpyToSymbol(::desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_DEVICE,    \
                          &::desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h, \
                          sizeof(int32_t*));                                \
-      cudaMemcpyToSymbol(::desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_NODE,      \
-                         &::desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_NODE_h,   \
+      cudaMemcpyToSymbol(::desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_NODE,    \
+                         &::desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_NODE_h, \
                          sizeof(int32_t*));                                \
     }                                                                      \
     ::desul::Impl::lock_array_copied = 1;                                  \
   }
+
 
 #endif /* defined( __CUDACC__ ) */
 
