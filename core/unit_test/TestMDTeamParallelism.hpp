@@ -82,6 +82,7 @@ struct FillConstant {
 template <typename ExecSpace>
 struct TestMDTeamParallelFor {
   using DataType = int;
+  using DimsType = int[8];
   using TeamType = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   template <typename HostViewType, typename FillFunctor>
@@ -97,7 +98,7 @@ struct TestMDTeamParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_3D_MDTeamThreadRange(int* dims,
+  static void test_parallel_for_3D_MDTeamThreadRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType***, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -142,7 +143,7 @@ struct TestMDTeamParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_4D_MDTeamThreadRange(int* dims,
+  static void test_parallel_for_4D_MDTeamThreadRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -191,7 +192,7 @@ struct TestMDTeamParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_5D_MDTeamThreadRange(int* dims,
+  static void test_parallel_for_5D_MDTeamThreadRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -245,7 +246,7 @@ struct TestMDTeamParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_6D_MDTeamThreadRange(int* dims,
+  static void test_parallel_for_6D_MDTeamThreadRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -303,7 +304,7 @@ struct TestMDTeamParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_7D_MDTeamThreadRange(int* dims,
+  static void test_parallel_for_7D_MDTeamThreadRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -364,7 +365,7 @@ struct TestMDTeamParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_8D_MDTeamThreadRange(int* dims,
+  static void test_parallel_for_8D_MDTeamThreadRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType********, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -406,7 +407,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_4D_MDThreadVectorRange(int* dims,
+  static void test_parallel_for_4D_MDThreadVectorRange(DimsType const& dims,
                                                        const int initValue) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -445,7 +446,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_5D_MDThreadVectorRange(int* dims,
+  static void test_parallel_for_5D_MDThreadVectorRange(DimsType const& dims,
                                                        const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -486,7 +487,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_6D_MDThreadVectorRange(int* dims,
+  static void test_parallel_for_6D_MDThreadVectorRange(DimsType const& dims,
                                                        const int initValue) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -528,7 +529,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_7D_MDThreadVectorRange(int* dims,
+  static void test_parallel_for_7D_MDThreadVectorRange(DimsType const& dims,
                                                        const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -572,7 +573,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_8D_MDThreadVectorRange(int* dims,
+  static void test_parallel_for_8D_MDThreadVectorRange(DimsType const& dims,
                                                        const int initValue) {
     using ViewType     = typename Kokkos::View<DataType********, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -618,7 +619,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_3D_MDTeamVectorRange(int* dims,
+  static void test_parallel_for_3D_MDTeamVectorRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType***, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -653,7 +654,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_4D_MDTeamVectorRange(int* dims,
+  static void test_parallel_for_4D_MDTeamVectorRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -689,7 +690,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_5D_MDTeamVectorRange(int* dims,
+  static void test_parallel_for_5D_MDTeamVectorRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -727,7 +728,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_6D_MDTeamVectorRange(int* dims,
+  static void test_parallel_for_6D_MDTeamVectorRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -767,7 +768,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_7D_MDTeamVectorRange(int* dims,
+  static void test_parallel_for_7D_MDTeamVectorRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType*******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -808,7 +809,7 @@ struct TestMDTeamParallelFor {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
-  static void test_parallel_for_8D_MDTeamVectorRange(int* dims,
+  static void test_parallel_for_8D_MDTeamVectorRange(DimsType const& dims,
                                                      const int initValue) {
     using ViewType     = typename Kokkos::View<DataType********, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
@@ -853,11 +854,34 @@ struct TestMDTeamParallelFor {
 template <typename ExecSpace>
 struct TestMDTeamParallelReduce {
   using DataType = int;
+  using DimsType = int[8];
   using TeamType = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  template <typename F>
+  constexpr static auto get_expected_partial_sum(DimsType const& dims, size_t maxRank, F const& f, DimsType& indices, size_t rank) {
+    if(rank == maxRank) {
+      return f(indices[0], indices[1], indices[2], indices[3], indices[4], indices[5], indices[6], indices[7]);
+    } 
+
+    auto& index = indices[rank];
+    DataType accValue = 0;
+    for(index = 0; index < dims[rank]; ++index) {
+      accValue += get_expected_partial_sum(dims, maxRank, f, indices, rank+1);
+    }
+
+    return accValue;
+  }
+
+  template <typename F>
+  static DataType get_expected_sum(DimsType const& dims, size_t maxRank,
+                                   F const& f) {
+    DimsType indices = {};
+    return get_expected_partial_sum(dims, maxRank, f, indices, 0);
+  }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_3D_MDTeamThreadRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType***, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -895,17 +919,14 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 - 1);
-    int numValues   = (leagueSize * n0 * n1);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 3, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDTeamThreadRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -944,17 +965,14 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_5D_MDTeamThreadRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -994,17 +1012,14 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 * n3 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2 * n3);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_6D_MDTeamThreadRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1047,10 +1062,7 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 * n3 * n4 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2 * n3 * n4);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1058,7 +1070,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDThreadVectorRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1106,10 +1118,7 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1117,7 +1126,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_5D_MDThreadVectorRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1167,10 +1176,7 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 * n3 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2 * n3);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1178,7 +1184,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_6D_MDThreadVectorRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1230,10 +1236,7 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 * n3 * n4 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2 * n3 * n4);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1241,7 +1244,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDTeamVectorRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1284,10 +1287,7 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1295,7 +1295,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_5D_MDTeamVectorRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1339,10 +1339,7 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 * n3 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2 * n3);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1350,7 +1347,7 @@ struct TestMDTeamParallelReduce {
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_6D_MDTeamVectorRange(
-      int* dims, const int initValue) {
+      DimsType const& dims, const int initValue) {
     using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
     int leagueSize = dims[0];
@@ -1397,22 +1394,13 @@ struct TestMDTeamParallelReduce {
         },
         finalSum);
 
-    int firstValue  = 0;
-    int lastValue   = (leagueSize * n0 * n1 * n2 * n3 * n4 - 1);
-    int numValues   = (leagueSize * n0 * n1 * n2 * n3 * n4);
-    int expectedSum = numValues * (firstValue + lastValue) / 2;
+    int expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
 };
 
-}  // namespace MDTeamParallelism
-
-}  // namespace Test
-
 /*--------------------------------------------------------------------------*/
-
-namespace Test {
 
 constexpr auto Left  = Kokkos::Iterate::Left;
 constexpr auto Right = Kokkos::Iterate::Right;
@@ -1420,8 +1408,7 @@ constexpr auto Right = Kokkos::Iterate::Right;
 TEST(TEST_CATEGORY, MDTeamParallelFor) {
   using namespace MDTeamParallelism;
   // int dims[] = {16, 16, 16, 16, 16, 16, 16, 16};
-  int dims[] = {4, 4, 4, 4, 4, 4, 4, 4};
-
+  int dims[]          = {3, 5, 7, 11, 13, 17, 19, 23};
   const int initValue = 5;
 
   {
@@ -1563,7 +1550,7 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
 TEST(TEST_CATEGORY, MDTeamParallelReduce) {
   using namespace MDTeamParallelism;
   // int dims[] = {16, 16, 16, 16, 16, 16, 16, 16};
-  int dims[]          = {4, 4, 4, 4, 4, 4, 4, 4};
+  int dims[]          = {3, 5, 7, 11, 13, 17, 19, 23};
   const int initValue = 5;
 
   {
@@ -1671,4 +1658,5 @@ TEST(TEST_CATEGORY, MDTeamParallelReduce) {
   }
 }
 
+}  // namespace MDTeamParallelism
 }  // namespace Test
