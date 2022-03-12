@@ -808,6 +808,13 @@ struct TestScratchTeam {
         Functor(), result_type(&error_count));
     Kokkos::fence();
     ASSERT_EQ(error_count, 0);
+
+    Kokkos::parallel_reduce(
+        team_exec.set_scratch_size(1, Kokkos::PerTeam(team_scratch_size),
+                                   Kokkos::PerThread(thread_scratch_size)),
+        Functor(), Kokkos::Sum<typename Functor::value_type>(error_count));
+    Kokkos::fence();
+    ASSERT_EQ(error_count, 0);
   }
 };
 
