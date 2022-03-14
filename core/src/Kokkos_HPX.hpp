@@ -764,17 +764,17 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   // NOTE: Max size is 1 for simplicity. In most cases more than 1 is not
   // necessary on CPU. Implement later if there is a need.
   template <class FunctorType>
-  static int team_size_max(const FunctorType &) {
+  inline static int team_size_max(const FunctorType &) {
     return 1;
   }
 
   template <class FunctorType>
-  static int team_size_recommended(const FunctorType &) {
+  inline static int team_size_recommended(const FunctorType &) {
     return 1;
   }
 
   template <class FunctorType>
-  static int team_size_recommended(const FunctorType &, const int &) {
+  inline static int team_size_recommended(const FunctorType &, const int &) {
     return 1;
   }
 
@@ -813,14 +813,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
 
   static int vector_length_max() { return 1; }
 
-  int impl_vector_length() noexcept { return 1; }
-  bool impl_auto_team_size() noexcept { return false; }
-  bool impl_auto_vector_length() noexcept { return false; }
-  void impl_set_vector_length(int) noexcept {}
-  void impl_set_team_size(int) noexcept {}
+  inline int impl_vector_length() noexcept { return 1; }
+  inline bool impl_auto_team_size() noexcept { return false; }
+  inline bool impl_auto_vector_length() noexcept { return false; }
+  inline void impl_set_vector_length(int) noexcept {}
+  inline void impl_set_team_size(int) noexcept {}
 
  private:
-  void init(const int league_size_request, const int team_size_request) {
+  inline void init(const int league_size_request, const int team_size_request) {
     m_league_size           = league_size_request;
     const int max_team_size = 1;  // TODO: Can't use team_size_max(...) because
                                   // it requires a functor as argument.
@@ -850,8 +850,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   }
 
  public:
-  int team_size() const { return m_team_size; }
-  int league_size() const { return m_league_size; }
+  inline int team_size() const { return m_team_size; }
+  inline int league_size() const { return m_league_size; }
 
   size_t scratch_size(const int &level, int team_size_ = -1) const {
     if (team_size_ < 0) {
@@ -861,7 +861,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
            team_size_ * m_thread_scratch_size[level];
   }
 
-  static int scratch_size_max(int level) {
+  inline static int scratch_size_max(int level) {
     return (level == 0 ? 1024 * 32 :  // Roughly L1 size
                 20 * 1024 * 1024);    // Limit to keep compatibility with CUDA
   }
@@ -959,28 +959,29 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     init(league_size_request, 1);
   }
 
-  int chunk_size() const { return m_chunk_size; }
+  inline int chunk_size() const { return m_chunk_size; }
 
-  TeamPolicyInternal &set_chunk_size(typename traits::index_type chunk_size_) {
+  inline TeamPolicyInternal &set_chunk_size(
+      typename traits::index_type chunk_size_) {
     m_chunk_size = chunk_size_;
     return *this;
   }
 
-  TeamPolicyInternal &set_scratch_size(const int &level,
-                                       const PerTeamValue &per_team) {
+  inline TeamPolicyInternal &set_scratch_size(const int &level,
+                                              const PerTeamValue &per_team) {
     m_team_scratch_size[level] = per_team.value;
     return *this;
   }
 
-  TeamPolicyInternal &set_scratch_size(const int &level,
-                                       const PerThreadValue &per_thread) {
+  inline TeamPolicyInternal &set_scratch_size(
+      const int &level, const PerThreadValue &per_thread) {
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
 
-  TeamPolicyInternal &set_scratch_size(const int &level,
-                                       const PerTeamValue &per_team,
-                                       const PerThreadValue &per_thread) {
+  inline TeamPolicyInternal &set_scratch_size(
+      const int &level, const PerTeamValue &per_team,
+      const PerThreadValue &per_thread) {
     m_team_scratch_size[level]   = per_team.value;
     m_thread_scratch_size[level] = per_thread.value;
     return *this;

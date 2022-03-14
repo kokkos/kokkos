@@ -1021,35 +1021,38 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   //----------------------------------------
 
   template <class FunctorType>
-  static int team_size_max(const FunctorType&, const ParallelForTag&) {
+  inline static int team_size_max(const FunctorType&, const ParallelForTag&) {
     return 256;
   }
 
   template <class FunctorType>
-  static int team_size_max(const FunctorType&, const ParallelReduceTag&) {
+  inline static int team_size_max(const FunctorType&,
+                                  const ParallelReduceTag&) {
     return 256;
   }
 
   template <class FunctorType, class ReducerType>
-  static int team_size_max(const FunctorType&, const ReducerType&,
-                           const ParallelReduceTag&) {
+  inline static int team_size_max(const FunctorType&, const ReducerType&,
+                                  const ParallelReduceTag&) {
     return 256;
   }
 
   template <class FunctorType>
-  static int team_size_recommended(const FunctorType&, const ParallelForTag&) {
+  inline static int team_size_recommended(const FunctorType&,
+                                          const ParallelForTag&) {
     return 128;
   }
 
   template <class FunctorType>
-  static int team_size_recommended(const FunctorType&,
-                                   const ParallelReduceTag&) {
+  inline static int team_size_recommended(const FunctorType&,
+                                          const ParallelReduceTag&) {
     return 128;
   }
 
   template <class FunctorType, class ReducerType>
-  static int team_size_recommended(const FunctorType&, const ReducerType&,
-                                   const ParallelReduceTag&) {
+  inline static int team_size_recommended(const FunctorType&,
+                                          const ReducerType&,
+                                          const ParallelReduceTag&) {
     return 128;
   }
 
@@ -1068,8 +1071,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   constexpr const static size_t default_team_size = 256;
   int m_chunk_size;
 
-  void init(const int league_size_request, const int team_size_request,
-            const int vector_length_request) {
+  inline void init(const int league_size_request, const int team_size_request,
+                   const int vector_length_request) {
     m_league_size = league_size_request;
 
     // Minimum team size should be 32 for OpenMPTarget backend.
@@ -1089,7 +1092,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
  public:
   // FIXME_OPENMPTARGET : Currently this routine is a copy of the Cuda
   // implementation, but this has to be tailored to be architecture specific.
-  static int scratch_size_max(int level) {
+  inline static int scratch_size_max(int level) {
     return (
         level == 0 ? 1024 * 40 :  // 48kB is the max for CUDA, but we need some
                                   // for team_member.reduce etc.
@@ -1097,27 +1100,27 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                 1024);  // arbitrarily setting this to 20MB, for a Volta V100
                         // that would give us about 3.2GB for 2 teams per SM
   }
-  bool impl_auto_team_size() const { return m_tune_team_size; }
-  bool impl_auto_vector_length() const { return m_tune_vector_length; }
-  void impl_set_team_size(const size_t size) { m_team_size = size; }
-  void impl_set_vector_length(const size_t length) {
+  inline bool impl_auto_team_size() const { return m_tune_team_size; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
+  inline void impl_set_team_size(const size_t size) { m_team_size = size; }
+  inline void impl_set_vector_length(const size_t length) {
     m_tune_vector_length = length;
   }
-  int impl_vector_length() const { return m_vector_length; }
+  inline int impl_vector_length() const { return m_vector_length; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_DEPRECATED inline int vector_length() const {
     return impl_vector_length();
   }
 #endif
-  int team_size() const { return m_team_size; }
-  int league_size() const { return m_league_size; }
-  size_t scratch_size(const int& level, int team_size_ = -1) const {
+  inline int team_size() const { return m_team_size; }
+  inline int league_size() const { return m_league_size; }
+  inline size_t scratch_size(const int& level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
 
-  Kokkos::Experimental::OpenMPTarget space() const {
+  inline Kokkos::Experimental::OpenMPTarget space() const {
     return Kokkos::Experimental::OpenMPTarget();
   }
 
@@ -1226,42 +1229,43 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
-  static size_t vector_length_max() {
+  inline static size_t vector_length_max() {
     return 32; /* TODO: this is bad. Need logic that is compiler and backend
                   aware */
   }
-  int team_alloc() const { return m_team_alloc; }
-  int team_iter() const { return m_team_iter; }
+  inline int team_alloc() const { return m_team_alloc; }
+  inline int team_iter() const { return m_team_iter; }
 
-  int chunk_size() const { return m_chunk_size; }
+  inline int chunk_size() const { return m_chunk_size; }
 
   /** \brief set chunk_size to a discrete value*/
-  TeamPolicyInternal& set_chunk_size(typename traits::index_type chunk_size_) {
+  inline TeamPolicyInternal& set_chunk_size(
+      typename traits::index_type chunk_size_) {
     m_chunk_size = chunk_size_;
     return *this;
   }
 
   /** \brief set per team scratch size for a specific level of the scratch
    * hierarchy */
-  TeamPolicyInternal& set_scratch_size(const int& level,
-                                       const PerTeamValue& per_team) {
+  inline TeamPolicyInternal& set_scratch_size(const int& level,
+                                              const PerTeamValue& per_team) {
     m_team_scratch_size[level] = per_team.value;
     return *this;
   }
 
   /** \brief set per thread scratch size for a specific level of the scratch
    * hierarchy */
-  TeamPolicyInternal& set_scratch_size(const int& level,
-                                       const PerThreadValue& per_thread) {
+  inline TeamPolicyInternal& set_scratch_size(
+      const int& level, const PerThreadValue& per_thread) {
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
 
   /** \brief set per thread and per team scratch size for a specific level of
    * the scratch hierarchy */
-  TeamPolicyInternal& set_scratch_size(const int& level,
-                                       const PerTeamValue& per_team,
-                                       const PerThreadValue& per_thread) {
+  inline TeamPolicyInternal& set_scratch_size(
+      const int& level, const PerTeamValue& per_team,
+      const PerThreadValue& per_thread) {
     m_team_scratch_size[level]   = per_team.value;
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
@@ -1269,7 +1273,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
 
  private:
   /** \brief finalize chunk_size if it was set to AUTO*/
-  void set_auto_chunk_size() {
+  inline void set_auto_chunk_size() {
     int concurrency = 2048 * 128;
 
     if (concurrency == 0) concurrency = 1;
