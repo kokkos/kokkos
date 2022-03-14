@@ -277,7 +277,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   const FunctorType m_functor;
   const Policy m_policy;
-  const int m_shared;
+  const size_t m_shared;
 
   template <class TagType, class Schedule>
   inline static typename std::enable_if<
@@ -739,7 +739,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const Policy m_policy;
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
-  const int m_shared;
+  const size_t m_shared;
 
   template <class TagType>
   inline static

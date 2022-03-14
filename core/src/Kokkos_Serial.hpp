@@ -1013,7 +1013,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_league;
   const ReducerType m_reducer;
   pointer_type m_result_ptr;
-  const int m_shared;
+  size_t m_shared;
 
   template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(

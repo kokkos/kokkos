@@ -98,7 +98,7 @@ class ThreadsExec {
 
   void *m_scratch;
   int m_scratch_reduce_end;
-  int m_scratch_thread_end;
+  size_t m_scratch_thread_end;
   int m_numa_rank;
   int m_numa_core_rank;
   int m_pool_rank;
