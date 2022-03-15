@@ -54,6 +54,7 @@
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <View/Hooks/Kokkos_ViewHooks.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 
@@ -174,6 +175,7 @@ struct ViewTraits<void> {
   using array_layout    = void;
   using memory_traits   = void;
   using specialize      = void;
+  using hooks_policy    = void;
 };
 
 template <class... Prop>
@@ -185,6 +187,20 @@ struct ViewTraits<void, void, Prop...> {
   using array_layout    = typename ViewTraits<void, Prop...>::array_layout;
   using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize      = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy    = typename ViewTraits<void, Prop...>::hooks_policy;
+};
+
+template <class HooksPolicy, class... Prop>
+struct ViewTraits<typename std::enable_if<Kokkos::Experimental::is_hooks_policy<
+                      HooksPolicy>::value>::type,
+                  HooksPolicy, Prop...> {
+  using execution_space = typename ViewTraits<void, Prop...>::execution_space;
+  using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
+  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using array_layout    = typename ViewTraits<void, Prop...>::array_layout;
+  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize      = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy    = HooksPolicy;
 };
 
 template <class ArrayLayout, class... Prop>
@@ -199,6 +215,7 @@ struct ViewTraits<
   using array_layout    = ArrayLayout;
   using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize      = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy    = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
 template <class Space, class... Prop>
@@ -224,6 +241,7 @@ struct ViewTraits<typename std::enable_if<Kokkos::is_space<Space>::value>::type,
   using array_layout  = typename execution_space::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
 template <class MemoryTraits, class... Prop>
@@ -240,6 +258,8 @@ struct ViewTraits<typename std::enable_if<
           std::is_same<typename ViewTraits<void, Prop...>::array_layout,
                        void>::value &&
           std::is_same<typename ViewTraits<void, Prop...>::memory_traits,
+                       void>::value &&
+          std::is_same<typename ViewTraits<void, Prop...>::hooks_policy,
                        void>::value,
       "MemoryTrait is the final optional template argument for a View");
 
@@ -249,6 +269,7 @@ struct ViewTraits<typename std::enable_if<
   using array_layout    = void;
   using memory_traits   = MemoryTraits;
   using specialize      = void;
+  using hooks_policy    = void;
 };
 
 template <class DataType, class... Properties>
@@ -277,6 +298,11 @@ struct ViewTraits {
   using MemoryTraits = typename std::conditional<
       !std::is_same<typename prop::memory_traits, void>::value,
       typename prop::memory_traits, typename Kokkos::MemoryManaged>::type;
+
+  using HooksPolicy = typename std::conditional<
+      !std::is_same<typename prop::hooks_policy, void>::value,
+      typename prop::hooks_policy,
+      Kokkos::Experimental::DefaultViewHooks>::type;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
@@ -328,6 +354,7 @@ struct ViewTraits {
   using device_type       = Kokkos::Device<ExecutionSpace, MemorySpace>;
   using memory_traits     = MemoryTraits;
   using host_mirror_space = HostMirrorSpace;
+  using hooks_policy      = HooksPolicy;
 
   using size_type = typename MemorySpace::size_type;
 
@@ -589,6 +616,7 @@ class View : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
+  using hooks_policy = typename traits::hooks_policy;
 
   view_tracker_type m_track;
   map_type m_map;
@@ -598,28 +626,32 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible view of array of scalar types */
   using array_type =
       View<typename traits::scalar_array_type, typename traits::array_layout,
-           typename traits::device_type, typename traits::memory_traits>;
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
   using const_type =
       View<typename traits::const_data_type, typename traits::array_layout,
-           typename traits::device_type, typename traits::memory_traits>;
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>;
 
   /** \brief  Compatible view of non-const data type */
   using non_const_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
-           typename traits::device_type, typename traits::memory_traits>;
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>;
 
   /** \brief  Compatible HostMirror view */
   using HostMirror =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
-                  typename traits::host_mirror_space::memory_space>>;
+                  typename traits::host_mirror_space::memory_space>,
+           typename traits::hooks_policy>;
 
   /** \brief  Compatible HostMirror view */
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
-           typename traits::host_mirror_space>;
+           typename traits::host_mirror_space, typename traits::hooks_policy>;
 
   /** \brief Unified types */
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;
@@ -1088,17 +1120,36 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
-  KOKKOS_DEFAULTED_FUNCTION
-  View(const View&) = default;
+  KOKKOS_FUNCTION
+  View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
+    KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
+  }
 
-  KOKKOS_DEFAULTED_FUNCTION
-  View(View&&) = default;
+  KOKKOS_FUNCTION
+  View(View&& other)
+      : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
+    KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+  }
 
-  KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(const View&) = default;
+  KOKKOS_FUNCTION
+  View& operator=(const View& other) {
+    m_map   = other.m_map;
+    m_track = other.m_track;
 
-  KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(View&&) = default;
+    KOKKOS_IF_ON_HOST((hooks_policy::copy_assign(*this, other);))
+
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  View& operator=(View&& other) {
+    m_map   = std::move(other.m_map);
+    m_track = std::move(other.m_track);
+
+    KOKKOS_IF_ON_HOST((hooks_policy::move_assign(*this, other);))
+
+    return *this;
+  }
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
