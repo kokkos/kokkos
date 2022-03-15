@@ -144,11 +144,11 @@ ThreadsExec::ThreadsExec()
     ThreadsExec *const nil = nullptr;
 
     // Which entry in 's_threads_exec', possibly determined from hwloc binding
-    const int entry =
-        ((size_t)s_current_function_arg) < size_t(s_thread_pool_size[0])
-            ? ((size_t)s_current_function_arg)
-            : size_t(Kokkos::hwloc::bind_this_thread(s_thread_pool_size[0],
-                                                     s_threads_coord));
+    const int entry = reinterpret_cast<size_t>(s_current_function_arg) <
+                              size_t(s_thread_pool_size[0])
+                          ? reinterpret_cast<size_t>(s_current_function_arg)
+                          : size_t(Kokkos::hwloc::bind_this_thread(
+                                s_thread_pool_size[0], s_threads_coord));
 
     // Given a good entry set this thread in the 's_threads_exec' array
     if (entry < s_thread_pool_size[0] &&
@@ -596,7 +596,7 @@ void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
       // choose its own entry in 's_threads_coord'
       // otherwise specify the entry.
       s_current_function_arg =
-          (void *)static_cast<uintptr_t>(hwloc_can_bind ? ~0u : ith);
+          reinterpret_cast<void *>(hwloc_can_bind ? ~0u : ith);
 
       // Make sure all outstanding memory writes are complete
       // before spawning the new thread.
