@@ -37,9 +37,9 @@ IF(Kokkos_ENABLE_CUDA)
         PATHS           ${PROJECT_SOURCE_DIR}
         PATH_SUFFIXES   bin)
 
-    # check if compiler was set to nvcc_wrapper
+    # Check if compiler was set to nvcc_wrapper
     kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
-    # if launcher was found and nvcc_wrapper was not specified as
+    # If launcher was found and nvcc_wrapper was not specified as
     # compiler and `CMAKE_CXX_COMPILIER_LAUNCHER` is not set, set to use launcher.
     # Will ensure CMAKE_CXX_COMPILER is replaced by nvcc_wrapper
     IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
