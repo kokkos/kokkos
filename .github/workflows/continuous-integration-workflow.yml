@@ -10,27 +10,11 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
-        cxx: ['g++', 'clang++']
-        cmake_build_type: ['Release', 'Debug']
-        openmp: ['ON']
         include:
-          - distro: 'fedora:intel'
-            cxx: 'icpc'
-            cmake_build_type: 'Release'
-            openmp: 'ON'
-          - distro: 'fedora:intel'
-            cxx: 'icpc'
-            cmake_build_type: 'Debug'
-            openmp: 'ON'
-          - distro: 'fedora:intel'
-            cxx: 'icpx'
-            cmake_build_type: 'Release'
-            openmp: 'ON'
-          - distro: 'fedora:intel'
-            cxx: 'icpx'
-            cmake_build_type: 'Debug'
-            openmp: 'ON'
+          - distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -50,12 +34,16 @@ jobs:
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
+      - name: maybe_install_clang_tidy
+        if: ${{ matrix.backend == 'THREADS' }}
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy
       - name: CMake
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
             -DKokkos_ENABLE_HWLOC=ON \
-            -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
