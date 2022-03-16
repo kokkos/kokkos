@@ -1,0 +1,43 @@
+name: github-OSX
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  osxci:
+    name: osx-ci
+    runs-on: [macos-latest]
+
+    strategy:
+      matrix:
+        include:
+          - backend: "SERIAL"
+            cmake_build_type: "RelWithDebInfo"
+          - backend: "THREADS"
+            cmake_build_type: "RelWithDebInfo"
+          - backend: "SERIAL"
+            cmake_build_type: "Debug"
+          - backend: "SERIAL"
+            cmake_build_type: "Release"
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: configure
+        run:
+          cmake -B build .
+            -DKokkos_ENABLE_${{ matrix.backend }}=On
+            -DCMAKE_CXX_FLAGS="-Werror"
+            -DCMAKE_CXX_STANDARD=14
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF
+            -DKokkos_ENABLE_TESTS=On
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
+      - name: build
+        run:
+          cmake --build build --parallel 2
+      - name: test
+        working-directory: build
+        run: ctest --output-on-failure
