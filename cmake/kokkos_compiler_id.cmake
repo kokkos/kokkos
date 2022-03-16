@@ -44,7 +44,7 @@ IF(Kokkos_ENABLE_CUDA)
     # Will ensure CMAKE_CXX_COMPILER is replaced by nvcc_wrapper
     IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
       IF(CMAKE_CXX_COMPILER_LAUNCHER)
-      MESSAGE(FATAL_ERROR "Cannot use CMAKE_CXX_COMPILER_LAUNCHER if the CMAKE_CXX_COMPILER is not able to compile CUDA code, i.e. nvcc_wrapper or
+       MESSAGE(FATAL_ERROR "Cannot use CMAKE_CXX_COMPILER_LAUNCHER if the CMAKE_CXX_COMPILER is not able to compile CUDA code, i.e. nvcc_wrapper or
 clang++!")
       ENDIF()
       # the first argument to launcher is always the C++ compiler defined by cmake
