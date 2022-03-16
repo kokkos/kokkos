@@ -10,7 +10,37 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
+        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
+        cxx: ['g++', 'clang++']
+        cmake_build_type: ['Release', 'Debug']
+        backend: ['OPENMP']
+        hwloc: ['ON']
+        clang-tidy: ['']
         include:
+          - distro: 'fedora:intel'
+            cxx: 'icpc'
+            cmake_build_type: 'Release'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
+          - distro: 'fedora:intel'
+            cxx: 'icpc'
+            cmake_build_type: 'Debug'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
+          - distro: 'fedora:intel'
+            cxx: 'icpx'
+            cmake_build_type: 'Release'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
+          - distro: 'fedora:intel'
+            cxx: 'icpx'
+            cmake_build_type: 'Debug'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
             cmake_build_type: 'RelWithDebInfo'
@@ -37,7 +67,7 @@ jobs:
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
       - name: maybe_install_clang_tidy
-        if: ${{ matrix.backend == 'THREADS' }}
+        if: ${{ matrix.clang-tidy != '' }}
         run: sudo apt-get update && sudo apt-get install -y clang-tidy
       - name: CMake
         run: |
