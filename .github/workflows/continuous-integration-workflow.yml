@@ -16,6 +16,7 @@ jobs:
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             hwloc: 'OFF'
+            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -42,7 +43,7 @@ jobs:
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
-            -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
+            ${{ matrix.clang-tidy }} \
             -DKokkos_ENABLE_HWLOC=${{ matrix.hwloc }} \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
