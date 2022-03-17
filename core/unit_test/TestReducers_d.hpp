@@ -65,6 +65,20 @@ TEST(TEST_CATEGORY, reducers_struct) {
 #endif
 }
 
+TEST(TEST_CATEGORY, reducers_int16_t) {
+  using ThisTestType = int16_t;
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(101);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(202);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(303);
+
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(5);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(10);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(15);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(20);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(25);
+}
+
 TEST(TEST_CATEGORY, reducers_half_t) {
   using ThisTestType = Kokkos::Experimental::half_t;
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
