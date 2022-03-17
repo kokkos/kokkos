@@ -44,4 +44,4 @@
 */
 
 #include <TestCuda_Category.hpp>
-#include <TestTeamMDParallelism.hpp>
+#include <TestMDTeamParallelism.hpp>
