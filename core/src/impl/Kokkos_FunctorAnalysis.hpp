@@ -56,6 +56,7 @@
 namespace Kokkos {
 namespace Impl {
 
+#if defined(KOKKOS_ENABLE_CUDA)
   template <typename T>
   struct alignas(T) volatile_wrapper {
     T t;
@@ -127,6 +128,7 @@ namespace Impl {
       }
     }
   };
+#endif // KOKKOS_ENABLE_CUDA
 
 struct FunctorPatternInterface {
   struct FOR {};
@@ -488,12 +490,21 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f,
                                             ValueType volatile* dst,
                                             ValueType volatile const* src) {
+#if defined(KOKKOS_ENABLE_CUDA)
+      // Call __threadfence() to encourage flushed writes in the face of potential strict aliasing violation
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
       ValueType dst_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->get(),
         src_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(src))->get();
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
 
       f->join(dst_local, src_local);
 
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
       reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->set(dst_local);
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
+#else
+      f->join(*dst, *src);
+#endif
     }
   };
 
@@ -540,12 +551,20 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f,
                                             ValueType volatile* dst,
                                             ValueType volatile const* src) {
+#if defined(KOKKOS_ENABLE_CUDA)
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
       ValueType dst_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->get(),
         src_local = reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(src))->get();
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
 
       f->join(WTag(), dst_local, src_local);
 
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
       reinterpret_cast<volatile_wrapper<ValueType>*>(const_cast<ValueType*>(dst))->set(dst_local);
+      KOKKOS_IF_ON_DEVICE(__threadfence(););
+#else
+      f->join(WTag(), *dst, *src);
+#endif
     }
   };
 
