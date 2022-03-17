@@ -48,6 +48,7 @@
 #include <cstddef>
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Traits.hpp>
+#include <Kokkos_Half.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -89,6 +90,43 @@ namespace Impl {
     }
   };
 
+  // Specialize for half_t because otherwise we end up with code that fails the tests for unclear reasons
+  template <>
+  struct alignas(Kokkos::Experimental::half_t) volatile_wrapper<Kokkos::Experimental::half_t> {
+    using T = Kokkos::Experimental::half_t;
+    T t;
+
+    // These should never be 'constructed', as such. Rather, they should always
+    // come from expressions like
+    // T* pt;
+    // auto vpt = reinterpret_cast<volatile_wrapper<T> *>(pt);
+    __device__ __host__ volatile_wrapper()                               = delete;
+    __device__ __host__ volatile_wrapper(const volatile_wrapper<T>& rhs) = delete;
+
+    __device__ __host__ void operator=(const volatile_wrapper<T>& rhs) {
+      set(rhs.get());
+    }
+
+    __device__ __host__ inline T get() const {
+      T ret;
+      auto vpt   = reinterpret_cast<const volatile int16_t*>(&t);
+      auto p_ret = reinterpret_cast<int16_t*>(&ret);
+      // These assignments have to be phrased as loops with a trip count of 1, not as *p or p[0] or again, the tests fail
+      for (size_t i = 0; i < sizeof(T)/2; ++i) {
+        p_ret[i] = vpt[i];
+      }
+      return ret;
+    }
+
+    __device__ __host__ inline void set(const T& s) {
+      auto vps = reinterpret_cast<const volatile int16_t*>(&s);
+      auto pt  = reinterpret_cast<volatile int16_t*>(&t);
+      // These assignments have to be phrased as loops with a trip count of 1, not as *p or p[0] or again, the tests fail
+      for (size_t i = 0; i < sizeof(T)/2; ++i) {
+        pt[i] = vps[i];
+      }
+    }
+  };
 
 struct FunctorPatternInterface {
   struct FOR {};
