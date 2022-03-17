@@ -858,15 +858,19 @@ struct TestMDTeamParallelReduce {
   using TeamType = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   template <typename F>
-  constexpr static auto get_expected_partial_sum(DimsType const& dims, size_t maxRank, F const& f, DimsType& indices, size_t rank) {
-    if(rank == maxRank) {
-      return f(indices[0], indices[1], indices[2], indices[3], indices[4], indices[5], indices[6], indices[7]);
-    } 
+  constexpr static auto get_expected_partial_sum(DimsType const& dims,
+                                                 size_t maxRank, F const& f,
+                                                 DimsType& indices,
+                                                 size_t rank) {
+    if (rank == maxRank) {
+      return f(indices[0], indices[1], indices[2], indices[3], indices[4],
+               indices[5], indices[6], indices[7]);
+    }
 
-    auto& index = indices[rank];
+    auto& index       = indices[rank];
     DataType accValue = 0;
-    for(index = 0; index < dims[rank]; ++index) {
-      accValue += get_expected_partial_sum(dims, maxRank, f, indices, rank+1);
+    for (index = 0; index < dims[rank]; ++index) {
+      accValue += get_expected_partial_sum(dims, maxRank, f, indices, rank + 1);
     }
 
     return accValue;
