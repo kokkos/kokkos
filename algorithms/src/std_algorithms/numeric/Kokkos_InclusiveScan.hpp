@@ -61,7 +61,6 @@ template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
 struct InclusiveScanDefaultFunctor {
   using execution_space = ExeSpace;
-  using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
 
   FirstFrom m_first_from;
   FirstDest m_first_dest;
@@ -72,31 +71,13 @@ struct InclusiveScanDefaultFunctor {
         m_first_dest(std::move(first_dest)) {}
 
   KOKKOS_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const IndexType i, ValueType& update,
                   const bool final_pass) const {
-    const auto tmp = value_type{m_first_from[i], false};
-    this->join(update, tmp);
+    update += m_first_from[i];
 
     if (final_pass) {
-      m_first_dest[i] = update.val;
+      m_first_dest[i] = update;
     }
-  }
-
-  KOKKOS_FUNCTION
-  void init(value_type& update) const {
-    update.val        = {};
-    update.is_initial = true;
-  }
-
-  KOKKOS_FUNCTION
-  void join(volatile value_type& update,
-            volatile const value_type& input) const {
-    if (update.is_initial) {
-      update.val = input.val;
-    } else {
-      update.val = update.val + input.val;
-    }
-    update.is_initial = false;
   }
 };
 
