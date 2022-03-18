@@ -58,6 +58,8 @@ namespace Impl {
 
 template <class ValueType>
 struct StdReduceDefaultJoinFunctor {
+  using value_type = ValueType;
+
   KOKKOS_FUNCTION
   constexpr ValueType operator()(const ValueType& a, const ValueType& b) const {
     return a + b;
@@ -142,10 +144,24 @@ ValueType reduce_default_functors_impl(const std::string& label,
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::expect_valid_range(first, last);
 
+  if (first == last) {
+    // init is returned, unmodified
+    return init_reduction_value;
+  }
+
   using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;
   using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;
-  return reduce_custom_functors_impl(
-      label, ex, first, last, std::move(init_reduction_value), joiner_type());
+
+  // run
+  value_type tmp;
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_reduce(label,
+                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                            joiner_type(), tmp);
+
+  // fence not needed since reducing into scalar
+  tmp += init_reduction_value;
+  return tmp;
 }
 
 }  // end namespace Impl
