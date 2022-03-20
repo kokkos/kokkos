@@ -259,11 +259,11 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       auto val0 = host_view(i, 0);
       auto val1 = host_view(i, 1);
       auto val2 = host_view(i, 2);
-      EXPECT_TRUE(std::fabs((val0 - 65536.0) / 65536.0) < 1e-14)
+      EXPECT_LT(std::fabs((val0 - 65536.0) / 65536.0), 1e-14)
           << "Data differs at index " << i;
-      EXPECT_TRUE(std::fabs((val1 - 256.0) / 256.0) < 1e-14)
+      EXPECT_LT(std::fabs((val1 - 256.0) / 256.0), 1e-14)
           << "Data differs at index " << i;
-      EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-14)
+      EXPECT_LT(std::fabs((val2 - 1.0) / 1.0), 1e-14)
           << "Data differs at index " << i;
     }
   }
@@ -282,9 +282,9 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       auto val2 = host_view(i, 2);
       if (i >= std::get<0>(subRangeDim0) && i < std::get<1>(subRangeDim0)) {
         // is in subview
-        EXPECT_TRUE(std::fabs((val0 - 65536.0) / 65536.0) < 1e-14);
-        EXPECT_TRUE(std::fabs((val1 - 256.0) / 256.0) < 1e-14);
-        EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-14);
+        EXPECT_LT(std::fabs((val0 - 65536.0) / 65536.0), 1e-14);
+        EXPECT_LT(std::fabs((val1 - 256.0) / 256.0), 1e-14);
+        EXPECT_LT(std::fabs((val2 - 1.0) / 1.0), 1e-14);
       } else {
         // is outside of subview
         EXPECT_NEAR(val0, NumberType(1), 1e-14)
@@ -362,11 +362,11 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       auto val0 = host_view(i, 0);
       auto val1 = host_view(i, 1);
       auto val2 = host_view(i, 2);
-      EXPECT_TRUE(std::fabs((val0 - 4.0) / 4.0) < 1e-14)
+      EXPECT_LT(std::fabs((val0 - 4.0) / 4.0), 1e-14)
           << "Data differs at index " << i;
-      EXPECT_TRUE(std::fabs((val1 - 2.0) / 2.0) < 1e-14)
+      EXPECT_LT(std::fabs((val1 - 2.0) / 2.0), 1e-14)
           << "Data differs at index " << i;
-      EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-14)
+      EXPECT_LT(std::fabs((val2 - 1.0) / 1.0), 1e-14)
           << "Data differs at index " << i;
     }
   }
@@ -385,11 +385,11 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       auto val2 = host_view(i, 2);
       if (i >= std::get<0>(subRangeDim0) && i < std::get<1>(subRangeDim0)) {
         // is in subview
-        EXPECT_TRUE(std::fabs((val0 - 4.0) / 4.0) < 1e-14)
+        EXPECT_LT(std::fabs((val0 - 4.0) / 4.0), 1e-14)
             << "Data differs at index " << i;
-        EXPECT_TRUE(std::fabs((val1 - 2.0) / 2.0) < 1e-14)
+        EXPECT_LT(std::fabs((val1 - 2.0) / 2.0), 1e-14)
             << "Data differs at index " << i;
-        EXPECT_TRUE(std::fabs((val2 - 1.0) / 1.0) < 1e-14)
+        EXPECT_LT(std::fabs((val2 - 1.0) / 1.0), 1e-14)
             << "Data differs at index " << i;
       } else {
         // is outside of subview
@@ -467,11 +467,11 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       auto val0 = host_view(i, 0);
       auto val1 = host_view(i, 1);
       auto val2 = host_view(i, 2);
-      EXPECT_TRUE(std::fabs((val0 - 16.0) / 16.0) < 1e-14)
+      EXPECT_LT(std::fabs((val0 - 16.0) / 16.0), 1e-14)
           << "Data differs at index " << i;
-      EXPECT_TRUE(std::fabs((val1 - 8.0) / 8.0) < 1e-14)
+      EXPECT_LT(std::fabs((val1 - 8.0) / 8.0), 1e-14)
           << "Data differs at index " << i;
-      EXPECT_TRUE(std::fabs((val2 - 4.0) / 4.0) < 1e-14)
+      EXPECT_LT(std::fabs((val2 - 4.0) / 4.0), 1e-14)
           << "Data differs at index " << i;
     }
   }
@@ -490,11 +490,11 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       auto val2 = host_view(i, 2);
       if (i >= std::get<0>(subRangeDim0) && i < std::get<1>(subRangeDim0)) {
         // is in subview
-        EXPECT_TRUE(std::fabs((val0 - 16.0) / 16.0) < 1e-14)
+        EXPECT_LT(std::fabs((val0 - 16.0) / 16.0), 1e-14)
             << "Data differs at index " << i;
-        EXPECT_TRUE(std::fabs((val1 - 8.0) / 8.0) < 1e-14)
+        EXPECT_LT(std::fabs((val1 - 8.0) / 8.0), 1e-14)
             << "Data differs at index " << i;
-        EXPECT_TRUE(std::fabs((val2 - 4.0) / 4.0) < 1e-14)
+        EXPECT_LT(std::fabs((val2 - 4.0) / 4.0), 1e-14)
             << "Data differs at index " << i;
       } else {
         // is outside of subview

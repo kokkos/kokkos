@@ -195,7 +195,7 @@ void verify_data(ViewType1 data_view,  // contains data
       //           << std::abs(gold_h(i) - test_view_h(i)) << std::endl;
 
       if (std::is_same<gold_view_value_type, int>::value) {
-        EXPECT_TRUE(gold_h(i) == test_view_h(i));
+        EXPECT_EQ(gold_h(i), test_view_h(i));
       } else {
         const auto error = std::abs(gold_h(i) - test_view_h(i));
         if (error > 1e-10) {
@@ -203,7 +203,7 @@ void verify_data(ViewType1 data_view,  // contains data
                     << " " << gold_h(i) << " " << test_view_h(i) << " "
                     << std::abs(gold_h(i) - test_view_h(i)) << std::endl;
         }
-        EXPECT_TRUE(error < 1e-10);
+        EXPECT_LT(error, 1e-10);
       }
     }
     // std::cout << " last el: " << test_view_h(test_view_h.extent(0)-1) <<
@@ -257,7 +257,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     auto r = KE::transform_exclusive_scan(
         exespace(), KE::cbegin(view_from), KE::cend(view_from),
         KE::begin(view_dest), init_value, bop, uop);
-    EXPECT_TRUE(r == KE::end(view_dest));
+    EXPECT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -266,7 +266,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     auto r = KE::transform_exclusive_scan(
         "label", exespace(), KE::cbegin(view_from), KE::cend(view_from),
         KE::begin(view_dest), init_value, bop, uop);
-    EXPECT_TRUE(r == KE::end(view_dest));
+    EXPECT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -274,7 +274,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     fill_zero(view_dest);
     auto r = KE::transform_exclusive_scan(exespace(), view_from, view_dest,
                                           init_value, bop, uop);
-    EXPECT_TRUE(r == KE::end(view_dest));
+    EXPECT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -282,7 +282,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     fill_zero(view_dest);
     auto r = KE::transform_exclusive_scan("label", exespace(), view_from,
                                           view_dest, init_value, bop, uop);
-    EXPECT_TRUE(r == KE::end(view_dest));
+    EXPECT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
