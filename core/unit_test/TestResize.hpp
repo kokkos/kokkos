@@ -167,7 +167,7 @@ void impl_testResize() {
         break;
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int**, DeviceType>;
@@ -190,7 +190,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int***, DeviceType>;
@@ -215,7 +215,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int****, DeviceType>;
@@ -242,7 +242,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int*****, DeviceType>;
@@ -274,7 +274,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int******, DeviceType>;
@@ -308,7 +308,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int*******, DeviceType>;
@@ -344,7 +344,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
   {
     using view_type = Kokkos::View<int********, DeviceType>;
