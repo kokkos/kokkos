@@ -382,7 +382,7 @@ void impl_testResize() {
         }
       }
     }
-    EXPECT_EQ(test, true);
+    EXPECT_TRUE(test);
   }
 }
 
