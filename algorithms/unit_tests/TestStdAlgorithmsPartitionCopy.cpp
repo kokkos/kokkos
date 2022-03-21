@@ -180,38 +180,38 @@ void verify_data(const std::string& name, ResultType my_result,
   }
 
   if (name == "empty") {
-    EXPECT_EQ(my_diff_true, 0);
-    EXPECT_EQ(my_diff_false, 0);
+    EXPECT_EQ(my_diff_true, 0u);
+    EXPECT_EQ(my_diff_false, 0u);
   }
 
   else if (name == "one-element-a") {
-    EXPECT_EQ(my_diff_true, 0);
-    EXPECT_EQ(my_diff_false, 1);
+    EXPECT_EQ(my_diff_true, 0u);
+    EXPECT_EQ(my_diff_false, 1u);
   }
 
   else if (name == "one-element-b") {
-    EXPECT_EQ(my_diff_true, 1);
-    EXPECT_EQ(my_diff_false, 0);
+    EXPECT_EQ(my_diff_true, 1u);
+    EXPECT_EQ(my_diff_false, 0u);
   }
 
   else if (name == "two-elements-a") {
-    EXPECT_EQ(my_diff_true, 1);
-    EXPECT_EQ(my_diff_false, 1);
+    EXPECT_EQ(my_diff_true, 1u);
+    EXPECT_EQ(my_diff_false, 1u);
   }
 
   else if (name == "two-elements-b") {
-    EXPECT_EQ(my_diff_true, 1);
-    EXPECT_EQ(my_diff_false, 1);
+    EXPECT_EQ(my_diff_true, 1u);
+    EXPECT_EQ(my_diff_false, 1u);
   }
 
   else if (name == "small-b") {
-    EXPECT_EQ(my_diff_true, 13);
-    EXPECT_EQ(my_diff_false, 0);
+    EXPECT_EQ(my_diff_true, 13u);
+    EXPECT_EQ(my_diff_false, 0u);
   }
 
   else if (name == "small-c") {
-    EXPECT_EQ(my_diff_true, 0);
-    EXPECT_EQ(my_diff_false, 15);
+    EXPECT_EQ(my_diff_true, 0u);
+    EXPECT_EQ(my_diff_false, 15u);
   }
 }
 

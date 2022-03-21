@@ -180,7 +180,7 @@ void test_iter_swap(ViewType view) {
   using value_type = typename ViewType::value_type;
   auto a_dc        = create_deep_copyable_compatible_clone(view);
   auto a_h         = create_mirror_view_and_copy(Kokkos::HostSpace(), a_dc);
-  EXPECT_EQ(view.extent(0), 10);
+  EXPECT_EQ(view.extent_int(0), 10);
   EXPECT_EQ(a_h(0), value_type(3));
   EXPECT_EQ(a_h(1), value_type(1));
   EXPECT_EQ(a_h(2), value_type(2));
