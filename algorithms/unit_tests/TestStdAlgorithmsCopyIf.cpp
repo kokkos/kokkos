@@ -220,7 +220,8 @@ void verify_data(const std::string& name, ViewTypeFrom view_from,
     std::size_t count = 0;
     for (std::size_t i = 0; i < view_from_h.extent(0); ++i) {
       if (pred(view_from_h(i))) {
-        EXPECT_EQ(view_test_h(count++), view_from_h(i));
+        EXPECT_EQ(view_test_h(count), view_from_h(i));
+        count++;
       }
     }
     // all other entries of test view should be zero
