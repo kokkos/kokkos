@@ -191,10 +191,9 @@ __device__ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_excha
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-__device__
-    typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type
-    atomic_compare_exchange(
-        T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
+__device__ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type
+atomic_compare_exchange(
+    T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid dead lock in a warp or wave front
   T return_val;
   int done = 0;
@@ -221,9 +220,8 @@ __device__
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-__device__
-    typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type
-    atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
+__device__ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type
+atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid dead lock in a warp or wave front
   T return_val;
   int done = 0;
