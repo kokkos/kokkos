@@ -45,12 +45,7 @@
 #ifndef KOKKOS_UNITTEST_MEMPOOL_HPP
 #define KOKKOS_UNITTEST_MEMPOOL_HPP
 
-#include <cstdio>
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-
-#include <Kokkos_Timer.hpp>
+#include <Kokkos_Core.hpp>
 
 namespace TestMemoryPool {
 
