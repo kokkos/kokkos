@@ -33,9 +33,11 @@ struct atomic_exchange_available_gcc {
 }  // namespace Impl
 
 #if defined(__clang__) && (__clang_major__ >= 7) && !defined(__APPLE__)
+// clang-format off
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
-// error: large atomic operation may incur significant performance penalty
-// [-Werror,-Watomic-alignment] https://godbolt.org/z/G7YhqhbG6
+// error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
+// https://godbolt.org/z/G7YhqhbG6
+// clang-format on
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif

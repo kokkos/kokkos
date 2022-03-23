@@ -6,8 +6,8 @@ Source: https://github.com/desul/desul
 SPDX-License-Identifier: (BSD-3-Clause)
 */
 
-#ifndef DESUL_ATORMICS_LOCK_ARRAY_HIP_HPP_
-#define DESUL_ATORMICS_LOCK_ARRAY_HIP_HPP_
+#ifndef DESUL_ATOMICS_LOCK_ARRAY_HIP_HPP_
+#define DESUL_ATOMICS_LOCK_ARRAY_HIP_HPP_
 
 #include "desul/atomics/Common.hpp"
 #include "desul/atomics/Macros.hpp"
@@ -39,8 +39,8 @@ extern int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h;
 ///
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
-///   snappshotted version while also linking against pure Desul
-template <typename T = int>
+///   snapshotted version while also linking against pure Desul
+template <typename /*AlwaysInt*/ = int>
 void init_lock_arrays_hip();
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
@@ -48,8 +48,8 @@ void init_lock_arrays_hip();
 ///
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
-///   snappshotted version while also linking against pure Desul
-template <typename T = int>
+///   snapshotted version while also linking against pure Desul
+template <typename /*AlwaysInt*/ = int>
 void finalize_lock_arrays_hip();
 }  // namespace Impl
 }  // namespace desul

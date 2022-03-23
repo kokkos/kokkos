@@ -9,8 +9,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_OPENMP_HPP_
 #include <omp.h>
 
-#include <cstdio>
-
 #include "desul/atomics/Common.hpp"
 
 #ifdef DESUL_HAVE_OPENMP_ATOMICS
@@ -104,8 +102,9 @@ std::enable_if_t<Impl::atomic_always_lock_free(sizeof(T)), T> atomic_compare_exc
 
 #if defined(__clang__) && (__clang_major__ >= 7)
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
-// error: large atomic operation may incur significant performance penalty
-// [-Werror,-Watomic-alignment]
+// clang-format off
+// error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
+// clang-format on
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif

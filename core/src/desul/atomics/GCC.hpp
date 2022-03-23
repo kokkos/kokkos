@@ -97,8 +97,9 @@ std::enable_if_t<!Impl::atomic_exchange_available_gcc<T>::value, T> atomic_excha
     MemoryOrder /*order*/,
     MemoryScope scope) {
   // Acquire a lock for the address
-  while (!Impl::lock_address((void*)dest, scope)) {
-  }
+  // clang-format off
+  while (!Impl::lock_address((void*)dest, scope)) {}
+  // clang-format on
 
   atomic_thread_fence(MemoryOrderAcquire(), scope);
   T return_val = *dest;
@@ -116,8 +117,9 @@ atomic_compare_exchange(T* const dest,
                         MemoryOrder /*order*/,
                         MemoryScope scope) {
   // Acquire a lock for the address
-  while (!Impl::lock_address((void*)dest, scope)) {
-  }
+  // clang-format off
+  while (!Impl::lock_address((void*)dest, scope)) {}
+  // clang-format on
 
   atomic_thread_fence(MemoryOrderAcquire(), scope);
   T return_val = *dest;
