@@ -164,10 +164,10 @@ atomic_exchange(T* const dest, T value, MemoryOrderAcqRel, MemoryScope) {
 template <typename T, class MemoryScope>
 __device__ typename std::enable_if<sizeof(T) == 4 || sizeof(T) == 8, T>::type
 atomic_exchange(T* const dest, T value, MemoryOrderSeqCst, MemoryScope) {
-          atomic_thread_fence(MemoryOrderAcquire(), MemoryScope());
-            T return_val = atomic_exchange(dest, value, MemoryOrderRelaxed(), MemoryScope());
-              atomic_thread_fence(MemoryOrderRelease(), MemoryScope());
-                return reinterpret_cast<T&>(return_val);
+  atomic_thread_fence(MemoryOrderAcquire(), MemoryScope());
+  T return_val = atomic_exchange(dest, value, MemoryOrderRelaxed(), MemoryScope());
+  atomic_thread_fence(MemoryOrderRelease(), MemoryScope());
+  return reinterpret_cast<T&>(return_val);
 }
 
 template <typename T, class MemoryScope>

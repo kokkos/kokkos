@@ -40,7 +40,7 @@ extern int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h;
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
 ///   snappshotted version while also linking against pure Desul
-template<typename T = int>
+template <typename T = int>
 void init_lock_arrays_hip();
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
@@ -49,7 +49,7 @@ void init_lock_arrays_hip();
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
 ///   snappshotted version while also linking against pure Desul
-template<typename T = int>
+template <typename T = int>
 void finalize_lock_arrays_hip();
 }  // namespace Impl
 }  // namespace desul
@@ -147,17 +147,18 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 /* It is critical that this code be a macro, so that it will
    capture the right address for g_device_hip_lock_arrays!
    putting this in an inline function will NOT do the right thing! */
-#define DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()                               \
-  {                                                                               \
-    if (::desul::Impl::lock_array_copied == 0) {                                  \
-      (void) hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE), \
-                        &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,          \
-                        sizeof(int32_t*));                                        \
-      (void) hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE),   \
-                        &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE_h,            \
-                        sizeof(int32_t*));                                        \
-    }                                                                             \
-    ::desul::Impl::lock_array_copied = 1;                                         \
+#define DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()                                   \
+  {                                                                                   \
+    if (::desul::Impl::lock_array_copied == 0) {                                      \
+      (void)hipMemcpyToSymbol(                                                        \
+          HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE),                   \
+          &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,                            \
+          sizeof(int32_t*));                                                          \
+      (void)hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE), \
+                              &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE_h,          \
+                              sizeof(int32_t*));                                      \
+    }                                                                                 \
+    ::desul::Impl::lock_array_copied = 1;                                             \
   }
 
 #endif

@@ -41,7 +41,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::local_space>
-    dest_ref(*reinterpret_cast<unsigned int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned int*>(dest));
     dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned int*>(&compare),
                                      *reinterpret_cast<unsigned int*>(&value));
     return compare;
@@ -50,7 +50,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::global_space>
-    dest_ref(*reinterpret_cast<unsigned int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned int*>(dest));
     dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned int*>(&compare),
                                      *reinterpret_cast<unsigned int*>(&value));
     return compare;
@@ -67,7 +67,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::local_space>
-    dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
     dest_ref.compare_exchange_strong(
         *reinterpret_cast<unsigned long long int*>(&compare),
         *reinterpret_cast<unsigned long long int*>(&value));
@@ -77,7 +77,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::global_space>
-    dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
     dest_ref.compare_exchange_strong(
         *reinterpret_cast<unsigned long long int*>(&compare),
         *reinterpret_cast<unsigned long long int*>(&value));
@@ -98,7 +98,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(T* const dest,
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::local_space>
-    dest_ref(*reinterpret_cast<unsigned int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned int*>(dest));
     unsigned int return_val =
         dest_ref.exchange(*reinterpret_cast<unsigned int*>(&value));
     return reinterpret_cast<T&>(return_val);
@@ -107,7 +107,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(T* const dest,
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::global_space>
-    dest_ref(*reinterpret_cast<unsigned int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned int*>(dest));
     unsigned int return_val =
         dest_ref.exchange(*reinterpret_cast<unsigned int*>(&value));
     return reinterpret_cast<T&>(return_val);
@@ -126,7 +126,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(T* const dest,
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::local_space>
-    dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
     unsigned long long int return_val =
         dest_ref.exchange(*reinterpret_cast<unsigned long long int*>(&value));
     return reinterpret_cast<T&>(return_val);
@@ -135,7 +135,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(T* const dest,
                           MemoryOrder,
                           MemoryScopeDevice,
                           sycl::access::address_space::global_space>
-    dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
+        dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
     unsigned long long int return_val =
         dest_ref.exchange(*reinterpret_cast<unsigned long long int*>(&value));
     return reinterpret_cast<T&>(return_val);
@@ -151,7 +151,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
                         MemoryOrder,
                         MemoryScope,
                         sycl::access::address_space::global_space>
-  dest_ref(*reinterpret_cast<unsigned int*>(dest));
+      dest_ref(*reinterpret_cast<unsigned int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned int*>(&compare),
                                    *reinterpret_cast<unsigned int*>(&value));
   return compare;
@@ -165,7 +165,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
                         MemoryOrder,
                         MemoryScope,
                         sycl::access::address_space::global_space>
-  dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
+      dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned long long int*>(&compare),
                                    *reinterpret_cast<unsigned long long int*>(&value));
   return compare;
@@ -182,7 +182,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(T* const dest,
                         MemoryOrder,
                         MemoryScope,
                         sycl::access::address_space::global_space>
-  dest_ref(*reinterpret_cast<unsigned int*>(dest));
+      dest_ref(*reinterpret_cast<unsigned int*>(dest));
   unsigned int return_val = dest_ref.exchange(*reinterpret_cast<unsigned int*>(&value));
   return reinterpret_cast<T&>(return_val);
 }
@@ -197,7 +197,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(T* const dest,
                         MemoryOrder,
                         MemoryScope,
                         sycl::access::address_space::global_space>
-  dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
+      dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
   unsigned long long int return_val =
       dest_ref.exchange(reinterpret_cast<unsigned long long int&>(value));
   return reinterpret_cast<T&>(return_val);
