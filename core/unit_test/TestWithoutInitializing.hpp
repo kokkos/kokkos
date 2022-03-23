@@ -96,3 +96,122 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
+
+namespace {
+struct NonTriviallyCopyable {
+  KOKKOS_FUNCTION NonTriviallyCopyable() {}
+  KOKKOS_FUNCTION NonTriviallyCopyable(const NonTriviallyCopyable&) {}
+};
+}  // namespace
+
+TEST(TEST_CATEGORY, view_alloc) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::View<NonTriviallyCopyable*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_existence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc("bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, view_alloc_exec_space) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::View<NonTriviallyCopyable*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, view_alloc_int) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_existence(
+      [&]() {
+        view_type inner_view("bla", 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}

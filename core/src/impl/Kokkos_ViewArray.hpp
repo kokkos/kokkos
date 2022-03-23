@@ -350,7 +350,8 @@ class ViewMapping<Traits, Kokkos::Array<>> {
   template <class... P>
   Kokkos::Impl::SharedAllocationRecord<> *allocate_shared(
       Kokkos::Impl::ViewCtorProp<P...> const &arg_prop,
-      typename Traits::array_layout const &arg_layout) {
+      typename Traits::array_layout const &arg_layout,
+      bool execution_space_specified) {
     using alloc_prop = Kokkos::Impl::ViewCtorProp<P...>;
 
     using execution_space = typename alloc_prop::execution_space;
@@ -386,12 +387,18 @@ class ViewMapping<Traits, Kokkos::Array<>> {
 
       if (alloc_prop::initialize) {
         // The functor constructs and destroys
-        record->m_destroy = functor_type(
-            static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const
-                            &>(arg_prop)
-                .value,
-            (pointer_type)m_impl_handle, m_impl_offset.span() * Array_N,
-            alloc_name);
+        if (execution_space_specified)
+          record->m_destroy = functor_type(
+              static_cast<
+                  Kokkos::Impl::ViewCtorProp<void, execution_space> const &>(
+                  arg_prop)
+                  .value,
+              (pointer_type)m_impl_handle, m_impl_offset.span() * Array_N,
+              alloc_name);
+        else
+          record->m_destroy =
+              functor_type((pointer_type)m_impl_handle,
+                           m_impl_offset.span() * Array_N, alloc_name);
 
         record->m_destroy.construct_shared_allocation();
       }
