@@ -458,7 +458,7 @@ struct _wrap_with_kokkos_sum {
 template <class Space, class T>
 struct _wrap_with_kokkos_sum<
     Space, T, typename std::enable_if<Kokkos::is_view<T>::value>::type> {
-  using type = Kokkos::Sum<typename T::value_type, Space>;
+  using type = Kokkos::Sum<typename T::value_type, typename T::memory_space>;
 };
 
 // TODO better error message for the case when a const& to a scalar is passed in
