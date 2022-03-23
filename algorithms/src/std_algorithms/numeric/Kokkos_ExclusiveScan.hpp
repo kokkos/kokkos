@@ -61,18 +61,22 @@ template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
 struct ExclusiveScanDefaultFunctorNoInit {
   using execution_space = ExeSpace;
+
+  ValueType m_init_value;
   FirstFrom m_first_from;
   FirstDest m_first_dest;
 
   KOKKOS_FUNCTION
-  ExclusiveScanDefaultFunctorNoInit(FirstFrom first_from, FirstDest first_dest)
-      : m_first_from(std::move(first_from)),
+  ExclusiveScanDefaultFunctorNoInit(ValueType init, FirstFrom first_from,
+                                    FirstDest first_dest)
+      : m_init_value(std::move(init)),
+        m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)) {}
 
   KOKKOS_FUNCTION
   void operator()(const IndexType i, ValueType& update,
                   const bool final_pass) const {
-    if (final_pass) m_first_dest[i] = update;
+    if (final_pass) m_first_dest[i] = update + m_init_value;
     update += m_first_from[i];
   }
 };
@@ -260,6 +264,11 @@ OutputIteratorType transform_exclusive_scan_impl(
 // --------------------------------------------------
 // exclusive_scan_default_op_impl
 // --------------------------------------------------
+
+template <typename ValueType>
+using has_reduction_identity_sum_t =
+    decltype(Kokkos::reduction_identity<ValueType>::sum());
+
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
 OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
@@ -305,10 +314,10 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  if (init_value == ::Kokkos::reduction_identity<ValueType>::sum())
-    ::Kokkos::parallel_scan(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            func_type_no_init(first_from, first_dest));
+  if (::Kokkos::is_detected<has_reduction_identity_sum_t, ValueType>::value)
+    ::Kokkos::parallel_scan(
+        label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+        func_type_no_init(init_value, first_from, first_dest));
   else
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
