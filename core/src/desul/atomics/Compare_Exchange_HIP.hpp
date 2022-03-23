@@ -13,7 +13,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
 namespace desul {
-#if defined(__HIP_DEVICE_COMPILE__)
 inline __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeDevice) {
   __threadfence();
 }
@@ -192,7 +191,7 @@ __device__ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_excha
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION __device__
+__device__
     typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type
     atomic_compare_exchange(
         T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
@@ -222,7 +221,7 @@ DESUL_INLINE_FUNCTION __device__
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION __device__
+__device__
     typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type
     atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid dead lock in a warp or wave front
@@ -247,7 +246,6 @@ DESUL_INLINE_FUNCTION __device__
   }
   return return_val;
 }
-#endif
 }  // namespace desul
 #endif
 #endif
