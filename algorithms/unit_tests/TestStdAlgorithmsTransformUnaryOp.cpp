@@ -88,7 +88,7 @@ void verify_data(ViewTypeFrom view_from, ViewTypeTest view_test) {
       create_mirror_view_and_copy(Kokkos::HostSpace(), view_from_dc);
 
   for (std::size_t i = 0; i < view_test_h.extent(0); ++i) {
-    EXPECT_TRUE(view_test_h(i) == view_from_h(i) + value_type(1));
+    EXPECT_EQ(view_test_h(i), view_from_h(i) + value_type(1));
   }
 }
 
