@@ -1719,8 +1719,8 @@ struct ParallelReduceFence {
  *    using value_type = <podType>;
  *    void operator()( <intType> iwork , <podType> & update ) const ;
  *    void init( <podType> & update ) const ;
- *    void join( volatile       <podType> & update ,
- *               volatile const <podType> & input ) const ;
+ *    void join(       <podType> & update ,
+ *               const <podType> & input ) const ;
  *
  *    void final( <podType> & update ) const ;
  *  };
@@ -1735,8 +1735,8 @@ struct ParallelReduceFence {
  *    using value_type = <podType>[];
  *    void operator()( <intType> , <podType> update[] ) const ;
  *    void init( <podType> update[] ) const ;
- *    void join( volatile       <podType> update[] ,
- *               volatile const <podType> input[] ) const ;
+ *    void join(       <podType> update[] ,
+ *               const <podType> input[] ) const ;
  *
  *    void final( <podType> update[] ) const ;
  *  };

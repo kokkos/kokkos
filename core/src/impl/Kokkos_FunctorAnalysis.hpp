@@ -90,6 +90,25 @@ struct DeduceFunctorPatternInterface<ParallelScanWithTotal<
   using type = FunctorPatternInterface::SCAN;
 };
 
+template <typename T>
+KOKKOS_INLINE_FUNCTION void volatile_preload(const volatile T* src,
+                                             size_t count) {
+#if defined(__CUDA_ARCH__)
+  // Ensure that subsequent code in this thread that may do
+  // non-`volatile` loads through `src` will not see stale
+  // non-coherent values in the cache by forcing `volatile` loads to
+  // precede it
+  auto ct         = reinterpret_cast<const volatile char*>(src);
+  unsigned char c = 0;
+  for (size_t i = 0; i < count * sizeof(T); ++i) {
+    c += ct[i];  // I'd rather avoid the addition, but this quiets the unused
+                 // variable warning about `c`
+  }
+
+  __threadfence();
+#endif
+}
+
 /** \brief  Query Functor and execution policy argument tag for value type.
  *
  *  If 'value_type' is not explicitly declared in the functor
@@ -403,37 +422,35 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_join_no_tag_function<F, /*is_array*/ false> {
-    using vref_type  = volatile ValueType&;
-    using cvref_type = const volatile ValueType&;
+    using ref_type  = ValueType&;
+    using cref_type = const ValueType&;
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(vref_type,
-                                                             cvref_type) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
+                                                             cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(vref_type,
-                                                          cvref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
-      f->join(*dst, *src);
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      volatile_preload(src, 1);
+      f->join(*const_cast<ValueType*>(dst), *const_cast<const ValueType*>(src));
     }
   };
 
   template <class F>
   struct has_join_no_tag_function<F, /*is_array*/ true> {
-    using vref_type  = volatile ValueType*;
-    using cvref_type = const volatile ValueType*;
+    using ref_type  = ValueType*;
+    using cref_type = const ValueType*;
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(vref_type,
-                                                             cvref_type) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
+                                                             cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(vref_type,
-                                                          cvref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
-      f->join(dst, src);
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      volatile_preload(src, value_count(*f));
+      f->join(const_cast<ValueType*>(dst), const_cast<const ValueType*>(src));
     }
   };
 
@@ -442,53 +459,53 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_join_tag_function<F, /*is_array*/ false> {
-    using vref_type  = volatile ValueType&;
-    using cvref_type = const volatile ValueType&;
+    using ref_type  = ValueType&;
+    using cref_type = const ValueType&;
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, vref_type,
-                                                             cvref_type) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ref_type,
+                                                             cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, vref_type,
-                                                          cvref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ref_type,
+                                                          cref_type));
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
-                                                             vref_type,
-                                                             cvref_type) const);
+                                                             ref_type,
+                                                             cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          vref_type,
-                                                          cvref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
+                                                          cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
-      f->join(WTag(), *dst, *src);
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      volatile_preload(src, 1);
+      f->join(WTag(), *const_cast<ValueType*>(dst),
+              *const_cast<const ValueType*>(src));
     }
   };
 
   template <class F>
   struct has_join_tag_function<F, /*is_array*/ true> {
-    using vref_type  = volatile ValueType*;
-    using cvref_type = const volatile ValueType*;
+    using ref_type  = ValueType*;
+    using cref_type = const ValueType*;
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, vref_type,
-                                                             cvref_type) const);
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ref_type,
+                                                             cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, vref_type,
-                                                          cvref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ref_type,
+                                                          cref_type));
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
-                                                             vref_type,
-                                                             cvref_type) const);
+                                                             ref_type,
+                                                             cref_type) const);
 
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&,
-                                                          vref_type,
-                                                          cvref_type));
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
+                                                          cref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
-      f->join(WTag(), dst, src);
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      volatile_preload(src, value_count(*f));
+      f->join(WTag(), const_cast<ValueType*>(dst),
+              const_cast<const ValueType*>(src));
     }
   };
 
@@ -496,11 +513,13 @@ struct FunctorAnalysis {
   struct DeduceJoinNoTag {
     enum : bool { value = false };
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
       const int n = FunctorAnalysis::value_count(*f);
-      for (int i = 0; i < n; ++i) dst[i] += src[i];
+      volatile_preload(src, n);
+      auto nv_dst = const_cast<ValueType*>(dst);
+      auto nv_src = const_cast<const ValueType*>(src);
+      for (int i = 0; i < n; ++i) nv_dst[i] += nv_src[i];
     }
   };
 
@@ -816,8 +835,7 @@ struct FunctorAnalysis {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(ValueType volatile* dst, ValueType volatile const* src) const
-        noexcept {
+    void join(ValueType* dst, ValueType const* src) const noexcept {
       DeduceJoin<>::join(m_functor, dst, src);
     }
 
