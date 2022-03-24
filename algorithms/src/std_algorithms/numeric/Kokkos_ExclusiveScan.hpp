@@ -304,24 +304,19 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
 
   // aliases
   using index_type = typename InputIteratorType::difference_type;
-  using func_type_no_init =
+  using func_type  = std::conditional_t<
+      ::Kokkos::is_detected<has_reduction_identity_sum_t, ValueType>::value,
       ExclusiveScanDefaultFunctorNoInit<ExecutionSpace, index_type, ValueType,
-                                        InputIteratorType, OutputIteratorType>;
-  using func_type =
+                                        InputIteratorType, OutputIteratorType>,
       ExclusiveScanDefaultFunctor<ExecutionSpace, index_type, ValueType,
-                                  InputIteratorType, OutputIteratorType>;
+                                  InputIteratorType, OutputIteratorType>>;
 
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  if (::Kokkos::is_detected<has_reduction_identity_sum_t, ValueType>::value)
-    ::Kokkos::parallel_scan(
-        label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-        func_type_no_init(init_value, first_from, first_dest));
-  else
-    ::Kokkos::parallel_scan(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            func_type(init_value, first_from, first_dest));
+  ::Kokkos::parallel_scan(label,
+                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                          func_type(init_value, first_from, first_dest));
 
   ex.fence("Kokkos::exclusive_scan_default_op: fence after operation");
 
