@@ -104,8 +104,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 8> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -200,8 +199,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -278,8 +276,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -354,8 +351,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -442,8 +438,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -512,8 +507,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -605,8 +599,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 
@@ -681,8 +674,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &update,
-                   const volatile value_type &input) {
+  static void join(value_type &update, const value_type &input) {
     update |= input;
   }
 

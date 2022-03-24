@@ -295,7 +295,7 @@ class ReduceTeamFunctor {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type &dst, const volatile value_type &src) const {
+  void join(value_type &dst, const value_type &src) const {
     dst.value[0] += src.value[0];
     dst.value[1] += src.value[1];
     dst.value[2] += src.value[2];
@@ -394,8 +394,7 @@ class ScanTeamFunctor {
   void init(value_type &error) const { error = 0; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type volatile &error,
-            value_type volatile const &input) const {
+  void join(value_type &error, value_type const &input) const {
     if (input) error = 1;
   }
 
@@ -403,8 +402,7 @@ class ScanTeamFunctor {
     using value_type = int64_t;
 
     KOKKOS_INLINE_FUNCTION
-    void join(value_type volatile &dst,
-              value_type volatile const &input) const {
+    void join(value_type &dst, value_type const &input) const {
       if (dst < input) dst = input;
     }
   };
