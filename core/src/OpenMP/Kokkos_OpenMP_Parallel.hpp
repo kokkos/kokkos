@@ -49,7 +49,7 @@
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 #include <omp.h>
-#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -80,7 +80,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
 
@@ -139,7 +139,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
       return;
     }
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
 #ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
 #else
@@ -193,7 +193,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using iterate_type = typename Kokkos::Impl::HostIterateTile<
       MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy;  // construct as RangePolicy( 0, num_tiles
@@ -240,7 +240,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       return;
     }
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
 #ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
 #else
@@ -326,7 +326,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   const ReducerType m_reducer;
@@ -368,7 +368,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -497,7 +497,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
                                              WorkTag, reference_type>;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy;  // construct as RangePolicy( 0, num_tiles
@@ -520,7 +520,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -658,7 +658,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
 
@@ -683,7 +683,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_scan");
 
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
@@ -768,7 +768,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   ReturnType& m_returnvalue;
@@ -794,7 +794,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_scan");
 
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
@@ -890,7 +890,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using SchedTag = typename Policy::schedule_type::type;
   using Member   = typename Policy::member_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   const size_t m_shmem_size;
@@ -937,7 +937,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
 
     const size_t pool_reduce_size  = 0;  // Never shrinks
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE * m_policy.team_size();
@@ -1023,7 +1023,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   const ReducerType m_reducer;
@@ -1082,7 +1082,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
       return;
     }
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
