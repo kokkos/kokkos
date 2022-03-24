@@ -310,12 +310,12 @@ class SharedAllocationRecord
     : public SharedAllocationRecord<MemorySpace, void> {
  private:
   template <typename ExecutionSpace>
-  SharedAllocationRecord(const ExecutionSpace& exec_space,
+  SharedAllocationRecord(const ExecutionSpace& execution_space,
                          const MemorySpace& arg_space,
                          const std::string& arg_label, const size_t arg_alloc)
       /*  Allocate user memory as [ SharedAllocationHeader , user_memory ] */
       : SharedAllocationRecord<MemorySpace, void>(
-            exec_space, arg_space, arg_label, arg_alloc,
+            execution_space, arg_space, arg_label, arg_alloc,
             &Kokkos::Impl::deallocate<MemorySpace, DestroyFunctor>),
         m_destroy() {}
 
