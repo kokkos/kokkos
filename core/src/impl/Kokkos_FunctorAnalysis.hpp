@@ -90,10 +90,10 @@ struct DeduceFunctorPatternInterface<ParallelScanWithTotal<
   using type = FunctorPatternInterface::SCAN;
 };
 
+#if defined(__CUDA_ARCH__)
 template <typename T>
 KOKKOS_INLINE_FUNCTION void volatile_preload(const volatile T* src,
                                              size_t count) {
-#if defined(__CUDA_ARCH__)
   // Ensure that subsequent code in this thread that may do
   // non-`volatile` loads through `src` will not see stale
   // non-coherent values in the cache by forcing `volatile` loads to
@@ -106,8 +106,11 @@ KOKKOS_INLINE_FUNCTION void volatile_preload(const volatile T* src,
   }
 
   __threadfence();
-#endif
 }
+#else
+template <typename T>
+KOKKOS_INLINE_FUNCTION void volatile_preload(const volatile T*, size_t) {}
+#endif
 
 /** \brief  Query Functor and execution policy argument tag for value type.
  *
