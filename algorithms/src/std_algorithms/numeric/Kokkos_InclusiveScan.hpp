@@ -59,14 +59,14 @@ namespace Impl {
 
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
-struct InclusiveScanDefaultFunctor {
+struct InclusiveScanDefaultFunctorNoInit {
   using execution_space = ExeSpace;
 
   FirstFrom m_first_from;
   FirstDest m_first_dest;
 
   KOKKOS_FUNCTION
-  InclusiveScanDefaultFunctor(FirstFrom first_from, FirstDest first_dest)
+  InclusiveScanDefaultFunctorNoInit(FirstFrom first_from, FirstDest first_dest)
       : m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)) {}
 
@@ -78,6 +78,49 @@ struct InclusiveScanDefaultFunctor {
     if (final_pass) {
       m_first_dest[i] = update;
     }
+  }
+};
+
+template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
+          class FirstDest>
+struct InclusiveScanDefaultFunctor {
+  using execution_space = ExeSpace;
+  using value_type      = ValueWrapperForNoNeutralElement<ValueType>;
+
+  FirstFrom m_first_from;
+  FirstDest m_first_dest;
+
+  KOKKOS_FUNCTION
+  InclusiveScanDefaultFunctor(FirstFrom first_from, FirstDest first_dest)
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)) {}
+
+  KOKKOS_FUNCTION
+  void operator()(const IndexType i, value_type& update,
+                  const bool final_pass) const {
+    const auto tmp = value_type{m_first_from[i], false};
+    this->join(update, tmp);
+
+    if (final_pass) {
+      m_first_dest[i] = update.val;
+    }
+  }
+
+  KOKKOS_FUNCTION
+  void init(value_type& update) const {
+    update.val        = {};
+    update.is_initial = true;
+  }
+
+  KOKKOS_FUNCTION
+  void join(volatile value_type& update,
+            volatile const value_type& input) const {
+    if (update.is_initial) {
+      update.val = input.val;
+    } else {
+      update.val = update.val + input.val;
+    }
+    update.is_initial = false;
   }
 };
 
@@ -181,6 +224,10 @@ struct TransformInclusiveScanWithInitValueFunctor {
   }
 };
 
+template <typename ValueType>
+using has_reduction_identity_sum_t =
+    decltype(Kokkos::reduction_identity<ValueType>::sum());
+
 // -------------------------------------------------------------
 // inclusive_scan_default_op_impl
 // -------------------------------------------------------------
@@ -200,9 +247,15 @@ OutputIteratorType inclusive_scan_default_op_impl(
   using index_type = typename InputIteratorType::difference_type;
   using value_type =
       std::remove_const_t<typename InputIteratorType::value_type>;
-  using func_type =
+  using func_type_no_init =
+      InclusiveScanDefaultFunctorNoInit<ExecutionSpace, index_type, value_type,
+                                        InputIteratorType, OutputIteratorType>;
+  using func_type = std::conditional_t<
+      ::Kokkos::is_detected<has_reduction_identity_sum_t, value_type>::value,
+      InclusiveScanDefaultFunctorNoInit<ExecutionSpace, index_type, value_type,
+                                        InputIteratorType, OutputIteratorType>,
       InclusiveScanDefaultFunctor<ExecutionSpace, index_type, value_type,
-                                  InputIteratorType, OutputIteratorType>;
+                                  InputIteratorType, OutputIteratorType>>;
 
   // run
   const auto num_elements =
