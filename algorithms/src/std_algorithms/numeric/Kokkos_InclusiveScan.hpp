@@ -89,8 +89,7 @@ struct InclusiveScanDefaultFunctor {
   }
 
   KOKKOS_FUNCTION
-  void join(volatile value_type& update,
-            volatile const value_type& input) const {
+  void join(value_type& update, const value_type& input) const {
     if (update.is_initial) {
       update.val = input.val;
     } else {
@@ -137,8 +136,7 @@ struct TransformInclusiveScanNoInitValueFunctor {
   }
 
   KOKKOS_FUNCTION
-  void join(volatile value_type& update,
-            volatile const value_type& input) const {
+  void join(value_type& update, const value_type& input) const {
     if (update.is_initial) {
       update.val = input.val;
     } else {
@@ -189,8 +187,7 @@ struct TransformInclusiveScanWithInitValueFunctor {
   }
 
   KOKKOS_FUNCTION
-  void join(volatile value_type& update,
-            volatile const value_type& input) const {
+  void join(value_type& update, const value_type& input) const {
     if (update.is_initial) {
       update.val = input.val;
     } else {

@@ -193,8 +193,7 @@ struct StdPartitionCopyFunctor {
   }
 
   KOKKOS_FUNCTION
-  void join(volatile value_type& update,
-            volatile const value_type& input) const {
+  void join(value_type& update, const value_type& input) const {
     update.true_count_ += input.true_count_;
     update.false_count_ += input.false_count_;
   }

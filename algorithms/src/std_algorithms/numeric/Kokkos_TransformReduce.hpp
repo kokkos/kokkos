@@ -73,12 +73,6 @@ struct StdTranformReduceDefaultJoinFunctor {
   constexpr ValueType operator()(const ValueType& a, const ValueType& b) const {
     return a + b;
   }
-
-  KOKKOS_FUNCTION
-  constexpr ValueType operator()(const volatile ValueType& a,
-                                 const volatile ValueType& b) const {
-    return a + b;
-  }
 };
 
 template <class IteratorType, class ReducerType, class TransformType>
