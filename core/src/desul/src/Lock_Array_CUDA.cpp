@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -6,10 +6,10 @@ Source: https://github.com/desul/desul
 SPDX-License-Identifier: (BSD-3-Clause)
 */
 
-#include <desul/atomics/Lock_Array.hpp>
 #include <cinttypes>
-#include <string>
+#include <desul/atomics/Lock_Array.hpp>
 #include <sstream>
+#include <string>
 
 #ifdef DESUL_HAVE_CUDA_ATOMICS
 #ifdef __CUDACC_RDC__
@@ -17,7 +17,7 @@ namespace desul {
 namespace Impl {
 __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE = nullptr;
 __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE = nullptr;
-}
+}  // namespace Impl
 }  // namespace desul
 #endif
 
@@ -37,7 +37,6 @@ __global__ void init_lock_arrays_cuda_kernel() {
 
 namespace Impl {
 
-
 int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
@@ -46,27 +45,29 @@ int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 namespace {
 
 void check_error_and_throw_cuda(cudaError e, const std::string msg) {
-  if(e != cudaSuccess) {
+  if (e != cudaSuccess) {
     std::ostringstream out;
     out << "Desul::Error: " << msg << " error(" << cudaGetErrorName(e)
-                  << "): " << cudaGetErrorString(e);
+        << "): " << cudaGetErrorString(e);
     throw std::runtime_error(out.str());
   }
 }
 
-}
+}  // namespace
 
 // define functions
-template<typename T>
+template <typename T>
 void init_lock_arrays_cuda() {
   if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
   auto error_malloc1 = cudaMalloc(&CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
-                                 sizeof(int32_t) * (CUDA_SPACE_ATOMIC_MASK + 1));
-  check_error_and_throw_cuda(error_malloc1, "init_lock_arrays_cuda: cudaMalloc device locks");
+                                  sizeof(int32_t) * (CUDA_SPACE_ATOMIC_MASK + 1));
+  check_error_and_throw_cuda(error_malloc1,
+                             "init_lock_arrays_cuda: cudaMalloc device locks");
 
   auto error_malloc2 = cudaMallocHost(&CUDA_SPACE_ATOMIC_LOCKS_NODE_h,
-                                 sizeof(int32_t) * (CUDA_SPACE_ATOMIC_MASK + 1));
-  check_error_and_throw_cuda(error_malloc2, "init_lock_arrays_cuda: cudaMalloc host locks");
+                                      sizeof(int32_t) * (CUDA_SPACE_ATOMIC_MASK + 1));
+  check_error_and_throw_cuda(error_malloc2,
+                             "init_lock_arrays_cuda: cudaMalloc host locks");
 
   auto error_sync1 = cudaDeviceSynchronize();
   DESUL_IMPL_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE();
@@ -76,7 +77,7 @@ void init_lock_arrays_cuda() {
   check_error_and_throw_cuda(error_sync2, "init_lock_arrays_cuda: post init kernel");
 }
 
-template<typename T>
+template <typename T>
 void finalize_lock_arrays_cuda() {
   if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
   cudaFree(CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h);
