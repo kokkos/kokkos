@@ -2900,6 +2900,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
                    std::is_trivially_copy_assignable<ValueType>::value>
   construct_dispatch() {
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2911,7 +2914,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
-
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
@@ -2925,8 +2927,11 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (default_exec_space)
         space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation(false);
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -3015,6 +3020,9 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   construct_shared_allocation() {
     // Shortcut for zero initialization
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3040,8 +3048,11 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       if (default_exec_space)
         space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation();
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
