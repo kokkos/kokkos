@@ -1,0 +1,5 @@
+# Code owners for half_t and bhalf_t
+*_Half* @e10harvey @masterleinad @Rombur
+
+# Code owners for Cuda backend
+core/src/Cuda @crtrott @dalg24
