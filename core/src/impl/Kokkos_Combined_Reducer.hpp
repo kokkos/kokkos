@@ -203,10 +203,10 @@ KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
+    T&&) noexcept ->
     typename std::enable_if<is_view<typename std::decay<T>::type>::value,
                             typename std::decay<T>::type>::type::value_type {
-  return arg();
+  return typename std::decay<T>::type::value_type{};
 }
 
 template <class T>
@@ -294,13 +294,24 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     return m_value_view;
   }
 
-  KOKKOS_FUNCTION
+  template <int Idx, class View>
+  constexpr static void write_one_value_back(
+      View const& view, typename View::value_type const& value) noexcept {
+    if (Kokkos::SpaceAccessibility<typename View::memory_space,
+                                   Space>::assignable)
+      view() = value;
+    else
+      Kokkos::deep_copy(view, value);
+  }
+
   constexpr static void write_value_back_to_original_references(
       value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
     emulate_fold_comma_operator(
-        (reducers_that_reference_original_values.view()() =
-             value.template get<Idxs, typename Reducers::value_type>())...);
+        (write_one_value_back<Idxs>(
+             reducers_that_reference_original_values.view(),
+             value.template get<Idxs, typename Reducers::value_type>()),
+         0)...);
   }
 };
 

@@ -648,7 +648,7 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
 
   int64_t result1;
   Kokkos::deep_copy(result1, result1_v);
-  ASSERT_EQ(int64_t(nw), result1_v());
+  ASSERT_EQ(int64_t(nw), result1);
   ASSERT_EQ(int64_t(nsum), result2);
   ASSERT_EQ(int64_t(nsum), result3_v());
 }
