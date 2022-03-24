@@ -3904,10 +3904,6 @@ struct TestMDRange_ReduceScalar {
     void operator=(const volatile Scalar &src) volatile {
       for (int i = 0; i < 4; i++) v[i] = src.v[i];
     }
-    KOKKOS_INLINE_FUNCTION
-    void operator+=(const volatile Scalar &src) volatile {
-      for (int i = 0; i < 4; i++) v[i] += src.v[i];
-    }
   };
 
   static void test_scalar_reduce(const int N0, const int N1) {
