@@ -98,16 +98,6 @@ struct RandomProperties {
     max = add.max > max ? add.max : max;
     return *this;
   }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator+=(const volatile RandomProperties& add) volatile {
-    count += add.count;
-    mean += add.mean;
-    variance += add.variance;
-    covariance += add.covariance;
-    min = add.min < min ? add.min : min;
-    max = add.max > max ? add.max : max;
-  }
 };
 
 // FIXME_OPENMPTARGET: Need this for OpenMPTarget because contra to the standard
