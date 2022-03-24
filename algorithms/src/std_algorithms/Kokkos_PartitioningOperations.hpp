@@ -132,12 +132,6 @@ struct StdPartitionCopyScalar {
     false_count_ = other.false_count_;
   }
 
-  KOKKOS_FUNCTION
-  void operator=(const volatile StdPartitionCopyScalar& other) volatile {
-    true_count_  = other.true_count_;
-    false_count_ = other.false_count_;
-  }
-
   // this is needed for
   // OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp:699:21: error: no viable
   // overloaded '=' m_returnvalue = 0;
