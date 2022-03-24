@@ -334,9 +334,9 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
 // overload set 1
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
-                      InputIteratorType, OutputIteratorType>::value,
-                  OutputIteratorType>
+std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
+                     InputIteratorType, OutputIteratorType>::value,
+                 OutputIteratorType>
 exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                InputIteratorType last, OutputIteratorType first_dest,
                ValueType init_value) {
@@ -349,9 +349,9 @@ exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
-                      InputIteratorType, OutputIteratorType>::value,
-                  OutputIteratorType>
+std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
+                     InputIteratorType, OutputIteratorType>::value,
+                 OutputIteratorType>
 exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                InputIteratorType first, InputIteratorType last,
                OutputIteratorType first_dest, ValueType init_value) {
@@ -397,9 +397,9 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
 // overload set 2
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
-                      InputIteratorType, OutputIteratorType>::value,
-                  OutputIteratorType>
+std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
+                     InputIteratorType, OutputIteratorType>::value,
+                 OutputIteratorType>
 exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                InputIteratorType last, OutputIteratorType first_dest,
                ValueType init_value, BinaryOpType bop) {
@@ -413,9 +413,9 @@ exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
-                      InputIteratorType, OutputIteratorType>::value,
-                  OutputIteratorType>
+std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
+                     InputIteratorType, OutputIteratorType>::value,
+                 OutputIteratorType>
 exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                InputIteratorType first, InputIteratorType last,
                OutputIteratorType first_dest, ValueType init_value,
@@ -473,9 +473,9 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
-                      InputIteratorType, OutputIteratorType>::value,
-                  OutputIteratorType>
+std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
+                     InputIteratorType, OutputIteratorType>::value,
+                 OutputIteratorType>
 transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
                          InputIteratorType last, OutputIteratorType first_dest,
                          ValueType init_value, BinaryOpType binary_op,
@@ -491,9 +491,9 @@ transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
-std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
-                      InputIteratorType, OutputIteratorType>::value,
-                  OutputIteratorType>
+std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
+                     InputIteratorType, OutputIteratorType>::value,
+                 OutputIteratorType>
 transform_exclusive_scan(const std::string& label, const ExecutionSpace& ex,
                          InputIteratorType first, InputIteratorType last,
                          OutputIteratorType first_dest, ValueType init_value,
