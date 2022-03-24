@@ -409,12 +409,6 @@ struct ValLocScalar {
     val = rhs.val;
     loc = rhs.loc;
   }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile ValLocScalar& rhs) volatile {
-    val = rhs.val;
-    loc = rhs.loc;
-  }
 };
 
 template <class Scalar, class Index, class Space>
@@ -520,12 +514,6 @@ struct MinMaxScalar {
     min_val = rhs.min_val;
     max_val = rhs.max_val;
   }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile MinMaxScalar& rhs) volatile {
-    min_val = rhs.min_val;
-    max_val = rhs.max_val;
-  }
 };
 
 template <class Scalar, class Space>
@@ -586,14 +574,6 @@ struct MinMaxLocScalar {
 
   KOKKOS_INLINE_FUNCTION
   void operator=(const MinMaxLocScalar& rhs) {
-    min_val = rhs.min_val;
-    min_loc = rhs.min_loc;
-    max_val = rhs.max_val;
-    max_loc = rhs.max_loc;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile MinMaxLocScalar& rhs) volatile {
     min_val = rhs.min_val;
     min_loc = rhs.min_loc;
     max_val = rhs.max_val;
@@ -1030,11 +1010,6 @@ struct FirstLocScalar {
 
   KOKKOS_INLINE_FUNCTION
   void operator=(const FirstLocScalar& rhs) { min_loc_true = rhs.min_loc_true; }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile FirstLocScalar& rhs) volatile {
-    min_loc_true = rhs.min_loc_true;
-  }
 };
 
 template <class Index, class Space>
@@ -1093,11 +1068,6 @@ struct LastLocScalar {
 
   KOKKOS_INLINE_FUNCTION
   void operator=(const LastLocScalar& rhs) { max_loc_true = rhs.max_loc_true; }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile LastLocScalar& rhs) volatile {
-    max_loc_true = rhs.max_loc_true;
-  }
 };
 
 template <class Index, class Space>
@@ -1153,12 +1123,6 @@ struct StdIsPartScalar {
 
   KOKKOS_INLINE_FUNCTION
   void operator=(const StdIsPartScalar& rhs) {
-    min_loc_false = rhs.min_loc_false;
-    max_loc_true  = rhs.max_loc_true;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile StdIsPartScalar& rhs) volatile {
     min_loc_false = rhs.min_loc_false;
     max_loc_true  = rhs.max_loc_true;
   }
@@ -1226,11 +1190,6 @@ struct StdPartPointScalar {
 
   KOKKOS_INLINE_FUNCTION
   void operator=(const StdPartPointScalar& rhs) {
-    min_loc_false = rhs.min_loc_false;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile StdPartPointScalar& rhs) volatile {
     min_loc_false = rhs.min_loc_false;
   }
 };
