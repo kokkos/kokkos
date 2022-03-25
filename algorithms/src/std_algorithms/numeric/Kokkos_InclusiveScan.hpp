@@ -248,9 +248,6 @@ OutputIteratorType inclusive_scan_default_op_impl(
   using index_type = typename InputIteratorType::difference_type;
   using value_type =
       std::remove_const_t<typename InputIteratorType::value_type>;
-  using func_type_no_init = InclusiveScanDefaultFunctorForKnownIdentityElement<
-      ExecutionSpace, index_type, value_type, InputIteratorType,
-      OutputIteratorType>;
   using func_type = std::conditional_t<
       ::Kokkos::is_detected<in_scan_has_reduction_identity_sum_t,
                             value_type>::value,
