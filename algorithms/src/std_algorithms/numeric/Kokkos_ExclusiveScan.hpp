@@ -267,7 +267,7 @@ OutputIteratorType transform_exclusive_scan_impl(
 // --------------------------------------------------
 
 template <typename ValueType>
-using has_reduction_identity_sum_t =
+using ex_scan_has_reduction_identity_sum_t =
     decltype(Kokkos::reduction_identity<ValueType>::sum());
 
 template <class ExecutionSpace, class InputIteratorType,
@@ -306,7 +306,8 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
   // aliases
   using index_type = typename InputIteratorType::difference_type;
   using func_type  = std::conditional_t<
-      ::Kokkos::is_detected<has_reduction_identity_sum_t, ValueType>::value,
+      ::Kokkos::is_detected<ex_scan_has_reduction_identity_sum_t,
+                            ValueType>::value,
       ExclusiveScanDefaultFunctorForKnownNeutralElement<
           ExecutionSpace, index_type, ValueType, InputIteratorType,
           OutputIteratorType>,

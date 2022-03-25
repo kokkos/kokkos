@@ -226,7 +226,7 @@ struct TransformInclusiveScanWithInitValueFunctor {
 };
 
 template <typename ValueType>
-using has_reduction_identity_sum_t =
+using in_scan_has_reduction_identity_sum_t =
     decltype(Kokkos::reduction_identity<ValueType>::sum());
 
 // -------------------------------------------------------------
@@ -252,7 +252,8 @@ OutputIteratorType inclusive_scan_default_op_impl(
       ExecutionSpace, index_type, value_type, InputIteratorType,
       OutputIteratorType>;
   using func_type = std::conditional_t<
-      ::Kokkos::is_detected<has_reduction_identity_sum_t, value_type>::value,
+      ::Kokkos::is_detected<in_scan_has_reduction_identity_sum_t,
+                            value_type>::value,
       InclusiveScanDefaultFunctorForKnownIdentityElement<
           ExecutionSpace, index_type, value_type, InputIteratorType,
           OutputIteratorType>,
