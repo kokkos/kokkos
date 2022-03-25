@@ -59,14 +59,15 @@ namespace Impl {
 
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
-struct InclusiveScanDefaultFunctorNoInit {
+struct InclusiveScanDefaultFunctorForKnownIdentityElement {
   using execution_space = ExeSpace;
 
   FirstFrom m_first_from;
   FirstDest m_first_dest;
 
   KOKKOS_FUNCTION
-  InclusiveScanDefaultFunctorNoInit(FirstFrom first_from, FirstDest first_dest)
+  InclusiveScanDefaultFunctorForKnownIdentityElement(FirstFrom first_from,
+                                                     FirstDest first_dest)
       : m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)) {}
 
@@ -247,13 +248,14 @@ OutputIteratorType inclusive_scan_default_op_impl(
   using index_type = typename InputIteratorType::difference_type;
   using value_type =
       std::remove_const_t<typename InputIteratorType::value_type>;
-  using func_type_no_init =
-      InclusiveScanDefaultFunctorNoInit<ExecutionSpace, index_type, value_type,
-                                        InputIteratorType, OutputIteratorType>;
+  using func_type_no_init = InclusiveScanDefaultFunctorForKnownIdentityElement<
+      ExecutionSpace, index_type, value_type, InputIteratorType,
+      OutputIteratorType>;
   using func_type = std::conditional_t<
       ::Kokkos::is_detected<has_reduction_identity_sum_t, value_type>::value,
-      InclusiveScanDefaultFunctorNoInit<ExecutionSpace, index_type, value_type,
-                                        InputIteratorType, OutputIteratorType>,
+      InclusiveScanDefaultFunctorForKnownIdentityElement<
+          ExecutionSpace, index_type, value_type, InputIteratorType,
+          OutputIteratorType>,
       InclusiveScanDefaultFunctor<ExecutionSpace, index_type, value_type,
                                   InputIteratorType, OutputIteratorType>>;
 

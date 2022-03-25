@@ -59,7 +59,7 @@ namespace Impl {
 
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
-struct ExclusiveScanDefaultFunctorNoInit {
+struct ExclusiveScanDefaultFunctorForKnownNeutralElement {
   using execution_space = ExeSpace;
 
   ValueType m_init_value;
@@ -67,8 +67,9 @@ struct ExclusiveScanDefaultFunctorNoInit {
   FirstDest m_first_dest;
 
   KOKKOS_FUNCTION
-  ExclusiveScanDefaultFunctorNoInit(ValueType init, FirstFrom first_from,
-                                    FirstDest first_dest)
+  ExclusiveScanDefaultFunctorForKnownNeutralElement(ValueType init,
+                                                    FirstFrom first_from,
+                                                    FirstDest first_dest)
       : m_init_value(std::move(init)),
         m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)) {}
@@ -306,8 +307,9 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
   using index_type = typename InputIteratorType::difference_type;
   using func_type  = std::conditional_t<
       ::Kokkos::is_detected<has_reduction_identity_sum_t, ValueType>::value,
-      ExclusiveScanDefaultFunctorNoInit<ExecutionSpace, index_type, ValueType,
-                                        InputIteratorType, OutputIteratorType>,
+      ExclusiveScanDefaultFunctorForKnownNeutralElement<
+          ExecutionSpace, index_type, ValueType, InputIteratorType,
+          OutputIteratorType>,
       ExclusiveScanDefaultFunctor<ExecutionSpace, index_type, ValueType,
                                   InputIteratorType, OutputIteratorType>>;
 
