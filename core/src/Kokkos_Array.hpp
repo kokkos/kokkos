@@ -56,6 +56,8 @@
 
 namespace Kokkos {
 
+#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
 namespace Impl {
 template <typename Integral, bool Signed = std::is_signed<Integral>::value>
@@ -64,10 +66,12 @@ struct ArrayBoundsCheck;
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, true> {
   KOKKOS_INLINE_FUNCTION
-  ArrayBoundsCheck(Integral i, size_t N) {
+  constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (i < 0) {
-      KOKKOS_IF_ON_HOST((std::string s = "Kokkos::Array: index ";
-                         s += std::to_string(i); s += " < 0";
+      KOKKOS_IF_ON_HOST((
+         // std::string s = "Kokkos::Array: index ";
+         //                s += std::to_string(i); s += " < 0";
+                         char s[] = "Kokkos::Array sucks";
                          Kokkos::Impl::throw_runtime_exception(s);))
 
       KOKKOS_IF_ON_DEVICE(
@@ -80,11 +84,12 @@ struct ArrayBoundsCheck<Integral, true> {
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, false> {
   KOKKOS_INLINE_FUNCTION
-  ArrayBoundsCheck(Integral i, size_t N) {
+  constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (size_t(i) >= N) {
-      KOKKOS_IF_ON_HOST((std::string s = "Kokkos::Array: index ";
-                         s += std::to_string(i); s += " >= ";
-                         s += std::to_string(N);
+      KOKKOS_IF_ON_HOST((//std::string s = "Kokkos::Array: index ";
+                         //s += std::to_string(i); s += " >= ";
+                         //s += std::to_string(N);
+                            char s[] = "Kokkos::Array sucks";
                          Kokkos::Impl::throw_runtime_exception(s);))
 
       KOKKOS_IF_ON_DEVICE((Kokkos::abort("Kokkos::Array: index >= size");))
@@ -130,7 +135,7 @@ struct Array {
   KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return N; }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION reference operator[](const iType& i) {
+  KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
@@ -139,7 +144,8 @@ struct Array {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION const_reference operator[](const iType& i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const_reference operator[](
+      const iType& i) const {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
@@ -147,10 +153,10 @@ struct Array {
     return m_internal_implementation_private_member_data[i];
   }
 
-  KOKKOS_INLINE_FUNCTION pointer data() {
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() {
     return &m_internal_implementation_private_member_data[0];
   }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const {
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
     return &m_internal_implementation_private_member_data[0];
   }
 };
