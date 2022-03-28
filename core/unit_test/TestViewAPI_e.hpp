@@ -240,6 +240,21 @@ struct TestViewOverloadResolution {
 TEST(TEST_CATEGORY, view_overload_resolution) {
   TestViewOverloadResolution<TEST_EXECSPACE>::test_function_overload();
 }
+
+TEST(TEST_CATEGORY, view_allocation_large_rank) {
+  constexpr int dim = 16;
+  int idx           = dim - 1;
+  using ViewType =
+      typename Kokkos::View<char********, Kokkos::DefaultExecutionSpace>;
+  ViewType v(Kokkos::view_alloc("v", Kokkos::WithoutInitializing), dim, dim,
+             dim, dim, dim, dim, dim, dim);
+
+  Kokkos::parallel_for(
+      1, KOKKOS_LAMBDA(const int&) {
+        auto& lhs = v(idx, idx, idx, idx, idx, idx, idx, idx);
+        lhs       = 0;  // This is where it segfaults
+      });
+}
 }  // namespace Test
 
 #include <TestViewIsAssignable.hpp>
