@@ -262,7 +262,7 @@ TEST(TEST_CATEGORY, view_allocation_large_rank) {
       Kokkos::view_alloc("v", Kokkos::WithoutInitializing), dim, dim, dim, dim,
       dim, dim, dim, dim);
 
-  Kokkos::parallel_for(1, FunctorType{v});
+  Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(1), FunctorType{v});
 }
 }  // namespace Test
 
