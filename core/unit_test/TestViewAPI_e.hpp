@@ -241,28 +241,29 @@ TEST(TEST_CATEGORY, view_overload_resolution) {
   TestViewOverloadResolution<TEST_EXECSPACE>::test_function_overload();
 }
 
-template <typename ExecutionSpace>
+template <typename MemorySpace>
 struct TestViewAllocationLargeRank {
-  using ViewType =
-      Kokkos::View<char********, typename ExecutionSpace::memory_space>;
+  using ViewType = Kokkos::View<char********, MemorySpace>;
 
   KOKKOS_FUNCTION void operator()(int) const {
-    int idx   = v.extent_int(0) - 1;
-    auto& lhs = v(idx, idx, idx, idx, idx, idx, idx, idx);
-    lhs       = 0;  // This is where it segfaulted
+    size_t idx = v.extent(0) - 1;
+    auto& lhs  = v(idx, idx, idx, idx, idx, idx, idx, idx);
+    lhs        = 0;  // This is where it segfaulted
   }
 
   ViewType v;
 };
 
 TEST(TEST_CATEGORY, view_allocation_large_rank) {
-  constexpr int dim = 16;
-  using FunctorType = TestViewAllocationLargeRank<TEST_EXECSPACE>;
+  using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
+  using MemorySpace    = typename TEST_EXECSPACE::memory_space;
+  constexpr int dim    = 16;
+  using FunctorType    = TestViewAllocationLargeRank<MemorySpace>;
   typename FunctorType::ViewType v(
       Kokkos::view_alloc("v", Kokkos::WithoutInitializing), dim, dim, dim, dim,
       dim, dim, dim, dim);
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                        FunctorType{v});
 }
 }  // namespace Test
