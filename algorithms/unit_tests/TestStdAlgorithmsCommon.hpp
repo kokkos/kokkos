@@ -260,6 +260,9 @@ struct CustomValueType {
   CustomValueType(const CustomValueType& other) { this->value = other.value; }
 
   KOKKOS_INLINE_FUNCTION
+  explicit operator value_type() const { return value; }
+
+  KOKKOS_INLINE_FUNCTION
   value_type& operator()() { return value; }
 
   KOKKOS_INLINE_FUNCTION
@@ -285,6 +288,13 @@ struct CustomValueType {
   }
 
   KOKKOS_INLINE_FUNCTION
+  CustomValueType operator-(const CustomValueType& other) const {
+    CustomValueType result;
+    result.value = this->value - other.value;
+    return result;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   CustomValueType operator*(const CustomValueType& other) const {
     CustomValueType result;
     result.value = this->value * other.value;
@@ -305,9 +315,22 @@ struct CustomValueType {
     this->value += other.value;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  CustomValueType operator*(const volatile CustomValueType& other) const
+      volatile {
+    CustomValueType result;
+    result.value = this->value * other.value;
+    return result;
+  }
+
   // note the void return
   KOKKOS_INLINE_FUNCTION
   void operator=(const CustomValueType& other) volatile {
+    this->value = other.value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator=(const volatile CustomValueType& other) volatile {
     this->value = other.value;
   }
 
@@ -320,6 +343,10 @@ struct CustomValueType {
   }
 
  private:
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const CustomValueType& custom_value_type) {
+    return os << custom_value_type.value;
+  }
   value_type value = {};
 };
 
