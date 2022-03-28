@@ -78,10 +78,16 @@ struct UnifDist<int> {
   int operator()() { return m_dist(m_gen); }
 };
 
-template <class ViewType>
-void fill_zero(ViewType view) {
-  Kokkos::parallel_for(view.extent(0), FillZeroFunctor<ViewType>(view));
-}
+template <>
+struct UnifDist<CustomValueType> {
+  using dist_type = std::uniform_real_distribution<double>;
+  std::mt19937 m_gen;
+  dist_type m_dist;
+
+  UnifDist() : m_dist(0.05, 1.2) { m_gen.seed(1034343); }
+
+  CustomValueType operator()() { return m_dist(m_gen); }
+};
 
 template <class ViewType>
 void fill_view(ViewType dest_view, const std::string& name) {
@@ -197,11 +203,13 @@ void verify_data(ViewType1 data_view,  // contains data
       if (std::is_same<gold_view_value_type, int>::value) {
         EXPECT_TRUE(gold_h(i) == test_view_h(i));
       } else {
-        const auto error = std::abs(gold_h(i) - test_view_h(i));
+        const auto error =
+            std::abs(static_cast<double>(gold_h(i) - test_view_h(i)));
         if (error > 1e-10) {
           std::cout << i << " " << std::setprecision(15) << data_view_h(i)
                     << " " << gold_h(i) << " " << test_view_h(i) << " "
-                    << std::abs(gold_h(i) - test_view_h(i)) << std::endl;
+                    << std::abs(static_cast<double>(gold_h(i) - test_view_h(i)))
+                    << std::endl;
         }
         EXPECT_TRUE(error < 1e-10);
       }
@@ -383,6 +391,8 @@ TEST(std_algorithms_numeric_ops_test, inclusive_scan) {
   run_inclusive_scan_all_scenarios<StridedThreeTag, double>();
   run_inclusive_scan_all_scenarios<DynamicTag, int>();
   run_inclusive_scan_all_scenarios<StridedThreeTag, int>();
+  run_inclusive_scan_all_scenarios<DynamicTag, CustomValueType>();
+  run_inclusive_scan_all_scenarios<StridedThreeTag, CustomValueType>();
 }
 
 }  // namespace IncScan
