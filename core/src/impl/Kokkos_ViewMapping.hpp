@@ -2065,29 +2065,31 @@ struct ViewOffset<
         m_stride(
             Padding<TrivialScalarSize>::
                 stride(/* 2 <= rank */
-                       size_type(m_dim.N1) *
+                       m_dim.N1 *
                        (dimension_type::rank == 2
-                            ? 1
+                            ? size_t(1)
                             : m_dim.N2 *
                                   (dimension_type::rank == 3
-                                       ? 1
+                                       ? size_t(1)
                                        : m_dim.N3 *
                                              (dimension_type::rank == 4
-                                                  ? 1
+                                                  ? size_t(1)
                                                   : m_dim.N4 *
                                                         (dimension_type::rank ==
                                                                  5
-                                                             ? 1
+                                                             ? size_t(1)
                                                              : m_dim.N5 *
                                                                    (dimension_type::
                                                                                 rank ==
                                                                             6
-                                                                        ? 1
+                                                                        ? size_t(
+                                                                              1)
                                                                         : m_dim.N6 *
                                                                               (dimension_type::
                                                                                            rank ==
                                                                                        7
-                                                                                   ? 1
+                                                                                   ? size_t(
+                                                                                         1)
                                                                                    : m_dim
                                                                                          .N7)))))))) {
   }
