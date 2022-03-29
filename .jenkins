@@ -70,7 +70,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \

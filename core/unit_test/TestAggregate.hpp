@@ -45,13 +45,7 @@
 #ifndef TEST_AGGREGATE_HPP
 #define TEST_AGGREGATE_HPP
 
-#include <gtest/gtest.h>
-
-#include <stdexcept>
-#include <sstream>
-#include <iostream>
-
-#include <impl/Kokkos_ViewArray.hpp>
+#include <Kokkos_Core.hpp>
 
 namespace Test {
 

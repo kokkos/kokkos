@@ -119,7 +119,7 @@ void test_abort_from_device() {
   } else {
     TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
-#elif defined(KOKKOS_ENABLE_HIP)  // FIXME_HIP
+#elif defined(KOKKOS_ENABLE_HIP)  // FIXME_HIP fixed from ROCm 5.0.2
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value) {
     TestAbortCausingAbnormalProgramTerminationButIgnoringErrorMessage<
         ExecutionSpace>();

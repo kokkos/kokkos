@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -10,13 +10,11 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef DESUL_HAVE_SERIAL_ATOMICS
 namespace desul {
-template<class MemoryScope>
-void atomic_thread_fence(MemoryOrderAcquire, MemoryScope) {
-}
+template <class MemoryScope>
+void atomic_thread_fence(MemoryOrderAcquire, MemoryScope) {}
 
-template<class MemoryScope>
-void atomic_thread_fence(MemoryOrderRelease, MemoryScope) {
-}
+template <class MemoryScope>
+void atomic_thread_fence(MemoryOrderRelease, MemoryScope) {}
 
 template <typename T, class MemoryScope>
 T atomic_compare_exchange(

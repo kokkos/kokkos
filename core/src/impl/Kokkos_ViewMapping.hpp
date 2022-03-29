@@ -2860,6 +2860,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   size_t n;
   bool destroy;
   std::string name;
+  bool default_exec_space;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i) const {
@@ -2882,13 +2883,26 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         ptr(arg_ptr),
         n(arg_n),
         destroy(false),
-        name(std::move(arg_name)) {}
+        name(std::move(arg_name)),
+        default_exec_space(false) {}
+
+  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
+                   std::string arg_name)
+      : space(ExecSpace{}),
+        ptr(arg_ptr),
+        n(arg_n),
+        destroy(false),
+        name(std::move(arg_name)),
+        default_exec_space(true) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
                    std::is_trivially_copy_assignable<ValueType>::value>
   construct_dispatch() {
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2900,7 +2914,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
-
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
@@ -2911,9 +2924,14 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
+      if (default_exec_space)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation(false);
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -2947,7 +2965,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, policy);
       closure.execute();
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
+      if (default_exec_space || destroy)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
@@ -2970,6 +2989,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   ValueType* ptr;
   size_t n;
   std::string name;
+  bool default_exec_space;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i) const { ptr[i] = ValueType(); }
@@ -2980,7 +3000,19 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
                    size_t const arg_n, std::string arg_name)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
+      : space(arg_space),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(false) {}
+
+  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
+                   std::string arg_name)
+      : space(ExecSpace{}),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(true) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
@@ -2988,6 +3020,9 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   construct_shared_allocation() {
     // Shortcut for zero initialization
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3010,9 +3045,14 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
+      if (default_exec_space)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation();
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -3041,8 +3081,10 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, PolicyType(0, n));
       closure.execute();
-      space.fence(
-          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in view");
+      if (default_exec_space)
+        space.fence(
+            "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
+            "view");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
@@ -3331,7 +3373,8 @@ class ViewMapping<
   template <class... P>
   Kokkos::Impl::SharedAllocationRecord<>* allocate_shared(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
-      typename Traits::array_layout const& arg_layout) {
+      typename Traits::array_layout const& arg_layout,
+      bool execution_space_specified) {
     using alloc_prop = Kokkos::Impl::ViewCtorProp<P...>;
 
     using execution_space = typename alloc_prop::execution_space;
@@ -3374,11 +3417,17 @@ class ViewMapping<
       // Assume destruction is only required when construction is requested.
       // The ViewValueFunctor has both value construction and destruction
       // operators.
-      record->m_destroy = functor_type(
-          static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-              arg_prop)
-              .value,
-          (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
+      if (execution_space_specified) {
+        record->m_destroy = functor_type(
+            static_cast<
+                Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+                arg_prop)
+                .value,
+            (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
+      } else {
+        record->m_destroy = functor_type((value_type*)m_impl_handle,
+                                         m_impl_offset.span(), alloc_name);
+      }
 
       // Construct values
       record->m_destroy.construct_shared_allocation();

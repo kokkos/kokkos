@@ -49,7 +49,6 @@
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_ExecPolicy.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostBarrier.hpp>
 

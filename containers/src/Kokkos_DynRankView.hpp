@@ -1152,7 +1152,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
         prop_copy,
         Impl::DynRankDimTraits<typename traits::specialize>::
-            template createLayout<traits, P...>(arg_prop, arg_layout));
+            template createLayout<traits, P...>(arg_prop, arg_layout),
+        Impl::ViewCtorProp<P...>::has_execution_space);
 
 //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)

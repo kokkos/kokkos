@@ -190,6 +190,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewAPI_e
       ViewCopy_a
       ViewCopy_b
+      ViewHooks
       ViewLayoutStrideAssignment
       ViewMapping_b
       ViewMapping_subview
@@ -197,6 +198,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewResize
       View_64bit
       WorkGraph
+      WithoutInitializing
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -264,7 +266,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       SubView_c12
       SubView_c13
       SubView_c14
-      WithoutInitializing
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
