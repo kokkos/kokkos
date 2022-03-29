@@ -1103,7 +1103,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp-targets=nvptx64-nvidia-cuda -Xopenmp-target -march
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp-targets=nvptx64 -Xopenmp-target -march
   endif
   KOKKOS_INTERNAL_USE_CUDA_ARCH = 1
 endif
