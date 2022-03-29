@@ -102,6 +102,7 @@ struct ViewTracker {
 
   KOKKOS_INLINE_FUNCTION ViewTracker& operator=(
       const ViewTracker& rhs) noexcept {
+    if (this == &rhs) return *this;
     KOKKOS_IF_ON_HOST((
         if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
                                            void, void>::tracking_enabled()) {
