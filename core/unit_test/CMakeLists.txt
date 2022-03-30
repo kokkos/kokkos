@@ -73,6 +73,7 @@ SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestDetectionIdiom.cpp
   TestInterOp.cpp
+  TestStringManipulation.cpp
   TestTypeList.cpp
 )
 # TestInterOp has a dependency on containers
