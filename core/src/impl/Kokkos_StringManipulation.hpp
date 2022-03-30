@@ -227,34 +227,6 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
 }
 //</editor-fold>
 
-template <class Integral>
-KOKKOS_FUNCTION constexpr int to_chars(char *buffer, Integral value) {
-  if (value == 0) {
-    *buffer = '0';
-    return 1;
-  }
-
-  int digits = 0;
-  auto v     = value;
-  while (v != 0) {
-    ++digits;
-    v /= 10;
-  }
-
-  int count = 0;
-  if (value < 0) {
-    ++count;
-    *buffer++ = '-';
-  }
-  for (int i = 0; i < digits; ++i) {
-    buffer[digits - 1 - i] =
-        '0' + (value % 10 > 0 ? value % 10 : -(value % 10));
-    value /= 10;
-    ++count;
-  }
-  return count;
-}
-
 }  // namespace Impl
 }  // namespace Kokkos
 
