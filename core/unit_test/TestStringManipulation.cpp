@@ -94,6 +94,7 @@ KOKKOS_FUNCTION constexpr bool test_strncmp() {
 #else
   STATIC_ASSERT(strncmp(greet2 + 12, greet3 + 11, 5) == 0);
 #endif
+  STATIC_ASSERT(strncmp(greet1, greet2, 0) == 0);
   return true;
 }
 STATIC_ASSERT(test_strncmp());
@@ -128,6 +129,7 @@ KOKKOS_FUNCTION constexpr bool strncpy_helper(const char* dest, const char* src,
 
 KOKKOS_FUNCTION constexpr bool test_strncpy() {
   STATIC_ASSERT(strncpy_helper("abcdef", "hi", 5, "hi\0\0\0f"));
+  STATIC_ASSERT(strncpy_helper("abcdef", "hi", 0, "abcdef"));
   return true;
 }
 STATIC_ASSERT(test_strncpy());
@@ -165,6 +167,8 @@ KOKKOS_FUNCTION constexpr bool strncat_helper(const char* dest, const char* src,
 KOKKOS_FUNCTION constexpr bool test_strncat() {
   STATIC_ASSERT(
       strncat_helper("Hello World!", " Goodbye World!", 3, "Hello World! Go"));
+  STATIC_ASSERT(
+      strncat_helper("Hello World!", " Goodbye World!", 0, "Hello World!"));
   return true;
 }
 STATIC_ASSERT(test_strncat());
