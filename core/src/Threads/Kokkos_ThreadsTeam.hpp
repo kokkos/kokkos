@@ -263,7 +263,7 @@ class ThreadsExecTeamMember {
          type* const local_value = ((type*)m_exec->scratch_memory());
 
          // Set this thread's contribution
-         if (team_rank() != team_size() - 1)* local_value = contribution;
+         if (team_rank() != team_size() - 1) *local_value = contribution;
 
          // Fence to make sure the base team member has access:
          memory_fence();
