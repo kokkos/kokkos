@@ -354,12 +354,12 @@ class ParallelReduce;
 /// skip this and go directly to the documentation of the nonmember
 /// template function Kokkos::parallel_scan.
 template <class FunctorType, class ExecPolicy,
-          class ExecutionSapce = typename Impl::FunctorPolicyExecutionSpace<
+          class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
               FunctorType, ExecPolicy>::execution_space>
 class ParallelScan;
 
 template <class FunctorType, class ExecPolicy, class ReturnType = InvalidType,
-          class ExecutionSapce = typename Impl::FunctorPolicyExecutionSpace<
+          class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
               FunctorType, ExecPolicy>::execution_space>
 class ParallelScanWithTotal;
 

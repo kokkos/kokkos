@@ -119,7 +119,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         LocalDeepCopy
         MinMaxClamp
         MathematicalConstants
-        MathematicalFunctions
+        MathematicalFunctions1
+        MathematicalFunctions2
         MDRange_a
         MDRange_b
         MDRange_c
@@ -174,6 +175,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
 
     SET(${Tag}_SOURCES2A)
     foreach(Name
+      Abort
       TeamBasic
       TeamReductionScan
       TeamScan
@@ -189,6 +191,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewCopy_a
       ViewCopy_b
       ViewCtorDimMatch
+      ViewHooks
       ViewLayoutStrideAssignment
       ViewMapping_b
       ViewMapping_subview
@@ -196,6 +199,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewResize
       View_64bit
       WorkGraph
+      WithoutInitializing
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -263,7 +267,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       SubView_c12
       SubView_c13
       SubView_c14
-      WithoutInitializing
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid

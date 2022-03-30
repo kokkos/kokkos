@@ -366,14 +366,6 @@ struct reduction_identity<signed char> {
 
 template <>
 struct reduction_identity<bool> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool sum() {
-    return static_cast<bool>(false);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool prod() {
-    return static_cast<bool>(true);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool max() { return false; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool min() { return true; }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static bool lor() {
     return static_cast<bool>(false);
   }

@@ -124,6 +124,13 @@ struct TestMDRange_ReduceArray_2D {
       parallel_for(range_init, functor);  // Init the view to 3's
 
       double sums[array_size];
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+      double *sums_ptr = sums;
+      parallel_reduce(range, functor, sums_ptr);
+      ASSERT_EQ(sums[0], 6 * N0 * N1);
+      ASSERT_EQ(sums[1], 3 * N0 * N1);
+#endif
+      Kokkos::fence("Fence before accessing result on the host");
       parallel_reduce(range, functor, sums);
 
       // Check output
@@ -378,7 +385,7 @@ struct TestMDRange_2D {
       parallel_reduce(
           "rank2-min-reducer", range,
           KOKKOS_LAMBDA(const int i, const int j, double &min_val) {
-            min_val = Kokkos::Experimental::fmin(v_in(i, j), min_val);
+            min_val = Kokkos::fmin(v_in(i, j), min_val);
           },
           reducer_scalar);
 

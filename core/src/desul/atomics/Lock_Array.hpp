@@ -57,17 +57,14 @@ inline void finalize_lock_arrays() {
 }
 template <typename MemoryScope>
 inline bool lock_address(void* ptr, MemoryScope ms) {
-  return 0 == atomic_exchange(host_locks__::get_host_lock_(ptr),
-                                      int32_t(1),
-                                      MemoryOrderSeqCst(),
-                                      ms);
+  return 0 ==
+         atomic_exchange(
+             host_locks__::get_host_lock_(ptr), int32_t(1), MemoryOrderSeqCst(), ms);
 }
 template <typename MemoryScope>
 void unlock_address(void* ptr, MemoryScope ms) {
-  (void)atomic_exchange(host_locks__::get_host_lock_(ptr),
-                                int32_t(0),
-                                MemoryOrderSeqCst(),
-                                ms);
+  (void)atomic_exchange(
+      host_locks__::get_host_lock_(ptr), int32_t(0), MemoryOrderSeqCst(), ms);
 }
 }  // namespace Impl
 }  // namespace desul

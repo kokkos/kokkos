@@ -1005,15 +1005,15 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -1026,23 +1026,24 @@ struct ViewOffset<
     return m_dim.N0;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const {
-    return m_dim.N0 * m_dim.N1;
+    return size_type(m_dim.N0) * m_dim.N1;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6;
   }
 
   // Stride with [ rank ] value is the total length
@@ -1288,8 +1289,8 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
@@ -1633,15 +1634,15 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -1916,14 +1917,14 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return size() > 0 ? m_dim.N0 * m_stride : 0;
+    return size() > 0 ? size_type(m_dim.N0) * m_stride : 0;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -2066,27 +2067,29 @@ struct ViewOffset<
                 stride(/* 2 <= rank */
                        m_dim.N1 *
                        (dimension_type::rank == 2
-                            ? 1
+                            ? size_t(1)
                             : m_dim.N2 *
                                   (dimension_type::rank == 3
-                                       ? 1
+                                       ? size_t(1)
                                        : m_dim.N3 *
                                              (dimension_type::rank == 4
-                                                  ? 1
+                                                  ? size_t(1)
                                                   : m_dim.N4 *
                                                         (dimension_type::rank ==
                                                                  5
-                                                             ? 1
+                                                             ? size_t(1)
                                                              : m_dim.N5 *
                                                                    (dimension_type::
                                                                                 rank ==
                                                                             6
-                                                                        ? 1
+                                                                        ? size_t(
+                                                                              1)
                                                                         : m_dim.N6 *
                                                                               (dimension_type::
                                                                                            rank ==
                                                                                        7
-                                                                                   ? 1
+                                                                                   ? size_t(
+                                                                                         1)
                                                                                    : m_dim
                                                                                          .N7)))))))) {
   }
@@ -2447,8 +2450,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   constexpr size_type size() const {
     return dimension_type::rank == 0
                ? 1
-               : m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
-                     m_dim.N5 * m_dim.N6 * m_dim.N7;
+               : size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 *
+                     m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
  private:
@@ -2860,6 +2863,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   size_t n;
   bool destroy;
   std::string name;
+  bool default_exec_space;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i) const {
@@ -2882,13 +2886,26 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         ptr(arg_ptr),
         n(arg_n),
         destroy(false),
-        name(std::move(arg_name)) {}
+        name(std::move(arg_name)),
+        default_exec_space(false) {}
+
+  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
+                   std::string arg_name)
+      : space(ExecSpace{}),
+        ptr(arg_ptr),
+        n(arg_n),
+        destroy(false),
+        name(std::move(arg_name)),
+        default_exec_space(true) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
                    std::is_trivially_copy_assignable<ValueType>::value>
   construct_dispatch() {
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2900,7 +2917,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
-
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
@@ -2911,9 +2927,14 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
+      if (default_exec_space)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation(false);
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -2947,7 +2968,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, policy);
       closure.execute();
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
+      if (default_exec_space || destroy)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
@@ -2970,6 +2992,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   ValueType* ptr;
   size_t n;
   std::string name;
+  bool default_exec_space;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i) const { ptr[i] = ValueType(); }
@@ -2980,7 +3003,19 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
                    size_t const arg_n, std::string arg_name)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
+      : space(arg_space),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(false) {}
+
+  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
+                   std::string arg_name)
+      : space(ExecSpace{}),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(true) {}
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
@@ -2988,6 +3023,9 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   construct_shared_allocation() {
     // Shortcut for zero initialization
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3010,9 +3048,14 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
+      if (default_exec_space)
+        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation();
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -3041,8 +3084,10 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, PolicyType(0, n));
       closure.execute();
-      space.fence(
-          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in view");
+      if (default_exec_space)
+        space.fence(
+            "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
+            "view");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
@@ -3331,7 +3376,8 @@ class ViewMapping<
   template <class... P>
   Kokkos::Impl::SharedAllocationRecord<>* allocate_shared(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
-      typename Traits::array_layout const& arg_layout) {
+      typename Traits::array_layout const& arg_layout,
+      bool execution_space_specified) {
     using alloc_prop = Kokkos::Impl::ViewCtorProp<P...>;
 
     using execution_space = typename alloc_prop::execution_space;
@@ -3374,11 +3420,17 @@ class ViewMapping<
       // Assume destruction is only required when construction is requested.
       // The ViewValueFunctor has both value construction and destruction
       // operators.
-      record->m_destroy = functor_type(
-          static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-              arg_prop)
-              .value,
-          (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
+      if (execution_space_specified) {
+        record->m_destroy = functor_type(
+            static_cast<
+                Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+                arg_prop)
+                .value,
+            (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
+      } else {
+        record->m_destroy = functor_type((value_type*)m_impl_handle,
+                                         m_impl_offset.span(), alloc_name);
+      }
 
       // Construct values
       record->m_destroy.construct_shared_allocation();
@@ -3917,7 +3969,8 @@ struct OperatorBoundsErrorOnDevice<MapType, true> {
   KOKKOS_INLINE_FUNCTION
   static void run(MapType const& map) {
     SharedAllocationHeader const* const header =
-        SharedAllocationHeader::get_header((void*)(map.data()));
+        SharedAllocationHeader::get_header(
+            static_cast<void const*>(map.data()));
     char const* const label = header->label();
     enum { LEN = 128 };
     char msg[LEN];

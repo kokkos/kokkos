@@ -107,7 +107,7 @@ void verify_data(ViewType1 test_view, ViewType2 orig_view) {
 
   const std::size_t ext = test_view.extent(0);
   for (std::size_t i = 0; i < ext; ++i) {
-    EXPECT_TRUE(tv_h(i) == ov_h(ext - i - 1));
+    EXPECT_EQ(tv_h(i), ov_h(ext - i - 1));
   }
 }
 

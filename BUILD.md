@@ -27,7 +27,7 @@ When configuring your project just set:
   -DKokkos_ROOT=${kokkos_install_prefix} \
   -DCMAKE_CXX_COMPILER=${compiler_used_to_build_kokkos}
 ````
-Note: You may need the following if using some versions of CMake (e.g. 3.12):
+Note: You may need the following if your project requires a minimum CMake version older than 3.12:
 ````cmake
 cmake_policy(SET CMP0074 NEW)
 ````
@@ -119,7 +119,7 @@ Device backends can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_OPENMP
     * Whether to build OpenMP backend
     * BOOL Default: OFF
-* Kokkos_ENABLE_PTHREAD
+* Kokkos_ENABLE_THREADS
     * Whether to build C++ thread backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_SERIAL
@@ -170,6 +170,9 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
     * BOOL Default: OFF
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
     * Whether HPX supports asynchronous dispatch
+    * BOOL Default: OFF
+* Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC
+    * Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2). This is an experimental performance feature and currently has issue when using with UCX. See https://github.com/kokkos/kokkos/issues/4228 for more details.
     * BOOL Default: OFF
 * Kokkos_ENABLE_LARGE_MEM_TESTS
     * Whether to perform extra large memory tests

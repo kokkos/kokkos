@@ -65,7 +65,7 @@ class SYCLTeamMember {
   using scratch_memory_space = execution_space::scratch_memory_space;
 
  private:
-  mutable void* m_team_reduce;
+  mutable sycl::local_ptr<void> m_team_reduce;
   scratch_memory_space m_team_shared;
   int m_team_reduce_size;
   sycl::nd_item<2> m_item;
@@ -124,11 +124,11 @@ class SYCLTeamMember {
     sycl::group_barrier(m_item.get_group());
     if (m_item.get_local_id(1) == 0 &&
         static_cast<int>(m_item.get_local_id(0)) == thread_id) {
-      *static_cast<ValueType*>(m_team_reduce) = val;
+      *static_cast<sycl::local_ptr<ValueType>>(m_team_reduce) = val;
     }
     // Wait for shared data read until root thread writes
     sycl::group_barrier(m_item.get_group());
-    val = *(static_cast<ValueType*>(m_team_reduce));
+    val = *static_cast<sycl::local_ptr<ValueType>>(m_team_reduce);
   }
 
   template <class Closure, class ValueType>
@@ -175,8 +175,9 @@ class SYCLTeamMember {
     const unsigned int maximum_work_range =
         std::min<int>(m_team_reduce_size / sizeof(value_type), n_subgroups);
 
-    const auto id_in_sg  = sg.get_local_id()[0];
-    auto reduction_array = static_cast<value_type*>(m_team_reduce);
+    const auto id_in_sg = sg.get_local_id()[0];
+    auto reduction_array =
+        static_cast<sycl::local_ptr<value_type>>(m_team_reduce);
 
     // Load values into the first maximum_work_range values of the reduction
     // array in chunks. This means that only sub groups with an id in the
@@ -251,7 +252,8 @@ class SYCLTeamMember {
     }
 
     const auto n_active_subgroups = sg.get_group_range()[0];
-    const auto base_data          = static_cast<Type*>(m_team_reduce);
+    const auto base_data =
+        static_cast<sycl::local_ptr<Type>>(m_team_reduce).get();
     if (static_cast<int>(n_active_subgroups * sizeof(Type)) >
         m_team_reduce_size)
       Kokkos::abort("Not implemented!");
@@ -364,12 +366,13 @@ class SYCLTeamMember {
   // Private for the driver
 
   KOKKOS_INLINE_FUNCTION
-  SYCLTeamMember(void* shared, const int shared_begin, const int shared_size,
-                 void* scratch_level_1_ptr, const int scratch_level_1_size,
-                 const sycl::nd_item<2> item)
+  SYCLTeamMember(sycl::local_ptr<void> shared, const int shared_begin,
+                 const int shared_size,
+                 sycl::global_ptr<void> scratch_level_1_ptr,
+                 const int scratch_level_1_size, const sycl::nd_item<2> item)
       : m_team_reduce(shared),
-        m_team_shared(static_cast<char*>(shared) + shared_begin, shared_size,
-                      scratch_level_1_ptr, scratch_level_1_size),
+        m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
+                      shared_size, scratch_level_1_ptr, scratch_level_1_size),
         m_team_reduce_size(shared_begin),
         m_item(item) {}
 

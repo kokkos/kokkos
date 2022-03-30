@@ -220,6 +220,9 @@ class BinSort {
         range_begin(range_begin_),
         range_end(range_end_),
         sort_within_bins(sort_within_bins_) {
+    if (bin_op.max_bins() <= 0)
+      Kokkos::abort(
+          "The number of bins in the BinSortOp object must be greater than 0!");
     bin_count_atomic = Kokkos::View<int*, Space>(
         "Kokkos::SortImpl::BinSortFunctor::bin_count", bin_op.max_bins());
     bin_count_const = bin_count_atomic;
@@ -433,7 +436,7 @@ struct BinOp1D {
         range_(typename KeyViewType::const_value_type()),
         min_(typename KeyViewType::const_value_type()) {}
 
-  // Construct BinOp with number of bins, minimum value and maxuimum value
+  // Construct BinOp with number of bins, minimum value and maximum value
   BinOp1D(int max_bins__, typename KeyViewType::const_value_type min,
           typename KeyViewType::const_value_type max)
       : max_bins_(max_bins__ + 1),

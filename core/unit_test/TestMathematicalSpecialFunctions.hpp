@@ -17,7 +17,7 @@ struct TestExponentialIntergral1Function {
   HostViewType h_ref;
 
   void testit() {
-    using Kokkos::Experimental::fabs;
+    using Kokkos::fabs;
     using Kokkos::Experimental::infinity;
 
     d_x      = ViewType("d_x", 15);

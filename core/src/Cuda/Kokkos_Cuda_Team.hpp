@@ -234,7 +234,11 @@ class CudaTeamMember {
     (void)reducer;
     (void)value;
 #ifdef __CUDA_ARCH__
-    cuda_intra_block_reduction(reducer, value, blockDim.y);
+    typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                   TeamPolicy<Cuda>, ReducerType>::Reducer
+        wrapped_reducer(&reducer);
+    cuda_intra_block_reduction(value, wrapped_reducer, blockDim.y);
+    reducer.reference() = value;
 #endif /* #ifdef __CUDA_ARCH__ */
   }
 
@@ -262,9 +266,11 @@ class CudaTeamMember {
     }
 
     base_data[threadIdx.y + 1] = value;
-
-    Impl::cuda_intra_block_reduce_scan<true, Impl::CudaJoinFunctor<Type>, void>(
-        Impl::CudaJoinFunctor<Type>(), base_data + 1);
+    Impl::CudaJoinFunctor<Type> cuda_join_functor;
+    typename Impl::FunctorAnalysis<
+        Impl::FunctorPatternInterface::SCAN, TeamPolicy<Cuda>,
+        Impl::CudaJoinFunctor<Type>>::Reducer reducer(&cuda_join_functor);
+    Impl::cuda_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
     if (global_accum) {
       if (blockDim.y == threadIdx.y + 1) {

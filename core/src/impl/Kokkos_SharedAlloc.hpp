@@ -65,8 +65,13 @@ class SharedAllocationHeader {
  private:
   using Record = SharedAllocationRecord<void, void>;
 
+#ifdef KOKKOS_ARCH_VEGA
+  static constexpr unsigned maximum_label_length =
+      (1u << 8 /* 256 */) - sizeof(Record*);
+#else
   static constexpr unsigned maximum_label_length =
       (1u << 7 /* 128 */) - sizeof(Record*);
+#endif
 
   template <class, class>
   friend class SharedAllocationRecord;
@@ -81,9 +86,9 @@ class SharedAllocationHeader {
  public:
   /* Given user memory get pointer to the header */
   KOKKOS_INLINE_FUNCTION static const SharedAllocationHeader* get_header(
-      void* alloc_ptr) {
-    return reinterpret_cast<SharedAllocationHeader*>(
-        reinterpret_cast<char*>(alloc_ptr) - sizeof(SharedAllocationHeader));
+      void const* alloc_ptr) {
+    return reinterpret_cast<SharedAllocationHeader const*>(
+        static_cast<char const*>(alloc_ptr) - sizeof(SharedAllocationHeader));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -93,8 +98,13 @@ class SharedAllocationHeader {
 template <>
 class SharedAllocationRecord<void, void> {
  protected:
+#ifdef KOKKOS_ARCH_VEGA
+  static_assert(sizeof(SharedAllocationHeader) == (1u << 8 /* 256 */),
+                "sizeof(SharedAllocationHeader) != 256");
+#else
   static_assert(sizeof(SharedAllocationHeader) == (1u << 7 /* 128 */),
                 "sizeof(SharedAllocationHeader) != 128");
+#endif
 
   template <class, class>
   friend class SharedAllocationRecord;
@@ -175,7 +185,7 @@ class SharedAllocationRecord<void, void> {
 
   /* User's memory begins at the end of the header */
   KOKKOS_INLINE_FUNCTION
-  void* data() const { return reinterpret_cast<void*>(m_alloc_ptr + 1); }
+  void* data() const { return static_cast<void*>(m_alloc_ptr + 1); }
 
   /* User's memory begins at the end of the header */
   size_t size() const { return m_alloc_size - sizeof(SharedAllocationHeader); }

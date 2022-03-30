@@ -533,6 +533,8 @@ KOKKOS_INLINE_FUNCTION constexpr auto make_wrapped_combined_functor(
   //----------------------------------------
 }
 
+template <typename FunctorType>
+using functor_has_value_t = typename FunctorType::value_type;
 }  // end namespace Impl
 
 //==============================================================================
@@ -570,7 +572,7 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
 
   using combined_functor_type = decltype(combined_functor);
   static_assert(
-      Impl::FunctorDeclaresValueType<combined_functor_type, void>::value,
+      is_detected<Impl::functor_has_value_t, combined_functor_type>::value,
       "value_type not properly detected");
   using reduce_adaptor_t =
       Impl::ParallelReduceAdaptor<PolicyType, combined_functor_type,

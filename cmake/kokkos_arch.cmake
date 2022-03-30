@@ -68,7 +68,7 @@ KOKKOS_ARCH_OPTION(VEGA900         GPU  "AMD GPU MI25 GFX900")
 KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906")
 KOKKOS_ARCH_OPTION(VEGA908         GPU  "AMD GPU MI100 GFX908")
 KOKKOS_ARCH_OPTION(VEGA90A         GPU  "AMD GPU MI200 GFX90A")
-KOKKOS_ARCH_OPTION(INTEL_GEN       GPU  "Intel GPUs Gen9+")
+KOKKOS_ARCH_OPTION(INTEL_GEN       GPU  "SPIR64-based devices, e.g. Intel GPUs, using JIT")
 KOKKOS_ARCH_OPTION(INTEL_DG1       GPU  "Intel Iris XeMAX GPU")
 KOKKOS_ARCH_OPTION(INTEL_GEN9      GPU  "Intel GPU Gen9")
 KOKKOS_ARCH_OPTION(INTEL_GEN11     GPU  "Intel GPU Gen11")
@@ -92,8 +92,15 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     LIST(REMOVE_ITEM COMMON_WARNINGS "-Wsign-compare")
   ENDIF()
 
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    LIST(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
+  ENDIF()
+
   SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers"
     ${COMMON_WARNINGS})
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
+    LIST(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
+  ENDIF()
 
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID CMAKE_CXX_COMPILER_ID
@@ -155,10 +162,8 @@ ENDIF()
 #clear anything that might be in the cache
 GLOBAL_SET(KOKKOS_AMDGPU_OPTIONS)
 IF(KOKKOS_ENABLE_HIP)
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
-    SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
-  ELSE()
-    SET(AMDGPU_ARCH_FLAG "--offload-arch")
+  SET(AMDGPU_ARCH_FLAG "--offload-arch")
+  IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
     GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS -x hip)
     IF(DEFINED ENV{ROCM_PATH})
       GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS --rocm-path=$ENV{ROCM_PATH})
@@ -211,7 +216,7 @@ IF (KOKKOS_ARCH_A64FX)
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.2-a+sve
     Clang   -march=armv8.2-a+sve -msve-vector-bits=512
-    GCC     -march=armv8.2-a+sve -msve-vector-bits=512
+    GNU     -march=armv8.2-a+sve -msve-vector-bits=512
   )
 ENDIF()
 
@@ -528,7 +533,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   IF (CLANG_CUDA_ARCH)
     STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${CLANG_CUDA_ARCH})
     COMPILER_SPECIFIC_FLAGS(
-      Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64-nvidia-cuda
+      Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64
       XL    -qtgtarch=${KOKKOS_CUDA_ARCH_FLAG}
       NVHPC -gpu=${NVHPC_CUDA_ARCH}
     )
@@ -557,7 +562,7 @@ IF (KOKKOS_ENABLE_SYCL)
     ENDIF()
   ELSEIF(KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9-"
+      DEFAULT -fsycl-targets=spir64
     )
   ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
     COMPILER_SPECIFIC_FLAGS(
@@ -669,6 +674,11 @@ ENDIF()
 
 IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
   SET(KOKKOS_ARCH_AMPERE ON)
+ENDIF()
+
+#Regardless of version, make sure we define the general architecture name
+IF (KOKKOS_ARCH_VEGA900 OR KOKKOS_ARCH_VEGA906 OR KOKKOS_ARCH_VEGA908 OR KOKKOS_ARCH_VEGA90A)
+  SET(KOKKOS_ARCH_VEGA ON)
 ENDIF()
 
 #CMake verbose is kind of pointless

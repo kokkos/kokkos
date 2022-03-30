@@ -48,7 +48,6 @@
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 #include <type_traits>
 #include <iostream>
@@ -1579,9 +1578,11 @@ template <class PolicyType, class FunctorType, class ReturnType>
 struct ParallelReduceAdaptor {
   using return_value_adapter =
       Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
-  static inline void execute(const std::string& label, const PolicyType& policy,
-                             const FunctorType& functor,
-                             ReturnType& return_value) {
+
+  static inline void execute_impl(const std::string& label,
+                                  const PolicyType& policy,
+                                  const FunctorType& functor,
+                                  ReturnType& return_value) {
     uint64_t kpID = 0;
 
     PolicyType inner_policy = policy;
@@ -1601,6 +1602,31 @@ struct ParallelReduceAdaptor {
         typename return_value_adapter::reducer_type>(inner_policy, functor,
                                                      label, kpID);
   }
+
+  static constexpr bool is_array_reduction =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
+                            FunctorType>::StaticValueSize == 0;
+
+  template <typename Dummy = ReturnType>
+  static inline std::enable_if_t<!(is_array_reduction &&
+                                   std::is_pointer<Dummy>::value)>
+  execute(const std::string& label, const PolicyType& policy,
+          const FunctorType& functor, ReturnType& return_value) {
+    execute_impl(label, policy, functor, return_value);
+  }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  template <typename Dummy = ReturnType>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Array reductions with a raw pointer return type a deprecated. Use a "
+      "Kokkos::View as return argument!")
+  static inline std::
+      enable_if_t<is_array_reduction && std::is_pointer<Dummy>::value> execute(
+          const std::string& label, const PolicyType& policy,
+          const FunctorType& functor, ReturnType& return_value) {
+    execute_impl(label, policy, functor, return_value);
+  }
+#endif
 };
 }  // namespace Impl
 
@@ -1890,14 +1916,15 @@ inline void parallel_reduce(
     const FunctorType& functor,
     typename std::enable_if<
         Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
-  using value_type  = std::conditional_t<(ValueTraits::StaticValueSize != 0),
-                                        typename ValueTraits::value_type,
-                                        typename ValueTraits::pointer_type>;
+  using FunctorAnalysis =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
+                            FunctorType>;
+  using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
+                                        typename FunctorAnalysis::value_type,
+                                        typename FunctorAnalysis::pointer_type>;
 
   static_assert(
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType>::has_final_member_function,
+      FunctorAnalysis::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
   using result_view_type =
@@ -1914,14 +1941,15 @@ inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     typename std::enable_if<
         Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
-  using value_type  = std::conditional_t<(ValueTraits::StaticValueSize != 0),
-                                        typename ValueTraits::value_type,
-                                        typename ValueTraits::pointer_type>;
+  using FunctorAnalysis =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
+                            FunctorType>;
+  using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
+                                        typename FunctorAnalysis::value_type,
+                                        typename FunctorAnalysis::pointer_type>;
 
   static_assert(
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType>::has_final_member_function,
+      FunctorAnalysis::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
   using result_view_type =
@@ -1938,15 +1966,15 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
-  using value_type  = std::conditional_t<(ValueTraits::StaticValueSize != 0),
-                                        typename ValueTraits::value_type,
-                                        typename ValueTraits::pointer_type>;
+  using FunctorAnalysis =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, policy_type,
+                            FunctorType>;
+  using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
+                                        typename FunctorAnalysis::value_type,
+                                        typename FunctorAnalysis::pointer_type>;
 
   static_assert(
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                            RangePolicy<>,
-                            FunctorType>::has_final_member_function,
+      FunctorAnalysis::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
   using result_view_type =
@@ -1965,15 +1993,15 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
-  using value_type  = std::conditional_t<(ValueTraits::StaticValueSize != 0),
-                                        typename ValueTraits::value_type,
-                                        typename ValueTraits::pointer_type>;
+  using FunctorAnalysis =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, policy_type,
+                            FunctorType>;
+  using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
+                                        typename FunctorAnalysis::value_type,
+                                        typename FunctorAnalysis::pointer_type>;
 
   static_assert(
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                            RangePolicy<>,
-                            FunctorType>::has_final_member_function,
+      FunctorAnalysis::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
   using result_view_type =

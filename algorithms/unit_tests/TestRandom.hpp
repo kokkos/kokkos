@@ -47,6 +47,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
+#include <Kokkos_DynRankView.hpp>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -353,9 +354,15 @@ struct test_random_scalar {
           variance_expect / (result.variance / num_draws / 3) - 1.0;
       double covariance_eps =
           result.covariance / num_draws / 2 / variance_expect;
-      EXPECT_LT(std::abs(mean_eps), tolerance);
-      EXPECT_LT(std::abs(variance_eps), 1.5 * tolerance);
-      EXPECT_LT(std::abs(covariance_eps), 2.0 * tolerance);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+      if (!std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+#endif
+        EXPECT_LT(std::abs(mean_eps), tolerance);
+        EXPECT_LT(std::abs(variance_eps), 1.5 * tolerance);
+        EXPECT_LT(std::abs(covariance_eps), 2.0 * tolerance);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+      }
+#endif
     }
     {
       cout << " -- Testing 1-D histogram" << endl;
@@ -387,16 +394,14 @@ struct test_random_scalar {
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-      if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
-        mean_eps_expect       = 0.019;
-        variance_eps_expect   = 1.0;
-        covariance_eps_expect = 2.8e4;
+      if (!std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+#endif
+        EXPECT_LT(std::abs(mean_eps), mean_eps_expect);
+        EXPECT_LT(std::abs(variance_eps), variance_eps_expect);
+        EXPECT_LT(std::abs(covariance_eps), covariance_eps_expect);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
-
-      EXPECT_LT(std::abs(mean_eps), mean_eps_expect);
-      EXPECT_LT(std::abs(variance_eps), variance_eps_expect);
-      EXPECT_LT(std::abs(covariance_eps), covariance_eps_expect);
 
       cout << "Density 1D: " << mean_eps << " " << variance_eps << " "
            << (result.covariance / HIST_DIM1D / HIST_DIM1D) << " || "
@@ -433,14 +438,14 @@ struct test_random_scalar {
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-      if (std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
-        variance_factor = 15.01;
+      if (!std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value) {
+#endif
+        EXPECT_LT(std::abs(mean_eps), tolerance);
+        EXPECT_LT(std::abs(variance_eps), variance_factor);
+        EXPECT_LT(std::abs(covariance_eps), variance_factor);
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
-
-      EXPECT_LT(std::abs(mean_eps), tolerance);
-      EXPECT_LT(std::abs(variance_eps), variance_factor);
-      EXPECT_LT(std::abs(covariance_eps), variance_factor);
 
       cout << "Density 3D: " << mean_eps << " " << variance_eps << " "
            << result.covariance / HIST_DIM1D / HIST_DIM1D << " || " << tolerance
@@ -508,6 +513,36 @@ void test_random(unsigned int num_draws) {
   test_random_scalar<RandomGenerator, double> test_double(
       density_1d, density_3d, pool, num_draws);
 }
+
+template <class ExecutionSpace, class Pool>
+struct TestDynRankView {
+  using ReducerType      = Kokkos::MinMax<double, Kokkos::HostSpace>;
+  using ReducerValueType = typename ReducerType::value_type;
+
+  Kokkos::DynRankView<double, ExecutionSpace> A;
+
+  TestDynRankView(int n) : A("a", n) {}
+
+  KOKKOS_FUNCTION void operator()(int i, ReducerValueType& update) const {
+    if (A(i) < update.min_val) update.min_val = A(i);
+    if (A(i) > update.max_val) update.max_val = A(i);
+  }
+
+  void run() {
+    Pool random(13);
+    double min = 10.;
+    double max = 100.;
+    Kokkos::fill_random(A, random, min, max);
+
+    ReducerValueType val;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, A.size()),
+                            *this, ReducerType(val));
+
+    Kokkos::fence();
+    ASSERT_GE(val.min_val, min);
+    ASSERT_LE(val.max_val, max);
+  }
+};
 }  // namespace Impl
 
 template <typename ExecutionSpace>
@@ -522,6 +557,9 @@ void test_random_xorshift64() {
   Impl::test_random<Kokkos::Random_XorShift64_Pool<
       Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
+  Impl::TestDynRankView<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000)
+      .run();
 }
 
 template <typename ExecutionSpace>
@@ -537,6 +575,9 @@ void test_random_xorshift1024() {
   Impl::test_random<Kokkos::Random_XorShift1024_Pool<
       Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
+  Impl::TestDynRankView<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(10000)
+      .run();
 }
 }  // namespace Test
 

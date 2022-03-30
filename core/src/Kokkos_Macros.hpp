@@ -204,6 +204,16 @@
 //  of the supported OpenMP API version.
 #endif  // #if defined( _OPENMP )
 
+#if defined(KOKKOS_ENABLE_CXX17)
+#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
+#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
+#define KOKKOS_IMPL_FALLTHROUGH [[gnu::fallthrough]];
+#elif defined(KOKKOS_COMPILER_CLANG)
+#define KOKKOS_IMPL_FALLTHROUGH [[clang::fallthrough]];
+#else
+#define KOKKOS_IMPL_FALLTHROUGH
+#endif
+
 //----------------------------------------------------------------------------
 // Intel compiler macros
 
@@ -603,7 +613,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__) && \
-    (KOKKOS_COMPILER_INTEL > 1900)
+    (!defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL > 1900)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else

@@ -211,7 +211,11 @@ class HIPTeamMember {
       team_reduce(ReducerType const& reducer,
                   typename ReducerType::value_type& value) const noexcept {
 #ifdef __HIP_DEVICE_COMPILE__
-    hip_intra_block_shuffle_reduction(reducer, value, blockDim.y);
+    typename Kokkos::Impl::FunctorAnalysis<
+        FunctorPatternInterface::REDUCE, TeamPolicy<Experimental::HIP>,
+        ReducerType>::Reducer wrapped_reducer(&reducer);
+    hip_intra_block_shuffle_reduction(value, wrapped_reducer, blockDim.y);
+    reducer.reference() = value;
 #else
     (void)reducer;
     (void)value;
@@ -243,8 +247,11 @@ class HIPTeamMember {
 
     base_data[threadIdx.y + 1] = value;
 
-    Impl::hip_intra_block_reduce_scan<true, Impl::HIPJoinFunctor<Type>, void>(
-        Impl::HIPJoinFunctor<Type>(), base_data + 1);
+    Impl::HIPJoinFunctor<Type> hip_join_functor;
+    typename Kokkos::Impl::FunctorAnalysis<
+        FunctorPatternInterface::REDUCE, TeamPolicy<Experimental::HIP>,
+        Impl::HIPJoinFunctor<Type>>::Reducer reducer(&hip_join_functor);
+    Impl::hip_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
     if (global_accum) {
       if (blockDim.y == threadIdx.y + 1) {

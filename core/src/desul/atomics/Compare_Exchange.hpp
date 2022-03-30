@@ -9,6 +9,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_COMPARE_EXCHANGE_HPP_
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_HPP_
 
+#include "desul/atomics/Compare_Exchange_ScopeCaller.hpp"
 #include "desul/atomics/Macros.hpp"
 
 #ifdef DESUL_HAVE_GCC_ATOMICS

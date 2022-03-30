@@ -76,16 +76,16 @@ TEST(TEST_CATEGORY, max) {
 
   int a = 1;
   int b = 2;
-  EXPECT_TRUE(KE::max(a, b) == 2);
+  EXPECT_EQ(KE::max(a, b), 2);
 
   a = 3;
   b = 1;
-  EXPECT_TRUE(KE::max(a, b) == 3);
+  EXPECT_EQ(KE::max(a, b), 3);
 
   STATIC_ASSERT(KE::max(1, 2) == 2);
   STATIC_ASSERT(KE::max(1, 2, ::Test::Greater<int>{}) == 1);
 
-  EXPECT_TRUE(KE::max({3.f, -1.f, 0.f}) == 3.f);
+  EXPECT_EQ(KE::max({3.f, -1.f, 0.f}), 3.f);
 
   STATIC_ASSERT(KE::max({3, -1, 0}) == 3);
   STATIC_ASSERT(KE::max({3, -1, 0}, ::Test::Greater<int>{}) == -1);
@@ -140,16 +140,16 @@ TEST(TEST_CATEGORY, min) {
 
   int a = 1;
   int b = 2;
-  EXPECT_TRUE(KE::min(a, b) == 1);
+  EXPECT_EQ(KE::min(a, b), 1);
 
   a = 3;
   b = 2;
-  EXPECT_TRUE(KE::min(a, b) == 2);
+  EXPECT_EQ(KE::min(a, b), 2);
 
   STATIC_ASSERT(KE::min(3.f, 2.f) == 2.f);
   STATIC_ASSERT(KE::min(3.f, 2.f, ::Test::Greater<int>{}) == 3.f);
 
-  EXPECT_TRUE(KE::min({3.f, -1.f, 0.f}) == -1.f);
+  EXPECT_EQ(KE::min({3.f, -1.f, 0.f}), -1.f);
 
   STATIC_ASSERT(KE::min({3, -1, 0}) == -1);
   STATIC_ASSERT(KE::min({3, -1, 0}, ::Test::Greater<int>{}) == 3);
@@ -203,14 +203,14 @@ TEST(TEST_CATEGORY, minmax) {
   int a         = 1;
   int b         = 2;
   const auto& r = KE::minmax(a, b);
-  EXPECT_TRUE(r.first == 1);
-  EXPECT_TRUE(r.second == 2);
+  EXPECT_EQ(r.first, 1);
+  EXPECT_EQ(r.second, 2);
 
   a              = 3;
   b              = 2;
   const auto& r2 = KE::minmax(a, b);
-  EXPECT_TRUE(r2.first == 2);
-  EXPECT_TRUE(r2.second == 3);
+  EXPECT_EQ(r2.first, 2);
+  EXPECT_EQ(r2.second, 3);
 
   STATIC_ASSERT((Kokkos::pair<float, float>(KE::minmax(3.f, 2.f)) ==
                  Kokkos::make_pair(2.f, 3.f)));
@@ -218,7 +218,7 @@ TEST(TEST_CATEGORY, minmax) {
       (Kokkos::pair<float, float>(KE::minmax(
            3.f, 2.f, ::Test::Greater<int>{})) == Kokkos::make_pair(3.f, 2.f)));
 
-  EXPECT_TRUE(KE::minmax({3.f, -1.f, 0.f}) == Kokkos::make_pair(-1.f, 3.f));
+  EXPECT_EQ(KE::minmax({3.f, -1.f, 0.f}), Kokkos::make_pair(-1.f, 3.f));
 
   STATIC_ASSERT(KE::minmax({3, -1, 0}) == Kokkos::make_pair(-1, 3));
   STATIC_ASSERT(KE::minmax({3, -1, 0}, ::Test::Greater<int>{}) ==
@@ -283,22 +283,22 @@ TEST(TEST_CATEGORY, clamp) {
   int b         = 2;
   int c         = 19;
   const auto& r = KE::clamp(a, b, c);
-  EXPECT_TRUE(&r == &b);
-  EXPECT_TRUE(r == b);
+  EXPECT_EQ(&r, &b);
+  EXPECT_EQ(r, b);
 
   a              = 5;
   b              = -2;
   c              = 3;
   const auto& r2 = KE::clamp(a, b, c);
-  EXPECT_TRUE(&r2 == &c);
-  EXPECT_TRUE(r2 == c);
+  EXPECT_EQ(&r2, &c);
+  EXPECT_EQ(r2, c);
 
   a              = 5;
   b              = -2;
   c              = 7;
   const auto& r3 = KE::clamp(a, b, c);
-  EXPECT_TRUE(&r3 == &a);
-  EXPECT_TRUE(r3 == a);
+  EXPECT_EQ(&r3, &a);
+  EXPECT_EQ(r3, a);
 }
 
 template <class ViewType>

@@ -88,7 +88,7 @@ void verify_data(ViewTypeFrom view_from, ViewTypeTest view_test) {
       create_mirror_view_and_copy(Kokkos::HostSpace(), view_from_dc);
 
   for (std::size_t i = 0; i < view_test_h.extent(0); ++i) {
-    EXPECT_TRUE(view_test_h(i) == view_from_h(i) + value_type(1));
+    EXPECT_EQ(view_test_h(i), view_from_h(i) + value_type(1));
   }
 }
 
@@ -104,9 +104,9 @@ template <class Tag, class ValueType, class InfoType>
 void run_single_scenario(const InfoType& scenario_info) {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
-  std::cout << "transform_unary_op: " << name << ", "
-            << view_tag_to_string(Tag{}) << ", "
-            << value_type_to_string(ValueType()) << std::endl;
+  // std::cout << "transform_unary_op: " << name << ", "
+  //           << view_tag_to_string(Tag{}) << ", "
+  //           << value_type_to_string(ValueType()) << std::endl;
 
   auto view_from =
       create_view<ValueType>(Tag{}, view_ext, "transform_uop_from");

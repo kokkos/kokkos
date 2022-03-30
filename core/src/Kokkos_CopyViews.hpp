@@ -1298,9 +1298,13 @@ inline std::enable_if_t<
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
     ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
   else
+#endif
     contiguous_fill(exec_space, dst, value);
 }
 
@@ -1326,9 +1330,13 @@ contiguous_fill_or_memset(
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
     ZeroMemset<exec_space_type, DT, DP...>(dst, value);
   else
+#endif
     contiguous_fill(exec_space_type(), dst, value);
 }
 
@@ -3411,6 +3419,7 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     typename std::enable_if<
+        std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
         Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   (void)name;
@@ -3427,6 +3436,7 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     typename std::enable_if<
+        std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
         !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;

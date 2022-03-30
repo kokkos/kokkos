@@ -76,14 +76,13 @@ TEST(hpx, reference_counting) {
           d.f();
         });
 
-    // This attaches a continuation and releases the d captured above from the
-    // shared state of the internal future.
-    Kokkos::parallel_for(
-        "Test::hpx::reference_counting::dummy_clear",
-        Kokkos::RangePolicy<Kokkos::Experimental::HPX>(hpx, 0, 1),
-        KOKKOS_LAMBDA(int){});
-
     hpx.fence();
+
+    // The fence above makes sure that copies of dummy get released. However,
+    // all copies are not guaranteed to be released as soon as fence returns.
+    // Therefore we wait for a short time to make it almost guaranteed that all
+    // copies have been released.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     ASSERT_EQ(1, dummy_count);
   }
