@@ -813,9 +813,9 @@ struct TestMDTeamParallelFor {
     using ViewType     = typename Kokkos::View<DataType***, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
-    int n0         = dims[0];
-    int n1         = dims[1];
-    int n2         = dims[2];
+    int n0 = dims[0];
+    int n1 = dims[1];
+    int n2 = dims[2];
 
     ViewType v("v", n0, n1, n2);
     FillFlattenedIndex fillFlattenedIndex(n0, n1, n2);
