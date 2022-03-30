@@ -293,7 +293,7 @@ class ThreadsExecTeamMember {
          team_fan_out();
 
          // Value was changed by the team base
-         reducer.reference() = *((type volatile const*)local_value);))
+         reducer.reference() = *local_value;))
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
