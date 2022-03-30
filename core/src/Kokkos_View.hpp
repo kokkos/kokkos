@@ -1383,8 +1383,10 @@ class View : public ViewTraits<DataType, Properties...> {
         .template get_label<typename traits::memory_space>();
   }
 
+ private:
   enum class check_input_args : bool { yes = true, no = false };
 
+ public:
   //----------------------------------------
   // Allocation according to allocation properties and array layout
 
@@ -1394,8 +1396,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      check_input_args check_args =
-          check_input_args::no /*Omit check input args per default*/)
+      check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
@@ -1496,8 +1497,9 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout,
-      check_input_args check_args = check_input_args::no)
-      : m_track()  // No memory tracking
+      check_input_args /*ignored*/ =
+          check_input_args::no)  // not checking on device)
+      : m_track()                // No memory tracking
         ,
         m_map(arg_prop, arg_layout) {
     static_assert(
@@ -1505,7 +1507,6 @@ class View : public ViewTraits<DataType, Properties...> {
                      typename Impl::ViewCtorProp<P...>::pointer_type>::value,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
-    static_cast<void>(check_args);
   }
 
   // Simple dimension-only layout
