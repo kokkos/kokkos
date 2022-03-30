@@ -151,8 +151,8 @@ class BinSort {
     }
   };
 
-  using execution_space = typename Space::execution_space;
-  using bin_op_type     = BinSortOp;
+  using exec_space  = typename Space::execution_space;
+  using bin_op_type = BinSortOp;
 
   struct bin_count_tag {};
   struct bin_offset_tag {};
@@ -238,7 +238,7 @@ class BinSort {
 
   BinSort(const_key_view_type keys_, int range_begin_, int range_end_,
           BinSortOp bin_op_, bool sort_within_bins_ = false)
-      : BinSort(execution_space{}, keys_, range_begin_, range_end_, bin_op_,
+      : BinSort(exec_space{}, keys_, range_begin_, range_end_, bin_op_,
                 sort_within_bins_) {}
 
   template <typename ExecutionSpace>
@@ -248,13 +248,13 @@ class BinSort {
 
   BinSort(const_key_view_type keys_, BinSortOp bin_op_,
           bool sort_within_bins_ = false)
-      : BinSort(execution_space{}, keys_, bin_op_, sort_within_bins_) {}
+      : BinSort(exec_space{}, keys_, bin_op_, sort_within_bins_) {}
 
   //----------------------------------------
   // Create the permutation vector, the bin_offset array and the bin_count
   // array. Can be called again if keys changed
-  template <class ExecutionSpace = execution_space>
-  void create_permute_vector(const ExecutionSpace& exec = execution_space{}) {
+  template <class ExecutionSpace = exec_space>
+  void create_permute_vector(const ExecutionSpace& exec = exec_space{}) {
     const size_t len = range_end - range_begin;
     Kokkos::parallel_for(
         "Kokkos::Sort::BinCount",
@@ -343,7 +343,7 @@ class BinSort {
   template <class ValuesViewType>
   void sort(ValuesViewType const& values, int values_range_begin,
             int values_range_end) const {
-    execution_space exec;
+    exec_space exec;
     sort(exec, values, values_range_begin, values_range_end);
     exec.fence("Kokkos::Sort: fence after sorting");
   }
