@@ -47,6 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_StringManipulation.hpp>
 
 #include <type_traits>
 #include <algorithm>
@@ -68,11 +69,10 @@ struct ArrayBoundsCheck<Integral, true> {
   KOKKOS_INLINE_FUNCTION
   constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (i < 0) {
-      KOKKOS_IF_ON_HOST((
-         // std::string s = "Kokkos::Array: index ";
-         //                s += std::to_string(i); s += " < 0";
-                         char s[] = "Kokkos::Array sucks";
-                         Kokkos::Impl::throw_runtime_exception(s);))
+      KOKKOS_IF_ON_HOST((char err[128] = "Kokkos::Array: index ";
+                         to_chars_i(err + strlen(err), err + 128, i);
+                         strcat(err, " < 0");
+                         Kokkos::Impl::throw_runtime_exception(err);))
 
       KOKKOS_IF_ON_DEVICE(
           (Kokkos::abort("Kokkos::Array: negative index in device code");))
@@ -86,11 +86,11 @@ struct ArrayBoundsCheck<Integral, false> {
   KOKKOS_INLINE_FUNCTION
   constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (size_t(i) >= N) {
-      KOKKOS_IF_ON_HOST((//std::string s = "Kokkos::Array: index ";
-                         //s += std::to_string(i); s += " >= ";
-                         //s += std::to_string(N);
-                            char s[] = "Kokkos::Array sucks";
-                         Kokkos::Impl::throw_runtime_exception(s);))
+      KOKKOS_IF_ON_HOST((char err[128] = "Kokkos::Array: index ";
+                         to_chars_i(err + strlen(err), err + 128, i);
+                         strcat(err, " >= ");
+                         to_chars_i(err + strlen(err), err + 128, N);
+                         Kokkos::Impl::throw_runtime_exception(err);))
 
       KOKKOS_IF_ON_DEVICE((Kokkos::abort("Kokkos::Array: index >= size");))
     }
