@@ -1,4 +1,4 @@
-ARG BASE=nvidia/cuda:10.2-devel
+ARG BASE=nvidia/cuda:11.0-devel
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
