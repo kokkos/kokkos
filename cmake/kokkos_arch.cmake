@@ -544,9 +544,29 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${CLANG_AMDGPU_ARCH} -fopenmp-targets=amdgcn-amd-amdhsa
     )
   ENDIF()
-  IF (KOKKOS_ARCH_INTEL_GPU)
+  IF (KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
       IntelLLVM -fopenmp-targets=spir64 -D__STRICT_ANSI__
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen9" -D__STRICT_ANSI__
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen11" -D__STRICT_ANSI__
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen12lp" -D__STRICT_ANSI__
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_DG1)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device dg1" -D__STRICT_ANSI__
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device xehp" -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()
