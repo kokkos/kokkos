@@ -57,8 +57,6 @@
 
 namespace Kokkos {
 
-#define KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
-
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
 namespace Impl {
 template <typename Integral, bool Signed = std::is_signed<Integral>::value>
@@ -69,13 +67,10 @@ struct ArrayBoundsCheck<Integral, true> {
   KOKKOS_INLINE_FUNCTION
   constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (i < 0) {
-      KOKKOS_IF_ON_HOST((char err[128] = "Kokkos::Array: index ";
-                         to_chars_i(err + strlen(err), err + 128, i);
-                         strcat(err, " < 0");
-                         Kokkos::Impl::throw_runtime_exception(err);))
-
-      KOKKOS_IF_ON_DEVICE(
-          (Kokkos::abort("Kokkos::Array: negative index in device code");))
+      char err[128] = "Kokkos::Array: index ";
+      to_chars_i(err + strlen(err), err + 128, i);
+      strcat(err, " < 0");
+      Kokkos::abort(err);
     }
     ArrayBoundsCheck<Integral, false>(i, N);
   }
@@ -86,13 +81,11 @@ struct ArrayBoundsCheck<Integral, false> {
   KOKKOS_INLINE_FUNCTION
   constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (size_t(i) >= N) {
-      KOKKOS_IF_ON_HOST((char err[128] = "Kokkos::Array: index ";
-                         to_chars_i(err + strlen(err), err + 128, i);
-                         strcat(err, " >= ");
-                         to_chars_i(err + strlen(err), err + 128, N);
-                         Kokkos::Impl::throw_runtime_exception(err);))
-
-      KOKKOS_IF_ON_DEVICE((Kokkos::abort("Kokkos::Array: index >= size");))
+      char err[128] = "Kokkos::Array: index ";
+      to_chars_i(err + strlen(err), err + 128, i);
+      strcat(err, " >= ");
+      to_chars_i(err + strlen(err), err + 128, N);
+      Kokkos::abort(err);
     }
   }
 };
