@@ -60,21 +60,15 @@ namespace Impl {
 //<editor-fold desc="String examination">
 // returns the length of a given string
 KOKKOS_FUNCTION constexpr std::size_t strlen(const char *str) {
-  if (str != nullptr) {
-    std::size_t i = 0;
-    while (str[i] != '\0') {
-      ++i;
-    }
-    return i;
+  std::size_t i = 0;
+  while (str[i] != '\0') {
+    ++i;
   }
-  return 0;
+  return i;
 }
 
 // compares two strings
 KOKKOS_FUNCTION constexpr int strcmp(const char *lhs, const char *rhs) {
-  if (lhs == nullptr || rhs == nullptr) {
-    return rhs != nullptr ? -1 : 1;
-  }
   while (*lhs == *rhs++) {
     if (*lhs++ == '\0') {
       return 0;
@@ -87,9 +81,6 @@ KOKKOS_FUNCTION constexpr int strcmp(const char *lhs, const char *rhs) {
 // compares a certain number of characters from two strings
 KOKKOS_FUNCTION constexpr int strncmp(const char *lhs, const char *rhs,
                                       std::size_t count) {
-  if (lhs == nullptr || rhs == nullptr) {
-    return rhs != nullptr ? -1 : 1;
-  }
   for (std::size_t i = 0; i < count; ++i) {
     if (lhs[i] != rhs[i]) {
       return lhs[i] < rhs[i] ? -1 : 1;
@@ -104,10 +95,8 @@ KOKKOS_FUNCTION constexpr int strncmp(const char *lhs, const char *rhs,
 //<editor-fold desc="String manipulation">
 // copies one string to another
 KOKKOS_FUNCTION constexpr char *strcpy(char *dest, const char *src) {
-  if (dest != nullptr && src != nullptr) {
-    char *d = dest;
-    for (; (*d = *src) != '\0'; ++d, ++src) {
-    }
+  char *d = dest;
+  for (; (*d = *src) != '\0'; ++d, ++src) {
   }
   return dest;
 }
@@ -115,7 +104,7 @@ KOKKOS_FUNCTION constexpr char *strcpy(char *dest, const char *src) {
 // copies a certain amount of characters from one string to another
 KOKKOS_FUNCTION constexpr char *strncpy(char *dest, const char *src,
                                         std::size_t count) {
-  if (dest != nullptr && src != nullptr && count != 0) {
+  if (count != 0) {
     char *d = dest;
     do {
       if ((*d++ = *src++) == '\0') {
@@ -131,12 +120,10 @@ KOKKOS_FUNCTION constexpr char *strncpy(char *dest, const char *src,
 
 // concatenates two strings
 KOKKOS_FUNCTION constexpr char *strcat(char *dest, const char *src) {
-  if (dest != nullptr && src != nullptr) {
-    char *d = dest;
-    for (; *d != '\0'; ++d) {
-    }
-    while ((*d++ = *src++) != '\0') {
-    }
+  char *d = dest;
+  for (; *d != '\0'; ++d) {
+  }
+  while ((*d++ = *src++) != '\0') {
   }
   return dest;
 }
@@ -144,7 +131,7 @@ KOKKOS_FUNCTION constexpr char *strcat(char *dest, const char *src) {
 // concatenates a certain amount of characters of two strings
 KOKKOS_FUNCTION constexpr char *strncat(char *dest, const char *src,
                                         std::size_t count) {
-  if (dest != nullptr && src != nullptr && count != 0) {
+  if (count != 0) {
     char *d = dest;
     for (; *d != '\0'; ++d) {
     }
