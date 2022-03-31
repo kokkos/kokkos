@@ -53,7 +53,6 @@
 #include <algorithm>
 #include <limits>
 #include <cstddef>
-#include <string>
 
 namespace Kokkos {
 
