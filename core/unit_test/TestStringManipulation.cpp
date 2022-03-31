@@ -66,8 +66,11 @@ KOKKOS_FUNCTION constexpr bool test_strcmp() {
   constexpr char cat3[] = "Hobbes";
   constexpr char cat4[] = "Garfield";
   STATIC_ASSERT(strcmp(cat1, cat1) == 0);
+#if !defined(KOKKOS_COMPILER_NVCC) || \
+    ((__CUDACC_VER_MAJOR__ >= 11) && (__CUDACC_VER_MINOR__ >= 3))
   STATIC_ASSERT(strcmp(cat1, cat2) < 0);
   STATIC_ASSERT(strcmp(cat1, cat3) < 0);
+#endif
   STATIC_ASSERT(strcmp(cat1, cat4) > 0);
   STATIC_ASSERT(strcmp(cat2, cat2) == 0);
   STATIC_ASSERT(strcmp(cat2, cat3) > 0);
