@@ -50,8 +50,6 @@
 
 #include <impl/Kokkos_Bitset_impl.hpp>
 
-#include <stdexcept>
-
 namespace Kokkos {
 
 template <typename Device = Kokkos::DefaultExecutionSpace>
@@ -403,7 +401,7 @@ class ConstBitset {
 template <typename DstDevice, typename SrcDevice>
 void deep_copy(Bitset<DstDevice>& dst, Bitset<SrcDevice> const& src) {
   if (dst.size() != src.size()) {
-    throw std::runtime_error(
+    Kokkos::Impl::throw_runtime_exception(
         "Error: Cannot deep_copy bitsets of different sizes!");
   }
 
@@ -418,7 +416,7 @@ void deep_copy(Bitset<DstDevice>& dst, Bitset<SrcDevice> const& src) {
 template <typename DstDevice, typename SrcDevice>
 void deep_copy(Bitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
   if (dst.size() != src.size()) {
-    throw std::runtime_error(
+    Kokkos::Impl::throw_runtime_exception(
         "Error: Cannot deep_copy bitsets of different sizes!");
   }
 
@@ -433,7 +431,7 @@ void deep_copy(Bitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
 template <typename DstDevice, typename SrcDevice>
 void deep_copy(ConstBitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
   if (dst.size() != src.size()) {
-    throw std::runtime_error(
+    Kokkos::Impl::throw_runtime_exception(
         "Error: Cannot deep_copy bitsets of different sizes!");
   }
 
