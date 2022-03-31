@@ -280,7 +280,7 @@ struct FloatingPointComparison {
       double min_denom = static_cast<double>(
           absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
       double rel_diff = abs_diff / min_denom;
-      bool ar         = rel_diff < rel_tol;
+      bool ar         = abs_diff == 0 || rel_diff < rel_tol;
       if (!ar) {
 #if !defined(KOKKOS_ENABLE_HIP)
         KOKKOS_IMPL_DO_NOT_USE_PRINTF(
