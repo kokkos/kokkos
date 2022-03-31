@@ -220,6 +220,11 @@ class BinSort {
         range_begin(range_begin_),
         range_end(range_end_),
         sort_within_bins(sort_within_bins_) {
+    static_assert(
+        Kokkos::SpaceAccessibility<ExecutionSpace,
+                                   typename Space::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "BinSort was initialized with!");
     if (bin_op.max_bins() <= 0)
       Kokkos::abort(
           "The number of bins in the BinSortOp object must be greater than 0!");
@@ -255,6 +260,12 @@ class BinSort {
   // array. Can be called again if keys changed
   template <class ExecutionSpace = exec_space>
   void create_permute_vector(const ExecutionSpace& exec = exec_space{}) {
+    static_assert(
+        Kokkos::SpaceAccessibility<ExecutionSpace,
+                                   typename Space::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "BinSort was initialized with!");
+
     const size_t len = range_end - range_begin;
     Kokkos::parallel_for(
         "Kokkos::Sort::BinCount",
@@ -284,6 +295,17 @@ class BinSort {
   template <class ExecutionSpace, class ValuesViewType>
   void sort(const ExecutionSpace& exec, ValuesViewType const& values,
             int values_range_begin, int values_range_end) const {
+    static_assert(
+        Kokkos::SpaceAccessibility<ExecutionSpace,
+                                   typename Space::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "BinSort was initialized with!");
+    static_assert(
+        Kokkos::SpaceAccessibility<
+            ExecutionSpace, typename ValuesViewType::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "of the View argument!");
+
     using scratch_view_type =
         Kokkos::View<typename ValuesViewType::data_type,
                      typename ValuesViewType::array_layout,
