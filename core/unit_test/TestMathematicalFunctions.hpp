@@ -257,9 +257,10 @@ struct FloatingPointComparison {
 
     bool ar = absolute(fpv) < abs_tol;
     if (!ar) {
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("absolute value exceeds tolerance [|%e| > %e]\n", (double)fpv,
-             abs_tol);
+#if !defined(KOKKOS_ENABLE_HIP)
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "absolute value exceeds tolerance [|%e| > %e]\n", (double)fpv,
+          abs_tol);
 #endif
     }
 
@@ -281,9 +282,10 @@ struct FloatingPointComparison {
       double rel_diff = abs_diff / min_denom;
       bool ar         = rel_diff < rel_tol;
       if (!ar) {
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-        printf("relative difference exceeds tolerance [%e > %e]\n",
-               (double)rel_diff, rel_tol);
+#if !defined(KOKKOS_ENABLE_HIP)
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "relative difference exceeds tolerance [%e > %e]\n",
+            (double)rel_diff, rel_tol);
 #endif
       }
 
@@ -456,9 +458,10 @@ struct TestMathUnaryFunction : FloatingPointComparison {
     bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
     if (!ar) {
       ++e;
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("value at %f which is %f was expected to be %f\n", (double)val_[i],
-             (double)Func::eval(val_[i]), (double)res_[i]);
+#if !defined(KOKKOS_ENABLE_HIP)
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %f which is %f was expected to be %f\n", (double)val_[i],
+          (double)Func::eval(val_[i]), (double)res_[i]);
 #endif
     }
   }
@@ -495,10 +498,10 @@ struct TestMathBinaryFunction : FloatingPointComparison {
     bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
     if (!ar) {
       ++e;
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("value at %f, %f which is %f was expected to be %f\n",
-             (double)val1_, (double)val2_, (double)Func::eval(val1_, val2_),
-             (double)res_);
+#if !defined(KOKKOS_ENABLE_HIP)
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %f, %f which is %f was expected to be %f\n", (double)val1_,
+          (double)val2_, (double)Func::eval(val1_, val2_), (double)res_);
 #endif
     }
   }
