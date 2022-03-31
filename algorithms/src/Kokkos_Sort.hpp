@@ -151,6 +151,9 @@ class BinSort {
     }
   };
 
+  // Naming this alias "execution_space" would be problematic since it would be
+  // considered as execution space for the various functors which might use
+  // another execution space through sort() or create_permute_vector().
   using exec_space  = typename Space::execution_space;
   using bin_op_type = BinSortOp;
 
