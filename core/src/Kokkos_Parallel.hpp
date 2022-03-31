@@ -244,8 +244,8 @@ namespace Kokkos {
 ///                     value_type& update,
 ///                     const bool final_pass) const;
 ///   void init (value_type& update) const;
-///   void join (volatile value_type& update,
-//               volatile const value_type& input) const
+///   void join (value_type& update,
+//               const value_type& input) const
 /// };
 /// \endcode
 ///
@@ -275,7 +275,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -313,7 +313,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -360,7 +360,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
