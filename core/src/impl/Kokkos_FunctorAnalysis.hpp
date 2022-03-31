@@ -92,8 +92,8 @@ struct DeduceFunctorPatternInterface<ParallelScanWithTotal<
 
 #if defined(__CUDA_ARCH__)
 template <typename T>
-KOKKOS_INLINE_FUNCTION void volatile_preload(const volatile T* src,
-                                             size_t count) {
+KOKKOS_INLINE_FUNCTION unsigned char volatile_preload(const volatile T* src,
+                                                      size_t count) {
   // Ensure that subsequent code in this thread that may do
   // non-`volatile` loads through `src` will not see stale
   // non-coherent values in the cache by forcing `volatile` loads to
@@ -101,11 +101,12 @@ KOKKOS_INLINE_FUNCTION void volatile_preload(const volatile T* src,
   auto ct         = reinterpret_cast<const volatile char*>(src);
   unsigned char c = 0;
   for (size_t i = 0; i < count * sizeof(T); ++i) {
-    c += ct[i];  // I'd rather avoid the addition, but this quiets the unused
-                 // variable warning about `c`
+    c = ct[i];
   }
 
   __threadfence();
+  // Return `c` so that nvcc doesn't warn about it being set but unused
+  return c;
 }
 #else
 template <typename T>
