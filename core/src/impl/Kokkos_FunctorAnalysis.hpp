@@ -437,7 +437,7 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       volatile_preload(src, 1);
-      f->join(*const_cast<ValueType*>(dst), *const_cast<const ValueType*>(src));
+      f->join(*dst, *src);
     }
   };
 
@@ -454,7 +454,7 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       volatile_preload(src, value_count(*f));
-      f->join(const_cast<ValueType*>(dst), const_cast<const ValueType*>(src));
+      f->join(dst, src);
     }
   };
 
@@ -482,8 +482,7 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       volatile_preload(src, 1);
-      f->join(WTag(), *const_cast<ValueType*>(dst),
-              *const_cast<const ValueType*>(src));
+      f->join(WTag(), *dst, *src);
     }
   };
 
@@ -508,8 +507,7 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       volatile_preload(src, value_count(*f));
-      f->join(WTag(), const_cast<ValueType*>(dst),
-              const_cast<const ValueType*>(src));
+      f->join(WTag(), dst, src);
     }
   };
 
@@ -521,9 +519,7 @@ struct FunctorAnalysis {
                                             ValueType const* src) {
       const int n = FunctorAnalysis::value_count(*f);
       volatile_preload(src, n);
-      auto nv_dst = const_cast<ValueType*>(dst);
-      auto nv_src = const_cast<const ValueType*>(src);
-      for (int i = 0; i < n; ++i) nv_dst[i] += nv_src[i];
+      for (int i = 0; i < n; ++i) dst[i] += src[i];
     }
   };
 
