@@ -178,6 +178,7 @@ KOKKOS_FUNCTION constexpr bool test_strncat() {
 }
 STATIC_ASSERT(test_strncat());
 
+#if !defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 540)
 template <class Integral>
 KOKKOS_FUNCTION constexpr bool to_chars_helper(Integral val, char const* ref) {
   using Kokkos::Impl::strcmp;
@@ -211,5 +212,6 @@ KOKKOS_FUNCTION constexpr bool test_to_chars() {
   return true;
 }
 STATIC_ASSERT(test_to_chars());
+#endif
 
 }  // namespace
