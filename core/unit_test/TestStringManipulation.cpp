@@ -95,7 +95,7 @@ KOKKOS_FUNCTION constexpr bool test_strncmp() {
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 610)
   (void)greet3;
 #elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 710)
-  STATIC_ASSERT(strncmp(&greet2[12], &greet3[11] + 11, 5) == 0);
+  STATIC_ASSERT(strncmp(&greet2[12], &greet3[11], 5) == 0);
 #else
   STATIC_ASSERT(strncmp(greet2 + 12, greet3 + 11, 5) == 0);
 #endif
