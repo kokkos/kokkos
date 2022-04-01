@@ -306,42 +306,6 @@ struct CustomValueType {
     return this->value == other.value;
   }
 
-  //
-  // volatile overloads needed for the kokkos reductions
-  //
-  // note the void return
-  KOKKOS_INLINE_FUNCTION
-  void operator+=(const volatile CustomValueType& other) volatile {
-    this->value += other.value;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType operator*(const volatile CustomValueType& other) const
-      volatile {
-    CustomValueType result;
-    result.value = this->value * other.value;
-    return result;
-  }
-
-  // note the void return
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const CustomValueType& other) volatile {
-    this->value = other.value;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const volatile CustomValueType& other) volatile {
-    this->value = other.value;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType operator+(const volatile CustomValueType& other) const
-      volatile {
-    CustomValueType result;
-    result.value = this->value + other.value;
-    return result;
-  }
-
  private:
   friend std::ostream& operator<<(std::ostream& os,
                                   const CustomValueType& custom_value_type) {

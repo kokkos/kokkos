@@ -264,14 +264,6 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
             src.template get<Idxs, typename Reducers::value_type>())...);
   }
 
-  KOKKOS_FUNCTION void join(value_type volatile& dest,
-                            value_type const volatile& src) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
-            dest.template get<Idxs, typename Reducers::value_type>(),
-            src.template get<Idxs, typename Reducers::value_type>())...);
-  }
-
   KOKKOS_FUNCTION constexpr void init(value_type& dest) const noexcept {
     emulate_fold_comma_operator(
         this->CombinedReducerStorageImpl<Idxs, Reducers>::_init(

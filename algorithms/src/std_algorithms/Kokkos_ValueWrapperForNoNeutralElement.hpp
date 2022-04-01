@@ -63,12 +63,6 @@ struct ValueWrapperForNoNeutralElement {
     val        = rhs.val;
     is_initial = rhs.is_initial;
   }
-
-  KOKKOS_FUNCTION
-  void operator=(const volatile ValueWrapperForNoNeutralElement& rhs) volatile {
-    val        = rhs.val;
-    is_initial = rhs.is_initial;
-  }
 };
 
 }  // namespace Impl

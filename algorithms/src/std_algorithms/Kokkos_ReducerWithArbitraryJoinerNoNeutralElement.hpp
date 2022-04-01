@@ -91,11 +91,6 @@ struct ReducerWithArbitraryJoinerNoNeutralElement {
   }
 
   KOKKOS_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
-    dest.val = m_joiner(dest.val, src.val);
-  }
-
-  KOKKOS_FUNCTION
   void init(value_type& val) const {
     // I cannot call reduction_identity, so need to default this
     val = {};
