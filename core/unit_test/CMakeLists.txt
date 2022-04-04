@@ -455,6 +455,7 @@ endif()
 if (Kokkos_ENABLE_OPENMP)
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
+    openmp/TestOpenMP_PartitionMaster.cpp
   )
   if (Kokkos_ENABLE_DEPRECATED_CODE_3)
     list(APPEND OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
