@@ -66,8 +66,10 @@ KOKKOS_FUNCTION constexpr bool test_strcmp() {
   constexpr char cat3[] = "Hobbes";
   constexpr char cat4[] = "Garfield";
   STATIC_ASSERT(strcmp(cat1, cat1) == 0);
-#if !defined(KOKKOS_COMPILER_NVCC) || \
-    ((__CUDACC_VER_MAJOR__ >= 11) && (__CUDACC_VER_MINOR__ >= 3))
+#if (!defined(KOKKOS_COMPILER_NVCC) ||                                 \
+     ((__CUDACC_VER_MAJOR__ >= 11) && (__CUDACC_VER_MINOR__ >= 3))) && \
+    (!defined(__INTEL_COMPILER_BUILD_DATE) ||                          \
+     (__INTEL_COMPILER_BUILD_DATE >= 20210228))
   STATIC_ASSERT(strcmp(cat1, cat2) < 0);
   STATIC_ASSERT(strcmp(cat1, cat3) < 0);
 #endif
@@ -93,7 +95,7 @@ KOKKOS_FUNCTION constexpr bool test_strncmp() {
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 610)
   (void)greet3;
 #elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 710)
-  STATIC_ASSERT(strncmp(&greet2[12], &greet3[11] + 11, 5) == 0);
+  STATIC_ASSERT(strncmp(&greet2[12], &greet3[11], 5) == 0);
 #else
   STATIC_ASSERT(strncmp(greet2 + 12, greet3 + 11, 5) == 0);
 #endif
@@ -176,6 +178,7 @@ KOKKOS_FUNCTION constexpr bool test_strncat() {
 }
 STATIC_ASSERT(test_strncat());
 
+#if !defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 540)
 template <class Integral>
 KOKKOS_FUNCTION constexpr bool to_chars_helper(Integral val, char const* ref) {
   using Kokkos::Impl::strcmp;
@@ -209,5 +212,6 @@ KOKKOS_FUNCTION constexpr bool test_to_chars() {
   return true;
 }
 STATIC_ASSERT(test_to_chars());
+#endif
 
 }  // namespace
