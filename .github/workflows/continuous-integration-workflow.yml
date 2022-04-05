@@ -47,6 +47,11 @@ jobs:
             backend: 'THREADS'
             hwloc: 'OFF'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            hwloc: 'OFF'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
