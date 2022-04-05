@@ -74,8 +74,7 @@ hipStream_t get_deep_copy_stream() {
 }  // namespace
 
 void DeepCopyHIP(void* dst, void const* src, size_t n) {
-  hipStream_t s = get_deep_copy_stream();
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault));
 }
 
 void DeepCopyAsyncHIP(const Kokkos::Experimental::HIP& instance, void* dst,

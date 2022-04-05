@@ -91,9 +91,7 @@ static std::atomic<int> num_uvm_allocations(0);
 }  // namespace
 
 void DeepCopyCuda(void *dst, const void *src, size_t n) {
-  cudaStream_t s = cuda_get_deep_copy_stream();
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
 }
 
 void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
