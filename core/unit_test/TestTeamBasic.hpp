@@ -155,12 +155,6 @@ struct long_wrapper {
   }
 
   KOKKOS_FUNCTION
-  friend void operator+=(volatile long_wrapper& lhs,
-                         const volatile long_wrapper& rhs) {
-    lhs.value += rhs.value;
-  }
-
-  KOKKOS_FUNCTION
   void operator=(const long_wrapper& other) { value = other.value; }
 
   KOKKOS_FUNCTION

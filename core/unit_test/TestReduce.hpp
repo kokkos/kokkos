@@ -81,7 +81,7 @@ class ReduceFunctor {
   */
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& dst, const volatile value_type& src) const {
+  void join(value_type& dst, const value_type& src) const {
     dst.value[0] += src.value[0];
     dst.value[1] += src.value[1];
     dst.value[2] += src.value[2];
@@ -128,8 +128,7 @@ class ReduceFunctorFinalTag {
   ReduceFunctorFinalTag(const size_type arg_nwork) : nwork(arg_nwork) {}
 
   KOKKOS_INLINE_FUNCTION
-  void join(const ReducerTag, volatile value_type& dst,
-            const volatile value_type& src) const {
+  void join(const ReducerTag, value_type& dst, const value_type& src) const {
     dst.value[0] += src.value[0];
     dst.value[1] += src.value[1];
     dst.value[2] += src.value[2];
@@ -173,7 +172,7 @@ class RuntimeReduceFunctor {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile ScalarType dst[], const volatile ScalarType src[]) const {
+  void join(ScalarType dst[], const ScalarType src[]) const {
     for (unsigned i = 0; i < value_count; ++i) dst[i] += src[i];
   }
 
@@ -217,7 +216,7 @@ class RuntimeReduceMinMax {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile ScalarType dst[], const volatile ScalarType src[]) const {
+  void join(ScalarType dst[], const ScalarType src[]) const {
     for (unsigned i = 0; i < value_count; ++i) {
       dst[i] = i % 2 ? (dst[i] < src[i] ? dst[i] : src[i])   // min
                      : (dst[i] > src[i] ? dst[i] : src[i]);  // max
