@@ -70,12 +70,6 @@ struct SumJoinFunctor {
   ValueType operator()(const ValueType& a, const ValueType& b) const {
     return a + b;
   }
-
-  KOKKOS_INLINE_FUNCTION
-  ValueType operator()(const volatile ValueType& a,
-                       const volatile ValueType& b) const {
-    return a + b;
-  }
 };
 
 struct std_algorithms_numerics_test : public ::testing::Test {

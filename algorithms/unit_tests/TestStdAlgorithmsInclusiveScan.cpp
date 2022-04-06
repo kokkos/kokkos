@@ -224,24 +224,12 @@ struct MultiplyFunctor {
   ValueType operator()(const ValueType& a, const ValueType& b) const {
     return (a * b);
   }
-
-  KOKKOS_INLINE_FUNCTION
-  ValueType operator()(const volatile ValueType& a,
-                       const volatile ValueType& b) const {
-    return (a * b);
-  }
 };
 
 template <class ValueType>
 struct SumFunctor {
   KOKKOS_INLINE_FUNCTION
   ValueType operator()(const ValueType& a, const ValueType& b) const {
-    return (a + b);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  ValueType operator()(const volatile ValueType& a,
-                       const volatile ValueType& b) const {
     return (a + b);
   }
 };

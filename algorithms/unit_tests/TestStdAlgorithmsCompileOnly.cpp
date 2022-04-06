@@ -61,12 +61,6 @@ struct TrivialBinaryFunctor {
   ValueType operator()(const ValueType &a, const ValueType &b) const {
     return (a + b);
   }
-
-  KOKKOS_INLINE_FUNCTION
-  ValueType operator()(const volatile ValueType &a,
-                       const volatile ValueType &b) const {
-    return (a + b);
-  }
 };
 
 template <class ValueType>
@@ -100,12 +94,6 @@ struct TrivialComparator {
   bool operator()(const ValueType &a, const ValueType &b) const {
     return a > b;
   }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(const volatile ValueType &a,
-                  const volatile ValueType &b) const {
-    return a > b;
-  }
 };
 
 template <class ValueType>
@@ -118,12 +106,6 @@ template <class ValueType>
 struct TrivialReduceJoinFunctor {
   KOKKOS_FUNCTION
   ValueType operator()(const ValueType &a, const ValueType &b) const {
-    return a + b;
-  }
-
-  KOKKOS_FUNCTION
-  ValueType operator()(const volatile ValueType &a,
-                       const volatile ValueType &b) const {
     return a + b;
   }
 };
