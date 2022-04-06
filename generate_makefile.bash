@@ -179,6 +179,7 @@ display_help_text() {
       echo "                 HSW             = Intel Haswell CPUs"
       echo "                 BDW             = Intel Broadwell Xeon E-class CPUs"
       echo "                 SKX             = Intel Sky Lake Xeon E-class HPC CPUs (AVX512)"
+      echo "                 ICX             = Intel Ice Lake CPUs (AVX512)"
       echo "               [Intel Xeon Phi]"
       echo "                 KNC             = Intel Knights Corner Xeon Phi"
       echo "                 KNL             = Intel Knights Landing Xeon Phi"
