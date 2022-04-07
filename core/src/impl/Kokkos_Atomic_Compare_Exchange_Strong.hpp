@@ -221,7 +221,7 @@ inline T atomic_compare_exchange(
   return tmp.t;
 }
 
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
 template <typename T>
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
@@ -249,7 +249,7 @@ template <typename T>
 inline T atomic_compare_exchange(
     volatile T* const dest, const T compare,
     typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
                                 && (sizeof(T) != 16)
 #endif
                                 ,

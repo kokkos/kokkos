@@ -60,7 +60,7 @@ void memory_fence() {
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
   sycl::atomic_fence(sycl::ext::oneapi::memory_order::acq_rel,
                      sycl::ext::oneapi::memory_scope::device);
-#elif defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
+#elif defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
   asm volatile("mfence" ::: "memory");
 #elif defined(KOKKOS_ENABLE_GNU_ATOMICS) || \
     (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_INTEL_ATOMICS))
@@ -85,7 +85,7 @@ void memory_fence() {
 
 KOKKOS_FORCEINLINE_FUNCTION
 void store_fence() {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
   asm volatile("sfence" ::: "memory");
 #else
   memory_fence();
@@ -100,7 +100,7 @@ void store_fence() {
 
 KOKKOS_FORCEINLINE_FUNCTION
 void load_fence() {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
   asm volatile("lfence" ::: "memory");
 #else
   memory_fence();
