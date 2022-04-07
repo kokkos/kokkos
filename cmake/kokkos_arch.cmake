@@ -74,6 +74,7 @@ KOKKOS_ARCH_OPTION(INTEL_GEN9      GPU  "Intel GPU Gen9")
 KOKKOS_ARCH_OPTION(INTEL_GEN11     GPU  "Intel GPU Gen11")
 KOKKOS_ARCH_OPTION(INTEL_GEN12LP   GPU  "Intel GPU Gen12LP")
 KOKKOS_ARCH_OPTION(INTEL_XEHP      GPU  "Intel GPU Xe-HP")
+KOKKOS_ARCH_OPTION(INTEL_PVC       GPU  "Intel GPU Ponte Vecchio")
 
 
 IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
@@ -527,6 +528,9 @@ ENDIF()
 IF(KOKKOS_ARCH_INTEL_XEHP)
   CHECK_MULTIPLE_INTEL_ARCH()
 ENDIF()
+IF(KOKKOS_ARCH_INTEL_PVC)
+  CHECK_MULTIPLE_INTEL_ARCH()
+ENDIF()
 
 IF (KOKKOS_ENABLE_OPENMPTARGET)
   SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
@@ -568,6 +572,10 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     COMPILER_SPECIFIC_FLAGS(
       IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device xehp" -D__STRICT_ANSI__
     )
+  ELSEIF(KOKKOS_ARCH_INTEL_PVC)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device pvc" -D__STRICT_ANSI__
+    )
   ENDIF()
 ENDIF()
 
@@ -603,6 +611,10 @@ IF (KOKKOS_ENABLE_SYCL)
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device xehp"
+    )
+  ELSEIF(KOKKOS_ARCH_INTEL_PVC)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device pvc"
     )
   ENDIF()
 ENDIF()
