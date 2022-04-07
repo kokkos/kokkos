@@ -199,7 +199,7 @@ struct RuntimeCheckMemoryAccessViolation {
 // explicit specialization: memory access violation will occur, call abort with
 // the specified error message.
 template <class MemorySpace, class AccessSpace>
-struct RuntimeCheckMemoryAccessViolation<AccessSpace, MemorySpace, false> {
+struct RuntimeCheckMemoryAccessViolation<MemorySpace, AccessSpace, false> {
   KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const *const msg) {
     Kokkos::abort(msg);
   }
