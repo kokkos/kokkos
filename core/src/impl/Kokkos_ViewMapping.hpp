@@ -59,6 +59,7 @@
 #include <impl/Kokkos_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_StringManipulation.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -4034,6 +4035,68 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
           operator_bounds_error_on_device(map);
         } else { Kokkos::abort("View bounds error"); }))
   }
+}
+
+// primary template: memory space is accessible, do nothing.
+template <class MemorySpace, class AccessSpace,
+          bool = SpaceAccessibility<AccessSpace, MemorySpace>::accessible>
+struct RuntimeCheckViewMemoryAccessViolation {
+  template <class Track, class Map>
+  KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const,
+                                                        Track const&,
+                                                        Map const&) {}
+};
+
+// explicit specialization: memory access violation will occur, call abort with
+// the specified error message.
+template <class MemorySpace, class AccessSpace>
+struct RuntimeCheckViewMemoryAccessViolation<MemorySpace, AccessSpace, false> {
+  template <class Track, class Map>
+  KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const msg,
+                                                        Track const& track,
+                                                        Map const& map) {
+    char const* lbl;
+
+    char const unmanaged[]   = "**UNMANAGED**";
+    char const unavailable[] = "**UNAVAILABLE**";
+
+    KOKKOS_IF_ON_HOST(({
+      auto const tracker = track.m_tracker;
+
+      lbl = tracker.has_record() ? tracker.template get_label<void>().c_str()
+                                 : unmanaged;
+      (void)map;
+      (void)unavailable;
+    }))
+
+    KOKKOS_IF_ON_DEVICE(({
+      lbl = unavailable;
+      (void)track;
+      (void)map;
+      (void)unmanaged;
+    }))
+
+    char err[1024] = "";
+    strcat(err, msg);
+    strcat(err, " (label=\"");
+    strcat(err, lbl);
+    strcat(err, "\")");
+
+    Kokkos::abort(err);
+  }
+};
+
+template <class MemorySpace, class Track, class Map, class... Ignore>
+KOKKOS_FUNCTION void runtime_check_memory_access_violation(
+    char const* const msg, Track const& track, Map const& map, Ignore...) {
+  KOKKOS_IF_ON_HOST(
+      ((void)RuntimeCheckViewMemoryAccessViolation<MemorySpace,
+                                                   DefaultHostExecutionSpace>(
+           msg, track, map);))
+  KOKKOS_IF_ON_DEVICE(
+      ((void)RuntimeCheckViewMemoryAccessViolation<MemorySpace,
+                                                   DefaultExecutionSpace>(
+           msg, track, map);))
 }
 
 } /* namespace Impl */
