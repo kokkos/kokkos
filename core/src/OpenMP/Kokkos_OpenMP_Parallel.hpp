@@ -123,6 +123,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   typename std::enable_if<std::is_same<typename Policy::schedule_type::type,
                                        Kokkos::Dynamic>::value>::type
   execute_parallel() const {
+    if (m_policy.begin() >= m_policy.end()) return;
 #pragma omp parallel for schedule(dynamic KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
