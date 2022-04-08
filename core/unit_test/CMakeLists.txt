@@ -197,6 +197,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewLayoutStrideAssignment
       ViewMapping_b
       ViewMapping_subview
+      ViewMemoryAccessViolation
       ViewOfClass
       ViewResize
       View_64bit
