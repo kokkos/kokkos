@@ -392,11 +392,12 @@ void pre_initialize_internal(const InitArguments& args) {
   declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_POWERPCLE",
                                  "no");
 #endif
-#ifdef KOKKOS_USE_ISA_X86_64
-  declare_configuration_metadata("architecture", "KOKKOS_USE_ISA_X86_64",
+#ifdef KOKKOS_ENABLE_ISA_X86_64
+  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_X86_64",
                                  "yes");
 #else
-  declare_configuration_metadata("architecture", "KOKKOS_USE_ISA_X86_64", "no");
+  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_X86_64",
+                                 "no");
 #endif
 
 #ifdef KOKKOS_ENABLE_GNU_ATOMICS

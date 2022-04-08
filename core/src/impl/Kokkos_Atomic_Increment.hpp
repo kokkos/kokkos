@@ -55,7 +55,7 @@ namespace Kokkos {
 // Atomic increment
 template <>
 KOKKOS_INLINE_FUNCTION void atomic_increment<char>(volatile char* a) {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64) && \
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64) && \
     !defined(_WIN32) && !defined(__CUDA_ARCH__)
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)a, _MM_HINT_ET0);
@@ -74,7 +74,7 @@ KOKKOS_INLINE_FUNCTION void atomic_increment<char>(volatile char* a) {
 
 template <>
 KOKKOS_INLINE_FUNCTION void atomic_increment<short>(volatile short* a) {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64) && \
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64) && \
     !defined(_WIN32) && !defined(__CUDA_ARCH__)
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)a, _MM_HINT_ET0);
@@ -94,7 +94,7 @@ KOKKOS_INLINE_FUNCTION void atomic_increment<short>(volatile short* a) {
 #ifndef _WIN32
 template <>
 KOKKOS_INLINE_FUNCTION void atomic_increment<int>(volatile int* a) {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64) && \
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64) && \
     !defined(_WIN32) && !defined(__CUDA_ARCH__)
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)a, _MM_HINT_ET0);
@@ -115,7 +115,7 @@ KOKKOS_INLINE_FUNCTION void atomic_increment<int>(volatile int* a) {
 template <>
 KOKKOS_INLINE_FUNCTION void atomic_increment<long long int>(
     volatile long long int* a) {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64) && \
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64) && \
     !defined(_WIN32) && !defined(__CUDA_ARCH__)
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)a, _MM_HINT_ET0);

@@ -576,7 +576,8 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ISA_X86_64), 1)
   tmp := $(call kokkos_append_header,"$H""ifndef __CUDA_ARCH__")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_USE_ISA_X86_64")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_USE_ISA_X86_64") # deprecated
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_ISA_X86_64")
   tmp := $(call kokkos_append_header,"$H""endif")
 endif
 

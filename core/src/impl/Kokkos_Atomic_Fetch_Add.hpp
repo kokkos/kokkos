@@ -171,8 +171,8 @@ atomic_fetch_add(volatile T* const dest,
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
-#if defined(KOKKOS_ENABLE_ASM) && \
-    (defined(KOKKOS_USE_ISA_X86_64) || defined(KOKKOS_KNL_USE_ASM_WORKAROUND))
+#if defined(KOKKOS_ENABLE_ASM) && (defined(KOKKOS_ENABLE_ISA_X86_64) || \
+                                   defined(KOKKOS_KNL_USE_ASM_WORKAROUND))
 inline int atomic_fetch_add(volatile int* dest, const int val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
@@ -284,7 +284,7 @@ inline T atomic_fetch_add(volatile T* const dest,
   return oldval.t;
 }
 
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 template <typename T>
 inline T atomic_fetch_add(
     volatile T* const dest,
@@ -320,7 +320,7 @@ template <typename T>
 inline T atomic_fetch_add(
     volatile T* const dest,
     typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
                                 && (sizeof(T) != 16)
 #endif
                                 ,

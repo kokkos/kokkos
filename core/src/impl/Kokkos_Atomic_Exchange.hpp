@@ -205,7 +205,7 @@ inline T atomic_exchange(volatile T* const dest,
   return old.val_T;
 }
 
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 template <typename T>
 inline T atomic_exchange(
     volatile T* const dest,
@@ -239,7 +239,7 @@ template <typename T>
 inline T atomic_exchange(
     volatile T* const dest,
     typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
                                 && (sizeof(T) != 16)
 #endif
                                 ,
@@ -297,7 +297,7 @@ inline void atomic_assign(volatile T* const dest,
   } while (assumed != old.val_type);
 }
 
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 template <typename T>
 inline void atomic_assign(
     volatile T* const dest,
@@ -326,7 +326,7 @@ template <typename T>
 inline void atomic_assign(
     volatile T* const dest,
     typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_USE_ISA_X86_64)
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
                                 && (sizeof(T) != 16)
 #endif
                                 ,
