@@ -99,29 +99,51 @@ void test_view_memory_access_violation(View v, ExecutionSpace const& s,
   TestViewMemoryAccessViolation<View, ExecutionSpace>(std::move(v), s, m);
 }
 
+template <class View, class LblOrPtr, std::size_t... Is>
+auto make_view_impl(LblOrPtr x, std::index_sequence<Is...>) {
+  return View(x, (Is + 1)...);
+}
+
+template <class View, class LblOrPtr>
+auto make_view(LblOrPtr x) {
+  return make_view_impl<View>(std::move(x),
+                              std::make_index_sequence<View::rank>());
+}
+
 template <class ExecutionSpace>
 void test_view_memory_access_violations_from_host() {
   Kokkos::DefaultHostExecutionSpace const host_exec_space{};
   // clang-format off
-  test_view_memory_access_violation(Kokkos::View<int,         ExecutionSpace>("my_label_0"),                 host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_0");
-  test_view_memory_access_violation(Kokkos::View<int*,        ExecutionSpace>("my_label_1",1),               host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_1");
-  test_view_memory_access_violation(Kokkos::View<int**,       ExecutionSpace>("my_label_2",1,2),             host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_2");
-  test_view_memory_access_violation(Kokkos::View<int***,      ExecutionSpace>("my_label_3",1,2,3),           host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_3");
-  test_view_memory_access_violation(Kokkos::View<int****,     ExecutionSpace>("my_label_4",1,2,3,4),         host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_4");
-  test_view_memory_access_violation(Kokkos::View<int*****,    ExecutionSpace>("my_label_5",1,2,3,4,5),       host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_5");
-  test_view_memory_access_violation(Kokkos::View<int******,   ExecutionSpace>("my_label_6",1,2,3,4,5,6),     host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_6");
-  test_view_memory_access_violation(Kokkos::View<int*******,  ExecutionSpace>("my_label_7",1,2,3,4,5,6,7),   host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_7");
-  test_view_memory_access_violation(Kokkos::View<int********, ExecutionSpace>("my_label_8",1,2,3,4,5,6,7,8), host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*my_label_8");
+  using V0 = Kokkos::View<int,         ExecutionSpace>;
+  using V1 = Kokkos::View<int*,        ExecutionSpace>;
+  using V2 = Kokkos::View<int**,       ExecutionSpace>;
+  using V3 = Kokkos::View<int***,      ExecutionSpace>;
+  using V4 = Kokkos::View<int****,     ExecutionSpace>;
+  using V5 = Kokkos::View<int*****,    ExecutionSpace>;
+  using V6 = Kokkos::View<int******,   ExecutionSpace>;
+  using V7 = Kokkos::View<int*******,  ExecutionSpace>;
+  using V8 = Kokkos::View<int********, ExecutionSpace>;
+  std::string const prefix = "Kokkos::View ERROR: attempt to access inaccessible memory space";
+  std::string const lbl = "my_label";
+  test_view_memory_access_violation(make_view<V0>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V1>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V2>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V3>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V4>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V5>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V6>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V7>(lbl), host_exec_space, prefix + ".*" + lbl);
+  test_view_memory_access_violation(make_view<V8>(lbl), host_exec_space, prefix + ".*" + lbl);
   auto* const ptr = reinterpret_cast<int*>(0xABADBABE);
-  test_view_memory_access_violation(Kokkos::View<int,         ExecutionSpace>(ptr),                 host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int*,        ExecutionSpace>(ptr,1),               host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int**,       ExecutionSpace>(ptr,1,2),             host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int***,      ExecutionSpace>(ptr,1,2,3),           host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int****,     ExecutionSpace>(ptr,1,2,3,4),         host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int*****,    ExecutionSpace>(ptr,1,2,3,4,5),       host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int******,   ExecutionSpace>(ptr,1,2,3,4,5,6),     host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int*******,  ExecutionSpace>(ptr,1,2,3,4,5,6,7),   host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
-  test_view_memory_access_violation(Kokkos::View<int********, ExecutionSpace>(ptr,1,2,3,4,5,6,7,8), host_exec_space, "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNMANAGED");
+  test_view_memory_access_violation(make_view<V0>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V1>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V2>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V3>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V4>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V5>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V6>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V7>(ptr), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V8>(ptr), host_exec_space, prefix + ".*UNMANAGED");
   // clang-format on
 }
 
@@ -129,27 +151,36 @@ template <class ExecutionSpace>
 void test_view_memory_access_violations_from_device() {
   ExecutionSpace const exec_space{};
   // clang-format off
-  std::string const matcher = "Kokkos::View ERROR: attempt to access inaccessible memory space.*UNAVAILABLE";
-  test_view_memory_access_violation(Kokkos::View<int,         Kokkos::HostSpace>("my_label_0"),                 exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int*,        Kokkos::HostSpace>("my_label_1",1),               exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int**,       Kokkos::HostSpace>("my_label_2",1,2),             exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int***,      Kokkos::HostSpace>("my_label_3",1,2,3),           exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int****,     Kokkos::HostSpace>("my_label_4",1,2,3,4),         exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int*****,    Kokkos::HostSpace>("my_label_5",1,2,3,4,5),       exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int******,   Kokkos::HostSpace>("my_label_6",1,2,3,4,5,6),     exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int*******,  Kokkos::HostSpace>("my_label_7",1,2,3,4,5,6,7),   exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int********, Kokkos::HostSpace>("my_label_8",1,2,3,4,5,6,7,8), exec_space, matcher);
-
+  using V0 = Kokkos::View<int,         Kokkos::HostSpace>;
+  using V1 = Kokkos::View<int*,        Kokkos::HostSpace>;
+  using V2 = Kokkos::View<int**,       Kokkos::HostSpace>;
+  using V3 = Kokkos::View<int***,      Kokkos::HostSpace>;
+  using V4 = Kokkos::View<int****,     Kokkos::HostSpace>;
+  using V5 = Kokkos::View<int*****,    Kokkos::HostSpace>;
+  using V6 = Kokkos::View<int******,   Kokkos::HostSpace>;
+  using V7 = Kokkos::View<int*******,  Kokkos::HostSpace>;
+  using V8 = Kokkos::View<int********, Kokkos::HostSpace>;
+  std::string const prefix = "Kokkos::View ERROR: attempt to access inaccessible memory space";
+  std::string const lbl = "my_label";
+  test_view_memory_access_violation(make_view<V0>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V1>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V2>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V3>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V4>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V5>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V6>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V7>(lbl), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V8>(lbl), exec_space, prefix + ".*UNAVAILABLE");
   auto* const ptr = reinterpret_cast<int*>(0xABADBABE);
-  test_view_memory_access_violation(Kokkos::View<int,         Kokkos::HostSpace>(ptr),                 exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int*,        Kokkos::HostSpace>(ptr,1),               exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int**,       Kokkos::HostSpace>(ptr,1,2),             exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int***,      Kokkos::HostSpace>(ptr,1,2,3),           exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int****,     Kokkos::HostSpace>(ptr,1,2,3,4),         exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int*****,    Kokkos::HostSpace>(ptr,1,2,3,4,5),       exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int******,   Kokkos::HostSpace>(ptr,1,2,3,4,5,6),     exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int*******,  Kokkos::HostSpace>(ptr,1,2,3,4,5,6,7),   exec_space, matcher);
-  test_view_memory_access_violation(Kokkos::View<int********, Kokkos::HostSpace>(ptr,1,2,3,4,5,6,7,8), exec_space, matcher);
+  test_view_memory_access_violation(make_view<V0>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V1>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V2>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V3>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V4>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V5>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V6>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V7>(ptr), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V8>(ptr), exec_space, prefix + ".*UNAVAILABLE");
   // clang-format on
 }
 
