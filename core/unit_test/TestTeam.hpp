@@ -1263,7 +1263,8 @@ struct TestShmemSize {
   }
 
   void test_shmem_size() {
-    using view_type = Kokkos::View<int64_t ***, ExecSpace>;
+    using view_type      = Kokkos::View<int64_t ***, ExecSpace>;
+    using view_test_type = Kokkos::View<size_t *, ExecSpace>;
 
     size_t d1 = 5;
     size_t d2 = 6;
@@ -1273,9 +1274,10 @@ struct TestShmemSize {
 
     ASSERT_EQ(size, (d1 * d2 * d3 + 1) * sizeof(int64_t));
 
-    Kokkos::View<size_t *> shmemSize("shmemSize", 1);
+    view_test_type shmemSize("shmemSize", 1);
+
     Kokkos::parallel_for(
-        1, KOKKOS_LAMBDA(const int &) {
+        Kokkos::RangePolicy<ExecSpace>(0, 1), KOKKOS_LAMBDA(const int &) {
           auto shmem   = view_type::shmem_size(d1, d2, d3);
           shmemSize(0) = shmem;
         });
