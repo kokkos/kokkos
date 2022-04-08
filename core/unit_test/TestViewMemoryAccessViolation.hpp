@@ -46,6 +46,7 @@
 
 #include <gtest/gtest.h>
 
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
 //<editor-fold desc="my_get(my_array) workaround">
 // Because using std::array on the device with CUDA would require compiling with
 // the '--expt-relaxed-constexpr' flag
@@ -209,3 +210,4 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
   }
   test_view_memory_access_violations_from_device<ExecutionSpace>();
 }
+#endif
