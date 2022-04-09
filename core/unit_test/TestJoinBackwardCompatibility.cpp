@@ -80,7 +80,7 @@ struct ReducerWithJoinThatTakesVolatileQualifiedArgs {
 
 }  // namespace
 
-KOKKOS_FUNCTION void test_join_backward_compatibility() {
+void test_join_backward_compatibility() {
   MyValueType result;
   Kokkos::RangePolicy<> policy(0, 1);
   Kokkos::parallel_reduce(
