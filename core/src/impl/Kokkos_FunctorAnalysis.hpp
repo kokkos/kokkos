@@ -398,7 +398,7 @@ struct FunctorAnalysis {
   //----------------------------------------
   // parallel_reduce join operator
 
-  template <class F, bool is_array = candidate_is_array>
+  template <class F, bool is_volatile, bool is_array = candidate_is_array>
   struct has_join_no_tag_function;
 
 #define KOKKOS_IMPL_LOVATILE  // detect join member functions with
@@ -406,7 +406,7 @@ struct FunctorAnalysis {
                               // compatibility
 
   template <class F>
-  struct has_join_no_tag_function<F, /*is_array*/ false> {
+  struct has_join_no_tag_function<F, false, /*is_array*/ false> {
     using ref_type  = ValueType&;
     using cref_type = const ValueType&;
 
@@ -415,6 +415,30 @@ struct FunctorAnalysis {
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
 
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(*dst, *src);
+    }
+  };
+
+  template <class F>
+  struct has_join_no_tag_function<F, false, /*is_array*/ true> {
+    using ref_type  = ValueType*;
+    using cref_type = const ValueType*;
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(dst, src);
+    }
+  };
+
+  template <class F>
+  struct has_join_no_tag_function<F, true, /*is_array*/ false> {
 #ifdef KOKKOS_IMPL_LOVATILE
     using vref_type  = volatile ValueType&;
     using cvref_type = const volatile ValueType&;
@@ -432,15 +456,7 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct has_join_no_tag_function<F, /*is_array*/ true> {
-    using ref_type  = ValueType*;
-    using cref_type = const ValueType*;
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
-                                                             cref_type) const);
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
-
+  struct has_join_no_tag_function<F, true, /*is_array*/ true> {
 #ifdef KOKKOS_IMPL_LOVATILE
     using vref_type  = volatile ValueType*;
     using cvref_type = const volatile ValueType*;
@@ -458,11 +474,11 @@ struct FunctorAnalysis {
     }
   };
 
-  template <class F, bool is_array = candidate_is_array>
+  template <class F, bool has_volatile, bool is_array = candidate_is_array>
   struct has_join_tag_function;
 
   template <class F>
-  struct has_join_tag_function<F, /*is_array*/ false> {
+  struct has_join_tag_function<F, false, /*is_array*/ false> {
     using ref_type  = ValueType&;
     using cref_type = const ValueType&;
 
@@ -478,6 +494,40 @@ struct FunctorAnalysis {
 
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
                                                           cref_type));
+
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(WTag(), *dst, *src);
+    }
+  };
+
+  template <class F>
+  struct has_join_tag_function<F, false, /*is_array*/ true> {
+    using ref_type  = ValueType*;
+    using cref_type = const ValueType*;
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ref_type,
+                                                          cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
+                                                             ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
+                                                          cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(WTag(), dst, src);
+    }
+  };
+
+  template <class F>
+  struct has_join_tag_function<F, true, /*is_array*/ false> {
 
 #ifdef KOKKOS_IMPL_LOVATILE
     using vref_type  = volatile ValueType&;
@@ -505,22 +555,7 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct has_join_tag_function<F, /*is_array*/ true> {
-    using ref_type  = ValueType*;
-    using cref_type = const ValueType*;
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ref_type,
-                                                             cref_type) const);
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ref_type,
-                                                          cref_type));
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
-                                                             ref_type,
-                                                             cref_type) const);
-
-    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
-                                                          cref_type));
+  struct has_join_tag_function<F, true, /*is_array*/ true> {
 #ifdef KOKKOS_IMPL_LOVATILE
     using vref_type  = volatile ValueType*;
     using cvref_type = const volatile ValueType*;
@@ -563,9 +598,19 @@ struct FunctorAnalysis {
   struct DeduceJoinNoTag<
       F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
                                                    std::is_void<Tag>::value),
-                          decltype(has_join_no_tag_function<F>::enable_if(
+						 decltype(has_join_no_tag_function<F, false>::enable_if(
                               &F::join))>>
-      : public has_join_no_tag_function<F> {
+    : public has_join_no_tag_function<F, false> {
+    enum : bool { value = true };
+  };
+
+  template <class F>
+  struct DeduceJoinNoTag<
+      F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
+                                                   std::is_void<Tag>::value),
+						 decltype(has_join_no_tag_function<F, true>::enable_if(
+                              &F::join))>>
+    : public has_join_no_tag_function<F, true> {
     enum : bool { value = true };
   };
 
@@ -576,8 +621,17 @@ struct FunctorAnalysis {
   struct DeduceJoin<
       F,
       std::enable_if_t<!is_reducer<F>::value,
-                       decltype(has_join_tag_function<F>::enable_if(&F::join))>>
-      : public has_join_tag_function<F> {
+						 decltype(has_join_tag_function<F, false>::enable_if(&F::join))>>
+    : public has_join_tag_function<F, false> {
+    enum : bool { value = true };
+  };
+
+  template <class F>
+  struct DeduceJoin<
+      F,
+      std::enable_if_t<!is_reducer<F>::value,
+						 decltype(has_join_tag_function<F, true>::enable_if(&F::join))>>
+    : public has_join_tag_function<F, true> {
     enum : bool { value = true };
   };
 
