@@ -495,7 +495,6 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
                                                           cref_type));
 
-
     KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       f->join(WTag(), *dst, *src);
@@ -528,7 +527,6 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_join_tag_function<F, true, /*is_array*/ false> {
-
 #ifdef KOKKOS_IMPL_LOVATILE
     using vref_type  = volatile ValueType&;
     using cvref_type = const volatile ValueType&;
@@ -596,11 +594,11 @@ struct FunctorAnalysis {
 
   template <class F>
   struct DeduceJoinNoTag<
-      F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
-                                                   std::is_void<Tag>::value),
-						 decltype(has_join_no_tag_function<F, false>::enable_if(
-                              &F::join))>>
-    : public has_join_no_tag_function<F, false> {
+      F, std::enable_if_t<
+             is_reducer<F>::value ||
+                 (!is_reducer<F>::value && std::is_void<Tag>::value),
+             decltype(has_join_no_tag_function<F, false>::enable_if(&F::join))>>
+      : public has_join_no_tag_function<F, false> {
     enum : bool { value = true };
   };
 
@@ -608,9 +606,9 @@ struct FunctorAnalysis {
   struct DeduceJoinNoTag<
       F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
                                                    std::is_void<Tag>::value),
-						 decltype(has_join_no_tag_function<F, true>::enable_if(
+                          decltype(has_join_no_tag_function<F, true>::enable_if(
                               &F::join))>>
-    : public has_join_no_tag_function<F, true> {
+      : public has_join_no_tag_function<F, true> {
     enum : bool { value = true };
   };
 
@@ -619,19 +617,19 @@ struct FunctorAnalysis {
 
   template <class F>
   struct DeduceJoin<
-      F,
-      std::enable_if_t<!is_reducer<F>::value,
-						 decltype(has_join_tag_function<F, false>::enable_if(&F::join))>>
-    : public has_join_tag_function<F, false> {
+      F, std::enable_if_t<!is_reducer<F>::value,
+                          decltype(has_join_tag_function<F, false>::enable_if(
+                              &F::join))>>
+      : public has_join_tag_function<F, false> {
     enum : bool { value = true };
   };
 
   template <class F>
   struct DeduceJoin<
-      F,
-      std::enable_if_t<!is_reducer<F>::value,
-						 decltype(has_join_tag_function<F, true>::enable_if(&F::join))>>
-    : public has_join_tag_function<F, true> {
+      F, std::enable_if_t<!is_reducer<F>::value,
+                          decltype(has_join_tag_function<F, true>::enable_if(
+                              &F::join))>>
+      : public has_join_tag_function<F, true> {
     enum : bool { value = true };
   };
 
