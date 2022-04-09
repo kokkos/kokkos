@@ -75,6 +75,7 @@ SET(COMPILE_ONLY_SOURCES
   TestInterOp.cpp
   TestStringManipulation.cpp
   TestTypeList.cpp
+  TestJoinBackwardCompatibility.cpp
 )
 # TestInterOp has a dependency on containers
 IF(KOKKOS_HAS_TRILINOS)
