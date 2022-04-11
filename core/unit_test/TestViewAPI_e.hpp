@@ -287,7 +287,6 @@ struct TestViewShmemSizeOnDevice {
 
 TEST(TEST_CATEGORY, view_shmem_size_on_device) {
   using ExecSpace = typename TEST_EXECSPACE::execution_space;
-  using MemSpace  = typename TEST_EXECSPACE::memory_space;
   using ViewType  = Kokkos::View<int64_t***, ExecSpace>;
 
   constexpr size_t d1 = 5;
