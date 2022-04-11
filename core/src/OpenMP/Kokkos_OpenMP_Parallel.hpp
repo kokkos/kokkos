@@ -1231,5 +1231,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#undef KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+#undef KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE
+
 #endif
 #endif /* KOKKOS_OPENMP_PARALLEL_HPP */
