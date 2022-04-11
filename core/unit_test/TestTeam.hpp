@@ -1245,7 +1245,16 @@ struct TestShmemSize {
   TestShmemSize() { run(); }
 
   void run() {
-    test_shmem_size();
+    using view_type = Kokkos::View<int64_t ***, ExecSpace>;
+
+    size_t d1 = 5;
+    size_t d2 = 6;
+    size_t d3 = 7;
+
+    size_t size = view_type::shmem_size(d1, d2, d3);
+
+    ASSERT_EQ(size, (d1 * d2 * d3 + 1) * sizeof(int64_t));
+
     test_layout_stride();
   }
 
@@ -1260,32 +1269,6 @@ struct TestShmemSize {
         Kokkos::View<double ***, Kokkos::LayoutRight, ExecSpace>::shmem_size(
             extents[0], extents[1], extents[2]);
     ASSERT_EQ(s1, s2);
-  }
-
-  void test_shmem_size() {
-    using view_type      = Kokkos::View<int64_t ***, ExecSpace>;
-    using view_test_type = Kokkos::View<size_t *, ExecSpace>;
-
-    size_t d1 = 5;
-    size_t d2 = 6;
-    size_t d3 = 7;
-
-    size_t size = view_type::shmem_size(d1, d2, d3);
-
-    ASSERT_EQ(size, (d1 * d2 * d3 + 1) * sizeof(int64_t));
-
-    view_test_type shmemSize("shmemSize", 1);
-
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, 1), KOKKOS_LAMBDA(const int &) {
-          auto shmem   = view_type::shmem_size(d1, d2, d3);
-          shmemSize(0) = shmem;
-        });
-
-    auto shmemSizeHost =
-        Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), shmemSize);
-
-    ASSERT_EQ(size, shmemSizeHost(0));
   }
 };
 
