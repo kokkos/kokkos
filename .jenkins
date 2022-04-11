@@ -101,6 +101,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                     }
@@ -172,6 +173,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         LC_ALL = 'C'
@@ -312,6 +314,9 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        // Nested OpenMP does not work for this configuration,
+                        // so disabling it
+                        OMP_MAX_ACTIVE_LEVELS = 1
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
@@ -416,6 +421,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PROC_BIND = 'true'
                     }
                     steps {
