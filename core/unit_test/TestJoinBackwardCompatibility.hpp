@@ -52,11 +52,12 @@ namespace {
 struct MyValueType {};
 
 KOKKOS_FUNCTION void operator+=(MyValueType &, const MyValueType &) {
-  FAIL() << "FunctorAnalysis fell back to operator+=(non-volatile)";
+  Kokkos::abort("FunctorAnalysis fell back to operator+=(non-volatile)");
 }
 
-KOKKOS_FUNCTION void operator+=(volatile MyValueType &, const volatile MyValueType &) {
-  FAIL() << "FunctorAnalysis fell back to operator+=(volatile)";
+KOKKOS_FUNCTION void operator+=(volatile MyValueType &,
+                                const volatile MyValueType &) {
+  Kokkos::abort("FunctorAnalysis fell back to operator+=(volatile)");
 }
 
 struct ReducerWithJoinThatTakesNonVolatileQualifiedArgs {
@@ -75,7 +76,8 @@ struct ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs {
   KOKKOS_FUNCTION void join(MyValueType &, MyValueType const &) const {}
   KOKKOS_FUNCTION void join(MyValueType volatile &,
                             MyValueType const volatile &) const {
-    FAIL() << "join overload taking non-volatile parameters should be selected";
+    Kokkos::abort(
+        "join overload taking non-volatile parameters should be selected");
   }
   KOKKOS_FUNCTION void operator()(int, MyValueType &) const {}
   KOKKOS_FUNCTION
