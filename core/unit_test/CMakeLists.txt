@@ -118,6 +118,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         ExecutionSpace
         FunctorAnalysis
         Init
+        JoinBackwardCompatibility
         LocalDeepCopy
         MinMaxClamp
         MathematicalConstants
