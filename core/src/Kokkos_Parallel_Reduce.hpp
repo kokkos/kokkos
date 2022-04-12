@@ -1275,7 +1275,7 @@ struct ParallelReduceReturnValue<
     typename std::enable_if<!Kokkos::is_view<ReturnType>::value &&
                             (!std::is_array<ReturnType>::value &&
                              !std::is_pointer<ReturnType>::value) &&
-                            !Kokkos::is_reducer_type<ReturnType>::value>::type,
+                            !Kokkos::is_reducer<ReturnType>::value>::type,
     ReturnType, FunctorType> {
   using return_type =
       Kokkos::View<ReturnType, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
@@ -1312,7 +1312,7 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<Kokkos::is_reducer_type<ReturnType>::value>::type,
+    typename std::enable_if<Kokkos::is_reducer<ReturnType>::value>::type,
     ReturnType, FunctorType> {
   using return_type  = ReturnType;
   using reducer_type = ReturnType;
