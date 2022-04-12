@@ -45,7 +45,7 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-namespace Test {
+namespace {
 
 struct MyJoinBackCompatValueType {};
 
@@ -110,4 +110,4 @@ TEST(TEST_CATEGORY, join_backward_compatibility) {
   test_join_backward_compatibility();
 }
 
-}  // namespace Test
+}  // namespace
