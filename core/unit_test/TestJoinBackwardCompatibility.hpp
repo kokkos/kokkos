@@ -47,24 +47,24 @@
 
 namespace Test {
 
-namespace {
+struct MyJoinBackCompatValueType {};
 
-struct MyValueType {};
-
-KOKKOS_FUNCTION void operator+=(MyValueType &, const MyValueType &) {
+KOKKOS_FUNCTION void operator+=(MyJoinBackCompatValueType &,
+                                const MyJoinBackCompatValueType &) {
   Kokkos::abort("FunctorAnalysis fell back to operator+=(non-volatile)");
 }
 
-KOKKOS_FUNCTION void operator+=(volatile MyValueType &,
-                                const volatile MyValueType &) {
+KOKKOS_FUNCTION void operator+=(volatile MyJoinBackCompatValueType &,
+                                const volatile MyJoinBackCompatValueType &) {
   Kokkos::abort("FunctorAnalysis fell back to operator+=(volatile)");
 }
 
 struct ReducerWithJoinThatTakesNonVolatileQualifiedArgs {
   using reducer    = ReducerWithJoinThatTakesNonVolatileQualifiedArgs;
-  using value_type = MyValueType;
-  KOKKOS_FUNCTION void join(MyValueType &, MyValueType const &) const {}
-  KOKKOS_FUNCTION void operator()(int, MyValueType &) const {}
+  using value_type = MyJoinBackCompatValueType;
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType &,
+                            MyJoinBackCompatValueType const &) const {}
+  KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION
   ReducerWithJoinThatTakesNonVolatileQualifiedArgs() {}
 };
@@ -72,31 +72,30 @@ struct ReducerWithJoinThatTakesNonVolatileQualifiedArgs {
 struct ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs {
   using reducer =
       ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs;
-  using value_type = MyValueType;
-  KOKKOS_FUNCTION void join(MyValueType &, MyValueType const &) const {}
-  KOKKOS_FUNCTION void join(MyValueType volatile &,
-                            MyValueType const volatile &) const {
+  using value_type = MyJoinBackCompatValueType;
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType &,
+                            MyJoinBackCompatValueType const &) const {}
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &,
+                            MyJoinBackCompatValueType const volatile &) const {
     Kokkos::abort(
         "join overload taking non-volatile parameters should be selected");
   }
-  KOKKOS_FUNCTION void operator()(int, MyValueType &) const {}
+  KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION
   ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs() {}
 };
 
 struct ReducerWithJoinThatTakesVolatileQualifiedArgs {
   using reducer    = ReducerWithJoinThatTakesVolatileQualifiedArgs;
-  using value_type = MyValueType;
-  KOKKOS_FUNCTION void join(MyValueType volatile &,
-                            MyValueType const volatile &) const {}
-  KOKKOS_FUNCTION void operator()(int, MyValueType &) const {}
+  using value_type = MyJoinBackCompatValueType;
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &,
+                            MyJoinBackCompatValueType const volatile &) const {}
+  KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION ReducerWithJoinThatTakesVolatileQualifiedArgs() {}
 };
 
-}  // namespace
-
 void test_join_backward_compatibility() {
-  MyValueType result;
+  MyJoinBackCompatValueType result;
   Kokkos::RangePolicy<> policy(0, 1);
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result);
