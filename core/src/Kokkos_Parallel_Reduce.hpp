@@ -54,6 +54,7 @@
 
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <class T, class Enable = void>
 struct is_reducer_type {
   enum { value = 0 };
@@ -66,6 +67,7 @@ struct is_reducer_type<
            typename std::remove_cv<typename T::reducer>::type>::value>::type> {
   enum { value = 1 };
 };
+#endif
 
 template <class Scalar, class Space>
 struct Sum {
