@@ -133,6 +133,14 @@ void test_join_backward_compatibility() {
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesNonVolatileQualifiedArgs{}, result);
   ASSERT_EQ(result.err, no_error);
+
+  // avoid warnings unused function 'operator+='
+  result += {};
+  ASSERT_EQ(result.err, error_operator_plus_equal);
+  static_cast<MyJoinBackCompatValueType volatile &>(result) +=
+      static_cast<MyJoinBackCompatValueType const volatile &>(result);
+  ASSERT_EQ(result.err,
+            error_operator_plus_equal | error_operator_plus_equal_volatile);
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
