@@ -365,7 +365,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       std::is_same<typename traits::array_layout, Kokkos::LayoutStride>::value;
 
   static constexpr bool is_default_map =
-      std::is_same<typename traits::specialize, void>::value &&
+      std::is_void<typename traits::specialize>::value &&
       (is_layout_left || is_layout_right || is_layout_stride);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)

@@ -81,14 +81,14 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   ParallelFor& operator=(const ParallelFor&) = delete;
 
   template <class TagType>
-  inline __device__ std::enable_if_t<std::is_same<TagType, void>::value>
-  exec_range(const Member i) const {
+  inline __device__ std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const Member i) const {
     m_functor(i);
   }
 
   template <class TagType>
-  inline __device__ std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const Member i) const {
+  inline __device__ std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const Member i) const {
     m_functor(TagType(), i);
   }
 
@@ -216,14 +216,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
-  exec_range(const Member& i, reference_type update) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const Member& i, reference_type update) const {
     m_functor(i, update);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const Member& i, reference_type update) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const Member& i, reference_type update) const {
     m_functor(TagType(), i, update);
   }
 
@@ -511,16 +511,14 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 #endif
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
-  exec_range(const Member& i, reference_type update,
-             const bool final_result) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const Member& i, reference_type update, const bool final_result) const {
     m_functor(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const Member& i, reference_type update,
-             const bool final_result) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const Member& i, reference_type update, const bool final_result) const {
     m_functor(TagType(), i, update, final_result);
   }
 
@@ -803,16 +801,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 #endif
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
-  exec_range(const Member& i, reference_type update,
-             const bool final_result) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const Member& i, reference_type update, const bool final_result) const {
     m_functor(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const Member& i, reference_type update,
-             const bool final_result) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const Member& i, reference_type update, const bool final_result) const {
     m_functor(TagType(), i, update, final_result);
   }
 

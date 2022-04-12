@@ -75,7 +75,7 @@ class TestRangePolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Static>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -90,7 +90,7 @@ class TestRangePolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Static>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -106,7 +106,7 @@ class TestRangePolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -122,7 +122,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -138,7 +138,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -202,7 +202,7 @@ class TestRangePolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -218,7 +218,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -234,7 +234,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -350,7 +350,7 @@ class TestTeamPolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Static>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -365,7 +365,7 @@ class TestTeamPolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Static>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -381,7 +381,7 @@ class TestTeamPolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -397,7 +397,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -413,7 +413,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -477,7 +477,7 @@ class TestTeamPolicyConstruction {
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -493,7 +493,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {
@@ -509,7 +509,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
-      ASSERT_TRUE((std::is_same<work_tag, void>::value));
+      ASSERT_TRUE((std::is_void<work_tag>::value));
     }
 
     {

@@ -130,7 +130,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp target teams distribute parallel for collapse(2) map(to : functor)
     for (auto i0 = begin_0; i0 < end_0; ++i0) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
-        if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+        if constexpr (std::is_void<typename Policy::work_tag>::value)
           functor(i0, i1);
         else
           functor(typename Policy::work_tag(), i0, i1);
@@ -148,7 +148,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp for collapse(2)
     for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
       for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1) {
-        if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+        if constexpr (std::is_void<typename Policy::work_tag>::value)
           functor(i0, i1);
         else
           functor(typename Policy::work_tag(), i0, i1);
@@ -174,7 +174,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     for (auto i0 = begin_0; i0 < end_0; ++i0) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
-          if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+          if constexpr (std::is_void<typename Policy::work_tag>::value)
             functor(i0, i1, i2);
           else
             functor(typename Policy::work_tag(), i0, i1, i2);
@@ -198,7 +198,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
       for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
         for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2) {
-          if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+          if constexpr (std::is_void<typename Policy::work_tag>::value)
             functor(i0, i1, i2);
           else
             functor(typename Policy::work_tag(), i0, i1, i2);
@@ -227,7 +227,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
           for (auto i3 = begin_3; i3 < end_3; ++i3) {
-            if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+            if constexpr (std::is_void<typename Policy::work_tag>::value)
               functor(i0, i1, i2, i3);
             else
               functor(typename Policy::work_tag(), i0, i1, i2, i3);
@@ -257,7 +257,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
         for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2)
           for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3) {
-            if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+            if constexpr (std::is_void<typename Policy::work_tag>::value)
               functor(i0, i1, i2, i3);
             else
               functor(typename Policy::work_tag(), i0, i1, i2, i3);
@@ -530,7 +530,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               : result)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
-          if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+          if constexpr (std::is_void<typename Policy::work_tag>::value)
             functor(i0, i1, result);
           else
             functor(typename Policy::work_tag(), i0, i1, result);
@@ -541,7 +541,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
-          if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+          if constexpr (std::is_void<typename Policy::work_tag>::value)
             functor(i0, i1, result);
           else
             functor(typename Policy::work_tag(), i0, i1, result);
@@ -582,7 +582,7 @@ reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
-            if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+            if constexpr (std::is_void<typename Policy::work_tag>::value)
               functor(i0, i1, i2, result);
             else
               functor(typename Policy::work_tag(), i0, i1, i2, result);
@@ -595,7 +595,7 @@ reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
-            if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+            if constexpr (std::is_void<typename Policy::work_tag>::value)
               functor(i0, i1, i2, result);
             else
               functor(typename Policy::work_tag(), i0, i1, i2, result);

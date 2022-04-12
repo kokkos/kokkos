@@ -240,7 +240,7 @@ class UnorderedMap {
   using const_map_type = UnorderedMap<const_key_type, const_value_type,
                                       device_type, hasher_type, equal_to_type>;
 
-  static const bool is_set = std::is_same<void, value_type>::value;
+  static const bool is_set = std::is_void<value_type>::value;
   static const bool has_const_key =
       std::is_same<const_key_type, declared_key_type>::value;
   static const bool has_const_value =

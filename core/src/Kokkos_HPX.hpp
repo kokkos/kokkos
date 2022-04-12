@@ -1017,31 +1017,29 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  static std::enable_if_t<std::is_same<TagType, void>::value> execute_functor(
+  static std::enable_if_t<std::is_void<TagType>::value> execute_functor(
       const FunctorType &functor, const Member i) {
     functor(i);
   }
 
   template <class TagType>
-  static std::enable_if_t<!std::is_same<TagType, void>::value> execute_functor(
+  static std::enable_if_t<!std::is_void<TagType>::value> execute_functor(
       const FunctorType &functor, const Member i) {
     const TagType t{};
     functor(t, i);
   }
 
   template <class TagType>
-  static std::enable_if_t<std::is_same<TagType, void>::value>
-  execute_functor_range(const FunctorType &functor, const Member i_begin,
-                        const Member i_end) {
+  static std::enable_if_t<std::is_void<TagType>::value> execute_functor_range(
+      const FunctorType &functor, const Member i_begin, const Member i_end) {
     for (Member i = i_begin; i < i_end; ++i) {
       functor(i);
     }
   }
 
   template <class TagType>
-  static std::enable_if_t<!std::is_same<TagType, void>::value>
-  execute_functor_range(const FunctorType &functor, const Member i_begin,
-                        const Member i_end) {
+  static std::enable_if_t<!std::is_void<TagType>::value> execute_functor_range(
+      const FunctorType &functor, const Member i_begin, const Member i_end) {
     const TagType t{};
     for (Member i = i_begin; i < i_end; ++i) {
       functor(t, i);
@@ -1189,33 +1187,29 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   bool m_force_synchronous;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
-  execute_functor(const FunctorType &functor, const Member i,
-                  reference_type update) {
+  inline static std::enable_if_t<std::is_void<TagType>::value> execute_functor(
+      const FunctorType &functor, const Member i, reference_type update) {
     functor(i, update);
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  execute_functor(const FunctorType &functor, const Member i,
-                  reference_type update) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> execute_functor(
+      const FunctorType &functor, const Member i, reference_type update) {
     const TagType t{};
     functor(t, i, update);
   }
 
   template <class TagType>
-  inline std::enable_if_t<std::is_same<TagType, void>::value>
-  execute_functor_range(reference_type update, const Member i_begin,
-                        const Member i_end) const {
+  inline std::enable_if_t<std::is_void<TagType>::value> execute_functor_range(
+      reference_type update, const Member i_begin, const Member i_end) const {
     for (Member i = i_begin; i < i_end; ++i) {
       m_functor(i, update);
     }
   }
 
   template <class TagType>
-  inline std::enable_if_t<!std::is_same<TagType, void>::value>
-  execute_functor_range(reference_type update, const Member i_begin,
-                        const Member i_end) const {
+  inline std::enable_if_t<!std::is_void<TagType>::value> execute_functor_range(
+      reference_type update, const Member i_begin, const Member i_end) const {
     const TagType t{};
 
     for (Member i = i_begin; i < i_end; ++i) {
@@ -1596,7 +1590,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Member i_begin,
                         const Member i_end, reference_type update,
                         const bool final) {
@@ -1606,7 +1600,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<!std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Member i_begin,
                         const Member i_end, reference_type update,
                         const bool final) {
@@ -1707,7 +1701,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   ReturnType &m_returnvalue;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Member i_begin,
                         const Member i_end, reference_type update,
                         const bool final) {
@@ -1717,7 +1711,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<!std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Member i_begin,
                         const Member i_end, reference_type update,
                         const bool final) {
@@ -1826,24 +1820,22 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const std::size_t m_shared;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
-  execute_functor(const FunctorType &functor, const Policy &policy,
-                  const int league_rank, char *local_buffer,
-                  const std::size_t local_buffer_size) {
+  inline static std::enable_if_t<std::is_void<TagType>::value> execute_functor(
+      const FunctorType &functor, const Policy &policy, const int league_rank,
+      char *local_buffer, const std::size_t local_buffer_size) {
     functor(Member(policy, 0, league_rank, local_buffer, local_buffer_size));
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  execute_functor(const FunctorType &functor, const Policy &policy,
-                  const int league_rank, char *local_buffer,
-                  const std::size_t local_buffer_size) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> execute_functor(
+      const FunctorType &functor, const Policy &policy, const int league_rank,
+      char *local_buffer, const std::size_t local_buffer_size) {
     const TagType t{};
     functor(t, Member(policy, 0, league_rank, local_buffer, local_buffer_size));
   }
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Policy &policy,
                         const int league_rank_begin, const int league_rank_end,
                         char *local_buffer,
@@ -1855,7 +1847,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<!std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Policy &policy,
                         const int league_rank_begin, const int league_rank_end,
                         char *local_buffer,
@@ -1951,26 +1943,26 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   bool m_force_synchronous;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
-  execute_functor(const FunctorType &functor, const Policy &policy,
-                  const int league_rank, char *local_buffer,
-                  const std::size_t local_buffer_size, reference_type update) {
+  inline static std::enable_if_t<std::is_void<TagType>::value> execute_functor(
+      const FunctorType &functor, const Policy &policy, const int league_rank,
+      char *local_buffer, const std::size_t local_buffer_size,
+      reference_type update) {
     functor(Member(policy, 0, league_rank, local_buffer, local_buffer_size),
             update);
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  execute_functor(const FunctorType &functor, const Policy &policy,
-                  const int league_rank, char *local_buffer,
-                  const std::size_t local_buffer_size, reference_type update) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> execute_functor(
+      const FunctorType &functor, const Policy &policy, const int league_rank,
+      char *local_buffer, const std::size_t local_buffer_size,
+      reference_type update) {
     const TagType t{};
     functor(t, Member(policy, 0, league_rank, local_buffer, local_buffer_size),
             update);
   }
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Policy &policy,
                         const int league_rank_begin, const int league_rank_end,
                         char *local_buffer, const std::size_t local_buffer_size,
@@ -1983,7 +1975,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
+  inline static std::enable_if_t<!std::is_void<TagType>::value>
   execute_functor_range(const FunctorType &functor, const Policy &policy,
                         const int league_rank_begin, const int league_rank_end,
                         char *local_buffer, const std::size_t local_buffer_size,

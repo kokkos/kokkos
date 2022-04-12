@@ -353,7 +353,7 @@ struct is_integral_extent {
   enum : bool { value = is_integral_extent_type<type>::value };
 
   static_assert(value || std::is_integral<type>::value ||
-                    std::is_same<type, void>::value,
+                    std::is_void<type>::value,
                 "subview argument must be either integral or integral extent");
 };
 
@@ -2672,7 +2672,7 @@ struct ViewDataHandle<
     Traits,
     std::enable_if_t<(std::is_same<typename Traits::non_const_value_type,
                                    typename Traits::value_type>::value &&
-                      std::is_same<typename Traits::specialize, void>::value &&
+                      std::is_void<typename Traits::specialize>::value &&
                       Traits::memory_traits::is_atomic)>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Kokkos::Impl::AtomicViewDataHandle<Traits>;
@@ -2695,7 +2695,7 @@ struct ViewDataHandle<
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    std::enable_if_t<(std::is_same<typename Traits::specialize, void>::value &&
+    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
                       (!Traits::memory_traits::is_aligned) &&
                       Traits::memory_traits::is_restrict
 #ifdef KOKKOS_ENABLE_CUDA
@@ -2725,7 +2725,7 @@ struct ViewDataHandle<
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    std::enable_if_t<(std::is_same<typename Traits::specialize, void>::value &&
+    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
                       Traits::memory_traits::is_aligned &&
                       (!Traits::memory_traits::is_restrict)
 #ifdef KOKKOS_ENABLE_CUDA
@@ -2770,7 +2770,7 @@ struct ViewDataHandle<
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    std::enable_if_t<(std::is_same<typename Traits::specialize, void>::value &&
+    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
                       Traits::memory_traits::is_aligned &&
                       Traits::memory_traits::is_restrict
 #ifdef KOKKOS_ENABLE_CUDA
@@ -3102,7 +3102,7 @@ template <class Traits>
 class ViewMapping<
     Traits,
     std::enable_if_t<(
-        std::is_same<typename Traits::specialize, void>::value &&
+        std::is_void<typename Traits::specialize>::value &&
         ViewOffset<typename Traits::dimension, typename Traits::array_layout,
                    void>::is_mapping_plugin::value)>> {
  public:
@@ -3449,8 +3449,8 @@ class ViewMapping<
               value) &&  // Added to have a new specialization for SrcType of
                          // LayoutStride
         // default mappings
-        std::is_same<typename DstTraits::specialize, void>::value &&
-        std::is_same<typename SrcTraits::specialize, void>::value &&
+        std::is_void<typename DstTraits::specialize>::value &&
+        std::is_void<typename SrcTraits::specialize>::value &&
         (
             // same layout
             std::is_same<typename DstTraits::array_layout,
@@ -3588,8 +3588,8 @@ class ViewMapping<
     std::enable_if_t<(
         std::is_same<typename SrcTraits::array_layout,
                      Kokkos::LayoutStride>::value &&
-        std::is_same<typename DstTraits::specialize, void>::value &&
-        std::is_same<typename SrcTraits::specialize, void>::value &&
+        std::is_void<typename DstTraits::specialize>::value &&
+        std::is_void<typename SrcTraits::specialize>::value &&
         (
             // same layout
             std::is_same<typename DstTraits::array_layout,
@@ -3784,14 +3784,13 @@ struct SubViewDataType : SubViewDataTypeImpl<void, ValueType, Exts, Args...> {};
 
 template <class SrcTraits, class... Args>
 class ViewMapping<
-    std::enable_if_t<(
-        std::is_same<typename SrcTraits::specialize, void>::value &&
-        (std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutLeft>::value ||
-         std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutRight>::value ||
-         std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutStride>::value))>,
+    std::enable_if_t<(std::is_void<typename SrcTraits::specialize>::value &&
+                      (std::is_same<typename SrcTraits::array_layout,
+                                    Kokkos::LayoutLeft>::value ||
+                       std::is_same<typename SrcTraits::array_layout,
+                                    Kokkos::LayoutRight>::value ||
+                       std::is_same<typename SrcTraits::array_layout,
+                                    Kokkos::LayoutStride>::value))>,
     SrcTraits, Args...> {
  private:
   static_assert(SrcTraits::rank == sizeof...(Args),

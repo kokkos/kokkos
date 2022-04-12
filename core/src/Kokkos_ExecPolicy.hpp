@@ -860,7 +860,7 @@ ThreadVectorRange(const TeamMemberType&, const iType1& arg_begin,
 namespace Impl {
 
 template <typename FunctorType, typename TagType,
-          bool HasTag = !std::is_same<TagType, void>::value>
+          bool HasTag = !std::is_void<TagType>::value>
 struct ParallelConstructName;
 
 template <typename FunctorType, typename TagType>

@@ -302,7 +302,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           typename Analysis::Reducer final_reducer(&selected_reducer);
           reference_type update = final_reducer.init(results_ptr);
           if (size == 1) {
-            if constexpr (std::is_same<WorkTag, void>::value)
+            if constexpr (std::is_void<WorkTag>::value)
               functor(begin, update);
             else
               functor(WorkTag(), begin, update);
@@ -362,7 +362,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                     final_reducer.init(&local_mem[local_id * value_count]);
                 for (index_type id = global_id; id < upper_bound;
                      id += wgroup_size) {
-                  if constexpr (std::is_same<WorkTag, void>::value)
+                  if constexpr (std::is_void<WorkTag>::value)
                     functor(id + begin, update);
                   else
                     functor(WorkTag(), id + begin, update);
@@ -406,7 +406,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                 reference_type update = final_reducer.init(&local_value);
                 for (index_type id = global_id; id < upper_bound;
                      id += wgroup_size) {
-                  if constexpr (std::is_same<WorkTag, void>::value)
+                  if constexpr (std::is_void<WorkTag>::value)
                     functor(id + begin, update);
                   else
                     functor(WorkTag(), id + begin, update);

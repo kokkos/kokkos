@@ -768,7 +768,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
         loop_boundaries,
     Closure const& closure,
-    std::enable_if<Impl::is_host_thread_team_member<Member>::value> const** =
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
         nullptr) {
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep

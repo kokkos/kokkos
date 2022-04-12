@@ -631,8 +631,7 @@ void test_view_mapping() {
 
     using a_const_int_r1 = ViewDataAnalysis<const int[], void>;
 
-    static_assert(
-        std::is_same<typename a_const_int_r1::specialize, void>::value, "");
+    static_assert(std::is_void<typename a_const_int_r1::specialize>::value, "");
     static_assert(std::is_same<typename a_const_int_r1::dimension,
                                Kokkos::Impl::ViewDimension<0> >::value,
                   "");
@@ -663,8 +662,7 @@ void test_view_mapping() {
 
     using a_const_int_r3 = ViewDataAnalysis<const int* * [4], void>;
 
-    static_assert(
-        std::is_same<typename a_const_int_r3::specialize, void>::value, "");
+    static_assert(std::is_void<typename a_const_int_r3::specialize>::value, "");
 
     static_assert(std::is_same<typename a_const_int_r3::dimension,
                                Kokkos::Impl::ViewDimension<0, 0, 4> >::value,

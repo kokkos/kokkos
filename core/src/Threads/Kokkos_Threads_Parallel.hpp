@@ -74,7 +74,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value> exec_range(
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const FunctorType &functor, const Member ibeg, const Member iend) {
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
     defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
@@ -86,8 +86,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const FunctorType &functor, const Member ibeg, const Member iend) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType &functor, const Member ibeg, const Member iend) {
     const TagType t{};
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
     defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
@@ -272,7 +272,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_shared;
 
   template <class TagType, class Schedule>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value &&
+  inline static std::enable_if_t<std::is_void<TagType>::value &&
                                  std::is_same<Schedule, Kokkos::Static>::value>
   exec_team(const FunctorType &functor, Member member) {
     for (; member.valid_static(); member.next_static()) {
@@ -281,7 +281,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType, class Schedule>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value &&
+  inline static std::enable_if_t<!std::is_void<TagType>::value &&
                                  std::is_same<Schedule, Kokkos::Static>::value>
   exec_team(const FunctorType &functor, Member member) {
     const TagType t{};
@@ -291,7 +291,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType, class Schedule>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value &&
+  inline static std::enable_if_t<std::is_void<TagType>::value &&
                                  std::is_same<Schedule, Kokkos::Dynamic>::value>
   exec_team(const FunctorType &functor, Member member) {
     for (; member.valid_dynamic(); member.next_dynamic()) {
@@ -300,7 +300,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType, class Schedule>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value &&
+  inline static std::enable_if_t<!std::is_void<TagType>::value &&
                                  std::is_same<Schedule, Kokkos::Dynamic>::value>
   exec_team(const FunctorType &functor, Member member) {
     const TagType t{};
@@ -382,7 +382,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const pointer_type m_result_ptr;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value> exec_range(
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const FunctorType &functor, const Member &ibeg, const Member &iend,
       reference_type update) {
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
@@ -395,9 +395,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const FunctorType &functor, const Member &ibeg, const Member &iend,
-             reference_type update) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType &functor, const Member &ibeg, const Member &iend,
+      reference_type update) {
     const TagType t{};
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
     defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
@@ -723,7 +723,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_shared;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value> exec_team(
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_team(
       const FunctorType &functor, Member member, reference_type update) {
     for (; member.valid_static(); member.next_static()) {
       functor(member, update);
@@ -731,7 +731,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value> exec_team(
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_team(
       const FunctorType &functor, Member member, reference_type update) {
     const TagType t{};
     for (; member.valid_static(); member.next_static()) {
@@ -848,7 +848,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value> exec_range(
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const FunctorType &functor, const Member &ibeg, const Member &iend,
       reference_type update, const bool final) {
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
@@ -861,9 +861,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const FunctorType &functor, const Member &ibeg, const Member &iend,
-             reference_type update, const bool final) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType &functor, const Member &ibeg, const Member &iend,
+      reference_type update, const bool final) {
     const TagType t{};
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
     defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
@@ -927,7 +927,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   ReturnType &m_returnvalue;
 
   template <class TagType>
-  inline static std::enable_if_t<std::is_same<TagType, void>::value> exec_range(
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const FunctorType &functor, const Member &ibeg, const Member &iend,
       reference_type update, const bool final) {
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
@@ -940,9 +940,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline static std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_range(const FunctorType &functor, const Member &ibeg, const Member &iend,
-             reference_type update, const bool final) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType &functor, const Member &ibeg, const Member &iend,
+      reference_type update, const bool final) {
     const TagType t{};
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
     defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
