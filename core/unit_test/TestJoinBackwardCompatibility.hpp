@@ -45,25 +45,48 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-namespace Test {
+namespace {
 
-struct MyJoinBackCompatValueType {};
+enum MyErrorCode {
+  no_error                           = 0b000,
+  error_operator_plus_equal          = 0b001,
+  error_operator_plus_equal_volatile = 0b010,
+  error_join_volatile                = 0b100
 
-KOKKOS_FUNCTION void operator+=(MyJoinBackCompatValueType &,
-                                const MyJoinBackCompatValueType &) {
-  Kokkos::abort("FunctorAnalysis fell back to operator+=(non-volatile)");
+};
+
+KOKKOS_FUNCTION constexpr MyErrorCode operator|(MyErrorCode lhs,
+                                                MyErrorCode rhs) {
+  return static_cast<MyErrorCode>(static_cast<int>(lhs) |
+                                  static_cast<int>(rhs));
 }
 
-KOKKOS_FUNCTION void operator+=(volatile MyJoinBackCompatValueType &,
-                                const volatile MyJoinBackCompatValueType &) {
-  Kokkos::abort("FunctorAnalysis fell back to operator+=(volatile)");
+static_assert((no_error | error_operator_plus_equal_volatile) ==
+                  error_operator_plus_equal_volatile,
+              "");
+static_assert((error_join_volatile | error_operator_plus_equal) == 0b101, "");
+
+struct MyJoinBackCompatValueType {
+  MyErrorCode err = no_error;
+};
+
+KOKKOS_FUNCTION void operator+=(MyJoinBackCompatValueType &x,
+                                const MyJoinBackCompatValueType &y) {
+  x.err = x.err | y.err | error_operator_plus_equal;
+}
+
+KOKKOS_FUNCTION void operator+=(volatile MyJoinBackCompatValueType &x,
+                                const volatile MyJoinBackCompatValueType &y) {
+  x.err = x.err | y.err | error_operator_plus_equal_volatile;
 }
 
 struct ReducerWithJoinThatTakesNonVolatileQualifiedArgs {
   using reducer    = ReducerWithJoinThatTakesNonVolatileQualifiedArgs;
   using value_type = MyJoinBackCompatValueType;
-  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType &,
-                            MyJoinBackCompatValueType const &) const {}
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType &x,
+                            MyJoinBackCompatValueType const &y) const {
+    x.err = x.err | y.err;
+  }
   KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION
   ReducerWithJoinThatTakesNonVolatileQualifiedArgs() {}
@@ -73,12 +96,13 @@ struct ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs {
   using reducer =
       ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs;
   using value_type = MyJoinBackCompatValueType;
-  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType &,
-                            MyJoinBackCompatValueType const &) const {}
-  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &,
-                            MyJoinBackCompatValueType const volatile &) const {
-    Kokkos::abort(
-        "join overload taking non-volatile parameters should be selected");
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType &x,
+                            MyJoinBackCompatValueType const &y) const {
+    x.err = x.err | y.err;
+  }
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &x,
+                            MyJoinBackCompatValueType const volatile &y) const {
+    x.err = x.err | y.err | error_join_volatile;
   }
   KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION
@@ -88,8 +112,10 @@ struct ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs {
 struct ReducerWithJoinThatTakesVolatileQualifiedArgs {
   using reducer    = ReducerWithJoinThatTakesVolatileQualifiedArgs;
   using value_type = MyJoinBackCompatValueType;
-  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &,
-                            MyJoinBackCompatValueType const volatile &) const {}
+  KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &x,
+                            MyJoinBackCompatValueType const volatile &y) const {
+    x.err = x.err | y.err;
+  }
   KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION ReducerWithJoinThatTakesVolatileQualifiedArgs() {}
 };
@@ -99,15 +125,26 @@ void test_join_backward_compatibility() {
   Kokkos::RangePolicy<> policy(0, 1);
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result);
+  ASSERT_EQ(result.err, no_error);
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs{},
       result);
+  ASSERT_EQ(result.err, no_error);
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesNonVolatileQualifiedArgs{}, result);
+  ASSERT_EQ(result.err, no_error);
+
+  // avoid warnings unused function 'operator+='
+  result += {};
+  ASSERT_EQ(result.err, error_operator_plus_equal);
+  static_cast<MyJoinBackCompatValueType volatile &>(result) +=
+      static_cast<MyJoinBackCompatValueType const volatile &>(result);
+  ASSERT_EQ(result.err,
+            error_operator_plus_equal | error_operator_plus_equal_volatile);
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
   test_join_backward_compatibility();
 }
 
-}  // namespace Test
+}  // namespace
