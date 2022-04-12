@@ -55,18 +55,9 @@
 namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class T, class Enable = void>
-struct is_reducer_type {
-  enum { value = 0 };
-};
-
 template <class T>
-struct is_reducer_type<
-    T, typename std::enable_if<std::is_same<
-           typename std::remove_cv<T>::type,
-           typename std::remove_cv<typename T::reducer>::type>::value>::type> {
-  enum { value = 1 };
-};
+using is_reducer_type KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::is_reducer instead!") = Kokkos::is_reducer<T>;
 #endif
 
 template <class Scalar, class Space>
