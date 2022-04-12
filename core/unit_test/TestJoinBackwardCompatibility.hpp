@@ -61,9 +61,10 @@ KOKKOS_FUNCTION constexpr MyErrorCode operator|(MyErrorCode lhs,
                                   static_cast<int>(rhs));
 }
 
-static_assert(no_error | error_operator_plus_equal_volatile ==
-                             error_operator_plus_equal_volatile);
-static_assert(error_join_volatile | error_operator_plus_equal == 0b101);
+static_assert((no_error | error_operator_plus_equal_volatile) ==
+                  error_operator_plus_equal_volatile,
+              "");
+static_assert((error_join_volatile | error_operator_plus_equal) == 0b101, "");
 
 struct MyJoinBackCompatValueType {
   MyErrorCode err = no_error;
