@@ -1403,12 +1403,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  */
 
 template <typename iType, class Lambda, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<!Kokkos::is_reducer_type<ValueType>::value>
-    parallel_reduce(
-        const Impl::TeamThreadRangeBoundariesStruct<
-            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-        const Lambda& lambda, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ValueType& result) {
   // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
   // elements in the array <= 32. For reduction we allocate, 16 bytes per
   // element in the scratch space, hence, 16*32 = 512.
@@ -1448,12 +1446,10 @@ KOKKOS_INLINE_FUNCTION
 // and crashes. We should try this with every new compiler
 // This is the variant we actually wanted to write
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(
-        const Impl::TeamThreadRangeBoundariesStruct<
-            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-        const Lambda& lambda, ReducerType result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType result) {
   using ValueType = typename ReducerType::value_type;
 
 #pragma omp declare reduction(                                               \
@@ -1483,12 +1479,10 @@ KOKKOS_INLINE_FUNCTION
 }
 #else
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(
-        const Impl::TeamThreadRangeBoundariesStruct<
-            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-        const Lambda& lambda, ReducerType result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType result) {
   using ValueType = typename ReducerType::value_type;
 
   // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
@@ -1678,12 +1672,10 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 }
 
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(
-        const Impl::ThreadVectorRangeBoundariesStruct<
-            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-        const Lambda& lambda, ReducerType const& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
 #pragma omp declare reduction(                                               \
@@ -1827,12 +1819,10 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
 #if !defined(KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND)
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(
-        const Impl::TeamVectorRangeBoundariesStruct<
-            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-        const Lambda& lambda, ReducerType const& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
+                    iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
   // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
@@ -1863,12 +1853,10 @@ KOKKOS_INLINE_FUNCTION
 }
 #else
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(
-        const Impl::TeamVectorRangeBoundariesStruct<
-            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-        const Lambda& lambda, ReducerType const& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
+                    iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
   // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of

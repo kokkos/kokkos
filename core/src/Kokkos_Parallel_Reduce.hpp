@@ -54,18 +54,11 @@
 
 namespace Kokkos {
 
-template <class T, class Enable = void>
-struct is_reducer_type {
-  enum { value = 0 };
-};
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <class T>
-struct is_reducer_type<
-    T, typename std::enable_if<std::is_same<
-           typename std::remove_cv<T>::type,
-           typename std::remove_cv<typename T::reducer>::type>::value>::type> {
-  enum { value = 1 };
-};
+using is_reducer_type KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::is_reducer instead!") = Kokkos::is_reducer<T>;
+#endif
 
 template <class Scalar, class Space>
 struct Sum {
@@ -1275,7 +1268,7 @@ struct ParallelReduceReturnValue<
     typename std::enable_if<!Kokkos::is_view<ReturnType>::value &&
                             (!std::is_array<ReturnType>::value &&
                              !std::is_pointer<ReturnType>::value) &&
-                            !Kokkos::is_reducer_type<ReturnType>::value>::type,
+                            !Kokkos::is_reducer<ReturnType>::value>::type,
     ReturnType, FunctorType> {
   using return_type =
       Kokkos::View<ReturnType, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
@@ -1312,7 +1305,7 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<Kokkos::is_reducer_type<ReturnType>::value>::type,
+    typename std::enable_if<Kokkos::is_reducer<ReturnType>::value>::type,
     ReturnType, FunctorType> {
   using return_type  = ReturnType;
   using reducer_type = ReturnType;
