@@ -51,6 +51,7 @@
 
 #include <type_traits>
 #include <algorithm>
+#include <utility>
 #include <limits>
 #include <cstddef>
 
@@ -344,5 +345,40 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 };
 
 }  // namespace Kokkos
+
+//<editor-fold desc="Support for structured binding">
+template <class T, std::size_t N>
+struct std::tuple_size<Kokkos::Array<T, N>>
+    : std::integral_constant<std::size_t, N> {};
+
+template <std::size_t I, class T, std::size_t N>
+struct std::tuple_element<I, Kokkos::Array<T, N>> {
+  using type = T;
+};
+
+namespace Kokkos {
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T& get(Array<T, N>& a) noexcept {
+  return a[I];
+}
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T const& get(Array<T, N> const& a) noexcept {
+  return a[I];
+}
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T&& get(Array<T, N>&& a) noexcept {
+  return std::move(a[I]);
+}
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
+  return std::move(a[I]);
+}
+
+}  // namespace Kokkos
+//</editor-fold>
 
 #endif /* #ifndef KOKKOS_ARRAY_HPP */
