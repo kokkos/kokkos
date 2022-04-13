@@ -113,14 +113,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
 };
 
 //----------------------------------------
-
-template <>
-struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
-                         Kokkos::Experimental::OpenMPTargetSpace> {
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
-};
 }  // namespace Impl
 }  // namespace Kokkos
 
