@@ -226,13 +226,13 @@ namespace Experimental {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <>
-class KOKKOS_DEPRECATED MasterLock<OpenMP> {
+class MasterLock<OpenMP> {
  public:
   void lock() { omp_set_lock(&m_lock); }
   void unlock() { omp_unset_lock(&m_lock); }
   bool try_lock() { return static_cast<bool>(omp_test_lock(&m_lock)); }
 
-  MasterLock() { omp_init_lock(&m_lock); }
+  KOKKOS_DEPRECATED MasterLock() { omp_init_lock(&m_lock); }
   ~MasterLock() { omp_destroy_lock(&m_lock); }
 
   MasterLock(MasterLock const&) = delete;
