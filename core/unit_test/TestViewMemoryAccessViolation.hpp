@@ -47,21 +47,6 @@
 #include <gtest/gtest.h>
 
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
-//<editor-fold desc="my_get(my_array) workaround">
-// Because using std::array on the device with CUDA would require compiling with
-// the '--expt-relaxed-constexpr' flag
-// clang-format off
-template <class T, std::size_t N>
-struct my_array {
-  T data[N];
-  KOKKOS_FUNCTION constexpr T const& operator[](std::size_t i) const { return data[i]; }
-};
-
-template <std::size_t I, class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T const& my_get(my_array<T, N> const& a) { return a[I]; }
-// clang-format on
-//</editor-fold>
-
 template <class View, class ExecutionSpace>
 struct TestViewMemoryAccessViolation {
   View v;
@@ -69,7 +54,7 @@ struct TestViewMemoryAccessViolation {
 
   template <std::size_t... Is>
   KOKKOS_FUNCTION decltype(auto) bad_access(std::index_sequence<Is...>) const {
-    return v(my_get<Is>(my_array<int, rank>{})...);
+    return v((Is * 0)...);
   }
 
   KOKKOS_FUNCTION void operator()(int) const {
