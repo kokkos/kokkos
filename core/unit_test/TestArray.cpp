@@ -63,4 +63,22 @@ KOKKOS_FUNCTION constexpr bool test_array() {
 
 STATIC_ASSERT(test_array());
 
+#ifdef KOKKOS_ENABLE_CXX17
+KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
+  constexpr Kokkos::Array<float, 2> a{};
+  auto& [xr, yr] = a;
+  (void)xr;
+  (void)yr;
+  auto [x, y] = a;
+  (void)x;
+  (void)y;
+  auto const& [xcr, ycr] = a;
+  (void)xcr;
+  (void)ycr;
+  return true;
+}
+
+STATIC_ASSERT(test_array_structured_binding_support());
+#endif
+
 }  // namespace
