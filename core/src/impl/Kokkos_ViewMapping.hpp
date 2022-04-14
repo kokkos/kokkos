@@ -4054,32 +4054,26 @@ struct RuntimeCheckViewMemoryAccessViolation<MemorySpace, AccessSpace, false> {
   template <class Track, class Map>
   KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const msg,
                                                         Track const& track,
-                                                        Map const& map) {
-    char const* lbl;
-
-    char const unmanaged[]   = "**UNMANAGED**";
-    char const unavailable[] = "**UNAVAILABLE**";
+                                                        Map const&) {
+    char err[1024] = "";
+    strncat(err, msg, 512);
+    strcat(err, " (label=\"");
 
     KOKKOS_IF_ON_HOST(({
       auto const tracker = track.m_tracker;
 
-      lbl = tracker.has_record() ? tracker.template get_label<void>().c_str()
-                                 : unmanaged;
-      (void)map;
-      (void)unavailable;
+      if (tracker.has_record()) {
+        strncat(err, tracker.template get_label<void>().c_str(), 256);
+      } else {
+        strcat(err, "**UNMANAGED**");
+      }
     }))
 
     KOKKOS_IF_ON_DEVICE(({
-      lbl = unavailable;
+      strcat(err, "**UNAVAILABLE**");
       (void)track;
-      (void)map;
-      (void)unmanaged;
     }))
 
-    char err[1024] = "";
-    strcat(err, msg);
-    strcat(err, " (label=\"");
-    strcat(err, lbl);
     strcat(err, "\")");
 
     Kokkos::abort(err);
