@@ -350,6 +350,10 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 // guarding against bogus error 'specialization in different namespace' with
 // older GCC that do not support C++17 anyway
 #if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU >= 710)
+#if defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 800
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
 template <class T, std::size_t N>
 struct std::tuple_size<Kokkos::Array<T, N>>
     : std::integral_constant<std::size_t, N> {};
@@ -358,6 +362,9 @@ template <std::size_t I, class T, std::size_t N>
 struct std::tuple_element<I, Kokkos::Array<T, N>> {
   using type = T;
 };
+#if defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 800
+#pragma clang diagnostic pop
+#endif
 #endif
 
 namespace Kokkos {
