@@ -44,6 +44,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -71,6 +72,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
@@ -114,6 +116,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG" \
                                 -DCMAKE_CXX_STANDARD=14 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -147,6 +150,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -187,6 +191,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=amdclang++ \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -220,6 +225,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror -Wno-undefined-internal -Wno-pass-failed" \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -256,6 +262,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=14 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -330,6 +337,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -391,6 +399,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=14 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
@@ -430,6 +439,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_STANDARD=14 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
