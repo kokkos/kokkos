@@ -353,6 +353,43 @@ void test_issue_1160_impl() {
   }
 }
 
+template <class ExecutionSpace>
+void test_issue_4978_impl() {
+  Kokkos::View<long long*, ExecutionSpace> element_("element", 9);
+
+  auto h_element = Kokkos::create_mirror_view(element_);
+
+  h_element(0) = LONG_LONG_MIN;
+  h_element(1) = 0;
+  h_element(2) = 3;
+  h_element(3) = 2;
+  h_element(4) = 1;
+  h_element(5) = 3;
+  h_element(6) = 6;
+  h_element(7) = 4;
+  h_element(8) = 3;
+
+  ExecutionSpace exec;
+  Kokkos::deep_copy(exec, element_, h_element);
+
+  using KeyViewType = decltype(element_);
+
+  Kokkos::sort(exec, element_);
+
+  Kokkos::deep_copy(exec, h_element, element_);
+  exec.fence();
+
+  ASSERT_EQ(h_element(0), LONG_LONG_MIN);
+  ASSERT_EQ(h_element(1), 0);
+  ASSERT_EQ(h_element(2), 1);
+  ASSERT_EQ(h_element(3), 2);
+  ASSERT_EQ(h_element(4), 3);
+  ASSERT_EQ(h_element(5), 3);
+  ASSERT_EQ(h_element(6), 3);
+  ASSERT_EQ(h_element(7), 4);
+  ASSERT_EQ(h_element(8), 6);
+}
+
 //----------------------------------------------------------------------------
 
 template <class ExecutionSpace, typename KeyType>
@@ -376,6 +413,11 @@ void test_issue_1160_sort() {
   test_issue_1160_impl<ExecutionSpace>();
 }
 
+template <class ExecutionSpace>
+void test_issue_4978_sort() {
+  test_issue_4978_impl<ExecutionSpace>();
+}
+
 template <class ExecutionSpace, typename KeyType>
 void test_sort(unsigned int N) {
   test_1D_sort<ExecutionSpace, KeyType>(N);
@@ -385,6 +427,7 @@ void test_sort(unsigned int N) {
   test_dynamic_view_sort<ExecutionSpace, KeyType>(N);
 #endif
   test_issue_1160_sort<ExecutionSpace>();
+  test_issue_4978_sort<ExecutionSpace>();
 }
 }  // namespace Impl
 }  // namespace Test
