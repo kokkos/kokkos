@@ -1,4 +1,22 @@
-FROM gcc:5.3.0
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    build-essential \
+    wget \
+    git \
+    bc \
+    ccache \
+    && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" >> /etc/apt/sources.list && \
+    echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" >> /etc/apt/sources.list && \
+    apt-get update && apt-get install -y g++-5 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 5 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 5 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
@@ -17,7 +35,7 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
     gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
-    grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
+    grep -i ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sed -e s/linux/Linux/ | sha256sum --check && \
     mkdir -p ${CMAKE_DIR} && \
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
     rm cmake*

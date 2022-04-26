@@ -55,7 +55,7 @@ we are unaware of.
 * Intel: 17.0.1
 * NVCC: 9.2.88
 * NVC++: 21.5
-* ROCM: 4.3
+* ROCm: 4.3
 * MSVC: 19.29
 * IBM XL: 16.1.1
 * Fujitsu: 4.5.0
@@ -70,7 +70,7 @@ we are unaware of.
 * MSVC: 19.29
 * ARM/Clang: 20.1
 * IBM XL: 16.1.1
-* ROCM: 4.3.0
+* ROCm: 4.3.0
 
 ### Build system:
 
@@ -80,7 +80,7 @@ we are unaware of.
 
 Primary tested compiler are passing in release mode
 with warnings as errors. They also are tested with a comprehensive set of
-backend combinations (i.e. OpenMP, Pthreads, Serial, OpenMP+Serial, ...).
+backend combinations (i.e. OpenMP, Threads, Serial, OpenMP+Serial, ...).
 We are using the following set of flags:
 * GCC:
    ````
@@ -193,7 +193,7 @@ The main reason is that you may otherwise need many different
 configurations of Kokkos installed depending on the required compile time
 features an application needs. For example there is only one default
 execution space, which means you need different installations to have OpenMP
-or Pthreads as the default space. Also for the CUDA backend there are certain
+or C++ threads as the default space. Also for the CUDA backend there are certain
 choices, such as allowing relocatable device code, which must be made at
 installation time. Building Kokkos inline uses largely the same process
 as compiling an application against an installed Kokkos library.

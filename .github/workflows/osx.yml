@@ -2,6 +2,10 @@ name: github-OSX
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
 jobs:
   osxci:
     name: osx-ci
@@ -12,7 +16,7 @@ jobs:
         include:
           - backend: "SERIAL"
             cmake_build_type: "RelWithDebInfo"
-          - backend: "PTHREAD"
+          - backend: "THREADS"
             cmake_build_type: "RelWithDebInfo"
           - backend: "SERIAL"
             cmake_build_type: "Debug"

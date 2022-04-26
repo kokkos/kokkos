@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
         ccache \
         python3 \
         libelf-dev \
+        g++-multilib \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -31,15 +32,15 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
     gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
-    grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
+    grep -i ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sed -e s/linux/Linux/ | sha256sum --check && \
     mkdir -p ${CMAKE_DIR} && \
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
     rm ${CMAKE_SCRIPT}
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
+ARG LLVM_VERSION=llvmorg-13.0.1-rc3
 ENV LLVM_DIR=/opt/llvm
-RUN LLVM_VERSION=887c7660bdf3f300bd1997dcfd7ace91787c0584 && \
-    LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
+RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
     LLVM_ARCHIVE=${LLVM_VERSION}.tar.gz &&\
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE} && \
@@ -52,22 +53,13 @@ RUN LLVM_VERSION=887c7660bdf3f300bd1997dcfd7ace91787c0584 && \
       -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
       -DCMAKE_C_COMPILER=gcc \
       -DCMAKE_CXX_COMPILER=g++ \
-      -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
+      -DLLVM_ENABLE_PROJECTS="clang" \
+      -DLLVM_ENABLE_RUNTIMES="openmp" \
       -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
     ../llvm && \
     make -j${NPROC} && \
     make install && \
-    rm -rf ../build/* && \
-    cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
-      -DCMAKE_C_COMPILER=$LLVM_DIR/bin/clang \
-      -DCMAKE_CXX_COMPILER=$LLVM_DIR/bin/clang++ \
-      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
-    ../openmp && \
-    make -j${NPROC} && \
-    make install && \
-    echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
+ENV LD_LIBRARY_PATH=${LLVM_DIR}/lib:$LD_LIBRARY_PATH
