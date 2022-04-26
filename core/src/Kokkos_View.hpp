@@ -823,16 +823,18 @@ class View : public ViewTraits<DataType, Properties...> {
 #define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)                               \
   Kokkos::Impl::runtime_check_memory_access_violation<                      \
       typename traits::memory_space>(                                       \
-      "Kokkos::View ERROR: attempt to access inaccessible memory space");   \
+      "Kokkos::View ERROR: attempt to access inaccessible memory space",    \
+      __VA_ARGS__);                                                         \
   Kokkos::Impl::view_verify_operator_bounds<typename traits::memory_space>( \
       __VA_ARGS__);
 
 #else
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)          \
-  Kokkos::Impl::runtime_check_memory_access_violation< \
-      typename traits::memory_space>(                  \
-      "Kokkos::View ERROR: attempt to access inaccessible memory space");
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)                            \
+  Kokkos::Impl::runtime_check_memory_access_violation<                   \
+      typename traits::memory_space>(                                    \
+      "Kokkos::View ERROR: attempt to access inaccessible memory space", \
+      __VA_ARGS__);
 
 #endif
 
