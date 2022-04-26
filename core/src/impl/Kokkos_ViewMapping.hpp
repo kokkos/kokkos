@@ -4055,15 +4055,15 @@ struct RuntimeCheckViewMemoryAccessViolation<MemorySpace, AccessSpace, false> {
   KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const msg,
                                                         Track const& track,
                                                         Map const&) {
-    char err[1024] = "";
-    strncat(err, msg, 512);
+    char err[256] = "";
+    strncat(err, msg, 64);
     strcat(err, " (label=\"");
 
     KOKKOS_IF_ON_HOST(({
       auto const tracker = track.m_tracker;
 
       if (tracker.has_record()) {
-        strncat(err, tracker.template get_label<void>().c_str(), 256);
+        strncat(err, tracker.template get_label<void>().c_str(), 128);
       } else {
         strcat(err, "**UNMANAGED**");
       }
