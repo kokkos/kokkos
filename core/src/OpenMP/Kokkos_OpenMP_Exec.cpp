@@ -67,8 +67,9 @@ __thread int t_openmp_hardware_id            = 0;
 __thread Impl::OpenMPExec *t_openmp_instance = nullptr;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-void OpenMPExec::validate_partition(const int nthreads, int &num_partitions,
-                                    int &partition_size) {
+void OpenMPExec::validate_partition_impl(const int nthreads,
+                                         int &num_partitions,
+                                         int &partition_size) {
   if (nthreads == 1) {
     num_partitions = 1;
     partition_size = 1;
