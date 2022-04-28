@@ -359,7 +359,7 @@ void test_issue_4978_impl() {
 
   auto h_element = Kokkos::create_mirror_view(element_);
 
-  h_element(0) = LONG_LONG_MIN;
+  h_element(0) = LLONG_MIN;
   h_element(1) = 0;
   h_element(2) = 3;
   h_element(3) = 2;
@@ -377,7 +377,7 @@ void test_issue_4978_impl() {
   Kokkos::deep_copy(exec, h_element, element_);
   exec.fence();
 
-  ASSERT_EQ(h_element(0), LONG_LONG_MIN);
+  ASSERT_EQ(h_element(0), LLONG_MIN);
   ASSERT_EQ(h_element(1), 0);
   ASSERT_EQ(h_element(2), 1);
   ASSERT_EQ(h_element(3), 2);
