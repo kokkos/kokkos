@@ -613,6 +613,10 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
       sort_in_bins = false;
     }
   }
+  if (std::is_floating_point<typename ViewType::non_const_value_type>::value) {
+    KOKKOS_ASSERT(std::isfinite(static_cast<double>(result.max_val) -
+                                static_cast<double>(result.min_val)));
+  }
 
   BinSort<ViewType, CompType> bin_sort(
       view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);

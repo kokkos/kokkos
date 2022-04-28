@@ -442,7 +442,6 @@ void test_sort(unsigned int N) {
   test_issue_4978_sort<ExecutionSpace>();
   test_sort_integer_overflow<ExecutionSpace, long long>();
   test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
-  test_sort_integer_overflow<ExecutionSpace, double>();
   test_sort_integer_overflow<ExecutionSpace, int>();
 }
 }  // namespace Impl
