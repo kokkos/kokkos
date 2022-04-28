@@ -390,6 +390,20 @@ void test_issue_4978_impl() {
   ASSERT_EQ(h_element(8), 6);
 }
 
+template <class ExecutionSpace, class T>
+void test_sort_integer_overflow() {
+  // array with two extrema in reverse order to expose integer overflow bug in
+  // bin calculation
+  T a[2]  = {Kokkos::Experimental::finite_max<T>::value,
+            Kokkos::Experimental::finite_min<T>::value};
+  auto vd = Kokkos::create_mirror_view_and_copy(
+      ExecutionSpace(), Kokkos::View<T[2], Kokkos::HostSpace>(a));
+  Kokkos::sort(vd, /*force using Kokkos bin sort*/ true);
+  auto vh = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), vd);
+  EXPECT_TRUE(std::is_sorted(vh.data(), vh.data() + 2))
+      << "view (" << vh[0] << ", " << vh[1] << ") is not sorted";
+}
+
 //----------------------------------------------------------------------------
 
 template <class ExecutionSpace, typename KeyType>
@@ -428,6 +442,10 @@ void test_sort(unsigned int N) {
 #endif
   test_issue_1160_sort<ExecutionSpace>();
   test_issue_4978_sort<ExecutionSpace>();
+  test_sort_integer_overflow<ExecutionSpace, long long>();
+  test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
+  test_sort_integer_overflow<ExecutionSpace, double>();
+  test_sort_integer_overflow<ExecutionSpace, int>();
 }
 }  // namespace Impl
 }  // namespace Test
