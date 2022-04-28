@@ -372,8 +372,6 @@ void test_issue_4978_impl() {
   ExecutionSpace exec;
   Kokkos::deep_copy(exec, element_, h_element);
 
-  using KeyViewType = decltype(element_);
-
   Kokkos::sort(exec, element_);
 
   Kokkos::deep_copy(exec, h_element, element_);
