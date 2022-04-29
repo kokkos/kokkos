@@ -271,14 +271,14 @@ TEST(TEST_CATEGORY, view_allocation_large_rank) {
 
 template <typename ExecSpace, typename ViewType>
 struct TestViewShmemSizeOnDevice {
-  using ViewTestType = Kokkos::View<size_t*, ExecSpace>;
+  using ViewTestType = Kokkos::View<size_t, ExecSpace>;
 
   TestViewShmemSizeOnDevice(size_t d1_, size_t d2_, size_t d3_)
-      : d1(d1_), d2(d2_), d3(d3_), shmemSize("shmemSize", 1) {}
+      : d1(d1_), d2(d2_), d3(d3_), shmemSize("shmemSize") {}
 
   KOKKOS_FUNCTION void operator()(const int&) const {
-    auto shmem   = ViewType::shmem_size(d1, d2, d3);
-    shmemSize(0) = shmem;
+    auto shmem  = ViewType::shmem_size(d1, d2, d3);
+    shmemSize() = shmem;
   }
 
   size_t d1, d2, d3;
@@ -302,7 +302,7 @@ TEST(TEST_CATEGORY, view_shmem_size_on_device) {
   auto shmemSizeHost = Kokkos::create_mirror_view_and_copy(
       Kokkos::HostSpace(), testShmemSize.shmemSize);
 
-  ASSERT_EQ(size, shmemSizeHost(0));
+  ASSERT_EQ(size, shmemSizeHost());
 }
 
 }  // namespace Test
