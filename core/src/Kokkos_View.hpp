@@ -191,9 +191,9 @@ struct ViewTraits<void, void, Prop...> {
 };
 
 template <class HooksPolicy, class... Prop>
-struct ViewTraits<typename std::enable_if<Kokkos::Experimental::is_hooks_policy<
-                      HooksPolicy>::value>::type,
-                  HooksPolicy, Prop...> {
+struct ViewTraits<
+    std::enable_if_t<Kokkos::Experimental::is_hooks_policy<HooksPolicy>::value>,
+    HooksPolicy, Prop...> {
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
   using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
@@ -204,9 +204,8 @@ struct ViewTraits<typename std::enable_if<Kokkos::Experimental::is_hooks_policy<
 };
 
 template <class ArrayLayout, class... Prop>
-struct ViewTraits<
-    typename std::enable_if<Kokkos::is_array_layout<ArrayLayout>::value>::type,
-    ArrayLayout, Prop...> {
+struct ViewTraits<std::enable_if_t<Kokkos::is_array_layout<ArrayLayout>::value>,
+                  ArrayLayout, Prop...> {
   // Specify layout, keep subsequent space and memory traits arguments
 
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
@@ -219,8 +218,8 @@ struct ViewTraits<
 };
 
 template <class Space, class... Prop>
-struct ViewTraits<typename std::enable_if<Kokkos::is_space<Space>::value>::type,
-                  Space, Prop...> {
+struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
+                  Prop...> {
   // Specify Space, memory traits should be the only subsequent argument.
 
   static_assert(
@@ -245,9 +244,9 @@ struct ViewTraits<typename std::enable_if<Kokkos::is_space<Space>::value>::type,
 };
 
 template <class MemoryTraits, class... Prop>
-struct ViewTraits<typename std::enable_if<
-                      Kokkos::is_memory_traits<MemoryTraits>::value>::type,
-                  MemoryTraits, Prop...> {
+struct ViewTraits<
+    std::enable_if_t<Kokkos::is_memory_traits<MemoryTraits>::value>,
+    MemoryTraits, Prop...> {
   // Specify memory trait, should not be any subsequent arguments
 
   static_assert(
@@ -682,9 +681,9 @@ class View : public ViewTraits<DataType, Properties...> {
   // constexpr unsigned rank() { return map_type::Rank; }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      extent(const iType& r) const noexcept {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, size_t>
+  extent(const iType& r) const noexcept {
     return m_map.extent(r);
   }
 
@@ -694,9 +693,9 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, int>::type
-      extent_int(const iType& r) const noexcept {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, int>
+  extent_int(const iType& r) const noexcept {
     return static_cast<int>(m_map.extent(r));
   }
 
@@ -742,9 +741,9 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      stride(iType r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, size_t>
+  stride(iType r) const {
     return (
         r == 0
             ? m_map.stride_0()
@@ -1339,10 +1338,9 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION View(
       const View<RT, RP...>& rhs,
-      typename std::enable_if<Kokkos::Impl::ViewMapping<
+      std::enable_if_t<Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable_data_type>::type* =
-          nullptr)
+          typename traits::specialize>::is_assignable_data_type>* = nullptr)
       : m_track(rhs), m_map() {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1353,11 +1351,11 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
           typename traits::specialize>::is_assignable_data_type,
-      View>::type&
+      View>&
   operator=(const View<RT, RP...>& rhs) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1408,9 +1406,8 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit inline View(
       const Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
-                              typename traits::array_layout>::type const&
-          arg_layout)
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout> const& arg_layout)
       : m_track(), m_map() {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
@@ -1488,9 +1485,8 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION View(
       const Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<Impl::ViewCtorProp<P...>::has_pointer,
-                              typename traits::array_layout>::type const&
-          arg_layout)
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout> const& arg_layout)
       : m_track()  // No memory tracking
         ,
         m_map(arg_prop, arg_layout) {
@@ -1505,9 +1501,8 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit inline View(
       const Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
-                              size_t>::type const arg_N0 =
-          KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer, size_t> const
+          arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1533,9 +1528,8 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION View(
       const Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<Impl::ViewCtorProp<P...>::has_pointer,
-                              size_t>::type const arg_N0 =
-          KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer, size_t> const
+          arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1562,18 +1556,16 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename Label>
   explicit inline View(
       const Label& arg_label,
-      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              typename traits::array_layout>::type const&
-          arg_layout)
+      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
+                       typename traits::array_layout> const& arg_layout)
       : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
 
   // Allocate label and layout, must disambiguate from subview constructor.
   template <typename Label>
   explicit inline View(
       const Label& arg_label,
-      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              const size_t>::type arg_N0 =
-          KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value, const size_t>
+          arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,

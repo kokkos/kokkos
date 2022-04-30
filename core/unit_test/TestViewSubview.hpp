@@ -67,14 +67,14 @@ struct static_assert_predicate_true_impl;
 
 template <template <class...> class predicate, class... message, class... args>
 struct static_assert_predicate_true_impl<
-    typename std::enable_if<predicate<args...>::type::value>::type, predicate,
+    std::enable_if_t<predicate<args...>::type::value>, predicate,
     static_predicate_message<message...>, args...> {
   using type = int;
 };
 
 template <template <class...> class predicate, class... message, class... args>
 struct static_assert_predicate_true_impl<
-    typename std::enable_if<!predicate<args...>::type::value>::type, predicate,
+    std::enable_if_t<!predicate<args...>::type::value>, predicate,
     static_predicate_message<message...>, args...> {
   using type = typename _kokkos____________________static_test_failure_____<
       message...>::type;

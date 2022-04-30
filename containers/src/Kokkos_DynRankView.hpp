@@ -117,10 +117,10 @@ struct DynRankDimTraits {
   // Create the layout for the rank-7 view.
   // Non-strided Layout
   template <typename Layout>
-  KOKKOS_INLINE_FUNCTION static typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
       (std::is_same<Layout, Kokkos::LayoutRight>::value ||
        std::is_same<Layout, Kokkos::LayoutLeft>::value),
-      Layout>::type
+      Layout>
   createLayout(const Layout& layout) {
     return Layout(layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
                   layout.dimension[1] != unspecified ? layout.dimension[1] : 1,
@@ -134,8 +134,8 @@ struct DynRankDimTraits {
 
   // LayoutStride
   template <typename Layout>
-  KOKKOS_INLINE_FUNCTION static typename std::enable_if<
-      (std::is_same<Layout, Kokkos::LayoutStride>::value), Layout>::type
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+      (std::is_same<Layout, Kokkos::LayoutStride>::value), Layout>
   createLayout(const Layout& layout) {
     return Layout(layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
                   layout.stride[0],
@@ -157,13 +157,13 @@ struct DynRankDimTraits {
 
   // Extra overload to match that for specialize types
   template <typename Traits, typename... P>
-  KOKKOS_INLINE_FUNCTION static typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION static std::enable_if_t<
       (std::is_same<typename Traits::array_layout,
                     Kokkos::LayoutRight>::value ||
        std::is_same<typename Traits::array_layout, Kokkos::LayoutLeft>::value ||
        std::is_same<typename Traits::array_layout,
                     Kokkos::LayoutStride>::value),
-      typename Traits::array_layout>::type
+      typename Traits::array_layout>
   createLayout(const Kokkos::Impl::ViewCtorProp<P...>& /* prop */,
                const typename Traits::array_layout& layout) {
     return createLayout(layout);
@@ -187,12 +187,12 @@ struct DynRankDimTraits {
 
 // Non-strided Layout
 template <typename Layout, typename iType>
-KOKKOS_INLINE_FUNCTION static
-    typename std::enable_if<(std::is_same<Layout, Kokkos::LayoutRight>::value ||
-                             std::is_same<Layout, Kokkos::LayoutLeft>::value) &&
-                                std::is_integral<iType>::value,
-                            Layout>::type
-    reconstructLayout(const Layout& layout, iType dynrank) {
+KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+    (std::is_same<Layout, Kokkos::LayoutRight>::value ||
+     std::is_same<Layout, Kokkos::LayoutLeft>::value) &&
+        std::is_integral<iType>::value,
+    Layout>
+reconstructLayout(const Layout& layout, iType dynrank) {
   return Layout(dynrank > 0 ? layout.dimension[0] : KOKKOS_INVALID_INDEX,
                 dynrank > 1 ? layout.dimension[1] : KOKKOS_INVALID_INDEX,
                 dynrank > 2 ? layout.dimension[2] : KOKKOS_INVALID_INDEX,
@@ -205,10 +205,10 @@ KOKKOS_INLINE_FUNCTION static
 
 // LayoutStride
 template <typename Layout, typename iType>
-KOKKOS_INLINE_FUNCTION static typename std::enable_if<
+KOKKOS_INLINE_FUNCTION static std::enable_if_t<
     (std::is_same<Layout, Kokkos::LayoutStride>::value) &&
         std::is_integral<iType>::value,
-    Layout>::type
+    Layout>
 reconstructLayout(const Layout& layout, iType dynrank) {
   return Layout(dynrank > 0 ? layout.dimension[0] : KOKKOS_INVALID_INDEX,
                 dynrank > 0 ? layout.stride[0] : (0),
@@ -308,7 +308,7 @@ namespace Impl {
 template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
-    typename std::enable_if<
+    std::enable_if_t<
         (std::is_same<typename DstTraits::memory_space,
                       typename SrcTraits::memory_space>::value &&
          std::is_same<typename DstTraits::specialize, void>::value &&
@@ -327,7 +327,7 @@ class ViewMapping<
                          Kokkos::LayoutRight>::value ||
             std::is_same<typename SrcTraits::array_layout,
                          Kokkos::LayoutStride>::value)))),
-        Kokkos::Impl::ViewToDynRankViewTag>::type> {
+        Kokkos::Impl::ViewToDynRankViewTag>> {
  private:
   enum {
     is_assignable_value_type =
@@ -465,16 +465,16 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   //  enum?
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      extent(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, size_t>
+  extent(const iType& r) const {
     return m_map.extent(r);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, int>::type
-      extent_int(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, int>
+  extent_int(const iType& r) const {
     return static_cast<int>(m_map.extent(r));
   }
 
@@ -611,11 +611,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // This assumes a contiguous underlying memory (i.e. no padding, no
   // striding...)
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       std::is_same<typename drvtraits::value_type,
                    typename drvtraits::scalar_array_type>::value &&
           std::is_integral<iType>::value,
-      reference_type>::type
+      reference_type>
   operator[](const iType& i0) const {
     // Phalanx is violating this, since they use the operator to access ALL
     // elements in the allocation KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (1 ,
@@ -626,11 +626,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // This assumes a contiguous underlying memory (i.e. no padding, no
   // striding... AND a Trilinos/Sacado scalar type )
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !std::is_same<typename drvtraits::value_type,
                     typename drvtraits::scalar_array_type>::value &&
           std::is_integral<iType>::value,
-      reference_type>::type
+      reference_type>
   operator[](const iType& i0) const {
     //      auto map = impl_map();
     const size_t dim_scalar = m_map.dimension_scalar();
@@ -647,20 +647,20 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 1 parenthesis
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename traits::specialize, void>::value &&
         std::is_integral<iType>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0, 0, 0, 0, 0, 0, 0);
@@ -668,20 +668,20 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 2
   template <typename iType0, typename iType1>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
     return m_map.reference(i0, i1);
   }
 
   template <typename iType0, typename iType1>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
     return m_map.reference(i0, i1, 0, 0, 0, 0, 0);
@@ -689,11 +689,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 3
   template <typename iType0, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (3, this->rank(), m_track, m_map, i0, i1, i2))
@@ -701,10 +701,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (3, this->rank(), m_track, m_map, i0, i1, i2))
@@ -713,11 +713,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 4
   template <typename iType0, typename iType1, typename iType2, typename iType3>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -726,10 +726,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2, typename iType3>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -740,12 +740,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 5
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value &&
        std::is_integral<iType4>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -755,10 +755,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -769,12 +769,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 6
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value &&
        std::is_integral<iType4>::value && std::is_integral<iType5>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4, const iType5& i5) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -784,10 +784,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4, const iType5& i5) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -798,12 +798,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 7
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5, typename iType6>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value &&
        std::is_integral<iType4>::value && std::is_integral<iType5>::value &&
        std::is_integral<iType6>::value),
-      reference_type>::type
+      reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4, const iType5& i5,
              const iType6& i6) const {
@@ -823,20 +823,20 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 1
   // Rank 1 parenthesis
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType>::value),
-      reference_type>::type
+      reference_type>
   access(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename traits::specialize, void>::value &&
         std::is_integral<iType>::value),
-      reference_type>::type
+      reference_type>
   access(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0, 0, 0, 0, 0, 0, 0);
@@ -844,20 +844,20 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 2
   template <typename iType0, typename iType1>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
     return m_map.reference(i0, i1);
   }
 
   template <typename iType0, typename iType1>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
     return m_map.reference(i0, i1, 0, 0, 0, 0, 0);
@@ -865,11 +865,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 3
   template <typename iType0, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (3, this->rank(), m_track, m_map, i0, i1, i2))
@@ -877,10 +877,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (3, this->rank(), m_track, m_map, i0, i1, i2))
@@ -889,11 +889,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 4
   template <typename iType0, typename iType1, typename iType2, typename iType3>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2,
          const iType3& i3) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -902,10 +902,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2, typename iType3>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2,
          const iType3& i3) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -916,12 +916,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 5
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value &&
        std::is_integral<iType4>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -931,10 +931,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -945,12 +945,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 6
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_same<typename traits::specialize, void>::value &&
        std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value &&
        std::is_integral<iType4>::value && std::is_integral<iType5>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4, const iType5& i5) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -960,10 +960,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       !(std::is_same<typename drvtraits::specialize, void>::value &&
         std::is_integral<iType0>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4, const iType5& i5) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -974,12 +974,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 7
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5, typename iType6>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
       (std::is_integral<iType0>::value && std::is_integral<iType1>::value &&
        std::is_integral<iType2>::value && std::is_integral<iType3>::value &&
        std::is_integral<iType4>::value && std::is_integral<iType5>::value &&
        std::is_integral<iType6>::value),
-      reference_type>::type
+      reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4, const iType5& i5, const iType6& i6) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -1092,9 +1092,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit inline DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                              typename traits::array_layout>::type const&
-          arg_layout)
+      std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout> const& arg_layout)
       : m_track(),
         m_map(),
         m_rank(Impl::DynRankDimTraits<typename traits::specialize>::
@@ -1173,9 +1172,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                              typename traits::array_layout>::type const&
-          arg_layout)
+      std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout> const& arg_layout)
       : m_track()  // No memory tracking
         ,
         m_map(arg_prop,
@@ -1198,15 +1196,15 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit inline DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                              size_t>::type const arg_N0 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N1                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N2                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N3                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N4                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N5                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7                                = KOKKOS_INVALID_INDEX)
+      std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       size_t> const arg_N0 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N1                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N2                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N3                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N4                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N5                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N6                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N7                   = KOKKOS_INVALID_INDEX)
       : DynRankView(arg_prop, typename traits::array_layout(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
                                   arg_N5, arg_N6, arg_N7)) {}
@@ -1214,15 +1212,15 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                              size_t>::type const arg_N0 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N1                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N2                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N3                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N4                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N5                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7                                = KOKKOS_INVALID_INDEX)
+      std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       size_t> const arg_N0 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N1                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N2                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N3                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N4                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N5                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N6                   = KOKKOS_INVALID_INDEX,
+      const size_t arg_N7                   = KOKKOS_INVALID_INDEX)
       : DynRankView(arg_prop, typename traits::array_layout(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
                                   arg_N5, arg_N6, arg_N7)) {}
@@ -1231,9 +1229,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <typename Label>
   explicit inline DynRankView(
       const Label& arg_label,
-      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              typename traits::array_layout>::type const&
-          arg_layout)
+      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
+                       typename traits::array_layout> const& arg_layout)
       : DynRankView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
                     arg_layout) {}
 
@@ -1241,15 +1238,15 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <typename Label>
   explicit inline DynRankView(
       const Label& arg_label,
-      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              const size_t>::type arg_N0 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N1                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N2                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N3                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N4                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N5                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7                                = KOKKOS_INVALID_INDEX)
+      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value, const size_t>
+          arg_N0          = KOKKOS_INVALID_INDEX,
+      const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N7 = KOKKOS_INVALID_INDEX)
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
@@ -1366,7 +1363,7 @@ namespace Impl {
 
 template <class SrcTraits, class... Args>
 class ViewMapping<
-    typename std::enable_if<
+    std::enable_if_t<
         (std::is_same<typename SrcTraits::specialize, void>::value &&
          (std::is_same<typename SrcTraits::array_layout,
                        Kokkos::LayoutLeft>::value ||
@@ -1374,7 +1371,7 @@ class ViewMapping<
                        Kokkos::LayoutRight>::value ||
           std::is_same<typename SrcTraits::array_layout,
                        Kokkos::LayoutStride>::value)),
-        Kokkos::Impl::DynRankSubviewTag>::type,
+        Kokkos::Impl::DynRankSubviewTag>,
     SrcTraits, Args...> {
  private:
   enum {
@@ -1622,8 +1619,7 @@ struct DynRankViewFill {
 };
 
 template <class OutputView>
-struct DynRankViewFill<OutputView,
-                       typename std::enable_if<OutputView::Rank == 0>::type> {
+struct DynRankViewFill<OutputView, std::enable_if_t<OutputView::Rank == 0>> {
   DynRankViewFill(const OutputView& dst,
                   const typename OutputView::const_value_type& src) {
     Kokkos::Impl::DeepCopy<typename OutputView::memory_space,
@@ -1727,9 +1723,8 @@ template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
     const ExecSpace& e, const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
                    typename ViewTraits<DT, DP...>::value_type>::value,
@@ -1743,9 +1738,8 @@ template <class DT, class... DP>
 inline void deep_copy(
     const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   Impl::apply_to_view_of_static_rank([=](auto view) { deep_copy(view, value); },
                                      dst);
 }
@@ -1756,8 +1750,8 @@ inline void deep_copy(
     const ExecSpace& e,
     typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const DynRankView<ST, SP...>& src,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
+    std::enable_if_t<std::is_same<typename ViewTraits<ST, SP...>::specialize,
+                                  void>::value>* = 0) {
   deep_copy(e, dst, Impl::as_view_of_rank_n<0>(src));
 }
 
@@ -1765,8 +1759,8 @@ template <class ST, class... SP>
 inline void deep_copy(
     typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const DynRankView<ST, SP...>& src,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
+    std::enable_if_t<std::is_same<typename ViewTraits<ST, SP...>::specialize,
+                                  void>::value>* = 0) {
   deep_copy(dst, Impl::as_view_of_rank_n<0>(src));
 }
 
@@ -1779,11 +1773,11 @@ inline void deep_copy(
 template <class ExecSpace, class DstType, class SrcType>
 inline void deep_copy(
     const ExecSpace& exec_space, const DstType& dst, const SrcType& src,
-    typename std::enable_if<
+    std::enable_if_t<
         (std::is_same<typename DstType::traits::specialize, void>::value &&
          std::is_same<typename SrcType::traits::specialize, void>::value &&
          (Kokkos::is_dyn_rank_view<DstType>::value ||
-          Kokkos::is_dyn_rank_view<SrcType>::value))>::type* = nullptr) {
+          Kokkos::is_dyn_rank_view<SrcType>::value))>* = nullptr) {
   static_assert(
       std::is_same<typename DstType::traits::value_type,
                    typename DstType::traits::non_const_value_type>::value,
@@ -1832,11 +1826,11 @@ inline void deep_copy(
 template <class DstType, class SrcType>
 inline void deep_copy(
     const DstType& dst, const SrcType& src,
-    typename std::enable_if<
+    std::enable_if_t<
         (std::is_same<typename DstType::traits::specialize, void>::value &&
          std::is_same<typename SrcType::traits::specialize, void>::value &&
          (Kokkos::is_dyn_rank_view<DstType>::value ||
-          Kokkos::is_dyn_rank_view<SrcType>::value))>::type* = nullptr) {
+          Kokkos::is_dyn_rank_view<SrcType>::value))>* = nullptr) {
   static_assert(
       std::is_same<typename DstType::traits::value_type,
                    typename DstType::traits::non_const_value_type>::value,
@@ -1979,9 +1973,8 @@ template <class Space, class T, class... P>
 typename Impl::MirrorDRVType<Space, T, P...>::view_type create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi, const Space&,
     const Kokkos::DynRankView<T, P...>& src,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<T, P...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
+                                  void>::value>* = nullptr) {
   return typename Impl::MirrorDRVType<Space, T, P...>::view_type(
       Kokkos::view_alloc(std::string(src.label()).append("_mirror"), wi),
       Impl::reconstructLayout(src.layout(), src.rank()));
@@ -2068,9 +2061,8 @@ typename Impl::MirrorDRViewType<Space, T, P...>::view_type
 create_mirror_view_and_copy(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     std::string const& name = "",
-    typename std::enable_if<
-        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* =
-        nullptr) {
+    std::enable_if_t<
+        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
   (void)name;
   return src;
 }
@@ -2082,9 +2074,8 @@ typename Impl::MirrorDRViewType<Space, T, P...>::view_type
 create_mirror_view_and_copy(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     std::string const& name = "",
-    typename std::enable_if<
-        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* =
-        nullptr) {
+    std::enable_if_t<
+        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
   using Mirror = typename Impl::MirrorDRViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
   auto mirror       = Mirror(view_alloc(WithoutInitializing, label),

@@ -185,8 +185,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  public:
   // TODO: can use detection idiom to generate better error message here later
   template <typename InputIterator>
-  typename std::enable_if<impl_is_input_iterator<InputIterator>::value,
-                          iterator>::type
+  std::enable_if_t<impl_is_input_iterator<InputIterator>::value, iterator>
   insert(iterator it, InputIterator b, InputIterator e) {
     ptrdiff_t count = std::distance(b, e);
 

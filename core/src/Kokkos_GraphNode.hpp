@@ -256,12 +256,12 @@ class GraphNodeRef {
 
   template <
       class Policy, class Functor,
-      typename std::enable_if<
+      std::enable_if_t<
           // equivalent to:
           //   requires Kokkos::ExecutionPolicy<remove_cvref_t<Policy>>
           is_execution_policy<Kokkos::Impl::remove_cvref_t<Policy>>::value,
           // --------------------
-          int>::type = 0>
+          int> = 0>
   auto then_parallel_for(std::string arg_name, Policy&& arg_policy,
                          Functor&& functor) const {
     //----------------------------------------
@@ -298,12 +298,12 @@ class GraphNodeRef {
 
   template <
       class Policy, class Functor,
-      typename std::enable_if<
+      std::enable_if_t<
           // equivalent to:
           //   requires Kokkos::ExecutionPolicy<remove_cvref_t<Policy>>
           is_execution_policy<Kokkos::Impl::remove_cvref_t<Policy>>::value,
           // --------------------
-          int>::type = 0>
+          int> = 0>
   auto then_parallel_for(Policy&& policy, Functor&& functor) const {
     // needs to static assert constraint: DataParallelFunctor<Functor>
     return this->then_parallel_for("", (Policy &&) policy,
@@ -333,12 +333,12 @@ class GraphNodeRef {
 
   template <
       class Policy, class Functor, class ReturnType,
-      typename std::enable_if<
+      std::enable_if_t<
           // equivalent to:
           //   requires Kokkos::ExecutionPolicy<remove_cvref_t<Policy>>
           is_execution_policy<Kokkos::Impl::remove_cvref_t<Policy>>::value,
           // --------------------
-          int>::type = 0>
+          int> = 0>
   auto then_parallel_reduce(std::string arg_name, Policy&& arg_policy,
                             Functor&& functor,
                             ReturnType&& return_value) const {
@@ -416,12 +416,12 @@ class GraphNodeRef {
 
   template <
       class Policy, class Functor, class ReturnType,
-      typename std::enable_if<
+      std::enable_if_t<
           // equivalent to:
           //   requires Kokkos::ExecutionPolicy<remove_cvref_t<Policy>>
           is_execution_policy<Kokkos::Impl::remove_cvref_t<Policy>>::value,
           // --------------------
-          int>::type = 0>
+          int> = 0>
   auto then_parallel_reduce(Policy&& arg_policy, Functor&& functor,
                             ReturnType&& return_value) const {
     return this->then_parallel_reduce("", (Policy &&) arg_policy,

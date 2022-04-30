@@ -350,16 +350,14 @@ struct FunctorAnalysis {
 
  private:
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr
-      typename std::enable_if<IsArray, unsigned>::type
-      get_length(FF const& f) {
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray, unsigned>
+  get_length(FF const& f) {
     return f.value_count;
   }
 
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr
-      typename std::enable_if<!IsArray, unsigned>::type
-      get_length(FF const&) {
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray, unsigned>
+  get_length(FF const&) {
     return candidate_is_void ? 0 : 1;
   }
 
@@ -903,15 +901,14 @@ struct FunctorAnalysis {
     Functor const* const m_functor;
 
     template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<IsArray, int>::type
-    len() const noexcept {
+    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
+        noexcept {
       return m_functor->value_count;
     }
 
     template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr
-        typename std::enable_if<!IsArray, int>::type
-        len() const noexcept {
+    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<!IsArray, int> len() const
+        noexcept {
       return candidate_is_void ? 0 : 1;
     }
 

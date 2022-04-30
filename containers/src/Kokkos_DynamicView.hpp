@@ -118,8 +118,7 @@ struct ChunkedArrayManager {
   template <typename Space>
   static ChunkedArrayManager<Space, ValueType> create_mirror(
       ChunkedArrayManager<MemorySpace, ValueType> const& other,
-      typename std::enable_if<IsAccessibleFrom<Space>::value>::type* =
-          nullptr) {
+      std::enable_if_t<IsAccessibleFrom<Space>::value>* = nullptr) {
     return ChunkedArrayManager<Space, ValueType>{
         ACCESSIBLE_TAG{}, other.m_chunks, other.m_chunk_max};
   }
@@ -127,8 +126,7 @@ struct ChunkedArrayManager {
   template <typename Space>
   static ChunkedArrayManager<Space, ValueType> create_mirror(
       ChunkedArrayManager<MemorySpace, ValueType> const& other,
-      typename std::enable_if<!IsAccessibleFrom<Space>::value>::type* =
-          nullptr) {
+      std::enable_if_t<!IsAccessibleFrom<Space>::value>* = nullptr) {
     using tag_type =
         typename ChunkedArrayManager<Space, ValueType>::INACCESSIBLE_TAG;
     return ChunkedArrayManager<Space, ValueType>{tag_type{}, other.m_chunk_max,
@@ -218,14 +216,14 @@ struct ChunkedArrayManager {
   pointer_type* get_ptr() const { return m_chunks; }
 
   template <typename Space>
-  typename std::enable_if<!IsAccessibleFrom<Space>::value>::type deep_copy_to(
+  std::enable_if_t<!IsAccessibleFrom<Space>::value> deep_copy_to(
       ChunkedArrayManager<Space, ValueType> const& other) {
     Kokkos::Impl::DeepCopy<Space, MemorySpace>(
         other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
   }
 
   template <typename Space>
-  typename std::enable_if<IsAccessibleFrom<Space>::value>::type deep_copy_to(
+  std::enable_if_t<IsAccessibleFrom<Space>::value> deep_copy_to(
       ChunkedArrayManager<Space, ValueType> const&) {
     // no-op
   }

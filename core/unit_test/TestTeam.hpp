@@ -863,31 +863,31 @@ namespace Test {
 template <class ExecSpace>
 KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
     const typename Kokkos::TeamPolicy<ExecSpace>::member_type &team) {
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_team1(team.team_scratch(0), 128);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_thread1(team.thread_scratch(0), 16);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_team2(team.team_scratch(0), 128);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_thread2(team.thread_scratch(0), 16);
 
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_team1(team.team_scratch(1), 12800);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_thread1(team.thread_scratch(1), 1600);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_team2(team.team_scratch(1), 12800);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_thread2(team.thread_scratch(1), 1600);
 
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_team3(team.team_scratch(0), 128);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_thread3(team.thread_scratch(0), 16);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_team3(team.team_scratch(1), 12800);
-  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
+  Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_thread3(team.thread_scratch(1), 1600);
 
   // The explicit types for 0 and 128 are here to test TeamThreadRange accepting
@@ -983,7 +983,7 @@ struct ClassNoShmemSizeFunction {
   using member_type =
       typename Kokkos::TeamPolicy<ExecSpace, ScheduleType>::member_type;
 
-  Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
+  Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>> errors;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const TagFor &, const member_type &team) const {
@@ -1005,20 +1005,20 @@ struct ClassNoShmemSizeFunction {
     const int per_team0 =
         3 *
         Kokkos::View<double *, ExecSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(128);
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(128);
     const int per_thread0 =
         3 *
         Kokkos::View<double *, ExecSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16);
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16);
 
     const int per_team1 =
         3 * Kokkos::View<
                 double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(12800);
+                Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(12800);
     const int per_thread1 =
-        3 * Kokkos::View<
-                double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
+        3 *
+        Kokkos::View<double *, ExecSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(1600);
 
 #ifdef KOKKOS_ENABLE_SYCL
     int team_size = 4;
@@ -1069,7 +1069,7 @@ struct ClassWithShmemSizeFunction {
   using member_type =
       typename Kokkos::TeamPolicy<ExecSpace, ScheduleType>::member_type;
 
-  Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
+  Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>> errors;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const TagFor &, const member_type &team) const {
@@ -1091,11 +1091,11 @@ struct ClassWithShmemSizeFunction {
     const int per_team1 =
         3 * Kokkos::View<
                 double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(12800);
+                Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(12800);
     const int per_thread1 =
-        3 * Kokkos::View<
-                double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
+        3 *
+        Kokkos::View<double *, ExecSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(1600);
 
     int team_size = 8;
     if (team_size > ExecSpace::concurrency())
@@ -1135,11 +1135,11 @@ struct ClassWithShmemSizeFunction {
     const int per_team0 =
         3 *
         Kokkos::View<double *, ExecSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(128);
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(128);
     const int per_thread0 =
         3 *
         Kokkos::View<double *, ExecSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16);
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16);
     return per_team0 + team_size * per_thread0;
   }
 };
@@ -1147,27 +1147,26 @@ struct ClassWithShmemSizeFunction {
 template <class ExecSpace, class ScheduleType>
 void test_team_mulit_level_scratch_test_lambda() {
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-  Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
+  Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>> errors;
   Kokkos::View<int, ExecSpace> d_errors("Errors");
   errors = d_errors;
 
   const int per_team0 =
       3 *
       Kokkos::View<double *, ExecSpace,
-                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(128);
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(128);
   const int per_thread0 =
-      3 *
-      Kokkos::View<double *, ExecSpace,
-                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16);
+      3 * Kokkos::View<double *, ExecSpace,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(16);
 
   const int per_team1 =
       3 *
       Kokkos::View<double *, ExecSpace,
-                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(12800);
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(12800);
   const int per_thread1 =
       3 *
       Kokkos::View<double *, ExecSpace,
-                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(1600);
 
 #ifdef KOKKOS_ENABLE_SYCL
   int team_size = 4;
@@ -1282,9 +1281,8 @@ template <class ExecSpace, class ScheduleType, class T, class Enabled = void>
 struct TestTeamBroadcast;
 
 template <class ExecSpace, class ScheduleType, class T>
-struct TestTeamBroadcast<
-    ExecSpace, ScheduleType, T,
-    typename std::enable_if<(sizeof(T) == sizeof(char)), void>::type> {
+struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
+                         std::enable_if_t<(sizeof(T) == sizeof(char)), void>> {
   using team_member =
       typename Kokkos::TeamPolicy<ScheduleType, ExecSpace>::member_type;
   using memory_space = typename ExecSpace::memory_space;
@@ -1472,9 +1470,8 @@ struct TestTeamBroadcast<
   }
 
   template <class ScalarType>
-  static inline
-      typename std::enable_if<!std::is_integral<ScalarType>::value, void>::type
-      compare_test(ScalarType A, ScalarType B, double epsilon_factor) {
+  static inline std::enable_if_t<!std::is_integral<ScalarType>::value, void>
+  compare_test(ScalarType A, ScalarType B, double epsilon_factor) {
     if (std::is_same<ScalarType, double>::value ||
         std::is_same<ScalarType, float>::value) {
       ASSERT_NEAR((double)A, (double)B,
@@ -1486,9 +1483,8 @@ struct TestTeamBroadcast<
   }
 
   template <class ScalarType>
-  static inline
-      typename std::enable_if<std::is_integral<ScalarType>::value, void>::type
-      compare_test(ScalarType A, ScalarType B, double) {
+  static inline std::enable_if_t<std::is_integral<ScalarType>::value, void>
+  compare_test(ScalarType A, ScalarType B, double) {
     ASSERT_EQ(A, B);
   }
 

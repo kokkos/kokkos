@@ -555,18 +555,15 @@ class HostThreadTeamMember {
   // team_reduce( Max(result) );
 
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      team_reduce(ReducerType const& reducer) const noexcept {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer) const noexcept {
     team_reduce(reducer, reducer.reference());
   }
 
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      team_reduce(ReducerType const& reducer,
-                  typename ReducerType::value_type contribution) const
-      noexcept {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer,
+              typename ReducerType::value_type contribution) const noexcept {
     KOKKOS_IF_ON_HOST((
         if (1 < m_data.m_team_size) {
           using value_type = typename ReducerType::value_type;
@@ -688,8 +685,8 @@ template <typename iType, typename Member>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<iType, Member>
 TeamThreadRange(
     Member const& member, iType count,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::TeamThreadRangeBoundariesStruct<iType, Member>(member, 0, count);
 }
 
@@ -698,8 +695,8 @@ KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Member>
 TeamThreadRange(
     Member const& member, iType1 begin, iType2 end,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::TeamThreadRangeBoundariesStruct<
       typename std::common_type<iType1, iType2>::type, Member>(member, begin,
                                                                end);
@@ -709,8 +706,8 @@ template <typename iType, typename Member>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<iType, Member>
 TeamVectorRange(
     Member const& member, iType count,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::TeamThreadRangeBoundariesStruct<iType, Member>(member, 0, count);
 }
 
@@ -719,8 +716,8 @@ KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Member>
 TeamVectorRange(
     Member const& member, iType1 begin, iType2 end,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::TeamThreadRangeBoundariesStruct<
       typename std::common_type<iType1, iType2>::type, Member>(member, begin,
                                                                end);
@@ -730,8 +727,8 @@ template <typename iType, typename Member>
 KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<iType, Member>
 ThreadVectorRange(
     Member const& member, iType count,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Member>(member, count);
 }
 
@@ -740,8 +737,8 @@ KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Member>
 ThreadVectorRange(
     Member const& member, iType1 arg_begin, iType2 arg_end,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Member>(
       member, iType(arg_begin), iType(arg_end));
@@ -785,12 +782,12 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 //----------------------------------------------------------------------------
 
 template <typename iType, class Closure, class Reducer, class Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Kokkos::is_reducer<Reducer>::value &&
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_reduce(
-    Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
-    Closure const& closure, Reducer const& reducer) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Kokkos::is_reducer<Reducer>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_reduce(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
+                        loop_boundaries,
+                    Closure const& closure, Reducer const& reducer) {
   typename Reducer::value_type value;
   reducer.init(value);
 
@@ -803,12 +800,12 @@ parallel_reduce(
 }
 
 template <typename iType, typename Closure, typename ValueType, typename Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    !Kokkos::is_reducer<ValueType>::value &&
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_reduce(
-    Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
-    Closure const& closure, ValueType& result) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_reduce(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
+                        loop_boundaries,
+                    Closure const& closure, ValueType& result) {
   ValueType val;
   Sum<ValueType> reducer(val);
   reducer.init(val);
@@ -857,12 +854,12 @@ Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
  *  performed and put into result.
  */
 template <typename iType, class Lambda, typename ValueType, typename Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    !Kokkos::is_reducer<ValueType>::value &&
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
-                    loop_boundaries,
-                const Lambda& lambda, ValueType& result) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                        iType, Member>& loop_boundaries,
+                    const Lambda& lambda, ValueType& result) {
   result = ValueType();
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
@@ -871,12 +868,12 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
 }
 
 template <typename iType, class Lambda, typename ReducerType, typename Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Kokkos::is_reducer<ReducerType>::value &&
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
-                    loop_boundaries,
-                const Lambda& lambda, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Kokkos::is_reducer<ReducerType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                        iType, Member>& loop_boundaries,
+                    const Lambda& lambda, const ReducerType& reducer) {
   reducer.init(reducer.reference());
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
@@ -887,11 +884,11 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
 //----------------------------------------------------------------------------
 
 template <typename iType, class Closure, class Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_scan(
-    Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
-    Closure const& closure) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  Closure const& closure) {
   // Extract ValueType from the closure
 
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
@@ -915,11 +912,11 @@ parallel_scan(
 }
 
 template <typename iType, class ClosureType, class Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
-                  loop_boundaries,
-              ClosureType const& closure) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  ClosureType const& closure) {
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Impl::FunctorPatternInterface::SCAN, void, ClosureType>::value_type;
 
@@ -935,12 +932,12 @@ parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
 }
 
 template <typename iType, class Lambda, typename ReducerType, typename Member>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Kokkos::is_reducer<ReducerType>::value &&
-    Impl::is_host_thread_team_member<Member>::value>::type
-parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
-                  loop_boundaries,
-              const Lambda& lambda, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Kokkos::is_reducer<ReducerType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
+                      loop_boundaries,
+                  const Lambda& lambda, const ReducerType& reducer) {
   typename ReducerType::value_type scan_val;
   reducer.init(scan_val);
 
@@ -958,48 +955,49 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
 template <class Member>
 KOKKOS_INLINE_FUNCTION Impl::ThreadSingleStruct<Member> PerTeam(
     Member const& member,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::ThreadSingleStruct<Member>(member);
 }
 
 template <class Member>
 KOKKOS_INLINE_FUNCTION Impl::VectorSingleStruct<Member> PerThread(
     Member const& member,
-    typename std::enable_if<
-        Impl::is_thread_team_member<Member>::value>::type const** = nullptr) {
+    std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
+        nullptr) {
   return Impl::VectorSingleStruct<Member>(member);
 }
 
 template <class Member, class FunctorType>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value>::type
-single(const Impl::ThreadSingleStruct<Member>& single,
-       const FunctorType& functor) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    single(const Impl::ThreadSingleStruct<Member>& single,
+           const FunctorType& functor) {
   // 'single' does not perform a barrier.
   if (single.team_member.team_rank() == 0) functor();
 }
 
 template <class Member, class FunctorType, typename ValueType>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value>::type
-single(const Impl::ThreadSingleStruct<Member>& single,
-       const FunctorType& functor, ValueType& val) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    single(const Impl::ThreadSingleStruct<Member>& single,
+           const FunctorType& functor, ValueType& val) {
   single.team_member.team_broadcast(functor, val, 0);
 }
 
 template <class Member, class FunctorType>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value>::type
-single(const Impl::VectorSingleStruct<Member>&, const FunctorType& functor) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    single(const Impl::VectorSingleStruct<Member>&,
+           const FunctorType& functor) {
   functor();
 }
 
 template <class Member, class FunctorType, typename ValueType>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    Impl::is_host_thread_team_member<Member>::value>::type
-single(const Impl::VectorSingleStruct<Member>&, const FunctorType& functor,
-       ValueType& val) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    single(const Impl::VectorSingleStruct<Member>&, const FunctorType& functor,
+           ValueType& val) {
   functor(val);
 }
 

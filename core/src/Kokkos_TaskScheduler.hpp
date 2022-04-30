@@ -530,23 +530,22 @@ Impl::TaskPolicyWithPredecessor<Impl::TaskType::TaskTeam,
 
 template <class Scheduler>
 Impl::TaskPolicyWithScheduler<Impl::TaskType::TaskTeam, Scheduler>
-    KOKKOS_INLINE_FUNCTION
-    TaskTeam(Scheduler arg_scheduler,
-             typename std::enable_if<Kokkos::is_scheduler<Scheduler>::value,
-                                     TaskPriority>::type arg_priority =
-                 TaskPriority::Regular) {
+    KOKKOS_INLINE_FUNCTION TaskTeam(
+        Scheduler arg_scheduler,
+        std::enable_if_t<Kokkos::is_scheduler<Scheduler>::value, TaskPriority>
+            arg_priority = TaskPriority::Regular) {
   return {std::move(arg_scheduler), arg_priority};
 }
 
 template <class Scheduler, class PredecessorFuture>
 Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskTeam, Scheduler,
                               PredecessorFuture>
-    KOKKOS_INLINE_FUNCTION TaskTeam(
-        Scheduler arg_scheduler, PredecessorFuture arg_future,
-        typename std::enable_if<Kokkos::is_scheduler<Scheduler>::value &&
-                                    Kokkos::is_future<PredecessorFuture>::value,
-                                TaskPriority>::type arg_priority =
-            TaskPriority::Regular) {
+    KOKKOS_INLINE_FUNCTION
+    TaskTeam(Scheduler arg_scheduler, PredecessorFuture arg_future,
+             std::enable_if_t<Kokkos::is_scheduler<Scheduler>::value &&
+                                  Kokkos::is_future<PredecessorFuture>::value,
+                              TaskPriority>
+                 arg_priority = TaskPriority::Regular) {
   static_assert(std::is_same<typename PredecessorFuture::scheduler_type,
                              Scheduler>::value,
                 "Can't create a task policy from a scheduler and a future from "
@@ -568,23 +567,22 @@ Impl::TaskPolicyWithPredecessor<Impl::TaskType::TaskSingle,
 
 template <class Scheduler>
 Impl::TaskPolicyWithScheduler<Impl::TaskType::TaskSingle, Scheduler>
-    KOKKOS_INLINE_FUNCTION
-    TaskSingle(Scheduler arg_scheduler,
-               typename std::enable_if<Kokkos::is_scheduler<Scheduler>::value,
-                                       TaskPriority>::type arg_priority =
-                   TaskPriority::Regular) {
+    KOKKOS_INLINE_FUNCTION TaskSingle(
+        Scheduler arg_scheduler,
+        std::enable_if_t<Kokkos::is_scheduler<Scheduler>::value, TaskPriority>
+            arg_priority = TaskPriority::Regular) {
   return {std::move(arg_scheduler), arg_priority};
 }
 
 template <class Scheduler, class PredecessorFuture>
 Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskSingle, Scheduler,
                               PredecessorFuture>
-    KOKKOS_INLINE_FUNCTION TaskSingle(
-        Scheduler arg_scheduler, PredecessorFuture arg_future,
-        typename std::enable_if<Kokkos::is_scheduler<Scheduler>::value &&
+    KOKKOS_INLINE_FUNCTION
+    TaskSingle(Scheduler arg_scheduler, PredecessorFuture arg_future,
+               std::enable_if_t<Kokkos::is_scheduler<Scheduler>::value &&
                                     Kokkos::is_future<PredecessorFuture>::value,
-                                TaskPriority>::type arg_priority =
-            TaskPriority::Regular) {
+                                TaskPriority>
+                   arg_priority = TaskPriority::Regular) {
   static_assert(std::is_same<typename PredecessorFuture::scheduler_type,
                              Scheduler>::value,
                 "Can't create a task policy from a scheduler and a future from "

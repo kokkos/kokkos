@@ -201,7 +201,7 @@ namespace Impl {
  */
 template <class Traits>
 class ViewDataHandle<
-    Traits, typename std::enable_if<(
+    Traits, std::enable_if_t<(
                 // Is Cuda memory space
                 (std::is_same<typename Traits::memory_space,
                               Kokkos::CudaSpace>::value ||
@@ -215,7 +215,7 @@ class ViewDataHandle<
                  sizeof(typename Traits::const_value_type) == 8 ||
                  sizeof(typename Traits::const_value_type) == 16) &&
                 // Random access trait
-                (Traits::memory_traits::is_random_access != 0))>::type> {
+                (Traits::memory_traits::is_random_access != 0))>> {
  public:
   using track_type = Kokkos::Impl::SharedAllocationTracker;
 

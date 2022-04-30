@@ -485,12 +485,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, Policy& arg_policy,
-      const ViewType& arg_result_view,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer<ReducerType>::value,
-                              void*>::type = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
+                 const ViewType& arg_result_view,
+                 std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                                      !Kokkos::is_reducer<ReducerType>::value,
+                                  void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -544,15 +543,15 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  typename std::enable_if<std::is_same<TagType, void>::value>::type
-  call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
-                const bool& is_final) const {
+  std::enable_if_t<std::is_same<TagType, void>::value> call_with_tag(
+      const FunctorType& f, const idx_type& idx, value_type& val,
+      const bool& is_final) const {
     f(idx, val, is_final);
   }
   template <class TagType>
-  typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
-                const bool& is_final) const {
+  std::enable_if_t<!std::is_same<TagType, void>::value> call_with_tag(
+      const FunctorType& f, const idx_type& idx, value_type& val,
+      const bool& is_final) const {
     f(WorkTag(), idx, val, is_final);
   }
 
@@ -1236,12 +1235,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer<ReducerType>::value,
-                              void*>::type = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ViewType& arg_result,
+                 std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                                      !Kokkos::is_reducer<ReducerType>::value,
+                                  void*> = nullptr)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),

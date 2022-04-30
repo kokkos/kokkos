@@ -239,14 +239,14 @@ struct FloatingPointComparison {
 
   // Using absolute here instead of abs, since we actually test abs ...
   template <class T>
-  KOKKOS_FUNCTION typename std::enable_if<std::is_signed<T>::value, T>::type
-  absolute(T val) const {
+  KOKKOS_FUNCTION std::enable_if_t<std::is_signed<T>::value, T> absolute(
+      T val) const {
     return val < T(0) ? -val : val;
   }
 
   template <class T>
-  KOKKOS_FUNCTION typename std::enable_if<!std::is_signed<T>::value, T>::type
-  absolute(T val) const {
+  KOKKOS_FUNCTION std::enable_if_t<!std::is_signed<T>::value, T> absolute(
+      T val) const {
     return val;
   }
 
