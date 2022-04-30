@@ -79,9 +79,9 @@ struct in_place_shfl_op {
   // sizeof(Scalar) <= sizeof(int) case
   template <class Scalar>
   // requires _assignable_from_bits<Scalar>
-  __device__ inline typename std::enable_if<sizeof(Scalar) <= sizeof(int)>::type
-  operator()(Scalar& out, Scalar const& in, int lane_or_delta, int width,
-             unsigned mask = shfl_all_mask) const noexcept {
+  __device__ inline std::enable_if_t<sizeof(Scalar) <= sizeof(int)> operator()(
+      Scalar& out, Scalar const& in, int lane_or_delta, int width,
+      unsigned mask = shfl_all_mask) const noexcept {
     using shfl_type = int;
     union conv_type {
       Scalar orig;
@@ -134,10 +134,9 @@ struct in_place_shfl_op {
 
   // sizeof(Scalar) > sizeof(double) case
   template <typename Scalar>
-  __device__ inline
-      typename std::enable_if<(sizeof(Scalar) > sizeof(double))>::type
-      operator()(Scalar& out, const Scalar& val, int lane_or_delta, int width,
-                 unsigned mask = shfl_all_mask) const noexcept {
+  __device__ inline std::enable_if_t<(sizeof(Scalar) > sizeof(double))>
+  operator()(Scalar& out, const Scalar& val, int lane_or_delta, int width,
+             unsigned mask = shfl_all_mask) const noexcept {
     // TODO DSH shouldn't this be KOKKOS_IMPL_CUDA_MAX_SHFL_SIZEOF instead of
     //      sizeof(int)? (Need benchmarks to decide which is faster)
     using shuffle_as_t = int;

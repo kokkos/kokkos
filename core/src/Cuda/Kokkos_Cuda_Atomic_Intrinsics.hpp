@@ -542,8 +542,7 @@ DO__atomic_store_simt_(1, 32) DO__atomic_store_simt_(2, 16)
 DO__atomic_compare_exchange_simt_(4, 32)
     DO__atomic_compare_exchange_simt_(8, 64)
 
-        template <class type,
-                  typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+        template <class type, std::enable_if_t<sizeof(type) <= 2, int> = 0>
         bool __device__
     __atomic_compare_exchange_simt_(type *ptr, type *expected,
                                     const type *desired, bool,
@@ -596,8 +595,7 @@ bool __device__ __atomic_compare_exchange_n_simt_(type *ptr, type *expected,
   }
 DO__atomic_exchange_simt_(4, 32) DO__atomic_exchange_simt_(8, 64)
 
-    template <class type,
-              typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+    template <class type, std::enable_if_t<sizeof(type) <= 2, int> = 0>
     void __device__
     __atomic_exchange_simt_(type *ptr, type *val, type *ret, int memorder) {
   type expected = __atomic_load_n_simt_(ptr, __ATOMIC_RELAXED);
@@ -634,7 +632,7 @@ type __device__ __atomic_exchange_n_simt_(type *ptr, type val, int memorder) {
 DO__atomic_fetch_add_simt_(4, 32) DO__atomic_fetch_add_simt_(8, 64)
 
     template <class type, class delta,
-              typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+              std::enable_if_t<sizeof(type) <= 2, int> = 0>
     type __device__
     __atomic_fetch_add_simt_(type *ptr, delta val, int memorder) {
   type expected      = __atomic_load_n_simt_(ptr, __ATOMIC_RELAXED);
@@ -665,7 +663,7 @@ DO__atomic_fetch_add_simt_(4, 32) DO__atomic_fetch_add_simt_(8, 64)
 DO__atomic_fetch_sub_simt_(4, 32) DO__atomic_fetch_sub_simt_(8, 64)
 
     template <class type, class delta,
-              typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+              std::enable_if_t<sizeof(type) <= 2, int> = 0>
     type __device__
     __atomic_fetch_sub_simt_(type *ptr, delta val, int memorder) {
   type expected      = __atomic_load_n_simt_(ptr, __ATOMIC_RELAXED);
@@ -695,7 +693,7 @@ DO__atomic_fetch_sub_simt_(4, 32) DO__atomic_fetch_sub_simt_(8, 64)
 DO__atomic_fetch_and_simt_(4, 32) DO__atomic_fetch_and_simt_(8, 64)
 
     template <class type, class delta,
-              typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+              std::enable_if_t<sizeof(type) <= 2, int> = 0>
     type __device__
     __atomic_fetch_and_simt_(type *ptr, delta val, int memorder) {
   type expected      = __atomic_load_n_simt_(ptr, __ATOMIC_RELAXED);
@@ -725,7 +723,7 @@ DO__atomic_fetch_and_simt_(4, 32) DO__atomic_fetch_and_simt_(8, 64)
 DO__atomic_fetch_xor_simt_(4, 32) DO__atomic_fetch_xor_simt_(8, 64)
 
     template <class type, class delta,
-              typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+              std::enable_if_t<sizeof(type) <= 2, int> = 0>
     type __device__
     __atomic_fetch_xor_simt_(type *ptr, delta val, int memorder) {
   type expected      = __atomic_load_n_simt_(ptr, __ATOMIC_RELAXED);
@@ -754,7 +752,7 @@ DO__atomic_fetch_xor_simt_(4, 32) DO__atomic_fetch_xor_simt_(8, 64)
 DO__atomic_fetch_or_simt_(4, 32) DO__atomic_fetch_or_simt_(8, 64)
 
     template <class type, class delta,
-              typename std::enable_if<sizeof(type) <= 2, int>::type = 0>
+              std::enable_if_t<sizeof(type) <= 2, int> = 0>
     type __device__
     __atomic_fetch_or_simt_(type *ptr, delta val, int memorder) {
   type expected      = __atomic_load_n_simt_(ptr, __ATOMIC_RELAXED);

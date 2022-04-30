@@ -183,17 +183,17 @@ KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept
-    -> std::enable_if_t<is_view<typename std::decay<T>::type>::value,
-                        typename std::decay<T>::type>::value_type {
+    T&& arg) noexcept ->
+    typename std::enable_if_t<is_view<typename std::decay<T>::type>::value,
+                              typename std::decay<T>::type>::value_type {
   return arg();
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept
-    -> std::enable_if_t<is_reducer<typename std::decay<T>::type>::value,
-                        typename std::decay<T>::type>::value_type {
+    T&& arg) noexcept ->
+    typename std::enable_if_t<is_reducer<typename std::decay<T>::type>::value,
+                              typename std::decay<T>::type>::value_type {
   return arg.reference();
 }
 
@@ -436,7 +436,7 @@ struct _wrap_with_kokkos_sum<Space, T,
 // TODO better error message for the case when a const& to a scalar is passed in
 //      (this is needed in general, though)
 template <class Space, class T>
-KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if_t<
     !Kokkos::is_reducer<typename std::decay<T>::type>::value,
     _wrap_with_kokkos_sum<Space, typename std::decay<T>::type>>::type
 _make_reducer_from_arg(T&& arg_scalar) noexcept {

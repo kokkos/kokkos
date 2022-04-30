@@ -870,8 +870,7 @@ struct ViewOffset {
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutLeft,
-    typename std::enable_if<(1 >= Dimension::rank ||
-                             0 == Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 >= Dimension::rank || 0 == Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -1153,8 +1152,7 @@ struct ViewOffset<
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutLeft,
-    typename std::enable_if<(1 < Dimension::rank &&
-                             0 < Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 < Dimension::rank && 0 < Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -1497,8 +1495,7 @@ struct ViewOffset<
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutRight,
-    typename std::enable_if<(1 >= Dimension::rank ||
-                             0 == Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 >= Dimension::rank || 0 == Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -1784,8 +1781,7 @@ struct ViewOffset<
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutRight,
-    typename std::enable_if<(1 < Dimension::rank &&
-                             0 < Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 < Dimension::rank && 0 < Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 

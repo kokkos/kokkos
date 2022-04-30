@@ -755,8 +755,8 @@ template <typename iType, class Closure, class Member>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
     Closure const& closure,
-    typename std::enable_if<Impl::is_host_thread_team_member<Member>::value>::
-        type const** = nullptr) {
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
+        nullptr) {
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     closure(i);
@@ -768,8 +768,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
         loop_boundaries,
     Closure const& closure,
-    typename std::enable_if<Impl::is_host_thread_team_member<Member>::value>::
-        type const** = nullptr) {
+    std::enable_if<Impl::is_host_thread_team_member<Member>::value> const** =
+        nullptr) {
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif

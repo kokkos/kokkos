@@ -1394,9 +1394,8 @@ struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
 };
 
 template <class ExecSpace, class ScheduleType, class T>
-struct TestTeamBroadcast<
-    ExecSpace, ScheduleType, T,
-    typename std::enable_if<(sizeof(T) > sizeof(char)), void>::type> {
+struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
+                         std::enable_if_t<(sizeof(T) > sizeof(char)), void>> {
   using team_member =
       typename Kokkos::TeamPolicy<ScheduleType, ExecSpace>::member_type;
   using value_type = T;
