@@ -223,12 +223,6 @@ struct SumBinaryFunctor {
   ValueType operator()(const ValueType& a, const ValueType& b) const {
     return (a + b);
   }
-
-  KOKKOS_INLINE_FUNCTION
-  ValueType operator()(const volatile ValueType& a,
-                       const volatile ValueType& b) const {
-    return (a + b);
-  }
 };
 
 std::string value_type_to_string(int) { return "int"; }

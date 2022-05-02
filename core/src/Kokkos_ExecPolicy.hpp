@@ -199,11 +199,10 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline member_type chunk_size() const { return m_granularity; }
 
   /** \brief set chunk_size to a discrete value*/
-  inline RangePolicy set_chunk_size(int chunk_size_) const {
-    RangePolicy p        = *this;
-    p.m_granularity      = chunk_size_;
-    p.m_granularity_mask = p.m_granularity - 1;
-    return p;
+  inline RangePolicy& set_chunk_size(int chunk_size) {
+    m_granularity      = chunk_size;
+    m_granularity_mask = m_granularity - 1;
+    return *this;
   }
 
  private:

@@ -47,12 +47,13 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_StringManipulation.hpp>
 
 #include <type_traits>
 #include <algorithm>
+#include <utility>
 #include <limits>
 #include <cstddef>
-#include <string>
 
 namespace Kokkos {
 
@@ -64,14 +65,12 @@ struct ArrayBoundsCheck;
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, true> {
   KOKKOS_INLINE_FUNCTION
-  ArrayBoundsCheck(Integral i, size_t N) {
+  constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (i < 0) {
-      KOKKOS_IF_ON_HOST((std::string s = "Kokkos::Array: index ";
-                         s += std::to_string(i); s += " < 0";
-                         Kokkos::Impl::throw_runtime_exception(s);))
-
-      KOKKOS_IF_ON_DEVICE(
-          (Kokkos::abort("Kokkos::Array: negative index in device code");))
+      char err[128] = "Kokkos::Array: index ";
+      to_chars_i(err + strlen(err), err + 128, i);
+      strcat(err, " < 0");
+      Kokkos::abort(err);
     }
     ArrayBoundsCheck<Integral, false>(i, N);
   }
@@ -80,14 +79,13 @@ struct ArrayBoundsCheck<Integral, true> {
 template <typename Integral>
 struct ArrayBoundsCheck<Integral, false> {
   KOKKOS_INLINE_FUNCTION
-  ArrayBoundsCheck(Integral i, size_t N) {
+  constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (size_t(i) >= N) {
-      KOKKOS_IF_ON_HOST((std::string s = "Kokkos::Array: index ";
-                         s += std::to_string(i); s += " >= ";
-                         s += std::to_string(N);
-                         Kokkos::Impl::throw_runtime_exception(s);))
-
-      KOKKOS_IF_ON_DEVICE((Kokkos::abort("Kokkos::Array: index >= size");))
+      char err[128] = "Kokkos::Array: index ";
+      to_chars_i(err + strlen(err), err + 128, i);
+      strcat(err, " >= ");
+      to_chars_i(err + strlen(err), err + 128, N);
+      Kokkos::abort(err);
     }
   }
 };
@@ -130,7 +128,7 @@ struct Array {
   KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return N; }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION reference operator[](const iType& i) {
+  KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
@@ -139,7 +137,8 @@ struct Array {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION const_reference operator[](const iType& i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const_reference operator[](
+      const iType& i) const {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
@@ -147,10 +146,10 @@ struct Array {
     return m_internal_implementation_private_member_data[i];
   }
 
-  KOKKOS_INLINE_FUNCTION pointer data() {
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() {
     return &m_internal_implementation_private_member_data[0];
   }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const {
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
     return &m_internal_implementation_private_member_data[0];
   }
 };
@@ -346,5 +345,51 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 };
 
 }  // namespace Kokkos
+
+//<editor-fold desc="Support for structured binding">
+// guarding against bogus error 'specialization in different namespace' with
+// older GCC that do not support C++17 anyway
+#if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU >= 710)
+#if defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 800
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+template <class T, std::size_t N>
+struct std::tuple_size<Kokkos::Array<T, N>>
+    : std::integral_constant<std::size_t, N> {};
+
+template <std::size_t I, class T, std::size_t N>
+struct std::tuple_element<I, Kokkos::Array<T, N>> {
+  using type = T;
+};
+#if defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 800
+#pragma clang diagnostic pop
+#endif
+#endif
+
+namespace Kokkos {
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T& get(Array<T, N>& a) noexcept {
+  return a[I];
+}
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T const& get(Array<T, N> const& a) noexcept {
+  return a[I];
+}
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T&& get(Array<T, N>&& a) noexcept {
+  return std::move(a[I]);
+}
+
+template <std::size_t I, class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
+  return std::move(a[I]);
+}
+
+}  // namespace Kokkos
+//</editor-fold>
 
 #endif /* #ifndef KOKKOS_ARRAY_HPP */

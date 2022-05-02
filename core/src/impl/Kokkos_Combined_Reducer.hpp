@@ -89,10 +89,6 @@ struct CombinedReducerValueItemImpl {
   constexpr value_type& ref() & noexcept { return m_value; }
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr value_type const& ref() const& noexcept { return m_value; }
-  KOKKOS_FORCEINLINE_FUNCTION
-  value_type volatile& ref() volatile& noexcept { return m_value; }
-  KOKKOS_FORCEINLINE_FUNCTION
-  value_type const volatile& ref() const volatile& noexcept { return m_value; }
 };
 
 //==============================================================================
@@ -133,15 +129,6 @@ struct CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
   KOKKOS_INLINE_FUNCTION ValueType const& get() const& noexcept {
     return this->CombinedReducerValueItemImpl<Idx, ValueType>::ref();
   }
-  template <size_t Idx, class ValueType>
-  KOKKOS_INLINE_FUNCTION ValueType volatile& get() volatile& noexcept {
-    return this->CombinedReducerValueItemImpl<Idx, ValueType>::ref();
-  }
-  template <size_t Idx, class ValueType>
-  KOKKOS_INLINE_FUNCTION ValueType const volatile& get() const
-      volatile& noexcept {
-    return this->CombinedReducerValueItemImpl<Idx, ValueType>::ref();
-  }
 };
 
 //==============================================================================
@@ -172,12 +159,6 @@ struct CombinedReducerStorageImpl {
 
   KOKKOS_INLINE_FUNCTION constexpr _fold_comma_emulation_return _join(
       value_type& dest, value_type const& src) const {
-    m_reducer.join(dest, src);
-    return _fold_comma_emulation_return{};
-  }
-
-  KOKKOS_INLINE_FUNCTION constexpr _fold_comma_emulation_return _join(
-      value_type volatile& dest, value_type const volatile& src) const {
     m_reducer.join(dest, src);
     return _fold_comma_emulation_return{};
   }
@@ -258,14 +239,6 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
 
   KOKKOS_FUNCTION constexpr void join(value_type& dest,
                                       value_type const& src) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
-            dest.template get<Idxs, typename Reducers::value_type>(),
-            src.template get<Idxs, typename Reducers::value_type>())...);
-  }
-
-  KOKKOS_FUNCTION void join(value_type volatile& dest,
-                            value_type const volatile& src) const noexcept {
     emulate_fold_comma_operator(
         this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
             dest.template get<Idxs, typename Reducers::value_type>(),

@@ -129,7 +129,7 @@ struct ParallelReduceSpecialize {
     constexpr int FunctorHasJoin =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                               FunctorType>::has_join_member_function;
-    constexpr int UseReducerType = is_reducer_type<ReducerType>::value;
+    constexpr int UseReducerType = is_reducer<ReducerType>::value;
 
     std::stringstream error_message;
     error_message << "Error: Invalid Specialization " << FunctorHasJoin << ' '
@@ -431,7 +431,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   static constexpr int HasJoin =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
                             FunctorType>::has_join_member_function;
-  static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+  static constexpr int UseReducer = is_reducer<ReducerType>::value;
   static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =
@@ -489,7 +489,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       const FunctorType& arg_functor, Policy& arg_policy,
       const ViewType& arg_result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer_type<ReducerType>::value,
+                                  !Kokkos::is_reducer<ReducerType>::value,
                               void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
@@ -1189,7 +1189,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   static constexpr int HasJoin =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
                             FunctorType>::has_join_member_function;
-  static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+  static constexpr int UseReducer = is_reducer<ReducerType>::value;
   static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =
@@ -1240,7 +1240,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer_type<ReducerType>::value,
+                                  !Kokkos::is_reducer<ReducerType>::value,
                               void*>::type = nullptr)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,

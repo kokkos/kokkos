@@ -124,6 +124,17 @@ class OpenMPTarget {
 };
 }  // namespace Experimental
 
+namespace Impl {
+template <>
+struct MemorySpaceAccess<
+    Kokkos::Experimental::OpenMPTargetSpace,
+    Kokkos::Experimental::OpenMPTarget::scratch_memory_space> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+}  // namespace Impl
+
 namespace Tools {
 namespace Experimental {
 template <>

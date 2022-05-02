@@ -151,8 +151,11 @@ class BinSort {
     }
   };
 
-  using execution_space = typename Space::execution_space;
-  using bin_op_type     = BinSortOp;
+  // Naming this alias "execution_space" would be problematic since it would be
+  // considered as execution space for the various functors which might use
+  // another execution space through sort() or create_permute_vector().
+  using exec_space  = typename Space::execution_space;
+  using bin_op_type = BinSortOp;
 
   struct bin_count_tag {};
   struct bin_offset_tag {};
@@ -220,6 +223,11 @@ class BinSort {
         range_begin(range_begin_),
         range_end(range_end_),
         sort_within_bins(sort_within_bins_) {
+    static_assert(
+        Kokkos::SpaceAccessibility<ExecutionSpace,
+                                   typename Space::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "BinSort was initialized with!");
     if (bin_op.max_bins() <= 0)
       Kokkos::abort(
           "The number of bins in the BinSortOp object must be greater than 0!");
@@ -238,7 +246,7 @@ class BinSort {
 
   BinSort(const_key_view_type keys_, int range_begin_, int range_end_,
           BinSortOp bin_op_, bool sort_within_bins_ = false)
-      : BinSort(execution_space{}, keys_, range_begin_, range_end_, bin_op_,
+      : BinSort(exec_space{}, keys_, range_begin_, range_end_, bin_op_,
                 sort_within_bins_) {}
 
   template <typename ExecutionSpace>
@@ -248,13 +256,19 @@ class BinSort {
 
   BinSort(const_key_view_type keys_, BinSortOp bin_op_,
           bool sort_within_bins_ = false)
-      : BinSort(execution_space{}, keys_, bin_op_, sort_within_bins_) {}
+      : BinSort(exec_space{}, keys_, bin_op_, sort_within_bins_) {}
 
   //----------------------------------------
   // Create the permutation vector, the bin_offset array and the bin_count
   // array. Can be called again if keys changed
-  template <class ExecutionSpace = execution_space>
-  void create_permute_vector(const ExecutionSpace& exec = execution_space{}) {
+  template <class ExecutionSpace = exec_space>
+  void create_permute_vector(const ExecutionSpace& exec = exec_space{}) {
+    static_assert(
+        Kokkos::SpaceAccessibility<ExecutionSpace,
+                                   typename Space::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "BinSort was initialized with!");
+
     const size_t len = range_end - range_begin;
     Kokkos::parallel_for(
         "Kokkos::Sort::BinCount",
@@ -284,6 +298,17 @@ class BinSort {
   template <class ExecutionSpace, class ValuesViewType>
   void sort(const ExecutionSpace& exec, ValuesViewType const& values,
             int values_range_begin, int values_range_end) const {
+    static_assert(
+        Kokkos::SpaceAccessibility<ExecutionSpace,
+                                   typename Space::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "BinSort was initialized with!");
+    static_assert(
+        Kokkos::SpaceAccessibility<
+            ExecutionSpace, typename ValuesViewType::memory_space>::accessible,
+        "The provided execution space must be able to access the memory space "
+        "of the View argument!");
+
     using scratch_view_type =
         Kokkos::View<typename ValuesViewType::data_type,
                      typename ValuesViewType::array_layout,
@@ -343,7 +368,7 @@ class BinSort {
   template <class ValuesViewType>
   void sort(ValuesViewType const& values, int values_range_begin,
             int values_range_end) const {
-    execution_space exec;
+    exec_space exec;
     sort(exec, values, values_range_begin, values_range_end);
     exec.fence("Kokkos::Sort: fence after sorting");
   }

@@ -42,31 +42,43 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STD_VALUE_WRAPPER_FOR_NO_NEUTRAL_ELEMENT_HPP
-#define KOKKOS_STD_VALUE_WRAPPER_FOR_NO_NEUTRAL_ELEMENT_HPP
+#include <Kokkos_Array.hpp>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace {
 
-//
-// scalar wrapper used for reductions and scans
-// when we don't have neutral element
-//
-template <class Scalar>
-struct ValueWrapperForNoNeutralElement {
-  Scalar val;
-  bool is_initial = true;
+#define STATIC_ASSERT(cond) static_assert(cond, "")
 
-  KOKKOS_FUNCTION
-  void operator=(const ValueWrapperForNoNeutralElement& rhs) {
-    val        = rhs.val;
-    is_initial = rhs.is_initial;
-  }
-};
+KOKKOS_FUNCTION constexpr bool test_array() {
+  constexpr Kokkos::Array<int, 3> a{{1, 2}};
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+  STATIC_ASSERT(!a.empty());
+  STATIC_ASSERT(a.size() == 3);
+  STATIC_ASSERT(a.max_size() == 3);
 
+  STATIC_ASSERT(*a.data() == 1);
+  STATIC_ASSERT(a[1] == 2);
+
+  return true;
+}
+
+STATIC_ASSERT(test_array());
+
+#ifdef KOKKOS_ENABLE_CXX17
+KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
+  constexpr Kokkos::Array<float, 2> a{};
+  auto& [xr, yr] = a;
+  (void)xr;
+  (void)yr;
+  auto [x, y] = a;
+  (void)x;
+  (void)y;
+  auto const& [xcr, ycr] = a;
+  (void)xcr;
+  (void)ycr;
+  return true;
+}
+
+STATIC_ASSERT(test_array_structured_binding_support());
 #endif
+
+}  // namespace

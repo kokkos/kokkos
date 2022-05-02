@@ -300,11 +300,6 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
     Kokkos::atomic_add(&dest, src);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile ValueType& dest, const volatile ValueType& src) const {
-    Kokkos::atomic_add(&dest, src);
-  }
-
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(value, rhs);
   }
@@ -386,11 +381,6 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
     atomic_prod(&dest, src);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile ValueType& dest, const volatile ValueType& src) const {
-    atomic_prod(&dest, src);
-  }
-
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     atomic_prod(&value, rhs);
   }
@@ -457,11 +447,6 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
     atomic_min(dest, src);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile ValueType& dest, const volatile ValueType& src) const {
-    atomic_min(dest, src);
-  }
-
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(value, rhs);
   }
@@ -525,11 +510,6 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
 
   KOKKOS_INLINE_FUNCTION
   void join(ValueType& dest, const ValueType& src) const {
-    atomic_max(dest, src);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile ValueType& dest, const volatile ValueType& src) const {
     atomic_max(dest, src);
   }
 

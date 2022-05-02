@@ -252,48 +252,48 @@ class ThreadsExecTeamMember {
                   const typename ReducerType::value_type contribution) const {
     KOKKOS_IF_ON_DEVICE(((void)reducer; (void)contribution;))
 
-    KOKKOS_IF_ON_HOST(
-        (using value_type = typename ReducerType::value_type;
-         // Make sure there is enough scratch space:
-         using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
-                                    value_type, void>::type;
+    KOKKOS_IF_ON_HOST((
+        using value_type = typename ReducerType::value_type;
+        // Make sure there is enough scratch space:
+        using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
+                                   value_type, void>::type;
 
-         if (nullptr == m_exec) return;
+        if (nullptr == m_exec) return;
 
-         type* const local_value = ((type*)m_exec->scratch_memory());
+        type* const local_value = ((type*)m_exec->scratch_memory());
 
-         // Set this thread's contribution
-         if (team_rank() != team_size() - 1)* local_value = contribution;
+        // Set this thread's contribution
+        if (team_rank() != team_size() - 1) { *local_value = contribution; }
 
-         // Fence to make sure the base team member has access:
-         memory_fence();
+        // Fence to make sure the base team member has access:
+        memory_fence();
 
-         if (team_fan_in()) {
-           // The last thread to synchronize returns true, all other threads
-           // wait for team_fan_out()
-           type* const team_value = ((type*)m_team_base[0]->scratch_memory());
+        if (team_fan_in()) {
+          // The last thread to synchronize returns true, all other threads
+          // wait for team_fan_out()
+          type* const team_value = ((type*)m_team_base[0]->scratch_memory());
 
-           *team_value = contribution;
-           // Join to the team value:
-           for (int i = 1; i < m_team_size; ++i) {
-             reducer.join(*team_value,
-                          *((type*)m_team_base[i]->scratch_memory()));
-           }
+          *team_value = contribution;
+          // Join to the team value:
+          for (int i = 1; i < m_team_size; ++i) {
+            reducer.join(*team_value,
+                         *((type*)m_team_base[i]->scratch_memory()));
+          }
 
-           // Team base thread may "lap" member threads so copy out to their
-           // local value.
-           for (int i = 1; i < m_team_size; ++i) {
-             *((type*)m_team_base[i]->scratch_memory()) = *team_value;
-           }
+          // Team base thread may "lap" member threads so copy out to their
+          // local value.
+          for (int i = 1; i < m_team_size; ++i) {
+            *((type*)m_team_base[i]->scratch_memory()) = *team_value;
+          }
 
-           // Fence to make sure all team members have access
-           memory_fence();
-         }
+          // Fence to make sure all team members have access
+          memory_fence();
+        }
 
-         team_fan_out();
+        team_fan_out();
 
-         // Value was changed by the team base
-         reducer.reference() = *((type volatile const*)local_value);))
+        // Value was changed by the team base
+        reducer.reference() = *local_value;))
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering

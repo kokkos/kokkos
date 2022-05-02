@@ -69,8 +69,7 @@ struct HIPJoinFunctor {
   using value_type = Type;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   volatile const value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update += input;
   }
 };
