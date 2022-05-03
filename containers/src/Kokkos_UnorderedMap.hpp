@@ -62,7 +62,6 @@
 #include <iostream>
 
 #include <cstdint>
-#include <stdexcept>
 
 namespace Kokkos {
 
@@ -318,7 +317,7 @@ class UnorderedMap {
 #endif
         m_scalars("UnorderedMap scalars") {
     if (!is_insertable_map) {
-      throw std::runtime_error(
+      Kokkos::Impl::throw_runtime_exception(
           "Cannot construct a non-insertable (i.e. const key_type) "
           "unordered_map");
     }

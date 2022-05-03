@@ -50,80 +50,6 @@ namespace KE = Kokkos::Experimental;
 namespace Test {
 namespace stdalgos {
 
-struct CustomValueType {
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType(){};
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType(value_type val) : value(val){};
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType(const CustomValueType& other) { this->value = other.value; }
-
-  KOKKOS_INLINE_FUNCTION
-  value_type& operator()() { return value; }
-
-  KOKKOS_INLINE_FUNCTION
-  const value_type& operator()() const { return value; }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType& operator+=(const CustomValueType& other) {
-    this->value += other.value;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType& operator=(const CustomValueType& other) {
-    this->value = other.value;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType operator+(const CustomValueType& other) const {
-    CustomValueType result;
-    result.value = this->value + other.value;
-    return result;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType operator*(const CustomValueType& other) const {
-    CustomValueType result;
-    result.value = this->value * other.value;
-    return result;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator==(const CustomValueType& other) const {
-    return this->value == other.value;
-  }
-
-  //
-  // volatile overloads needed for the kokkos reductions
-  //
-  // note the void return
-  KOKKOS_INLINE_FUNCTION
-  void operator+=(const volatile CustomValueType& other) volatile {
-    this->value += other.value;
-  }
-
-  // note the void return
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const CustomValueType& other) volatile {
-    this->value = other.value;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CustomValueType operator+(const volatile CustomValueType& other) const
-      volatile {
-    CustomValueType result;
-    result.value = this->value + other.value;
-    return result;
-  }
-
- private:
-  value_type value = {};
-};
-
 template <class ValueType>
 struct TimesTwoUnaryTransformFunctor {
   KOKKOS_INLINE_FUNCTION
@@ -142,12 +68,6 @@ template <class ValueType>
 struct SumJoinFunctor {
   KOKKOS_INLINE_FUNCTION
   ValueType operator()(const ValueType& a, const ValueType& b) const {
-    return a + b;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  ValueType operator()(const volatile ValueType& a,
-                       const volatile ValueType& b) const {
     return a + b;
   }
 };

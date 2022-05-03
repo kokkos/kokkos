@@ -379,26 +379,6 @@ void pre_initialize_internal(const InitArguments& args) {
                                  std::to_string(KOKKOS_COMPILER_MSVC));
   declare_configuration_metadata("tools_only", "compiler_family", "msvc");
 #endif
-#ifdef KOKKOS_ENABLE_ISA_KNC
-  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_KNC",
-                                 "yes");
-#else
-  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_KNC", "no");
-#endif
-#ifdef KOKKOS_ENABLE_ISA_POWERPCLE
-  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_POWERPCLE",
-                                 "yes");
-#else
-  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_POWERPCLE",
-                                 "no");
-#endif
-#ifdef KOKKOS_ENABLE_ISA_X86_64
-  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_X86_64",
-                                 "yes");
-#else
-  declare_configuration_metadata("architecture", "KOKKOS_ENABLE_ISA_X86_64",
-                                 "no");
-#endif
 
 #ifdef KOKKOS_ENABLE_GNU_ATOMICS
   declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "yes");

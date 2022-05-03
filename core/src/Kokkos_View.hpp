@@ -823,16 +823,18 @@ class View : public ViewTraits<DataType, Properties...> {
 #define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)                               \
   Kokkos::Impl::runtime_check_memory_access_violation<                      \
       typename traits::memory_space>(                                       \
-      "Kokkos::View ERROR: attempt to access inaccessible memory space");   \
+      "Kokkos::View ERROR: attempt to access inaccessible memory space",    \
+      __VA_ARGS__);                                                         \
   Kokkos::Impl::view_verify_operator_bounds<typename traits::memory_space>( \
       __VA_ARGS__);
 
 #else
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)          \
-  Kokkos::Impl::runtime_check_memory_access_violation< \
-      typename traits::memory_space>(                  \
-      "Kokkos::View ERROR: attempt to access inaccessible memory space");
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)                            \
+  Kokkos::Impl::runtime_check_memory_access_violation<                   \
+      typename traits::memory_space>(                                    \
+      "Kokkos::View ERROR: attempt to access inaccessible memory space", \
+      __VA_ARGS__);
 
 #endif
 
@@ -1669,14 +1671,15 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Shared scratch memory constructor
 
-  static inline size_t shmem_size(const size_t arg_N0 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
+  static KOKKOS_INLINE_FUNCTION size_t
+  shmem_size(const size_t arg_N0 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+             const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
     if (is_layout_stride) {
       Kokkos::abort(
           "Kokkos::View::shmem_size(extents...) doesn't work with "
@@ -1695,8 +1698,8 @@ class View : public ViewTraits<DataType, Properties...> {
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
 
-  static inline size_t shmem_size(
-      typename traits::array_layout const& arg_layout) {
+  static KOKKOS_INLINE_FUNCTION size_t
+  shmem_size(typename traits::array_layout const& arg_layout) {
     return map_type::memory_span(arg_layout) +
            sizeof(typename traits::value_type);
   }

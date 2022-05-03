@@ -59,6 +59,7 @@
 #include <impl/Kokkos_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_StringManipulation.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1005,15 +1006,15 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -1026,23 +1027,24 @@ struct ViewOffset<
     return m_dim.N0;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const {
-    return m_dim.N0 * m_dim.N1;
+    return size_type(m_dim.N0) * m_dim.N1;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_6() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_7() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6;
   }
 
   // Stride with [ rank ] value is the total length
@@ -1288,8 +1290,8 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
@@ -1633,15 +1635,15 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -1916,14 +1918,14 @@ struct ViewOffset<
   /* Cardinality of the domain index space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type size() const {
-    return m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 * m_dim.N5 *
-           m_dim.N6 * m_dim.N7;
+    return size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
+           m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
   /* Span of the range space */
   KOKKOS_INLINE_FUNCTION
   constexpr size_type span() const {
-    return size() > 0 ? m_dim.N0 * m_stride : 0;
+    return size() > 0 ? size_type(m_dim.N0) * m_stride : 0;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -2066,27 +2068,29 @@ struct ViewOffset<
                 stride(/* 2 <= rank */
                        m_dim.N1 *
                        (dimension_type::rank == 2
-                            ? 1
+                            ? size_t(1)
                             : m_dim.N2 *
                                   (dimension_type::rank == 3
-                                       ? 1
+                                       ? size_t(1)
                                        : m_dim.N3 *
                                              (dimension_type::rank == 4
-                                                  ? 1
+                                                  ? size_t(1)
                                                   : m_dim.N4 *
                                                         (dimension_type::rank ==
                                                                  5
-                                                             ? 1
+                                                             ? size_t(1)
                                                              : m_dim.N5 *
                                                                    (dimension_type::
                                                                                 rank ==
                                                                             6
-                                                                        ? 1
+                                                                        ? size_t(
+                                                                              1)
                                                                         : m_dim.N6 *
                                                                               (dimension_type::
                                                                                            rank ==
                                                                                        7
-                                                                                   ? 1
+                                                                                   ? size_t(
+                                                                                         1)
                                                                                    : m_dim
                                                                                          .N7)))))))) {
   }
@@ -2447,8 +2451,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   constexpr size_type size() const {
     return dimension_type::rank == 0
                ? 1
-               : m_dim.N0 * m_dim.N1 * m_dim.N2 * m_dim.N3 * m_dim.N4 *
-                     m_dim.N5 * m_dim.N6 * m_dim.N7;
+               : size_type(m_dim.N0) * m_dim.N1 * m_dim.N2 * m_dim.N3 *
+                     m_dim.N4 * m_dim.N5 * m_dim.N6 * m_dim.N7;
   }
 
  private:
@@ -2900,6 +2904,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
                    std::is_trivially_copy_assignable<ValueType>::value>
   construct_dispatch() {
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2911,7 +2918,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
-
       (void)ZeroMemset<ExecSpace, ValueType*, typename DeviceType::memory_space,
                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           space,
@@ -2925,8 +2931,11 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (default_exec_space)
         space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation(false);
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -3015,6 +3024,9 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   construct_shared_allocation() {
     // Shortcut for zero initialization
     ValueType value{};
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3040,8 +3052,11 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       if (default_exec_space)
         space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
+#endif
       parallel_for_implementation();
+#ifndef KOKKOS_ARCH_A64FX
     }
+#endif
   }
 
   template <typename Dummy = ValueType>
@@ -4020,6 +4035,62 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
           operator_bounds_error_on_device(map);
         } else { Kokkos::abort("View bounds error"); }))
   }
+}
+
+// primary template: memory space is accessible, do nothing.
+template <class MemorySpace, class AccessSpace,
+          bool = SpaceAccessibility<AccessSpace, MemorySpace>::accessible>
+struct RuntimeCheckViewMemoryAccessViolation {
+  template <class Track, class Map>
+  KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const,
+                                                        Track const&,
+                                                        Map const&) {}
+};
+
+// explicit specialization: memory access violation will occur, call abort with
+// the specified error message.
+template <class MemorySpace, class AccessSpace>
+struct RuntimeCheckViewMemoryAccessViolation<MemorySpace, AccessSpace, false> {
+  template <class Track, class Map>
+  KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const msg,
+                                                        Track const& track,
+                                                        Map const&) {
+    char err[256] = "";
+    strncat(err, msg, 64);
+    strcat(err, " (label=\"");
+
+    KOKKOS_IF_ON_HOST(({
+      auto const tracker = track.m_tracker;
+
+      if (tracker.has_record()) {
+        strncat(err, tracker.template get_label<void>().c_str(), 128);
+      } else {
+        strcat(err, "**UNMANAGED**");
+      }
+    }))
+
+    KOKKOS_IF_ON_DEVICE(({
+      strcat(err, "**UNAVAILABLE**");
+      (void)track;
+    }))
+
+    strcat(err, "\")");
+
+    Kokkos::abort(err);
+  }
+};
+
+template <class MemorySpace, class Track, class Map, class... Ignore>
+KOKKOS_FUNCTION void runtime_check_memory_access_violation(
+    char const* const msg, Track const& track, Map const& map, Ignore...) {
+  KOKKOS_IF_ON_HOST(
+      ((void)RuntimeCheckViewMemoryAccessViolation<MemorySpace,
+                                                   DefaultHostExecutionSpace>(
+           msg, track, map);))
+  KOKKOS_IF_ON_DEVICE(
+      ((void)RuntimeCheckViewMemoryAccessViolation<MemorySpace,
+                                                   DefaultExecutionSpace>(
+           msg, track, map);))
 }
 
 } /* namespace Impl */

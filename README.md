@@ -156,7 +156,7 @@ for the install location given above.
 ## Spack
 An alternative to manually building with the CMake is to use the Spack package manager.
 To get started, download the Spack [repo](https://github.com/spack/spack).
-````
+
 A basic installation would be done as:
 ````bash
 > spack install kokkos

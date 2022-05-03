@@ -461,7 +461,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
                               FunctorType>::has_join_member_function
   };
-  enum { UseReducer = is_reducer_type<ReducerType>::value };
+  enum { UseReducer = is_reducer<ReducerType>::value };
 
   const pointer_type m_result_ptr;
   const FunctorType m_functor;
@@ -483,7 +483,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer_type<ReducerType>::value,
+                                  !Kokkos::is_reducer<ReducerType>::value,
                               void*>::type = NULL)
       : m_result_ptr(arg_result_view.data()),
         m_functor(arg_functor),

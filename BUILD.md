@@ -238,6 +238,9 @@ The following options control `find_package` paths for CMake-based TPLs:
 ## Architecture Keywords
 Architecture-specific optimizations can be enabled by specifying `-DKokkos_ARCH_X`.
 
+* Kokkos_ARCH_NATIVE
+    * Whether to optimize for the the local CPU architecture
+    * BOOL Default: OFF
 * Kokkos_ARCH_AMDAVX
     * Whether to optimize for the AMDAVX architecture
     * BOOL Default: OFF

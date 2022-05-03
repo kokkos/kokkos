@@ -403,6 +403,41 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_join_no_tag_function<F, /*is_array*/ false> {
+    using ref_type  = ValueType&;
+    using cref_type = const ValueType&;
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(*dst, *src);
+    }
+  };
+
+  template <class F>
+  struct has_join_no_tag_function<F, /*is_array*/ true> {
+    using ref_type  = ValueType*;
+    using cref_type = const ValueType*;
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(ref_type, cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(dst, src);
+    }
+  };
+
+  template <class F, bool is_array = candidate_is_array>
+  struct has_volatile_join_no_tag_function;
+
+  template <class F>
+  struct has_volatile_join_no_tag_function<F, /*is_array*/ false> {
     using vref_type  = volatile ValueType&;
     using cvref_type = const volatile ValueType&;
 
@@ -412,15 +447,14 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(vref_type,
                                                           cvref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
       f->join(*dst, *src);
     }
   };
 
   template <class F>
-  struct has_join_no_tag_function<F, /*is_array*/ true> {
+  struct has_volatile_join_no_tag_function<F, /*is_array*/ true> {
     using vref_type  = volatile ValueType*;
     using cvref_type = const volatile ValueType*;
 
@@ -430,9 +464,8 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(vref_type,
                                                           cvref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
       f->join(dst, src);
     }
   };
@@ -442,6 +475,57 @@ struct FunctorAnalysis {
 
   template <class F>
   struct has_join_tag_function<F, /*is_array*/ false> {
+    using ref_type  = ValueType&;
+    using cref_type = const ValueType&;
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ref_type,
+                                                          cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
+                                                             ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
+                                                          cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(WTag(), *dst, *src);
+    }
+  };
+
+  template <class F>
+  struct has_join_tag_function<F, /*is_array*/ true> {
+    using ref_type  = ValueType*;
+    using cref_type = const ValueType*;
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag, ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag, ref_type,
+                                                          cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (F::*)(WTag const&,
+                                                             ref_type,
+                                                             cref_type) const);
+
+    KOKKOS_INLINE_FUNCTION static void enable_if(void (*)(WTag const&, ref_type,
+                                                          cref_type));
+
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
+      f->join(WTag(), dst, src);
+    }
+  };
+
+  template <class F, bool is_array = candidate_is_array>
+  struct has_volatile_join_tag_function;
+
+  template <class F>
+  struct has_volatile_join_tag_function<F, /*is_array*/ false> {
     using vref_type  = volatile ValueType&;
     using cvref_type = const volatile ValueType&;
 
@@ -459,15 +543,14 @@ struct FunctorAnalysis {
                                                           vref_type,
                                                           cvref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
       f->join(WTag(), *dst, *src);
     }
   };
 
   template <class F>
-  struct has_join_tag_function<F, /*is_array*/ true> {
+  struct has_volatile_join_tag_function<F, /*is_array*/ true> {
     using vref_type  = volatile ValueType*;
     using cvref_type = const volatile ValueType*;
 
@@ -485,20 +568,62 @@ struct FunctorAnalysis {
                                                           vref_type,
                                                           cvref_type));
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
       f->join(WTag(), dst, src);
     }
+  };
+
+  template <class F, class = void>
+  struct detected_join_no_tag {
+    enum : bool { value = false };
+  };
+
+  template <class F>
+  struct detected_join_no_tag<
+      F, decltype(has_join_no_tag_function<F>::enable_if(&F::join))> {
+    enum : bool { value = true };
+  };
+
+  template <class F, class = void>
+  struct detected_volatile_join_no_tag {
+    enum : bool { value = false };
+  };
+
+  template <class F>
+  struct detected_volatile_join_no_tag<
+      F, decltype(has_volatile_join_no_tag_function<F>::enable_if(&F::join))> {
+    enum : bool { value = true };
+  };
+
+  template <class F, class = void>
+  struct detected_join_tag {
+    enum : bool { value = false };
+  };
+
+  template <class F>
+  struct detected_join_tag<F, decltype(has_join_tag_function<F>::enable_if(
+                                  &F::join))> {
+    enum : bool { value = true };
+  };
+
+  template <class F, class = void>
+  struct detected_volatile_join_tag {
+    enum : bool { value = false };
+  };
+
+  template <class F>
+  struct detected_volatile_join_tag<
+      F, decltype(has_volatile_join_tag_function<F>::enable_if(&F::join))> {
+    enum : bool { value = true };
   };
 
   template <class F = Functor, typename = void>
   struct DeduceJoinNoTag {
     enum : bool { value = false };
 
-    KOKKOS_INLINE_FUNCTION static void join(F const* const f,
-                                            ValueType volatile* dst,
-                                            ValueType volatile const* src) {
+    KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
+                                            ValueType const* src) {
       const int n = FunctorAnalysis::value_count(*f);
       for (int i = 0; i < n; ++i) dst[i] += src[i];
     }
@@ -506,11 +631,14 @@ struct FunctorAnalysis {
 
   template <class F>
   struct DeduceJoinNoTag<
-      F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
-                                                   std::is_void<Tag>::value),
-                          decltype(has_join_no_tag_function<F>::enable_if(
-                              &F::join))>>
-      : public has_join_no_tag_function<F> {
+      F,
+      std::enable_if_t<(is_reducer<F>::value ||
+                        (!is_reducer<F>::value && std::is_void<Tag>::value)) &&
+                       (detected_join_no_tag<F>::value ||
+                        detected_volatile_join_no_tag<F>::value)>>
+      : public std::conditional_t<detected_join_no_tag<F>::value,
+                                  has_join_no_tag_function<F>,
+                                  has_volatile_join_no_tag_function<F>> {
     enum : bool { value = true };
   };
 
@@ -518,11 +646,12 @@ struct FunctorAnalysis {
   struct DeduceJoin : public DeduceJoinNoTag<F> {};
 
   template <class F>
-  struct DeduceJoin<
-      F,
-      std::enable_if_t<!is_reducer<F>::value,
-                       decltype(has_join_tag_function<F>::enable_if(&F::join))>>
-      : public has_join_tag_function<F> {
+  struct DeduceJoin<F, std::enable_if_t<!is_reducer<F>::value &&
+                                        (detected_join_tag<F>::value ||
+                                         detected_volatile_join_tag<F>::value)>>
+      : public std::conditional_t<detected_join_tag<F>::value,
+                                  has_join_tag_function<F>,
+                                  has_volatile_join_tag_function<F>> {
     enum : bool { value = true };
   };
 
@@ -816,8 +945,7 @@ struct FunctorAnalysis {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(ValueType volatile* dst, ValueType volatile const* src) const
-        noexcept {
+    void join(ValueType* dst, ValueType const* src) const noexcept {
       DeduceJoin<>::join(m_functor, dst, src);
     }
 

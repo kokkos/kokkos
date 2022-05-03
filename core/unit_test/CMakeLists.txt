@@ -70,8 +70,10 @@ KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
 SET(COMPILE_ONLY_SOURCES
+  TestArray.cpp
   TestDetectionIdiom.cpp
   TestInterOp.cpp
+  TestStringManipulation.cpp
   TestTypeList.cpp
 )
 # TestInterOp has a dependency on containers
@@ -116,6 +118,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         ExecutionSpace
         FunctorAnalysis
         Init
+        JoinBackwardCompatibility
         LocalDeepCopy
         MinMaxClamp
         MathematicalConstants
@@ -194,6 +197,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewLayoutStrideAssignment
       ViewMapping_b
       ViewMapping_subview
+      ViewMemoryAccessViolation
       ViewOfClass
       ViewResize
       View_64bit
@@ -453,6 +457,7 @@ endif()
 if (Kokkos_ENABLE_OPENMP)
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
+    openmp/TestOpenMP_PartitionMaster.cpp
   )
   if (Kokkos_ENABLE_DEPRECATED_CODE_3)
     list(APPEND OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
