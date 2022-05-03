@@ -376,10 +376,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                     false, std::min(size, wgroup_size));
 
                 if (local_id == 0) {
-                  sycl::ext::oneapi::atomic_ref<
-                      unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                      sycl::ext::oneapi::memory_scope::device,
-                      sycl::access::address_space::global_space>
+                  sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                                   sycl::memory_scope::device,
+                                   sycl::access::address_space::global_space>
                       scratch_flags_ref(*scratch_flags);
                   num_teams_done[0] = ++scratch_flags_ref;
                 }
@@ -419,10 +418,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                     std::min(size, wgroup_size));
 
                 if (local_id == 0) {
-                  sycl::ext::oneapi::atomic_ref<
-                      unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                      sycl::ext::oneapi::memory_scope::device,
-                      sycl::access::address_space::global_space>
+                  sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                                   sycl::memory_scope::device,
+                                   sycl::access::address_space::global_space>
                       scratch_flags_ref(*scratch_flags);
                   num_teams_done[0] = ++scratch_flags_ref;
                 }
@@ -704,10 +702,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 std::min(size, wgroup_size));
 
             if (local_id == 0) {
-              sycl::ext::oneapi::atomic_ref<
-                  unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                  sycl::ext::oneapi::memory_scope::device,
-                  sycl::access::address_space::global_space>
+              sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                               sycl::memory_scope::device,
+                               sycl::access::address_space::global_space>
                   scratch_flags_ref(*scratch_flags);
               num_teams_done[0] = ++scratch_flags_ref;
             }
@@ -748,10 +745,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 std::min(size, wgroup_size));
 
             if (local_id == 0) {
-              sycl::ext::oneapi::atomic_ref<
-                  unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                  sycl::ext::oneapi::memory_scope::device,
-                  sycl::access::address_space::global_space>
+              sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                               sycl::memory_scope::device,
+                               sycl::access::address_space::global_space>
                   scratch_flags_ref(*scratch_flags);
               num_teams_done[0] = ++scratch_flags_ref;
             }
