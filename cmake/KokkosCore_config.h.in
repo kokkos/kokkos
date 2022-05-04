@@ -23,10 +23,6 @@
 #cmakedefine KOKKOS_ENABLE_LIBRT
 #cmakedefine KOKKOS_ENABLE_SYCL
 
-#ifndef __CUDA_ARCH__
-#cmakedefine KOKKOS_ENABLE_TM
-#endif
-
 /* General Settings */
 #cmakedefine KOKKOS_ENABLE_CXX14
 #cmakedefine KOKKOS_ENABLE_CXX17
