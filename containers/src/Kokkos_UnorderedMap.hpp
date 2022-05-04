@@ -741,10 +741,10 @@ class UnorderedMap {
   template <typename SKey, typename SValue>
   UnorderedMap(
       UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src,
-      typename std::enable_if<
+      std::enable_if_t<
           Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type,
                                       SKey, SValue>::value,
-          int>::type = 0)
+          int> = 0)
       : m_bounded_insert(src.m_bounded_insert),
         m_hasher(src.m_hasher),
         m_equal_to(src.m_equal_to),
@@ -757,10 +757,10 @@ class UnorderedMap {
         m_scalars(src.m_scalars) {}
 
   template <typename SKey, typename SValue>
-  typename std::enable_if<
+  std::enable_if_t<
       Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type, SKey,
                                   SValue>::value,
-      declared_map_type &>::type
+      declared_map_type &>
   operator=(UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src) {
     m_bounded_insert    = src.m_bounded_insert;
     m_hasher            = src.m_hasher;
@@ -776,10 +776,9 @@ class UnorderedMap {
   }
 
   template <typename SKey, typename SValue, typename SDevice>
-  typename std::enable_if<
+  std::enable_if_t<
       std::is_same<typename std::remove_const<SKey>::type, key_type>::value &&
-      std::is_same<typename std::remove_const<SValue>::type,
-                   value_type>::value>::type
+      std::is_same<typename std::remove_const<SValue>::type, value_type>::value>
   create_copy_view(
       UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
     if (m_hash_lists.data() != src.m_hash_lists.data()) {

@@ -413,7 +413,7 @@ class ViewMapping<Traits, Kokkos::Array<>> {
 template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
-    typename std::enable_if<(
+    std::enable_if_t<(
         std::is_same<typename DstTraits::memory_space,
                      typename SrcTraits::memory_space>::value &&
         std::is_same<typename DstTraits::specialize, void>::value &&
@@ -429,7 +429,7 @@ class ViewMapping<
          std::is_same<typename SrcTraits::array_layout,
                       Kokkos::LayoutRight>::value ||
          std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutStride>::value))>::type> {
+                      Kokkos::LayoutStride>::value))>> {
  public:
   // Can only convert to View::array_type
 
@@ -513,14 +513,14 @@ class ViewMapping<
 
 template <class SrcTraits, class... Args>
 class ViewMapping<
-    typename std::enable_if<(
+    std::enable_if_t<(
         std::is_same<typename SrcTraits::specialize, Kokkos::Array<>>::value &&
         (std::is_same<typename SrcTraits::array_layout,
                       Kokkos::LayoutLeft>::value ||
          std::is_same<typename SrcTraits::array_layout,
                       Kokkos::LayoutRight>::value ||
          std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutStride>::value))>::type,
+                      Kokkos::LayoutStride>::value))>,
     SrcTraits, Args...> {
  private:
   static_assert(SrcTraits::rank == sizeof...(Args), "");

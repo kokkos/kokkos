@@ -1360,9 +1360,8 @@ template <class DT, class... DP>
 inline void deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
@@ -1458,9 +1457,8 @@ template <class ST, class... SP>
 inline void deep_copy(
     typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<ST, SP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<ST, SP...>::specialize,
+                                  void>::value>* = nullptr) {
   using src_traits       = ViewTraits<ST, SP...>;
   using src_memory_space = typename src_traits::memory_space;
 
@@ -1495,12 +1493,11 @@ inline void deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(
+    std::enable_if_t<(
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
-         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>::type* =
-        nullptr) {
+         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>* = nullptr) {
   using dst_type = View<DT, DP...>;
   using src_type = View<ST, SP...>;
 
@@ -1548,11 +1545,11 @@ inline void deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(
+    std::enable_if_t<(
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
-         unsigned(ViewTraits<ST, SP...>::rank) != 0))>::type* = nullptr) {
+         unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
   using dst_type            = View<DT, DP...>;
   using src_type            = View<ST, SP...>;
   using dst_execution_space = typename dst_type::execution_space;
@@ -1756,9 +1753,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 1)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1775,9 +1771,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 2)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1803,9 +1798,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 3)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 3)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1833,9 +1827,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 4)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 4)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1866,9 +1859,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 5)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 5)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1901,9 +1893,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 6)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 6)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1938,9 +1929,8 @@ template <class TeamType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 7)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 7)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1977,9 +1967,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 1)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1994,9 +1983,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 2)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2012,9 +2000,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 3)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 3)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2032,9 +2019,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 4)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 4)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2053,9 +2039,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 5)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 5)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2075,9 +2060,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 6)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 6)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2098,9 +2082,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
-                             unsigned(ViewTraits<ST, SP...>::rank) ==
-                                 7)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 7)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2126,9 +2109,8 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   Kokkos::parallel_for(Kokkos::TeamVectorRange(team, dst.span()),
                        [&](const int& i) { dst.data()[i] = value; });
 }
@@ -2137,9 +2119,8 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   for (size_t i = 0; i < dst.span(); ++i) {
     dst.data()[i] = value;
   }
@@ -2149,8 +2130,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             1)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2167,8 +2147,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             2)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2194,8 +2173,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             3)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2223,8 +2201,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             4)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2255,8 +2232,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             5)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2289,8 +2265,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             6)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2325,8 +2300,7 @@ template <class TeamType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const TeamType& team, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             7)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2364,8 +2338,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             1)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2381,8 +2354,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             2)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2399,8 +2371,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             3)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2418,8 +2389,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             4)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2439,8 +2409,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             5)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2461,8 +2430,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             6)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2484,8 +2452,7 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<(unsigned(ViewTraits<DT, DP...>::rank) ==
-                             7)>::type* = nullptr) {
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2517,12 +2484,11 @@ template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
     const ExecSpace& space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<
+    std::enable_if_t<
         Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        Kokkos::SpaceAccessibility<
-            ExecSpace,
-            typename ViewTraits<DT, DP...>::memory_space>::accessible>::type* =
+        Kokkos::SpaceAccessibility<ExecSpace, typename ViewTraits<DT, DP...>::
+                                                  memory_space>::accessible>* =
         nullptr) {
   using dst_traits = ViewTraits<DT, DP...>;
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
@@ -2559,12 +2525,11 @@ template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
     const ExecSpace& space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<
+    std::enable_if_t<
         Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        !Kokkos::SpaceAccessibility<
-            ExecSpace,
-            typename ViewTraits<DT, DP...>::memory_space>::accessible>::type* =
+        !Kokkos::SpaceAccessibility<ExecSpace, typename ViewTraits<DT, DP...>::
+                                                   memory_space>::accessible>* =
         nullptr) {
   using dst_traits = ViewTraits<DT, DP...>;
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
@@ -2608,10 +2573,9 @@ inline void deep_copy(
     const ExecSpace& exec_space,
     typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<
-        Kokkos::is_execution_space<ExecSpace>::value &&
-        std::is_same<typename ViewTraits<ST, SP...>::specialize,
-                     void>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_space<ExecSpace>::value &&
+                     std::is_same<typename ViewTraits<ST, SP...>::specialize,
+                                  void>::value>* = nullptr) {
   using src_traits       = ViewTraits<ST, SP...>;
   using src_memory_space = typename src_traits::memory_space;
   static_assert(src_traits::rank == 0,
@@ -2646,13 +2610,12 @@ template <class ExecSpace, class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const ExecSpace& exec_space, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(
+    std::enable_if_t<(
         Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
-         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>::type* =
-        nullptr) {
+         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>* = nullptr) {
   using src_traits = ViewTraits<ST, SP...>;
   using dst_traits = ViewTraits<DT, DP...>;
 
@@ -2697,12 +2660,12 @@ template <class ExecSpace, class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const ExecSpace& exec_space, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    typename std::enable_if<(
+    std::enable_if_t<(
         Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
-         unsigned(ViewTraits<ST, SP...>::rank) != 0))>::type* = nullptr) {
+         unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
   using dst_type = View<DT, DP...>;
   using src_type = View<ST, SP...>;
 
@@ -2909,11 +2872,11 @@ bool size_mismatch(const ViewType& view, unsigned int max_extent,
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
 template <class... I, class T, class... P>
-inline typename std::enable_if<
+inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutRight>::value>::type
+                 Kokkos::LayoutRight>::value>
 impl_resize(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
             const size_t n2, const size_t n3, const size_t n4, const size_t n5,
             const size_t n6, const size_t n7, const I&... arg_prop) {
@@ -2944,11 +2907,11 @@ impl_resize(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
 }
 
 template <class T, class... P>
-inline typename std::enable_if<
+inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutRight>::value>::type
+                 Kokkos::LayoutRight>::value>
 resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -2963,12 +2926,12 @@ resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
 template <class I, class T, class... P>
-inline typename std::enable_if<
+inline std::enable_if_t<
     Impl::is_view_ctor_property<I>::value &&
     (std::is_same<typename Kokkos::View<T, P...>::array_layout,
                   Kokkos::LayoutLeft>::value ||
      std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                  Kokkos::LayoutRight>::value)>::type
+                  Kokkos::LayoutRight>::value)>
 resize(const I& arg_prop, Kokkos::View<T, P...>& v,
        const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3052,11 +3015,11 @@ inline void resize(Kokkos::View<T, P...>& v,
 
 /** \brief  Resize a view with discarding old data. */
 template <class... I, class T, class... P>
-inline typename std::enable_if<
+inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutRight>::value>::type
+                 Kokkos::LayoutRight>::value>
 impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
              const size_t n2, const size_t n3, const size_t n4, const size_t n5,
              const size_t n6, const size_t n7, const I&... arg_prop) {
@@ -3079,11 +3042,11 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
 }
 
 template <class T, class... P>
-inline typename std::enable_if<
+inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutRight>::value>::type
+                 Kokkos::LayoutRight>::value>
 realloc(Kokkos::View<T, P...>& v,
         const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3097,12 +3060,12 @@ realloc(Kokkos::View<T, P...>& v,
 }
 
 template <class I, class T, class... P>
-inline typename std::enable_if<
+inline std::enable_if_t<
     Impl::is_view_ctor_property<I>::value &&
     (std::is_same<typename Kokkos::View<T, P...>::array_layout,
                   Kokkos::LayoutLeft>::value ||
      std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                  Kokkos::LayoutRight>::value)>::type
+                  Kokkos::LayoutRight>::value)>
 realloc(const I& arg_prop, Kokkos::View<T, P...>& v,
         const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3234,10 +3197,10 @@ struct MirrorType {
 };
 
 template <class T, class... P, class... I>
-inline typename std::enable_if<
+inline std::enable_if_t<
     !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
                   Kokkos::LayoutStride>::value,
-    typename Kokkos::View<T, P...>::HostMirror>::type
+    typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
   using src_type = View<T, P...>;
   using dst_type = typename src_type::HostMirror;
@@ -3256,10 +3219,10 @@ create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
 }
 
 template <class T, class... P, class... I>
-inline typename std::enable_if<
+inline std::enable_if_t<
     std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
                  Kokkos::LayoutStride>::value,
-    typename Kokkos::View<T, P...>::HostMirror>::type
+    typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
   using src_type = View<T, P...>;
   using dst_type = typename src_type::HostMirror;
@@ -3337,36 +3300,35 @@ create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const& space,
 namespace Impl {
 
 template <class T, class... P, class... I>
-inline typename std::enable_if<
+inline std::enable_if_t<
     (std::is_same<
          typename Kokkos::View<T, P...>::memory_space,
          typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
      std::is_same<
          typename Kokkos::View<T, P...>::data_type,
          typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
-    typename Kokkos::View<T, P...>::HostMirror>::type
+    typename Kokkos::View<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::View<T, P...>& src, const I&...) {
   return src;
 }
 
 template <class T, class... P, class... I>
-inline typename std::enable_if<
+inline std::enable_if_t<
     !(std::is_same<
           typename Kokkos::View<T, P...>::memory_space,
           typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
       std::is_same<
           typename Kokkos::View<T, P...>::data_type,
           typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
-    typename Kokkos::View<T, P...>::HostMirror>::type
+    typename Kokkos::View<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::View<T, P...>& src, const I&... arg_prop) {
   return Kokkos::create_mirror(arg_prop..., src);
 }
 
 // Create a mirror view in a new space (specialization for same space)
 template <class Space, class T, class... P, class... I>
-typename std::enable_if<
-    Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
-    typename Impl::MirrorViewType<Space, T, P...>::view_type>::type
+std::enable_if_t<Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
+                 typename Impl::MirrorViewType<Space, T, P...>::view_type>
 create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
                    const I&...) {
   return src;
@@ -3374,9 +3336,8 @@ create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
 
 // Create a mirror view in a new space (specialization for different space)
 template <class Space, class T, class... P, class... I>
-typename std::enable_if<
-    !Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
-    typename Impl::MirrorViewType<Space, T, P...>::view_type>::type
+std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
+                 typename Impl::MirrorViewType<Space, T, P...>::view_type>
 create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
                    const I&... arg_prop) {
   return typename Impl::MirrorViewType<Space, T, P...>::view_type(
@@ -3418,10 +3379,9 @@ typename Impl::MirrorViewType<Space, T, P...>::view_type
 create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
-    typename std::enable_if<
+    std::enable_if_t<
         std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
-        Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
-        nullptr) {
+        Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
   (void)name;
   fence(
       "Kokkos::create_mirror_view_and_copy: fence before returning src view");  // same behavior as deep_copy(src, src)
@@ -3435,10 +3395,9 @@ typename Impl::MirrorViewType<Space, T, P...>::view_type
 create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
-    typename std::enable_if<
+    std::enable_if_t<
         std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
-        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
-        nullptr) {
+        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
   auto mirror       = typename Mirror::non_const_type{
@@ -3456,8 +3415,7 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
     const Space&, const Kokkos::View<T, P...>& src,
     Kokkos::Impl::WithoutInitializing_t,
-    typename std::enable_if<
-        Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+    std::enable_if_t<Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
         nullptr) {
   return src;
 }
@@ -3470,8 +3428,7 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
     const Space&, const Kokkos::View<T, P...>& src,
     Kokkos::Impl::WithoutInitializing_t,
-    typename std::enable_if<
-        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+    std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
         nullptr) {
   using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   return Mirror(view_alloc(WithoutInitializing, src.label()), src.layout());

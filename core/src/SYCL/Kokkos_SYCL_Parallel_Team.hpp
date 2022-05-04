@@ -939,10 +939,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   template <class ViewType>
-  ParallelReduce(FunctorType const& arg_functor, Policy const& arg_policy,
-                 ViewType const& arg_result,
-                 typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = nullptr)
+  ParallelReduce(
+      FunctorType const& arg_functor, Policy const& arg_policy,
+      ViewType const& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),

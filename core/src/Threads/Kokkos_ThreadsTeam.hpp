@@ -207,7 +207,7 @@ class ThreadsExecTeamMember {
 
   template <typename Type>
   KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<!Kokkos::is_reducer<Type>::value, Type>::type
+      std::enable_if_t<!Kokkos::is_reducer<Type>::value, Type>
       team_reduce(const Type& value) const {
     KOKKOS_IF_ON_DEVICE((return value;))
 
@@ -239,15 +239,14 @@ class ThreadsExecTeamMember {
   }
 
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      team_reduce(ReducerType const& reducer) const noexcept {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer) const noexcept {
     team_reduce(reducer, reducer.reference());
   }
 
   template <typename ReducerType>
   KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+      std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
       team_reduce(const ReducerType& reducer,
                   const typename ReducerType::value_type contribution) const {
     KOKKOS_IF_ON_DEVICE(((void)reducer; (void)contribution;))
@@ -918,11 +917,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * and a summation of val is performed and put into result.
  */
 template <typename iType, class Lambda, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
-    parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                        iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ValueType& result) {
   ValueType intermediate;
   Sum<ValueType> sum(intermediate);
   sum.init(intermediate);
@@ -939,11 +937,10 @@ KOKKOS_INLINE_FUNCTION
 }
 
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                        iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, const ReducerType& reducer) {
   typename ReducerType::value_type value;
   reducer.init(value);
 
@@ -983,11 +980,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * and a summation of val is performed and put into result.
  */
 template <typename iType, class Lambda, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
-    parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
-                        iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ValueType& result) {
   result = ValueType();
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
@@ -996,11 +992,10 @@ KOKKOS_INLINE_FUNCTION
 }
 
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
-                        iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, const ReducerType& reducer) {
   reducer.init(reducer.reference());
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
@@ -1081,11 +1076,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
  *
  */
 template <typename iType, class FunctorType, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
-                      iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
-                  const FunctorType& lambda, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                  iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+              const FunctorType& lambda, const ReducerType& reducer) {
   typename ReducerType::value_type scan_val;
   reducer.init(scan_val);
 

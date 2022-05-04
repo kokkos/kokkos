@@ -75,7 +75,7 @@ class HostThreadTeamDataSingleton : private HostThreadTeamData {
 // TODO @tasking @cleanup DSH Make this the general class template and make the
 // old code the partial specialization
 template <class QueueType>
-class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType> > {
+class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
  public:
   using execution_space = Kokkos::OpenMP;
   using scheduler_type  = SimpleTaskScheduler<Kokkos::OpenMP, QueueType>;
@@ -198,8 +198,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType> > {
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
     Scheduler,
-    typename std::enable_if<std::is_same<typename Scheduler::execution_space,
-                                         Kokkos::OpenMP>::value>::type> {
+    std::enable_if_t<std::is_same<typename Scheduler::execution_space,
+                                  Kokkos::OpenMP>::value>> {
  public:
   using execution_space = Kokkos::OpenMP;
   using scheduler_type  = Scheduler;

@@ -522,16 +522,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <typename TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_team(const member_type& member) const {
+  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
+  exec_team(const member_type& member) const {
     m_functor(member);
   }
 
   template <typename TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_team(const member_type& member) const {
+  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
+  exec_team(const member_type& member) const {
     m_functor(TagType(), member);
   }
 
@@ -696,16 +694,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_team(member_type const& member, reference_type update) const {
+  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
+  exec_team(member_type const& member, reference_type update) const {
     m_functor(member, update);
   }
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_team(member_type const& member, reference_type update) const {
+  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
+  exec_team(member_type const& member, reference_type update) const {
     m_functor(TagType(), member, update);
   }
 
@@ -886,10 +882,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  ParallelReduce(FunctorType const& arg_functor, Policy const& arg_policy,
-                 ViewType const& arg_result,
-                 typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = nullptr)
+  ParallelReduce(
+      FunctorType const& arg_functor, Policy const& arg_policy,
+      ViewType const& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),

@@ -76,16 +76,14 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   ParallelFor& operator=(const ParallelFor&) = delete;
 
   template <class TagType>
-  inline __device__
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const Member i) const {
+  inline __device__ std::enable_if_t<std::is_same<TagType, void>::value>
+  exec_range(const Member i) const {
     m_functor(i);
   }
 
   template <class TagType>
-  inline __device__
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const Member i) const {
+  inline __device__ std::enable_if_t<!std::is_same<TagType, void>::value>
+  exec_range(const Member i) const {
     m_functor(TagType(), i);
   }
 
@@ -190,16 +188,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const Member& i, reference_type update) const {
+  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
+  exec_range(const Member& i, reference_type update) const {
     m_functor(i, update);
   }
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const Member& i, reference_type update) const {
+  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
+  exec_range(const Member& i, reference_type update) const {
     m_functor(TagType(), i, update);
   }
 
@@ -406,10 +402,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ViewType& arg_result,
-                 typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = nullptr)
+  ParallelReduce(
+      const FunctorType& arg_functor, const Policy& arg_policy,
+      const ViewType& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -483,18 +479,16 @@ class ParallelScanHIPBase {
 
  private:
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const Member& i, reference_type update,
-                 const bool final_result) const {
+  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
+  exec_range(const Member& i, reference_type update,
+             const bool final_result) const {
     m_functor(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const Member& i, reference_type update,
-                 const bool final_result) const {
+  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
+  exec_range(const Member& i, reference_type update,
+             const bool final_result) const {
     m_functor(TagType(), i, update, final_result);
   }
 
