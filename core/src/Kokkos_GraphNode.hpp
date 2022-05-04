@@ -225,7 +225,7 @@ class GraphNodeRef {
 
   template <
       class OtherKernel, class OtherPredecessor,
-      typename std::enable_if_t<
+      std::enable_if_t<
           // Not a copy/move constructor
           !std::is_same<GraphNodeRef, GraphNodeRef<execution_space, OtherKernel,
                                                    OtherPredecessor>>::value &&
@@ -353,8 +353,7 @@ class GraphNodeRef {
     // needs static assertion of constraint:
     //   DataParallelReductionFunctor<Functor, ReturnType>
 
-    using policy_t = typename std::remove_cv<
-        typename std::remove_reference<Policy>::type>::type;
+    using policy_t = std::remove_cv_t<std::remove_reference_t<Policy>>;
     static_assert(
         std::is_same<typename policy_t::execution_space,
                      execution_space>::value,
@@ -380,8 +379,8 @@ class GraphNodeRef {
 
     //----------------------------------------
     // This is a disaster, but I guess it's not a my disaster to fix right now
-    using return_type_remove_cvref = typename std::remove_cv<
-        typename std::remove_reference<ReturnType>::type>::type;
+    using return_type_remove_cvref =
+        std::remove_cv_t<std::remove_reference_t<ReturnType>>;
     static_assert(Kokkos::is_view<return_type_remove_cvref>::value ||
                       Kokkos::is_reducer<return_type_remove_cvref>::value,
                   "Output argument to parallel reduce in a graph must be a "

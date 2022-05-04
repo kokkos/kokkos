@@ -548,8 +548,8 @@ DO__atomic_compare_exchange_simt_(4, 32)
                                     const type *desired, bool,
                                     int success_memorder,
                                     int failure_memorder) {
-  using R            = typename std::conditional<std::is_volatile<type>::value,
-                                      volatile uint32_t, uint32_t>::type;
+  using R = std::conditional_t<std::is_volatile<type>::value, volatile uint32_t,
+                               uint32_t>;
   auto const aligned = (R *)((intptr_t)ptr & ~(sizeof(uint32_t) - 1));
   auto const offset  = uint32_t((intptr_t)ptr & (sizeof(uint32_t) - 1)) * 8;
   auto const mask    = ((1 << sizeof(type) * 8) - 1) << offset;

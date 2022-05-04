@@ -112,7 +112,7 @@ struct rank_dynamic<Val, Args...> {
   template <unsigned RD>                                                    \
   struct ViewDimension##R<0u, RD> {                                         \
     static constexpr size_t ArgN##R = 0;                                    \
-    typename std::conditional<(RD < 3), size_t, unsigned>::type N##R;       \
+    std::conditional_t<(RD < 3), size_t, unsigned> N##R;                    \
     ViewDimension##R()                        = default;                    \
     ViewDimension##R(const ViewDimension##R&) = default;                    \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
@@ -347,8 +347,8 @@ struct is_integral_extent_type<std::initializer_list<iType>> {
 template <unsigned I, class... Args>
 struct is_integral_extent {
   // get_type is void when sizeof...(Args) <= I
-  using type = typename std::remove_cv<typename std::remove_reference<
-      typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
+  using type = std::remove_cv_t<std::remove_reference_t<
+      typename Kokkos::Impl::get_type<I, Args...>::type>>;
 
   enum : bool { value = is_integral_extent_type<type>::value };
 
@@ -754,8 +754,8 @@ struct ViewDataType<T, ViewDimension<N, Args...>> {
 template <class T>
 struct ViewArrayAnalysis {
   using value_type           = T;
-  using const_value_type     = typename std::add_const<T>::type;
-  using non_const_value_type = typename std::remove_const<T>::type;
+  using const_value_type     = std::add_const_t<T>;
+  using non_const_value_type = std::remove_const_t<T>;
   using static_dimension     = ViewDimension<>;
   using dynamic_dimension    = ViewDimension<>;
   using dimension            = ViewDimension<>;
@@ -3750,8 +3750,7 @@ struct SubViewDataTypeImpl<void, ValueType, Kokkos::Experimental::Extents<>> {
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
           class... Args>
 struct SubViewDataTypeImpl<
-    std::enable_if_t<
-        std::is_integral<typename std::decay<Integral>::type>::value>,
+    std::enable_if_t<std::is_integral<std::decay_t<Integral>>::value>,
     ValueType, Kokkos::Experimental::Extents<Ext, Exts...>, Integral, Args...>
     : SubViewDataTypeImpl<void, ValueType,
                           Kokkos::Experimental::Extents<Exts...>, Args...> {};
@@ -3837,7 +3836,7 @@ class ViewMapping<
   };
 
   // Subview's layout
-  using array_layout = typename std::conditional<
+  using array_layout = std::conditional_t<
       (            /* Same array layout IF */
        (rank == 0) /* output rank zero */
        || SubviewLegalArgsCompileTime<typename SrcTraits::array_layout,
@@ -3855,7 +3854,7 @@ class ViewMapping<
         std::is_same<typename SrcTraits::array_layout,
                      Kokkos::LayoutRight>::value)  // replace input rank
        ),
-      typename SrcTraits::array_layout, Kokkos::LayoutStride>::type;
+      typename SrcTraits::array_layout, Kokkos::LayoutStride>;
 
   using value_type = typename SrcTraits::value_type;
 

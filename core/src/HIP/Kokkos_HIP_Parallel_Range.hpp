@@ -201,9 +201,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   __device__ inline void operator()() const {
-    using ReductionTag =
-        typename std::conditional<UseShflReduction, ShflReductionTag,
-                                  SHMEMReductionTag>::type;
+    using ReductionTag = std::conditional_t<UseShflReduction, ShflReductionTag,
+                                            SHMEMReductionTag>;
     run(ReductionTag{});
   }
 

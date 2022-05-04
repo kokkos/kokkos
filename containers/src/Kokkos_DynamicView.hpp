@@ -598,8 +598,8 @@ struct MirrorDynamicViewType {
       Kokkos::Experimental::DynamicView<data_type, array_layout, Space>;
   // If it is the same memory_space return the existing view_type
   // This will also keep the unmanaged trait if necessary
-  using view_type = typename std::conditional<is_same_memspace, src_view_type,
-                                              dest_view_type>::type;
+  using view_type =
+      std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 }  // namespace Impl
 

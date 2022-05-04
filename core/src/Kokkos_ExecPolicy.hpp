@@ -808,7 +808,7 @@ KOKKOS_INLINE_FUNCTION_DELETED
 template <typename iType1, typename iType2, class TeamMemberType,
           class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION_DELETED Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, TeamMemberType>
+    std::common_type_t<iType1, iType2>, TeamMemberType>
 TeamThreadRange(const TeamMemberType&, const iType1& begin,
                 const iType2& end) = delete;
 
@@ -834,7 +834,7 @@ KOKKOS_INLINE_FUNCTION_DELETED
 template <typename iType1, typename iType2, class TeamMemberType,
           class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION_DELETED Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, TeamMemberType>
+    std::common_type_t<iType1, iType2>, TeamMemberType>
 TeamVectorRange(const TeamMemberType&, const iType1& begin,
                 const iType2& end) = delete;
 
@@ -853,7 +853,7 @@ KOKKOS_INLINE_FUNCTION_DELETED
 template <typename iType1, typename iType2, class TeamMemberType,
           class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION_DELETED Impl::ThreadVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, TeamMemberType>
+    std::common_type_t<iType1, iType2>, TeamMemberType>
 ThreadVectorRange(const TeamMemberType&, const iType1& arg_begin,
                   const iType2& arg_end) = delete;
 

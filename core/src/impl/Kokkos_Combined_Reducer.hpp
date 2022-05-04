@@ -175,25 +175,25 @@ struct _construct_combined_reducer_from_args_tag {};
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
     T&& arg) noexcept
-    -> std::enable_if_t<!is_view<typename std::decay<T>::type>::value &&
-                            !is_reducer<typename std::decay<T>::type>::value,
-                        typename std::decay<T>::type> {
+    -> std::enable_if_t<!is_view<std::decay_t<T>>::value &&
+                            !is_reducer<std::decay_t<T>>::value,
+                        std::decay_t<T>> {
   return arg;
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
     T&& arg) noexcept ->
-    typename std::enable_if_t<is_view<typename std::decay<T>::type>::value,
-                              typename std::decay<T>::type>::value_type {
+    typename std::enable_if_t<is_view<std::decay_t<T>>::value,
+                              std::decay_t<T>>::value_type {
   return arg();
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
     T&& arg) noexcept ->
-    typename std::enable_if_t<is_reducer<typename std::decay<T>::type>::value,
-                              typename std::decay<T>::type>::value_type {
+    typename std::enable_if_t<is_reducer<std::decay_t<T>>::value,
+                              std::decay_t<T>>::value_type {
   return arg.reference();
 }
 
@@ -414,8 +414,7 @@ struct CombinedReductionFunctorWrapper
 
 template <class Space, class Reducer>
 KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
-    Kokkos::is_reducer<typename std::decay<Reducer>::type>::value,
-    typename std::decay<Reducer>::type>
+    Kokkos::is_reducer<std::decay_t<Reducer>>::value, std::decay_t<Reducer>>
 _make_reducer_from_arg(Reducer&& arg_reducer) noexcept {
   return arg_reducer;
 }
@@ -437,12 +436,11 @@ struct _wrap_with_kokkos_sum<Space, T,
 //      (this is needed in general, though)
 template <class Space, class T>
 KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if_t<
-    !Kokkos::is_reducer<typename std::decay<T>::type>::value,
-    _wrap_with_kokkos_sum<Space, typename std::decay<T>::type>>::type
+    !Kokkos::is_reducer<std::decay_t<T>>::value,
+    _wrap_with_kokkos_sum<Space, std::decay_t<T>>>::type
 _make_reducer_from_arg(T&& arg_scalar) noexcept {
   return
-      typename _wrap_with_kokkos_sum<Space, typename std::decay<T>::type>::type{
-          arg_scalar};
+      typename _wrap_with_kokkos_sum<Space, std::decay_t<T>>::type{arg_scalar};
 }
 
 // This can't be an alias template because GCC doesn't know how to mangle

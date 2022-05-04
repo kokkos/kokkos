@@ -204,13 +204,12 @@ struct HostMirror {
   };
 
  public:
-  using Space = typename std::conditional<
+  using Space = std::conditional_t<
       keep_exe && keep_mem, S,
-      typename std::conditional<
-          keep_mem,
-          Kokkos::Device<Kokkos::HostSpace::execution_space,
-                         typename S::memory_space>,
-          Kokkos::HostSpace>::type>::type;
+      std::conditional_t<keep_mem,
+                         Kokkos::Device<Kokkos::HostSpace::execution_space,
+                                        typename S::memory_space>,
+                         Kokkos::HostSpace>>;
 };
 
 }  // namespace Impl

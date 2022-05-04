@@ -1916,7 +1916,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 
   RP const& m_rp;
   Functor const& m_func;
-  typename std::conditional<std::is_void<Tag>::value, int, Tag>::type m_tag;
+  std::conditional_t<std::is_void<Tag>::value, int, Tag> m_tag;
 };
 
 // For ParallelReduce
@@ -2334,7 +2334,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
   RP const& m_rp;
   Functor const& m_func;
   value_type& m_v;
-  typename std::conditional<std::is_void<Tag>::value, int, Tag>::type m_tag;
+  std::conditional_t<std::is_void<Tag>::value, int, Tag> m_tag;
 };
 
 // For ParallelReduce
@@ -2753,7 +2753,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
   RP const& m_rp;
   Functor const& m_func;
   value_type* m_v;
-  typename std::conditional<std::is_void<Tag>::value, int, Tag>::type m_tag;
+  std::conditional_t<std::is_void<Tag>::value, int, Tag> m_tag;
 };
 
 // ------------------------------------------------------------------ //

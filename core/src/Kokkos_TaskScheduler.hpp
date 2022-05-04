@@ -145,7 +145,7 @@ class BasicTaskScheduler : public Impl::TaskSchedulerBase {
                   typename task_base::destroy_type /*arg_destroy*/,
                   FunctorType&& arg_functor) {
     using functor_future_type =
-        future_type_for_functor<typename std::decay<FunctorType>::type>;
+        future_type_for_functor<std::decay_t<FunctorType>>;
     using task_type =
         Impl::Task<BasicTaskScheduler, typename functor_future_type::value_type,
                    FunctorType>;
@@ -301,11 +301,9 @@ class BasicTaskScheduler : public Impl::TaskSchedulerBase {
   }
 
   template <int TaskEnum, typename DepFutureType, typename FunctorType>
-  KOKKOS_FUNCTION
-      future_type_for_functor<typename std::decay<FunctorType>::type>
-      spawn(
-          Impl::TaskPolicyWithPredecessor<TaskEnum, DepFutureType>&& arg_policy,
-          FunctorType&& arg_functor) {
+  KOKKOS_FUNCTION future_type_for_functor<std::decay_t<FunctorType>> spawn(
+      Impl::TaskPolicyWithPredecessor<TaskEnum, DepFutureType>&& arg_policy,
+      FunctorType&& arg_functor) {
     using task_type = runnable_task_type<FunctorType>;
     typename task_type::function_type const ptr = task_type::apply;
     typename task_type::destroy_type const dtor = task_type::destroy;
@@ -521,7 +519,7 @@ namespace Kokkos {
 
 template <class T, class Scheduler>
 Impl::TaskPolicyWithPredecessor<Impl::TaskType::TaskTeam,
-                                Kokkos::BasicFuture<T, Scheduler> >
+                                Kokkos::BasicFuture<T, Scheduler>>
     KOKKOS_INLINE_FUNCTION
     TaskTeam(Kokkos::BasicFuture<T, Scheduler> arg_future,
              TaskPriority arg_priority = TaskPriority::Regular) {
@@ -558,7 +556,7 @@ Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskTeam, Scheduler,
 
 template <class T, class Scheduler>
 Impl::TaskPolicyWithPredecessor<Impl::TaskType::TaskSingle,
-                                Kokkos::BasicFuture<T, Scheduler> >
+                                Kokkos::BasicFuture<T, Scheduler>>
     KOKKOS_INLINE_FUNCTION
     TaskSingle(Kokkos::BasicFuture<T, Scheduler> arg_future,
                TaskPriority arg_priority = TaskPriority::Regular) {
@@ -601,8 +599,7 @@ Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskSingle, Scheduler,
  */
 template <int TaskEnum, typename Scheduler, typename DepFutureType,
           typename FunctorType>
-typename Scheduler::template future_type_for_functor<
-    typename std::decay<FunctorType>::type>
+typename Scheduler::template future_type_for_functor<std::decay_t<FunctorType>>
 host_spawn(Impl::TaskPolicyWithScheduler<TaskEnum, Scheduler, DepFutureType>
                arg_policy,
            FunctorType&& arg_functor) {
@@ -633,8 +630,7 @@ host_spawn(Impl::TaskPolicyWithScheduler<TaskEnum, Scheduler, DepFutureType>
  */
 template <int TaskEnum, typename Scheduler, typename DepFutureType,
           typename FunctorType>
-typename Scheduler::template future_type_for_functor<
-    typename std::decay<FunctorType>::type>
+typename Scheduler::template future_type_for_functor<std::decay_t<FunctorType>>
     KOKKOS_INLINE_FUNCTION
     task_spawn(Impl::TaskPolicyWithScheduler<TaskEnum, Scheduler, DepFutureType>
                    arg_policy,
