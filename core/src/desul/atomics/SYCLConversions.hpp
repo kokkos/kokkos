@@ -80,16 +80,20 @@ struct DesulToSYCLMemoryScope<MemoryScopeSystem, extended_namespace> {
       sycl_memory_scope<extended_namespace>::system;
 };
 
-template <class T,
-          class MemoryOrder,
-          class MemoryScope,
-          sycl::access::address_space AddressSpace>
-using sycl_atomic_ref =
-    sycl::ext::oneapi::atomic_ref<T,
-                                  DesulToSYCLMemoryOrder<MemoryOrder>::value,
-                                  DesulToSYCLMemoryScope<MemoryScope>::value,
-                                  AddressSpace>;
-
+// FIXME_SYCL generic_space isn't available yet for CUDA.
+#ifdef __NVPTX__
+template <class T, class MemoryOrder, class MemoryScope>
+using sycl_atomic_ref = sycl::atomic_ref<T,
+                                         DesulToSYCLMemoryOrder<MemoryOrder>::value,
+                                         DesulToSYCLMemoryScope<MemoryScope>::value,
+                                         sycl::access::address_space::global_space>;
+#else
+template <class T, class MemoryOrder, class MemoryScope>
+using sycl_atomic_ref = sycl::atomic_ref<T,
+                                         DesulToSYCLMemoryOrder<MemoryOrder>::value,
+                                         DesulToSYCLMemoryScope<MemoryScope>::value,
+                                         sycl::access::address_space::generic_space>;
+#endif
 }  // namespace Impl
 }  // namespace desul
 
