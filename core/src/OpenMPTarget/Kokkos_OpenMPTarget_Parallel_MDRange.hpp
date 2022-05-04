@@ -116,7 +116,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <int Rank>
-  inline typename std::enable_if<Rank == 2>::type execute_tile(
+  inline std::enable_if_t<Rank == 2> execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
@@ -157,7 +157,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <int Rank>
-  inline typename std::enable_if<Rank == 3>::type execute_tile(
+  inline std::enable_if_t<Rank == 3> execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
@@ -207,7 +207,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <int Rank>
-  inline typename std::enable_if<Rank == 4>::type execute_tile(
+  inline std::enable_if_t<Rank == 4> execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
@@ -266,7 +266,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <int Rank>
-  inline typename std::enable_if<Rank == 5>::type execute_tile(
+  inline std::enable_if_t<Rank == 5> execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
@@ -336,7 +336,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <int Rank>
-  inline typename std::enable_if<Rank == 6>::type execute_tile(
+  inline std::enable_if_t<Rank == 6> execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
@@ -482,9 +482,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   inline ParallelReduce(
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_result_view,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer<ReducerType>::value,
-                              void*>::type = NULL)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                           !Kokkos::is_reducer<ReducerType>::value,
+                       void*> = NULL)
       : m_result_ptr(arg_result_view.data()),
         m_functor(arg_functor),
         m_policy(arg_policy),
@@ -505,9 +505,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                   memory_space>::accessible) {}
 
   template <int Rank, class ValueType>
-  inline typename std::enable_if<Rank == 2>::type execute_tile(
-      const FunctorType& functor, const Policy& policy,
-      pointer_type ptr) const {
+  inline std::enable_if_t<Rank == 2> execute_tile(const FunctorType& functor,
+                                                  const Policy& policy,
+                                                  pointer_type ptr) const {
     const auto begin_0 = policy.m_lower[0];
     const auto begin_1 = policy.m_lower[1];
 
@@ -554,9 +554,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline typename std::enable_if<Rank == 3>::type execute_tile(
-      const FunctorType& functor, const Policy& policy,
-      pointer_type ptr) const {
+  inline std::enable_if_t<Rank == 3> execute_tile(const FunctorType& functor,
+                                                  const Policy& policy,
+                                                  pointer_type ptr) const {
     const auto begin_0 = policy.m_lower[0];
     const auto begin_1 = policy.m_lower[1];
     const auto begin_2 = policy.m_lower[2];
@@ -609,9 +609,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline typename std::enable_if<Rank == 4>::type execute_tile(
-      const FunctorType& functor, const Policy& policy,
-      pointer_type ptr) const {
+  inline std::enable_if_t<Rank == 4> execute_tile(const FunctorType& functor,
+                                                  const Policy& policy,
+                                                  pointer_type ptr) const {
     const auto begin_0 = policy.m_lower[0];
     const auto begin_1 = policy.m_lower[1];
     const auto begin_2 = policy.m_lower[3];
@@ -672,9 +672,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline typename std::enable_if<Rank == 5>::type execute_tile(
-      const FunctorType& functor, const Policy& policy,
-      pointer_type ptr) const {
+  inline std::enable_if_t<Rank == 5> execute_tile(const FunctorType& functor,
+                                                  const Policy& policy,
+                                                  pointer_type ptr) const {
     const auto begin_0 = policy.m_lower[0];
     const auto begin_1 = policy.m_lower[1];
     const auto begin_2 = policy.m_lower[2];
@@ -743,9 +743,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline typename std::enable_if<Rank == 6>::type execute_tile(
-      const FunctorType& functor, const Policy& policy,
-      pointer_type ptr) const {
+  inline std::enable_if_t<Rank == 6> execute_tile(const FunctorType& functor,
+                                                  const Policy& policy,
+                                                  pointer_type ptr) const {
     const auto begin_0 = policy.m_lower[0];
     const auto begin_1 = policy.m_lower[1];
     const auto begin_2 = policy.m_lower[2];

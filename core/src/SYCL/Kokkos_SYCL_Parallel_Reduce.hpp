@@ -230,9 +230,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  public:
   // V - View
   template <typename V>
-  ParallelReduce(
-      const FunctorType& f, const Policy& p, const V& v,
-      typename std::enable_if<Kokkos::is_view<V>::value, void*>::type = nullptr)
+  ParallelReduce(const FunctorType& f, const Policy& p, const V& v,
+                 std::enable_if_t<Kokkos::is_view<V>::value, void*> = nullptr)
       : m_functor(f),
         m_policy(p),
         m_result_ptr(v.data()),
@@ -545,9 +544,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
  public:
   // V - View
   template <typename V>
-  ParallelReduce(
-      const FunctorType& f, const Policy& p, const V& v,
-      typename std::enable_if<Kokkos::is_view<V>::value, void*>::type = nullptr)
+  ParallelReduce(const FunctorType& f, const Policy& p, const V& v,
+                 std::enable_if_t<Kokkos::is_view<V>::value, void*> = nullptr)
       : m_functor(f),
         m_policy(p),
         m_space(p.space()),

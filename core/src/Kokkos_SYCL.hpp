@@ -196,11 +196,12 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
 #endif
 
   sycl::context context = sycl_space.sycl_context();
-  sycl::default_selector device_selector;
+  sycl::device device =
+      sycl_space.impl_internal_space_instance()->m_queue->get_device();
   std::vector<SYCL> instances;
   instances.reserve(sizeof...(Args));
   for (unsigned int i = 0; i < sizeof...(Args); ++i)
-    instances.emplace_back(sycl::queue(context, device_selector));
+    instances.emplace_back(sycl::queue(context, device));
   return instances;
 }
 
@@ -212,11 +213,12 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   sycl::context context = sycl_space.sycl_context();
-  sycl::default_selector device_selector;
+  sycl::device device =
+      sycl_space.impl_internal_space_instance()->m_queue->get_device();
   std::vector<SYCL> instances;
   instances.reserve(weights.size());
   for (unsigned int i = 0; i < weights.size(); ++i)
-    instances.emplace_back(sycl::queue(context, device_selector));
+    instances.emplace_back(sycl::queue(context, device));
   return instances;
 }
 }  // namespace Experimental

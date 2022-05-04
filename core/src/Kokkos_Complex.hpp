@@ -87,9 +87,9 @@ class
   complex& operator=(const complex&) noexcept = default;
 
   /// \brief Conversion constructor from compatible RType
-  template <class RType,
-            typename std::enable_if<std::is_convertible<RType, RealType>::value,
-                                    int>::type = 0>
+  template <
+      class RType,
+      std::enable_if_t<std::is_convertible<RType, RealType>::value, int> = 0>
   KOKKOS_INLINE_FUNCTION complex(const complex<RType>& other) noexcept
       // Intentionally do the conversions implicitly here so that users don't
       // get any warnings about narrowing, etc., that they would expect to get
@@ -280,9 +280,9 @@ class
   //---------------------------------------------------------------------------
 
   //! Copy constructor from volatile.
-  template <class RType,
-            typename std::enable_if<std::is_convertible<RType, RealType>::value,
-                                    int>::type = 0>
+  template <
+      class RType,
+      std::enable_if_t<std::is_convertible<RType, RealType>::value, int> = 0>
   KOKKOS_INLINE_FUNCTION complex(const volatile complex<RType>& src) noexcept
       // Intentionally do the conversions implicitly here so that users don't
       // get any warnings about narrowing, etc., that they would expect to get
@@ -310,8 +310,7 @@ class
   //    vl = r;
   //    vl = cr;
   template <class Complex,
-            typename std::enable_if<std::is_same<Complex, complex>::value,
-                                    int>::type = 0>
+            std::enable_if_t<std::is_same<Complex, complex>::value, int> = 0>
   KOKKOS_INLINE_FUNCTION void operator=(const Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
@@ -333,8 +332,7 @@ class
   //    vl = vr;
   //    vl = cvr;
   template <class Complex,
-            typename std::enable_if<std::is_same<Complex, complex>::value,
-                                    int>::type = 0>
+            std::enable_if_t<std::is_same<Complex, complex>::value, int> = 0>
   KOKKOS_INLINE_FUNCTION volatile complex& operator=(
       const volatile Complex& src) volatile noexcept {
     re_ = src.re_;
@@ -356,8 +354,7 @@ class
   //    l = cvr;
   //
   template <class Complex,
-            typename std::enable_if<std::is_same<Complex, complex>::value,
-                                    int>::type = 0>
+            std::enable_if_t<std::is_same<Complex, complex>::value, int> = 0>
   KOKKOS_INLINE_FUNCTION complex& operator=(
       const volatile Complex& src) noexcept {
     re_ = src.re_;
@@ -478,8 +475,7 @@ inline bool operator==(complex<RealType1> const& x,
 template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
-    typename std::enable_if<std::is_convertible<RealType2, RealType1>::value,
-                            int>::type = 0>
+    std::enable_if_t<std::is_convertible<RealType2, RealType1>::value, int> = 0>
 KOKKOS_INLINE_FUNCTION bool operator==(complex<RealType1> const& x,
                                        RealType2 const& y) noexcept {
   using common_type = typename std::common_type<RealType1, RealType2>::type;
@@ -491,8 +487,7 @@ KOKKOS_INLINE_FUNCTION bool operator==(complex<RealType1> const& x,
 template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
-    typename std::enable_if<std::is_convertible<RealType1, RealType2>::value,
-                            int>::type = 0>
+    std::enable_if_t<std::is_convertible<RealType1, RealType2>::value, int> = 0>
 KOKKOS_INLINE_FUNCTION bool operator==(RealType1 const& x,
                                        complex<RealType2> const& y) noexcept {
   using common_type = typename std::common_type<RealType1, RealType2>::type;
@@ -531,8 +526,7 @@ inline bool operator!=(complex<RealType1> const& x,
 template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
-    typename std::enable_if<std::is_convertible<RealType2, RealType1>::value,
-                            int>::type = 0>
+    std::enable_if_t<std::is_convertible<RealType2, RealType1>::value, int> = 0>
 KOKKOS_INLINE_FUNCTION bool operator!=(complex<RealType1> const& x,
                                        RealType2 const& y) noexcept {
   using common_type = typename std::common_type<RealType1, RealType2>::type;
@@ -544,8 +538,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(complex<RealType1> const& x,
 template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
-    typename std::enable_if<std::is_convertible<RealType1, RealType2>::value,
-                            int>::type = 0>
+    std::enable_if_t<std::is_convertible<RealType1, RealType2>::value, int> = 0>
 KOKKOS_INLINE_FUNCTION bool operator!=(RealType1 const& x,
                                        complex<RealType2> const& y) noexcept {
   using common_type = typename std::common_type<RealType1, RealType2>::type;

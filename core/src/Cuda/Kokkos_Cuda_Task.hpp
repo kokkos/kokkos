@@ -338,9 +338,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
-    Scheduler,
-    typename std::enable_if<std::is_same<typename Scheduler::execution_space,
-                                         Kokkos::Cuda>::value>::type> {
+    Scheduler, std::enable_if_t<std::is_same<
+                   typename Scheduler::execution_space, Kokkos::Cuda>::value>> {
  public:
   using scheduler_type  = Scheduler;
   using execution_space = Kokkos::Cuda;

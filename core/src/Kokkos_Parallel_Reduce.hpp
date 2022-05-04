@@ -1247,8 +1247,8 @@ struct ParallelReduceReturnValue;
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<Kokkos::is_view<ReturnType>::value>::type,
-    ReturnType, FunctorType> {
+    std::enable_if_t<Kokkos::is_view<ReturnType>::value>, ReturnType,
+    FunctorType> {
   using return_type  = ReturnType;
   using reducer_type = InvalidType;
 
@@ -1265,10 +1265,10 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<!Kokkos::is_view<ReturnType>::value &&
-                            (!std::is_array<ReturnType>::value &&
-                             !std::is_pointer<ReturnType>::value) &&
-                            !Kokkos::is_reducer<ReturnType>::value>::type,
+    std::enable_if_t<!Kokkos::is_view<ReturnType>::value &&
+                     (!std::is_array<ReturnType>::value &&
+                      !std::is_pointer<ReturnType>::value) &&
+                     !Kokkos::is_reducer<ReturnType>::value>,
     ReturnType, FunctorType> {
   using return_type =
       Kokkos::View<ReturnType, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
@@ -1284,8 +1284,8 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<(std::is_array<ReturnType>::value ||
-                             std::is_pointer<ReturnType>::value)>::type,
+    std::enable_if_t<(std::is_array<ReturnType>::value ||
+                      std::is_pointer<ReturnType>::value)>,
     ReturnType, FunctorType> {
   using return_type = Kokkos::View<typename std::remove_const<ReturnType>::type,
                                    Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
@@ -1305,8 +1305,8 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<Kokkos::is_reducer<ReturnType>::value>::type,
-    ReturnType, FunctorType> {
+    std::enable_if_t<Kokkos::is_reducer<ReturnType>::value>, ReturnType,
+    FunctorType> {
   using return_type  = ReturnType;
   using reducer_type = ReturnType;
   using value_type   = typename return_type::value_type;
@@ -1321,8 +1321,7 @@ struct ParallelReducePolicyType;
 
 template <class PolicyType, class FunctorType>
 struct ParallelReducePolicyType<
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type,
+    std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>,
     PolicyType, FunctorType> {
   using policy_type = PolicyType;
   static PolicyType policy(const PolicyType& policy_) { return policy_; }
@@ -1330,8 +1329,8 @@ struct ParallelReducePolicyType<
 
 template <class PolicyType, class FunctorType>
 struct ParallelReducePolicyType<
-    typename std::enable_if<std::is_integral<PolicyType>::value>::type,
-    PolicyType, FunctorType> {
+    std::enable_if_t<std::is_integral<PolicyType>::value>, PolicyType,
+    FunctorType> {
   using execution_space =
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                  void>::execution_space;
@@ -1692,8 +1691,8 @@ template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor,
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
+        nullptr) {
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType>;
@@ -1717,8 +1716,8 @@ inline void parallel_reduce(
 template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
+        nullptr) {
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType>;

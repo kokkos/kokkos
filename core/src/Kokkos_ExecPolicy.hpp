@@ -442,27 +442,23 @@ struct PerThreadValue {
 template <class iType, class... Args>
 struct ExtractVectorLength {
   static inline iType value(
-      typename std::enable_if<std::is_integral<iType>::value, iType>::type val,
-      Args...) {
+      std::enable_if_t<std::is_integral<iType>::value, iType> val, Args...) {
     return val;
   }
-  static inline
-      typename std::enable_if<!std::is_integral<iType>::value, int>::type
-      value(
-          typename std::enable_if<!std::is_integral<iType>::value, iType>::type,
-          Args...) {
+  static inline std::enable_if_t<!std::is_integral<iType>::value, int> value(
+      std::enable_if_t<!std::is_integral<iType>::value, iType>, Args...) {
     return 1;
   }
 };
 
 template <class iType, class... Args>
-inline typename std::enable_if<std::is_integral<iType>::value, iType>::type
+inline std::enable_if_t<std::is_integral<iType>::value, iType>
 extract_vector_length(iType val, Args...) {
   return val;
 }
 
 template <class iType, class... Args>
-inline typename std::enable_if<!std::is_integral<iType>::value, int>::type
+inline std::enable_if_t<!std::is_integral<iType>::value, int>
 extract_vector_length(iType, Args...) {
   return 1;
 }

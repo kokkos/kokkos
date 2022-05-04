@@ -34,17 +34,16 @@ struct is_offset_view<const OffsetView<D, P...>> : public std::true_type {};
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
 
-template <typename iType,
-          typename std::enable_if<std::is_integral<iType>::value &&
-                                      std::is_signed<iType>::value,
-                                  iType>::type = 0>
+template <typename iType, std::enable_if_t<std::is_integral<iType>::value &&
+                                               std::is_signed<iType>::value,
+                                           iType> = 0>
 using IndexRange = Kokkos::Array<iType, 2>;
 
 using index_list_type = std::initializer_list<int64_t>;
 
 //  template <typename iType,
-//    typename std::enable_if< std::is_integral<iType>::value &&
-//      std::is_signed<iType>::value, iType >::type = 0> using min_index_type =
+//    std::enable_if_t< std::is_integral<iType>::value &&
+//      std::is_signed<iType>::value, iType > = 0> using min_index_type =
 //      std::initializer_list<iType>;
 
 namespace Impl {
@@ -191,9 +190,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   enum { Rank = map_type::Rank };
   using begins_type = Kokkos::Array<int64_t, Rank>;
 
-  template <
-      typename iType,
-      typename std::enable_if<std::is_integral<iType>::value, iType>::type = 0>
+  template <typename iType,
+            std::enable_if_t<std::is_integral<iType>::value, iType> = 0>
   KOKKOS_INLINE_FUNCTION int64_t begin(const iType local_dimension) const {
     return local_dimension < Rank ? m_begins[local_dimension]
                                   : KOKKOS_INVALID_OFFSET;
@@ -202,9 +200,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION
   begins_type begins() const { return m_begins; }
 
-  template <
-      typename iType,
-      typename std::enable_if<std::is_integral<iType>::value, iType>::type = 0>
+  template <typename iType,
+            std::enable_if_t<std::is_integral<iType>::value, iType> = 0>
   KOKKOS_INLINE_FUNCTION int64_t end(const iType local_dimension) const {
     return begin(local_dimension) + m_map.extent(local_dimension);
   }
@@ -249,16 +246,16 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // constexpr unsigned rank() { return map_type::Rank; }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      extent(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, size_t>
+  extent(const iType& r) const {
     return m_map.extent(r);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, int>::type
-      extent_int(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, int>
+  extent_int(const iType& r) const {
     return static_cast<int>(m_map.extent(r));
   }
 
@@ -299,9 +296,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      stride(iType r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, size_t>
+  stride(iType r) const {
     return (
         r == 0
             ? m_map.stride_0()
@@ -401,11 +398,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Rank 1 operator()
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0>::value &&
-                               (1 == Rank) && !is_default_map),
-                              reference_type>::type
-      operator()(const I0& i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::are_integral<I0>::value && (1 == Rank) && !is_default_map),
+      reference_type>
+  operator()(const I0& i0) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0))
     const size_t j0 = i0 - m_begins[0];
     return m_map.reference(j0);
@@ -413,10 +409,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0>::value &&
-                               (1 == Rank) && is_default_map &&
-                               !is_layout_stride),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0>::value && (1 == Rank) &&
+                        is_default_map && !is_layout_stride),
+                       reference_type>
       operator()(const I0& i0) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0))
     const size_t j0 = i0 - m_begins[0];
@@ -425,10 +420,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0>::value &&
-                               (1 == Rank) && is_default_map &&
-                               is_layout_stride),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0>::value && (1 == Rank) &&
+                        is_default_map && is_layout_stride),
+                       reference_type>
       operator()(const I0& i0) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0))
     const size_t j0 = i0 - m_begins[0];
@@ -438,11 +432,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Rank 1 operator[]
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0>::value &&
-                               (1 == Rank) && !is_default_map),
-                              reference_type>::type
-      operator[](const I0& i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::are_integral<I0>::value && (1 == Rank) && !is_default_map),
+      reference_type>
+  operator[](const I0& i0) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0))
     const size_t j0 = i0 - m_begins[0];
     return m_map.reference(j0);
@@ -450,10 +443,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0>::value &&
-                               (1 == Rank) && is_default_map &&
-                               !is_layout_stride),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0>::value && (1 == Rank) &&
+                        is_default_map && !is_layout_stride),
+                       reference_type>
       operator[](const I0& i0) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0))
     const size_t j0 = i0 - m_begins[0];
@@ -462,10 +454,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0>::value &&
-                               (1 == Rank) && is_default_map &&
-                               is_layout_stride),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0>::value && (1 == Rank) &&
+                        is_default_map && is_layout_stride),
+                       reference_type>
       operator[](const I0& i0) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0))
     const size_t j0 = i0 - m_begins[0];
@@ -477,9 +468,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                               (2 == Rank) && !is_default_map),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1>::value &&
+                        (2 == Rank) && !is_default_map),
+                       reference_type>
       operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
@@ -488,12 +479,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                               (2 == Rank) && is_default_map &&
-                               is_layout_left && (traits::rank_dynamic == 0)),
-                              reference_type>::type
-      operator()(const I0& i0, const I1& i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
+       is_default_map && is_layout_left && (traits::rank_dynamic == 0)),
+      reference_type>
+  operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
     const size_t j1 = i1 - m_begins[1];
@@ -501,12 +491,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                               (2 == Rank) && is_default_map &&
-                               is_layout_left && (traits::rank_dynamic != 0)),
-                              reference_type>::type
-      operator()(const I0& i0, const I1& i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
+       is_default_map && is_layout_left && (traits::rank_dynamic != 0)),
+      reference_type>
+  operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
     const size_t j1 = i1 - m_begins[1];
@@ -514,12 +503,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                               (2 == Rank) && is_default_map &&
-                               is_layout_right && (traits::rank_dynamic == 0)),
-                              reference_type>::type
-      operator()(const I0& i0, const I1& i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
+       is_default_map && is_layout_right && (traits::rank_dynamic == 0)),
+      reference_type>
+  operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
     const size_t j1 = i1 - m_begins[1];
@@ -527,12 +515,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                               (2 == Rank) && is_default_map &&
-                               is_layout_right && (traits::rank_dynamic != 0)),
-                              reference_type>::type
-      operator()(const I0& i0, const I1& i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
+       is_default_map && is_layout_right && (traits::rank_dynamic != 0)),
+      reference_type>
+  operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
     const size_t j1 = i1 - m_begins[1];
@@ -541,10 +528,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                               (2 == Rank) && is_default_map &&
-                               is_layout_stride),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1>::value &&
+                        (2 == Rank) && is_default_map && is_layout_stride),
+                       reference_type>
       operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
@@ -558,9 +544,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1, I2>::value &&
-                               (3 == Rank) && is_default_map),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1, I2>::value &&
+                        (3 == Rank) && is_default_map),
+                       reference_type>
       operator()(const I0& i0, const I1& i1, const I2& i2) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
         (m_track, m_map, m_begins, i0, i1, i2))
@@ -572,9 +558,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(Kokkos::Impl::are_integral<I0, I1, I2>::value &&
-                               (3 == Rank) && !is_default_map),
-                              reference_type>::type
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1, I2>::value &&
+                        (3 == Rank) && !is_default_map),
+                       reference_type>
       operator()(const I0& i0, const I1& i1, const I2& i2) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
         (m_track, m_map, m_begins, i0, i1, i2))
@@ -588,11 +574,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Rank 4
 
   template <typename I0, typename I1, typename I2, typename I3>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
-      (Kokkos::Impl::are_integral<I0, I1, I2, I3>::value && (4 == Rank) &&
-       is_default_map),
-      reference_type>::type
-  operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1, I2, I3>::value &&
+                        (4 == Rank) && is_default_map),
+                       reference_type>
+      operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
         (m_track, m_map, m_begins, i0, i1, i2, i3))
     const size_t j0 = i0 - m_begins[0];
@@ -603,11 +589,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1, typename I2, typename I3>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
-      (Kokkos::Impl::are_integral<I0, I1, I2, I3>::value && (4 == Rank) &&
-       !is_default_map),
-      reference_type>::type
-  operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1, I2, I3>::value &&
+                        (4 == Rank) && !is_default_map),
+                       reference_type>
+      operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
         (m_track, m_map, m_begins, i0, i1, i2, i3))
     const size_t j0 = i0 - m_begins[0];
@@ -621,12 +607,12 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Rank 5
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
-      (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4>::value && (5 == Rank) &&
-       is_default_map),
-      reference_type>::type
-  operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
-             const I4& i4) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1, I2, I3, I4>::value &&
+                        (5 == Rank) && is_default_map),
+                       reference_type>
+      operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
+                 const I4& i4) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
         (m_track, m_map, m_begins, i0, i1, i2, i3, i4))
     const size_t j0 = i0 - m_begins[0];
@@ -638,12 +624,12 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
-      (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4>::value && (5 == Rank) &&
-       !is_default_map),
-      reference_type>::type
-  operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
-             const I4& i4) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1, I2, I3, I4>::value &&
+                        (5 == Rank) && !is_default_map),
+                       reference_type>
+      operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
+                 const I4& i4) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
         (m_track, m_map, m_begins, i0, i1, i2, i3, i4))
     const size_t j0 = i0 - m_begins[0];
@@ -659,10 +645,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4,
             typename I5>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4, I5>::value &&
        (6 == Rank) && is_default_map),
-      reference_type>::type
+      reference_type>
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
@@ -678,10 +664,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4,
             typename I5>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4, I5>::value &&
        (6 == Rank) && !is_default_map),
-      reference_type>::type
+      reference_type>
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
@@ -700,10 +686,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4,
             typename I5, typename I6>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4, I5, I6>::value &&
        (7 == Rank) && is_default_map),
-      reference_type>::type
+      reference_type>
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5, const I6& i6) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
@@ -720,10 +706,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4,
             typename I5, typename I6>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4, I5, I6>::value &&
        (7 == Rank) && !is_default_map),
-      reference_type>::type
+      reference_type>
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5, const I6& i6) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
@@ -743,10 +729,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4,
             typename I5, typename I6, typename I7>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4, I5, I6, I7>::value &&
        (8 == Rank) && is_default_map),
-      reference_type>::type
+      reference_type>
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5, const I6& i6, const I7& i7) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
@@ -765,10 +751,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename I4,
             typename I5, typename I6, typename I7>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1, I2, I3, I4, I5, I6, I7>::value &&
        (8 == Rank) && !is_default_map),
-      reference_type>::type
+      reference_type>
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5, const I6& i6, const I7& i7) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY(
@@ -1113,8 +1099,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   template <typename Label>
   explicit inline OffsetView(
       const Label& arg_label,
-      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              const std::pair<int64_t, int64_t>>::type range0,
+      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
+                       const std::pair<int64_t, int64_t>>
+          range0,
       const std::pair<int64_t, int64_t> range1 = KOKKOS_INVALID_INDEX_RANGE,
       const std::pair<int64_t, int64_t> range2 = KOKKOS_INVALID_INDEX_RANGE,
       const std::pair<int64_t, int64_t> range3 = KOKKOS_INVALID_INDEX_RANGE,
@@ -1144,8 +1131,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       "instead!")
   explicit inline OffsetView(
       const Label& arg_label,
-      typename std::enable_if<Kokkos::Impl::is_view_label<Label>::value,
-                              const index_list_type>::type range0,
+      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
+                       const index_list_type>
+          range0,
       const index_list_type range1 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range2 = KOKKOS_INVALID_INDEX_RANGE,
       const index_list_type range3 = KOKKOS_INVALID_INDEX_RANGE,
@@ -1169,9 +1157,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                              typename traits::array_layout>::type const&
-          arg_layout,
+      std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout> const& arg_layout,
       const index_list_type minIndices)
       : m_track()  // No memory tracking
         ,
@@ -1189,9 +1176,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   template <class... P>
   explicit inline OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      typename std::enable_if<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                              typename traits::array_layout>::type const&
-          arg_layout,
+      std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout> const& arg_layout,
       const index_list_type minIndices)
       : m_track(),
         m_map()
@@ -1287,9 +1273,8 @@ KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const OffsetView<D, P...>& V) {
 namespace Impl {
 
 template <class T>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<std::is_integral<T>::value, T>::type
-    shift_input(const T arg, const int64_t offset) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, T>
+shift_input(const T arg, const int64_t offset) {
   return arg - offset;
 }
 
@@ -1300,22 +1285,21 @@ Kokkos::Impl::ALL_t shift_input(const Kokkos::Impl::ALL_t arg,
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<std::is_integral<T>::value,
-                                               Kokkos::pair<T, T>>::type
-shift_input(const Kokkos::pair<T, T> arg, const int64_t offset) {
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<std::is_integral<T>::value, Kokkos::pair<T, T>>
+    shift_input(const Kokkos::pair<T, T> arg, const int64_t offset) {
   return Kokkos::make_pair<T, T>(arg.first - offset, arg.second - offset);
 }
 template <class T>
-inline
-    typename std::enable_if<std::is_integral<T>::value, std::pair<T, T>>::type
-    shift_input(const std::pair<T, T> arg, const int64_t offset) {
+inline std::enable_if_t<std::is_integral<T>::value, std::pair<T, T>>
+shift_input(const std::pair<T, T> arg, const int64_t offset) {
   return std::make_pair<T, T>(arg.first - offset, arg.second - offset);
 }
 
 template <size_t N, class Arg, class A>
 KOKKOS_INLINE_FUNCTION void map_arg_to_new_begin(
     const size_t i, Kokkos::Array<int64_t, N>& subviewBegins,
-    typename std::enable_if<N != 0, const Arg>::type shiftedArg, const Arg arg,
+    std::enable_if_t<N != 0, const Arg> shiftedArg, const Arg arg,
     const A viewBegins, size_t& counter) {
   if (!std::is_integral<Arg>::value) {
     subviewBegins[counter] = shiftedArg == arg ? viewBegins[i] : 0;
@@ -1326,8 +1310,8 @@ KOKKOS_INLINE_FUNCTION void map_arg_to_new_begin(
 template <size_t N, class Arg, class A>
 KOKKOS_INLINE_FUNCTION void map_arg_to_new_begin(
     const size_t /*i*/, Kokkos::Array<int64_t, N>& /*subviewBegins*/,
-    typename std::enable_if<N == 0, const Arg>::type /*shiftedArg*/,
-    const Arg /*arg*/, const A /*viewBegins*/, size_t& /*counter*/) {}
+    std::enable_if_t<N == 0, const Arg> /*shiftedArg*/, const Arg /*arg*/,
+    const A /*viewBegins*/, size_t& /*counter*/) {}
 
 template <class D, class... P, class T>
 KOKKOS_INLINE_FUNCTION
@@ -1809,9 +1793,8 @@ template <class DT, class... DP>
 inline void deep_copy(
     const Experimental::OffsetView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
                    typename ViewTraits<DT, DP...>::value_type>::value,
@@ -1825,9 +1808,8 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const Experimental::OffsetView<DT, DP...>& dst,
     const Experimental::OffsetView<ST, SP...>& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::value_type,
                    typename ViewTraits<ST, SP...>::non_const_value_type>::value,
@@ -1840,9 +1822,8 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const Experimental::OffsetView<DT, DP...>& dst,
     const View<ST, SP...>& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::value_type,
                    typename ViewTraits<ST, SP...>::non_const_value_type>::value,
@@ -1856,9 +1837,8 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst,
     const Experimental::OffsetView<ST, SP...>& value,
-    typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
-        nullptr) {
+    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
+                                  void>::value>* = nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::value_type,
                    typename ViewTraits<ST, SP...>::non_const_value_type>::value,

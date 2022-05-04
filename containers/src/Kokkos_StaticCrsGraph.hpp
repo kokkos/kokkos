@@ -214,8 +214,7 @@ struct GraphRowViewConst {
       const typename GraphType::entries_type& colidx_in,
       const ordinal_type& stride, const ordinal_type& count,
       const OffsetType& idx,
-      const typename std::enable_if<std::is_integral<OffsetType>::value,
-                                    int>::type& = 0)
+      const std::enable_if_t<std::is_integral<OffsetType>::value, int>& = 0)
       : colidx_(&colidx_in(idx)), stride_(stride), length(count) {}
 
   /// \brief Number of entries in the row.
