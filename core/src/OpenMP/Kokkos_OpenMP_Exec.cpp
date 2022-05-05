@@ -506,6 +506,15 @@ void OpenMPSpaceInitializer::print_configuration(std::ostream &msg,
 }
 
 }  // namespace Impl
+
+#ifdef KOKKOS_ENABLE_CXX14
+namespace Tools {
+namespace Experimental {
+constexpr DeviceType DeviceTypeTraits<OpenMP>::id;
+}
+}  // namespace Tools
+#endif
+
 }  // namespace Kokkos
 
 #else
