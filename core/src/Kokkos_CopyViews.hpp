@@ -1493,11 +1493,11 @@ inline void deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(
-        std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
-        (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
-         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>* = nullptr) {
+    std::enable_if_t<
+        (std::is_void<typename ViewTraits<DT, DP...>::specialize>::value &&
+         std::is_void<typename ViewTraits<ST, SP...>::specialize>::value &&
+         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
+          unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>* = nullptr) {
   using dst_type = View<DT, DP...>;
   using src_type = View<ST, SP...>;
 
@@ -1545,11 +1545,11 @@ inline void deep_copy(
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(
-        std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
-        (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
-         unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
+    std::enable_if_t<
+        (std::is_void<typename ViewTraits<DT, DP...>::specialize>::value &&
+         std::is_void<typename ViewTraits<ST, SP...>::specialize>::value &&
+         (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
+          unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
   using dst_type            = View<DT, DP...>;
   using src_type            = View<ST, SP...>;
   using dst_execution_space = typename dst_type::execution_space;
@@ -2486,7 +2486,7 @@ inline void deep_copy(
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<
         Kokkos::is_execution_space<ExecSpace>::value &&
-        std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
+        std::is_void<typename ViewTraits<DT, DP...>::specialize>::value &&
         Kokkos::SpaceAccessibility<ExecSpace, typename ViewTraits<DT, DP...>::
                                                   memory_space>::accessible>* =
         nullptr) {
@@ -2527,7 +2527,7 @@ inline void deep_copy(
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<
         Kokkos::is_execution_space<ExecSpace>::value &&
-        std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
+        std::is_void<typename ViewTraits<DT, DP...>::specialize>::value &&
         !Kokkos::SpaceAccessibility<ExecSpace, typename ViewTraits<DT, DP...>::
                                                    memory_space>::accessible>* =
         nullptr) {
@@ -2610,12 +2610,12 @@ template <class ExecSpace, class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const ExecSpace& exec_space, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    std::enable_if_t<(
-        Kokkos::is_execution_space<ExecSpace>::value &&
-        std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
-        (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
-         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>* = nullptr) {
+    std::enable_if_t<
+        (Kokkos::is_execution_space<ExecSpace>::value &&
+         std::is_void<typename ViewTraits<DT, DP...>::specialize>::value &&
+         std::is_void<typename ViewTraits<ST, SP...>::specialize>::value &&
+         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
+          unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>* = nullptr) {
   using src_traits = ViewTraits<ST, SP...>;
   using dst_traits = ViewTraits<DT, DP...>;
 
@@ -2660,12 +2660,12 @@ template <class ExecSpace, class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const ExecSpace& exec_space, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    std::enable_if_t<(
-        Kokkos::is_execution_space<ExecSpace>::value &&
-        std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
-        (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
-         unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
+    std::enable_if_t<
+        (Kokkos::is_execution_space<ExecSpace>::value &&
+         std::is_void<typename ViewTraits<DT, DP...>::specialize>::value &&
+         std::is_void<typename ViewTraits<ST, SP...>::specialize>::value &&
+         (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
+          unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
   using dst_type = View<DT, DP...>;
   using src_type = View<ST, SP...>;
 
@@ -3262,17 +3262,15 @@ typename Impl::MirrorType<Space, T, P...>::view_type create_mirror(
 }  // namespace Impl
 
 template <class T, class... P>
-std::enable_if_t<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
-    typename Kokkos::View<T, P...>::HostMirror>
+std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
+                 typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(v);
 }
 
 template <class T, class... P>
-std::enable_if_t<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
-    typename Kokkos::View<T, P...>::HostMirror>
+std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
+                 typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
               Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(v, wi);
@@ -3280,18 +3278,16 @@ create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
 
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
-std::enable_if_t<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
-    typename Impl::MirrorType<Space, T, P...>::view_type>
+std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
+                 typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(Space const& space, Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(space, v);
 }
 
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
-std::enable_if_t<
-    std::is_same<typename ViewTraits<T, P...>::specialize, void>::value,
-    typename Impl::MirrorType<Space, T, P...>::view_type>
+std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
+                 typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const& space,
               Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(space, v, wi);
@@ -3380,7 +3376,7 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     std::enable_if_t<
-        std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
+        std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
         Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
   (void)name;
   fence(
@@ -3396,7 +3392,7 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     std::enable_if_t<
-        std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
+        std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
         !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;

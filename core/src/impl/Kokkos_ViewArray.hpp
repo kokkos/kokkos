@@ -55,7 +55,7 @@ struct ViewDataAnalysis<DataType, ArrayLayout, Kokkos::Array<V, N, P>> {
  private:
   using array_analysis = ViewArrayAnalysis<DataType>;
 
-  static_assert(std::is_same<P, void>::value, "");
+  static_assert(std::is_void<P>::value, "");
   static_assert(std::is_same<typename array_analysis::non_const_value_type,
                              Kokkos::Array<V, N, P>>::value,
                 "");
@@ -416,7 +416,7 @@ class ViewMapping<
     std::enable_if_t<(
         std::is_same<typename DstTraits::memory_space,
                      typename SrcTraits::memory_space>::value &&
-        std::is_same<typename DstTraits::specialize, void>::value &&
+        std::is_void<typename DstTraits::specialize>::value &&
         (std::is_same<typename DstTraits::array_layout,
                       Kokkos::LayoutLeft>::value ||
          std::is_same<typename DstTraits::array_layout,

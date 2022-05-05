@@ -522,14 +522,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <typename TagType>
-  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
-  exec_team(const member_type& member) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+      const member_type& member) const {
     m_functor(member);
   }
 
   template <typename TagType>
-  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_team(const member_type& member) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+      const member_type& member) const {
     m_functor(TagType(), member);
   }
 
@@ -694,14 +694,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_same<TagType, void>::value>
-  exec_team(member_type const& member, reference_type update) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+      member_type const& member, reference_type update) const {
     m_functor(member, update);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_same<TagType, void>::value>
-  exec_team(member_type const& member, reference_type update) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+      member_type const& member, reference_type update) const {
     m_functor(TagType(), member, update);
   }
 

@@ -1496,16 +1496,16 @@ ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
     std::conditional_t<
-        std::is_same<Duplication, void>::value,
+        std::is_void<Duplication>::value,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type,
         Duplication>,
     std::conditional_t<
-        std::is_same<Contribution, void>::value,
+        std::is_void<Contribution>::value,
         typename Kokkos::Impl::Experimental::DefaultContribution<
             typename ViewTraits<RT, RP...>::execution_space,
             typename std::conditional_t<
-                std::is_same<Duplication, void>::value,
+                std::is_void<Duplication>::value,
                 typename Kokkos::Impl::Experimental::DefaultDuplication<
                     typename ViewTraits<RT, RP...>::execution_space>::type,
                 Duplication>>::type,

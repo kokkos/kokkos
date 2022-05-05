@@ -276,7 +276,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   // It is assumed that the value_type is trivially copyable;
   // when this is not the case, potential problems can occur.
-  static_assert(std::is_same<typename traits::specialize, void>::value,
+  static_assert(std::is_void<typename traits::specialize>::value,
                 "DynamicView only implemented for non-specialized View type");
 
  private:
