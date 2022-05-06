@@ -130,28 +130,20 @@ class CudaTeamMember {
   KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank; }
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
   KOKKOS_INLINE_FUNCTION int team_rank() const {
-#ifdef __CUDA_ARCH__
-    return threadIdx.y;
-#else
-    return 0;
-#endif
+    KOKKOS_IF_ON_DEVICE((return threadIdx.y;))
+    KOKKOS_IF_ON_DEVICE((return 0;))
   }
 
   KOKKOS_INLINE_FUNCTION int team_size() const {
-#ifdef __CUDA_ARCH__
-    return blockDim.y;
-#else
-    return 1;
-#endif
+    KOKKOS_IF_ON_DEVICE((return blockDim.y;))
+    KOKKOS_IF_ON_DEVICE((return 1;))
   }
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
-#ifdef __CUDA_ARCH__
-    if (1 == blockDim.z)
-      __syncthreads();  // team == block
-    else
-      __threadfence_block();  // team <= warp
-#endif
+    KOKKOS_IF_ON_DEVICE((
+        if (1 == blockDim.z) { __syncthreads(); }  // team == block
+        else { __threadfence_block(); }            // team <= warp
+        ))
   }
 
   //--------------------------------------------------------------------------
@@ -161,21 +153,21 @@ class CudaTeamMember {
                                              const int& thread_id) const {
     (void)val;
     (void)thread_id;
-#ifdef __CUDA_ARCH__
-    if (1 == blockDim.z) {  // team == block
-      __syncthreads();
-      // Wait for shared data write until all threads arrive here
-      if (threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id) {
-        *((ValueType*)m_team_reduce) = val;
-      }
-      __syncthreads();  // Wait for shared data read until root thread writes
-      val = *((ValueType*)m_team_reduce);
-    } else {               // team <= warp
-      ValueType tmp(val);  // input might not be a register variable
-      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
-                          blockDim.x * blockDim.y);
-    }
-#endif
+    KOKKOS_IF_ON_DEVICE((
+        if (1 == blockDim.z) {  // team == block
+          __syncthreads();
+          // Wait for shared data write until all threads arrive here
+          if (threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id) {
+            *((ValueType*)m_team_reduce) = val;
+          }
+          __syncthreads();  // Wait for shared data read until root thread
+                            // writes
+          val = *((ValueType*)m_team_reduce);
+        } else {               // team <= warp
+          ValueType tmp(val);  // input might not be a register variable
+          Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
+                              blockDim.x * blockDim.y);
+        }))
   }
 
   template <class Closure, class ValueType>
@@ -184,23 +176,23 @@ class CudaTeamMember {
     (void)f;
     (void)val;
     (void)thread_id;
-#ifdef __CUDA_ARCH__
-    f(val);
+    KOKKOS_IF_ON_DEVICE((
+        f(val);
 
-    if (1 == blockDim.z) {  // team == block
-      __syncthreads();
-      // Wait for shared data write until all threads arrive here
-      if (threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id) {
-        *((ValueType*)m_team_reduce) = val;
-      }
-      __syncthreads();  // Wait for shared data read until root thread writes
-      val = *((ValueType*)m_team_reduce);
-    } else {               // team <= warp
-      ValueType tmp(val);  // input might not be a register variable
-      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
-                          blockDim.x * blockDim.y);
-    }
-#endif
+        if (1 == blockDim.z) {  // team == block
+          __syncthreads();
+          // Wait for shared data write until all threads arrive here
+          if (threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id) {
+            *((ValueType*)m_team_reduce) = val;
+          }
+          __syncthreads();  // Wait for shared data read until root thread
+                            // writes
+          val = *((ValueType*)m_team_reduce);
+        } else {               // team <= warp
+          ValueType tmp(val);  // input might not be a register variable
+          Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
+                              blockDim.x * blockDim.y);
+        }))
   }
 
   //--------------------------------------------------------------------------
@@ -230,13 +222,12 @@ class CudaTeamMember {
               typename ReducerType::value_type& value) const noexcept {
     (void)reducer;
     (void)value;
-#ifdef __CUDA_ARCH__
-    typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                   TeamPolicy<Cuda>, ReducerType>::Reducer
-        wrapped_reducer(&reducer);
-    cuda_intra_block_reduction(value, wrapped_reducer, blockDim.y);
-    reducer.reference() = value;
-#endif /* #ifdef __CUDA_ARCH__ */
+    KOKKOS_IF_ON_DEVICE(
+        (typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                        TeamPolicy<Cuda>, ReducerType>::Reducer
+             wrapped_reducer(&reducer);
+         cuda_intra_block_reduction(value, wrapped_reducer, blockDim.y);
+         reducer.reference() = value;))
   }
 
   //--------------------------------------------------------------------------
@@ -252,38 +243,33 @@ class CudaTeamMember {
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value,
                                         Type* const global_accum) const {
-#ifdef __CUDA_ARCH__
-    Type* const base_data = (Type*)m_team_reduce;
+    KOKKOS_IF_ON_DEVICE((
+        Type* const base_data = (Type*)m_team_reduce;
 
-    __syncthreads();  // Don't write in to shared data until all threads have
-                      // entered this function
+        __syncthreads();  // Don't write in to shared data until all threads
+                          // have entered this function
 
-    if (0 == threadIdx.y) {
-      base_data[0] = 0;
-    }
+        if (0 == threadIdx.y) { base_data[0] = 0; }
 
-    base_data[threadIdx.y + 1] = value;
-    Impl::CudaJoinFunctor<Type> cuda_join_functor;
-    typename Impl::FunctorAnalysis<
-        Impl::FunctorPatternInterface::SCAN, TeamPolicy<Cuda>,
-        Impl::CudaJoinFunctor<Type>>::Reducer reducer(&cuda_join_functor);
-    Impl::cuda_intra_block_reduce_scan<true>(reducer, base_data + 1);
+        base_data[threadIdx.y + 1] = value;
+        Impl::CudaJoinFunctor<Type> cuda_join_functor;
+        typename Impl::FunctorAnalysis<
+            Impl::FunctorPatternInterface::SCAN, TeamPolicy<Cuda>,
+            Impl::CudaJoinFunctor<Type>>::Reducer reducer(&cuda_join_functor);
+        Impl::cuda_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
-    if (global_accum) {
-      if (blockDim.y == threadIdx.y + 1) {
-        base_data[blockDim.y] =
-            atomic_fetch_add(global_accum, base_data[blockDim.y]);
-      }
-      __syncthreads();  // Wait for atomic
-      base_data[threadIdx.y] += base_data[blockDim.y];
-    }
+        if (global_accum) {
+          if (blockDim.y == threadIdx.y + 1) {
+            base_data[blockDim.y] =
+                atomic_fetch_add(global_accum, base_data[blockDim.y]);
+          }
+          __syncthreads();  // Wait for atomic
+          base_data[threadIdx.y] += base_data[blockDim.y];
+        }
 
-    return base_data[threadIdx.y];
-#else
-    (void)value;
-    (void)global_accum;
-    return Type();
-#endif
+        return base_data[threadIdx.y];))
+
+    KOKKOS_IF_ON_HOST(((void)value; (void)global_accum; return Type();))
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.
@@ -310,35 +296,33 @@ class CudaTeamMember {
                 typename ReducerType::value_type& value) {
     (void)reducer;
     (void)value;
-#ifdef __CUDA_ARCH__
-    if (blockDim.x == 1) return;
+    KOKKOS_IF_ON_DEVICE(
+        (if (blockDim.x == 1) return;
 
-    // Intra vector lane shuffle reduction:
-    typename ReducerType::value_type tmp(value);
-    typename ReducerType::value_type tmp2 = tmp;
+         // Intra vector lane shuffle reduction:
+         typename ReducerType::value_type tmp(value);
+         typename ReducerType::value_type tmp2 = tmp;
 
-    unsigned mask =
-        blockDim.x == 32
-            ? 0xffffffff
-            : ((1 << blockDim.x) - 1)
-                  << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
+         unsigned mask =
+             blockDim.x == 32
+                 ? 0xffffffff
+                 : ((1 << blockDim.x) - 1)
+                       << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
 
-    for (int i = blockDim.x; (i >>= 1);) {
-      Impl::in_place_shfl_down(tmp2, tmp, i, blockDim.x, mask);
-      if ((int)threadIdx.x < i) {
-        reducer.join(tmp, tmp2);
-      }
-    }
+         for (int i = blockDim.x; (i >>= 1);) {
+           Impl::in_place_shfl_down(tmp2, tmp, i, blockDim.x, mask);
+           if ((int)threadIdx.x < i) {
+             reducer.join(tmp, tmp2);
+           }
+         }
 
-    // Broadcast from root lane to all other lanes.
-    // Cannot use "butterfly" algorithm to avoid the broadcast
-    // because floating point summation is not associative
-    // and thus different threads could have different results.
+         // Broadcast from root lane to all other lanes.
+         // Cannot use "butterfly" algorithm to avoid the broadcast
+         // because floating point summation is not associative
+         // and thus different threads could have different results.
 
-    Impl::in_place_shfl(tmp2, tmp, 0, blockDim.x, mask);
-    value               = tmp2;
-    reducer.reference() = tmp2;
-#endif
+         Impl::in_place_shfl(tmp2, tmp, 0, blockDim.x, mask);
+         value = tmp2; reducer.reference() = tmp2;))
   }
 
   //----------------------------------------
@@ -514,11 +498,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-#ifdef __CUDA_ARCH__
-  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y)
-    closure(i);
-#endif
+  KOKKOS_IF_ON_DEVICE(
+      (for (iType i = loop_boundaries.start + threadIdx.y;
+            i < loop_boundaries.end; i += blockDim.y) { closure(i); }))
 }
 
 //----------------------------------------------------------------------------
@@ -539,18 +521,15 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)reducer;
-#ifdef __CUDA_ARCH__
-  typename ReducerType::value_type value;
-  reducer.init(value);
+  KOKKOS_IF_ON_DEVICE(
+      (typename ReducerType::value_type value;
 
-  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y) {
-    closure(i, value);
-  }
+       reducer.init(value);
 
-  loop_boundaries.member.team_reduce(reducer, value);
+       for (iType i = loop_boundaries.start + threadIdx.y;
+            i < loop_boundaries.end; i += blockDim.y) { closure(i, value); }
 
-#endif
+       loop_boundaries.member.team_reduce(reducer, value);))
 }
 
 /** \brief  Inter-thread parallel_reduce assuming summation.
@@ -569,20 +548,16 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)result;
-#ifdef __CUDA_ARCH__
-  ValueType val;
-  Kokkos::Sum<ValueType> reducer(val);
+  KOKKOS_IF_ON_DEVICE(
+      (ValueType val; Kokkos::Sum<ValueType> reducer(val);
 
-  reducer.init(reducer.reference());
+       reducer.init(reducer.reference());
 
-  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y) {
-    closure(i, val);
-  }
+       for (iType i = loop_boundaries.start + threadIdx.y;
+            i < loop_boundaries.end; i += blockDim.y) { closure(i, val); }
 
-  loop_boundaries.member.team_reduce(reducer, val);
-  result = reducer.reference();
-#endif
+       loop_boundaries.member.team_reduce(reducer, val);
+       result = reducer.reference();))
 }
 
 template <typename iType, class Closure>
@@ -592,11 +567,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-#ifdef __CUDA_ARCH__
-  for (iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x;
-       i < loop_boundaries.end; i += blockDim.y * blockDim.x)
-    closure(i);
-#endif
+  KOKKOS_IF_ON_DEVICE((for (iType i = loop_boundaries.start +
+                                      threadIdx.y * blockDim.x + threadIdx.x;
+                            i < loop_boundaries.end;
+                            i += blockDim.y * blockDim.x) { closure(i); }))
 }
 
 template <typename iType, class Closure, class ReducerType>
@@ -607,18 +581,16 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)reducer;
-#ifdef __CUDA_ARCH__
-  typename ReducerType::value_type value;
-  reducer.init(value);
+  KOKKOS_IF_ON_DEVICE((typename ReducerType::value_type value;
+                       reducer.init(value);
 
-  for (iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x;
-       i < loop_boundaries.end; i += blockDim.y * blockDim.x) {
-    closure(i, value);
-  }
+                       for (iType i = loop_boundaries.start +
+                                      threadIdx.y * blockDim.x + threadIdx.x;
+                            i < loop_boundaries.end;
+                            i += blockDim.y * blockDim.x) { closure(i, value); }
 
-  loop_boundaries.member.vector_reduce(reducer, value);
-  loop_boundaries.member.team_reduce(reducer, value);
-#endif
+                       loop_boundaries.member.vector_reduce(reducer, value);
+                       loop_boundaries.member.team_reduce(reducer, value);))
 }
 
 template <typename iType, class Closure, typename ValueType>
@@ -629,21 +601,18 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)result;
-#ifdef __CUDA_ARCH__
-  ValueType val;
-  Kokkos::Sum<ValueType> reducer(val);
+  KOKKOS_IF_ON_DEVICE((ValueType val; Kokkos::Sum<ValueType> reducer(val);
 
-  reducer.init(reducer.reference());
+                       reducer.init(reducer.reference());
 
-  for (iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x;
-       i < loop_boundaries.end; i += blockDim.y * blockDim.x) {
-    closure(i, val);
-  }
+                       for (iType i = loop_boundaries.start +
+                                      threadIdx.y * blockDim.x + threadIdx.x;
+                            i < loop_boundaries.end;
+                            i += blockDim.y * blockDim.x) { closure(i, val); }
 
-  loop_boundaries.member.vector_reduce(reducer);
-  loop_boundaries.member.team_reduce(reducer);
-  result = reducer.reference();
-#endif
+                       loop_boundaries.member.vector_reduce(reducer);
+                       loop_boundaries.member.team_reduce(reducer);
+                       result = reducer.reference();))
 }
 
 //----------------------------------------------------------------------------
@@ -661,16 +630,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-#ifdef __CUDA_ARCH__
-  for (iType i = loop_boundaries.start + threadIdx.x; i < loop_boundaries.end;
-       i += blockDim.x) {
-    closure(i);
-  }
-  __syncwarp(blockDim.x == 32
-                 ? 0xffffffff
-                 : ((1 << blockDim.x) - 1)
-                       << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-#endif
+  KOKKOS_IF_ON_DEVICE((
+      for (iType i = loop_boundaries.start + threadIdx.x;
+           i < loop_boundaries.end; i += blockDim.x) { closure(i); }
+
+      __syncwarp(blockDim.x == 32
+                     ? 0xffffffff
+                     : ((1 << blockDim.x) - 1)
+                           << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
 }
 
 //----------------------------------------------------------------------------
@@ -694,18 +661,17 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)reducer;
-#ifdef __CUDA_ARCH__
+  KOKKOS_IF_ON_DEVICE((
 
-  reducer.init(reducer.reference());
+      reducer.init(reducer.reference());
 
-  for (iType i = loop_boundaries.start + threadIdx.x; i < loop_boundaries.end;
-       i += blockDim.x) {
-    closure(i, reducer.reference());
-  }
+      for (iType i = loop_boundaries.start + threadIdx.x;
+           i < loop_boundaries.end;
+           i += blockDim.x) { closure(i, reducer.reference()); }
 
-  Impl::CudaTeamMember::vector_reduce(reducer);
+      Impl::CudaTeamMember::vector_reduce(reducer);
 
-#endif
+      ))
 }
 
 /** \brief  Intra-thread vector parallel_reduce.
@@ -727,17 +693,15 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)result;
-#ifdef __CUDA_ARCH__
-  result = ValueType();
+  KOKKOS_IF_ON_DEVICE(
+      (result = ValueType();
 
-  for (iType i = loop_boundaries.start + threadIdx.x; i < loop_boundaries.end;
-       i += blockDim.x) {
-    closure(i, result);
-  }
+       for (iType i = loop_boundaries.start + threadIdx.x;
+            i < loop_boundaries.end; i += blockDim.x) { closure(i, result); }
 
-  Impl::CudaTeamMember::vector_reduce(Kokkos::Sum<ValueType>(result));
+       Impl::CudaTeamMember::vector_reduce(Kokkos::Sum<ValueType>(result));
 
-#endif
+       ))
 }
 
 //----------------------------------------------------------------------------
@@ -806,71 +770,77 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
   (void)loop_boundaries;
   (void)closure;
   (void)reducer;
-#ifdef __CUDA_ARCH__
+  KOKKOS_IF_ON_DEVICE((
 
-  using value_type = typename ReducerType::value_type;
-  value_type accum;
-  reducer.init(accum);
-  const value_type identity = accum;
+      using value_type = typename ReducerType::value_type;
 
-  // Loop through boundaries by vector-length chunks
-  // must scan at each iteration
+      value_type accum;
 
-  // All thread "lanes" must loop the same number of times.
-  // Determine an loop end for all thread "lanes."
-  // Requires:
-  //   blockDim.x is power of two and thus
-  //     ( end % blockDim.x ) == ( end & ( blockDim.x - 1 ) )
-  //   1 <= blockDim.x <= CudaTraits::WarpSize
+      reducer.init(accum);
 
-  const int mask = blockDim.x - 1;
-  const unsigned active_mask =
-      blockDim.x == 32 ? 0xffffffff
-                       : ((1 << blockDim.x) - 1)
-                             << (threadIdx.y % (32 / blockDim.x)) * blockDim.x;
-  const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
-  const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
+      const value_type identity = accum;
 
-  for (int i = threadIdx.x; i < end; i += blockDim.x) {
-    value_type val = identity;
+      // Loop through boundaries by vector-length chunks
+      // must scan at each iteration
 
-    // First acquire per-lane contributions.
-    // This sets i's val to i-1's contribution
-    // to make the latter in_place_shfl_up an
-    // exclusive scan -- the final accumulation
-    // of i's val will be included in the second
-    // closure call later.
-    if (i < loop_boundaries.end && threadIdx.x > 0) closure(i - 1, val, false);
+      // All thread "lanes" must loop the same number of times.
+      // Determine an loop end for all thread "lanes."
+      // Requires:
+      //   blockDim.x is power of two and thus
+      //     ( end % blockDim.x ) == ( end & ( blockDim.x - 1 ) )
+      //   1 <= blockDim.x <= CudaTraits::WarpSize
 
-    // Bottom up exclusive scan in triangular pattern
-    // where each CUDA thread is the root of a reduction tree
-    // from the zeroth "lane" to itself.
-    //  [t] += [t-1] if t >= 1
-    //  [t] += [t-2] if t >= 2
-    //  [t] += [t-4] if t >= 4
-    //  ...
-    //  This differs from the non-reducer overload, where an inclusive scan was
-    //  implemented, because in general the binary operator cannot be inverted
-    //  and we would not be able to remove the inclusive contribution by
-    //  inversion.
-    for (int j = 1; j < (int)blockDim.x; j <<= 1) {
-      value_type tmp = identity;
-      Impl::in_place_shfl_up(tmp, val, j, blockDim.x, active_mask);
-      if (j <= (int)threadIdx.x) {
-        reducer.join(val, tmp);
+      const int mask = blockDim.x - 1;
+      const unsigned active_mask =
+          blockDim.x == 32
+              ? 0xffffffff
+              : ((1 << blockDim.x) - 1)
+                    << (threadIdx.y % (32 / blockDim.x)) * blockDim.x;
+      const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
+      const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
+
+      for (int i = threadIdx.x; i < end; i += blockDim.x) {
+        value_type val = identity;
+
+        // First acquire per-lane contributions.
+        // This sets i's val to i-1's contribution
+        // to make the latter in_place_shfl_up an
+        // exclusive scan -- the final accumulation
+        // of i's val will be included in the second
+        // closure call later.
+        if (i < loop_boundaries.end && threadIdx.x > 0) {
+          closure(i - 1, val, false);
+        }
+
+        // Bottom up exclusive scan in triangular pattern
+        // where each CUDA thread is the root of a reduction tree
+        // from the zeroth "lane" to itself.
+        //  [t] += [t-1] if t >= 1
+        //  [t] += [t-2] if t >= 2
+        //  [t] += [t-4] if t >= 4
+        //  ...
+        //  This differs from the non-reducer overload, where an inclusive scan
+        //  was implemented, because in general the binary operator cannot be
+        //  inverted and we would not be able to remove the inclusive
+        //  contribution by inversion.
+        for (int j = 1; j < (int)blockDim.x; j <<= 1) {
+          value_type tmp = identity;
+          Impl::in_place_shfl_up(tmp, val, j, blockDim.x, active_mask);
+          if (j <= (int)threadIdx.x) {
+            reducer.join(val, tmp);
+          }
+        }
+
+        // Include accumulation
+        reducer.join(val, accum);
+
+        // Update i's contribution into the val
+        // and add it to accum for next round
+        if (i < loop_boundaries.end) closure(i, val, true);
+        Impl::in_place_shfl(accum, val, mask, blockDim.x, active_mask);
       }
-    }
 
-    // Include accumulation
-    reducer.join(val, accum);
-
-    // Update i's contribution into the val
-    // and add it to accum for next round
-    if (i < loop_boundaries.end) closure(i, val, true);
-    Impl::in_place_shfl(accum, val, mask, blockDim.x, active_mask);
-  }
-
-#endif
+      ))
 }
 
 //----------------------------------------------------------------------------
@@ -903,13 +873,13 @@ KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::CudaTeamMember>&,
     const FunctorType& lambda) {
   (void)lambda;
-#ifdef __CUDA_ARCH__
-  if (threadIdx.x == 0) lambda();
-  __syncwarp(blockDim.x == 32
-                 ? 0xffffffff
-                 : ((1 << blockDim.x) - 1)
-                       << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-#endif
+  KOKKOS_IF_ON_DEVICE((
+      if (threadIdx.x == 0) { lambda(); }
+
+      __syncwarp(blockDim.x == 32
+                     ? 0xffffffff
+                     : ((1 << blockDim.x) - 1)
+                           << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
 }
 
 template <class FunctorType>
@@ -917,13 +887,13 @@ KOKKOS_INLINE_FUNCTION void single(
     const Impl::ThreadSingleStruct<Impl::CudaTeamMember>&,
     const FunctorType& lambda) {
   (void)lambda;
-#ifdef __CUDA_ARCH__
-  if (threadIdx.x == 0 && threadIdx.y == 0) lambda();
-  __syncwarp(blockDim.x == 32
-                 ? 0xffffffff
-                 : ((1 << blockDim.x) - 1)
-                       << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-#endif
+  KOKKOS_IF_ON_DEVICE((
+      if (threadIdx.x == 0 && threadIdx.y == 0) { lambda(); }
+
+      __syncwarp(blockDim.x == 32
+                     ? 0xffffffff
+                     : ((1 << blockDim.x) - 1)
+                           << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
 }
 
 template <class FunctorType, class ValueType>
@@ -932,14 +902,16 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda, ValueType& val) {
   (void)lambda;
   (void)val;
-#ifdef __CUDA_ARCH__
-  if (threadIdx.x == 0) lambda(val);
-  unsigned mask = blockDim.x == 32
-                      ? 0xffffffff
-                      : ((1 << blockDim.x) - 1)
-                            << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-  Impl::in_place_shfl(val, val, 0, blockDim.x, mask);
-#endif
+  KOKKOS_IF_ON_DEVICE(
+      (if (threadIdx.x == 0) { lambda(val); }
+
+       unsigned mask =
+           blockDim.x == 32
+               ? 0xffffffff
+               : ((1 << blockDim.x) - 1)
+                     << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
+
+       Impl::in_place_shfl(val, val, 0, blockDim.x, mask);))
 }
 
 template <class FunctorType, class ValueType>
@@ -949,12 +921,10 @@ KOKKOS_INLINE_FUNCTION void single(
   (void)single_struct;
   (void)lambda;
   (void)val;
-#ifdef __CUDA_ARCH__
-  if (threadIdx.x == 0 && threadIdx.y == 0) {
-    lambda(val);
-  }
-  single_struct.team_member.team_broadcast(val, 0);
-#endif
+  KOKKOS_IF_ON_DEVICE(
+      (if (threadIdx.x == 0 && threadIdx.y == 0) { lambda(val); }
+
+       single_struct.team_member.team_broadcast(val, 0);))
 }
 
 }  // namespace Kokkos
