@@ -169,7 +169,7 @@ int bit_scan_forward_fallback(unsigned i) {
 
 KOKKOS_IMPL_DEVICE_FUNCTION inline int bit_scan_forward_device(unsigned i) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return __popc(i);
+  return __ffs(i) - 1;
 #else
   return bit_scan_forward_fallback(i);
 #endif
