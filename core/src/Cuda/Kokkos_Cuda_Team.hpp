@@ -131,12 +131,12 @@ class CudaTeamMember {
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
   KOKKOS_INLINE_FUNCTION int team_rank() const {
     KOKKOS_IF_ON_DEVICE((return threadIdx.y;))
-    KOKKOS_IF_ON_DEVICE((return 0;))
+    KOKKOS_IF_ON_HOST((return 0;))
   }
 
   KOKKOS_INLINE_FUNCTION int team_size() const {
     KOKKOS_IF_ON_DEVICE((return blockDim.y;))
-    KOKKOS_IF_ON_DEVICE((return 1;))
+    KOKKOS_IF_ON_HOST((return 1;))
   }
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
