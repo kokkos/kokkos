@@ -38,8 +38,8 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
 ENV SYCL_DIR=/opt/sycl
-RUN SYCL_VERSION=2021-09 && \
-    SYCL_URL=https://github.com/intel/llvm/archive/ && \
+RUN SYCL_VERSION=20220112 && \
+    SYCL_URL=https://github.com/intel/llvm/archive/sycl-nightly && \
     SYCL_ARCHIVE=${SYCL_VERSION}.tar.gz && \
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     wget --quiet ${SYCL_URL}/${SYCL_ARCHIVE} && \
