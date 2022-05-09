@@ -49,14 +49,14 @@ struct is_cuda_atomic_sub_type {
 // Atomic Add
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_add_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_add_type<T>::value, T>
     atomic_fetch_add(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicAdd(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_add_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_add_type<T>::value, T>
     atomic_fetch_add(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicAdd(dest, val);
@@ -66,7 +66,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_add_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_add_type<T>::value, T>
     atomic_fetch_add(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_add(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
@@ -74,14 +74,14 @@ __device__ inline
 // Atomic Sub
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_sub_type<T>::value, T>
     atomic_fetch_sub(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicSub(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_sub_type<T>::value, T>
     atomic_fetch_sub(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicSub(dest, val);
@@ -91,7 +91,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_sub_type<T>::value, T>
     atomic_fetch_sub(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_sub(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
@@ -153,14 +153,14 @@ __device__ inline unsigned int atomic_fetch_dec_mod(unsigned int* dest,
 // Atomic Inc
 template <typename T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_add_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_add_type<T>::value, T>
     atomic_fetch_inc(T* dest, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicAdd(dest, T(1));
 }
 
 template <typename T, typename MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_add_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_add_type<T>::value, T>
     atomic_fetch_inc(T* dest, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicAdd(dest, T(1));
@@ -171,7 +171,7 @@ __device__ inline
 
 template <typename T, typename MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_add_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_add_type<T>::value, T>
     atomic_fetch_inc(T* dest, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_add(dest, T(1), MemoryOrder(), MemoryScopeDevice());
 }
@@ -179,14 +179,14 @@ __device__ inline
 // Atomic Dec
 template <typename T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_sub_type<T>::value, T>
     atomic_fetch_dec(T* dest, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicSub(dest, T(1));
 }
 
 template <typename T, typename MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_sub_type<T>::value, T>
     atomic_fetch_dec(T* dest, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicSub(dest, T(1));
@@ -196,7 +196,7 @@ __device__ inline
 
 template <typename T, typename MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_sub_type<T>::value, T>
     atomic_fetch_dec(T* dest, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_sub(dest, T(1), MemoryOrder(), MemoryScopeDevice());
 }
@@ -204,14 +204,14 @@ __device__ inline
 // Atomic Max
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_max(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicMax(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_max(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicMax(dest, val);
@@ -221,7 +221,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_max(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_max(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
@@ -229,14 +229,14 @@ __device__ inline
 // Atomic Min
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_min(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicMin(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_min(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicMin(dest, val);
@@ -246,7 +246,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_min(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_min(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
@@ -254,14 +254,14 @@ __device__ inline
 // Atomic And
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_and(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicAnd(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_and(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicAnd(dest, val);
@@ -271,7 +271,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_and(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_and(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
@@ -279,14 +279,14 @@ __device__ inline
 // Atomic XOR
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_xor(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicXor(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_xor(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicXor(dest, val);
@@ -296,7 +296,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_xor(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_xor(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
@@ -304,14 +304,14 @@ __device__ inline
 // Atomic OR
 template <class T>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_or(T* dest, T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return atomicOr(dest, val);
 }
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_or(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicOr(dest, val);
@@ -321,7 +321,7 @@ __device__ inline
 
 template <class T, class MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_cuda_atomic_integer_type<T>::value, T>::type
+    std::enable_if_t<Impl::is_cuda_atomic_integer_type<T>::value, T>
     atomic_fetch_or(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_or(dest, val, MemoryOrder(), MemoryScopeDevice());
 }

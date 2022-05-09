@@ -277,31 +277,35 @@ struct ViewTraits {
   // Unpack the properties arguments
   using prop = ViewTraits<void, Properties...>;
 
-  using ExecutionSpace = typename std::conditional<
-      !std::is_void<typename prop::execution_space>::value,
-      typename prop::execution_space, Kokkos::DefaultExecutionSpace>::type;
+  using ExecutionSpace =
+      std::conditional_t<!std::is_void<typename prop::execution_space>::value,
+                         typename prop::execution_space,
+                         Kokkos::DefaultExecutionSpace>;
 
-  using MemorySpace = typename std::conditional<
-      !std::is_void<typename prop::memory_space>::value,
-      typename prop::memory_space, typename ExecutionSpace::memory_space>::type;
+  using MemorySpace =
+      std::conditional_t<!std::is_void<typename prop::memory_space>::value,
+                         typename prop::memory_space,
+                         typename ExecutionSpace::memory_space>;
 
-  using ArrayLayout = typename std::conditional<
-      !std::is_void<typename prop::array_layout>::value,
-      typename prop::array_layout, typename ExecutionSpace::array_layout>::type;
+  using ArrayLayout =
+      std::conditional_t<!std::is_void<typename prop::array_layout>::value,
+                         typename prop::array_layout,
+                         typename ExecutionSpace::array_layout>;
 
-  using HostMirrorSpace = typename std::conditional<
+  using HostMirrorSpace = std::conditional_t<
       !std::is_void<typename prop::HostMirrorSpace>::value,
       typename prop::HostMirrorSpace,
-      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>::type;
+      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>;
 
-  using MemoryTraits = typename std::conditional<
-      !std::is_void<typename prop::memory_traits>::value,
-      typename prop::memory_traits, typename Kokkos::MemoryManaged>::type;
+  using MemoryTraits =
+      std::conditional_t<!std::is_void<typename prop::memory_traits>::value,
+                         typename prop::memory_traits,
+                         typename Kokkos::MemoryManaged>;
 
-  using HooksPolicy = typename std::conditional<
-      !std::is_void<typename prop::hooks_policy>::value,
-      typename prop::hooks_policy,
-      Kokkos::Experimental::DefaultViewHooks>::type;
+  using HooksPolicy =
+      std::conditional_t<!std::is_void<typename prop::hooks_policy>::value,
+                         typename prop::hooks_policy,
+                         Kokkos::Experimental::DefaultViewHooks>;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
@@ -337,10 +341,10 @@ struct ViewTraits {
   using array_layout = ArrayLayout;
   using dimension    = typename data_analysis::dimension;
 
-  using specialize = typename std::conditional<
+  using specialize = std::conditional_t<
       std::is_void<typename data_analysis::specialize>::value,
-      typename prop::specialize, typename data_analysis::specialize>::
-      type; /* mapping specialization tag */
+      typename prop::specialize,
+      typename data_analysis::specialize>; /* mapping specialization tag */
 
   enum { rank = dimension::rank };
   enum { rank_dynamic = dimension::rank_dynamic };
@@ -471,9 +475,8 @@ struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
 
 template <class View1, class View2>
 using is_always_assignable = is_always_assignable_impl<
-    typename std::remove_reference<View1>::type,
-    typename std::remove_const<
-        typename std::remove_reference<View2>::type>::type>;
+    std::remove_reference_t<View1>,
+    std::remove_const_t<std::remove_reference_t<View2>>>;
 
 #ifdef KOKKOS_ENABLE_CXX17
 template <class T1, class T2>
@@ -1416,17 +1419,15 @@ class View : public ViewTraits<DataType, Properties...> {
     // to avoid duplicate class error.
     using alloc_prop = Impl::ViewCtorProp<
         P...,
-        typename std::conditional<alloc_prop_input::has_label,
-                                  std::integral_constant<unsigned int, 0>,
-                                  typename std::string>::type,
-        typename std::conditional<
-            alloc_prop_input::has_memory_space,
-            std::integral_constant<unsigned int, 1>,
-            typename traits::device_type::memory_space>::type,
-        typename std::conditional<
-            alloc_prop_input::has_execution_space,
-            std::integral_constant<unsigned int, 2>,
-            typename traits::device_type::execution_space>::type>;
+        std::conditional_t<alloc_prop_input::has_label,
+                           std::integral_constant<unsigned int, 0>,
+                           std::string>,
+        std::conditional_t<alloc_prop_input::has_memory_space,
+                           std::integral_constant<unsigned int, 1>,
+                           typename traits::device_type::memory_space>,
+        std::conditional_t<alloc_prop_input::has_execution_space,
+                           std::integral_constant<unsigned int, 2>,
+                           typename traits::device_type::execution_space>>;
 
     static_assert(traits::is_managed,
                   "View allocation constructor requires managed memory");
@@ -1888,7 +1889,7 @@ struct CommonViewValueType;
 
 template <typename A, typename B>
 struct CommonViewValueType<void, A, B> {
-  using value_type = typename std::common_type<A, B>::type;
+  using value_type = std::common_type_t<A, B>;
 };
 
 template <class Specialize, class ValueType>
@@ -1945,11 +1946,11 @@ struct DeduceCommonViewAllocProp<FirstView, NextViews...> {
                 "specialize trait allowed");
 
   // otherwise choose non-void specialize if either/both are non-void
-  using specialize = typename std::conditional<
+  using specialize = std::conditional_t<
       std::is_same<first_specialize, next_specialize>::value, first_specialize,
-      typename std::conditional<(std::is_void<first_specialize>::value &&
-                                 !std::is_void<next_specialize>::value),
-                                next_specialize, first_specialize>::type>::type;
+      std::conditional_t<(std::is_void<first_specialize>::value &&
+                          !std::is_void<next_specialize>::value),
+                         next_specialize, first_specialize>>;
 
   using value_type = typename CommonViewValueType<specialize, first_value_type,
                                                   next_value_type>::value_type;

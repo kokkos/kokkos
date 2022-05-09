@@ -465,14 +465,13 @@ class ResolveFutureArgOrder {
   static_assert(!(Arg1_is_value && Arg2_is_value),
                 "Future cannot be given two value types");
 
-  using value_type = typename std::conditional<
-      Arg1_is_value, Arg1,
-      typename std::conditional<Arg2_is_value, Arg2, void>::type>::type;
+  using value_type =
+      std::conditional_t<Arg1_is_value, Arg1,
+                         std::conditional_t<Arg2_is_value, Arg2, void>>;
 
-  using execution_space = typename std::conditional<
+  using execution_space = typename std::conditional_t<
       Arg1_is_space, Arg1,
-      typename std::conditional<Arg2_is_space, Arg2,
-                                void>::type>::type::execution_space;
+      std::conditional_t<Arg2_is_space, Arg2, void>>::execution_space;
 
  public:
   using type = BasicFuture<value_type, TaskScheduler<execution_space>>;

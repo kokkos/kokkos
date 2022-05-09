@@ -58,7 +58,7 @@ namespace Impl {
 
 template <class Scalar, class JoinerType, class Space = HostSpace>
 struct ReducerWithArbitraryJoinerNoNeutralElement {
-  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
 
  public:
   // Required

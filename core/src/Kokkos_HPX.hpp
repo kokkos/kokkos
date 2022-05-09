@@ -2129,10 +2129,10 @@ KOKKOS_INLINE_FUNCTION
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::HPXTeamMember>
 TeamThreadRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
                 const iType2 &i_end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
       thread, iType(i_begin), iType(i_end));
 }
@@ -2147,10 +2147,10 @@ KOKKOS_INLINE_FUNCTION
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::HPXTeamMember>
 TeamVectorRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
                 const iType2 &i_end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
       thread, iType(i_begin), iType(i_end));
 }
@@ -2165,10 +2165,10 @@ KOKKOS_INLINE_FUNCTION
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::HPXTeamMember>
 ThreadVectorRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
                   const iType2 &i_end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
       thread, iType(i_begin), iType(i_end));
 }

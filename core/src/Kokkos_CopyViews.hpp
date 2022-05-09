@@ -1261,9 +1261,9 @@ inline void contiguous_fill(
   using ViewTypeFlat = Kokkos::View<
       typename ViewType::value_type*, Kokkos::LayoutRight,
       Kokkos::Device<typename ViewType::execution_space,
-                     typename std::conditional<ViewType::Rank == 0,
-                                               typename ViewType::memory_space,
-                                               Kokkos::AnonymousSpace>::type>,
+                     std::conditional_t<ViewType::Rank == 0,
+                                        typename ViewType::memory_space,
+                                        Kokkos::AnonymousSpace>>,
       Kokkos::MemoryTraits<0>>;
 
   ViewTypeFlat dst_flat(dst.data(), dst.size());
@@ -1423,9 +1423,10 @@ inline void deep_copy(
 
   // Lets call the right ViewFill functor based on integer space needed and
   // iteration type
-  using ViewTypeUniform = typename std::conditional<
-      ViewType::Rank == 0, typename ViewType::uniform_runtime_type,
-      typename ViewType::uniform_runtime_nomemspace_type>::type;
+  using ViewTypeUniform =
+      std::conditional_t<ViewType::Rank == 0,
+                         typename ViewType::uniform_runtime_type,
+                         typename ViewType::uniform_runtime_nomemspace_type>;
   if (dst.span() > static_cast<size_t>(std::numeric_limits<int>::max())) {
     if (iterate == Kokkos::Iterate::Right)
       Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight,
@@ -2507,10 +2508,10 @@ inline void deep_copy(
   } else if (dst.span_is_contiguous()) {
     Impl::contiguous_fill_or_memset(space, dst, value);
   } else {
-    using ViewTypeUniform = typename std::conditional<
+    using ViewTypeUniform = std::conditional_t<
         View<DT, DP...>::Rank == 0,
         typename View<DT, DP...>::uniform_runtime_type,
-        typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
+        typename View<DT, DP...>::uniform_runtime_nomemspace_type>;
     Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                            ExecSpace>(dst, value, space);
   }
@@ -2552,10 +2553,10 @@ inline void deep_copy(
     if (dst.span_is_contiguous()) {
       Impl::contiguous_fill_or_memset(fill_exec_space(), dst, value);
     } else {
-      using ViewTypeUniform = typename std::conditional<
+      using ViewTypeUniform = std::conditional_t<
           View<DT, DP...>::Rank == 0,
           typename View<DT, DP...>::uniform_runtime_type,
-          typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
+          typename View<DT, DP...>::uniform_runtime_nomemspace_type>;
       Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                              fill_exec_space>(dst, value, fill_exec_space());
     }
@@ -2826,8 +2827,8 @@ inline void deep_copy(
       Impl::view_copy(exec_space, dst, src);
     } else if (DstExecCanAccessSrc || SrcExecCanAccessDst) {
       using cpy_exec_space =
-          typename std::conditional<DstExecCanAccessSrc, dst_execution_space,
-                                    src_execution_space>::type;
+          std::conditional_t<DstExecCanAccessSrc, dst_execution_space,
+                             src_execution_space>;
       exec_space.fence(
           "Kokkos::deep_copy: view-to-view noncontiguous copy on space, pre "
           "copy");
@@ -3172,8 +3173,8 @@ struct MirrorViewType {
   using dest_view_type = Kokkos::View<data_type, array_layout, Space>;
   // If it is the same memory_space return the existsing view_type
   // This will also keep the unmanaged trait if necessary
-  using view_type = typename std::conditional<is_same_memspace, src_view_type,
-                                              dest_view_type>::type;
+  using view_type =
+      std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
 template <class Space, class T, class... P>

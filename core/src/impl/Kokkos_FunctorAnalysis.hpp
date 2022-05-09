@@ -323,30 +323,28 @@ struct FunctorAnalysis {
   //----------------------------------------
 
  public:
-  using execution_space = typename std::conditional<
-      functor_has_space::value, typename functor_has_space::type,
-      typename std::conditional<policy_has_space::value,
-                                typename policy_has_space::type,
-                                Kokkos::DefaultExecutionSpace>::type>::type;
+  using execution_space =
+      std::conditional_t<functor_has_space::value,
+                         typename functor_has_space::type,
+                         std::conditional_t<policy_has_space::value,
+                                            typename policy_has_space::type,
+                                            Kokkos::DefaultExecutionSpace>>;
 
-  using value_type = typename std::remove_extent<candidate_type>::type;
+  using value_type = std::remove_extent_t<candidate_type>;
 
   static_assert(!std::is_const<value_type>::value,
                 "Kokkos functor operator reduce argument cannot be const");
 
  private:
   // Stub to avoid defining a type 'void &'
-  using ValueType =
-      typename std::conditional<candidate_is_void, VOID, value_type>::type;
+  using ValueType = std::conditional_t<candidate_is_void, VOID, value_type>;
 
  public:
-  using pointer_type =
-      typename std::conditional<candidate_is_void, void, ValueType*>::type;
+  using pointer_type = std::conditional_t<candidate_is_void, void, ValueType*>;
 
-  using reference_type = typename std::conditional<
+  using reference_type = std::conditional_t<
       candidate_is_array, ValueType*,
-      typename std::conditional<!candidate_is_void, ValueType&,
-                                void>::type>::type;
+      std::conditional_t<!candidate_is_void, ValueType&, void>>;
 
  private:
   template <bool IsArray, class FF>

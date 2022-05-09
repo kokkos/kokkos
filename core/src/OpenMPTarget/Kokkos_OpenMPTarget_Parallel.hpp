@@ -146,8 +146,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          PolicyType, ReducerTypeFwd>;
   using ReferenceType = typename Analysis::reference_type;
@@ -420,8 +420,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using WorkRange = typename Policy::WorkRange;
 
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          Policy, ReducerTypeFwd>;
 
@@ -836,8 +836,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          PolicyType, ReducerTypeFwd>;
 
@@ -1170,8 +1170,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;

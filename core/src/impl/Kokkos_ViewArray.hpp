@@ -75,7 +75,7 @@ struct ViewDataAnalysis<DataType, ArrayLayout, Kokkos::Array<V, N, P>> {
 
   using array_scalar_dimension = typename dimension::template append<N>::type;
 
-  using scalar_type = typename std::conditional<is_const, const V, V>::type;
+  using scalar_type           = std::conditional_t<is_const, const V, V>;
   using non_const_scalar_type = V;
   using const_scalar_type     = const V;
 
@@ -230,8 +230,8 @@ class ViewMapping<Traits, Kokkos::Array<>> {
   }
 
   using reference_type =
-      typename std::conditional<is_contiguous_reference, contiguous_reference,
-                                strided_reference>::type;
+      std::conditional_t<is_contiguous_reference, contiguous_reference,
+                         strided_reference>;
 
   using pointer_type = handle_type;
 
@@ -565,36 +565,34 @@ class ViewMapping<
 
   // Subview's layout
   using array_layout =
-      typename std::conditional<((rank == 0) ||
-                                 (rank <= 2 && R0 &&
-                                  std::is_same<typename SrcTraits::array_layout,
-                                               Kokkos::LayoutLeft>::value) ||
-                                 (rank <= 2 && R0_rev &&
-                                  std::is_same<typename SrcTraits::array_layout,
-                                               Kokkos::LayoutRight>::value)),
-                                typename SrcTraits::array_layout,
-                                Kokkos::LayoutStride>::type;
+      std::conditional_t<((rank == 0) ||
+                          (rank <= 2 && R0 &&
+                           std::is_same<typename SrcTraits::array_layout,
+                                        Kokkos::LayoutLeft>::value) ||
+                          (rank <= 2 && R0_rev &&
+                           std::is_same<typename SrcTraits::array_layout,
+                                        Kokkos::LayoutRight>::value)),
+                         typename SrcTraits::array_layout,
+                         Kokkos::LayoutStride>;
 
   using value_type = typename SrcTraits::value_type;
 
-  using data_type = typename std::conditional<
+  using data_type = std::conditional_t<
       rank == 0, value_type,
-      typename std::conditional<
+      std::conditional_t<
           rank == 1, value_type *,
-          typename std::conditional<
+          std::conditional_t<
               rank == 2, value_type **,
-              typename std::conditional<
+              std::conditional_t<
                   rank == 3, value_type ***,
-                  typename std::conditional<
+                  std::conditional_t<
                       rank == 4, value_type ****,
-                      typename std::conditional<
+                      std::conditional_t<
                           rank == 5, value_type *****,
-                          typename std::conditional<
+                          std::conditional_t<
                               rank == 6, value_type ******,
-                              typename std::conditional<
-                                  rank == 7, value_type *******,
-                                  value_type ********>::type>::type>::type>::
-                      type>::type>::type>::type>::type;
+                              std::conditional_t<rank == 7, value_type *******,
+                                                 value_type ********>>>>>>>>;
 
  public:
   using traits_type = Kokkos::ViewTraits<data_type, array_layout,

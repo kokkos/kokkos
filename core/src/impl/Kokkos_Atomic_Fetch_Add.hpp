@@ -365,8 +365,7 @@ T atomic_fetch_add(volatile T* const dest, const T val) {
 #elif defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
 
 template <typename T>
-T atomic_fetch_add(volatile T* const dest_v,
-                   typename std::add_const<T>::type val) {
+T atomic_fetch_add(volatile T* const dest_v, std::add_const_t<T> val) {
   T* dest  = const_cast<T*>(dest_v);
   T retval = *dest;
   *dest += val;

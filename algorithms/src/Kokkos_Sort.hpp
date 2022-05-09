@@ -120,13 +120,13 @@ class BinSort {
     // If a Kokkos::View then can generate constant random access
     // otherwise can only use the constant type.
 
-    using src_view_type = typename std::conditional<
+    using src_view_type = std::conditional_t<
         Kokkos::is_view<SrcViewType>::value,
         Kokkos::View<typename SrcViewType::const_data_type,
                      typename SrcViewType::array_layout,
                      typename SrcViewType::device_type,
                      Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
-        typename SrcViewType::const_type>::type;
+        typename SrcViewType::const_type>;
 
     using perm_view_type = typename PermuteViewType::const_type;
 
@@ -174,13 +174,13 @@ class BinSort {
   // If a Kokkos::View then can generate constant random access
   // otherwise can only use the constant type.
 
-  using const_rnd_key_view_type = typename std::conditional<
+  using const_rnd_key_view_type = std::conditional_t<
       Kokkos::is_view<KeyViewType>::value,
       Kokkos::View<typename KeyViewType::const_data_type,
                    typename KeyViewType::array_layout,
                    typename KeyViewType::device_type,
                    Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
-      const_key_view_type>::type;
+      const_key_view_type>;
 
   using non_const_key_scalar = typename KeyViewType::non_const_value_type;
   using const_key_scalar     = typename KeyViewType::const_value_type;

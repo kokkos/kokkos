@@ -101,10 +101,10 @@ struct MultipleTaskQueueTeamEntry {
   using ready_queue_type =
       typename TaskQueueTraits::template ready_queue_type<task_base_type>;
   using task_queue_traits         = TaskQueueTraits;
-  using task_scheduling_info_type = typename std::conditional<
+  using task_scheduling_info_type = std::conditional_t<
       TaskQueueTraits::ready_queue_insertion_may_fail,
       FailedQueueInsertionLinkedListSchedulingInfo<TaskQueueTraits>,
-      EmptyTaskSchedulingInfo>::type;
+      EmptyTaskSchedulingInfo>;
 
  private:
   // Number of allowed priorities
@@ -348,10 +348,10 @@ class MultipleTaskQueue final
     ~SchedulerInfo() = default;
   };
 
-  using task_scheduling_info_type = typename std::conditional<
+  using task_scheduling_info_type = std::conditional_t<
       TaskQueueTraits::ready_queue_insertion_may_fail,
       FailedQueueInsertionLinkedListSchedulingInfo<TaskQueueTraits>,
-      EmptyTaskSchedulingInfo>::type;
+      EmptyTaskSchedulingInfo>;
   using team_scheduler_info_type = SchedulerInfo;
 
   using runnable_task_base_type = RunnableTaskBase<TaskQueueTraits>;

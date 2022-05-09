@@ -222,12 +222,11 @@ class ViewDataHandle<
   using value_type  = typename Traits::const_value_type;
   using return_type = typename Traits::const_value_type;  // NOT a reference
 
-  using alias_type = typename std::conditional<
+  using alias_type = std::conditional_t<
       (sizeof(value_type) == 4), int,
-      typename std::conditional<
+      std::conditional_t<
           (sizeof(value_type) == 8), ::int2,
-          typename std::conditional<(sizeof(value_type) == 16), ::int4,
-                                    void>::type>::type>::type;
+          std::conditional_t<(sizeof(value_type) == 16), ::int4, void>>>;
 
 #if defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
   using handle_type = Kokkos::Impl::CudaLDGFetch<value_type, alias_type>;

@@ -184,10 +184,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   // offset rather than at every 4 byte word; such that, when the join is
   // performed, we have the correct data that was copied over in chunks of 4
   // bytes.
-  using word_size_type = typename std::conditional<
+  using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
-      typename std::conditional<sizeof(value_type) == 2, int16_t, int8_t>::type,
-      Kokkos::Cuda::size_type>::type;
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
+      Kokkos::Cuda::size_type>;
   using index_type   = typename Policy::index_type;
   using reducer_type = ReducerType;
 
