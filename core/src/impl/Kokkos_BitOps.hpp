@@ -58,7 +58,8 @@ namespace Impl {
 
 KOKKOS_FORCEINLINE_FUNCTION
 int int_log2_fallback(unsigned i) {
-  enum : int { shift = sizeof(unsigned) * CHAR_BIT - 1 };
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
+
   int offset = 0;
   if (i) {
     for (offset = shift; (i & (1 << offset)) == 0; --offset)
@@ -69,7 +70,7 @@ int int_log2_fallback(unsigned i) {
 
 KOKKOS_IMPL_DEVICE_FUNCTION
 inline int int_log2_device(unsigned i) {
-  enum : int { shift = sizeof(unsigned) * CHAR_BIT - 1 };
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return shift - __clz(i);
 #else
@@ -79,7 +80,7 @@ inline int int_log2_device(unsigned i) {
 
 KOKKOS_IMPL_HOST_FUNCTION
 inline int int_log2_host(unsigned i) {
-  enum : int { shift = sizeof(unsigned) * CHAR_BIT - 1 };
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
 #if defined(KOKKOS_COMPILER_INTEL)
   return _bit_scan_reverse(i);
 #elif defined(KOKKOS_COMPILER_CRAYC)
@@ -110,7 +111,8 @@ int int_log2(unsigned i) {
  */
 KOKKOS_FORCEINLINE_FUNCTION
 int bit_first_zero_fallback(unsigned i) noexcept {
-  enum : unsigned { full = ~0u };
+  constexpr unsigned full = ~0u;
+
   int offset = -1;
   if (full != i) {
     for (offset = 0; i & (1 << offset); ++offset)
@@ -121,7 +123,7 @@ int bit_first_zero_fallback(unsigned i) noexcept {
 
 KOKKOS_IMPL_DEVICE_FUNCTION
 inline int bit_first_zero_device(unsigned i) noexcept {
-  enum : unsigned { full = ~0u };
+  constexpr unsigned full = ~0u;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return full != i ? __ffs(~i) - 1 : -1;
 #else
@@ -131,8 +133,7 @@ inline int bit_first_zero_device(unsigned i) noexcept {
 
 KOKKOS_IMPL_HOST_FUNCTION
 inline int bit_first_zero_host(unsigned i) noexcept {
-  enum : unsigned { full = ~0u };
-
+  constexpr unsigned full = ~0u;
 #if defined(KOKKOS_COMPILER_INTEL)
   return full != i ? _bit_scan_forward(~i) : -1;
 #elif defined(KOKKOS_COMPILER_CRAYC)
