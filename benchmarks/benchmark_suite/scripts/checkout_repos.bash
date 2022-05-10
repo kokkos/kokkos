@@ -3,11 +3,11 @@
 # Kokkos
 if [ ! -d "kokkos" ]; then
   git clone https://github.com/kokkos/kokkos
-  cd kokkos
-  git checkout develop
-  git pull
-  cd ..
 fi
+cd kokkos
+git checkout develop
+git pull
+cd ..
 
 # KokkosKernels
 if [ ! -d "kokkos-kernels" ]; then
