@@ -73,6 +73,8 @@ inline int int_log2_device(unsigned i) {
   constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return shift - __clz(i);
+#elif defined(KOKKOS_COMPILER_INTEL)
+  return _bit_scan_reverse(i);
 #else
   return int_log2_fallback(i);
 #endif
@@ -126,6 +128,8 @@ inline int bit_first_zero_device(unsigned i) noexcept {
   constexpr unsigned full = ~0u;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return full != i ? __ffs(~i) - 1 : -1;
+#elif defined(KOKKOS_COMPILER_INTEL)
+  return full != i ? _bit_scan_forward(~i) : -1;
 #else
   return bit_first_zero_fallback(i);
 #endif
@@ -171,6 +175,8 @@ int bit_scan_forward_fallback(unsigned i) {
 KOKKOS_IMPL_DEVICE_FUNCTION inline int bit_scan_forward_device(unsigned i) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return __ffs(i) - 1;
+#elif defined(KOKKOS_COMPILER_INTEL)
+  return _bit_scan_forward(i);
 #else
   return bit_scan_forward_fallback(i);
 #endif
@@ -216,6 +222,8 @@ int bit_count_fallback(unsigned i) {
 KOKKOS_IMPL_DEVICE_FUNCTION inline int bit_count_device(unsigned i) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return __popc(i);
+#elif defined(__INTEL_COMPILER)
+  return _popcnt32(i);
 #else
   return bit_count_fallback(i);
 #endif
