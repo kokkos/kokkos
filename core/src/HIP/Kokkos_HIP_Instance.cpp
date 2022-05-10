@@ -467,7 +467,6 @@ void HIPInternal::finalize() {
 }
 
 char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
-  std::lock_guard<std::mutex> const lock(m_mutexWorkArray);
   if (d_driverWorkArray == nullptr) {
     KOKKOS_IMPL_HIP_SAFE_CALL(
         hipHostMalloc(&d_driverWorkArray,
