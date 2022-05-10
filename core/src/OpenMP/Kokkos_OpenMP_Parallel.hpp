@@ -84,8 +84,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   const Policy m_policy;
 
   template <class Enable = WorkTag>
-  inline static typename std::enable_if_t<std::is_void<WorkTag>::value &&
-                                          std::is_same<Enable, WorkTag>::value>
+  inline static std::enable_if_t<std::is_void<WorkTag>::value && std::is_same<Enable, WorkTag>::value>
   exec_range(const FunctorType& functor, const Member ibeg, const Member iend) {
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = ibeg; iwork < iend; ++iwork) {
@@ -94,8 +93,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   }
 
   template <class Enable = WorkTag>
-  inline static typename std::enable_if_t<!std::is_void<WorkTag>::value &&
-                                          std::is_same<Enable, WorkTag>::value>
+  inline static std::enable_if_t<!std::is_void<WorkTag>::value && std::is_same<Enable, WorkTag>::value>
   exec_range(const FunctorType& functor, const Member ibeg, const Member iend) {
     const Enable t{};
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
@@ -105,23 +103,20 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   }
 
   template <class Enable = WorkTag>
-  inline static typename std::enable_if_t<std::is_void<WorkTag>::value &&
-                                          std::is_same<Enable, WorkTag>::value>
+  inline static std::enable_if_t<std::is_void<WorkTag>::value && std::is_same<Enable, WorkTag>::value>
   exec_work(const FunctorType& functor, const Member iwork) {
     functor(iwork);
   }
 
   template <class Enable = WorkTag>
-  inline static typename std::enable_if_t<!std::is_void<WorkTag>::value &&
-                                          std::is_same<Enable, WorkTag>::value>
+  inline static std::enable_if_t<!std::is_void<WorkTag>::value && std::is_same<Enable, WorkTag>::value>
   exec_work(const FunctorType& functor, const Member iwork) {
     const Enable t{};
     functor(t, iwork);
   }
 
   template <class Policy>
-  typename std::enable_if<std::is_same<typename Policy::schedule_type::type,
-                                       Kokkos::Dynamic>::value>::type
+  std::enable_if_t<std::is_same<typename Policy::schedule_type::type, Kokkos::Dynamic>::value>
   execute_parallel() const {
     // prevent bug in NVHPC 21.9/CUDA 11.4 (entering zero iterations loop)
     if (m_policy.begin() >= m_policy.end()) return;
@@ -134,8 +129,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   }
 
   template <class Policy>
-  typename std::enable_if<!std::is_same<typename Policy::schedule_type::type,
-                                        Kokkos::Dynamic>::value>::type
+  std::enable_if_t<!std::is_same<typename Policy::schedule_type::type, Kokkos::Dynamic>::value>
   execute_parallel() const {
 #pragma omp parallel for schedule(static KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
     num_threads(OpenMP::impl_thread_pool_size())
