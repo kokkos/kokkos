@@ -150,10 +150,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 #ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
 #else
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
+    constexpr bool is_dynamic = std::is_same<typename Policy::schedule_type::type, Kokkos::Dynamic>::value;
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
@@ -258,10 +255,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
 #else
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
+    constexpr bool is_dynamic = std::is_same<typename Policy::schedule_type::type, Kokkos::Dynamic>::value;
 
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
     {
