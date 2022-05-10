@@ -57,11 +57,9 @@
 //----------------------------------------------------------------------------
 
 #define KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-#ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
 #undef KOKKOS_PRAGMA_IVDEP_IF_ENABLED
 #define KOKKOS_PRAGMA_IVDEP_IF_ENABLED _Pragma(ivdep)
-#endif
 #endif
 
 #ifndef KOKKOS_COMPILER_NVHPC
