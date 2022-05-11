@@ -59,6 +59,7 @@ DECLARE_AND_CHECK_HOST_ARCH(SKL               "Intel Skylake Client CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(SKX               "Intel Skylake Xeon Server CPUs (AVX512)")
 DECLARE_AND_CHECK_HOST_ARCH(KNC               "Intel Knights Corner Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(KNL               "Intel Knights Landing Xeon Phi")
+DECLARE_AND_CHECK_HOST_ARCH(SPR               "Intel Sapphire Rapids Xeon Server CPUs (AVX512)")
 DECLARE_AND_CHECK_HOST_ARCH(BGQ               "IBM Blue Gene Q")
 DECLARE_AND_CHECK_HOST_ARCH(POWER7            "IBM POWER7 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(POWER8            "IBM POWER8 CPUs")
@@ -379,6 +380,14 @@ IF (KOKKOS_ARCH_ICX)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     DEFAULT -march=icelake-server -mtune=icelake-server
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_SPR)
+  SET(KOKKOS_ARCH_AVX512XEON ON)
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    DEFAULT -march=sapphirerapids -mtune=sapphirerapids
   )
 ENDIF()
 
