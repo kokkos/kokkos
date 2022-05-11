@@ -238,13 +238,10 @@ TEST(kokkosp, test_id_gen) {
   using Kokkos::Tools::Experimental::DeviceTypeTraits;
   test_wrapper([&]() {
     Kokkos::DefaultExecutionSpace ex;
-    auto id      = device_id(ex);
-    auto id_ref  = identifier_from_devid(id);
-    auto success = (id_ref.instance_id == ex.impl_instance_id()) &&
-                   (id_ref.device_id ==
-                    static_cast<uint32_t>(
-                        DeviceTypeTraits<Kokkos::DefaultExecutionSpace>::id));
-    ASSERT_TRUE(success);
+    auto id     = device_id(ex);
+    auto id_ref = identifier_from_devid(id);
+    ASSERT_EQ(DeviceTypeTraits<decltype(ex)>::id, id_ref.type);
+    ASSERT_EQ(id_ref.instance_id, ex.impl_instance_id());
   });
 }
 
