@@ -129,7 +129,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
-      ParallelFor::template exec_work(m_functor, iwork);
+      exec_work(m_functor, iwork);
     }
   }
 
@@ -141,7 +141,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
-      ParallelFor::template exec_work(m_functor, iwork);
+      exec_work(m_functor, iwork);
     }
   }
 
@@ -177,7 +177,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
         range = is_dynamic ? data.get_work_stealing_chunk()
                            : data.get_work_partition();
 
-        ParallelFor::template exec_range(m_functor,
+        exec_range(m_functor,
                                          range.first + m_policy.begin(),
                                          range.second + m_policy.begin());
 
