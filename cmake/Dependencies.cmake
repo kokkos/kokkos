@@ -6,4 +6,5 @@ TRIBITS_PACKAGE_DEFINE_DEPENDENCIES(
     Core                  core              PS       REQUIRED
     Containers            containers        PS       OPTIONAL
     Algorithms            algorithms        PS       OPTIONAL
+    Simd                  simd              PS       OPTIONAL
   )
