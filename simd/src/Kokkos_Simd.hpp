@@ -9,6 +9,8 @@
 #include <Kokkos_Simd_AVX512.hpp>
 #endif
 
+namespace Kokkos {
+
 namespace simd_abi {
 
 #if defined(__AVX512F__)
@@ -24,6 +26,8 @@ using device_native = host_native;
 #endif
 
 using native = host_native;
+
+}
 
 }
 

@@ -181,7 +181,7 @@ simd<T, simd_abi::scalar> fma(
     simd<T, simd_abi::scalar> const& y,
     simd<T, simd_abi::scalar> const& z)
 {
-  return simd<T, simd_abi::scalar>((a.get() * b.get()) + c.get());
+  return simd<T, simd_abi::scalar>((x.get() * y.get()) + z.get());
 }
 
 template <class T>
