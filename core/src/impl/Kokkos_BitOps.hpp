@@ -70,8 +70,8 @@ int int_log2_fallback(unsigned i) {
 
 KOKKOS_IMPL_DEVICE_FUNCTION
 inline int int_log2_device(unsigned i) {
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
   return shift - __clz(i);
 #elif defined(KOKKOS_COMPILER_INTEL)
   return _bit_scan_reverse(i);
@@ -84,6 +84,7 @@ KOKKOS_IMPL_HOST_FUNCTION
 inline int int_log2_host(unsigned i) {
   constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
 #if defined(KOKKOS_COMPILER_INTEL)
+  (void)shift;
   return _bit_scan_reverse(i);
 #elif defined(KOKKOS_COMPILER_CRAYC)
   return i ? shift - _leadz32(i) : 0;
@@ -131,6 +132,7 @@ inline int bit_first_zero_device(unsigned i) noexcept {
 #elif defined(KOKKOS_COMPILER_INTEL)
   return full != i ? _bit_scan_forward(~i) : -1;
 #else
+  (void)full;
   return bit_first_zero_fallback(i);
 #endif
 }
@@ -145,6 +147,7 @@ inline int bit_first_zero_host(unsigned i) noexcept {
 #elif defined(KOKKOS_COMPILER_GNU) || defined(__GNUC__) || defined(__GNUG__)
   return full != i ? __builtin_ffs(~i) - 1 : -1;
 #else
+  (void)full;
   return bit_first_zero_fallback(i);
 #endif
 }
