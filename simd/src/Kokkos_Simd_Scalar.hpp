@@ -187,7 +187,7 @@ simd<T, simd_abi::scalar> fma(
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
 simd<T, simd_abi::scalar> condition(
-    no_deduce_t<simd_mask<T, simd_abi::scalar>> const& a,
+    desul::Impl::dont_deduce_this_parameter_t<simd_mask<T, simd_abi::scalar>> const& a,
     simd<T, simd_abi::scalar> const& b,
     simd<T, simd_abi::scalar> const& c)
 {
