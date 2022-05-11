@@ -225,7 +225,7 @@ int bit_count_fallback(unsigned i) {
 KOKKOS_IMPL_DEVICE_FUNCTION inline int bit_count_device(unsigned i) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   return __popc(i);
-#elif defined(__INTEL_COMPILER)
+#elif defined(KOKKOS_COMPILER_INTEL)
   return _popcnt32(i);
 #else
   return bit_count_fallback(i);
@@ -233,7 +233,7 @@ KOKKOS_IMPL_DEVICE_FUNCTION inline int bit_count_device(unsigned i) {
 }
 
 KOKKOS_IMPL_HOST_FUNCTION inline int bit_count_host(unsigned i) {
-#if defined(__INTEL_COMPILER)
+#if defined(KOKKOS_COMPILER_INTEL)
   return _popcnt32(i);
 #elif defined(KOKKOS_COMPILER_CRAYC)
   return _popcnt(i);
