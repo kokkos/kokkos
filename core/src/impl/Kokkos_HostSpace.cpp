@@ -50,7 +50,7 @@
 
 /*--------------------------------------------------------------------------*/
 
-#if defined(__INTEL_COMPILER) && !defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_COMPILER_INTEL) && !defined(KOKKOS_ENABLE_CUDA)
 
 // Intel specialized allocator does not interoperate with CUDA memory allocation
 
