@@ -84,24 +84,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   const FunctorType m_functor;
   const Policy m_policy;
 
-  template <class Enable = WorkTag>
-  inline static std::enable_if_t<std::is_void<WorkTag>::value &&
-                                 std::is_same<Enable, WorkTag>::value>
-  exec_range(const FunctorType& functor, const Member ibeg, const Member iend) {
+  inline static void exec_range(const FunctorType& functor, const Member ibeg,
+                                const Member iend) {
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = ibeg; iwork < iend; ++iwork) {
-      functor(iwork);
-    }
-  }
-
-  template <class Enable = WorkTag>
-  inline static std::enable_if_t<!std::is_void<WorkTag>::value &&
-                                 std::is_same<Enable, WorkTag>::value>
-  exec_range(const FunctorType& functor, const Member ibeg, const Member iend) {
-    const WorkTag tag{};
-    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (auto iwork = ibeg; iwork < iend; ++iwork) {
-      functor(tag, iwork);
+      exec_work(functor, iwork);
     }
   }
 
@@ -221,11 +208,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     }
   }
 
-  inline static void exec_work(const MDRangePolicy& mdr_policy,
-                               const FunctorType& functor, const Member iwork) {
-    iterate_type(mdr_policy, functor)(iwork);
-  }
-
   template <class Policy>
   typename std::enable_if_t<std::is_same<typename Policy::schedule_type::type,
                                          Kokkos::Dynamic>::value>
@@ -234,7 +216,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
-      exec_work(m_mdr_policy, m_functor, iwork);
+      iterate_type(m_mdr_policy, m_functor)(iwork);
     }
   }
 
@@ -246,7 +228,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     num_threads(OpenMP::impl_thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
-      exec_work(m_mdr_policy, m_functor, iwork);
+      iterate_type(m_mdr_policy, m_functor)(iwork);
     }
   }
 
