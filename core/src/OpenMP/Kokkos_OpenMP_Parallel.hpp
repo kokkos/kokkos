@@ -177,9 +177,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
         range = is_dynamic ? data.get_work_stealing_chunk()
                            : data.get_work_partition();
 
-        exec_range(m_functor,
-                                         range.first + m_policy.begin(),
-                                         range.second + m_policy.begin());
+        exec_range(m_functor, range.first + m_policy.begin(),
+                   range.second + m_policy.begin());
 
       } while (is_dynamic && 0 <= range.first);
     }
@@ -229,7 +228,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <class Policy>
   typename std::enable_if_t<std::is_same<typename Policy::schedule_type::type,
-                                       Kokkos::Dynamic>::value>
+                                         Kokkos::Dynamic>::value>
   execute_parallel() const {
 #pragma omp parallel for schedule(dynamic KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
     num_threads(OpenMP::impl_thread_pool_size())
