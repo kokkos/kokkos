@@ -443,7 +443,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
             scratch_size[1], item);
-        if constexpr (std::is_same<work_tag, void>::value)
+        if constexpr (std::is_void<work_tag>::value)
           functor_wrapper.get_functor()(team_member);
         else
           functor_wrapper.get_functor()(work_tag(), team_member);
@@ -647,7 +647,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 const member_type team_member(
                     team_scratch_memory_L0.get_pointer(), shmem_begin,
                     scratch_size[0], global_scratch_ptr, scratch_size[1], item);
-                if constexpr (std::is_same<WorkTag, void>::value)
+                if constexpr (std::is_void<WorkTag>::value)
                   functor(team_member, update);
                 else
                   functor(WorkTag(), team_member, update);
@@ -715,7 +715,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                       scratch_size[0],
                       global_scratch_ptr + item.get_group(1) * scratch_size[1],
                       scratch_size[1], item);
-                  if constexpr (std::is_same<WorkTag, void>::value)
+                  if constexpr (std::is_void<WorkTag>::value)
                     functor(team_member, update);
                   else
                     functor(WorkTag(), team_member, update);
@@ -730,10 +730,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                                 item.get_local_range()[1]));
 
                   if (local_id == 0) {
-                    sycl::ext::oneapi::atomic_ref<
-                        unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                        sycl::ext::oneapi::memory_scope::device,
-                        sycl::access::address_space::global_space>
+                    sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                                     sycl::memory_scope::device,
+                                     sycl::access::address_space::global_space>
                         scratch_flags_ref(*scratch_flags);
                     num_teams_done = ++scratch_flags_ref;
                   }
@@ -766,7 +765,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                       scratch_size[0],
                       global_scratch_ptr + item.get_group(1) * scratch_size[1],
                       scratch_size[1], item);
-                  if constexpr (std::is_same<WorkTag, void>::value)
+                  if constexpr (std::is_void<WorkTag>::value)
                     functor(team_member, update);
                   else
                     functor(WorkTag(), team_member, update);
@@ -779,10 +778,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                                 item.get_local_range()[1]));
 
                   if (local_id == 0) {
-                    sycl::ext::oneapi::atomic_ref<
-                        unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                        sycl::ext::oneapi::memory_scope::device,
-                        sycl::access::address_space::global_space>
+                    sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                                     sycl::memory_scope::device,
+                                     sycl::access::address_space::global_space>
                         scratch_flags_ref(*scratch_flags);
                     num_teams_done = ++scratch_flags_ref;
                   }

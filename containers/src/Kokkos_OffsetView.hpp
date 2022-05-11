@@ -365,7 +365,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       std::is_same<typename traits::array_layout, Kokkos::LayoutStride>::value;
 
   static constexpr bool is_default_map =
-      std::is_same<typename traits::specialize, void>::value &&
+      std::is_void<typename traits::specialize>::value &&
       (is_layout_left || is_layout_right || is_layout_stride);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
@@ -1192,17 +1192,14 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     // to avoid duplicate class error.
     using alloc_prop = Kokkos::Impl::ViewCtorProp<
         P...,
-        typename std::conditional<alloc_prop_input::has_label,
-                                  std::integral_constant<unsigned, 0>,
-                                  typename std::string>::type,
-        typename std::conditional<
-            alloc_prop_input::has_memory_space,
-            std::integral_constant<unsigned, 1>,
-            typename traits::device_type::memory_space>::type,
-        typename std::conditional<
-            alloc_prop_input::has_execution_space,
-            std::integral_constant<unsigned, 2>,
-            typename traits::device_type::execution_space>::type>;
+        std::conditional_t<alloc_prop_input::has_label,
+                           std::integral_constant<unsigned, 0>, std::string>,
+        std::conditional_t<alloc_prop_input::has_memory_space,
+                           std::integral_constant<unsigned, 1>,
+                           typename traits::device_type::memory_space>,
+        std::conditional_t<alloc_prop_input::has_execution_space,
+                           std::integral_constant<unsigned, 2>,
+                           typename traits::device_type::execution_space>>;
 
     static_assert(traits::is_managed,
                   "OffsetView allocation constructor requires managed memory");
@@ -1871,8 +1868,8 @@ struct MirrorOffsetViewType {
       Kokkos::Experimental::OffsetView<data_type, array_layout, Space>;
   // If it is the same memory_space return the existing view_type
   // This will also keep the unmanaged trait if necessary
-  using view_type = typename std::conditional<is_same_memspace, src_view_type,
-                                              dest_view_type>::type;
+  using view_type =
+      std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
 template <class Space, class T, class... P>

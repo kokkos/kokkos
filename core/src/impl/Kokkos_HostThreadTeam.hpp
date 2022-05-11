@@ -692,14 +692,13 @@ TeamThreadRange(
 
 template <typename iType1, typename iType2, typename Member>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Member>
+    std::common_type_t<iType1, iType2>, Member>
 TeamThreadRange(
     Member const& member, iType1 begin, iType2 end,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
   return Impl::TeamThreadRangeBoundariesStruct<
-      typename std::common_type<iType1, iType2>::type, Member>(member, begin,
-                                                               end);
+      std::common_type_t<iType1, iType2>, Member>(member, begin, end);
 }
 
 template <typename iType, typename Member>
@@ -713,14 +712,13 @@ TeamVectorRange(
 
 template <typename iType1, typename iType2, typename Member>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Member>
+    std::common_type_t<iType1, iType2>, Member>
 TeamVectorRange(
     Member const& member, iType1 begin, iType2 end,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
   return Impl::TeamThreadRangeBoundariesStruct<
-      typename std::common_type<iType1, iType2>::type, Member>(member, begin,
-                                                               end);
+      std::common_type_t<iType1, iType2>, Member>(member, begin, end);
 }
 
 template <typename iType, typename Member>
@@ -734,12 +732,12 @@ ThreadVectorRange(
 
 template <typename iType1, typename iType2, typename Member>
 KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Member>
+    std::common_type_t<iType1, iType2>, Member>
 ThreadVectorRange(
     Member const& member, iType1 arg_begin, iType2 arg_end,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Member>(
       member, iType(arg_begin), iType(arg_end));
 }
@@ -768,7 +766,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
         loop_boundaries,
     Closure const& closure,
-    std::enable_if<Impl::is_host_thread_team_member<Member>::value> const** =
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
         nullptr) {
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep

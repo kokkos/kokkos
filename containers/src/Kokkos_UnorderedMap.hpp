@@ -199,10 +199,9 @@ class UnorderedMapInsertResult {
 ///   <tt>Key</tt>.  The default will do a bitwise equality comparison.
 ///
 template <typename Key, typename Value,
-          typename Device = Kokkos::DefaultExecutionSpace,
-          typename Hasher = pod_hash<typename std::remove_const<Key>::type>,
-          typename EqualTo =
-              pod_equal_to<typename std::remove_const<Key>::type>>
+          typename Device  = Kokkos::DefaultExecutionSpace,
+          typename Hasher  = pod_hash<std::remove_const_t<Key>>,
+          typename EqualTo = pod_equal_to<std::remove_const_t<Key>>>
 class UnorderedMap {
  private:
   using host_mirror_space =
@@ -214,13 +213,13 @@ class UnorderedMap {
 
   // key_types
   using declared_key_type = Key;
-  using key_type          = typename std::remove_const<declared_key_type>::type;
-  using const_key_type    = typename std::add_const<key_type>::type;
+  using key_type          = std::remove_const_t<declared_key_type>;
+  using const_key_type    = std::add_const_t<key_type>;
 
   // value_types
   using declared_value_type = Value;
-  using value_type = typename std::remove_const<declared_value_type>::type;
-  using const_value_type = typename std::add_const<value_type>::type;
+  using value_type          = std::remove_const_t<declared_value_type>;
+  using const_value_type    = std::add_const_t<value_type>;
 
   using device_type     = Device;
   using execution_space = typename Device::execution_space;
@@ -240,7 +239,7 @@ class UnorderedMap {
   using const_map_type = UnorderedMap<const_key_type, const_value_type,
                                       device_type, hasher_type, equal_to_type>;
 
-  static const bool is_set = std::is_same<void, value_type>::value;
+  static const bool is_set = std::is_void<value_type>::value;
   static const bool has_const_key =
       std::is_same<const_key_type, declared_key_type>::value;
   static const bool has_const_value =
@@ -776,9 +775,8 @@ class UnorderedMap {
   }
 
   template <typename SKey, typename SValue, typename SDevice>
-  std::enable_if_t<
-      std::is_same<typename std::remove_const<SKey>::type, key_type>::value &&
-      std::is_same<typename std::remove_const<SValue>::type, value_type>::value>
+  std::enable_if_t<std::is_same<std::remove_const_t<SKey>, key_type>::value &&
+                   std::is_same<std::remove_const_t<SValue>, value_type>::value>
   create_copy_view(
       UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
     if (m_hash_lists.data() != src.m_hash_lists.data()) {

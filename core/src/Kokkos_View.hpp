@@ -277,31 +277,35 @@ struct ViewTraits {
   // Unpack the properties arguments
   using prop = ViewTraits<void, Properties...>;
 
-  using ExecutionSpace = typename std::conditional<
-      !std::is_same<typename prop::execution_space, void>::value,
-      typename prop::execution_space, Kokkos::DefaultExecutionSpace>::type;
+  using ExecutionSpace =
+      std::conditional_t<!std::is_void<typename prop::execution_space>::value,
+                         typename prop::execution_space,
+                         Kokkos::DefaultExecutionSpace>;
 
-  using MemorySpace = typename std::conditional<
-      !std::is_same<typename prop::memory_space, void>::value,
-      typename prop::memory_space, typename ExecutionSpace::memory_space>::type;
+  using MemorySpace =
+      std::conditional_t<!std::is_void<typename prop::memory_space>::value,
+                         typename prop::memory_space,
+                         typename ExecutionSpace::memory_space>;
 
-  using ArrayLayout = typename std::conditional<
-      !std::is_same<typename prop::array_layout, void>::value,
-      typename prop::array_layout, typename ExecutionSpace::array_layout>::type;
+  using ArrayLayout =
+      std::conditional_t<!std::is_void<typename prop::array_layout>::value,
+                         typename prop::array_layout,
+                         typename ExecutionSpace::array_layout>;
 
-  using HostMirrorSpace = typename std::conditional<
-      !std::is_same<typename prop::HostMirrorSpace, void>::value,
+  using HostMirrorSpace = std::conditional_t<
+      !std::is_void<typename prop::HostMirrorSpace>::value,
       typename prop::HostMirrorSpace,
-      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>::type;
+      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>;
 
-  using MemoryTraits = typename std::conditional<
-      !std::is_same<typename prop::memory_traits, void>::value,
-      typename prop::memory_traits, typename Kokkos::MemoryManaged>::type;
+  using MemoryTraits =
+      std::conditional_t<!std::is_void<typename prop::memory_traits>::value,
+                         typename prop::memory_traits,
+                         typename Kokkos::MemoryManaged>;
 
-  using HooksPolicy = typename std::conditional<
-      !std::is_same<typename prop::hooks_policy, void>::value,
-      typename prop::hooks_policy,
-      Kokkos::Experimental::DefaultViewHooks>::type;
+  using HooksPolicy =
+      std::conditional_t<!std::is_void<typename prop::hooks_policy>::value,
+                         typename prop::hooks_policy,
+                         Kokkos::Experimental::DefaultViewHooks>;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
@@ -337,10 +341,10 @@ struct ViewTraits {
   using array_layout = ArrayLayout;
   using dimension    = typename data_analysis::dimension;
 
-  using specialize = typename std::conditional<
-      std::is_same<typename data_analysis::specialize, void>::value,
-      typename prop::specialize, typename data_analysis::specialize>::
-      type; /* mapping specialization tag */
+  using specialize = std::conditional_t<
+      std::is_void<typename data_analysis::specialize>::value,
+      typename prop::specialize,
+      typename data_analysis::specialize>; /* mapping specialization tag */
 
   enum { rank = dimension::rank };
   enum { rank_dynamic = dimension::rank_dynamic };
@@ -471,9 +475,8 @@ struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
 
 template <class View1, class View2>
 using is_always_assignable = is_always_assignable_impl<
-    typename std::remove_reference<View1>::type,
-    typename std::remove_const<
-        typename std::remove_reference<View2>::type>::type>;
+    std::remove_reference_t<View1>,
+    std::remove_const_t<std::remove_reference_t<View2>>>;
 
 #ifdef KOKKOS_ENABLE_CXX17
 template <class T1, class T2>
@@ -814,7 +817,7 @@ class View : public ViewTraits<DataType, Properties...> {
       std::is_same<typename traits::array_layout, Kokkos::LayoutStride>::value;
 
   static constexpr bool is_default_map =
-      std::is_same<typename traits::specialize, void>::value &&
+      std::is_void<typename traits::specialize>::value &&
       (is_layout_left || is_layout_right || is_layout_stride);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
@@ -1416,17 +1419,15 @@ class View : public ViewTraits<DataType, Properties...> {
     // to avoid duplicate class error.
     using alloc_prop = Impl::ViewCtorProp<
         P...,
-        typename std::conditional<alloc_prop_input::has_label,
-                                  std::integral_constant<unsigned int, 0>,
-                                  typename std::string>::type,
-        typename std::conditional<
-            alloc_prop_input::has_memory_space,
-            std::integral_constant<unsigned int, 1>,
-            typename traits::device_type::memory_space>::type,
-        typename std::conditional<
-            alloc_prop_input::has_execution_space,
-            std::integral_constant<unsigned int, 2>,
-            typename traits::device_type::execution_space>::type>;
+        std::conditional_t<alloc_prop_input::has_label,
+                           std::integral_constant<unsigned int, 0>,
+                           std::string>,
+        std::conditional_t<alloc_prop_input::has_memory_space,
+                           std::integral_constant<unsigned int, 1>,
+                           typename traits::device_type::memory_space>,
+        std::conditional_t<alloc_prop_input::has_execution_space,
+                           std::integral_constant<unsigned int, 2>,
+                           typename traits::device_type::execution_space>>;
 
     static_assert(traits::is_managed,
                   "View allocation constructor requires managed memory");
@@ -1516,13 +1517,13 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST(
         (Impl::runtime_check_rank_host(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
     KOKKOS_IF_ON_DEVICE(
         (Impl::runtime_check_rank_device(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   template <class... P>
@@ -1543,13 +1544,13 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST(
         (Impl::runtime_check_rank_host(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
     KOKKOS_IF_ON_DEVICE(
         (Impl::runtime_check_rank_device(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   // Allocate with label and layout
@@ -1583,13 +1584,13 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST(
         (Impl::runtime_check_rank_host(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
     KOKKOS_IF_ON_DEVICE(
         (Impl::runtime_check_rank_device(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   // Construct view from ViewTracker and map
@@ -1647,13 +1648,13 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST(
         (Impl::runtime_check_rank_host(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
     KOKKOS_IF_ON_DEVICE(
         (Impl::runtime_check_rank_device(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1680,7 +1681,7 @@ class View : public ViewTraits<DataType, Properties...> {
     const size_t num_passed_args = Impl::count_valid_integers(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
 
-    if (std::is_same<typename traits::specialize, void>::value &&
+    if (std::is_void<typename traits::specialize>::value &&
         num_passed_args != traits::rank_dynamic) {
       Kokkos::abort(
           "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n");
@@ -1726,13 +1727,13 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST(
         (Impl::runtime_check_rank_host(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
     KOKKOS_IF_ON_DEVICE(
         (Impl::runtime_check_rank_device(
              traits::rank_dynamic,
-             std::is_same<typename traits::specialize, void>::value, arg_N0,
-             arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
+             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
+             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 };
 
@@ -1888,7 +1889,7 @@ struct CommonViewValueType;
 
 template <typename A, typename B>
 struct CommonViewValueType<void, A, B> {
-  using value_type = typename std::common_type<A, B>::type;
+  using value_type = std::common_type_t<A, B>;
 };
 
 template <class Specialize, class ValueType>
@@ -1939,17 +1940,17 @@ struct DeduceCommonViewAllocProp<FirstView, NextViews...> {
   // if first and next specialize differ, but are not the same specialize, error
   // out
   static_assert(!(!std::is_same<first_specialize, next_specialize>::value &&
-                  !std::is_same<first_specialize, void>::value &&
-                  !std::is_same<void, next_specialize>::value),
+                  !std::is_void<first_specialize>::value &&
+                  !std::is_void<next_specialize>::value),
                 "Kokkos DeduceCommonViewAllocProp ERROR: Only one non-void "
                 "specialize trait allowed");
 
   // otherwise choose non-void specialize if either/both are non-void
-  using specialize = typename std::conditional<
+  using specialize = std::conditional_t<
       std::is_same<first_specialize, next_specialize>::value, first_specialize,
-      typename std::conditional<(std::is_same<first_specialize, void>::value &&
-                                 !std::is_same<next_specialize, void>::value),
-                                next_specialize, first_specialize>::type>::type;
+      std::conditional_t<(std::is_void<first_specialize>::value &&
+                          !std::is_void<next_specialize>::value),
+                         next_specialize, first_specialize>>;
 
   using value_type = typename CommonViewValueType<specialize, first_value_type,
                                                   next_value_type>::value_type;

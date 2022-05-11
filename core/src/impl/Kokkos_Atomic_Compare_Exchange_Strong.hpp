@@ -378,12 +378,10 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH bool _atomic_compare_exchange_strong(
     std::enable_if_t<
         (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8 ||
          sizeof(T) == 16) &&
-            std::is_same<
-                typename MemoryOrderSuccess::memory_order,
-                typename std::remove_cv<MemoryOrderSuccess>::type>::value &&
-            std::is_same<
-                typename MemoryOrderFailure::memory_order,
-                typename std::remove_cv<MemoryOrderFailure>::type>::value,
+            std::is_same<typename MemoryOrderSuccess::memory_order,
+                         std::remove_cv_t<MemoryOrderSuccess>>::value &&
+            std::is_same<typename MemoryOrderFailure::memory_order,
+                         std::remove_cv_t<MemoryOrderFailure>>::value,
         void const**> = nullptr) {
   return __atomic_compare_exchange_n(dest, &compare, val, /* weak = */ false,
                                      MemoryOrderSuccess::gnu_constant,
@@ -397,12 +395,10 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH bool _atomic_compare_exchange_strong(
     std::enable_if_t<
         !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
           sizeof(T) == 8 || sizeof(T) == 16) &&
-            std::is_same<
-                typename MemoryOrderSuccess::memory_order,
-                typename std::remove_cv<MemoryOrderSuccess>::type>::value &&
-            std::is_same<
-                typename MemoryOrderFailure::memory_order,
-                typename std::remove_cv<MemoryOrderFailure>::type>::value,
+            std::is_same<typename MemoryOrderSuccess::memory_order,
+                         std::remove_cv_t<MemoryOrderSuccess>>::value &&
+            std::is_same<typename MemoryOrderFailure::memory_order,
+                         std::remove_cv_t<MemoryOrderFailure>>::value,
         void const**> = nullptr) {
   return _atomic_compare_exchange_fallback(dest, compare, val, order_success,
                                            order_failure);

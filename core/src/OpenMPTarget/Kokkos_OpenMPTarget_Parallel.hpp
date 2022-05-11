@@ -83,7 +83,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 #pragma omp target teams distribute parallel for map(to : a_functor)
     for (auto i = begin; i < end; ++i) {
-      if constexpr (std::is_same<TagType, void>::value) {
+      if constexpr (std::is_void<TagType>::value) {
         a_functor(i);
       } else {
         a_functor(TagType(), i);
@@ -146,8 +146,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          PolicyType, ReducerTypeFwd>;
   using ReferenceType = typename Analysis::reference_type;
@@ -183,7 +183,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                      : f) reduction(custom \
                                                                     : result)
     for (auto i = begin; i < end; ++i) {
-      if constexpr (std::is_same<TagType, void>::value) {
+      if constexpr (std::is_void<TagType>::value) {
         f(i, result);
       } else {
         f(TagType(), i, result);
@@ -221,7 +221,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
          map(to:f) reduction(+: result)
         for (auto i = begin; i < end; ++i)
 
-          if constexpr (std::is_same<TagType, void>::value) {
+          if constexpr (std::is_void<TagType>::value) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -233,7 +233,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                                     : result)
         for (auto i = begin; i < end; ++i)
 
-          if constexpr (std::is_same<TagType, void>::value) {
+          if constexpr (std::is_void<TagType>::value) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -255,7 +255,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       }
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
-        if constexpr (std::is_same<TagType, void>::value) {
+        if constexpr (std::is_void<TagType>::value) {
           f(i, result);
         } else {
           f(TagType(), i, result);
@@ -351,7 +351,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         // Accumulate partial results in thread specific storage.
 #pragma omp for simd
         for (auto i = team_begin; i < team_end; ++i) {
-          if constexpr (std::is_same<TagType, void>::value) {
+          if constexpr (std::is_void<TagType>::value) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -420,8 +420,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using WorkRange = typename Policy::WorkRange;
 
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          Policy, ReducerTypeFwd>;
 
@@ -543,13 +543,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  std::enable_if_t<std::is_same<TagType, void>::value> call_with_tag(
+  std::enable_if_t<std::is_void<TagType>::value> call_with_tag(
       const FunctorType& f, const idx_type& idx, value_type& val,
       const bool& is_final) const {
     f(idx, val, is_final);
   }
   template <class TagType>
-  std::enable_if_t<!std::is_same<TagType, void>::value> call_with_tag(
+  std::enable_if_t<!std::is_void<TagType>::value> call_with_tag(
       const FunctorType& f, const idx_type& idx, value_type& val,
       const bool& is_final) const {
     f(WorkTag(), idx, val, is_final);
@@ -810,7 +810,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           typename Policy::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               blockIdx, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_same<TagType, void>::value)
+          if constexpr (std::is_void<TagType>::value)
             m_functor(team);
           else
             m_functor(TagType(), team);
@@ -836,8 +836,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          PolicyType, ReducerTypeFwd>;
 
@@ -890,7 +890,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               blockIdx, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_same<TagType, void>::value)
+          if constexpr (std::is_void<TagType>::value)
             f(team, result);
           else
             f(TagType(), team, result);
@@ -948,7 +948,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
               typename PolicyType::member_type team(
                   league_id, league_size, team_size, vector_length, scratch_ptr,
                   blockIdx, shmem_size_L0, shmem_size_L1);
-              if constexpr (std::is_same<TagType, void>::value)
+              if constexpr (std::is_void<TagType>::value)
                 f(team, result);
               else
                 f(TagType(), team, result);
@@ -975,7 +975,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
               typename PolicyType::member_type team(
                   league_id, league_size, team_size, vector_length, scratch_ptr,
                   blockIdx, shmem_size_L0, shmem_size_L1);
-              if constexpr (std::is_same<TagType, void>::value)
+              if constexpr (std::is_void<TagType>::value)
                 f(team, result);
               else
                 f(TagType(), team, result);
@@ -1006,7 +1006,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
             typename PolicyType::member_type team(
                 league_id, league_size, team_size, vector_length, scratch_ptr,
                 blockIdx, shmem_size_L0, shmem_size_L1);
-            if constexpr (std::is_same<TagType, void>::value)
+            if constexpr (std::is_void<TagType>::value)
               f(team, result);
             else
               f(TagType(), team, result);
@@ -1114,7 +1114,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               team_num, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_same<TagType, void>::value) {
+          if constexpr (std::is_void<TagType>::value) {
             f(team, result);
           } else {
             f(TagType(), team, result);
@@ -1170,8 +1170,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
   using ReducerTypeFwd =
-      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
-                                FunctorType, ReducerType>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;

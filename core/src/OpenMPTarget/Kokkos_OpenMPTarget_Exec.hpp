@@ -85,7 +85,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Sum<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -106,7 +106,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Prod<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -127,7 +127,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Min<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -150,7 +150,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Max<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -174,7 +174,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<LAnd<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -196,7 +196,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<LOr<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -221,7 +221,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<BAnd<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -244,7 +244,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
  public:
   // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -266,8 +266,8 @@ struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -294,8 +294,8 @@ struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -321,7 +321,7 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
 template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
 
  public:
   // Required
@@ -358,8 +358,8 @@ struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -405,8 +405,8 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MaxFirstLoc<Scalar, Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -448,8 +448,8 @@ struct OpenMPTargetReducerWrapper<MaxFirstLoc<Scalar, Index, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MinFirstLoc<Scalar, Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -491,8 +491,8 @@ struct OpenMPTargetReducerWrapper<MinFirstLoc<Scalar, Index, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MinMaxFirstLastLoc<Scalar, Index, Space>> {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -553,7 +553,7 @@ struct OpenMPTargetReducerWrapper<MinMaxFirstLastLoc<Scalar, Index, Space>> {
 template <class Index, class Space>
 struct OpenMPTargetReducerWrapper<FirstLoc<Index, Space>> {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -591,7 +591,7 @@ struct OpenMPTargetReducerWrapper<FirstLoc<Index, Space>> {
 template <class Index, class Space>
 struct OpenMPTargetReducerWrapper<LastLoc<Index, Space>> {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -629,7 +629,7 @@ struct OpenMPTargetReducerWrapper<LastLoc<Index, Space>> {
 template <class Index, class Space>
 struct OpenMPTargetReducerWrapper<StdIsPartitioned<Index, Space>> {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -676,7 +676,7 @@ struct OpenMPTargetReducerWrapper<StdIsPartitioned<Index, Space>> {
 template <class Index, class Space>
 struct OpenMPTargetReducerWrapper<StdPartitionPoint<Index, Space>> {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -835,9 +835,8 @@ class OpenMPTargetExecTeamMember {
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
                                              int thread_id) const {
     // Make sure there is enough scratch space:
-    using type =
-        typename std::conditional<(sizeof(ValueType) < TEAM_REDUCE_SIZE),
-                                  ValueType, void>::type;
+    using type = std::conditional_t<(sizeof(ValueType) < TEAM_REDUCE_SIZE),
+                                    ValueType, void>;
     type* team_scratch =
         reinterpret_cast<type*>(static_cast<char*>(m_glb_scratch) +
                                 TEAM_REDUCE_SIZE * omp_get_team_num());
@@ -1314,11 +1313,10 @@ TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread,
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type,
-    Impl::OpenMPTargetExecTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::OpenMPTargetExecTeamMember>
 TeamThreadRange(const Impl::OpenMPTargetExecTeamMember& thread,
                 const iType1& begin, const iType2& end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::TeamThreadRangeBoundariesStruct<
       iType, Impl::OpenMPTargetExecTeamMember>(thread, iType(begin),
                                                iType(end));
@@ -1335,11 +1333,10 @@ ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type,
-    Impl::OpenMPTargetExecTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::OpenMPTargetExecTeamMember>
 ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
                   const iType1& arg_begin, const iType2& arg_end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::ThreadVectorRangeBoundariesStruct<
       iType, Impl::OpenMPTargetExecTeamMember>(thread, iType(arg_begin),
                                                iType(arg_end));
@@ -1356,11 +1353,10 @@ TeamVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type,
-    Impl::OpenMPTargetExecTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::OpenMPTargetExecTeamMember>
 TeamVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
                 const iType1& arg_begin, const iType2& arg_end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::TeamVectorRangeBoundariesStruct<
       iType, Impl::OpenMPTargetExecTeamMember>(thread, iType(arg_begin),
                                                iType(arg_end));

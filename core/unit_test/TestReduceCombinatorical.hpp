@@ -523,9 +523,9 @@ struct TestReduceCombinatoricalInstantiation {
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
     AddLambdaRange(
         N,
-        typename std::conditional<
+        std::conditional_t<
             std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value,
-            void*, Kokkos::InvalidType>::type(),
+            void*, Kokkos::InvalidType>(),
         args...);
 #endif
   }
@@ -536,9 +536,9 @@ struct TestReduceCombinatoricalInstantiation {
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
     AddLambdaTeam(
         N,
-        typename std::conditional<
+        std::conditional_t<
             std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value,
-            void*, Kokkos::InvalidType>::type(),
+            void*, Kokkos::InvalidType>(),
         args...);
 #endif
   }

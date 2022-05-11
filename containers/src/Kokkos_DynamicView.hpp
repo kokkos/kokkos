@@ -276,7 +276,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   // It is assumed that the value_type is trivially copyable;
   // when this is not the case, potential problems can occur.
-  static_assert(std::is_same<typename traits::specialize, void>::value,
+  static_assert(std::is_void<typename traits::specialize>::value,
                 "DynamicView only implemented for non-specialized View type");
 
  private:
@@ -598,8 +598,8 @@ struct MirrorDynamicViewType {
       Kokkos::Experimental::DynamicView<data_type, array_layout, Space>;
   // If it is the same memory_space return the existing view_type
   // This will also keep the unmanaged trait if necessary
-  using view_type = typename std::conditional<is_same_memspace, src_view_type,
-                                              dest_view_type>::type;
+  using view_type =
+      std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 }  // namespace Impl
 
