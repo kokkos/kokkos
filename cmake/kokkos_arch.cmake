@@ -53,6 +53,7 @@ DECLARE_AND_CHECK_HOST_ARCH(WSM               "Intel Westmere CPU")
 DECLARE_AND_CHECK_HOST_ARCH(SNB               "Intel Sandy/Ivy Bridge CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(HSW               "Intel Haswell CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(BDW               "Intel Broadwell Xeon E-class CPUs")
+DECLARE_AND_CHECK_HOST_ARCH(ICX               "Intel Ice Lake Server CPUs (AVX512)")
 DECLARE_AND_CHECK_HOST_ARCH(SKX               "Intel Sky Lake Xeon E-class HPC CPUs (AVX512)")
 DECLARE_AND_CHECK_HOST_ARCH(KNC               "Intel Knights Corner Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(KNL               "Intel Knights Landing Xeon Phi")
@@ -350,6 +351,14 @@ IF (KOKKOS_ARCH_SKX)
     NVHPC   -tp=skylake
     Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_ICX)
+  SET(KOKKOS_ARCH_AVX512XEON ON)
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    DEFAULT -march=icelake-server -mtune=icelake-server
   )
 ENDIF()
 
