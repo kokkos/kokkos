@@ -28,7 +28,7 @@ pipeline {
 
         stage('Build') {
             parallel {
-                stage('CUDA-11.4-NVHPC') {
+                stage('CUDA-11.6-NVHPC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
