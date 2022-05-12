@@ -37,11 +37,20 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        // Nested OpenMP does not work for this configuration,
+                        // so disabling it
+                        OMP_MAX_ACTIVE_LEVELS = 1
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                        NVCC_WRAPPER_DEFAULT_COMPILER = 'nvc++'
+                    }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
-                                -DCMAKE_CXX_COMPILER=nvc++ \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
