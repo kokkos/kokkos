@@ -29,6 +29,11 @@ using native = host_native;
 
 }
 
+template <class T>
+using device_simd = simd<T, simd_abi::device_native>;
+template <class T>
+using device_simd_mask = simd_mask<T, simd_abi::device_native>;
+
 }
 
 #endif
