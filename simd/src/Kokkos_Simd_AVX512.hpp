@@ -88,6 +88,7 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::int32_t;
   using abi_type = simd_abi::avx512_fixed_size<8>;
   using mask_type = simd_mask<value_type, abi_type>;
+  using reference = value_type&;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd() = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd&&) = default;
@@ -101,6 +102,12 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
     :m_value(value_in)
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(simd<std::uint64_t, abi_type> const& other);
+  KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
+    return reinterpret_cast<value_type*>(&m_value)[i];
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
+    return reinterpret_cast<value_type const*>(&m_value)[i];
+  }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
     return _mm256_mullo_epi32(m_value, other.m_value);
   }
@@ -168,6 +175,7 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::uint32_t;
   using abi_type = simd_abi::avx512_fixed_size<8>;
   using mask_type = simd_mask<value_type, abi_type>;
+  using reference = value_type&;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd() = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd&&) = default;
@@ -183,6 +191,12 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& other)
     :m_value(other.get())
   {
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
+    return reinterpret_cast<value_type*>(&m_value)[i];
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
+    return reinterpret_cast<value_type const*>(&m_value)[i];
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
     return _mm256_mullo_epi32(m_value, other.m_value);
@@ -242,6 +256,7 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::int64_t;
   using abi_type = simd_abi::avx512_fixed_size<8>;
   using mask_type = simd_mask<value_type, abi_type>;
+  using reference = value_type&;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd() = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd&&) = default;
@@ -261,6 +276,12 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
     :m_value(value_in)
   {}
+  KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
+    return reinterpret_cast<value_type*>(&m_value)[i];
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
+    return reinterpret_cast<value_type const*>(&m_value)[i];
+  }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
     return _mm512_mullo_epi64(m_value, other.m_value);
   }
@@ -339,6 +360,7 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::uint64_t;
   using abi_type = simd_abi::avx512_fixed_size<8>;
   using mask_type = simd_mask<value_type, abi_type>;
+  using reference = value_type&;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd() = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd&&) = default;
@@ -357,6 +379,12 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(simd<std::int64_t, abi_type> const& other)
     :m_value(other.get())
   {}
+  KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
+    return reinterpret_cast<value_type*>(&m_value)[i];
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
+    return reinterpret_cast<value_type const*>(&m_value)[i];
+  }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
     return _mm512_mullo_epi64(m_value, other.m_value);
   }
@@ -448,6 +476,7 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   using value_type = double;
   using abi_type = simd_abi::avx512_fixed_size<8>;
   using mask_type = simd_mask<value_type, abi_type>;
+  using reference = value_type&;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd() = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd&&) = default;
@@ -465,6 +494,12 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512d const& value_in)
     :m_value(value_in)
   {}
+  KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
+    return reinterpret_cast<value_type*>(&m_value)[i];
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
+    return reinterpret_cast<value_type const*>(&m_value)[i];
+  }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
     return simd(_mm512_mul_pd(m_value, other.m_value));
   }
