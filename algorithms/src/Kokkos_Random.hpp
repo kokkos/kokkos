@@ -648,63 +648,44 @@ struct Random_UniqueIndex {
   }
 };
 
-#ifdef KOKKOS_ENABLE_CUDA
-template <class MemorySpace>
-struct Random_UniqueIndex<Kokkos::Device<Kokkos::Cuda, MemorySpace>> {
-  using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Cuda, MemorySpace>>;
-  KOKKOS_FUNCTION
-  static int get_state_idx(const locks_view_type& locks_) {
-#ifdef __CUDA_ARCH__
-    const int i_offset =
-        (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
-    int i = (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
-                 blockDim.x * blockDim.y * blockDim.z +
-             i_offset) %
-            locks_.extent(0);
-    while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
-      i += blockDim.x * blockDim.y * blockDim.z;
-      if (i >= static_cast<int>(locks_.extent(0))) {
-        i = i_offset;
-      }
-    }
-    return i;
-#else
-    (void)locks_;
-    return 0;
-#endif
-  }
-};
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+
+#if defined(KOKKOS_ENABLE_CUDA)
+#define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::Cuda
+#elif defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::Experimental::HIP
 #endif
 
-#ifdef KOKKOS_ENABLE_HIP
 template <class MemorySpace>
 struct Random_UniqueIndex<
-    Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>> {
+    Kokkos::Device<KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP, MemorySpace>> {
   using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>>;
+      View<int**, Kokkos::Device<KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP,
+                                 MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
-#ifdef __HIP_DEVICE_COMPILE__
-    const int i_offset =
-        (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
-    int i = (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
+    KOKKOS_IF_ON_DEVICE((
+        const int i_offset =
+            (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
+        int i =
+            (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
                  blockDim.x * blockDim.y * blockDim.z +
              i_offset) %
             locks_.extent(0);
-    while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
-      i += blockDim.x * blockDim.y * blockDim.z;
-      if (i >= static_cast<int>(locks_.extent(0))) {
-        i = i_offset;
-      }
-    }
-    return i;
-#else
-    (void)locks_;
-    return 0;
-#endif
+        while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
+          i += blockDim.x * blockDim.y * blockDim.z;
+          if (i >= static_cast<int>(locks_.extent(0))) {
+            i = i_offset;
+          }
+        }
+
+        return i;))
+    KOKKOS_IF_ON_HOST(((void)locks_; return 0;))
   }
 };
+
+#undef KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP
+
 #endif
 
 #ifdef KOKKOS_ENABLE_SYCL
