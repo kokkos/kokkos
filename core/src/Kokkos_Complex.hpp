@@ -785,6 +785,13 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log(
   return Kokkos::complex<RealType>(log(abs(x)), phi);
 }
 
+//! base 10 log of a complex number.
+template <class RealType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log10(
+    const complex<RealType>& x) {
+  return log(x) / log(RealType(10));
+}
+
 //! sine of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sin(
