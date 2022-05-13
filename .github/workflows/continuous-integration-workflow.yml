@@ -13,24 +13,40 @@ jobs:
         distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
+        cmake_cxx_flags: ['']
         openmp: ['ON']
+        memkind: ['OFF']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Release'
+            cmake_cxx_flags: ''
             openmp: 'ON'
+            memkind: 'OFF'
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Debug'
+            cmake_cxx_flags: ''
             openmp: 'ON'
+            memkind: 'OFF'
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
+            cmake_cxx_flags: ''
             openmp: 'ON'
+            memkind: 'OFF'
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
+            cmake_cxx_flags: ''
             openmp: 'ON'
+            memkind: 'OFF'
+          - distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cmake_build_type: 'Debug'
+            cmake_cxx_flags: '-DMEMKIND_TYPE=MEMKIND_DEFAULT'
+            openmp: 'ON'
+            memkind: 'ON'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -50,18 +66,23 @@ jobs:
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
+      - name: maybe_install_memkind
+        if: ${{ matrix.memkind == 'ON' }}
+        run: sudo apt-get update && sudo apt-get install -y libmemkind-dev numactl
       - name: CMake
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_HWLOC=ON \
+            -DKokkos_ENABLE_MEMKIND=${{ matrix.memkind }} \
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_CXX_FLAGS=${{ matrix.cmake_cxx_flags }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
       - name: Build
         run: |
@@ -69,6 +90,11 @@ jobs:
           cmake --build builddir --parallel 2
           ccache -s
       - name: Tests
+        if: ${{ matrix.memkind == 'ON' }}
+        working-directory: builddir
+        run: numactl --membind=0 --cpunodebind=0 ctest --output-on-failure
+      - name: Tests
+        if: ${{ matrix.memkind == 'OFF' }}
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test DESTDIR Install
