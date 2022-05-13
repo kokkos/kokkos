@@ -183,7 +183,7 @@ void host_shared_ptr_test_reference_counting() {
         static_cast<Foo*>(Kokkos::kokkos_malloc<DevMemSpace>(sizeof(Foo)));
     Kokkos::View<Foo, DevMemSpace> fp_d(fp_d_ptr);
     // If using UVM or on the CPU don't make an extra HostCopy
-    Foo* fp_h_ptr = std::is_same<DevMemSpace, HostMemSpace>::value
+    Foo* fp_h_ptr = std::is_same<DevMemSpace, HostMemSpace>::value || !is_gpu
                         ? fp_d_ptr
                         : static_cast<Foo*>(
                               Kokkos::kokkos_malloc<HostMemSpace>(sizeof(Foo)));

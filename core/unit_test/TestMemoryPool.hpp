@@ -49,10 +49,10 @@
 
 namespace TestMemoryPool {
 
-template <typename MemSpace = Kokkos::HostSpace>
+template <typename Space>
 void test_host_memory_pool_defaults() {
-  using Space   = typename MemSpace::execution_space;
-  using MemPool = typename Kokkos::MemoryPool<Space>;
+  using MemPool  = typename Kokkos::MemoryPool<Space>;
+  using MemSpace = typename MemPool::memory_space;
 
   {
     const size_t MemoryCapacity = 32000;
@@ -125,10 +125,10 @@ void test_host_memory_pool_defaults() {
   }
 }
 
-template <typename MemSpace = Kokkos::HostSpace>
+template <typename Space>
 void test_host_memory_pool_stats() {
-  using Space   = typename MemSpace::execution_space;
-  using MemPool = typename Kokkos::MemoryPool<Space>;
+  using MemPool  = typename Kokkos::MemoryPool<Space>;
+  using MemSpace = typename MemPool::memory_space;
 
   const size_t MemoryCapacity = 32000;
   const size_t MinBlockSize   = 64;
@@ -557,8 +557,8 @@ void test_memory_pool_huge() {
 namespace Test {
 
 TEST(TEST_CATEGORY, memory_pool) {
-  TestMemoryPool::test_host_memory_pool_defaults<>();
-  TestMemoryPool::test_host_memory_pool_stats<>();
+  TestMemoryPool::test_host_memory_pool_defaults<TEST_EXECSPACE>();
+  TestMemoryPool::test_host_memory_pool_stats<TEST_EXECSPACE>();
   TestMemoryPool::test_memory_pool_v2<TEST_EXECSPACE>(false, false);
   TestMemoryPool::test_memory_pool_corners<TEST_EXECSPACE>(false, false);
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS

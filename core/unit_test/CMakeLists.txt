@@ -815,7 +815,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     )
 
     set(ADDRESS_REGEX "0x[0-9a-f]*")
-    set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
+    set(MEMSPACE_REGEX "[a-zA-Z]*")
     set(SIZE_REGEX "[0-9]*")
     set(SKIP_SCRATCH_INITIALIZATION_REGEX ".*")
 
