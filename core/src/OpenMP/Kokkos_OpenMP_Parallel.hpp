@@ -363,10 +363,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
       return;
     }
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
+    constexpr bool is_dynamic =
+        std::is_same<typename Policy::schedule_type::type,
+                     Kokkos::Dynamic>::value;
 
     OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
@@ -515,10 +514,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
+    constexpr bool is_dynamic =
+        std::is_same<typename Policy::schedule_type::type,
+                     Kokkos::Dynamic>::value;
 
     OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
@@ -935,7 +933,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   inline void execute() const {
-    enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
+    constexpr bool is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value;
 
     OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
 
@@ -1070,7 +1068,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   inline void execute() const {
-    enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
+    constexpr bool is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value;
 
     typename Analysis::Reducer final_reducer(
         &ReducerConditional::select(m_functor, m_reducer));
