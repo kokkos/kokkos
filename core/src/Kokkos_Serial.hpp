@@ -252,12 +252,22 @@ class SerialSpaceInitializer : public ExecSpaceInitializerBase {
 namespace Kokkos {
 namespace Impl {
 
-template <>
-struct MemorySpaceAccess<Kokkos::Serial::memory_space,
-                         Kokkos::Serial::scratch_memory_space> {
+template <typename MemorySpace>
+struct MemorySpaceAccess<MemorySpace, Kokkos::Serial::scratch_memory_space> {
   enum : bool { assignable = false };
-  enum : bool { accessible = true };
+  enum : bool {
+    accessible =
+        MemorySpaceAccess<MemorySpace, Kokkos::Serial::memory_space>::accessible
+  };
   enum : bool { deepcopy = false };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::Serial::scratch_memory_space,
+                         Kokkos::Serial::scratch_memory_space> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = true };
 };
 
 }  // namespace Impl
