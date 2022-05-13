@@ -301,6 +301,63 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
+template <class FunctorType, class PolicyType, class ReducerType,
+          class PointerType, class ValueType>
+struct ParallelReduceSpecialize {
+  inline static void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
+                             PointerType /*result_ptr*/) {
+    constexpr int FunctorHasJoin =
+        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
+                              FunctorType>::has_join_member_function;
+    constexpr int UseReducerType = is_reducer<ReducerType>::value;
+
+    (void)FunctorHasJoin;
+    (void)UseReducerType;
+    //    error_message << "Error: Invalid Specialization " << FunctorHasJoin <<
+    //    ' ' << UseReducerType << '\n';
+  }
+};
+
+template <class FunctorType, class ReducerType, class PointerType,
+          class ValueType, class... PolicyArgs>
+struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
+                                ReducerType, PointerType, ValueType> {
+  using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
+  using TagType    = typename PolicyType::work_tag;
+  using ReducerTypeFwd =
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                         PolicyType, ReducerTypeFwd>;
+  using ReferenceType = typename Analysis::reference_type;
+
+  template <class TagType, int NumReductions>
+  static void execute_array(const FunctorType& f, const PolicyType& p,
+                            PointerType /*result_ptr*/) {
+    const auto begin = p.begin();
+    const auto end   = p.end();
+
+    // if the reduction is on a scalar type
+    if (NumReductions == 1) {
+      auto result = ValueType{};
+
+      // Case where reduction is on a native data type.
+      if (std::is_arithmetic<ValueType>::value) {
+#pragma omp parallel for reduction(+ : result)
+        for (auto i = begin; i < end; ++i)
+
+          if (std::is_void<TagType>::value) {
+            f(i, result);
+          } /*else {
+            f(TagType(), i, result);
+          }*/ // cannot use if constexpr
+      }
+      // REMOVEME:
+      printf("\n\n\nomp parallel for reduction result:\n%d\n\n\n", result);
+    }
+  }
+};
+
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::OpenMP> {
@@ -325,6 +382,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
+
+  static constexpr int HasJoin =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                      FunctorType>::has_join_member_function;
+  static constexpr int UseReducer = is_reducer<ReducerType>::value;
+  static constexpr int IsArray    = std::is_pointer<reference_type>::value;
+
+  using ParReduceSpecialize =
+      ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
+                               typename Analysis::value_type>;
 
   OpenMPInternal* m_instance;
   const FunctorType m_functor;
@@ -353,6 +420,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
+    /////////////////////////////////////////////////////////
+    // refactored
+    ParReduceSpecialize::template execute_array<WorkTag, 1>(m_functor, m_policy,
+                                                            m_result_ptr);
+    /////////////////////////////////////////////////////////
     typename Analysis::Reducer final_reducer(
         &ReducerConditional::select(m_functor, m_reducer));
 
