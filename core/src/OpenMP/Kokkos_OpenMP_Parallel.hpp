@@ -301,133 +301,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class Reducer>
-struct OpenMPReducerWrapper {
-  using value_type = typename Reducer::value_type;
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(value_type&, const value_type&) {
-    printf(
-        "Using a generic unknown Reducer for the OpenMP backend is not "
-        "implemented.");
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type&, const volatile value_type&) {
-    printf(
-        "Using a generic unknown Reducer for the OpenMP backend is not "
-        "implemented.");
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void init(value_type&) {
-    printf(
-        "Using a generic unknown Reducer for the OpenMP backend is not "
-        "implemented.");
-  }
-};
-
-// template <>
-// struct OpenMPReducerWrapper<InvalidType> {
-//   using value_type = int; //typename Reducer::value_type;
-
-//   KOKKOS_INLINE_FUNCTION
-//   static void join(value_type&, const value_type&) {}
-//   KOKKOS_INLINE_FUNCTION
-//   static void join(volatile value_type&, const volatile value_type&) {}
-//   KOKKOS_INLINE_FUNCTION
-//   static void init(value_type&) {}
-// };
-
-template <class Scalar, class Space>
-struct OpenMPReducerWrapper<Sum<Scalar, Space>> {
- public:
-  // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
-
-  // Required
-  KOKKOS_INLINE_FUNCTION
-  static void join(value_type& dest, const value_type& src) { dest += src; }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    dest += src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::sum();
-  }
-};
-
-template <class Scalar, class Space>
-struct OpenMPReducerWrapper<Prod<Scalar, Space>> {
- public:
-  // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
-
-  // Required
-  KOKKOS_INLINE_FUNCTION
-  static void join(value_type& dest, const value_type& src) { dest *= src; }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    dest *= src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::prod();
-  }
-};
-
-template <class Scalar, class Space>
-struct OpenMPReducerWrapper<Min<Scalar, Space>> {
- public:
-  // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
-
-  // Required
-  KOKKOS_INLINE_FUNCTION
-  static void join(value_type& dest, const value_type& src) {
-    if (src < dest) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    if (src < dest) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::min();
-  }
-};
-
-template <class Scalar, class Space>
-struct OpenMPReducerWrapper<Max<Scalar, Space>> {
- public:
-  // Required
-  using value_type = typename std::remove_cv<Scalar>::type;
-
-  // Required
-  KOKKOS_INLINE_FUNCTION
-  static void join(value_type& dest, const value_type& src) {
-    if (src > dest) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    if (src > dest) dest = src;
-  }
-
-  // Required
-  KOKKOS_INLINE_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::max();
-  }
-};
-
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::OpenMP> {
@@ -440,7 +313,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   using ReducerConditional =
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;  // std::conditional_t (?)
+                         FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
@@ -482,15 +355,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   inline void execute() const {
     typename Analysis::Reducer final_reducer(
         &ReducerConditional::select(m_functor, m_reducer));
-// FIXME : use Analysis
-#pragma omp declare reduction(                                   \
-    custom                                                       \
-    : typename Analysis::value_type                              \
-    : OpenMPReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
-    initializer(OpenMPReducerWrapper <ReducerType>::init(omp_priv))
-
-    typename Analysis::value_type result;
-    OpenMPReducerWrapper<ReducerType>::init(result);
 
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
