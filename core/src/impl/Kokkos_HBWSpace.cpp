@@ -76,14 +76,12 @@ namespace Experimental {
 
 /* Default allocation mechanism */
 HBWSpace::HBWSpace() : m_alloc_mech(HBWSpace::STD_MALLOC) {
-  printf("Init\n");
   setenv("MEMKIND_HBW_NODES", "1", 0);
 }
 
 /* Default allocation mechanism */
 HBWSpace::HBWSpace(const HBWSpace::AllocationMechanism &arg_alloc_mech)
     : m_alloc_mech(HBWSpace::STD_MALLOC) {
-  printf("Init2\n");
   setenv("MEMKIND_HBW_NODES", "1", 0);
   if (arg_alloc_mech == STD_MALLOC) {
     m_alloc_mech = HBWSpace::STD_MALLOC;
@@ -105,7 +103,7 @@ void *HBWSpace::impl_allocate(
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
   static_assert(
-      Kokkos::Impl::power_of_two<Kokkos::Impl::MEMORY_ALIGNMENT>::value,
+      Kokkos::Impl::is_integral_power_of_two(Kokkos::Impl::MEMORY_ALIGNMENT),
       "Memory alignment must be power of two");
 
   constexpr uintptr_t alignment      = Kokkos::Impl::MEMORY_ALIGNMENT;
@@ -114,50 +112,43 @@ void *HBWSpace::impl_allocate(
   void *ptr = nullptr;
 
   if (arg_alloc_size) {
-    if (m_alloc_mech == STD_MALLOC) {
-      // Over-allocate to and round up to guarantee proper alignment.
-      size_t size_padded = arg_alloc_size + sizeof(void *) + alignment;
+    // Over-allocate to and round up to guarantee proper alignment.
+    size_t size_padded = arg_alloc_size + sizeof(void *) + alignment;
 
-      void *alloc_ptr = memkind_malloc(MEMKIND_TYPE, size_padded);
+    void *alloc_ptr = memkind_malloc(MEMKIND_TYPE, size_padded);
 
-      if (alloc_ptr) {
-        uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
+    if (alloc_ptr) {
+      uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
 
-        // offset enough to record the alloc_ptr
-        address += sizeof(void *);
-        uintptr_t rem    = address % alignment;
-        uintptr_t offset = rem ? (alignment - rem) : 0u;
-        address += offset;
-        ptr = reinterpret_cast<void *>(address);
-        // record the alloc'd pointer
-        address -= sizeof(void *);
-        *reinterpret_cast<void **>(address) = alloc_ptr;
-      }
+      // offset enough to record the alloc_ptr
+      address += sizeof(void *);
+      uintptr_t rem    = address % alignment;
+      uintptr_t offset = rem ? (alignment - rem) : 0u;
+      address += offset;
+      ptr = reinterpret_cast<void *>(address);
+      // record the alloc'd pointer
+      address -= sizeof(void *);
+      *reinterpret_cast<void **>(address) = alloc_ptr;
     }
   }
 
   if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
-    std::ostringstream msg;
-    msg << "Kokkos::Experimental::HBWSpace::allocate[ ";
-    switch (m_alloc_mech) {
-      case STD_MALLOC: msg << "STD_MALLOC"; break;
-      case POSIX_MEMALIGN: msg << "POSIX_MEMALIGN"; break;
-      case POSIX_MMAP: msg << "POSIX_MMAP"; break;
-      case INTEL_MM_ALLOC: msg << "INTEL_MM_ALLOC"; break;
-    }
-    msg << " ]( " << arg_alloc_size << " ) FAILED";
+    Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
+        Experimental::RawMemoryAllocationFailure::FailureMode::
+            AllocationNotAligned;
     if (ptr == nullptr) {
-      msg << " nullptr";
-    } else {
-      msg << " NOT ALIGNED " << ptr;
+      failure_mode = Experimental::RawMemoryAllocationFailure::FailureMode::
+          OutOfMemoryError;
     }
 
-    std::cerr << msg.str() << std::endl;
-    std::cerr.flush();
-
-    Kokkos::Impl::throw_runtime_exception(msg.str());
+    Experimental::RawMemoryAllocationFailure::AllocationMechanism alloc_mec =
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            StdMalloc;
+    throw Kokkos::Experimental::RawMemoryAllocationFailure(
+        arg_alloc_size, alignment, failure_mode, alloc_mec);
   }
+
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
