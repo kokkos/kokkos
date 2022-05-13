@@ -289,7 +289,7 @@ struct DeepCopy<Kokkos::Experimental::HBWSpace, Kokkos::Experimental::HBWSpace,
 
   DeepCopy(const DefaultHostExecutionSpace& exec, void* dst, const void* src,
            size_t n) {
-    hostspace_parallel_deepcopy(exec, dst, src, n);
+    hostspace_parallel_deepcopy_async(exec, dst, src, n);
   }
 };
 
@@ -318,7 +318,7 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HBWSpace,
 
   DeepCopy(const DefaultHostExecutionSpace& exec, void* dst, const void* src,
            size_t n) {
-    hostspace_parallel_deepcopy(exec, dst, src, n);
+    hostspace_parallel_deepcopy_async(exec, dst, src, n);
   }
 };
 
@@ -332,7 +332,7 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HBWSpace, ExecutionSpace> {
     exec.fence(
         "Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HBWSpace, "
         "ExecutionSpace>::DeepCopy: fence before copy");
-    hostspace_parallel_deepcopy_async(copy_space, dst, src, n);
+    hostspace_parallel_deepcopy_async(exec, dst, src, n);
   }
 };
 
@@ -345,7 +345,7 @@ struct DeepCopy<Kokkos::Experimental::HBWSpace, HostSpace,
 
   DeepCopy(const DefaultHostExecutionSpace& exec, void* dst, const void* src,
            size_t n) {
-    hostspace_parallel_deepcopy(exec, dst, src, n);
+    hostspace_parallel_deepcopy_async(exec, dst, src, n);
   }
 };
 
