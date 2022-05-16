@@ -1198,7 +1198,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.hpp)
   ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
-    KOKKOS_SRC += $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_HIP.cpp
+    KOKKOS_SRC += $(KOKKOS_PATH)/tpls/desul/src/Lock_Array_HIP.cpp
   endif
 
   KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
@@ -1274,6 +1274,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_DESUL_ATOMICS")
+  KOKKOS_CPPFLAGS+=-I$(KOKKOS_PATH)/tpls/desul/include
 else
   ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
     $(error Contradictory Desul atomics options: KOKKOS_OPTIONS=$(KOKKOS_OPTIONS) )
@@ -1358,7 +1359,7 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
   ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
-    KOKKOS_SRC += $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_CUDA.cpp
+    KOKKOS_SRC += $(KOKKOS_PATH)/tpls/desul/src/Lock_Array_CUDA.cpp
   endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
   ifneq ($(CUDA_PATH),)

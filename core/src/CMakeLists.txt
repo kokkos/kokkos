@@ -10,7 +10,7 @@ KOKKOS_INCLUDE_DIRECTORIES(
 )
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
   KOKKOS_INCLUDE_DIRECTORIES(
-    ${CMAKE_SOURCE_DIR}/tpls/desul/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
 ENDIF()
 
@@ -76,23 +76,24 @@ IF (KOKKOS_ENABLE_SYCL)
 ENDIF()
 
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
-  APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_SOURCE_DIR}/tpls/desul/src/*.cpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_SOURCE_DIR}/tpls/desul/include/desul/*.hpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_SOURCE_DIR}/tpls/desul/include/desul/*/*.hpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_SOURCE_DIR}/tpls/desul/include/desul/*/*/*.hpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_SOURCE_DIR}/tpls/desul/include/*/*/*.inc*)
+  APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/src/*.cpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*.hpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*.hpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*/*.hpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/*/*/*.inc*)
 
   INSTALL (DIRECTORY
-    "${CMAKE_SOURCE_DIR}/tpls/desul/include/desul"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul"
     DESTINATION ${KOKKOS_HEADER_DIR}
     FILES_MATCHING
     PATTERN "*.inc"
     PATTERN "*.inc_*"
     PATTERN "*.hpp"
   )
-  MESSAGE(STATUS "Using internal DESUL atomics copy")
+  MESSAGE(STATUS "Using internal desul_atomics copy")
 ELSE()
-  MESSAGE(STATUS "Using external DESUL atomics copy")
+  MESSAGE(STATUS "Using external desul_atomics install found at:")
+  MESSAGE(STATUS "  " ${desul_atomics_DIR})
 ENDIF()
 
 
@@ -110,7 +111,7 @@ KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
 )
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
   KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
-    ${CMAKE_SOURCE_DIR}/tpls/desul/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
 ENDIF()
 
