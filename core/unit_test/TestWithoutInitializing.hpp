@@ -246,7 +246,11 @@ TEST(TEST_CATEGORY, resize_exec_space) {
   Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
 
   auto success = validate_absence(
-      [&]() { Kokkos::resize(TEST_EXECSPACE{}, bla, 5, 6, 7, 8); },
+      [&]() {
+        Kokkos::resize(
+            Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
+            bla, 5, 6, 7, 8);
+      },
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("Kokkos::resize(View)") !=
             std::string::npos)

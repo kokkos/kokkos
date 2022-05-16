@@ -88,6 +88,11 @@ struct ViewCtorProp;
 template <typename Specialize, typename T>
 struct CommonViewAllocProp;
 
+/* Dummy to allow for empty ViewCtorProp object
+ */
+template <>
+struct ViewCtorProp<void> {};
+
 /* Common value_type stored as ViewCtorProp
  */
 template <typename Specialize, typename T>
