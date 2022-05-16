@@ -79,6 +79,10 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
 #endif
 
+#elif defined(KOKKOS_COMPILER_NVHPC)
+
+#define KOKKOS_IMPL_ABORT_NORETURN
+
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
 // HIP aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
@@ -221,6 +225,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
 KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
     const char *const message) {
   KOKKOS_IF_ON_HOST(::Kokkos::Impl::host_abort(message););

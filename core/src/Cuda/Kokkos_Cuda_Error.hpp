@@ -67,7 +67,10 @@ void cuda_stream_synchronize(const cudaStream_t stream,
                                             const char* file = nullptr,
                                             const int line   = 0);
 
-[[noreturn]] void cuda_internal_error_abort(cudaError e, const char* name,
+#ifndef KOKKOS_COMPILER_NVHPC
+[[noreturn]]
+#endif
+             void cuda_internal_error_abort(cudaError e, const char* name,
                                             const char* file = nullptr,
                                             const int line   = 0);
 
