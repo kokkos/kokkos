@@ -91,9 +91,7 @@ struct ViewTracker {
 
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) noexcept {
-    if (reinterpret_cast<void*>(this) ==
-        reinterpret_cast<const void*>(&vt.m_track))
-      return;
+    if (this == reinterpret_cast<const ViewTracker*>(&vt.m_track)) return;
     KOKKOS_IF_ON_HOST((
         if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
                                            void, void>::tracking_enabled()) {
