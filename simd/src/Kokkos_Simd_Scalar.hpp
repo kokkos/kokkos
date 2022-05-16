@@ -1,6 +1,8 @@
 #ifndef KOKKOS_SIMD_SCALAR_HPP
 #define KOKKOS_SIMD_SCALAR_HPP
 
+#include <type_traits>
+
 #include <Kokkos_Simd_Common.hpp>
 
 namespace Kokkos {
@@ -89,6 +91,15 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION explicit simd(simd<U, abi_type> const& other)
     :m_value(value_type(other.get()))
   {}
+  template <class G,
+    typename std::enable_if<
+      // basically, can you do { value_type r = gen(std::integral_constant<std::size_t, i>()); }
+      std::is_invocable_r_v<value_type, G, std::integral_constant<std::size_t, 0>>,
+      bool>::type = false>
+  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+    :m_value(gen(std::integral_constant<std::size_t, 0>()))
+  {
+  }
   KOKKOS_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
     return simd(m_value * other.m_value);
   }
