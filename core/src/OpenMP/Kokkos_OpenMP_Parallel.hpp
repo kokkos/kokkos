@@ -893,7 +893,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   OpenMPExec* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
-  const int m_shmem_size;
+  const size_t m_shmem_size;
 
   template <class TagType>
   inline static std::enable_if_t<(std::is_void<TagType>::value)> exec_team(
@@ -941,7 +941,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t pool_reduce_size  = 0;  // Never shrinks
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE * m_policy.team_size();
-    const size_t team_shared_size  = m_shmem_size + m_policy.scratch_size(1);
+    const size_t team_shared_size  = m_shmem_size;
     const size_t thread_local_size = 0;  // Never shrinks
 
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,

@@ -933,7 +933,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const FunctorType m_functor;
   const Policy m_policy;
   const int m_league;
-  const int m_shared;
+  const size_t m_shared;
 
   template <class TagType>
   inline std::enable_if_t<std::is_void<TagType>::value> exec(
@@ -1011,7 +1011,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_league;
   const ReducerType m_reducer;
   pointer_type m_result_ptr;
-  const int m_shared;
+  size_t m_shared;
 
   template <class TagType>
   inline std::enable_if_t<std::is_void<TagType>::value> exec(

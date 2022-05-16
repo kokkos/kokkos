@@ -329,9 +329,10 @@ class CudaTeamMember {
   // Private for the driver
 
   KOKKOS_INLINE_FUNCTION
-  CudaTeamMember(void* shared, const int shared_begin, const int shared_size,
-                 void* scratch_level_1_ptr, const int scratch_level_1_size,
-                 const int arg_league_rank, const int arg_league_size)
+  CudaTeamMember(void* shared, const size_t shared_begin,
+                 const size_t shared_size, void* scratch_level_1_ptr,
+                 const size_t scratch_level_1_size, const int arg_league_rank,
+                 const int arg_league_size)
       : m_team_reduce(shared),
         m_team_shared(static_cast<char*>(shared) + shared_begin, shared_size,
                       scratch_level_1_ptr, scratch_level_1_size),

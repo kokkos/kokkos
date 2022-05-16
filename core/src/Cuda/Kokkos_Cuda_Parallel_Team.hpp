@@ -94,8 +94,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   int m_league_size;
   int m_team_size;
   int m_vector_length;
-  int m_team_scratch_size[2];
-  int m_thread_scratch_size[2];
+  size_t m_team_scratch_size[2];
+  size_t m_thread_scratch_size[2];
   int m_chunk_size;
   bool m_tune_team;
   bool m_tune_vector;
@@ -250,15 +250,15 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   inline void impl_set_vector_length(size_t vector_length) {
     m_vector_length = vector_length;
   }
-  inline int scratch_size(int level, int team_size_ = -1) const {
+  size_t scratch_size(int level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
-  inline int team_scratch_size(int level) const {
+  size_t team_scratch_size(int level) const {
     return m_team_scratch_size[level];
   }
-  inline int thread_scratch_size(int level) const {
+  size_t thread_scratch_size(int level) const {
     return m_thread_scratch_size[level];
   }
 
@@ -498,7 +498,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_begin;
   int m_shmem_size;
   void* m_scratch_ptr[2];
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
 
@@ -694,7 +694,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type m_shmem_begin;
   size_type m_shmem_size;
   void* m_scratch_ptr[2];
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
   const size_type m_league_size;
