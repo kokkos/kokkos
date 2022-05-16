@@ -1087,6 +1087,12 @@ class TestViewAPI {
     dView4_unmanaged unmanaged_dx = dx;
     ASSERT_EQ(dx.use_count(), 1);
 
+    // Test self assignment
+    dx = dx;
+    ASSERT_EQ(dx.use_count(), 1);
+    dx = reinterpret_cast<typename dView4::uniform_type &>(dx);
+    ASSERT_EQ(dx.use_count(), 1);
+
     dView4_unmanaged unmanaged_from_ptr_dx = dView4_unmanaged(
         dx.data(), dx.extent(0), dx.extent(1), dx.extent(2), dx.extent(3));
 
