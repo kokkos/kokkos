@@ -161,14 +161,14 @@ void testRealloc() {
   Kokkos::View<int*, DeviceType> v;
   Kokkos::realloc(Kokkos::view_alloc("v"), v, 1);
   EXPECT_EQ(v.label(), "v");
-  EXPECT_EQ(v.size(), 1);
+  EXPECT_EQ(v.extent_int(0), 1);
   Kokkos::View<int*, DeviceType> w = v;
   EXPECT_EQ(w.label(), "v");
   Kokkos::realloc(Kokkos::view_alloc("v_realloc"), v, 2);
   EXPECT_EQ(w.label(), "v");
-  EXPECT_EQ(w.size(), 1);
+  EXPECT_EQ(w.extent_int(0), 1);
   EXPECT_EQ(v.label(), "v_realloc");
-  EXPECT_EQ(v.size(), 2);
+  EXPECT_EQ(v.extent_int(0), 2);
 }
 
 }  // namespace TestViewRealloc
