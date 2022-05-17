@@ -323,13 +323,28 @@ template <class FunctorType, class ReducerType, class PointerType,
 struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
-  using TagType    = typename PolicyType::work_tag;
+  using WorkTag    = typename PolicyType::work_tag;
+  using Member     = typename PolicyType::member_type;
   using ReducerTypeFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          PolicyType, ReducerTypeFwd>;
   using ReferenceType = typename Analysis::reference_type;
+
+  template <class Enable = WorkTag>
+  inline static std::enable_if_t<std::is_void<WorkTag>::value &&
+                                 std::is_same<Enable, WorkTag>::value>
+  exec_work(const FunctorType& functor, const Member i, ValueType& result) {
+    functor(i, result);
+  }
+
+  template <class Enable = WorkTag>
+  inline static std::enable_if_t<!std::is_void<WorkTag>::value &&
+                                 std::is_same<Enable, WorkTag>::value>
+  exec_work(const FunctorType& functor, const Member i, ValueType& result) {
+    functor(WorkTag{}, i, result);
+  }
 
   template <class TagType, int NumReductions>
   static void execute_array(const FunctorType& f, const PolicyType& p,
@@ -338,22 +353,18 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto end   = p.end();
 
     // if the reduction is on a scalar type
-    if (NumReductions == 1) {
+    // consider std::is_scalar etc.
+    if (NumReductions == 1) {  // constexpr
       auto result = ValueType{};
 
       // Case where reduction is on a native data type.
-      if (std::is_arithmetic<ValueType>::value) {
+      if (std::is_arithmetic<ValueType>::value) {  // constexpr
 #pragma omp parallel for reduction(+ : result)
-        for (auto i = begin; i < end; ++i)
-
-          if (std::is_void<TagType>::value) {
-            f(i, result);
-          } /*else {
-            f(TagType(), i, result);
-          }*/ // cannot use if constexpr
+        for (auto i = begin; i < end; ++i) {
+          exec_work(f, i, result);
+        }
       }
-      // REMOVEME:
-      printf("\n\n\nomp parallel for reduction result:\n%d\n\n\n", result);
+      printf("parallel_reduce -> execute_array result:\n%d\n", result);
     }
   }
 };

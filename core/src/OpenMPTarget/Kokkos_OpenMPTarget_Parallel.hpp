@@ -144,7 +144,7 @@ template <class FunctorType, class ReducerType, class PointerType,
 struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
-  using TagType    = typename PolicyType::work_tag;
+  using WorkTag    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
@@ -183,10 +183,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                      : f) reduction(custom \
                                                                     : result)
     for (auto i = begin; i < end; ++i) {
-      if constexpr (std::is_void<TagType>::value) {
+      if constexpr (std::is_void<WorkTag>::value) {
         f(i, result);
       } else {
-        f(TagType(), i, result);
+        f(WorkTag(), i, result);
       }
     }
 
@@ -351,10 +351,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         // Accumulate partial results in thread specific storage.
 #pragma omp for simd
         for (auto i = team_begin; i < team_end; ++i) {
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void<WorkTag>::value) {
             f(i, result);
           } else {
-            f(TagType(), i, result);
+            f(WorkTag(), i, result);
           }
         }
 
