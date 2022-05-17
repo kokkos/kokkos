@@ -348,7 +348,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   template <class TagType, int NumReductions>
   static void execute_array(const FunctorType& f, const PolicyType& p,
-                            PointerType /*result_ptr*/) {
+                            PointerType result_ptr) {
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -364,7 +364,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
           exec_work(f, i, result);
         }
       }
-      printf("parallel_reduce -> execute_array result:\n%d\n", result);
+
+      // printf("parallel_reduce -> execute_array result:\n%d\n", result);
+      // ParReduceCommon::memcpy_result
+      *result_ptr = result;
     }
   }
 };
@@ -431,87 +434,24 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    /////////////////////////////////////////////////////////
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
+
     // refactored
     ParReduceSpecialize::template execute_array<WorkTag, 1>(m_functor, m_policy,
                                                             m_result_ptr);
-    /////////////////////////////////////////////////////////
-    typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+    // TODO:
+    // constexpr bool is_dynamic =
+    //     std::is_same<typename Policy::schedule_type::type,
+    //                  Kokkos::Dynamic>::value;
 
-    if (m_policy.end() <= m_policy.begin()) {
-      if (m_result_ptr) {
-        final_reducer.init(m_result_ptr);
-        final_reducer.final(m_result_ptr);
-      }
-      return;
-    }
-    constexpr bool is_dynamic =
-        std::is_same<typename Policy::schedule_type::type,
-                     Kokkos::Dynamic>::value;
+    // if (m_result_ptr) {
+    //   const int n = Analysis::value_count(
+    //       ReducerConditional::select(m_functor, m_reducer));
 
-    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
-
-    const size_t pool_reduce_bytes =
-        Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
-
-    m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
-                                   ,
-                                   0  // team_shared_bytes
-                                   ,
-                                   0  // thread_local_bytes
-    );
-
-    const int pool_size = OpenMP::impl_thread_pool_size();
-#pragma omp parallel num_threads(pool_size)
-    {
-      HostThreadTeamData& data = *(m_instance->get_thread_data());
-
-      data.set_work_partition(m_policy.end() - m_policy.begin(),
-                              m_policy.chunk_size());
-
-      if (is_dynamic) {
-        // Make sure work partition is set before stealing
-        if (data.pool_rendezvous()) data.pool_rendezvous_release();
-      }
-
-      reference_type update = final_reducer.init(
-          reinterpret_cast<pointer_type>(data.pool_reduce_local()));
-
-      std::pair<int64_t, int64_t> range(0, 0);
-
-      do {
-        range = is_dynamic ? data.get_work_stealing_chunk()
-                           : data.get_work_partition();
-
-        ParallelReduce::template exec_range<WorkTag>(
-            m_functor, range.first + m_policy.begin(),
-            range.second + m_policy.begin(), update);
-
-      } while (is_dynamic && 0 <= range.first);
-    }
-
-    // Reduction:
-
-    const pointer_type ptr =
-        pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
-
-    for (int i = 1; i < pool_size; ++i) {
-      final_reducer.join(
-          ptr, reinterpret_cast<pointer_type>(
-                   m_instance->get_thread_data(i)->pool_reduce_local()));
-    }
-
-    final_reducer.final(ptr);
-
-    if (m_result_ptr) {
-      const int n = Analysis::value_count(
-          ReducerConditional::select(m_functor, m_reducer));
-
-      for (int j = 0; j < n; ++j) {
-        m_result_ptr[j] = ptr[j];
-      }
-    }
+    //   for (int j = 0; j < n; ++j) {
+    //     m_result_ptr[j] = ptr[j];
+    //   }
+    // }
   }
 
   //----------------------------------------
