@@ -158,9 +158,6 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION void copy_to(T* ptr, element_aligned_tag) const {
     *ptr = m_value;
   }
-  KOKKOS_FORCEINLINE_FUNCTION static simd contiguous_from(value_type i) {
-    return simd(i);
-  }
   KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t)
   {
     return m_value;

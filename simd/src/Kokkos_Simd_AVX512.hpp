@@ -163,17 +163,6 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION mask_type operator!=(simd const& other) const {
     return mask_type(_mm256_cmpneq_epi32_mask(m_value, other.m_value));
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION static simd contiguous_from(value_type i) {
-    return _mm256_setr_epi32(
-        i,
-        i + 1,
-        i + 2,
-        i + 3,
-        i + 4,
-        i + 5,
-        i + 6,
-        i + 7);
-  }
 };
 
 KOKKOS_HOST_FORCEINLINE_FUNCTION
@@ -243,17 +232,6 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION mask_type operator!=(simd const& other) const {
     return mask_type(_mm256_cmpneq_epu32_mask(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION static simd contiguous_from(value_type i) {
-    return _mm256_setr_epi32(
-        i,
-        i + 1,
-        i + 2,
-        i + 3,
-        i + 4,
-        i + 5,
-        i + 6,
-        i + 7);
   }
 };
 
@@ -348,17 +326,6 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION mask_type operator!=(simd const& other) const {
     return mask_type(_mm512_cmpneq_epi64_mask(m_value, other.m_value));
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION static simd contiguous_from(value_type i) {
-    return _mm512_setr_epi64(
-        i,
-        i + 1,
-        i + 2,
-        i + 3,
-        i + 4,
-        i + 5,
-        i + 6,
-        i + 7);
-  }
 };
 
 KOKKOS_HOST_FORCEINLINE_FUNCTION
@@ -450,17 +417,6 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION mask_type operator!=(simd const& other) const {
     return mask_type(_mm512_cmpneq_epu64_mask(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION static simd contiguous_from(value_type i) {
-    return _mm512_setr_epi64(
-        i,
-        i + 1,
-        i + 2,
-        i + 3,
-        i + 4,
-        i + 5,
-        i + 6,
-        i + 7);
   }
 };
 
