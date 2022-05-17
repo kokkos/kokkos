@@ -2924,7 +2924,7 @@ inline typename std::enable_if<
 impl_resize(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
             const size_t n2, const size_t n3, const size_t n4, const size_t n5,
             const size_t n6, const size_t n7,
-            Impl::ViewCtorProp<ViewCtorArgs...> arg_prop) {
+            const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -3035,7 +3035,7 @@ inline std::enable_if_t<
     is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value>
 impl_resize(Kokkos::View<T, P...>& v,
             const typename Kokkos::View<T, P...>::array_layout& layout,
-            Impl::ViewCtorProp<ViewCtorArgs...> arg_prop) {
+            const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -3084,7 +3084,7 @@ inline std::enable_if_t<
       is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value)>
 impl_resize(Kokkos::View<T, P...>& v,
             const typename Kokkos::View<T, P...>::array_layout& layout,
-            Impl::ViewCtorProp<ViewCtorArgs...> arg_prop) {
+            const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
