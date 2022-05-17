@@ -107,10 +107,14 @@ namespace Impl {
 namespace {
 
 __global__ void query_cuda_kernel_arch(int *d_arch) {
+#if defined(KOKKOS_COMPILER_NVHPC) && defined(_NVHPC_CUDA)
+  *d_arch = __builtin_current_device_sm() * 10;
+#else
 #if defined(__CUDA_ARCH__)
   *d_arch = __CUDA_ARCH__;
 #else
   *d_arch = 0;
+#endif
 #endif
 }
 
