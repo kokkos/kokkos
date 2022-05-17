@@ -330,7 +330,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          PolicyType, ReducerTypeFwd>;
-  using ReferenceType = typename Analysis::reference_type;
+  using reference_type = typename Analysis::reference_type;
 
   template <class Enable = WorkTag>
   inline static std::enable_if_t<std::is_void<WorkTag>::value &&
@@ -365,8 +365,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         }
       }
 
-      // printf("parallel_reduce -> execute_array result:\n%d\n", result);
-      // ParReduceCommon::memcpy_result
       *result_ptr = result;
     }
   }
@@ -413,30 +411,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
-  template <class TagType>
-  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
-      const FunctorType& functor, const Member ibeg, const Member iend,
-      reference_type update) {
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      functor(iwork, update);
-    }
-  }
-
-  template <class TagType>
-  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
-      const FunctorType& functor, const Member ibeg, const Member iend,
-      reference_type update) {
-    const TagType t{};
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      functor(t, iwork, update);
-    }
-  }
-
  public:
   inline void execute() const {
     OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
-    // refactored
     ParReduceSpecialize::template execute_array<WorkTag, 1>(m_functor, m_policy,
                                                             m_result_ptr);
     // TODO:
