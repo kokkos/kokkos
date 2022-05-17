@@ -242,7 +242,8 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
 
 TEST(TEST_CATEGORY, resize_exec_space) {
   using namespace Kokkos::Test::Tools;
-  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  listen_tool_events(Config::DisableAll(), Config::EnableFences(),
+                     Config::EnableKernels());
   Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
 
   auto success = validate_absence(
@@ -260,6 +261,16 @@ TEST(TEST_CATEGORY, resize_exec_space) {
       [&](EndFenceEvent event) {
         if (event.descriptor().find("Kokkos::resize(View)") !=
             std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](BeginParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
           return MatchDiagnostic{true, {"Found end event"}};
         return MatchDiagnostic{false};
       });
