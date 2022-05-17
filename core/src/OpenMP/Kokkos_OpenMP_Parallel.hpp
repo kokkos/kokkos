@@ -332,6 +332,15 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                          PolicyType, ReducerTypeFwd>;
   using reference_type = typename Analysis::reference_type;
 
+  inline static std::enable_if_t<std::is_arithmetic<ValueType>::value>
+  exec_reduce(const FunctorType& functor, const Member ibeg, const Member iend,
+              ValueType& result) {
+#pragma omp parallel for reduction(+ : result)
+    for (auto i = ibeg; i < iend; ++i) {
+      exec_work(functor, i, result);
+    }
+  }
+
   template <class Enable = WorkTag>
   inline static std::enable_if_t<std::is_void<WorkTag>::value &&
                                  std::is_same<Enable, WorkTag>::value>
@@ -356,15 +365,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // consider std::is_scalar etc.
     if (NumReductions == 1) {  // constexpr
       auto result = ValueType{};
-
-      // Case where reduction is on a native data type.
-      if (std::is_arithmetic<ValueType>::value) {  // constexpr
-#pragma omp parallel for reduction(+ : result)
-        for (auto i = begin; i < end; ++i) {
-          exec_work(f, i, result);
-        }
-      }
-
+      exec_reduce(f, begin, end, result);
       *result_ptr = result;
     }
   }
