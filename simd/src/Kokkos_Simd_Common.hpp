@@ -8,6 +8,7 @@
 #include <desul/atomics/Common.hpp>
 
 namespace Kokkos {
+namespace Experimental {
 
 template <class To, class From>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr
@@ -216,6 +217,7 @@ simd<T, Abi> cos(simd<T, Abi> a)
   return a;
 }
 
+}
 }
 
 #endif

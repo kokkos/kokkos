@@ -6,6 +6,7 @@
 #include <Kokkos_Simd_Common.hpp>
 
 namespace Kokkos {
+namespace Experimental {
 
 namespace simd_abi {
 
@@ -271,6 +272,7 @@ T reduce(
   return x.mask().get() ? x.value().get() : identity_element;
 }
 
+}
 }
 
 #endif

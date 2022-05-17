@@ -13,6 +13,7 @@
 #endif
 
 namespace Kokkos {
+namespace Experimental {
 
 namespace simd_abi {
 
@@ -744,6 +745,7 @@ double reduce(
   return _mm512_mask_reduce_add_pd(x.mask().get(), x.value().get());
 }
 
+}
 }
 
 #endif
