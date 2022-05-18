@@ -42,12 +42,10 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_OPENMPEXEC_HPP
-#define KOKKOS_OPENMPEXEC_HPP
+#ifndef KOKKOS_OPENMP_INSTANCE_HPP
+#define KOKKOS_OPENMP_INSTANCE_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_OPENMP)
-
 #if !defined(_OPENMP) && !defined(__CUDA_ARCH__) && \
     !defined(__HIP_DEVICE_COMPILE__) && !defined(__SYCL_DEVICE_ONLY__)
 #error \
@@ -66,27 +64,34 @@
 
 #include <omp.h>
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
 namespace Kokkos {
 namespace Impl {
 
-class OpenMPExec;
+class OpenMPInternal;
 
 extern int g_openmp_hardware_max_threads;
 
 extern __thread int t_openmp_hardware_id;
-extern __thread OpenMPExec* t_openmp_instance;
+extern __thread OpenMPInternal* t_openmp_instance;
 
-//----------------------------------------------------------------------------
-/** \brief  Data for OpenMP thread execution */
+struct OpenMPTraits {
+  static int constexpr MAX_THREAD_COUNT = 512;
+};
 
-class OpenMPExec {
+class OpenMPInternal {
+ private:
+  OpenMPInternal(int arg_pool_size)
+      : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {}
+
+  ~OpenMPInternal() { clear_thread_data(); }
+
+  int m_pool_size;
+  int m_level;
+
+  HostThreadTeamData* m_pool[OpenMPTraits::MAX_THREAD_COUNT];
+
  public:
   friend class Kokkos::OpenMP;
-
-  enum { MAX_THREAD_COUNT = 512 };
 
   void clear_thread_data();
 
@@ -100,18 +105,6 @@ class OpenMPExec {
                                       int& partition_size);
 #endif
 
- private:
-  OpenMPExec(int arg_pool_size)
-      : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {}
-
-  ~OpenMPExec() { clear_thread_data(); }
-
-  int m_pool_size;
-  int m_level;
-
-  HostThreadTeamData* m_pool[MAX_THREAD_COUNT];
-
- public:
   static void verify_is_master(const char* const);
 
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
@@ -127,13 +120,6 @@ class OpenMPExec {
 };
 
 }  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
 inline bool OpenMP::impl_is_initialized() noexcept {
   return Impl::t_openmp_instance != nullptr;
 }
@@ -179,7 +165,7 @@ KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
 #else
   if (omp_get_nested()) {
 #endif
-    using Exec = Impl::OpenMPExec;
+    using Exec = Impl::OpenMPInternal;
 
     Exec* prev_instance = Impl::t_openmp_instance;
 
@@ -368,4 +354,3 @@ inline int OpenMP::impl_max_hardware_threads() noexcept {
 }  // namespace Kokkos
 
 #endif
-#endif /* #ifndef KOKKOS_OPENMPEXEC_HPP */
