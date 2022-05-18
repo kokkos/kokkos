@@ -901,20 +901,30 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// This discards any existing contents of the objects, and resets
   /// their modified flags.  It does <i>not</i> copy the old contents
   /// of either View into the new View objects.
-  template <class... I>
+  template <class... ViewCtorArgs>
   void impl_realloc(const size_t n0, const size_t n1, const size_t n2,
                     const size_t n3, const size_t n4, const size_t n5,
-                    const size_t n6, const size_t n7, const I&... arg_prop) {
+                    const size_t n6, const size_t n7,
+                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+    using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+
+    static_assert(!alloc_prop_input::has_label,
+                  "The view constructor arguments passed to Kokkos::realloc "
+                  "must not include a label!");
+
     const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
     const bool sizeMismatch =
         Impl::size_mismatch(h_view, h_view.rank_dynamic, new_extents);
 
     if (sizeMismatch) {
-      ::Kokkos::realloc(arg_prop..., d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-      h_view = create_mirror_view(arg_prop..., typename t_host::memory_space(),
-                                  d_view);
-    } else if (!Kokkos::Impl::has_type<Kokkos::Impl::WithoutInitializing_t,
-                                       I...>::value) {
+      ::Kokkos::realloc(arg_prop, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
+      if (alloc_prop_input::initialize) {
+        h_view = create_mirror_view(typename t_host::memory_space(), d_view);
+      } else {
+        h_view = create_mirror_view(Kokkos::WithoutInitializing,
+                                    typename t_host::memory_space(), d_view);
+      }
+    } else if (alloc_prop_input::initialize) {
       ::Kokkos::deep_copy(d_view, typename t_dev::value_type{});
     }
 
@@ -925,6 +935,19 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       modified_flags(1) = modified_flags(0) = 0;
   }
 
+  template <class... ViewCtorArgs>
+  void realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+               const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+    impl_realloc(n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+  }
+
   void realloc(const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -933,7 +956,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    impl_realloc(n0, n1, n2, n3, n4, n5, n6, n7);
+    impl_realloc(n0, n1, n2, n3, n4, n5, n6, n7, Impl::ViewCtorProp<>{});
   }
 
   template <typename I>
@@ -946,7 +969,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    impl_realloc(n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+    impl_realloc(n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
   }
 
   /// \brief Resize both views, copying old contents into new if necessary.
@@ -1184,6 +1207,15 @@ std::enable_if_t<Impl::is_view_ctor_property<I>::value> resize(
     Args&&... args) noexcept(noexcept(dv.resize(arg_prop,
                                                 std::forward<Args>(args)...))) {
   dv.resize(arg_prop, std::forward<Args>(args)...);
+}
+
+template <class... ViewCtorArgs, class... Properties, class... Args>
+void realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+             DualView<Properties...>& dv,
+             Args&&... args) noexcept(noexcept(dv
+                                                   .realloc(std::forward<Args>(
+                                                       args)...))) {
+  dv.realloc(arg_prop, std::forward<Args>(args)...);
 }
 
 template <class... Properties, class... Args>

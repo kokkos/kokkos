@@ -2349,21 +2349,39 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> resize(
 
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
-template <class... I, class T, class... P>
+template <class... ViewCtorArgs, class T, class... P>
 inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
                          const size_t n1, const size_t n2, const size_t n3,
                          const size_t n4, const size_t n5, const size_t n6,
-                         const size_t n7, const I&... arg_prop) {
-  using drview_type = DynRankView<T, P...>;
+                         const size_t n7,
+                         const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  using drview_type      = DynRankView<T, P...>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a label!");
 
   const std::string label = v.label();
 
   v = drview_type();  // Deallocate first, if the only view to allocation
-  v = drview_type(view_alloc(label, arg_prop...), n0, n1, n2, n3, n4, n5, n6,
-                  n7);
+  v = drview_type(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
+}
+
+template <class T, class... P, class... ViewCtorArgs>
+inline void realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+                    DynRankView<T, P...>& v,
+                    const size_t n0 = KOKKOS_INVALID_INDEX,
+                    const size_t n1 = KOKKOS_INVALID_INDEX,
+                    const size_t n2 = KOKKOS_INVALID_INDEX,
+                    const size_t n3 = KOKKOS_INVALID_INDEX,
+                    const size_t n4 = KOKKOS_INVALID_INDEX,
+                    const size_t n5 = KOKKOS_INVALID_INDEX,
+                    const size_t n6 = KOKKOS_INVALID_INDEX,
+                    const size_t n7 = KOKKOS_INVALID_INDEX) {
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
 }
 
 template <class T, class... P>
@@ -2376,7 +2394,7 @@ inline void realloc(DynRankView<T, P...>& v,
                     const size_t n5 = KOKKOS_INVALID_INDEX,
                     const size_t n6 = KOKKOS_INVALID_INDEX,
                     const size_t n7 = KOKKOS_INVALID_INDEX) {
-  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7);
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, Impl::ViewCtorProp<>{});
 }
 
 template <class I, class T, class... P>
@@ -2390,7 +2408,7 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
     const size_t n5 = KOKKOS_INVALID_INDEX,
     const size_t n6 = KOKKOS_INVALID_INDEX,
     const size_t n7 = KOKKOS_INVALID_INDEX) {
-  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
 }
 
 }  // namespace Kokkos

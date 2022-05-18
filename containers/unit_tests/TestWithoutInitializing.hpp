@@ -62,6 +62,8 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
+                        6, 7, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -153,6 +155,8 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
+                        6, 7, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -217,6 +221,8 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 4, 5, 6, 8);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
+                        6, 7, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
