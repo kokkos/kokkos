@@ -323,7 +323,12 @@ struct math_function_name;
 // https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
 // For now 1s largely seem to work ...
 DEFINE_UNARY_FUNCTION_EVAL(exp, 2);
+#ifdef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND exp2 not device callable,
+                              // workaround computes it via exp
+DEFINE_UNARY_FUNCTION_EVAL(exp2, 30);
+#else
 DEFINE_UNARY_FUNCTION_EVAL(exp2, 2);
+#endif
 DEFINE_UNARY_FUNCTION_EVAL(expm1, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log10, 2);

@@ -93,8 +93,8 @@ using promote_2_t = typename promote_2<T, U>::type;
 #if defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE sycl
 #else
-#if defined(KOKKOS_COMPILER_NVCC) && defined(__GNUC__) && (__GNUC__ < 6) && \
-    !defined(__clang__)
+#if (defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC)) && \
+    defined(__GNUC__) && (__GNUC__ < 6) && !defined(__clang__)
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
 #else
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE std
@@ -243,12 +243,22 @@ KOKKOS_INLINE_FUNCTION int abs(int n) {
   return abs(n);
 }
 KOKKOS_INLINE_FUNCTION long abs(long n) {
+#ifdef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND ptxas fatal   : unresolved
+                              // extern function 'labs'
+  return n > 0 ? n : -n;
+#else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
   return abs(n);
+#endif
 }
 KOKKOS_INLINE_FUNCTION long long abs(long long n) {
+#ifdef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND ptxas fatal   : unresolved
+                              // extern function 'labs'
+  return n > 0 ? n : -n;
+#else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
   return abs(n);
+#endif
 }
 KOKKOS_INLINE_FUNCTION float abs(float x) {
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -292,7 +302,23 @@ KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(
     })
 // Exponential functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp)
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND nvc++ has issues with exp2
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp2)
+#else
+KOKKOS_INLINE_FUNCTION float exp2(float val) {
+  constexpr float ln2 = 0.69314718055994530941723212145818;
+  return exp(ln2 * val);
+}
+KOKKOS_INLINE_FUNCTION double exp2(double val) {
+  constexpr double ln2 = 0.69314718055994530941723212145818;
+  return exp(ln2 * val);
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION double exp2(T val) {
+  constexpr double ln2 = 0.69314718055994530941723212145818;
+  return exp(ln2 * static_cast<double>(val));
+}
+#endif
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(expm1)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(log)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(log10)
