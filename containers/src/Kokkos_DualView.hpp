@@ -232,7 +232,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : modified_flags(t_modified_flags("DualView::modified_flags")),
+      : modified_flags(Kokkos::view_alloc(typename t_modified_flags::execution_space{}, "DualView::modified_flags")),
         d_view(label, n0, n1, n2, n3, n4, n5, n6, n7),
         h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
   {}
@@ -929,6 +929,22 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                                     typename t_host::memory_space(), d_view);
       }
     } else if (alloc_prop_input::initialize) {
+    if (alloc_prop_input::has_execution_space) {
+    // Add execution_space if not provided to avoid need for if constexpr
+      using alloc_prop = Impl::ViewCtorProp<
+        ViewCtorArgs...,
+        std::conditional_t<alloc_prop_input::has_execution_space,
+                           std::integral_constant<unsigned int, 2>,
+                           typename t_dev::execution_space>>;
+      alloc_prop arg_prop_copy(arg_prop);
+      using execution_space_type = typename alloc_prop::execution_space;
+      const execution_space_type& exec_space =  static_cast<
+                Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
+                arg_prop_copy)
+                .value;
+      ::Kokkos::deep_copy(exec_space, d_view, typename t_dev::value_type{});
+    }
+    else
       ::Kokkos::deep_copy(d_view, typename t_dev::value_type{});
     }
 

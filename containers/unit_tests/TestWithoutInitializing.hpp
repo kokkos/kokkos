@@ -146,6 +146,33 @@ TEST(TEST_CATEGORY, resize_exec_space_dualview) {
   listen_tool_events(Config::DisableAll());
 }
 
+TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::DualView<int*, TEST_EXECSPACE>;
+  view_type v(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+
+  auto success = validate_absence(
+      [&]() {
+        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), v, 8);
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+
 TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -205,6 +232,38 @@ TEST(TEST_CATEGORY, resize_exec_space_dynrankview) {
         if (event.descriptor().find("initialization") != std::string::npos)
           return MatchDiagnostic{true, {"Found end event"}};
         return MatchDiagnostic{false};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::DynRankView<int, TEST_EXECSPACE>;
+  view_type outer_view, outer_view2;
+
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
+                        inner_view, 10);
+        outer_view2 = inner_view;
+        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
@@ -302,6 +361,38 @@ TEST(TEST_CATEGORY, resize_exec_space_scatterview) {
         if (event.descriptor().find("initialization") != std::string::npos)
           return MatchDiagnostic{true, {"Found end event"}};
         return MatchDiagnostic{false};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::Experimental::ScatterView<int*, typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>;
+  view_type outer_view, outer_view2;
+
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
+                        inner_view, 10);
+        outer_view2 = inner_view;
+        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            std::string::npos};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
