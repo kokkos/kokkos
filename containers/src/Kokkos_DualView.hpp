@@ -144,7 +144,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   using t_dev_const_randomread =
       View<typename traits::const_data_type, typename traits::array_layout,
            typename traits::device_type,
-           Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
+           Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
   /// \typedef t_host_const_randomread
   /// \brief The type of a const, random-access View host mirror of
@@ -175,7 +175,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   using t_dev_const_randomread_um =
       View<typename t_host::const_data_type, typename t_host::array_layout,
            typename t_host::device_type,
-           Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess> >;
+           Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>>;
 
   /// \typedef t_host_const_randomread
   /// \brief The type of a const, random-access View host mirror of
@@ -232,7 +232,9 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : modified_flags(Kokkos::view_alloc(typename t_modified_flags::execution_space{}, "DualView::modified_flags")),
+      : modified_flags(
+            Kokkos::view_alloc(typename t_modified_flags::execution_space{},
+                               "DualView::modified_flags")),
         d_view(label, n0, n1, n2, n3, n4, n5, n6, n7),
         h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
   {}
@@ -402,7 +404,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                   impl_device_matches_tdev_exec<Device>::value, t_dev,
                   typename std::conditional_t<
                       impl_device_matches_tdev_memory_space<Device>::value,
-                      t_dev, t_host> > > > >
+                      t_dev, t_host>>>>>
   view() const {
     constexpr bool device_is_memspace =
         std::is_same<Device, typename Device::memory_space>::value;
