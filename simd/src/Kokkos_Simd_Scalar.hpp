@@ -21,6 +21,7 @@ class simd_mask<T, simd_abi::scalar> {
   using value_type = bool;
   using simd_type = simd<T, simd_abi::scalar>;
   using abi_type = simd_abi::scalar;
+  using reference = value_type&;
   KOKKOS_DEFAULTED_FUNCTION simd_mask() = default;
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
   KOKKOS_FORCEINLINE_FUNCTION simd_mask(value_type value)
@@ -33,6 +34,14 @@ class simd_mask<T, simd_abi::scalar> {
   {
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr bool get() const { return m_value; }
+  KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t)
+  {
+    return m_value;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const
+  {
+    return m_value;
+  }
   KOKKOS_FORCEINLINE_FUNCTION simd_mask operator||(simd_mask const& other) const {
     return m_value || other.m_value;
   }

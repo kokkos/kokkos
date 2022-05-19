@@ -26,6 +26,34 @@ template <class T>
 class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   __mmask8 m_value;
  public:
+  class reference {
+    __mmask8& m_mask;
+    int m_lane;
+    KOKKOS_HOST_FORCEINLINE_FUNCTION __mmask8 bit_mask() const
+    {
+      return __mmask8(std::int16_t(1 << m_lane));
+    }
+   public:
+    KOKKOS_HOST_FORCEINLINE_FUNCTION reference(
+        __mmask8& mask_arg,
+        int lane_arg)
+      :m_mask(mask_arg)
+      ,m_lane(lane_arg)
+    {
+    }
+    KOKKOS_HOST_FORCEINLINE_FUNCTION void operator=(bool value) const
+    {
+      if (value) {
+        m_mask |= bit_mask();
+      } else {
+        m_mask &= !bit_mask();
+      }
+    }
+    KOKKOS_HOST_FORCEINLINE_FUNCTION operator bool () const
+    {
+      return (m_mask & bit_mask()) != 0;
+    }
+  };
   using value_type = bool;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
@@ -41,6 +69,14 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
     :m_value(value_in)
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr __mmask8 get() const { return m_value; }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i)
+  {
+    return reference(m_value, int(i));
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const
+  {
+    return static_cast<value_type>(reference(m_value, int(i)));
+  }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd_mask operator||(simd_mask const& other) const {
     return simd_mask(_kor_mask8(m_value, other.m_value));
   }
@@ -53,6 +89,9 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION bool operator==(simd_mask const& other) const {
     return m_value == other.m_value;
+  }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION bool operator!=(simd_mask const& other) const {
+    return m_value != other.m_value;
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION static
   simd_mask first_n(int n)
