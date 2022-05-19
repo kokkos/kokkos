@@ -375,9 +375,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     // (NumReductions == 1) -> the reduction is on a scalar type
     // consider std::is_scalar etc. (?)
-    ValueType result = {};
-    exec_reduce(f, begin, end, result);
-    *result_ptr = result; // FIXME: pass *result_ptr instead?
+    exec_reduce(f, begin, end, *result_ptr);
   }
 
   template <class TagType, int NumReductions>
