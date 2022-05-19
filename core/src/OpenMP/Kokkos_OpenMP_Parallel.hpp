@@ -384,12 +384,12 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    ValueType result[NumReductions] = {};
-#pragma omp parallel for reduction(+ : result[:NumReductions])
+    // ValueType result[NumReductions] = {};
+#pragma omp parallel for reduction(+ : result_ptr[:NumReductions])
     for (auto i = begin; i < end; ++i) {
-      exec_work(f, i, result);
+      exec_work(f, i, *result_ptr);
     }
-    *result_ptr = result; // FIXME: memcpy_result? pass ptr directly?
+    // *result_ptr = result; // FIXME: memcpy_result? pass ptr directly?
   }
 };
 
@@ -433,49 +433,41 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const Policy m_policy;
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
-  const int m_result_ptr_num_elems; // FIXME: size() type
+  const int m_result_ptr_num_elems;  // FIXME: size() type
 
  public:
   inline void execute() const {
     OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
-    if (m_result_ptr_num_elems == 1) {
-      ParReduceSpecialize::template execute_array<WorkTag, 1>(m_functor, m_policy,
-                                                            m_result_ptr);
+    if (m_result_ptr_num_elems == 1) {  // scalar reduction
+      ParReduceSpecialize::template execute_array<WorkTag, 1>(
+          m_functor, m_policy, m_result_ptr);
     }
 
-    // if constexpr (IsArray )
-    // if (m_result_ptr_num_elems <= 2) {
-    //   ParReduceSpecialize::template execute_array<WorkTag, 2>(
-    //       m_functor, m_policy, m_result_ptr);
-    // } else if (m_result_ptr_num_elems <= 4) {
-    //   ParReduceSpecialize::template execute_array<WorkTag, 4>(
-    //       m_functor, m_policy, m_result_ptr);
-    // } else if (m_result_ptr_num_elems <= 8) {
-    //   ParReduceSpecialize::template execute_array<WorkTag, 8>(
-    //       m_functor, m_policy, m_result_ptr);
-    // } else if (m_result_ptr_num_elems <= 16) {
-    //   ParReduceSpecialize::template execute_array<WorkTag, 16>(
-    //       m_functor, m_policy, m_result_ptr);
-    // } else if (m_result_ptr_num_elems <= 32) {
-    //   ParReduceSpecialize::template execute_array<WorkTag, 32>(
-    //       m_functor, m_policy, m_result_ptr);
-    // } else {
-    //   Kokkos::abort("array reduction length must be <= 32");
-    // }
+    if (IsArray) {
+      if (m_result_ptr_num_elems <= 2) {
+        ParReduceSpecialize::template execute_array<WorkTag, 2>(
+            m_functor, m_policy, m_result_ptr);
+      } else if (m_result_ptr_num_elems <= 4) {
+        ParReduceSpecialize::template execute_array<WorkTag, 4>(
+            m_functor, m_policy, m_result_ptr);
+      } else if (m_result_ptr_num_elems <= 8) {
+        ParReduceSpecialize::template execute_array<WorkTag, 8>(
+            m_functor, m_policy, m_result_ptr);
+      } else if (m_result_ptr_num_elems <= 16) {
+        ParReduceSpecialize::template execute_array<WorkTag, 16>(
+            m_functor, m_policy, m_result_ptr);
+      } else if (m_result_ptr_num_elems <= 32) {
+        ParReduceSpecialize::template execute_array<WorkTag, 32>(
+            m_functor, m_policy, m_result_ptr);
+      } else {
+        Kokkos::abort("array reduction length must be <= 32");
+      }
+    }
     // TODO:
     // constexpr bool is_dynamic =
     //     std::is_same<typename Policy::schedule_type::type,
     //                  Kokkos::Dynamic>::value;
-
-    // if (m_result_ptr) {
-    //   const int n = Analysis::value_count(
-    //       ReducerConditional::select(m_functor, m_reducer));
-
-    //   for (int j = 0; j < n; ++j) {
-    //     m_result_ptr[j] = ptr[j];
-    //   }
-    // }
   }
 
   //----------------------------------------
