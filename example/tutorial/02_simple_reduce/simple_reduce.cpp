@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 
   // Compute the sum of squares of integers from 0 to n-1, in
   // parallel, using Kokkos.
-  int sum = 0;
+  int sum = 15;
   Kokkos::parallel_reduce(n, squaresum(), sum);
   printf(
       "Sum of squares of integers from 0 to %i, "
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
       n - 1, sum);
 
   // Compare to a sequential loop.
-  int seqSum = 0;
+  int seqSum = 15;
   for (int i = 0; i < n; ++i) {
     seqSum += i * i;
   }
