@@ -3219,10 +3219,12 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
-
   static_assert(!alloc_prop_input::has_label,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
@@ -3310,6 +3312,9 @@ impl_realloc(Kokkos::View<T, P...>& v,
   static_assert(!alloc_prop_input::has_label,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
 
   if (v.layout() != layout) {
     v = view_type();  // Deallocate first, if the only view to allocation
@@ -3340,6 +3345,9 @@ impl_realloc(Kokkos::View<T, P...>& v,
   static_assert(!alloc_prop_input::has_label,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
 
   v = view_type();  // Deallocate first, if the only view to allocation
   v = view_type(arg_prop, layout);

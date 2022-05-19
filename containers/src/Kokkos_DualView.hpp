@@ -911,6 +911,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     static_assert(!alloc_prop_input::has_label,
                   "The view constructor arguments passed to Kokkos::realloc "
                   "must not include a label!");
+    static_assert(
+        !alloc_prop_input::has_pointer,
+        "The view constructor arguments passed to Kokkos::realloc must "
+        "not include a pointer!");
 
     const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
     const bool sizeMismatch =

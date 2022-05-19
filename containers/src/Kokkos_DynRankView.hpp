@@ -2363,6 +2363,9 @@ inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
   static_assert(!alloc_prop_input::has_label,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
 
   const std::string label = v.label();
 
