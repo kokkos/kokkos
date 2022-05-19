@@ -3234,21 +3234,21 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
     v = view_type(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
   } else if (alloc_prop_input::initialize) {
     if (alloc_prop_input::has_execution_space) {
-    // Add execution_space if not provided to avoid need for if constexpr
+      // Add execution_space if not provided to avoid need for if constexpr
       using alloc_prop = Impl::ViewCtorProp<
-        ViewCtorArgs...,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned int, 2>,
-                           typename view_type::execution_space>>;
+          ViewCtorArgs...,
+          std::conditional_t<alloc_prop_input::has_execution_space,
+                             std::integral_constant<unsigned int, 2>,
+                             typename view_type::execution_space>>;
       alloc_prop arg_prop_copy(arg_prop);
       using execution_space_type = typename alloc_prop::execution_space;
-      const execution_space_type& exec_space =  static_cast<
-                Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-                arg_prop_copy)
-                .value;
+      const execution_space_type& exec_space =
+          static_cast<
+              Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
+              arg_prop_copy)
+              .value;
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
-    }
-    else
+    } else
       Kokkos::deep_copy(v, typename view_type::value_type{});
   }
 }
@@ -3338,21 +3338,21 @@ impl_realloc(Kokkos::View<T, P...>& v,
     v = view_type(arg_prop, layout);
   } else if (alloc_prop_input::initialize) {
     if (alloc_prop_input::has_execution_space) {
-    // Add execution_space if not provided to avoid need for if constexpr
+      // Add execution_space if not provided to avoid need for if constexpr
       using alloc_prop = Impl::ViewCtorProp<
-        ViewCtorArgs...,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned int, 2>,
-                           typename view_type::execution_space>>;
+          ViewCtorArgs...,
+          std::conditional_t<alloc_prop_input::has_execution_space,
+                             std::integral_constant<unsigned int, 2>,
+                             typename view_type::execution_space>>;
       alloc_prop arg_prop_copy(arg_prop);
       using execution_space_type = typename alloc_prop::execution_space;
-      const execution_space_type& exec_space =  static_cast<
-                Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-                arg_prop_copy)
-                .value;
+      const execution_space_type& exec_space =
+          static_cast<
+              Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
+              arg_prop_copy)
+              .value;
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
-    }
-    else
+    } else
       Kokkos::deep_copy(v, typename view_type::value_type{});
   }
 }

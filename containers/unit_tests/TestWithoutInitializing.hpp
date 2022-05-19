@@ -159,19 +159,13 @@ TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
   view_type v(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
 
   auto success = validate_absence(
-      [&]() {
-        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), v, 8);
-      },
-      [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
-            std::string::npos};
+      [&]() { Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), v, 8); },
+      [&](BeginFenceEvent) {
+        return MatchDiagnostic{true, {"Found fence event!"}};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
-
 
 TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
   using namespace Kokkos::Test::Tools;
@@ -254,16 +248,13 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
         view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
         // Avoid testing the destructor
         outer_view = inner_view;
-        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
-                        inner_view, 10);
+        Kokkos::realloc(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
+            inner_view, 10);
         outer_view2 = inner_view;
-        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
       },
-      [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
-            std::string::npos};
+      [&](BeginFenceEvent) {
+        return MatchDiagnostic{true, {"Found fence event!"}};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
@@ -375,7 +366,8 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
-  using view_type = Kokkos::Experimental::ScatterView<int*, typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>;
+  using view_type = Kokkos::Experimental::ScatterView<
+      int*, typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>;
   view_type outer_view, outer_view2;
 
   auto success = validate_absence(
@@ -383,16 +375,14 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
         view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
         // Avoid testing the destructor
         outer_view = inner_view;
-        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
-                        inner_view, 10);
+        Kokkos::realloc(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
+            inner_view, 10);
         outer_view2 = inner_view;
         Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
       },
-      [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
-            std::string::npos};
+      [&](BeginFenceEvent) {
+        return MatchDiagnostic{true, {"Found fence event!"}};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
