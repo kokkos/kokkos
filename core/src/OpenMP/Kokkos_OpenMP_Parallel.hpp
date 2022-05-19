@@ -418,9 +418,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  static constexpr bool HasJoin =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
-                      FunctorType>::has_join_member_function;
   static constexpr bool UseReducer = is_reducer<ReducerType>::value;
 
   using ParReduceSpecialize =
@@ -434,8 +431,26 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const pointer_type m_result_ptr;
   const int m_result_ptr_num_elems;  // FIXME: size() type
 
+  template <class Enable = FunctorType>
+  std::enable_if_t<FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   Enable>::has_join_member_function>
+  exec() const {
+    ;  // HasJoin
+  }
+
+  template <class Enable = FunctorType>
+  std::enable_if_t<!FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                    Enable>::has_join_member_function &&
+                   UseReducer>
+  exec() const {
+    ;  // UseReducer
+  }
+
   template <class Enable = reference_type>
-  std::enable_if_t<std::is_pointer<Enable>::value> exec() const {
+  std::enable_if_t<!FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                    FunctorType>::has_join_member_function &&
+                   !UseReducer && std::is_pointer<Enable>::value>
+  exec() const {
     if (m_result_ptr_num_elems <= 2) {
       ParReduceSpecialize::template execute_array<WorkTag, 2>(
           m_functor, m_policy, m_result_ptr);
@@ -457,10 +472,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class Enable = reference_type>
-  std::enable_if_t<!std::is_pointer<Enable>::value> exec() const {
+  std::enable_if_t<!FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                    FunctorType>::has_join_member_function &&
+                   !UseReducer && !std::is_pointer<Enable>::value>
+  exec() const {
     // if (m_result_ptr_num_elems == 1) {  // scalar reduction
-    ParReduceSpecialize::template execute_array<WorkTag, 1>(
-    m_functor, m_policy, m_result_ptr);
+    ParReduceSpecialize::template execute_array<WorkTag, 1>(m_functor, m_policy,
+                                                            m_result_ptr);
   }
 
  public:
