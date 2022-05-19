@@ -3205,11 +3205,11 @@ inline void resize(Kokkos::View<T, P...>& v,
 
 /** \brief  Resize a view with discarding old data. */
 template <class T, class... P, class... ViewCtorArgs>
-inline typename std::enable_if<
+inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutRight>::value>::type
+                 Kokkos::LayoutRight>::value>
 impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
              const size_t n2, const size_t n3, const size_t n4, const size_t n5,
              const size_t n6, const size_t n7,
