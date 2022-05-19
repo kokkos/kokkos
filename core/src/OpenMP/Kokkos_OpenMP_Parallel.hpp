@@ -418,11 +418,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  static constexpr int HasJoin =
+  static constexpr bool HasJoin =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
                       FunctorType>::has_join_member_function;
-  static constexpr int UseReducer = is_reducer<ReducerType>::value;
-  static constexpr int IsArray    = std::is_pointer<reference_type>::value;
+  static constexpr bool UseReducer = is_reducer<ReducerType>::value;
+  static constexpr bool IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
