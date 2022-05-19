@@ -5,7 +5,7 @@
 
 #include <Kokkos_Simd_Scalar.hpp>
 
-#ifdef __AVX512F__
+#ifdef KOKKOS_ARCH_AVX512XEON
 #include <Kokkos_Simd_AVX512.hpp>
 #endif
 
@@ -14,7 +14,19 @@ namespace Experimental {
 
 namespace simd_abi {
 
-#if defined(__AVX512F__)
+template <class ... Abis>
+class abi_set {};
+
+using host_abi_set = abi_set<scalar
+#ifdef KOKKOS_ARCH_AVX512XEON
+      ,avx512_fixed_size<8>
+#endif
+      >;
+
+using device_abi_set = abi_set<scalar
+      >;
+
+#if defined(KOKKOS_ARCH_AVX512XEON)
 using host_native = avx512_fixed_size<8>;
 #else
 using host_native = scalar;
