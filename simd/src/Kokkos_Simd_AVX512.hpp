@@ -46,7 +46,7 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
       if (value) {
         m_mask |= bit_mask();
       } else {
-        m_mask &= !bit_mask();
+        m_mask &= ~bit_mask();
       }
     }
     KOKKOS_HOST_FORCEINLINE_FUNCTION operator bool () const
