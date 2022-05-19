@@ -341,6 +341,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     }
   }
 
+  // TODO:
+  // !std::is_arithmetic
+  // exec_reduce
+
   template <class Enable = WorkTag>
   inline static std::enable_if_t<std::is_void<WorkTag>::value &&
                                  std::is_same<Enable, WorkTag>::value>
@@ -356,18 +360,30 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   }
 
   template <class TagType, int NumReductions>
-  static void execute_array(const FunctorType& f, const PolicyType& p,
-                            PointerType result_ptr) {
+  static std::enable_if_t<(NumReductions == 1)> execute_array(
+      const FunctorType& f, const PolicyType& p, PointerType result_ptr) {
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    // if the reduction is on a scalar type
-    // consider std::is_scalar etc.
-    if (NumReductions == 1) {  // constexpr
-      auto result = ValueType{};
-      exec_reduce(f, begin, end, result);
-      *result_ptr = result;
+    // (NumReductions == 1) -> the reduction is on a scalar type
+    // consider std::is_scalar etc. (?)
+    ValueType result = {};
+    exec_reduce(f, begin, end, result);
+    *result_ptr = result;
+  }
+
+  template <class TagType, int NumReductions>
+  static std::enable_if_t<(NumReductions > 1)> execute_array(
+      const FunctorType& f, const PolicyType& p, PointerType result_ptr) {
+    const auto begin = p.begin();
+    const auto end   = p.end();
+
+    ValueType result[NumReductions] = {};
+#pragma omp parallel for reduction(+ : result[:NumReductions])
+    for (auto i = begin; i < end; ++i) {
+      exec_work(f, i, result);
     }
+    *result_ptr = result;
   }
 };
 
