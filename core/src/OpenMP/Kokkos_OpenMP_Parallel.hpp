@@ -56,6 +56,8 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#define KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
+
 #define KOKKOS_PRAGMA_IVDEP_IF_ENABLED
 #if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
     defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
@@ -1211,6 +1213,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#undef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
 #undef KOKKOS_PRAGMA_IVDEP_IF_ENABLED
 #undef KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE
 
