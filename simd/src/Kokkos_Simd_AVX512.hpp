@@ -93,11 +93,6 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION bool operator!=(simd_mask const& other) const {
     return m_value != other.m_value;
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION static
-  simd_mask first_n(int n)
-  {
-    return simd_mask(__mmask8(std::int16_t((1 << n) - 1)));
-  }
 };
 
 template <class T>
