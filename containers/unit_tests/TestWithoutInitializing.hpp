@@ -160,8 +160,11 @@ TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
 
   auto success = validate_absence(
       [&]() { Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), v, 8); },
-      [&](BeginFenceEvent) {
-        return MatchDiagnostic{true, {"Found fence event!"}};
+      [&](BeginFenceEvent event) {
+        if (!(event.descriptor().find("Debug Only Check for Execution Error") !=
+              std::string::npos))
+          return MatchDiagnostic{true, {"Found fence event!"}};
+        return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
@@ -257,8 +260,13 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
             inner_view, 10);
         outer_view2 = inner_view;
       },
-      [&](BeginFenceEvent) {
-        return MatchDiagnostic{true, {"Found fence event!"}};
+      [&](BeginFenceEvent event) {
+        // FIXME_CUDA FIXME_HIP FIXME_SYCL FIXME_OPENMPTARGET
+        if (!(event.descriptor().find(
+                  "fence after copying header from HostSpace") !=
+              std::string::npos))
+          return MatchDiagnostic{true, {"Found fence event!"}};
+        return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
@@ -385,7 +393,14 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
         outer_view2 = inner_view;
         Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
       },
-      [&](BeginFenceEvent) {
+      [&](BeginFenceEvent event) {
+        // FIXME_CUDA FIXME_HIP FIXME_SYCL FIXME_OPENMPTARGET
+        if ((event.descriptor().find(
+                 "fence after copying header from HostSpace") !=
+             std::string::npos) ||
+            (event.descriptor().find("Debug Only Check for Execution Error") !=
+             std::string::npos))
+          return MatchDiagnostic{false};
         return MatchDiagnostic{true, {"Found fence event!"}};
       });
   ASSERT_TRUE(success);
