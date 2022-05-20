@@ -298,6 +298,36 @@ TEST(TEST_CATEGORY, vector_insert) {
   Impl::test_vector_insert<int, TEST_EXECSPACE>(3057);
 }
 
+TEST(TEST_CATEGORY, vector_push_back_default_exec) {
+  using TestVectorDeviceType =
+      Kokkos::Device<Kokkos::DefaultExecutionSpace,
+                     typename Kokkos::DefaultExecutionSpace::memory_space>;
+  typedef unsigned long long int UInt64;
+  typedef Kokkos::pair<int, UInt64> Pair;
+  typedef Kokkos::vector<Pair, TestVectorDeviceType> PairVec;
+  PairVec V;
+  V.clear();
+  {
+    const int first     = 4;
+    const UInt64 second = 1;
+    const Pair p(first, second);
+    V.push_back(p);
+  }
+  ASSERT_EQ(V[0].first, 4);
+  ASSERT_EQ(V[0].second, 1u);
+
+  {
+    const int first     = 3;
+    const UInt64 second = 2;
+    const Pair p(first, second);
+    V.push_back(p);
+  }
+  ASSERT_EQ(V[1].first, 3);
+  ASSERT_EQ(V[1].second, 2u);
+  ASSERT_EQ(V[0].first, 4);
+  ASSERT_EQ(V[0].second, 1u);
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
