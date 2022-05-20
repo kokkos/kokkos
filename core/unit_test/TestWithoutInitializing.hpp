@@ -215,3 +215,20 @@ TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
+
+TEST(TEST_CATEGORY, deep_copy_zero_memset) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  Kokkos::View<int*, TEST_EXECSPACE> bla("bla", 8);
+
+  auto success =
+      validate_absence([&]() { Kokkos::deep_copy(bla, 0); },
+                       [&](BeginParallelForEvent) {
+                         return MatchDiagnostic{true, {"Found begin event"}};
+                       },
+                       [&](EndParallelForEvent) {
+                         return MatchDiagnostic{true, {"Found end event"}};
+                       });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
