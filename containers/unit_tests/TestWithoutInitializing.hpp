@@ -237,6 +237,10 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
                    Kokkos::CudaUVMSpace>::value)
     return;
 #endif
+// FIXME_THREADS The Threads backend fences every parallel_for
+#ifdef KOKKOS_ENABLE_THREADS
+  if (std::is_same<typename TEST_EXECSPACE, Kokkos::Threads>::value) return;
+#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
