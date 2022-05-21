@@ -194,12 +194,6 @@ TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
                    Kokkos::CudaUVMSpace>::value)
     return;
 #endif
-    // FIXME_OPENMPTARGET The OpenMPTarget backend doesn't implement ZeroMemset
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same<typename TEST_EXECSPACE,
-                   Kokkos::Experimental::OpenMPTarget>::value)
-    return;
-#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
@@ -223,6 +217,13 @@ TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
 }
 
 TEST(TEST_CATEGORY, deep_copy_zero_memset) {
+// FIXME_OPENMPTARGET The OpenMPTarget backend doesn't implement ZeroMemset
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  if (std::is_same<typename TEST_EXECSPACE,
+                   Kokkos::Experimental::OpenMPTarget>::value)
+    return;
+#endif
+
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::View<int*, TEST_EXECSPACE> bla("bla", 8);
