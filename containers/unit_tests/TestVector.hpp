@@ -302,9 +302,9 @@ TEST(TEST_CATEGORY, vector_push_back_default_exec) {
   using TestVectorDeviceType =
       Kokkos::Device<Kokkos::DefaultExecutionSpace,
                      typename Kokkos::DefaultExecutionSpace::memory_space>;
-  typedef unsigned long long int UInt64;
-  typedef Kokkos::pair<int, UInt64> Pair;
-  typedef Kokkos::vector<Pair, TestVectorDeviceType> PairVec;
+  using UInt64  = unsigned long long int;
+  using Pair    = Kokkos::pair<int, UInt64>;
+  using PairVec = Kokkos::vector<Pair, TestVectorDeviceType>;
   PairVec V;
   V.clear();
   {
