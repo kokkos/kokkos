@@ -785,7 +785,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
             std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
                 nullptr>
   void modify() {
-    if (modified_flags.data() == nullptr) return;
+    if (modified_flags.data() == nullptr) {
+      modified_flags = t_modified_flags("DualView::modified_flags");
+    }
+
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -969,17 +972,17 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                                     typename t_host::memory_space(), d_view);
 
         /* Mark Device copy as modified */
-        modified_flags(1) = modified_flags(1) + 1;
+        ++modified_flags(1);
       }
     } else {
-      /* Realloc on Device */
+      /* Resize on Host */
       if (sizeMismatch) {
         ::Kokkos::resize(arg_prop..., h_view, n0, n1, n2, n3, n4, n5, n6, n7);
         d_view = create_mirror_view(arg_prop..., typename t_dev::memory_space(),
                                     h_view);
 
         /* Mark Host copy as modified */
-        modified_flags(0) = modified_flags(0) + 1;
+        ++modified_flags(0);
       }
     }
   }
