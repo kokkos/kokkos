@@ -298,34 +298,17 @@ TEST(TEST_CATEGORY, vector_insert) {
   Impl::test_vector_insert<int, TEST_EXECSPACE>(3057);
 }
 
+// The particular scenario below triggered a bug where empty modified_flags
+// would cause resize in push_back to be executed on the device overwriting the
+// values that were stored on the host previously.
 TEST(TEST_CATEGORY, vector_push_back_default_exec) {
-  using TestVectorDeviceType =
-      Kokkos::Device<Kokkos::DefaultExecutionSpace,
-                     typename Kokkos::DefaultExecutionSpace::memory_space>;
-  using UInt64  = unsigned long long int;
-  using Pair    = Kokkos::pair<int, UInt64>;
-  using PairVec = Kokkos::vector<Pair, TestVectorDeviceType>;
-  PairVec V;
+  Kokkos::vector<int, TEST_EXECSPACE> V;
   V.clear();
-  {
-    const int first     = 4;
-    const UInt64 second = 1;
-    const Pair p(first, second);
-    V.push_back(p);
-  }
-  ASSERT_EQ(V[0].first, 4);
-  ASSERT_EQ(V[0].second, 1u);
-
-  {
-    const int first     = 3;
-    const UInt64 second = 2;
-    const Pair p(first, second);
-    V.push_back(p);
-  }
-  ASSERT_EQ(V[1].first, 3);
-  ASSERT_EQ(V[1].second, 2u);
-  ASSERT_EQ(V[0].first, 4);
-  ASSERT_EQ(V[0].second, 1u);
+  V.push_back(4);
+  ASSERT_EQ(V[0], 4);
+  V.push_back(3);
+  ASSERT_EQ(V[1], 3);
+  ASSERT_EQ(V[0], 4);
 }
 
 }  // namespace Test
