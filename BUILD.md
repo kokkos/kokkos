@@ -171,6 +171,9 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
     * Whether HPX supports asynchronous dispatch
     * BOOL Default: OFF
+* Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC
+    * Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2). This is an experimental performance feature and currently has issue when using with UCX. See https://github.com/kokkos/kokkos/issues/4228 for more details.
+    * BOOL Default: OFF
 * Kokkos_ENABLE_LARGE_MEM_TESTS
     * Whether to perform extra large memory tests
     * BOOL_Default: OFF
@@ -235,6 +238,9 @@ The following options control `find_package` paths for CMake-based TPLs:
 ## Architecture Keywords
 Architecture-specific optimizations can be enabled by specifying `-DKokkos_ARCH_X`.
 
+* Kokkos_ARCH_NATIVE
+    * Whether to optimize for the the local CPU architecture
+    * BOOL Default: OFF
 * Kokkos_ARCH_AMDAVX
     * Whether to optimize for the AMDAVX architecture
     * BOOL Default: OFF
@@ -310,11 +316,23 @@ Architecture-specific optimizations can be enabled by specifying `-DKokkos_ARCH_
 * Kokkos_ARCH_POWER9
     * Whether to optimize for the POWER9 architecture
     * BOOL Default: OFF
+* Kokkos_ARCH_ICL
+    * Whether to optimize for the ICL architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_ICX
+    * Whether to optimize for the ICX architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_SKL
+    * Whether to optimize for the SKL architecture
+    * BOOL Default: OFF
 * Kokkos_ARCH_SKX
     * Whether to optimize for the SKX architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_SNB
     * Whether to optimize for the SNB architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_SPR
+    * Whether to optimize for the SPR architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_TURING75
     * Whether to optimize for the TURING75 architecture

@@ -234,7 +234,6 @@ unsigned thread_mapping(const char* const label, const bool allow_async,
 
 #include <iostream>
 #include <sstream>
-#include <stdexcept>
 
 /*--------------------------------------------------------------------------*/
 /* Third Party Libraries */

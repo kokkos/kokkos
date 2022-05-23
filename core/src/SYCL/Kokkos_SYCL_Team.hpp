@@ -142,17 +142,15 @@ class SYCLTeamMember {
   /**\brief  Reduction across a team
    */
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      team_reduce(ReducerType const& reducer) const noexcept {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer) const noexcept {
     team_reduce(reducer, reducer.reference());
   }
 
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      team_reduce(ReducerType const& reducer,
-                  typename ReducerType::value_type& value) const noexcept {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer,
+              typename ReducerType::value_type& value) const noexcept {
     using value_type = typename ReducerType::value_type;
 
     auto sg                       = m_item.get_sub_group();
@@ -323,17 +321,15 @@ class SYCLTeamMember {
   //----------------------------------------
 
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      vector_reduce(ReducerType const& reducer) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  vector_reduce(ReducerType const& reducer) const {
     vector_reduce(reducer, reducer.reference());
   }
 
   template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<is_reducer<ReducerType>::value>::type
-      vector_reduce(ReducerType const& reducer,
-                    typename ReducerType::value_type& value) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  vector_reduce(ReducerType const& reducer,
+                typename ReducerType::value_type& value) const {
     const auto tidx1   = m_item.get_local_id(1);
     const auto grange1 = m_item.get_local_range(1);
 
@@ -459,9 +455,9 @@ KOKKOS_INLINE_FUNCTION
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Impl::SYCLTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::SYCLTeamMember>
 TeamThreadRange(const Impl::SYCLTeamMember& thread, iType1 begin, iType2 end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::SYCLTeamMember>(
       thread, iType(begin), iType(end));
 }
@@ -476,10 +472,10 @@ KOKKOS_INLINE_FUNCTION
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Impl::SYCLTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::SYCLTeamMember>
 TeamVectorRange(const Impl::SYCLTeamMember& thread, const iType1& begin,
                 const iType2& end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::TeamVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>(
       thread, iType(begin), iType(end));
 }
@@ -494,10 +490,10 @@ KOKKOS_INLINE_FUNCTION
 
 template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
-    typename std::common_type<iType1, iType2>::type, Impl::SYCLTeamMember>
+    std::common_type_t<iType1, iType2>, Impl::SYCLTeamMember>
 ThreadVectorRange(const Impl::SYCLTeamMember& thread, iType1 arg_begin,
                   iType2 arg_end) {
-  using iType = typename std::common_type<iType1, iType2>::type;
+  using iType = std::common_type_t<iType1, iType2>;
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>(
       thread, iType(arg_begin), iType(arg_end));
 }
@@ -545,11 +541,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  *  performed and put into result.
  */
 template <typename iType, class Closure, class ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                        iType, Impl::SYCLTeamMember>& loop_boundaries,
-                    const Closure& closure, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::SYCLTeamMember>& loop_boundaries,
+                const Closure& closure, const ReducerType& reducer) {
   typename ReducerType::value_type value;
   reducer.init(value);
 
@@ -572,11 +567,10 @@ KOKKOS_INLINE_FUNCTION
  *  performed and put into result.
  */
 template <typename iType, class Closure, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
-    parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                        iType, Impl::SYCLTeamMember>& loop_boundaries,
-                    const Closure& closure, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::SYCLTeamMember>& loop_boundaries,
+                const Closure& closure, ValueType& result) {
   ValueType val;
   Kokkos::Sum<ValueType> reducer(val);
 
@@ -656,11 +650,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 }
 
 template <typename iType, class Closure, class ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
-                        iType, Impl::SYCLTeamMember>& loop_boundaries,
-                    const Closure& closure, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
+                    iType, Impl::SYCLTeamMember>& loop_boundaries,
+                const Closure& closure, const ReducerType& reducer) {
   typename ReducerType::value_type value;
   reducer.init(value);
 
@@ -679,11 +672,10 @@ KOKKOS_INLINE_FUNCTION
 }
 
 template <typename iType, class Closure, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
-    parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
-                        iType, Impl::SYCLTeamMember>& loop_boundaries,
-                    const Closure& closure, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
+                    iType, Impl::SYCLTeamMember>& loop_boundaries,
+                const Closure& closure, ValueType& result) {
   ValueType val;
   Kokkos::Sum<ValueType> reducer(val);
 
@@ -747,11 +739,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  *  constructed value.
  */
 template <typename iType, class Closure, class ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<is_reducer<ReducerType>::value>::type
-    parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
-                        iType, Impl::SYCLTeamMember> const& loop_boundaries,
-                    Closure const& closure, ReducerType const& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::SYCLTeamMember> const& loop_boundaries,
+                Closure const& closure, ReducerType const& reducer) {
   reducer.init(reducer.reference());
 
   const iType tidx1   = loop_boundaries.member.item().get_local_id(1);
@@ -776,11 +767,10 @@ KOKKOS_INLINE_FUNCTION
  *  constructed value.
  */
 template <typename iType, class Closure, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<!is_reducer<ValueType>::value>::type
-    parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
-                        iType, Impl::SYCLTeamMember> const& loop_boundaries,
-                    Closure const& closure, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!is_reducer<ValueType>::value>
+parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::SYCLTeamMember> const& loop_boundaries,
+                Closure const& closure, ValueType& result) {
   result = ValueType();
 
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
@@ -804,11 +794,10 @@ KOKKOS_INLINE_FUNCTION
  *  The last call to closure has final == true.
  */
 template <typename iType, class Closure, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
-                      iType, Impl::SYCLTeamMember>& loop_boundaries,
-                  const Closure& closure, const ReducerType& reducer) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                  iType, Impl::SYCLTeamMember>& loop_boundaries,
+              const Closure& closure, const ReducerType& reducer) {
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
 

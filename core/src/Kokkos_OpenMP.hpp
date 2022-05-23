@@ -72,7 +72,7 @@
 namespace Kokkos {
 
 namespace Impl {
-class OpenMPExec;
+class OpenMPInternal;
 }
 
 /// \class OpenMP
@@ -179,6 +179,7 @@ namespace Experimental {
 template <>
 struct DeviceTypeTraits<OpenMP> {
   static constexpr DeviceType id = DeviceType::OpenMP;
+  static int device_id(const OpenMP&) { return 0; }
 };
 }  // namespace Experimental
 }  // namespace Tools
@@ -219,7 +220,7 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <OpenMP/Kokkos_OpenMP_Team.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 #include <OpenMP/Kokkos_OpenMP_Task.hpp>

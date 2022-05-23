@@ -61,7 +61,7 @@ namespace Kokkos {
 namespace Impl {
 
 template <class QueueType>
-class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType> > {
+class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType>> {
  public:
   // Note: Scheduler may be an incomplete type at class scope (but not inside
   // of the methods, obviously)
@@ -131,8 +131,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType> > {
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
     Scheduler,
-    typename std::enable_if<std::is_same<typename Scheduler::execution_space,
-                                         Kokkos::Serial>::value>::type> {
+    std::enable_if_t<std::is_same<typename Scheduler::execution_space,
+                                  Kokkos::Serial>::value>> {
  public:
   // Note: Scheduler may be an incomplete type at class scope (but not inside
   // of the methods, obviously)

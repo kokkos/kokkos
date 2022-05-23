@@ -241,7 +241,7 @@ class ParallelScanSYCLBase {
 
         value_type update{};
         final_reducer.init(&update);
-        if constexpr (std::is_same<WorkTag, void>::value)
+        if constexpr (std::is_void<WorkTag>::value)
           functor_wrapper.get_functor()(id, update, false);
         else
           functor_wrapper.get_functor()(WorkTag(), id, update, false);
@@ -261,7 +261,7 @@ class ParallelScanSYCLBase {
         auto global_id = item.get_id(0);
 
         value_type update = global_mem[global_id];
-        if constexpr (std::is_same<WorkTag, void>::value)
+        if constexpr (std::is_void<WorkTag>::value)
           functor_wrapper.get_functor()(global_id, update, true);
         else
           functor_wrapper.get_functor()(WorkTag(), global_id, update, true);

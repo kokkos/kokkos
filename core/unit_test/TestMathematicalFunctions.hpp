@@ -239,14 +239,14 @@ struct FloatingPointComparison {
 
   // Using absolute here instead of abs, since we actually test abs ...
   template <class T>
-  KOKKOS_FUNCTION typename std::enable_if<std::is_signed<T>::value, T>::type
-  absolute(T val) const {
+  KOKKOS_FUNCTION std::enable_if_t<std::is_signed<T>::value, T> absolute(
+      T val) const {
     return val < T(0) ? -val : val;
   }
 
   template <class T>
-  KOKKOS_FUNCTION typename std::enable_if<!std::is_signed<T>::value, T>::type
-  absolute(T val) const {
+  KOKKOS_FUNCTION std::enable_if_t<!std::is_signed<T>::value, T> absolute(
+      T val) const {
     return val;
   }
 
@@ -257,10 +257,9 @@ struct FloatingPointComparison {
 
     bool ar = absolute(fpv) < abs_tol;
     if (!ar) {
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("absolute value exceeds tolerance [|%e| > %e]\n", (double)fpv,
-             abs_tol);
-#endif
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "absolute value exceeds tolerance [|%e| > %e]\n", (double)fpv,
+          abs_tol);
     }
 
     return ar;
@@ -279,12 +278,11 @@ struct FloatingPointComparison {
       double min_denom = static_cast<double>(
           absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
       double rel_diff = abs_diff / min_denom;
-      bool ar         = rel_diff < rel_tol;
+      bool ar         = abs_diff == 0 || rel_diff < rel_tol;
       if (!ar) {
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-        printf("relative difference exceeds tolerance [%e > %e]\n",
-               (double)rel_diff, rel_tol);
-#endif
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "relative difference exceeds tolerance [%e > %e]\n",
+            (double)rel_diff, rel_tol);
       }
 
       return ar;
@@ -456,10 +454,9 @@ struct TestMathUnaryFunction : FloatingPointComparison {
     bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
     if (!ar) {
       ++e;
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("value at %f which is %f was expected to be %f\n", (double)val_[i],
-             (double)Func::eval(val_[i]), (double)res_[i]);
-#endif
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %f which is %f was expected to be %f\n", (double)val_[i],
+          (double)Func::eval(val_[i]), (double)res_[i]);
     }
   }
 };
@@ -495,11 +492,9 @@ struct TestMathBinaryFunction : FloatingPointComparison {
     bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
     if (!ar) {
       ++e;
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("value at %f, %f which is %f was expected to be %f\n",
-             (double)val1_, (double)val2_, (double)Func::eval(val1_, val2_),
-             (double)res_);
-#endif
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %f, %f which is %f was expected to be %f\n", (double)val1_,
+          (double)val2_, (double)Func::eval(val1_, val2_), (double)res_);
     }
   }
 };

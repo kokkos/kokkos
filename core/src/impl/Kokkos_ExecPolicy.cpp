@@ -47,14 +47,16 @@
 
 namespace Kokkos {
 namespace Impl {
-PerTeamValue::PerTeamValue(int arg) : value(arg) {}
+PerTeamValue::PerTeamValue(size_t arg) : value(arg) {}
 
-PerThreadValue::PerThreadValue(int arg) : value(arg) {}
+PerThreadValue::PerThreadValue(size_t arg) : value(arg) {}
 }  // namespace Impl
 
-Impl::PerTeamValue PerTeam(const int& arg) { return Impl::PerTeamValue(arg); }
+Impl::PerTeamValue PerTeam(const size_t& arg) {
+  return Impl::PerTeamValue(arg);
+}
 
-Impl::PerThreadValue PerThread(const int& arg) {
+Impl::PerThreadValue PerThread(const size_t& arg) {
   return Impl::PerThreadValue(arg);
 }
 

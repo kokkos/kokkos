@@ -58,7 +58,7 @@ namespace Impl {
 
 template <class Scalar, class JoinerType, class Space = HostSpace>
 struct ReducerWithArbitraryJoinerNoNeutralElement {
-  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
 
  public:
   // Required
@@ -87,11 +87,6 @@ struct ReducerWithArbitraryJoinerNoNeutralElement {
   // Required
   KOKKOS_FUNCTION
   void join(value_type& dest, const value_type& src) const {
-    dest.val = m_joiner(dest.val, src.val);
-  }
-
-  KOKKOS_FUNCTION
-  void join(volatile value_type& dest, const volatile value_type& src) const {
     dest.val = m_joiner(dest.val, src.val);
   }
 

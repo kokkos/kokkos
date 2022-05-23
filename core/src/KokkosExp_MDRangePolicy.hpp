@@ -190,7 +190,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   template <class... OtherProperties>
   friend struct MDRangePolicy;
 
-  static_assert(!std::is_same<typename traits::iteration_pattern, void>::value,
+  static_assert(!std::is_void<typename traits::iteration_pattern>::value,
                 "Kokkos Error: MD iteration pattern not defined");
 
   using iteration_pattern = typename traits::iteration_pattern;

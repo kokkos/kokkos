@@ -79,6 +79,7 @@ jobs:
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
+            -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_HWLOC=${{ matrix.hwloc }} \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \

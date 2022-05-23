@@ -113,14 +113,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
 };
 
 //----------------------------------------
-
-template <>
-struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
-                         Kokkos::Experimental::OpenMPTargetSpace> {
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
-};
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -161,13 +153,29 @@ class OpenMPTargetSpace {
 
   /**\brief  Allocate untracked memory in the space */
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the space */
-  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+  void deallocate(void* const arg_alloc_ptr,
+                  const std::size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size,
+                  const size_t arg_logical_size = 0) const;
 
   static constexpr const char* name() { return "OpenMPTargetSpace"; }
 
  private:
+  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
+  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                       const size_t arg_alloc_size,
+                       const size_t arg_logical_size = 0,
+                       const Kokkos::Tools::SpaceHandle =
+                           Kokkos::Tools::make_space_handle(name())) const;
+
   friend class Kokkos::Impl::SharedAllocationRecord<
       Kokkos::Experimental::OpenMPTargetSpace, void>;
 };

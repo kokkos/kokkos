@@ -75,8 +75,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   int m_league_size;
   int m_team_size;
   int m_vector_length;
-  int m_team_scratch_size[2];
-  int m_thread_scratch_size[2];
+  size_t m_team_scratch_size[2];
+  size_t m_thread_scratch_size[2];
   int m_chunk_size;
   bool m_tune_team_size;
   bool m_tune_vector_length;
@@ -206,15 +206,17 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
 
   int league_size() const { return m_league_size; }
 
-  int scratch_size(int level, int team_size_ = -1) const {
+  size_t scratch_size(int level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
 
-  int team_scratch_size(int level) const { return m_team_scratch_size[level]; }
+  size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
 
-  int thread_scratch_size(int level) const {
+  size_t thread_scratch_size(int level) const {
     return m_thread_scratch_size[level];
   }
 
@@ -515,23 +517,21 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_begin;
   int m_shmem_size;
   void* m_scratch_ptr[2];
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   int32_t* m_scratch_locks;
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
   std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <typename TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_team(const member_type& member) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+      const member_type& member) const {
     m_functor(member);
   }
 
   template <typename TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_team(const member_type& member) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+      const member_type& member) const {
     m_functor(TagType(), member);
   }
 
@@ -686,7 +686,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type m_shmem_begin;
   size_type m_shmem_size;
   void* m_scratch_ptr[2];
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   int32_t* m_scratch_locks;
   const size_type m_league_size;
   int m_team_size;
@@ -696,16 +696,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_team(member_type const& member, reference_type update) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+      member_type const& member, reference_type update) const {
     m_functor(member, update);
   }
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_team(member_type const& member, reference_type update) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+      member_type const& member, reference_type update) const {
     m_functor(TagType(), member, update);
   }
 
@@ -886,10 +884,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  ParallelReduce(FunctorType const& arg_functor, Policy const& arg_policy,
-                 ViewType const& arg_result,
-                 typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = nullptr)
+  ParallelReduce(
+      FunctorType const& arg_functor, Policy const& arg_policy,
+      ViewType const& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),

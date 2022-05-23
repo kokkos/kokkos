@@ -636,6 +636,7 @@ fi
 export OMP_NUM_THREADS=8
 export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
+export OMP_MAX_ACTIVE_LEVELS=1
 
 declare -i NUM_RESULTS_TO_KEEP=7
 

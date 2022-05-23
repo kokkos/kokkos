@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-#include <stdexcept>
 #include <sstream>
 #include <iostream>
 #include <limits>

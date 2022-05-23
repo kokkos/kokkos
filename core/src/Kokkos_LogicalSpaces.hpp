@@ -98,9 +98,9 @@ class LogicalMemorySpace {
   /// parallel using the View's default execution space).
 
   using execution_space =
-      typename std::conditional<std::is_void<DefaultBaseExecutionSpace>::value,
-                                typename BaseSpace::execution_space,
-                                DefaultBaseExecutionSpace>::type;
+      std::conditional_t<std::is_void<DefaultBaseExecutionSpace>::value,
+                         typename BaseSpace::execution_space,
+                         DefaultBaseExecutionSpace>;
 
   using device_type = Kokkos::Device<execution_space, memory_space>;
 

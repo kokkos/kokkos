@@ -134,7 +134,6 @@ __device__ bool cuda_inter_block_reduction(
     typename FunctorType::pointer_type const /*result*/,
     Cuda::size_type* const m_scratch_flags,
     const int max_active_thread = blockDim.y) {
-#ifdef __CUDA_ARCH__
   using pointer_type = typename FunctorType::pointer_type;
   using value_type   = typename FunctorType::value_type;
 
@@ -211,15 +210,6 @@ __device__ bool cuda_inter_block_reduction(
   // The last block has in its thread=0 the global reduction value through
   // "value"
   return last_block;
-#else
-  (void)value;
-  (void)neutral;
-  (void)reducer;
-  (void)m_scratch_space;
-  (void)m_scratch_flags;
-  (void)max_active_thread;
-  return true;
-#endif
 }
 
 template <class FunctorType, bool DoScan, bool UseShfl>

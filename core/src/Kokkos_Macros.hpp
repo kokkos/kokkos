@@ -579,15 +579,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 //----------------------------------------------------------------------------
-
-#if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || \
-    (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
-#if defined(KOKKOS_ENABLE_PERFORMANCE_POSIX_MEMALIGN)
-#define KOKKOS_ENABLE_POSIX_MEMALIGN 1
-#endif
-#endif
-
-//----------------------------------------------------------------------------
 // If compiling with CUDA, we must use relocatable device code to enable the
 // task policy.
 
