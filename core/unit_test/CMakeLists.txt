@@ -326,12 +326,16 @@ foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYC
 endforeach()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
-  list(REMOVE_ITEM OpenMPTarget_SOURCES
+  list(REMOVE_ITEM OpenMPTarget_SOURCES1A
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexfloat.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
+    )
+  list(REMOVE_ITEM OpenMPTarget_SOURCES1B
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
+    )
+  list(REMOVE_ITEM OpenMPTarget_SOURCES2A
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
@@ -348,7 +352,7 @@ IF(KOKKOS_ARCH_VEGA906 OR KOKKOS_ARCH_VEGA908 OR KOKKOS_ARCH_VEGA90A)
   SET(KOKKOS_AMDGPU_ARCH TRUE)
 ENDIF()
 IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_AMDGPU_ARCH)
-  LIST(REMOVE_ITEM OpenMPTarget_SOURCES
+  LIST(REMOVE_ITEM OpenMPTarget_SOURCES1B
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_e.cpp
   )
 ENDIF()
@@ -525,10 +529,45 @@ endif()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMPTarget
+    UnitTest_OpenMPTarget1A
     SOURCES
-    UnitTestMainInit.cpp
-    ${OpenMPTarget_SOURCES}
+      UnitTestMainInit.cpp
+      ${OpenMPTarget_SOURCES1A}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget1B
+    SOURCES
+      UnitTestMainInit.cpp
+      ${OpenMPTarget_SOURCES1B}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget2A
+    SOURCES
+      UnitTestMainInit.cpp
+      ${OpenMPTarget_SOURCES2A}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget2B
+    SOURCES
+      UnitTestMainInit.cpp
+      ${OpenMPTarget_SOURCES2B}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget2C
+    SOURCES
+      UnitTestMainInit.cpp
+      ${OpenMPTarget_SOURCES2C}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget2D
+    SOURCES
+      UnitTestMainInit.cpp
+      ${OpenMPTarget_SOURCES2D}
   )
 endif()
 
