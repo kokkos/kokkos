@@ -8,11 +8,11 @@
 - Fix allocating large Views [\#4907](https://github.com/kokkos/kokkos/pull/4907)
 - Fix bounds errors with Kokkos::sort [\#4980](https://github.com/kokkos/kokkos/pull/4980)
 - Fix HIP version when printing the configuration [\#4872](https://github.com/kokkos/kokkos/pull/4872)
-- Fixed _CUDA_ARCH__ to __CUDA_ARCH__ for CUDA LDG [\#4893](https://github.com/kokkos/kokkos/pull/4893)
+- Fixed `_CUDA_ARCH__` to `__CUDA_ARCH__` for CUDA LDG [\#4893](https://github.com/kokkos/kokkos/pull/4893)
 - Fixed an incorrect struct initialization [\#5028](https://github.com/kokkos/kokkos/pull/5028)
-- Fix device_id in profiling [\#4997](https://github.com/kokkos/kokkos/pull/4997)
-- Fix racing condition in HIPParallelLaunch [\#5008](https://github.com/kokkos/kokkos/pull/5008)
-- Avoid deprecation warnings with OpenMPExec::validate_partition [\#4982](https://github.com/kokkos/kokkos/pull/4982)
+- Fix `device_id` in profiling [\#4997](https://github.com/kokkos/kokkos/pull/4997)
+- Fix racing condition in `HIPParallelLaunch` [\#5008](https://github.com/kokkos/kokkos/pull/5008)
+- Avoid deprecation warnings with `OpenMPExec::validate_partition` [\#4982](https://github.com/kokkos/kokkos/pull/4982)
 - Make View self-assignment not produce double-free [\#5024](https://github.com/kokkos/kokkos/pull/5024)
 
 
