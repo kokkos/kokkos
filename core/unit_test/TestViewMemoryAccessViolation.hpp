@@ -195,7 +195,7 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
     GTEST_SKIP() << "skipping since no memory access violation would occur";
   }
 
-#ifdef KOKKOS_ENABLE_HIP  // FIXME_HIP fixed from ROCm 5.0.2
+#if defined(KOKKOS_IMPL_HIP_ABORT_DOES_NOT_PRINT_MESSAGE)
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::HIP>::value) {
     GTEST_SKIP() << "skipping because not yet supported with HIP toolchain";
   }

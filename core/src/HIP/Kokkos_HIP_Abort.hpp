@@ -50,6 +50,18 @@
 
 #include <hip/hip_runtime.h>
 
+// FIXME_HIP ROCm 4.5 version header include would be <rocm/rocm_version.h>
+#if __has_include(<rocm_version.h>)
+#include <rocm_version.h>
+#define KOKKOS_IMPL_ROCM_VERSION \
+  ROCM_VERSION_MAJOR * 10000 + ROCM_VERSION_MINOR * 100 + ROCM_VERSION_PATCH
+#endif
+
+// FIXME_HIP workaround for ROCm version less than 5.0.2
+#if KOKKOS_IMPL_ROCM_VERSION < 50002
+#define KOKKOS_IMPL_HIP_ABORT_DOES_NOT_PRINT_MESSAGE
+#endif
+
 namespace Kokkos {
 namespace Impl {
 
