@@ -653,14 +653,8 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#if (defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)) || \
-    (defined(KOKKOS_COMPILER_INTEL) && defined(_WIN32))
 #define KOKKOS_THREAD_LOCAL \
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") __declspec(thread)
-#else
-#define KOKKOS_THREAD_LOCAL \
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") __thread
-#endif
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") thread_local
 #endif
 
 #if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \
