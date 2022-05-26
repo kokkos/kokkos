@@ -275,10 +275,15 @@ class TestAcquireTeamUniqueToken {
   }
 };
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET - Not yet implemented
 TEST(TEST_CATEGORY, unique_token_team_acquire) {
-  TestAcquireTeamUniqueToken<TEST_EXECSPACE>::run();
-}
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+  if constexpr (std::is_same<TEST_EXECSPACE,
+                             Kokkos::Experimental::OpenMPTarget>::value) {
+    GTEST_SKIP() << "skipping because OpenMPTarget does not implement yet a "
+                    "specialization of AcquireTeamUniqueToken";
+  } else
 #endif
+    TestAcquireTeamUniqueToken<TEST_EXECSPACE>::run();
+}
 
 }  // namespace
