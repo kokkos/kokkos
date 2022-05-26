@@ -141,7 +141,7 @@ class SharedAllocationRecord<void, void> {
       SharedAllocationHeader* arg_alloc_ptr, size_t arg_alloc_size,
       function_type arg_dealloc, const std::string& label);
  private:
-  static KOKKOS_THREAD_LOCAL int t_tracking_enabled;
+  static thread_local int t_tracking_enabled;
 
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }

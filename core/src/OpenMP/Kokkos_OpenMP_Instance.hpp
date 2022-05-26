@@ -71,8 +71,8 @@ class OpenMPInternal;
 
 extern int g_openmp_hardware_max_threads;
 
-extern __thread int t_openmp_hardware_id;
-extern __thread OpenMPInternal* t_openmp_instance;
+extern thread_local int t_openmp_hardware_id;
+extern thread_local OpenMPInternal* t_openmp_instance;
 
 struct OpenMPTraits {
   static int constexpr MAX_THREAD_COUNT = 512;
