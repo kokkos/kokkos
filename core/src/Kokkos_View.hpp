@@ -1881,7 +1881,7 @@ inline void shared_allocation_tracking_enable() {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if KOKKOS_ENABLE_DEPRECATED_CODE_3
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 namespace Impl {
 
