@@ -8,7 +8,7 @@ SET(KOKKOS_ENABLE_CXX14 OFF)
 SET(KOKKOS_ENABLE_CXX17 OFF)
 SET(KOKKOS_ENABLE_CXX20 OFF)
 IF (KOKKOS_CXX_STANDARD)
-  MESSAGE(WARNING "Setting the variable Kokkos_CXX_STANDARD in configuration is deprecated - set CMAKE_CXX_STANDARD directly instead")
+  MESSAGE(DEPRECATION "Setting the variable Kokkos_CXX_STANDARD in configuration is deprecated - set CMAKE_CXX_STANDARD directly instead")
 
   IF (${KOKKOS_CXX_STANDARD} STREQUAL "c++98")
     MESSAGE(FATAL_ERROR "Kokkos no longer supports C++98 - minimum C++14")
