@@ -63,9 +63,9 @@ void DeepCopySYCL(void* dst, const void* src, size_t n) {
 
 void DeepCopyAsyncSYCL(const Kokkos::Experimental::SYCL& instance, void* dst,
                        const void* src, size_t n) {
-  // FIXME_SYCL using an in-order queue here should not be necessary since we
-  // are using submit_barrier for managing kernel dependencies but this seems to
-  // be required as a hot fix for now.
+  // FIXME_SYCL memcpy doesn't respect submit_barrier which means that we need
+  // to actually fence the execution space to make sure the memcpy is properly
+  // enqueued when using out-of-order queues.
   sycl::queue& q = *instance.impl_internal_space_instance()->m_queue;
   q.wait_and_throw();
   auto event = q.memcpy(dst, src, n);
