@@ -57,7 +57,7 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
     auto copy = *this;
     // not actually doing anything useful, mostly checking that
     // ExecutionSpace::in_parallel() is callalable
-    if (copy.device.in_parallel() < 0) {
+    if (static_cast<int>(copy.device.in_parallel()) < 0) {
       ++e;
     }
   }
