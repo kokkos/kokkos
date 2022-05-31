@@ -921,6 +921,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
         !alloc_prop_input::has_memory_space,
         "The view constructor arguments passed to Kokkos::realloc must "
         "not include a memory space instance!");
+    static_assert(
+        !alloc_prop_input::allow_padding,
+        "The view constructor arguments passed to Kokkos::realloc must "
+        "not explicitly allow padding!");
 
     const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
     const bool sizeMismatch =

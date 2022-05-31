@@ -2369,6 +2369,9 @@ inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
   static_assert(!alloc_prop_input::has_memory_space,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a memory space instance!");
+  static_assert(!alloc_prop_input::allow_padding,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not explicitly allow padding!");
 
   const std::string label = v.label();
 
