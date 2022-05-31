@@ -128,7 +128,8 @@ TEST(TEST_CATEGORY, realloc_exec_space) {
                  "fence after copying header from HostSpace") !=
              std::string::npos) ||
             (event.descriptor().find("Debug Only Check for Execution Error") !=
-             std::string::npos))
+             std::string::npos) ||
+            (event.descriptor().find("HostSpace fence") != std::string::npos))
           return MatchDiagnostic{false};
         return MatchDiagnostic{true, {"Found fence event!"}};
       });
