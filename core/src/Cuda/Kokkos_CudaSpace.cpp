@@ -234,6 +234,7 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
   }
 #else
   (void)exec_space;
+  (void)exec_space_provided;
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
 #endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
