@@ -789,8 +789,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         league_size < max_active_teams ? league_size : max_active_teams;
 
     // If the league size is <=0, do not launch the kernel.
-    if(nteams <=0) 
-        return;
+    if (nteams <= 0) return;
 
 // Performing our own scheduling of teams to avoid separation of code between
 // teams-distribute and parallel. Gave a 2x performance boost in test cases with
@@ -874,8 +873,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         league_size < max_active_teams ? league_size : max_active_teams;
 
     // If the league size is <=0, do not launch the kernel.
-    if(nteams <=0) 
-        return;
+    if (nteams <= 0) return;
 
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -936,8 +934,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         league_size < max_active_teams ? league_size : max_active_teams;
 
     // If the league size is <=0, do not launch the kernel.
-    if(nteams <=0) 
-        return;
+    if (nteams <= 0) return;
 
     // Case where the number of reduction items is 1.
     if constexpr (NumReductions == 1) {
