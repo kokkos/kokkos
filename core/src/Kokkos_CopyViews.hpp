@@ -3265,6 +3265,9 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
   static_assert(!alloc_prop_input::has_pointer,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a memory space instance!");
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
@@ -3372,6 +3375,9 @@ impl_realloc(Kokkos::View<T, P...>& v,
   static_assert(!alloc_prop_input::has_pointer,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a memory space instance!");
 
   if (v.layout() != layout) {
     v = view_type();  // Deallocate first, if the only view to allocation
@@ -3423,6 +3429,9 @@ impl_realloc(Kokkos::View<T, P...>& v,
   static_assert(!alloc_prop_input::has_pointer,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a memory space instance!");
 
   v = view_type();  // Deallocate first, if the only view to allocation
   v = view_type(arg_prop, layout);
