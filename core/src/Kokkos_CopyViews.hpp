@@ -3285,8 +3285,11 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
           ViewCtorArgs...,
           std::conditional_t<alloc_prop_input::has_execution_space,
                              std::integral_constant<unsigned int, 2>,
-                             typename view_type::execution_space>>;
+                             typename view_type::execution_space>,
+          std::string>;
       alloc_prop arg_prop_copy(arg_prop);
+      static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
+          .value                 = v.label();
       using execution_space_type = typename alloc_prop::execution_space;
       const execution_space_type& exec_space =
           static_cast<
@@ -3395,8 +3398,11 @@ impl_realloc(Kokkos::View<T, P...>& v,
           ViewCtorArgs...,
           std::conditional_t<alloc_prop_input::has_execution_space,
                              std::integral_constant<unsigned int, 2>,
-                             typename view_type::execution_space>>;
+                             typename view_type::execution_space>,
+          std::string>;
       alloc_prop arg_prop_copy(arg_prop);
+      static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
+          .value                 = v.label();
       using execution_space_type = typename alloc_prop::execution_space;
       const execution_space_type& exec_space =
           static_cast<
@@ -3443,7 +3449,12 @@ impl_realloc(Kokkos::View<T, P...>& v,
                 "not explicitly allow padding!");
 
   v = view_type();  // Deallocate first, if the only view to allocation
-  v = view_type(arg_prop, layout);
+
+  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
+  alloc_prop arg_prop_copy(arg_prop);
+  static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
+      .value = v.label();
+  v          = view_type(arg_prop_copy, layout);
 }
 
 template <class T, class... P, class... ViewCtorArgs>
