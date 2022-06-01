@@ -255,22 +255,18 @@ namespace Impl {
 // We only need to provide a specialization for Serial if there is a host
 // parallel execution space since the specialization for
 // DefaultHostExecutionSpace is defined elsewhere.
-struct DummyExecutionSpace {};
-using SerialWrapper =
-    std::conditional_t<std::is_same<Serial, DefaultHostExecutionSpace>::value,
-                       DummyExecutionSpace, Serial>;
-
+struct DummyExecutionSpace;
 template <class DT, class... DP>
-struct ZeroMemset<SerialWrapper, DT, DP...> {
-  ZeroMemset(const SerialWrapper&, const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type& value)
-      : ZeroMemset(dst, value) {}
+struct ZeroMemset<
+    std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
+                       Serial, DummyExecutionSpace>,
+    DT, DP...> : public ZeroMemset<DefaultHostExecutionSpace, DT, DP...> {
+  using Base = ZeroMemset<DefaultHostExecutionSpace, DT, DP...>;
+  using Base::Base;
 
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    using ValueType = typename View<DT, DP...>::value_type;
-    std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
-  }
+  ZeroMemset(const Serial&, const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type& value)
+      : Base(dst, value) {}
 };
 
 template <>
