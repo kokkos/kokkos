@@ -58,8 +58,7 @@ TEST(TEST_CATEGORY, team_reduction_scan) {
 }
 
 TEST(TEST_CATEGORY, team_long_reduce) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  // WORKAROUND OPENMPTARGET: Not implemented
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET: Not implemented
   if constexpr (!std::is_same<TEST_EXECSPACE,
                               Kokkos::Experimental::OpenMPTarget>::value)
 #endif
@@ -76,8 +75,7 @@ TEST(TEST_CATEGORY, team_long_reduce) {
 }
 
 TEST(TEST_CATEGORY, team_double_reduce) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  // WORKAROUND OPENMPTARGET: Not implemented
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET: Not implemented
   if constexpr (!std::is_same<TEST_EXECSPACE,
                               Kokkos::Experimental::OpenMPTarget>::value)
 #endif
