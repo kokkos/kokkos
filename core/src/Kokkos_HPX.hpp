@@ -364,6 +364,7 @@ class HPX {
 #endif
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   static std::vector<HPX> partition(...) {
     Kokkos::abort(
         "Kokkos::Experimental::HPX::partition_master: can't partition an HPX "
@@ -371,7 +372,6 @@ class HPX {
     return std::vector<HPX>();
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename F>
   KOKKOS_DEPRECATED static void partition_master(
       F const &, int requested_num_partitions = 0, int = 0) {
