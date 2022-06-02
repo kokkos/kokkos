@@ -1290,7 +1290,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_PVC), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_PVC")
-  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device pvc"
+  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device 12.4.0"
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
