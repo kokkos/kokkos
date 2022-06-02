@@ -265,7 +265,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     return m_value_view;
   }
 
-  template <typename ExecutionSpace, int Idx, class View>
+  template <class ExecutionSpace, int Idx, class View>
   constexpr static void write_one_value_back(
       const ExecutionSpace& exec_space, View const& view,
       typename View::const_value_type& value) noexcept {
@@ -276,7 +276,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
       Kokkos::deep_copy(exec_space, view, value);
   }
 
-  template <typename ExecutionSpace>
+  template <class ExecutionSpace>
   constexpr static void write_value_back_to_original_references(
       const ExecutionSpace& exec_space, value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
