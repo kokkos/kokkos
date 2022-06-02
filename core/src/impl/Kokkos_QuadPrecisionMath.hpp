@@ -50,6 +50,7 @@
 #if defined(KOKKOS_ENABLE_LIBQUADMATH)
 
 #include <Kokkos_NumericTraits.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
 
 #include <quadmath.h>
 
@@ -132,6 +133,9 @@ struct reduction_identity<__float128> {
 //<editor-fold desc="Common mathematical functions __float128 overloads">
 namespace Kokkos {
 // clang-format off
+namespace Impl {
+template <> struct promote<__float128> { using type = __float128; };
+}
 // Basic operations
 inline __float128 abs(__float128 x) { return ::fabsq(x); }
 inline __float128 fabs(__float128 x) { return ::fabsq(x); }

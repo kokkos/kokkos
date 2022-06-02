@@ -50,6 +50,8 @@
 
 #include <gtest/gtest.h>
 
+namespace {
+
 // FIXME instantiate only once for default host execution space
 TEST(TEST_CATEGORY, quad_precision_reductions) {
   int const n = 100;
@@ -105,5 +107,19 @@ TEST(TEST_CATEGORY, quad_precision_common_math_functions) {
         (void)Kokkos::cosh((__float128)4);
       });
 }
+
+#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
+
+constexpr bool test_quad_precision_promotion_traits() {
+  STATIC_ASSERT(
+      std::is_same<__float128, decltype(Kokkos::pow(__float128(1), 2))>::value);
+  STATIC_ASSERT(std::is_same<__float128,
+                             decltype(Kokkos::hypot(3, __float128(4)))>::value);
+  return true;
+}
+
+STATIC_ASSERT(test_quad_precision_promotion_traits());
+
+}  // namespace
 
 #endif
