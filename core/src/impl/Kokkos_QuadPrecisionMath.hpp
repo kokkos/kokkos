@@ -88,7 +88,14 @@ KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_max,     __float128, __float128, FLT
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(epsilon,        __float128, __float128, FLT128_EPSILON)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(round_error,    __float128, __float128, static_cast<__float128>(0.5))
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(norm_min,       __float128, __float128, FLT128_MIN)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(denorm_min,     __float128, __float128, FLT128_DENORM_MIN)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(reciprocal_overflow_threshold, __float128, __float128, FLT128_MIN)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(quiet_NaN,      __float128, __float128, __builtin_nanq(""))
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(signaling_NaN,  __float128, __float128, __builtin_nansq(""))
+#endif
 
+// Numeric characteristics traits
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits,         __float128,        int, FLT128_MANT_DIG)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits10,       __float128,        int, FLT128_DIG)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_digits10,   __float128,        int, 36)
