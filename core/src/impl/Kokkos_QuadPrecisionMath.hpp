@@ -130,15 +130,12 @@ namespace Experimental {
 inline __float128 fabs(__float128 x) { return ::fabsq(x); }
 inline __float128 fmod(__float128 x, __float128 y) { return ::fmodq(x, y); }
 inline __float128 remainder(__float128 x, __float128 y) { return ::remainderq(x, y); }
-inline __float128 fmin(__float128 x, __float128 y) { return ::fminq(x, y); }
+// remquo
+// fma
 inline __float128 fmax(__float128 x, __float128 y) { return ::fmaxq(x, y); }
+inline __float128 fmin(__float128 x, __float128 y) { return ::fminq(x, y); }
 inline __float128 fdim(__float128 x, __float128 y) { return ::fdimq(x, y); }
 inline __float128 nanq(char const* arg) { return ::nanq(arg); }
-// Power functions
-inline __float128 pow(__float128 x, __float128 y) { return ::powq(x, y); }
-inline __float128 sqrt(__float128 x) { return ::sqrtq(x); }
-inline __float128 cbrt(__float128 x) { return ::cbrtq(x); }
-inline __float128 hypot(__float128 x, __float128 y) { return ::hypotq(x, y); }
 // Exponential functions
 inline __float128 exp(__float128 x) { return ::expq(x); }
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 910)
@@ -149,6 +146,11 @@ inline __float128 log(__float128 x) { return ::logq(x); }
 inline __float128 log10(__float128 x) { return ::log10q(x); }
 inline __float128 log2(__float128 x) { return ::log2q(x); }
 inline __float128 log1p(__float128 x) { return ::log1pq(x); }
+// Power functions
+inline __float128 pow(__float128 x, __float128 y) { return ::powq(x, y); }
+inline __float128 sqrt(__float128 x) { return ::sqrtq(x); }
+inline __float128 cbrt(__float128 x) { return ::cbrtq(x); }
+inline __float128 hypot(__float128 x, __float128 y) { return ::hypotq(x, y); }
 // Trigonometric functions
 inline __float128 sin(__float128 x) { return ::sinq(x); }
 inline __float128 cos(__float128 x) { return ::cosq(x); }
@@ -173,11 +175,40 @@ inline __float128 lgamma(__float128 x) { return ::lgammaq(x); }
 inline __float128 ceil(__float128 x) { return ::ceilq(x); }
 inline __float128 floor(__float128 x) { return ::floorq(x); }
 inline __float128 trunc(__float128 x) { return ::truncq(x); }
+inline __float128 round(__float128 x) { return ::roundq(x); }
+// lround
+// llround
 inline __float128 nearbyint(__float128 x) { return ::nearbyintq(x); }
+// rint
+// lrint
+// llrint
+// Floating point manipulation functions
+// frexp
+// ldexp
+// modf
+// scalbn
+// scalbln
+// ilog
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 610)
+inline __float128 logb(__float128 x) { return ::logbq(x); }
+#endif
+inline __float128 nextafter(__float128 x, __float128 y) { return ::nextafterq(x, y); }
+// nexttoward
+inline __float128 copysign(__float128 x, __float128 y) { return ::copysignq(x, y); }
 // Classification and comparison
+// fpclassify
 inline bool isfinite(__float128 x) { return !::isinfq(x); }  // isfiniteq not provided
 inline bool isinf(__float128 x) { return ::isinfq(x); }
 inline bool isnan(__float128 x) { return ::isnanq(x); }
+// isnormal
+inline bool signbit(__float128 x) { return ::signbitq(x); }
+// isgreater
+// isgreaterequal
+// isless
+// islessequal
+// islessgreater
+// isunordered
+// clang-format on
 }  // namespace Experimental
 }  // namespace Kokkos
 //</editor-fold>
