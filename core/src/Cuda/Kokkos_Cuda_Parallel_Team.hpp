@@ -94,8 +94,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   int m_league_size;
   int m_team_size;
   int m_vector_length;
-  int m_team_scratch_size[2];
-  int m_thread_scratch_size[2];
+  size_t m_team_scratch_size[2];
+  size_t m_thread_scratch_size[2];
   int m_chunk_size;
   bool m_tune_team;
   bool m_tune_vector;
@@ -250,15 +250,15 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   inline void impl_set_vector_length(size_t vector_length) {
     m_vector_length = vector_length;
   }
-  inline int scratch_size(int level, int team_size_ = -1) const {
+  size_t scratch_size(int level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
-  inline int team_scratch_size(int level) const {
+  size_t team_scratch_size(int level) const {
     return m_team_scratch_size[level];
   }
-  inline int thread_scratch_size(int level) const {
+  size_t thread_scratch_size(int level) const {
     return m_thread_scratch_size[level];
   }
 
@@ -498,21 +498,19 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_begin;
   int m_shmem_size;
   void* m_scratch_ptr[2];
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_team(const Member& member) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+      const Member& member) const {
     m_functor(member);
   }
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_team(const Member& member) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+      const Member& member) const {
     m_functor(TagType(), member);
   }
 
@@ -696,7 +694,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type m_shmem_begin;
   size_type m_shmem_size;
   void* m_scratch_ptr[2];
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
   const size_type m_league_size;
@@ -704,16 +702,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const size_type m_vector_size;
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_team(const Member& member, reference_type update) const {
+  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+      const Member& member, reference_type update) const {
     m_functor(member, update);
   }
 
   template <class TagType>
-  __device__ inline
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_team(const Member& member, reference_type update) const {
+  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+      const Member& member, reference_type update) const {
     m_functor(TagType(), member, update);
   }
 
@@ -936,10 +932,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ViewType& arg_result,
-                 typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = nullptr)
+  ParallelReduce(
+      const FunctorType& arg_functor, const Policy& arg_policy,
+      const ViewType& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),

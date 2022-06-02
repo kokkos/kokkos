@@ -124,12 +124,26 @@ class OpenMPTarget {
 };
 }  // namespace Experimental
 
+namespace Impl {
+template <>
+struct MemorySpaceAccess<
+    Kokkos::Experimental::OpenMPTargetSpace,
+    Kokkos::Experimental::OpenMPTarget::scratch_memory_space> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+}  // namespace Impl
+
 namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
   static constexpr DeviceType id =
       ::Kokkos::Profiling::Experimental::DeviceType::OpenMPTarget;
+  static int device_id(const Kokkos::Experimental::OpenMPTarget&) {
+    return omp_get_default_device();
+  }
 };
 }  // namespace Experimental
 }  // namespace Tools

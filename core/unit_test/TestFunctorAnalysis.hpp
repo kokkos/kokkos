@@ -61,7 +61,7 @@ struct TestFunctorAnalysis_03 {
   void operator()(int, value_type&) const {}
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type volatile&, value_type const volatile&) const {}
+  void join(value_type&, value_type const&) const {}
 
   KOKKOS_INLINE_FUNCTION static void init(value_type&) {}
 };
@@ -77,9 +77,9 @@ void test_functor_analysis() {
 
   using R01 = typename A01::Reducer;
 
-  static_assert(std::is_same<typename A01::value_type, void>::value, "");
-  static_assert(std::is_same<typename A01::pointer_type, void>::value, "");
-  static_assert(std::is_same<typename A01::reference_type, void>::value, "");
+  static_assert(std::is_void<typename A01::value_type>::value, "");
+  static_assert(std::is_void<typename A01::pointer_type>::value, "");
+  static_assert(std::is_void<typename A01::reference_type>::value, "");
   static_assert(std::is_same<typename R01::functor_type, decltype(c01)>::value,
                 "");
 

@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -8,10 +8,11 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifndef DESUL_ATOMICS_COMMON_HPP_
 #define DESUL_ATOMICS_COMMON_HPP_
-#include "desul/atomics/Macros.hpp"
-#include <cstdint>
 #include <atomic>
+#include <cstdint>
 #include <type_traits>
+
+#include "desul/atomics/Macros.hpp"
 
 namespace desul {
 struct alignas(16) Dummy16ByteValue {
@@ -137,20 +138,21 @@ using cmpexch_failure_memory_order =
     typename CmpExchFailureOrder<MemoryOrder>::memory_order;
 }  // namespace Impl
 
-}
+}  // namespace desul
 
-// We should in principle use std::numeric_limits, but that requires constexpr function support on device
-// Currently that is still considered experimetal on CUDA and sometimes not reliable.
+// We should in principle use std::numeric_limits, but that requires constexpr function
+// support on device Currently that is still considered experimetal on CUDA and
+// sometimes not reliable.
 namespace desul {
 namespace Impl {
-template<class T>
+template <class T>
 struct numeric_limits_max;
 
-template<>
+template <>
 struct numeric_limits_max<uint32_t> {
   static constexpr uint32_t value = 0xffffffffu;
 };
-template<>
+template <>
 struct numeric_limits_max<uint64_t> {
   static constexpr uint64_t value = 0xfffffffflu;
 };
@@ -172,30 +174,32 @@ DESUL_INLINE_FUNCTION bool atomic_is_lock_free() noexcept {
       ;
 }
 
-template<std::size_t N>
+template <std::size_t N>
 struct atomic_compare_exchange_type;
 
-template<>
+template <>
 struct atomic_compare_exchange_type<4> {
   using type = int32_t;
 };
 
-template<>
+template <>
 struct atomic_compare_exchange_type<8> {
   using type = int64_t;
 };
 
-template<>
+template <>
 struct atomic_compare_exchange_type<16> {
   using type = Dummy16ByteValue;
 };
 
-template<class T>
-struct dont_deduce_this_parameter { using type = T; };
+template <class T>
+struct dont_deduce_this_parameter {
+  using type = T;
+};
 
-template<class T>
+template <class T>
 using dont_deduce_this_parameter_t = typename dont_deduce_this_parameter<T>::type;
 
-}
-}
+}  // namespace Impl
+}  // namespace desul
 #endif

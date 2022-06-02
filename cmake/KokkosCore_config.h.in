@@ -23,14 +23,6 @@
 #cmakedefine KOKKOS_ENABLE_LIBRT
 #cmakedefine KOKKOS_ENABLE_SYCL
 
-#ifndef __CUDA_ARCH__
-#cmakedefine KOKKOS_ENABLE_TM
-#cmakedefine KOKKOS_USE_ISA_X86_64
-#cmakedefine KOKKOS_USE_ISA_KNC
-#cmakedefine KOKKOS_USE_ISA_POWERPCLE
-#cmakedefine KOKKOS_USE_ISA_POWERPCBE
-#endif
-
 /* General Settings */
 #cmakedefine KOKKOS_ENABLE_CXX14
 #cmakedefine KOKKOS_ENABLE_CXX17

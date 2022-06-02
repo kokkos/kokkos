@@ -70,8 +70,8 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   int m_league_size;
   int m_team_size;
   int m_vector_length;
-  int m_team_scratch_size[2];
-  int m_thread_scratch_size[2];
+  size_t m_team_scratch_size[2];
+  size_t m_thread_scratch_size[2];
   int m_chunk_size;
   bool m_tune_team_size;
   bool m_tune_vector_length;
@@ -172,15 +172,17 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   int league_size() const { return m_league_size; }
 
-  int scratch_size(int level, int team_size_ = -1) const {
+  size_t scratch_size(int level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
 
-  int team_scratch_size(int level) const { return m_team_scratch_size[level]; }
+  size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
 
-  int thread_scratch_size(int level) const {
+  size_t thread_scratch_size(int level) const {
     return m_thread_scratch_size[level];
   }
 
@@ -409,7 +411,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_begin;
   int m_shmem_size;
   sycl::global_ptr<char> m_global_scratch_ptr;
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
@@ -430,12 +432,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       sycl::accessor<char, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
           team_scratch_memory_L0(
-              sycl::range<1>(std::max(m_scratch_size[0] + m_shmem_begin, 1)),
+              sycl::range<1>(
+                  std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
               cgh);
 
       // Avoid capturing *this since it might not be trivially copyable
-      const auto shmem_begin    = m_shmem_begin;
-      const int scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
+      const auto shmem_begin       = m_shmem_begin;
+      const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
       sycl::global_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
       auto lambda = [=](sycl::nd_item<2> item) {
@@ -443,7 +446,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
             scratch_size[1], item);
-        if constexpr (std::is_same<work_tag, void>::value)
+        if constexpr (std::is_void<work_tag>::value)
           functor_wrapper.get_functor()(team_member);
         else
           functor_wrapper.get_functor()(work_tag(), team_member);
@@ -580,7 +583,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type m_shmem_begin;
   size_type m_shmem_size;
   sycl::global_ptr<char> m_global_scratch_ptr;
-  int m_scratch_size[2];
+  size_t m_scratch_size[2];
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
@@ -623,12 +626,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         sycl::accessor<char, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
             team_scratch_memory_L0(
-                sycl::range<1>(std::max(m_scratch_size[0] + m_shmem_begin, 1)),
+                sycl::range<1>(
+                    std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
                 cgh);
 
         // Avoid capturing *this since it might not be trivially copyable
-        const auto shmem_begin    = m_shmem_begin;
-        const int scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
+        const auto shmem_begin       = m_shmem_begin;
+        const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::global_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
         cgh.depends_on(memcpy_events);
@@ -647,7 +651,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                 const member_type team_member(
                     team_scratch_memory_L0.get_pointer(), shmem_begin,
                     scratch_size[0], global_scratch_ptr, scratch_size[1], item);
-                if constexpr (std::is_same<WorkTag, void>::value)
+                if constexpr (std::is_void<WorkTag>::value)
                   functor(team_member, update);
                 else
                   functor(WorkTag(), team_member, update);
@@ -675,12 +679,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         sycl::accessor<char, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
             team_scratch_memory_L0(
-                sycl::range<1>(std::max(m_scratch_size[0] + m_shmem_begin, 1)),
+                sycl::range<1>(
+                    std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
                 cgh);
 
         // Avoid capturing *this since it might not be trivially copyable
-        const auto shmem_begin    = m_shmem_begin;
-        const int scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
+        const auto shmem_begin       = m_shmem_begin;
+        const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::global_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
         auto team_reduction_factory =
@@ -715,7 +720,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                       scratch_size[0],
                       global_scratch_ptr + item.get_group(1) * scratch_size[1],
                       scratch_size[1], item);
-                  if constexpr (std::is_same<WorkTag, void>::value)
+                  if constexpr (std::is_void<WorkTag>::value)
                     functor(team_member, update);
                   else
                     functor(WorkTag(), team_member, update);
@@ -730,10 +735,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                                 item.get_local_range()[1]));
 
                   if (local_id == 0) {
-                    sycl::ext::oneapi::atomic_ref<
-                        unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                        sycl::ext::oneapi::memory_scope::device,
-                        sycl::access::address_space::global_space>
+                    sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                                     sycl::memory_scope::device,
+                                     sycl::access::address_space::global_space>
                         scratch_flags_ref(*scratch_flags);
                     num_teams_done = ++scratch_flags_ref;
                   }
@@ -766,7 +770,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                       scratch_size[0],
                       global_scratch_ptr + item.get_group(1) * scratch_size[1],
                       scratch_size[1], item);
-                  if constexpr (std::is_same<WorkTag, void>::value)
+                  if constexpr (std::is_void<WorkTag>::value)
                     functor(team_member, update);
                   else
                     functor(WorkTag(), team_member, update);
@@ -779,10 +783,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                                 item.get_local_range()[1]));
 
                   if (local_id == 0) {
-                    sycl::ext::oneapi::atomic_ref<
-                        unsigned, sycl::ext::oneapi::memory_order::relaxed,
-                        sycl::ext::oneapi::memory_scope::device,
-                        sycl::access::address_space::global_space>
+                    sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                                     sycl::memory_scope::device,
+                                     sycl::access::address_space::global_space>
                         scratch_flags_ref(*scratch_flags);
                     num_teams_done = ++scratch_flags_ref;
                   }
@@ -939,10 +942,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   template <class ViewType>
-  ParallelReduce(FunctorType const& arg_functor, Policy const& arg_policy,
-                 ViewType const& arg_result,
-                 typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = nullptr)
+  ParallelReduce(
+      FunctorType const& arg_functor, Policy const& arg_policy,
+      ViewType const& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),

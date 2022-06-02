@@ -56,16 +56,22 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+template <class IteratorType, class ValueType>
+struct StdReduceDefaultFunctor {
+  using index_type = typename IteratorType::difference_type;
+
+  const IteratorType m_first;
+
+  KOKKOS_FUNCTION
+  void operator()(const index_type i, ValueType& update) const {
+    update += m_first[i];
+  }
+};
+
 template <class ValueType>
 struct StdReduceDefaultJoinFunctor {
   KOKKOS_FUNCTION
   constexpr ValueType operator()(const ValueType& a, const ValueType& b) const {
-    return a + b;
-  }
-
-  KOKKOS_FUNCTION
-  constexpr ValueType operator()(const volatile ValueType& a,
-                                 const volatile ValueType& b) const {
     return a + b;
   }
 };
@@ -132,6 +138,10 @@ ValueType reduce_custom_functors_impl(const std::string& label,
   return joiner(result.val, init_reduction_value);
 }
 
+template <typename ValueType>
+using has_reduction_identity_sum_t =
+    decltype(Kokkos::reduction_identity<ValueType>::sum());
+
 template <class ExecutionSpace, class IteratorType, class ValueType>
 ValueType reduce_default_functors_impl(const std::string& label,
                                        const ExecutionSpace& ex,
@@ -142,10 +152,31 @@ ValueType reduce_default_functors_impl(const std::string& label,
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::expect_valid_range(first, last);
 
-  using value_type  = Kokkos::Impl::remove_cvref_t<ValueType>;
-  using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;
-  return reduce_custom_functors_impl(
-      label, ex, first, last, std::move(init_reduction_value), joiner_type());
+  using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
+
+  if (::Kokkos::is_detected<has_reduction_identity_sum_t, value_type>::value) {
+    if (first == last) {
+      // init is returned, unmodified
+      return init_reduction_value;
+    }
+
+    using functor_type =
+        Impl::StdReduceDefaultFunctor<IteratorType, value_type>;
+
+    // run
+    value_type tmp;
+    const auto num_elements = Kokkos::Experimental::distance(first, last);
+    ::Kokkos::parallel_reduce(label,
+                              RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                              functor_type{first}, tmp);
+    // fence not needed since reducing into scalar
+    tmp += init_reduction_value;
+    return tmp;
+  } else {
+    using joiner_type = Impl::StdReduceDefaultJoinFunctor<value_type>;
+    return reduce_custom_functors_impl(
+        label, ex, first, last, std::move(init_reduction_value), joiner_type());
+  }
 }
 
 }  // end namespace Impl

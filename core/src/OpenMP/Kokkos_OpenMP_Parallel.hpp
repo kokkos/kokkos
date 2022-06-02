@@ -49,12 +49,25 @@
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 #include <omp.h>
-#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#define KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
+    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
+#undef KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+#define KOKKOS_PRAGMA_IVDEP_IF_ENABLED _Pragma(ivdep)
+#endif
+
+#ifndef KOKKOS_COMPILER_NVHPC
+#define KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE , m_policy.chunk_size()
+#else
+#define KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE
+#endif
 
 namespace Kokkos {
 namespace Impl {
@@ -67,78 +80,96 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
 
-  template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend) {
-#ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-#endif
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      functor(iwork);
+  inline static void exec_range(const FunctorType& functor, const Member ibeg,
+                                const Member iend) {
+    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+    for (auto iwork = ibeg; iwork < iend; ++iwork) {
+      exec_work(functor, iwork);
     }
   }
 
-  template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend) {
-    const TagType t{};
-#ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-#endif
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      functor(t, iwork);
+  template <class Enable = WorkTag>
+  inline static std::enable_if_t<std::is_void<WorkTag>::value &&
+                                 std::is_same<Enable, WorkTag>::value>
+  exec_work(const FunctorType& functor, const Member iwork) {
+    functor(iwork);
+  }
+
+  template <class Enable = WorkTag>
+  inline static std::enable_if_t<!std::is_void<WorkTag>::value &&
+                                 std::is_same<Enable, WorkTag>::value>
+  exec_work(const FunctorType& functor, const Member iwork) {
+    functor(WorkTag{}, iwork);
+  }
+
+  template <class Policy>
+  std::enable_if_t<std::is_same<typename Policy::schedule_type::type,
+                                Kokkos::Dynamic>::value>
+  execute_parallel() const {
+    // prevent bug in NVHPC 21.9/CUDA 11.4 (entering zero iterations loop)
+    if (m_policy.begin() >= m_policy.end()) return;
+#pragma omp parallel for schedule(dynamic KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
+    num_threads(OpenMP::impl_thread_pool_size())
+    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
+      exec_work(m_functor, iwork);
+    }
+  }
+
+  template <class Policy>
+  std::enable_if_t<!std::is_same<typename Policy::schedule_type::type,
+                                 Kokkos::Dynamic>::value>
+  execute_parallel() const {
+#pragma omp parallel for schedule(static KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
+    num_threads(OpenMP::impl_thread_pool_size())
+    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
+      exec_work(m_functor, iwork);
     }
   }
 
  public:
   inline void execute() const {
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
-
     if (OpenMP::in_parallel()) {
-      exec_range<WorkTag>(m_functor, m_policy.begin(), m_policy.end());
-    } else {
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
-
-#pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-      {
-        HostThreadTeamData& data = *(m_instance->get_thread_data());
-
-        data.set_work_partition(m_policy.end() - m_policy.begin(),
-                                m_policy.chunk_size());
-
-        if (is_dynamic) {
-          // Make sure work partition is set before stealing
-          if (data.pool_rendezvous()) data.pool_rendezvous_release();
-        }
-
-        std::pair<int64_t, int64_t> range(0, 0);
-
-        do {
-          range = is_dynamic ? data.get_work_stealing_chunk()
-                             : data.get_work_partition();
-
-          ParallelFor::template exec_range<WorkTag>(
-              m_functor, range.first + m_policy.begin(),
-              range.second + m_policy.begin());
-
-        } while (is_dynamic && 0 <= range.first);
-      }
+      exec_range(m_functor, m_policy.begin(), m_policy.end());
+      return;
     }
+
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
+#ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
+    execute_parallel<Policy>();
+#else
+    constexpr bool is_dynamic =
+        std::is_same<typename Policy::schedule_type::type,
+                     Kokkos::Dynamic>::value;
+#pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
+    {
+      HostThreadTeamData& data = *(m_instance->get_thread_data());
+
+      data.set_work_partition(m_policy.end() - m_policy.begin(),
+                              m_policy.chunk_size());
+
+      if (is_dynamic) {
+        // Make sure work partition is set before stealing
+        if (data.pool_rendezvous()) data.pool_rendezvous_release();
+      }
+
+      std::pair<int64_t, int64_t> range(0, 0);
+
+      do {
+        range = is_dynamic ? data.get_work_stealing_chunk()
+                           : data.get_work_partition();
+
+        exec_range(m_functor, range.first + m_policy.begin(),
+                   range.second + m_policy.begin());
+
+      } while (is_dynamic && 0 <= range.first);
+    }
+#endif
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
@@ -162,7 +193,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using iterate_type = typename Kokkos::Impl::HostIterateTile<
       MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy;  // construct as RangePolicy( 0, num_tiles
@@ -171,55 +202,78 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   inline static void exec_range(const MDRangePolicy& mdr_policy,
                                 const FunctorType& functor, const Member ibeg,
                                 const Member iend) {
-#ifdef KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-#endif
+    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       iterate_type(mdr_policy, functor)(iwork);
     }
   }
 
+  template <class Policy>
+  typename std::enable_if_t<std::is_same<typename Policy::schedule_type::type,
+                                         Kokkos::Dynamic>::value>
+  execute_parallel() const {
+#pragma omp parallel for schedule(dynamic KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
+    num_threads(OpenMP::impl_thread_pool_size())
+    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
+      iterate_type(m_mdr_policy, m_functor)(iwork);
+    }
+  }
+
+  template <class Policy>
+  typename std::enable_if<!std::is_same<typename Policy::schedule_type::type,
+                                        Kokkos::Dynamic>::value>::type
+  execute_parallel() const {
+#pragma omp parallel for schedule(static KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
+    num_threads(OpenMP::impl_thread_pool_size())
+    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+    for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
+      iterate_type(m_mdr_policy, m_functor)(iwork);
+    }
+  }
+
  public:
   inline void execute() const {
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
-
     if (OpenMP::in_parallel()) {
       ParallelFor::exec_range(m_mdr_policy, m_functor, m_policy.begin(),
                               m_policy.end());
-    } else {
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+      return;
+    }
+
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
+#ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
+    execute_parallel<Policy>();
+#else
+    constexpr bool is_dynamic =
+        std::is_same<typename Policy::schedule_type::type,
+                     Kokkos::Dynamic>::value;
 
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-      {
-        HostThreadTeamData& data = *(m_instance->get_thread_data());
+    {
+      HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-        data.set_work_partition(m_policy.end() - m_policy.begin(),
-                                m_policy.chunk_size());
+      data.set_work_partition(m_policy.end() - m_policy.begin(),
+                              m_policy.chunk_size());
 
-        if (is_dynamic) {
-          // Make sure work partition is set before stealing
-          if (data.pool_rendezvous()) data.pool_rendezvous_release();
-        }
-
-        std::pair<int64_t, int64_t> range(0, 0);
-
-        do {
-          range = is_dynamic ? data.get_work_stealing_chunk()
-                             : data.get_work_partition();
-
-          ParallelFor::exec_range(m_mdr_policy, m_functor,
-                                  range.first + m_policy.begin(),
-                                  range.second + m_policy.begin());
-
-        } while (is_dynamic && 0 <= range.first);
+      if (is_dynamic) {
+        // Make sure work partition is set before stealing
+        if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
-      // END #pragma omp parallel
+
+      std::pair<int64_t, int64_t> range(0, 0);
+
+      do {
+        range = is_dynamic ? data.get_work_stealing_chunk()
+                           : data.get_work_partition();
+
+        ParallelFor::exec_range(m_mdr_policy, m_functor,
+                                range.first + m_policy.begin(),
+                                range.second + m_policy.begin());
+
+      } while (is_dynamic && 0 <= range.first);
     }
+    // END #pragma omp parallel
+#endif
   }
 
   inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
@@ -272,27 +326,25 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend, reference_type update) {
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const FunctorType& functor, const Member ibeg, const Member iend,
+      reference_type update) {
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       functor(iwork, update);
     }
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend, reference_type update) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType& functor, const Member ibeg, const Member iend,
+      reference_type update) {
     const TagType t{};
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       functor(t, iwork, update);
@@ -316,7 +368,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -386,9 +438,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   inline ParallelReduce(
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_view,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = nullptr)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                           !Kokkos::is_reducer<ReducerType>::value,
+                       void*> = nullptr)
       : m_instance(t_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
@@ -445,7 +497,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
                                              WorkTag, reference_type>;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy;  // construct as RangePolicy( 0, num_tiles
@@ -468,7 +520,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -542,9 +594,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   inline ParallelReduce(
       const FunctorType& arg_functor, MDRangePolicy arg_policy,
       const ViewType& arg_view,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = nullptr)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                           !Kokkos::is_reducer<ReducerType>::value,
+                       void*> = nullptr)
       : m_instance(t_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
@@ -606,25 +658,23 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
 
   template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend, reference_type update, const bool final) {
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const FunctorType& functor, const Member ibeg, const Member iend,
+      reference_type update, const bool final) {
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       functor(iwork, update, final);
     }
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend, reference_type update, const bool final) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType& functor, const Member ibeg, const Member iend,
+      reference_type update, const bool final) {
     const TagType t{};
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       functor(t, iwork, update, final);
@@ -633,7 +683,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_scan");
 
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
@@ -718,26 +768,24 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   ReturnType& m_returnvalue;
 
   template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend, reference_type update, const bool final) {
+  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
+      const FunctorType& functor, const Member ibeg, const Member iend,
+      reference_type update, const bool final) {
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       functor(iwork, update, final);
     }
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      exec_range(const FunctorType& functor, const Member ibeg,
-                 const Member iend, reference_type update, const bool final) {
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType& functor, const Member ibeg, const Member iend,
+      reference_type update, const bool final) {
     const TagType t{};
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
       functor(t, iwork, update, final);
@@ -746,7 +794,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_scan");
 
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
@@ -842,17 +890,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using SchedTag = typename Policy::schedule_type::type;
   using Member   = typename Policy::member_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
-  const int m_shmem_size;
+  const size_t m_shmem_size;
 
   template <class TagType>
-  inline static
-      typename std::enable_if<(std::is_same<TagType, void>::value)>::type
-      exec_team(const FunctorType& functor, HostThreadTeamData& data,
-                const int league_rank_begin, const int league_rank_end,
-                const int league_size) {
+  inline static std::enable_if_t<(std::is_void<TagType>::value)> exec_team(
+      const FunctorType& functor, HostThreadTeamData& data,
+      const int league_rank_begin, const int league_rank_end,
+      const int league_size) {
     for (int r = league_rank_begin; r < league_rank_end;) {
       functor(Member(data, r, league_size));
 
@@ -867,11 +914,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<(!std::is_same<TagType, void>::value)>::type
-      exec_team(const FunctorType& functor, HostThreadTeamData& data,
-                const int league_rank_begin, const int league_rank_end,
-                const int league_size) {
+  inline static std::enable_if_t<(!std::is_void<TagType>::value)> exec_team(
+      const FunctorType& functor, HostThreadTeamData& data,
+      const int league_rank_begin, const int league_rank_end,
+      const int league_size) {
     const TagType t{};
 
     for (int r = league_rank_begin; r < league_rank_end;) {
@@ -891,11 +937,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
 
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_for");
 
     const size_t pool_reduce_size  = 0;  // Never shrinks
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE * m_policy.team_size();
-    const size_t team_shared_size  = m_shmem_size + m_policy.scratch_size(1);
+    const size_t team_shared_size  = m_shmem_size;
     const size_t thread_local_size = 0;  // Never shrinks
 
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
@@ -977,7 +1023,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  OpenMPExec* m_instance;
+  OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
   const ReducerType m_reducer;
@@ -985,11 +1031,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_shmem_size;
 
   template <class TagType>
-  inline static
-      typename std::enable_if<(std::is_same<TagType, void>::value)>::type
-      exec_team(const FunctorType& functor, HostThreadTeamData& data,
-                reference_type& update, const int league_rank_begin,
-                const int league_rank_end, const int league_size) {
+  inline static std::enable_if_t<(std::is_void<TagType>::value)> exec_team(
+      const FunctorType& functor, HostThreadTeamData& data,
+      reference_type& update, const int league_rank_begin,
+      const int league_rank_end, const int league_size) {
     for (int r = league_rank_begin; r < league_rank_end;) {
       functor(Member(data, r, league_size), update);
 
@@ -1004,11 +1049,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline static
-      typename std::enable_if<(!std::is_same<TagType, void>::value)>::type
-      exec_team(const FunctorType& functor, HostThreadTeamData& data,
-                reference_type& update, const int league_rank_begin,
-                const int league_rank_end, const int league_size) {
+  inline static std::enable_if_t<(!std::is_void<TagType>::value)> exec_team(
+      const FunctorType& functor, HostThreadTeamData& data,
+      reference_type& update, const int league_rank_begin,
+      const int league_rank_end, const int league_size) {
     const TagType t{};
 
     for (int r = league_rank_begin; r < league_rank_end;) {
@@ -1038,7 +1082,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
       return;
     }
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
+    OpenMPInternal::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -1132,9 +1176,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline ParallelReduce(
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = nullptr)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                           !Kokkos::is_reducer<ReducerType>::value,
+                       void*> = nullptr)
       : m_instance(t_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
@@ -1166,6 +1210,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#undef KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+#undef KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE
 
 #endif
 #endif /* KOKKOS_OPENMP_PARALLEL_HPP */

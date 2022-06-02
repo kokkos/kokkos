@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -10,7 +10,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef DESUL_HAVE_GCC_ATOMICS
 
-#include<type_traits>
+#include <type_traits>
 /*
 Built - in Function : type __atomic_add_fetch(type * ptr, type val, int memorder)
 Built - in Function : type __atomic_sub_fetch(type * ptr, type val, int memorder)
@@ -91,18 +91,20 @@ DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeDevice)
 DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeCore)
 
 template <typename T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<!Impl::atomic_exchange_available_gcc<T>::value, T>
-atomic_exchange(T* const dest,
-                  Impl::dont_deduce_this_parameter_t<const T> val,
-                  MemoryOrder /*order*/,
-                  MemoryScope scope) {
+std::enable_if_t<!Impl::atomic_exchange_available_gcc<T>::value, T> atomic_exchange(
+    T* const dest,
+    Impl::dont_deduce_this_parameter_t<const T> val,
+    MemoryOrder /*order*/,
+    MemoryScope scope) {
   // Acquire a lock for the address
+  // clang-format off
   while (!Impl::lock_address((void*)dest, scope)) {}
+  // clang-format on
 
-  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  atomic_thread_fence(MemoryOrderAcquire(), scope);
   T return_val = *dest;
   *dest = val;
-  atomic_thread_fence(MemoryOrderRelease(),scope);
+  atomic_thread_fence(MemoryOrderRelease(), scope);
   Impl::unlock_address((void*)dest, scope);
   return return_val;
 }
@@ -110,18 +112,20 @@ atomic_exchange(T* const dest,
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(T* const dest,
-                  Impl::dont_deduce_this_parameter_t<const T> compare,
-                  Impl::dont_deduce_this_parameter_t<const T> val,
-                  MemoryOrder /*order*/,
-                  MemoryScope scope) {
+                        Impl::dont_deduce_this_parameter_t<const T> compare,
+                        Impl::dont_deduce_this_parameter_t<const T> val,
+                        MemoryOrder /*order*/,
+                        MemoryScope scope) {
   // Acquire a lock for the address
+  // clang-format off
   while (!Impl::lock_address((void*)dest, scope)) {}
+  // clang-format on
 
-  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  atomic_thread_fence(MemoryOrderAcquire(), scope);
   T return_val = *dest;
-  if(return_val == compare) {
+  if (return_val == compare) {
     *dest = val;
-    atomic_thread_fence(MemoryOrderRelease(),scope);
+    atomic_thread_fence(MemoryOrderRelease(), scope);
   }
   Impl::unlock_address((void*)dest, scope);
   return return_val;

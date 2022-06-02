@@ -107,10 +107,14 @@ namespace Impl {
 namespace {
 
 __global__ void query_cuda_kernel_arch(int *d_arch) {
+#ifdef _NVHPC_CUDA
+  *d_arch = __builtin_current_device_sm() * 10;
+#else
 #if defined(__CUDA_ARCH__)
   *d_arch = __CUDA_ARCH__;
 #else
   *d_arch = 0;
+#endif
 #endif
 }
 
@@ -1018,6 +1022,15 @@ void CudaSpaceInitializer::print_configuration(std::ostream &msg,
 }
 
 }  // namespace Impl
+
+#ifdef KOKKOS_ENABLE_CXX14
+namespace Tools {
+namespace Experimental {
+constexpr DeviceType DeviceTypeTraits<Cuda>::id;
+}
+}  // namespace Tools
+#endif
+
 }  // namespace Kokkos
 
 #else

@@ -162,7 +162,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     }
     DV::sync_host();
     DV::modify_host();
-    if (it < begin() || it > end())
+    if (std::less<>()(it, begin()) || std::less<>()(end(), it))
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
     if (count == 0) return it;
     ptrdiff_t start = std::distance(begin(), it);
@@ -185,31 +185,24 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  public:
   // TODO: can use detection idiom to generate better error message here later
   template <typename InputIterator>
-  typename std::enable_if<impl_is_input_iterator<InputIterator>::value,
-                          iterator>::type
+  std::enable_if_t<impl_is_input_iterator<InputIterator>::value, iterator>
   insert(iterator it, InputIterator b, InputIterator e) {
     ptrdiff_t count = std::distance(b, e);
-    if (count == 0) return it;
 
     DV::sync_host();
     DV::modify_host();
-    if (it < begin() || it > end())
+    if (std::less<>()(it, begin()) || std::less<>()(end(), it))
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
 
-    bool resized = false;
-    if ((size() == 0) && (it == begin())) {
-      resize(count);
-      it      = begin();
-      resized = true;
-    }
     ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
-    if (!resized) resize(size() + count);
-    it = begin() + start;
+
+    // Note: resize(...) invalidates it; use begin() + start instead
+    resize(size() + count);
 
     std::copy_backward(begin() + start, begin() + org_size,
                        begin() + org_size + count);
-    std::copy(b, e, it);
+    std::copy(b, e, begin() + start);
 
     return begin() + start;
   }

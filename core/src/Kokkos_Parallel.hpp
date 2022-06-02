@@ -154,8 +154,8 @@ template <class ExecPolicy, class FunctorType>
 inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::is_execution_policy<ExecPolicy>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<ExecPolicy>::value>* =
+        nullptr) {
   uint64_t kpID = 0;
 
   ExecPolicy inner_policy = policy;
@@ -244,8 +244,8 @@ namespace Kokkos {
 ///                     value_type& update,
 ///                     const bool final_pass) const;
 ///   void init (value_type& update) const;
-///   void join (volatile value_type& update,
-//               volatile const value_type& input) const
+///   void join (value_type& update,
+//               const value_type& input) const
 /// };
 /// \endcode
 ///
@@ -275,7 +275,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -313,7 +313,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -360,7 +360,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -376,8 +376,8 @@ template <class ExecutionPolicy, class FunctorType>
 inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<ExecutionPolicy>::value>* =
+        nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
@@ -424,8 +424,8 @@ template <class ExecutionPolicy, class FunctorType, class ReturnType>
 inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     ReturnType& return_value, const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<ExecutionPolicy>::value>* =
+        nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);

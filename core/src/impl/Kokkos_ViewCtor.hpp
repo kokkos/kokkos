@@ -53,7 +53,6 @@ namespace Impl {
 
 struct WithoutInitializing_t {};
 struct AllowPadding_t {};
-struct NullSpace_t {};
 
 template <typename>
 struct is_view_ctor_property : public std::false_type {};
@@ -63,9 +62,6 @@ struct is_view_ctor_property<WithoutInitializing_t> : public std::true_type {};
 
 template <>
 struct is_view_ctor_property<AllowPadding_t> : public std::true_type {};
-
-template <>
-struct is_view_ctor_property<NullSpace_t> : public std::true_type {};
 
 //----------------------------------------------------------------------------
 /**\brief Whether a type can be used for a view label */
@@ -87,6 +83,7 @@ struct is_view_label<const char[N]> : public std::true_type {};
 template <typename... P>
 struct ViewCtorProp;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // Forward declare
 template <typename Specialize, typename T>
 struct CommonViewAllocProp;
@@ -108,6 +105,7 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T> > {
 
   type value;
 };
+#endif
 
 /*  std::integral_constant<unsigned,I> are dummy arguments
  *  that avoid duplicate base class errors
@@ -124,10 +122,10 @@ struct ViewCtorProp<void, std::integral_constant<unsigned, I> > {
 
 /* Property flags have constexpr value */
 template <typename P>
-struct ViewCtorProp<typename std::enable_if<
-                        std::is_same<P, AllowPadding_t>::value ||
-                        std::is_same<P, WithoutInitializing_t>::value>::type,
-                    P> {
+struct ViewCtorProp<
+    std::enable_if_t<std::is_same<P, AllowPadding_t>::value ||
+                     std::is_same<P, WithoutInitializing_t>::value>,
+    P> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
@@ -141,8 +139,7 @@ struct ViewCtorProp<typename std::enable_if<
 
 /* Map input label type to std::string */
 template <typename Label>
-struct ViewCtorProp<typename std::enable_if<is_view_label<Label>::value>::type,
-                    Label> {
+struct ViewCtorProp<std::enable_if_t<is_view_label<Label>::value>, Label> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
@@ -156,10 +153,9 @@ struct ViewCtorProp<typename std::enable_if<is_view_label<Label>::value>::type,
 };
 
 template <typename Space>
-struct ViewCtorProp<
-    typename std::enable_if<Kokkos::is_memory_space<Space>::value ||
-                            Kokkos::is_execution_space<Space>::value>::type,
-    Space> {
+struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
+                                     Kokkos::is_execution_space<Space>::value>,
+                    Space> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;

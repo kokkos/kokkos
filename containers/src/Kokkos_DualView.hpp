@@ -249,16 +249,15 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// omit the integer arguments that follow.
   template <class... P>
   DualView(const Impl::ViewCtorProp<P...>& arg_prop,
-           typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
-                                   size_t>::type const n0 =
-               KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-           const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+           std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+                            size_t> const n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n1                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n2                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n3                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n4                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n5                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n6                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n7                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7) {
     // without UVM, host View mirrors
@@ -609,21 +608,21 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   template <class Device>
-  void sync(const typename std::enable_if<
+  void sync(const std::enable_if_t<
                 (std::is_same<typename traits::data_type,
                               typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
-                int>::type& = 0) {
+                int>& = 0) {
     sync_impl<Device>(std::true_type{});
   }
 
   template <class Device, class ExecutionSpace>
   void sync(const ExecutionSpace& exec,
-            const typename std::enable_if<
+            const std::enable_if_t<
                 (std::is_same<typename traits::data_type,
                               typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
-                int>::type& = 0) {
+                int>& = 0) {
     sync_impl<Device>(std::true_type{}, exec);
   }
 
@@ -651,20 +650,20 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   template <class Device>
-  void sync(const typename std::enable_if<
+  void sync(const std::enable_if_t<
                 (!std::is_same<typename traits::data_type,
                                typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
-                int>::type& = 0) {
+                int>& = 0) {
     sync_impl<Device>(std::false_type{});
   }
   template <class Device, class ExecutionSpace>
   void sync(const ExecutionSpace& exec,
-            const typename std::enable_if<
+            const std::enable_if_t<
                 (!std::is_same<typename traits::data_type,
                                typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
-                int>::type& = 0) {
+                int>& = 0) {
     sync_impl<Device>(std::false_type{}, exec);
   }
 
@@ -786,7 +785,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
             std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
                 nullptr>
   void modify() {
-    if (modified_flags.data() == nullptr) return;
+    if (modified_flags.data() == nullptr) {
+      modified_flags = t_modified_flags("DualView::modified_flags");
+    }
+
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -970,17 +972,17 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                                     typename t_host::memory_space(), d_view);
 
         /* Mark Device copy as modified */
-        modified_flags(1) = modified_flags(1) + 1;
+        ++modified_flags(1);
       }
     } else {
-      /* Realloc on Device */
+      /* Resize on Host */
       if (sizeMismatch) {
         ::Kokkos::resize(arg_prop..., h_view, n0, n1, n2, n3, n4, n5, n6, n7);
         d_view = create_mirror_view(arg_prop..., typename t_dev::memory_space(),
                                     h_view);
 
         /* Mark Host copy as modified */
-        modified_flags(0) = modified_flags(0) + 1;
+        ++modified_flags(0);
       }
     }
   }
@@ -1027,16 +1029,16 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      extent(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, size_t>
+  extent(const iType& r) const {
     return d_view.extent(r);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, int>::type
-      extent_int(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      std::is_integral<iType>::value, int>
+  extent_int(const iType& r) const {
     return static_cast<int>(d_view.extent(r));
   }
 

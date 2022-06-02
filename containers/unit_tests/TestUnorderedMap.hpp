@@ -87,8 +87,7 @@ struct TestInsert {
   void init(value_type &failed_count) const { failed_count = 0; }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type &failed_count,
-            const volatile value_type &count) const {
+  void join(value_type &failed_count, const value_type &count) const {
     failed_count += count;
   }
 
@@ -156,9 +155,7 @@ struct TestFind {
   static void init(value_type &dst) { dst = 0; }
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type &dst, const volatile value_type &src) {
-    dst += src;
-  }
+  static void join(value_type &dst, const value_type &src) { dst += src; }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(typename execution_space::size_type i,
