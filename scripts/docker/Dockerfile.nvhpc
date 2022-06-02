@@ -1,4 +1,4 @@
-ARG BASE=nvcr.io/nvidia/nvhpc:21.9-devel-cuda11.4-ubuntu20.04
+ARG BASE=nvcr.io/nvidia/nvhpc:22.3-devel-cuda11.6-ubuntu20.04
 FROM $BASE
 
 RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
@@ -9,7 +9,7 @@ RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
     gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
     rm ${KEYDUMP_FILE}*
 
-ARG CMAKE_VERSION=3.21.4
+ARG CMAKE_VERSION=3.23.1
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
     CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \

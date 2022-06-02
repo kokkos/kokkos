@@ -9,7 +9,7 @@ KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MIN
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Threads"
 # Options:
-# Intel:    KNC,KNL,SNB,HSW,BDW,SKX,ICX
+# Intel:    KNC,KNL,SNB,HSW,BDW,SKL,SKX,ICL,ICX,SPR
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75,Ampere80,Ampere86
 # ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2,A64FX
 # IBM:      BGQ,Power7,Power8,Power9
@@ -360,9 +360,12 @@ KOKKOS_INTERNAL_USE_ARCH_WSM := $(call kokkos_has_string,$(KOKKOS_ARCH),WSM)
 KOKKOS_INTERNAL_USE_ARCH_SNB := $(call kokkos_has_string,$(KOKKOS_ARCH),SNB)
 KOKKOS_INTERNAL_USE_ARCH_HSW := $(call kokkos_has_string,$(KOKKOS_ARCH),HSW)
 KOKKOS_INTERNAL_USE_ARCH_BDW := $(call kokkos_has_string,$(KOKKOS_ARCH),BDW)
+KOKKOS_INTERNAL_USE_ARCH_SKL := $(call kokkos_has_string,$(KOKKOS_ARCH),SKL)
 KOKKOS_INTERNAL_USE_ARCH_SKX := $(call kokkos_has_string,$(KOKKOS_ARCH),SKX)
 KOKKOS_INTERNAL_USE_ARCH_KNL := $(call kokkos_has_string,$(KOKKOS_ARCH),KNL)
+KOKKOS_INTERNAL_USE_ARCH_ICL := $(call kokkos_has_string,$(KOKKOS_ARCH),ICL)
 KOKKOS_INTERNAL_USE_ARCH_ICX := $(call kokkos_has_string,$(KOKKOS_ARCH),ICX)
+KOKKOS_INTERNAL_USE_ARCH_SPR := $(call kokkos_has_string,$(KOKKOS_ARCH),SPR)
 
 KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen)
 KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen9)
@@ -456,7 +459,7 @@ KOKKOS_INTERNAL_USE_ARCH_AVX2       := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_H
 KOKKOS_INTERNAL_USE_ARCH_AVX512MIC  := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_KNL))
 
 # Incompatible flags?
-KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_SSE42)+$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC)+$(KOKKOS_INTERNAL_USE_ARCH_SKX)+$(KOKKOS_INTERNAL_USE_ARCH_ICX)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_ARM)>1") | bc)
+KOKKOS_INTERNAL_USE_ARCH_MULTIHOST := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_SSE42)+$(KOKKOS_INTERNAL_USE_ARCH_AVX)+$(KOKKOS_INTERNAL_USE_ARCH_AVX2)+$(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC)+$(KOKKOS_INTERNAL_USE_ARCH_SKL)+$(KOKKOS_INTERNAL_USE_ARCH_SKX)+$(KOKKOS_INTERNAL_USE_ARCH_ICL)+$(KOKKOS_INTERNAL_USE_ARCH_ICX)+$(KOKKOS_INTERNAL_USE_ARCH_SPR)+$(KOKKOS_INTERNAL_USE_ARCH_KNC)+$(KOKKOS_INTERNAL_USE_ARCH_IBM)+$(KOKKOS_INTERNAL_USE_ARCH_ARM)>1") | bc)
 KOKKOS_INTERNAL_USE_ARCH_MULTIGPU := $(strip $(shell echo "$(KOKKOS_INTERNAL_USE_ARCH_NVIDIA)>1") | bc)
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MULTIHOST), 1)
@@ -1019,6 +1022,27 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
   endif
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SKL), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CXXFLAGS += -xSKYLAKE
+    KOKKOS_LDFLAGS  += -xSKYLAKE
+  else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+
+    else
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+
+      else
+        # Nothing here yet.
+	KOKKOS_CXXFLAGS += -march=skylake
+	KOKKOS_LDFLAGS  += -march=skylake
+      endif
+    endif
+  endif
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SKX), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
 
@@ -1033,17 +1057,29 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SKX), 1)
 
       else
         # Nothing here yet.
-        KOKKOS_CXXFLAGS += -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
-        KOKKOS_LDFLAGS  += -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
+        KOKKOS_CXXFLAGS += -march=skylake-avx512 -mtune=skylake-avx512
+        KOKKOS_LDFLAGS  += -march=skylake-avx512 -mtune=skylake-avx512
       endif
     endif
   endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ICL), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
+  KOKKOS_CXXFLAGS += -march=icelake-client -mtune=icelake-client
+  KOKKOS_LDFLAGS += -march=icelake-client -mtune=icelake-client
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ICX), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
   KOKKOS_CXXFLAGS += -march=icelake-server -mtune=icelake-server
   KOKKOS_LDFLAGS += -march=icelake-server -mtune=icelake-server
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SPR), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
+  KOKKOS_CXXFLAGS += -march=sapphirerapids -mtune=sapphirerapids
+  KOKKOS_LDFLAGS += -march=sapphirerapids -mtune=sapphirerapids
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KNC), 1)
@@ -1198,7 +1234,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.hpp)
   ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
-    KOKKOS_SRC += $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_HIP.cpp
+    KOKKOS_SRC += $(KOKKOS_PATH)/tpls/desul/src/Lock_Array_HIP.cpp
   endif
 
   KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
@@ -1254,7 +1290,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_PVC), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_PVC")
-  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device pvc"
+  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device 12.4.0"
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
@@ -1274,6 +1310,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_DESUL_ATOMICS")
+  KOKKOS_CPPFLAGS+=-I$(KOKKOS_PATH)/tpls/desul/include
 else
   ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
     $(error Contradictory Desul atomics options: KOKKOS_OPTIONS=$(KOKKOS_OPTIONS) )
@@ -1358,7 +1395,7 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
   ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
-    KOKKOS_SRC += $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_CUDA.cpp
+    KOKKOS_SRC += $(KOKKOS_PATH)/tpls/desul/src/Lock_Array_CUDA.cpp
   endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
   ifneq ($(CUDA_PATH),)

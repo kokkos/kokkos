@@ -349,14 +349,16 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Base = ParallelScanSYCLBase<FunctorType, Traits...>;
 
   ReturnType& m_returnvalue;
+  const Kokkos::Experimental::SYCL& m_exec;
 
   inline void execute() {
     Base::impl_execute([&]() {
       const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
       if (nwork > 0) {
         const int size = Base::Analysis::value_size(Base::m_functor);
-        DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace>(
-            &m_returnvalue, Base::m_scratch_space + nwork - 1, size);
+        DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+                 Kokkos::Experimental::SYCL>(
+            m_exec, &m_returnvalue, Base::m_scratch_space + nwork - 1, size);
       }
     });
   }
@@ -364,7 +366,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename Base::Policy& arg_policy,
                         ReturnType& arg_returnvalue)
-      : Base(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+      : Base(arg_functor, arg_policy),
+        m_returnvalue(arg_returnvalue),
+        m_exec(arg_policy.space()) {}
 };
 
 }  // namespace Impl

@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_OPENMP)
-
 #include <cstdio>
 #include <cstdlib>
 
@@ -57,19 +54,20 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Tools.hpp>
+#include "Kokkos_OpenMP_Instance.hpp"
 
 namespace Kokkos {
 namespace Impl {
 
 int g_openmp_hardware_max_threads = 1;
 
-__thread int t_openmp_hardware_id            = 0;
-__thread Impl::OpenMPExec *t_openmp_instance = nullptr;
+thread_local int t_openmp_hardware_id                = 0;
+thread_local Impl::OpenMPInternal *t_openmp_instance = nullptr;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-void OpenMPExec::validate_partition_impl(const int nthreads,
-                                         int &num_partitions,
-                                         int &partition_size) {
+void OpenMPInternal::validate_partition_impl(const int nthreads,
+                                             int &num_partitions,
+                                             int &partition_size) {
   if (nthreads == 1) {
     num_partitions = 1;
     partition_size = 1;
@@ -121,7 +119,7 @@ void OpenMPExec::validate_partition_impl(const int nthreads,
 }
 #endif
 
-void OpenMPExec::verify_is_master(const char *const label) {
+void OpenMPInternal::verify_is_master(const char *const label) {
   if (!t_openmp_instance) {
     std::string msg(label);
     msg.append(" ERROR: in parallel or not initialized");
@@ -138,7 +136,7 @@ void OpenMPExec::verify_is_master(const char *const label) {
 namespace Kokkos {
 namespace Impl {
 
-void OpenMPExec::clear_thread_data() {
+void OpenMPInternal::clear_thread_data() {
   const size_t member_bytes =
       sizeof(int64_t) *
       HostThreadTeamData::align_to_int64(sizeof(HostThreadTeamData));
@@ -163,10 +161,10 @@ void OpenMPExec::clear_thread_data() {
   /* END #pragma omp parallel */
 }
 
-void OpenMPExec::resize_thread_data(size_t pool_reduce_bytes,
-                                    size_t team_reduce_bytes,
-                                    size_t team_shared_bytes,
-                                    size_t thread_local_bytes) {
+void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
+                                        size_t team_reduce_bytes,
+                                        size_t team_shared_bytes,
+                                        size_t thread_local_bytes) {
   const size_t member_bytes =
       sizeof(int64_t) *
       HostThreadTeamData::align_to_int64(sizeof(HostThreadTeamData));
@@ -342,14 +340,14 @@ void OpenMP::impl_initialize(int thread_count) {
 
     void *ptr = nullptr;
     try {
-      ptr = space.allocate(sizeof(Impl::OpenMPExec));
+      ptr = space.allocate(sizeof(Impl::OpenMPInternal));
     } catch (Kokkos::Experimental::RawMemoryAllocationFailure const &f) {
       // For now, just rethrow the error message the existing way
       Kokkos::Impl::throw_runtime_exception(f.get_error_message());
     }
 
     Impl::t_openmp_instance =
-        new (ptr) Impl::OpenMPExec(Impl::g_openmp_hardware_max_threads);
+        new (ptr) Impl::OpenMPInternal(Impl::g_openmp_hardware_max_threads);
 
     // New, unified host thread team data:
     {
@@ -401,7 +399,7 @@ void OpenMP::impl_finalize() {
                              : Impl::t_openmp_instance->m_pool_size;
     (void)nthreads;
 
-    using Exec     = Impl::OpenMPExec;
+    using Exec     = Impl::OpenMPInternal;
     Exec *instance = Impl::t_openmp_instance;
     instance->~Exec();
 
@@ -432,7 +430,7 @@ void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   const bool is_initialized = Impl::t_openmp_instance != nullptr;
 
   if (is_initialized) {
-    Impl::OpenMPExec::verify_is_master("OpenMP::print_configuration");
+    Impl::OpenMPInternal::verify_is_master("OpenMP::print_configuration");
 
     const int numa_count      = 1;
     const int core_per_numa   = Impl::g_openmp_hardware_max_threads;
@@ -445,9 +443,11 @@ void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   }
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 std::vector<OpenMP> OpenMP::partition(...) { return std::vector<OpenMP>(1); }
 
 OpenMP OpenMP::create_instance(...) { return OpenMP(); }
+#endif
 
 int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
 
@@ -517,7 +517,3 @@ constexpr DeviceType DeviceTypeTraits<OpenMP>::id;
 #endif
 
 }  // namespace Kokkos
-
-#else
-void KOKKOS_CORE_SRC_OPENMP_EXEC_PREVENT_LINK_ERROR() {}
-#endif  // KOKKOS_ENABLE_OPENMP

@@ -95,7 +95,7 @@ inline int int_log2_host(unsigned i) {
 #endif
 }
 
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma push
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
@@ -104,7 +104,7 @@ int int_log2(unsigned i) {
   KOKKOS_IF_ON_DEVICE((return int_log2_device(i);))
   KOKKOS_IF_ON_HOST((return int_log2_host(i);))
 }
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma pop
 #endif
 
@@ -152,7 +152,7 @@ inline int bit_first_zero_host(unsigned i) noexcept {
 #endif
 }
 
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma push
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
@@ -161,7 +161,7 @@ int bit_first_zero(unsigned i) noexcept {
   KOKKOS_IF_ON_DEVICE((return bit_first_zero_device(i);))
   KOKKOS_IF_ON_HOST((return bit_first_zero_host(i);))
 }
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma pop
 #endif
 
@@ -197,7 +197,7 @@ KOKKOS_IMPL_HOST_FUNCTION inline int bit_scan_forward_host(unsigned i) {
 #endif
 }
 
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma push
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
@@ -206,7 +206,7 @@ int bit_scan_forward(unsigned i) {
   KOKKOS_IF_ON_DEVICE((return bit_scan_forward_device(i);))
   KOKKOS_IF_ON_HOST((return bit_scan_forward_host(i);))
 }
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma pop
 #endif
 
@@ -244,7 +244,7 @@ KOKKOS_IMPL_HOST_FUNCTION inline int bit_count_host(unsigned i) {
 #endif
 }
 
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma push
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
@@ -253,7 +253,7 @@ int bit_count(unsigned i) {
   KOKKOS_IF_ON_DEVICE((return bit_count_device(i);))
   KOKKOS_IF_ON_HOST((return bit_count_host(i);))
 }
-#if defined(__EDG__)
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
 #pragma pop
 #endif
 

@@ -72,7 +72,7 @@
 namespace Kokkos {
 
 namespace Impl {
-class OpenMPExec;
+class OpenMPInternal;
 }
 
 /// \class OpenMP
@@ -116,6 +116,7 @@ class OpenMP {
   /// This always returns false on OpenMP
   inline static bool is_asynchronous(OpenMP const& = OpenMP()) noexcept;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   /// \brief Partition the default instance into new instances without creating
   ///  new masters
   ///
@@ -129,7 +130,6 @@ class OpenMP {
   /// This is a no-op on OpenMP since a non default instance cannot be created
   static OpenMP create_instance(...);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   /// \brief Partition the default instance and call 'f' on each new 'master'
   /// thread
   ///
@@ -220,7 +220,7 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <OpenMP/Kokkos_OpenMP_Team.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 #include <OpenMP/Kokkos_OpenMP_Task.hpp>

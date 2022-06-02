@@ -748,7 +748,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   const FunctorType m_functor;
   const Policy m_policy;
-  const int m_shmem_size;
+  const size_t m_shmem_size;
 
  public:
   void execute() const {
@@ -787,6 +787,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // nteams should not exceed the maximum in-flight teams possible.
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
+
+    // If the league size is <=0, do not launch the kernel.
+    if (nteams <= 0) return;
 
 // Performing our own scheduling of teams to avoid separation of code between
 // teams-distribute and parallel. Gave a 2x performance boost in test cases with
@@ -869,6 +872,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
 
+    // If the league size is <=0, do not launch the kernel.
+    if (nteams <= 0) return;
+
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
@@ -926,6 +932,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
+
+    // If the league size is <=0, do not launch the kernel.
+    if (nteams <= 0) return;
 
     // Case where the number of reduction items is 1.
     if constexpr (NumReductions == 1) {
@@ -1199,7 +1208,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const Policy m_policy;
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
-  const int m_shmem_size;
+  const size_t m_shmem_size;
 
  public:
   void execute() const {

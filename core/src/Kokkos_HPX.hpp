@@ -364,6 +364,7 @@ class HPX {
 #endif
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   static std::vector<HPX> partition(...) {
     Kokkos::abort(
         "Kokkos::Experimental::HPX::partition_master: can't partition an HPX "
@@ -371,7 +372,6 @@ class HPX {
     return std::vector<HPX>();
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename F>
   KOKKOS_DEPRECATED static void partition_master(
       F const &, int requested_num_partitions = 0, int = 0) {
@@ -699,7 +699,7 @@ struct HPXTeamMember {
       const TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
           &policy,
       const int team_rank, const int league_rank, void *scratch,
-      int scratch_size) noexcept
+      size_t scratch_size) noexcept
       : m_team_shared(scratch, scratch_size, scratch, scratch_size),
         m_league_size(policy.league_size()),
         m_league_rank(league_rank),
@@ -852,7 +852,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
 
-  inline size_t scratch_size(const int &level, int team_size_ = -1) const {
+  size_t scratch_size(const int &level, int team_size_ = -1) const {
     if (team_size_ < 0) {
       team_size_ = m_team_size;
     }

@@ -81,7 +81,7 @@ class ThreadsExecTeamMember {
   ThreadsExec* const m_exec;
   ThreadsExec* const* m_team_base;  ///< Base for team fan-in
   space m_team_shared;
-  int m_team_shared_size;
+  size_t m_team_shared_size;
   int m_team_size;
   int m_team_rank;
   int m_team_rank_rev;
@@ -372,7 +372,7 @@ class ThreadsExecTeamMember {
   ThreadsExecTeamMember(
       Impl::ThreadsExec* exec,
       const TeamPolicyInternal<Kokkos::Threads, Properties...>& team,
-      const int shared_size)
+      const size_t shared_size)
       : m_exec(exec),
         m_team_base(nullptr),
         m_team_shared(nullptr, 0),
@@ -413,7 +413,7 @@ class ThreadsExecTeamMember {
       if (league_iter_end > team.league_size())
         league_iter_end = team.league_size();
 
-      if ((team.team_alloc() > m_team_size)
+      if ((team.team_alloc() > size_t(m_team_size))
               ? (team_rank_rev >= m_team_size)
               : (m_exec->pool_size() - pool_num_teams * m_team_size >
                  m_exec->pool_rank()))
@@ -523,7 +523,7 @@ class ThreadsExecTeamMember {
   }
 
   void set_league_shmem(const int arg_league_rank, const int arg_league_size,
-                        const int arg_shmem_size) {
+                        const size_t arg_shmem_size) {
     m_league_rank      = arg_league_rank;
     m_league_size      = arg_league_size;
     m_team_shared_size = arg_shmem_size;
@@ -664,7 +664,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
   inline int team_size() const { return m_team_size; }
   inline int impl_vector_length() const { return 1; }
-  inline int team_alloc() const { return m_team_alloc; }
+  inline size_t team_alloc() const { return m_team_alloc; }
   inline int league_size() const { return m_league_size; }
 
   inline bool impl_auto_team_size() const { return m_tune_team_size; }

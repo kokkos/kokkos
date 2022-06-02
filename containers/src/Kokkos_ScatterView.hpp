@@ -364,18 +364,6 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
     Kokkos::atomic_div(&value, rhs);
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  void atomic_prod(ValueType& dest, const ValueType& src) const {
-    bool success = false;
-    while (!success) {
-      ValueType dest_old = dest;
-      ValueType dest_new = dest_old * src;
-      dest_new =
-          Kokkos::atomic_compare_exchange<ValueType>(&dest, dest_old, dest_new);
-      success = ((dest_new - dest_old) / dest_old <= 1e-15);
-    }
-  }
-
   KOKKOS_INLINE_FUNCTION
   void join(ValueType& dest, const ValueType& src) const {
     atomic_prod(&dest, src);
@@ -430,21 +418,9 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
       : value(other.value) {}
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  void atomic_min(ValueType& dest, const ValueType& src) const {
-    bool success = false;
-    while (!success) {
-      ValueType dest_old = dest;
-      ValueType dest_new = (dest_old > src) ? src : dest_old;
-      dest_new =
-          Kokkos::atomic_compare_exchange<ValueType>(&dest, dest_old, dest_new);
-      success = ((dest_new - dest_old) / dest_old <= 1e-15);
-    }
-  }
-
   KOKKOS_INLINE_FUNCTION
   void join(ValueType& dest, const ValueType& src) const {
-    atomic_min(dest, src);
+    atomic_min(&dest, src);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
@@ -496,21 +472,9 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
       : value(other.value) {}
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  void atomic_max(ValueType& dest, const ValueType& src) const {
-    bool success = false;
-    while (!success) {
-      ValueType dest_old = dest;
-      ValueType dest_new = (dest_old < src) ? src : dest_old;
-      dest_new =
-          Kokkos::atomic_compare_exchange<ValueType>(&dest, dest_old, dest_new);
-      success = ((dest_new - dest_old) / dest_old <= 1e-15);
-    }
-  }
-
   KOKKOS_INLINE_FUNCTION
   void join(ValueType& dest, const ValueType& src) const {
-    atomic_max(dest, src);
+    atomic_max(&dest, src);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {

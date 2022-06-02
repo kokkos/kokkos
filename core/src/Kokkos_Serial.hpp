@@ -252,6 +252,23 @@ class SerialSpaceInitializer : public ExecSpaceInitializerBase {
 namespace Kokkos {
 namespace Impl {
 
+// We only need to provide a specialization for Serial if there is a host
+// parallel execution space since the specialization for
+// DefaultHostExecutionSpace is defined elsewhere.
+struct DummyExecutionSpace;
+template <class DT, class... DP>
+struct ZeroMemset<
+    std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
+                       Serial, DummyExecutionSpace>,
+    DT, DP...> : public ZeroMemset<DefaultHostExecutionSpace, DT, DP...> {
+  using Base = ZeroMemset<DefaultHostExecutionSpace, DT, DP...>;
+  using Base::Base;
+
+  ZeroMemset(const Serial&, const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type& value)
+      : Base(dst, value) {}
+};
+
 template <typename MemorySpace>
 struct MemorySpaceAccess<MemorySpace, Kokkos::Serial::scratch_memory_space> {
   enum : bool { assignable = false };
@@ -943,7 +960,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const FunctorType m_functor;
   const Policy m_policy;
   const int m_league;
-  const int m_shared;
+  const size_t m_shared;
 
   template <class TagType>
   inline std::enable_if_t<std::is_void<TagType>::value> exec(
@@ -1021,7 +1038,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_league;
   const ReducerType m_reducer;
   pointer_type m_result_ptr;
-  const int m_shared;
+  size_t m_shared;
 
   template <class TagType>
   inline std::enable_if_t<std::is_void<TagType>::value> exec(

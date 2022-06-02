@@ -448,13 +448,6 @@ void pre_initialize_internal(const InitArguments& args) {
   declare_configuration_metadata("memory", "KOKKOS_ENABLE_INTEL_MM_ALLOC",
                                  "no");
 #endif
-#ifdef KOKKOS_ENABLE_POSIX_MEMALIGN
-  declare_configuration_metadata("memory", "KOKKOS_ENABLE_POSIX_MEMALIGN",
-                                 "yes");
-#else
-  declare_configuration_metadata("memory", "KOKKOS_ENABLE_POSIX_MEMALIGN",
-                                 "no");
-#endif
 
 #ifdef KOKKOS_ENABLE_ASM
   declare_configuration_metadata("options", "KOKKOS_ENABLE_ASM", "yes");

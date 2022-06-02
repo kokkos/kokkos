@@ -112,10 +112,10 @@ class HostThreadTeamData {
   int64_t* m_team_scratch;  // == pool[ 0 + m_team_base ]->m_scratch
   int m_pool_rank;
   int m_pool_size;
-  int m_team_reduce;
-  int m_team_shared;
-  int m_thread_local;
-  int m_scratch_size;
+  size_t m_team_reduce;
+  size_t m_team_shared;
+  size_t m_thread_local;
+  size_t m_scratch_size;
   int m_team_base;
   int m_team_rank;
   int m_team_size;
@@ -246,33 +246,31 @@ class HostThreadTeamData {
 
   //----------------------------------------
 
- private:
-  enum : int { mask_to_16 = 0x0f };  // align to 16 bytes
-  enum : int { shift_to_8 = 3 };     // size to 8 bytes
-
  public:
-  static constexpr int align_to_int64(int n) {
+  static constexpr size_t align_to_int64(size_t n) {
+    constexpr size_t mask_to_16 = 0x0f;  // align to 16 bytes
+    constexpr size_t shift_to_8 = 3;     // size to 8 bytes
     return ((n + mask_to_16) & ~mask_to_16) >> shift_to_8;
   }
 
-  constexpr int pool_reduce_bytes() const {
+  constexpr size_t pool_reduce_bytes() const {
     return m_scratch_size ? sizeof(int64_t) * (m_team_reduce - m_pool_reduce)
                           : 0;
   }
 
-  constexpr int team_reduce_bytes() const {
+  constexpr size_t team_reduce_bytes() const {
     return sizeof(int64_t) * (m_team_shared - m_team_reduce);
   }
 
-  constexpr int team_shared_bytes() const {
+  constexpr size_t team_shared_bytes() const {
     return sizeof(int64_t) * (m_thread_local - m_team_shared);
   }
 
-  constexpr int thread_local_bytes() const {
+  constexpr size_t thread_local_bytes() const {
     return sizeof(int64_t) * (m_scratch_size - m_thread_local);
   }
 
-  constexpr int scratch_bytes() const {
+  constexpr size_t scratch_bytes() const {
     return sizeof(int64_t) * m_scratch_size;
   }
 
@@ -309,8 +307,9 @@ class HostThreadTeamData {
   //   thread_local_size = number bytes for thread local memory
   // Return:
   //   total number of bytes that must be allocated
-  static size_t scratch_size(int pool_reduce_size, int team_reduce_size,
-                             int team_shared_size, int thread_local_size) {
+  static size_t scratch_size(size_t pool_reduce_size, size_t team_reduce_size,
+                             size_t team_shared_size,
+                             size_t thread_local_size) {
     pool_reduce_size  = align_to_int64(pool_reduce_size);
     team_reduce_size  = align_to_int64(team_reduce_size);
     team_shared_size  = align_to_int64(team_shared_size);
@@ -335,7 +334,7 @@ class HostThreadTeamData {
   //   total number of bytes that must be allocated
   void scratch_assign(void* const alloc_ptr, size_t const alloc_size,
                       int pool_reduce_size, int team_reduce_size,
-                      int team_shared_size, int /* thread_local_size */) {
+                      size_t team_shared_size, size_t /* thread_local_size */) {
     pool_reduce_size = align_to_int64(pool_reduce_size);
     team_reduce_size = align_to_int64(team_reduce_size);
     team_shared_size = align_to_int64(team_shared_size);

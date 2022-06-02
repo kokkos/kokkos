@@ -53,10 +53,13 @@ DECLARE_AND_CHECK_HOST_ARCH(WSM               "Intel Westmere CPU")
 DECLARE_AND_CHECK_HOST_ARCH(SNB               "Intel Sandy/Ivy Bridge CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(HSW               "Intel Haswell CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(BDW               "Intel Broadwell Xeon E-class CPUs")
-DECLARE_AND_CHECK_HOST_ARCH(ICX               "Intel Ice Lake Server CPUs (AVX512)")
-DECLARE_AND_CHECK_HOST_ARCH(SKX               "Intel Sky Lake Xeon E-class HPC CPUs (AVX512)")
+DECLARE_AND_CHECK_HOST_ARCH(ICL               "Intel Ice Lake Client CPUs (AVX512)")
+DECLARE_AND_CHECK_HOST_ARCH(ICX               "Intel Ice Lake Xeon Server CPUs (AVX512)")
+DECLARE_AND_CHECK_HOST_ARCH(SKL               "Intel Skylake Client CPUs")
+DECLARE_AND_CHECK_HOST_ARCH(SKX               "Intel Skylake Xeon Server CPUs (AVX512)")
 DECLARE_AND_CHECK_HOST_ARCH(KNC               "Intel Knights Corner Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(KNL               "Intel Knights Landing Xeon Phi")
+DECLARE_AND_CHECK_HOST_ARCH(SPR               "Intel Sapphire Rapids Xeon Server CPUs (AVX512)")
 DECLARE_AND_CHECK_HOST_ARCH(BGQ               "IBM Blue Gene Q")
 DECLARE_AND_CHECK_HOST_ARCH(POWER7            "IBM POWER7 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(POWER8            "IBM POWER8 CPUs")
@@ -161,6 +164,10 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   IF (KOKKOS_ENABLE_CUDA)
      SET(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND ON CACHE BOOL "enable CUDA Clang workarounds" FORCE)
   ENDIF()
+ELSEIF (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+  SET(CUDA_ARCH_FLAG "-gpu")
+  GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -cuda)
+  GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -cuda)
 ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
   SET(CUDA_ARCH_FLAG "-arch")
 ENDIF()
@@ -342,6 +349,16 @@ IF (KOKKOS_ARCH_KNC)
   )
 ENDIF()
 
+IF (KOKKOS_ARCH_SKL)
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    Intel   -xSKYLAKE
+    NVHPC   -tp=skylake
+    Cray    NO-VALUE-SPECIFIED
+    DEFAULT -march=skylake -mtune=skylake
+  )
+ENDIF()
+
 IF (KOKKOS_ARCH_SKX)
   #avx512-xeon
   SET(KOKKOS_ARCH_AVX512XEON ON)
@@ -350,7 +367,15 @@ IF (KOKKOS_ARCH_SKX)
     Intel   -xCORE-AVX512
     NVHPC   -tp=skylake
     Cray    NO-VALUE-SPECIFIED
-    DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
+    DEFAULT -march=skylake-avx512 -mtune=skylake-avx512
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_ICL)
+  SET(KOKKOS_ARCH_AVX512XEON ON)
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    DEFAULT -march=icelake-client -mtune=icelake-client
   )
 ENDIF()
 
@@ -359,6 +384,14 @@ IF (KOKKOS_ARCH_ICX)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     DEFAULT -march=icelake-server -mtune=icelake-server
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_SPR)
+  SET(KOKKOS_ARCH_AVX512XEON ON)
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    DEFAULT -march=sapphirerapids -mtune=sapphirerapids
   )
 ENDIF()
 
@@ -390,6 +423,11 @@ IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
   COMPILER_SPECIFIC_FLAGS(
     Clang  -fcuda-rdc
     NVIDIA --relocatable-device-code=true
+    NVHPC -gpu=rdc
+  )
+ELSEIF(KOKKOS_ENABLE_CUDA)
+  COMPILER_SPECIFIC_FLAGS(
+    NVHPC -gpu=nordc
   )
 ENDIF()
 
@@ -448,9 +486,15 @@ FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
         string(REPLACE "sm_" "" CMAKE_ARCH ${FLAG})
         SET(CMAKE_CUDA_ARCHITECTURES ${CMAKE_ARCH} PARENT_SCOPE)
       ELSE()
-        GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
-        IF(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE OR KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-          GLOBAL_APPEND(KOKKOS_LINK_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
+        IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+          STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${FLAG})
+          GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "${CUDA_ARCH_FLAG}=${NVHPC_CUDA_ARCH}")
+          GLOBAL_APPEND(KOKKOS_LINK_OPTIONS "${CUDA_ARCH_FLAG}=${NVHPC_CUDA_ARCH}")
+        ELSE()
+          GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
+          IF(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE OR KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+            GLOBAL_APPEND(KOKKOS_LINK_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
+          ENDIF()
         ENDIF()
       ENDIF()
     ENDIF()
@@ -593,7 +637,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device pvc" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.4.0" -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()
@@ -633,7 +677,7 @@ IF (KOKKOS_ENABLE_SYCL)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device pvc"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.4.0"
     )
   ENDIF()
 ENDIF()

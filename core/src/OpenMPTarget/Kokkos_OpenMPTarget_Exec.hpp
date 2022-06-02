@@ -787,7 +787,7 @@ class OpenMPTargetExecTeamMember {
   using scratch_memory_space = execution_space::scratch_memory_space;
 
   scratch_memory_space m_team_shared;
-  int m_team_scratch_size[2];
+  size_t m_team_scratch_size[2];
   int m_team_rank;
   int m_team_size;
   int m_league_rank;
@@ -974,7 +974,7 @@ class OpenMPTargetExecTeamMember {
                                // Properties ...> & team
       ,
       void* const glb_scratch, const int shmem_block_index,
-      const int shmem_size_L0, const int shmem_size_L1)
+      const size_t shmem_size_L0, const size_t shmem_size_L1)
       : m_team_scratch_size{shmem_size_L0, shmem_size_L1},
         m_team_rank(0),
         m_team_size(team_size),

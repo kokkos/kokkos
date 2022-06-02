@@ -93,10 +93,8 @@ TEST(sycl, raw_sycl_interop_context_2) {
   constexpr int n = 100;
 
   Kokkos::Experimental::SYCL space(queue);
-  // FIXME_SYCL WithoutInitialing should not be necessary but works around a
-  // compiler regression
-  Kokkos::View<int*, Kokkos::Experimental::SYCLDeviceUSMSpace> v(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "default_view"), n);
+  Kokkos::View<int*, Kokkos::Experimental::SYCLDeviceUSMSpace> v("default_view",
+                                                                 n);
   Kokkos::deep_copy(space, v, 5);
 
   auto* v_ptr = v.data();

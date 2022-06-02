@@ -98,11 +98,7 @@ void SYCLInternal::initialize(const sycl::device& d) {
       Kokkos::Impl::throw_runtime_exception(
           "There was an asynchronous SYCL error!\n");
   };
-  // FIXME_SYCL using an in-order queue here should not be necessary since we
-  // are using submit_barrier for managing kernel dependencies but this seems to
-  // be required as a hot fix for now.
-  initialize(
-      sycl::queue{d, exception_handler, sycl::property::queue::in_order()});
+  initialize(sycl::queue{d, exception_handler});
 }
 
 // FIXME_SYCL

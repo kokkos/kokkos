@@ -141,15 +141,22 @@ class SharedAllocationRecord<void, void> {
       SharedAllocationHeader* arg_alloc_ptr, size_t arg_alloc_size,
       function_type arg_dealloc, const std::string& label);
  private:
-  static KOKKOS_THREAD_LOCAL int t_tracking_enabled;
+  static thread_local int t_tracking_enabled;
 
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
+#pragma push
+#pragma diag_suppress implicit_return_from_non_void_function
+#endif
   static KOKKOS_FUNCTION int tracking_enabled() {
     KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
     KOKKOS_IF_ON_DEVICE(return 0;)
   }
+#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
+#pragma pop
+#endif
 
   /**\brief A host process thread claims and disables the
    *        shared allocation tracking flag.
