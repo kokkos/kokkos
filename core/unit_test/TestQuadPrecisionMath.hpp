@@ -127,11 +127,15 @@ constexpr bool test_quad_precision_math_constants() {
   STATIC_ASSERT(Kokkos::Experimental::log2e_v <__float128> == M_LOG2Eq);
   STATIC_ASSERT(Kokkos::Experimental::log10e_v<__float128> == M_LOG10Eq);
   STATIC_ASSERT(Kokkos::Experimental::pi_v    <__float128> == M_PIq);
-  // STATIC_ASSERT(Kokkos::Experimental::inv_pi_v<__float128> == M_1_PIq);  // FIXME
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 930)
+  STATIC_ASSERT(Kokkos::Experimental::inv_pi_v<__float128> == M_1_PIq);
+#endif
   // inv_sqrtpi_v
   STATIC_ASSERT(Kokkos::Experimental::ln2_v   <__float128> == M_LN2q);
   STATIC_ASSERT(Kokkos::Experimental::ln10_v  <__float128> == M_LN10q);
-  // STATIC_ASSERT(Kokkos::Experimental::sqrt2_v <__float128> == M_SQRT2q);  // FIXME
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 930)
+  STATIC_ASSERT(Kokkos::Experimental::sqrt2_v <__float128> == M_SQRT2q);
+#endif
   // sqrt3_v
   // inv_sqrt3_v
   // egamma_v
