@@ -265,22 +265,24 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     return m_value_view;
   }
 
-  template <int Idx, class View>
+  template <typename ExecutionSpace, int Idx, class View>
   constexpr static void write_one_value_back(
-      View const& view, typename View::value_type const& value) noexcept {
+      const ExecutionSpace& exec_space, View const& view,
+      typename View::const_value_type& value) noexcept {
     if (Kokkos::SpaceAccessibility<typename View::memory_space,
                                    Space>::assignable)
       view() = value;
     else
-      Kokkos::deep_copy(view, value);
+      Kokkos::deep_copy(exec_space, view, value);
   }
 
+  template <typename ExecutionSpace>
   constexpr static void write_value_back_to_original_references(
-      value_type const& value,
+      const ExecutionSpace& exec_space, value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
     emulate_fold_comma_operator(
-        (write_one_value_back<Idxs>(
-             reducers_that_reference_original_values.view(),
+        (write_one_value_back<ExecutionSpace, Idxs>(
+             exec_space, reducers_that_reference_original_values.view(),
              value.template get<Idxs, typename Reducers::value_type>()),
          0)...);
   }
@@ -565,9 +567,12 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
           "Kokkos::parallel_reduce: fence due to result being value, not view",
           combined_reducer);
   combined_reducer.write_value_back_to_original_references(
-      value, Impl::_make_reducer_from_arg<space_type>(returnType1),
+      policy.space(), value,
+      Impl::_make_reducer_from_arg<space_type>(returnType1),
       Impl::_make_reducer_from_arg<space_type>(returnType2),
       Impl::_make_reducer_from_arg<space_type>(returnTypes)...);
+  policy.space().fence(
+      "Kokkos::parallel_reduce: fence after copying values back");
   //----------------------------------------
 }
 
