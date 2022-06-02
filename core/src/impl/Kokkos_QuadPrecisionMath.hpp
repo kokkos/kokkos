@@ -133,6 +133,7 @@ struct reduction_identity<__float128> {
 namespace Kokkos {
 // clang-format off
 // Basic operations
+inline __float128 abs(__float128 x) { return ::fabsq(x); }
 inline __float128 fabs(__float128 x) { return ::fabsq(x); }
 inline __float128 fmod(__float128 x, __float128 y) { return ::fmodq(x, y); }
 inline __float128 remainder(__float128 x, __float128 y) { return ::remainderq(x, y); }
