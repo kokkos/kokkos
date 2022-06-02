@@ -98,11 +98,11 @@ TEST(TEST_CATEGORY, quad_precision_common_math_functions) {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, 1),
       KOKKOS_LAMBDA(int) {
-        (void)Kokkos::Experimental::fabs((__float128)0);
-        (void)Kokkos::Experimental::sqrt((__float128)1);
-        (void)Kokkos::Experimental::exp((__float128)2);
-        (void)Kokkos::Experimental::sin((__float128)3);
-        (void)Kokkos::Experimental::cosh((__float128)4);
+        (void)Kokkos::fabs((__float128)0);
+        (void)Kokkos::sqrt((__float128)1);
+        (void)Kokkos::exp((__float128)2);
+        (void)Kokkos::sin((__float128)3);
+        (void)Kokkos::cosh((__float128)4);
       });
 }
 

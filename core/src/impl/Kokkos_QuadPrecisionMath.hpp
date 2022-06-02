@@ -124,7 +124,6 @@ struct reduction_identity<__float128> {
 
 //<editor-fold desc="Common mathematical functions __float128 overloads">
 namespace Kokkos {
-namespace Experimental {
 // clang-format off
 // Basic operations
 inline __float128 fabs(__float128 x) { return ::fabsq(x); }
@@ -209,7 +208,6 @@ inline bool signbit(__float128 x) { return ::signbitq(x); }
 // islessgreater
 // isunordered
 // clang-format on
-}  // namespace Experimental
 }  // namespace Kokkos
 //</editor-fold>
 
