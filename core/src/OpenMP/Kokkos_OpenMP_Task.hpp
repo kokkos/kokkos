@@ -96,10 +96,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
     // HostThreadTeamData& team_data_single =
     // HostThreadTeamDataSingleton::singleton();
 
-    // TODO @tasking @generalization DSH use
-    // scheduler.get_execution_space().impl() (or something like that) instead
-    // of the thread-local variable
-    Impl::OpenMPInternal* instance = t_openmp_instance;
+    Impl::OpenMPInternal* instance =
+        execution_space().impl_internal_space_instance();
     const int pool_size = get_max_team_count(scheduler.get_execution_space());
 
     // TODO @tasking @new_feature DSH allow team sizes other than 1
@@ -258,8 +256,9 @@ class TaskQueueSpecializationConstrained<
     HostThreadTeamData& team_data_single =
         HostThreadTeamDataSingleton::singleton();
 
-    Impl::OpenMPInternal* instance = t_openmp_instance;
-    const int pool_size            = OpenMP::impl_thread_pool_size();
+    Impl::OpenMPInternal* instance =
+        execution_space().impl_internal_space_instance();
+    const int pool_size = OpenMP::impl_thread_pool_size();
 
     const int team_size = 1;       // Threads per core
     instance->resize_thread_data(0 /* global reduce buffer */
