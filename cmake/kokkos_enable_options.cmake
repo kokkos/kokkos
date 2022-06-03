@@ -65,6 +65,10 @@ KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple ke
 KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ON  "Whether to use desul based atomics - option only during beta")
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
 
+KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
+KOKKOS_OPTION(USE_EXTERNAL_MDSPAN ON BOOL "Whether to use an external version of mdspan")
+mark_as_advanced(KOKKOS_USE_EXTERNAL_MDSPAN)
+
 IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
   SET(CUDA_LAMBDA_DEFAULT ON)
 ELSEIF (KOKKOS_ENABLE_CUDA AND (KOKKOS_CXX_COMPILER_ID STREQUAL Clang))
