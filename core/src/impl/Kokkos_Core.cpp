@@ -486,6 +486,11 @@ void pre_initialize_internal(const InitArguments& args) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBRT", "no");
 #endif
+#ifdef KOKKOS_ENABLE_LIBDL
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "yes");
+#else
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "no");
+#endif
   declare_configuration_metadata("architecture", "Default Device",
                                  typeid(Kokkos::DefaultExecutionSpace).name());
 }
