@@ -114,3 +114,9 @@ IF(NOT Kokkos_ENABLE_OPENMPTARGET)
     CATEGORIES PERFORMANCE
   )
 ENDIF()
+
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  PerformanceTest_SampleBenchmark
+  SOURCES BenchmarkMain.cpp Benchmark_Sample.cpp
+  CATEGORIES PERFORMANCE
+)
