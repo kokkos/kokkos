@@ -194,6 +194,7 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
 }
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args) {
+#ifdef KOKKOS_TOOLS_ENABLE_LIBDL
   Kokkos::Profiling::initialize(args.lib);
   auto final_args =
       (args.args != Kokkos::Tools::InitArguments::unset_string_option)
@@ -207,6 +208,9 @@ InitializationStatus initialize_tools_subsystem(
     return {InitializationStatus::InitializationResult::help_request};
   }
   Kokkos::Tools::parseArgs(final_args);
+#else
+  (void)args;
+#endif
   return {InitializationStatus::InitializationResult::success};
 }
 
