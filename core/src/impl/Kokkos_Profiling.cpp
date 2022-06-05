@@ -79,6 +79,18 @@ void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
   (void)arg;
 #endif
 }
+void warn_env_var_ignored_when_kokkos_tools_disabled(char const* env_var,
+                                                     char const* val) {
+#ifndef KOKKOS_TOOLS_ENABLE_LIBDL
+  if (Kokkos::show_warnings()) {
+    std::cerr << "Warning: environment variable '" << env_var << "=" << val
+              << "' ignored because kokkos-tools is disabled." << std::endl;
+  }
+#else
+  (void)env_var;
+  (void)val;
+#endif
+}
 }  // namespace
 
 namespace Kokkos {
@@ -150,6 +162,8 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
   auto& tune_internals = arguments.tune_internals;
   auto env_tool_lib    = std::getenv("KOKKOS_PROFILE_LIBRARY");
   if (env_tool_lib != nullptr) {
+    warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_PROFILE_LIBRARY",
+                                                    env_tool_lib);
     if ((tool_lib != Kokkos::Tools::InitArguments::unset_string_option) &&
         std::string(env_tool_lib) != tool_lib)
       return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
