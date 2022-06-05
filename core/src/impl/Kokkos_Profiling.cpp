@@ -89,22 +89,14 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& help           = arguments.help;
   auto& tune_internals = arguments.tune_internals;
   while (iarg < narg) {
+    bool remove_flag = false;
     if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
       tune_internals = InitArguments::PossiblyUnsetOption::on;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
+      remove_flag    = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", lib)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
+      remove_flag = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", args)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
+      remove_flag = true;
       // strip any leading and/or trailing quotes if they were retained in the
       // string because this will very likely cause parsing issues for tools.
       // If the quotes are retained (via bypassing the shell):
@@ -120,13 +112,16 @@ void parse_command_line_arguments(int& narg, char* arg[],
       // add the name of the executable to the beginning
       if (narg > 0) args = std::string(arg[0]) + " " + args;
     } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
-      help = InitArguments::PossiblyUnsetOption::on;
+      help        = InitArguments::PossiblyUnsetOption::on;
+      remove_flag = true;
+    } else {
+      iarg++;
+    }
+    if (remove_flag) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       narg--;
-    } else {
-      iarg++;
     }
     if ((args == Kokkos::Tools::InitArguments::unset_string_option) && narg > 0)
       args = arg[0];
