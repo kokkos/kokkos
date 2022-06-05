@@ -67,6 +67,20 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+
+namespace {
+void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
+#ifndef KOKKOS_TOOLS_ENABLE_LIBDL
+  if (Kokkos::show_warnings()) {
+    std::cerr << "Warning: command line argument '" << arg
+              << "' ignored because kokkos-tools is disabled." << std::endl;
+  }
+#else
+  (void)arg;
+#endif
+}
+}  // namespace
+
 namespace Kokkos {
 
 namespace Tools {
@@ -94,8 +108,10 @@ void parse_command_line_arguments(int& narg, char* arg[],
       tune_internals = InitArguments::PossiblyUnsetOption::on;
       remove_flag    = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", lib)) {
+      warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
       remove_flag = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", args)) {
+      warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
       remove_flag = true;
       // strip any leading and/or trailing quotes if they were retained in the
       // string because this will very likely cause parsing issues for tools.
@@ -112,7 +128,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
       // add the name of the executable to the beginning
       if (narg > 0) args = std::string(arg[0]) + " " + args;
     } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
-      help        = InitArguments::PossiblyUnsetOption::on;
+      help = InitArguments::PossiblyUnsetOption::on;
+      warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
       remove_flag = true;
     } else {
       iarg++;
