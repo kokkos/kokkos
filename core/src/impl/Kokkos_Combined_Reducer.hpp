@@ -190,10 +190,10 @@ KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
+    T&&) noexcept ->
     typename std::enable_if_t<is_reducer<std::decay_t<T>>::value,
                               std::decay_t<T>>::value_type {
-  return arg.reference();
+  return typename std::decay_t<T>::value_type{};
 }
 
 template <class IdxSeq, class Space, class...>
