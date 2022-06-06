@@ -24,16 +24,16 @@ class simd_mask<T, simd_abi::scalar> {
   using reference = value_type&;
   KOKKOS_DEFAULTED_FUNCTION simd_mask() = default;
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
-  KOKKOS_FORCEINLINE_FUNCTION simd_mask(value_type value)
+  KOKKOS_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
     :m_value(value)
   {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION
   simd_mask(simd_mask<U, simd_abi::scalar> const& other)
-    :m_value(other.get())
+    :m_value(static_cast<U>(other))
   {
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr bool get() const { return m_value; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool () const { return m_value; }
   KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t)
   {
     return m_value;
@@ -60,20 +60,22 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 bool none_of(simd_mask<T, simd_abi::scalar> const& mask)
 {
-  return !mask.get();
+  return !static_cast<bool>(mask);
 }
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 bool all_of(simd_mask<T, simd_abi::scalar> const& mask)
 {
-  return mask.get();
+  return static_cast<bool>(mask);
 }
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 bool any_of(simd_mask<T, simd_abi::scalar> const& mask)
-{ return mask.get(); }
+{
+  return static_cast<bool>(mask);
+}
 
 template <class T>
 class simd<T, simd_abi::scalar> {
@@ -94,7 +96,7 @@ class simd<T, simd_abi::scalar> {
   {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION explicit simd(simd<U, abi_type> const& other)
-    :m_value(value_type(other.get()))
+    :m_value(static_cast<U>(other))
   {}
   template <class G,
     typename std::enable_if<
@@ -124,21 +126,21 @@ class simd<T, simd_abi::scalar> {
     return simd(m_value >> rhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator>>(simd<int, abi_type> const& rhs) const {
-    return simd(m_value >> rhs.get());
+    return simd(m_value >> static_cast<int>(rhs));
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator<<(int rhs) const {
     return simd(m_value << rhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator<<(simd<int, abi_type> const& rhs) const {
-    return simd(m_value << rhs.get());
+    return simd(m_value << static_cast<int>(rhs));
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator&(simd const& other) const {
-    return m_value & other.get();
+    return m_value & other.m_value;
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator|(simd const& other) const {
-    return m_value | other.get();
+    return m_value | other.m_value;
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr T get() const { return m_value; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator T () const { return m_value; }
   KOKKOS_FORCEINLINE_FUNCTION mask_type operator<(simd const& other) const {
     return mask_type(m_value < other.m_value);
   }
@@ -177,14 +179,14 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 simd<T, simd_abi::scalar> abs(simd<T, simd_abi::scalar> const& a)
 {
-  return simd<T, simd_abi::scalar>(std::abs(a.get()));
+  return simd<T, simd_abi::scalar>(std::abs(static_cast<T>(a)));
 }
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 simd<T, simd_abi::scalar> sqrt(simd<T, simd_abi::scalar> const& a)
 {
-  return simd<T, simd_abi::scalar>(std::sqrt(a.get()));
+  return simd<T, simd_abi::scalar>(std::sqrt(static_cast<T>(a)));
 }
 
 template <class T>
@@ -194,7 +196,7 @@ simd<T, simd_abi::scalar> fma(
     simd<T, simd_abi::scalar> const& y,
     simd<T, simd_abi::scalar> const& z)
 {
-  return simd<T, simd_abi::scalar>((x.get() * y.get()) + z.get());
+  return simd<T, simd_abi::scalar>((static_cast<T>(x) * static_cast<T>(y)) + static_cast<T>(z));
 }
 
 template <class T>
@@ -204,13 +206,13 @@ simd<T, simd_abi::scalar> condition(
     simd<T, simd_abi::scalar> const& b,
     simd<T, simd_abi::scalar> const& c)
 {
-  return simd<T, simd_abi::scalar>(a.get() ? b.get() : c.get());
+  return simd<T, simd_abi::scalar>(static_cast<bool>(a) ? static_cast<T>(b) : static_cast<T>(c));
 }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 simd<T, Abi> copysign(simd<T, Abi> const& a, simd<T, Abi> const& b) {
-  return std::copysign(a.get(), b.get());
+  return std::copysign(static_cast<T>(a), static_cast<T>(b));
 }
 
 template <class T>
@@ -234,13 +236,13 @@ class const_where_expression<simd_mask<T, simd_abi::scalar>, simd<T, simd_abi::s
   value_type const& value() const { return m_value; }
   KOKKOS_FORCEINLINE_FUNCTION
   void copy_to(T* mem, element_aligned_tag) const {
-    if (m_mask.get()) *mem = m_value.get();
+    if (static_cast<bool>(m_mask)) *mem = static_cast<T>(m_value);
   }
   template <class Integral>
   KOKKOS_FORCEINLINE_FUNCTION
   std::enable_if_t<std::is_integral_v<Integral>>
   scatter_to(T* mem, simd<Integral, simd_abi::scalar> const& index) const {
-    if (m_mask.get()) mem[index.get()] = m_value.get();
+    if (static_cast<bool>(m_mask)) mem[static_cast<Integral>(index)] = static_cast<T>(m_value);
   }
 };
 
@@ -256,13 +258,13 @@ class where_expression<simd_mask<T, simd_abi::scalar>, simd<T, simd_abi::scalar>
   {}
   KOKKOS_FORCEINLINE_FUNCTION
   void copy_from(T const* mem, element_aligned_tag) {
-    this->m_value = value_type(this->m_mask.get() ? *mem : T(0));
+    this->m_value = value_type(static_cast<bool>(this->m_mask) ? *mem : T(0));
   }
   template <class Integral>
   KOKKOS_FORCEINLINE_FUNCTION
   std::enable_if_t<std::is_integral_v<Integral>>
   gather_from(T const* mem, simd<Integral, simd_abi::scalar> const& index) {
-    this->m_value = value_type(this->m_mask.get() ? mem[index.get()] : T(0));
+    this->m_value = value_type(static_cast<bool>(this->m_mask) ? mem[static_cast<Integral>(index)] : T(0));
   }
 };
 
@@ -273,7 +275,7 @@ T reduce(
     T identity_element,
     BinaryOp)
 {
-  return x.mask().get() ? x.value().get() : identity_element;
+  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value()) : identity_element;
 }
 
 }
