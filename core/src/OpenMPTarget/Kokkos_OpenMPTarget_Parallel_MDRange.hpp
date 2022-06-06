@@ -67,7 +67,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using Policy  = Kokkos::MDRangePolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
-  using Index = typename Policy::index_type;
+  using Index   = typename Policy::index_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -446,7 +446,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
-  using Index = typename Policy::index_type;
+  using Index   = typename Policy::index_type;
 
   using ReducerConditional =
       std::conditional<std::is_same<InvalidType, ReducerType>::value,
