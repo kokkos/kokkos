@@ -794,13 +794,6 @@ struct MDTeamThreadRangeBoundariesStruct {
     static_assert(sizeof...(ns) == Rank, "Number of ns must equal Rank");
   }
 
-  KOKKOS_INLINE_FUNCTION
-  MDTeamThreadRangeBoundariesStruct(TeamMemberType const& member,
-                                    const iType (&array)[Rank])
-      : thread(member) {
-    std::copy(&array[0], &array[Rank], &threadDims[0]);
-  }
-
   TeamMemberType const& thread;
   iType threadDims[Rank];
 };
