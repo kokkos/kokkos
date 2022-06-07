@@ -164,7 +164,7 @@ bool any_of(bool a) { return a; }
 // individual Abi types may provide overloads with more efficient implementations.
 
 template <class T, class Abi>
-[[nodiscard]] P3A_ALWAYS_INLINE P3A_HOST_DEVICE inline
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
 simd<T, Abi> exp(simd<T, Abi> a)
 {
   T a_array[simd<T, Abi>::size()];
