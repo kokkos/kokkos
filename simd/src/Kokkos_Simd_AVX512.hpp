@@ -131,7 +131,7 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 8; }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type value)
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
     :m_value(_mm256_set1_epi32(value))
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(__m256i const& value_in)
@@ -228,7 +228,7 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 8; }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type value)
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
     :m_value(_mm256_set1_epi32(bit_cast<std::int32_t>(value)))
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(__m256i const& value_in)
@@ -302,7 +302,7 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 8; }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type value)
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
     :m_value(_mm512_set1_epi64(value))
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(
@@ -399,7 +399,7 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 8; }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type value)
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
     :m_value(_mm512_set1_epi64(bit_cast<std::int64_t>(value)))
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
@@ -507,8 +507,8 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(simd&&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd& operator=(simd&&) = default;
-  KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr int size() { return 8; }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(double value)
+  KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 8; }
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
     :m_value(_mm512_set1_pd(value))
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(
@@ -713,17 +713,30 @@ class where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>, simd<d
     :const_where_expression(mask_arg, value_arg)
   {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION
-  void copy_from(double const* mem, element_aligned_tag) {
+  void copy_from(double const* mem, element_aligned_tag)
+  {
     m_value = value_type(_mm512_mask_loadu_pd(_mm512_set1_pd(0.0), static_cast<__mmask8>(m_mask), mem));
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION
-  void gather_from(double const* mem, simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
+  void gather_from(double const* mem, simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index)
+  {
     m_value = value_type(_mm512_mask_i32gather_pd(
         _mm512_set1_pd(0.0),
         static_cast<__mmask8>(m_mask),
         static_cast<__m256i>(index),
         mem,
         8));
+  }
+  template <class U>
+  KOKKOS_HOST_FORCEINLINE_FUNCTION
+  void operator=(U const& other)
+  {
+    auto const other_as_value_type = static_cast<simd<double, simd_abi::avx512_fixed_size<8>>>(other);
+    m_value = simd<double, simd_abi::avx512_fixed_size<8>>(
+      _mm512_mask_blend_pd(
+        static_cast<__mmask8>(m_mask),
+        static_cast<__m512d>(m_value),
+        static_cast<__m512d>(other_as_value_type)));
   }
 };
 
