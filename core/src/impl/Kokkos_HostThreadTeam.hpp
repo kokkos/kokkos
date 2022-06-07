@@ -1017,7 +1017,7 @@ struct ParallelForMDTeamVectorRangeHostImpl {
   KOKKOS_INLINE_FUNCTION static void next_rank(
       Boundaries const& boundaries, Closure const& closure,
       typename Boundaries::index_type i) {
-    auto newClosure = [i, &closure](auto... iArgs) { closure(i, iArgs...); };
+    auto newClosure = [i, &closure](auto... is) { closure(i, is...); };
     ParallelForMDTeamVectorRangeHostImpl<Boundaries::inner_direction,
                                          RemainingRank -
                                              1>::parallel_for_impl(boundaries,
