@@ -50,37 +50,44 @@
 
 #include <Kokkos_MinMaxClamp.hpp>
 
-class check_using_gtest {
+class gtest_checker {
  public:
-  void operator()(bool condition, char const* message) const
+  void truth(bool x) const
   {
-    GTEST_TEST_BOOLEAN_(condition, message, false, true, GTEST_NONFATAL_FAILURE_);
+    EXPECT_TRUE(x);
+  }
+  template <class T>
+  void equality(T const& a, T const& b) const
+  {
+    if (a != b) std::abort();
+    EXPECT_EQ(a, b);
   }
 };
 
-class check_using_kokkos {
+class kokkos_checker {
  public:
-  KOKKOS_INLINE_FUNCTION void operator()(bool condition, char const* message) const
+  KOKKOS_INLINE_FUNCTION void truth(bool x) const
   {
-    if (!condition) ::Kokkos::abort(message);
+    KOKKOS_ASSERT(x);
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION void equality(T const& a, T const& b) const
+  {
+    KOKKOS_ASSERT(a == b);
   }
 };
 
-#define KOKKOS_SIMD_CHECK(checker, expression) \
-  checker(expression, #expression)
-
-template <class Checker, class T>
+template <class Checker, class T, class Abi>
 KOKKOS_INLINE_FUNCTION void check_equality(
-    T const& expected_result,
-    T const& computed_result)
+    Kokkos::Experimental::simd<T, Abi> const& expected_result,
+    Kokkos::Experimental::simd<T, Abi> const& computed_result)
 {
   Checker checker;
-  // use the simd_mask reducer functions first
-  KOKKOS_SIMD_CHECK(checker, all_of(expected_result == computed_result));
-  KOKKOS_SIMD_CHECK(checker, none_of(expected_result != computed_result));
+  checker.truth(all_of(expected_result == computed_result));
+  checker.truth(none_of(expected_result != computed_result));
   // double-check that with manual comparison of each entry
   for (std::size_t i = 0; i < expected_result.size(); ++i) {
-    KOKKOS_SIMD_CHECK(checker, expected_result[i] == computed_result[i]);
+    checker.equality(expected_result[i], computed_result[i]);
   }
 }
 
@@ -136,7 +143,7 @@ class load_as_scalars {
 };
 
 template <class Abi, class Checker, class Loader, class BinaryOp, class T>
-KOKKOS_INLINE_FUNCTION void check_binary_op_one_loader(
+__attribute__((noinline)) void check_binary_op_one_loader(
     BinaryOp binary_op,
     std::size_t n,
     T const* first_args,
@@ -154,7 +161,7 @@ KOKKOS_INLINE_FUNCTION void check_binary_op_one_loader(
     bool const loaded_second_arg = loader(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
     simd_type expected_result;
-    for (std::size_t i = 0; i < nlanes; ++i) {
+    for (std::size_t i = 0; i < width; ++i) {
       expected_result[i] = binary_op(first_arg[i], second_arg[i]);
     }
     simd_type const computed_result = binary_op(first_arg, second_arg);
@@ -201,8 +208,19 @@ KOKKOS_INLINE_FUNCTION void check_abi()
   check_addition<Abi, Checker>();
 }
 
-TEST(simd, plus)
+template <class Checker>
+KOKKOS_INLINE_FUNCTION void check_abis(Kokkos::Experimental::simd_abi::abi_set<> set)
 {
-  using abi_type = Kokkos::Experimental::simd_abi::host_native;
-  check_abi<abi_type, check_using_gtest>();
+}
+
+template <class Checker, class FirstAbi, class ... RestAbis>
+KOKKOS_INLINE_FUNCTION void check_abis(Kokkos::Experimental::simd_abi::abi_set<FirstAbi, RestAbis...> set)
+{
+  check_abi<FirstAbi, Checker>();
+  check_abis<Checker>(Kokkos::Experimental::simd_abi::abi_set<RestAbis...>());
+}
+
+TEST(simd, host)
+{
+  check_abis<gtest_checker>(Kokkos::Experimental::simd_abi::host_abi_set());
 }
