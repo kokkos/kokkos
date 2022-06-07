@@ -2115,8 +2115,17 @@ inline void impl_resize(DynRankView<T, P...>& v, const size_t n0,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
   static_assert(!alloc_prop_input::has_label,
-                "The view constructor arguments passed to Kokkos::realloc "
+                "The view constructor arguments passed to Kokkos::resize "
                 "must not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a memory space instance!");
+  static_assert(!alloc_prop_input::allow_padding,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not explicitly allow padding!");
 
   // Add execution space here to avoid the need for if constexpr below
   using alloc_prop = Impl::ViewCtorProp<

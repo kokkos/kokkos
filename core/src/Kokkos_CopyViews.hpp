@@ -2930,6 +2930,18 @@ impl_resize(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::resize "
+                "must not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a memory space instance!");
+  static_assert(!alloc_prop_input::allow_padding,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not explicitly allow padding!");
 
   // TODO (mfh 27 Jun 2017) If the old View has enough space but just
   // different dimensions (e.g., if the product of the dimensions,
@@ -3041,6 +3053,18 @@ impl_resize(Kokkos::View<T, P...>& v,
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::resize "
+                "must not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a memory space instance!");
+  static_assert(!alloc_prop_input::allow_padding,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not explicitly allow padding!");
 
   if (v.layout() != layout) {
     // Add execution space here to avoid the need for if constexpr below
@@ -3090,6 +3114,18 @@ impl_resize(Kokkos::View<T, P...>& v,
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::resize "
+                "must not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a memory space instance!");
+  static_assert(!alloc_prop_input::allow_padding,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not explicitly allow padding!");
 
   // Add execution space here to avoid the need for if constexpr below
   using alloc_prop = Impl::ViewCtorProp<

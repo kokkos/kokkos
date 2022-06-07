@@ -961,12 +961,20 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
     static_assert(!alloc_prop_input::has_label,
-                  "The view constructor arguments passed to Kokkos::realloc "
+                  "The view constructor arguments passed to Kokkos::resize "
                   "must not include a label!");
     static_assert(
         !alloc_prop_input::has_pointer,
-        "The view constructor arguments passed to Kokkos::realloc must "
+        "The view constructor arguments passed to Kokkos::resize must "
         "not include a pointer!");
+    static_assert(
+        !alloc_prop_input::has_memory_space,
+        "The view constructor arguments passed to Kokkos::resize must "
+        "not include a memory space instance!");
+    static_assert(
+        !alloc_prop_input::allow_padding,
+        "The view constructor arguments passed to Kokkos::resize must "
+        "not explicitly allow padding!");
 
     const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
     const bool sizeMismatch =
