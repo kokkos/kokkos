@@ -43,10 +43,61 @@
 */
 
 #include <gtest/gtest.h>
+
 #include <Kokkos_Simd.hpp>
+
+#include <impl/Kokkos_Error.hpp>
+
+class check_using_gtest {
+ public:
+  void operator()(bool condition, char const* message) const
+  {
+    GTEST_TEST_BOOLEAN_(condition, message, false, true, GTEST_NONFATAL_FAILURE_);
+  }
+};
+
+class check_using_kokkos {
+ public:
+  KOKKOS_INLINE_FUNCTION void operator()(bool condition, char const* message) const
+  {
+    if (!condition) ::Kokkos::abort(message);
+  }
+};
+
+#define KOKKOS_SIMD_CHECK(checker, expression) \
+  checker(expression, #expression)
+
+template <class Checker>
+class check_equality {
+  Checker m_checker;
+ public:
+  template <class T>
+  KOKKOS_INLINE_FUNCTION void operator()(
+      T const& expected_result,
+      T const& computed_result) const
+  {
+    // use the simd_mask reducer functions first
+    KOKKOS_SIMD_CHECK(m_checker, all_of(expected_result == computed_result));
+    KOKKOS_SIMD_CHECK(m_checker, none_of(expected_result != computed_result));
+    // double-check that with manual comparison of each entry
+    for (std::size_t i = 0; i < expected_result.size(); ++i) {
+      KOKKOS_SIMD_CHECK(m_checker, expected_result[i] == computed_result[i]);
+    }
+  }
+};
+
+class plus {
+ public:
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto operator()(T const& a, T const& b) const
+  {
+    return a + b;
+  }
+};
 
 TEST(simd, plus)
 {
   using simd_type = Kokkos::Experimental::simd<double, Kokkos::Experimental::simd_abi::host_native>;
-  EXPECT_TRUE(all_of(simd_type(2.0) == simd_type(1.0) + simd_type(1.0)));
+  check_equality<check_using_gtest> equality_checker;
+  equality_checker(simd_type(2.0), simd_type(1.0) + simd_type(1.0));
 }
