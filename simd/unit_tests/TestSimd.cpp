@@ -48,5 +48,5 @@
 TEST(simd, plus)
 {
   using simd_type = Kokkos::Experimental::simd<double, Kokkos::Experimental::simd_abi::host_native>;
-  EXPECT_EQ(simd_type(2.0), simd_type(1.0) + simd_type(1.0));
+  EXPECT_TRUE(all_of(simd_type(2.0) == simd_type(1.0) + simd_type(1.0)));
 }
