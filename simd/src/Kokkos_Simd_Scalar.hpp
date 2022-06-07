@@ -43,13 +43,13 @@ class simd_mask<T, simd_abi::scalar> {
     return m_value;
   }
   KOKKOS_FORCEINLINE_FUNCTION simd_mask operator||(simd_mask const& other) const {
-    return m_value || other.m_value;
+    return simd_mask(m_value || other.m_value);
   }
   KOKKOS_FORCEINLINE_FUNCTION simd_mask operator&&(simd_mask const& other) const {
-    return m_value && other.m_value;
+    return simd_mask(m_value && other.m_value);
   }
   KOKKOS_FORCEINLINE_FUNCTION simd_mask operator!() const {
-    return !m_value;
+    return simd_mask(!m_value);
   }
   KOKKOS_FORCEINLINE_FUNCTION bool operator==(simd_mask const& other) const {
     return m_value == other.m_value;
@@ -257,14 +257,22 @@ class where_expression<simd_mask<T, simd_abi::scalar>, simd<T, simd_abi::scalar>
     :base_type(mask_arg, value_arg)
   {}
   KOKKOS_FORCEINLINE_FUNCTION
-  void copy_from(T const* mem, element_aligned_tag) {
-    this->m_value = value_type(static_cast<bool>(this->m_mask) ? *mem : T(0));
+  void copy_from(T const* mem, element_aligned_tag)
+  {
+    if (static_cast<bool>(this->m_mask)) this->m_value = *mem;
   }
   template <class Integral>
   KOKKOS_FORCEINLINE_FUNCTION
   std::enable_if_t<std::is_integral_v<Integral>>
-  gather_from(T const* mem, simd<Integral, simd_abi::scalar> const& index) {
-    this->m_value = value_type(static_cast<bool>(this->m_mask) ? mem[static_cast<Integral>(index)] : T(0));
+  gather_from(T const* mem, simd<Integral, simd_abi::scalar> const& index)
+  {
+    if (static_cast<bool>(this->m_mask)) this->m_value = mem[static_cast<Integral>(index)];
+  }
+  template <class U>
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator=(U const& other)
+  {
+    if (static_cast<bool>(this->m_mask)) this->m_value = static_cast<simd<T, simd_abi::scalar>>(other);
   }
 };
 
