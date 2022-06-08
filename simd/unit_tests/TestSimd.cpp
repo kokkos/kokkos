@@ -50,6 +50,8 @@
 
 #include <Kokkos_MinMaxClamp.hpp>
 
+#include <Kokkos_Core.hpp>
+
 class gtest_checker {
  public:
   void truth(bool x) const
@@ -221,7 +223,7 @@ void host_check_binary_op_one_loader(
 }
 
 template <class Abi, class Loader, class BinaryOp, class T>
-void device_check_binary_op_one_loader(
+KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
     BinaryOp binary_op,
     std::size_t n,
     T const* first_args,
@@ -301,12 +303,31 @@ inline void host_check_addition()
 }
 
 template <class Abi>
+KOKKOS_INLINE_FUNCTION void device_check_addition()
+{
+  std::size_t constexpr n = 7;
+  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2};
+  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2};
+  device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+}
+
+template <class Abi>
 inline void host_check_abi()
 {
   host_check_addition<Abi>();
 }
 
+template <class Abi>
+KOKKOS_INLINE_FUNCTION void device_check_abi()
+{
+  device_check_addition<Abi>();
+}
+
 inline void host_check_abis(Kokkos::Experimental::simd_abi::abi_set<> set)
+{
+}
+
+KOKKOS_INLINE_FUNCTION void device_check_abis(Kokkos::Experimental::simd_abi::abi_set<> set)
 {
 }
 
@@ -317,7 +338,29 @@ inline void host_check_abis(Kokkos::Experimental::simd_abi::abi_set<FirstAbi, Re
   host_check_abis(Kokkos::Experimental::simd_abi::abi_set<RestAbis...>());
 }
 
+template <class FirstAbi, class ... RestAbis>
+KOKKOS_INLINE_FUNCTION void device_check_abis(Kokkos::Experimental::simd_abi::abi_set<FirstAbi, RestAbis...> set)
+{
+  device_check_abi<FirstAbi>();
+  device_check_abis(Kokkos::Experimental::simd_abi::abi_set<RestAbis...>());
+}
+
 TEST(simd, host)
 {
   host_check_abis(Kokkos::Experimental::simd_abi::host_abi_set());
+}
+
+class simd_device_functor {
+ public:
+  KOKKOS_INLINE_FUNCTION void operator()(int) const
+  {
+    device_check_abis(Kokkos::Experimental::simd_abi::device_abi_set());
+  }
+};
+
+TEST(simd, device)
+{
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
+      simd_device_functor());
 }
