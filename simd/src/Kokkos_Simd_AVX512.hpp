@@ -455,17 +455,17 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
     return _mm512_srli_epi64(m_value, rhs);
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator>>(
-      simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) const {
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) const {
     return _mm512_srlv_epi64(m_value,
-                             _mm512_cvtepu32_epi64(static_cast<__m256i>(rhs)));
+                             _mm512_cvtepi32_epi64(static_cast<__m256i>(rhs)));
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator<<(unsigned int rhs) const {
     return _mm512_slli_epi64(m_value, rhs);
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator<<(
-      simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) const {
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) const {
     return _mm512_sllv_epi64(m_value,
-                             _mm512_cvtepu32_epi64(static_cast<__m256i>(rhs)));
+                             _mm512_cvtepi32_epi64(static_cast<__m256i>(rhs)));
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator&(simd const& other) const {
     return _mm512_and_epi64(m_value, other.m_value);
