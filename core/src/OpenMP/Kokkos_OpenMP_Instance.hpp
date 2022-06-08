@@ -72,6 +72,7 @@ class OpenMPInternal;
 extern int g_openmp_hardware_max_threads;
 
 extern thread_local int t_openmp_hardware_id;
+// FIXME_OPENMP we can remove this after we remove partition_master
 extern thread_local OpenMPInternal* t_openmp_instance;
 
 struct OpenMPTraits {
@@ -85,6 +86,10 @@ class OpenMPInternal {
 
   ~OpenMPInternal() { clear_thread_data(); }
 
+  static int get_current_max_threads() noexcept;
+
+  bool m_initialized = false;
+
   int m_pool_size;
   int m_level;
 
@@ -92,6 +97,12 @@ class OpenMPInternal {
 
  public:
   friend class Kokkos::OpenMP;
+
+  static OpenMPInternal& singleton();
+
+  void initialize(int thread_cound);
+
+  void finalize();
 
   void clear_thread_data();
 
@@ -105,38 +116,51 @@ class OpenMPInternal {
                                       int& partition_size);
 #endif
 
-  static void verify_is_master(const char* const);
-
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
 
-  inline HostThreadTeamData* get_thread_data() const noexcept {
+  HostThreadTeamData* get_thread_data() const noexcept {
     return m_pool[m_level == omp_get_level() ? 0 : omp_get_thread_num()];
   }
 
-  inline HostThreadTeamData* get_thread_data(int i) const noexcept {
+  HostThreadTeamData* get_thread_data(int i) const noexcept {
     return m_pool[i];
   }
+
+  bool is_initialized() const { return m_initialized; }
+
+  bool verify_is_initialized(const char* const label) const;
+
+  void print_configuration(std::ostream& s) const;
 };
 
 }  // namespace Impl
 inline bool OpenMP::impl_is_initialized() noexcept {
-  return Impl::t_openmp_instance != nullptr;
+  return Impl::OpenMPInternal::singleton().is_initialized();
 }
 
 inline bool OpenMP::in_parallel(OpenMP const&) noexcept {
-  // t_openmp_instance is only non-null on a master thread
-  return !Impl::t_openmp_instance ||
-         Impl::t_openmp_instance->m_level < omp_get_level();
+  // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
+  // static and does not use the OpenMP object
+  return ((Impl::OpenMPInternal::singleton().m_level < omp_get_level()) &&
+          (!Impl::t_openmp_instance ||
+           Impl::t_openmp_instance->m_level < omp_get_level()));
 }
 
 inline int OpenMP::impl_thread_pool_size() noexcept {
-  return OpenMP::in_parallel() ? omp_get_num_threads()
-                               : Impl::t_openmp_instance->m_pool_size;
+  // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
+  // static
+  return OpenMP::in_parallel()
+             ? omp_get_num_threads()
+             : (Impl::t_openmp_instance
+                    ? Impl::t_openmp_instance->m_pool_size
+                    : Impl::OpenMPInternal::singleton().m_pool_size);
 }
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::impl_thread_pool_rank() noexcept {
+  // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
+  // static
   KOKKOS_IF_ON_HOST(
       (return Impl::t_openmp_instance ? 0 : omp_get_thread_num();))
 
@@ -167,7 +191,7 @@ KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
 #endif
     using Exec = Impl::OpenMPInternal;
 
-    Exec* prev_instance = Impl::t_openmp_instance;
+    Exec* prev_instance = &Impl::OpenMPInternal::singleton();
 
     Exec::validate_partition_impl(prev_instance->m_pool_size, num_partitions,
                                   partition_size);
@@ -176,35 +200,22 @@ KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
 
 #pragma omp parallel num_threads(num_partitions)
     {
-      void* ptr = nullptr;
-      try {
-        ptr = space.allocate(sizeof(Exec));
-      } catch (
-          Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-        // For now, just rethrow the error message the existing way
-        Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
-      }
-
-      Impl::t_openmp_instance = new (ptr) Exec(partition_size);
+      Exec thread_local_instance(partition_size);
+      Impl::t_openmp_instance = &thread_local_instance;
 
       size_t pool_reduce_bytes  = 32 * partition_size;
       size_t team_reduce_bytes  = 32 * partition_size;
       size_t team_shared_bytes  = 1024 * partition_size;
       size_t thread_local_bytes = 1024;
 
-      Impl::t_openmp_instance->resize_thread_data(
+      thread_local_instance.resize_thread_data(
           pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
           thread_local_bytes);
 
       omp_set_num_threads(partition_size);
       f(omp_get_thread_num(), omp_get_num_threads());
-
-      Impl::t_openmp_instance->~Exec();
-      space.deallocate(Impl::t_openmp_instance, sizeof(Exec));
       Impl::t_openmp_instance = nullptr;
     }
-
-    Impl::t_openmp_instance = prev_instance;
   } else {
     // nested openmp not enabled
     f(0, 1);
