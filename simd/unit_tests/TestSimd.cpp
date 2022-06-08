@@ -61,7 +61,6 @@ class gtest_checker {
   template <class T>
   void equality(T const& a, T const& b) const
   {
-    if (a != b) std::abort();
     EXPECT_EQ(a, b);
   }
 };
@@ -82,27 +81,37 @@ class kokkos_checker {
 template <class T, class Abi>
 inline void host_check_equality(
     Kokkos::Experimental::simd<T, Abi> const& expected_result,
-    Kokkos::Experimental::simd<T, Abi> const& computed_result)
+    Kokkos::Experimental::simd<T, Abi> const& computed_result,
+    std::size_t nlanes)
 {
   gtest_checker checker;
-  checker.truth(all_of(expected_result == computed_result));
-  checker.truth(none_of(expected_result != computed_result));
-  for (std::size_t i = 0; i < expected_result.size(); ++i) {
+  for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
+  using mask_type = typename Kokkos::Experimental::simd<T, Abi>::mask_type;
+  mask_type mask(false);
+  for (std::size_t i = 0; i < nlanes; ++i) {
+    mask[i] = true;
+  }
+  checker.equality((expected_result == computed_result) && mask, mask);
 }
 
 template <class T, class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_equality(
     Kokkos::Experimental::simd<T, Abi> const& expected_result,
-    Kokkos::Experimental::simd<T, Abi> const& computed_result)
+    Kokkos::Experimental::simd<T, Abi> const& computed_result,
+    std::size_t nlanes)
 {
   kokkos_checker checker;
-  checker.truth(all_of(expected_result == computed_result));
-  checker.truth(none_of(expected_result != computed_result));
-  for (std::size_t i = 0; i < expected_result.size(); ++i) {
+  for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
+  using mask_type = typename Kokkos::Experimental::simd<T, Abi>::mask_type;
+  mask_type mask(false);
+  for (std::size_t i = 0; i < nlanes; ++i) {
+    mask[i] = true;
+  }
+  checker.equality((expected_result == computed_result) && mask, mask);
 }
 
 class load_element_aligned {
@@ -214,11 +223,11 @@ void host_check_binary_op_one_loader(
     bool const loaded_second_arg = loader.host_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
     simd_type expected_result;
-    for (std::size_t i = 0; i < width; ++i) {
+    for (std::size_t i = 0; i < nlanes; ++i) {
       expected_result[i] = binary_op.on_host(first_arg[i], second_arg[i]);
     }
     simd_type const computed_result = binary_op.on_host(first_arg, second_arg);
-    host_check_equality(expected_result, computed_result);
+    host_check_equality(expected_result, computed_result, nlanes);
   }
 }
 
@@ -241,11 +250,11 @@ KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
     bool const loaded_second_arg = loader.device_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
     simd_type expected_result;
-    for (std::size_t i = 0; i < width; ++i) {
+    for (std::size_t i = 0; i < nlanes; ++i) {
       expected_result[i] = binary_op.on_device(first_arg[i], second_arg[i]);
     }
     simd_type const computed_result = binary_op.on_device(first_arg, second_arg);
-    device_check_equality(expected_result, computed_result);
+    device_check_equality(expected_result, computed_result, nlanes);
   }
 }
 
@@ -293,6 +302,20 @@ class plus {
   }
 };
 
+class minus {
+ public:
+  template <class T>
+  auto on_host(T const& a, T const& b) const
+  {
+    return a - b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const
+  {
+    return a - b;
+  }
+};
+
 class multiplies {
  public:
   template <class T>
@@ -307,54 +330,54 @@ class multiplies {
   }
 };
 
+class divides {
+ public:
+  template <class T>
+  auto on_host(T const& a, T const& b) const
+  {
+    return a / b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const
+  {
+    return a / b;
+  }
+};
+
 template <class Abi>
-inline void host_check_addition()
+inline void host_check_math_ops()
 {
   std::size_t constexpr n = 11;
   double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
-  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
+  double const second_args[n] = {1, 2,  1,  1, 1, -3, -2,  1, 0, -3, -2};
   host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
-}
-
-template <class Abi>
-KOKKOS_INLINE_FUNCTION void device_check_addition()
-{
-  std::size_t constexpr n = 11;
-  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
-  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
-  device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
-}
-
-template <class Abi>
-inline void host_check_multiplication()
-{
-  std::size_t constexpr n = 11;
-  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
-  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
+  host_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
+  host_check_binary_op_all_loaders<Abi>(divides(), n, first_args, second_args);
 }
 
 template <class Abi>
-KOKKOS_INLINE_FUNCTION void device_check_multiplication()
+KOKKOS_INLINE_FUNCTION void device_check_math_ops()
 {
   std::size_t constexpr n = 11;
   double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
-  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
+  double const second_args[n] = {1, 2,  1,  1, 1, -3, -2,  1, 0, -3, -2};
+  device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  device_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   device_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
+  device_check_binary_op_all_loaders<Abi>(divides(), n, first_args, second_args);
 }
 
 template <class Abi>
 inline void host_check_abi()
 {
-  host_check_addition<Abi>();
-  host_check_multiplication<Abi>();
+  host_check_math_ops<Abi>();
 }
 
 template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_abi()
 {
-  device_check_addition<Abi>();
-  device_check_multiplication<Abi>();
+  device_check_math_ops<Abi>();
 }
 
 inline void host_check_abis(Kokkos::Experimental::simd_abi::abi_set<> set)
