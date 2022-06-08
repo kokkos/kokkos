@@ -172,10 +172,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
-      : m_instance(nullptr),
-        m_functor(arg_functor),
-        m_policy(arg_policy) {
-    if(t_openmp_instance) {
+      : m_instance(nullptr), m_functor(arg_functor), m_policy(arg_policy) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -285,7 +283,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -454,7 +452,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_view.data()) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -472,7 +470,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_policy(arg_policy),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -619,7 +617,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
         m_reducer(InvalidType()),
         m_result_ptr(arg_view.data()) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -638,7 +636,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -769,10 +767,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   inline ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_instance(nullptr),
-        m_functor(arg_functor),
-        m_policy(arg_policy) {
-    if(t_openmp_instance) {
+      : m_instance(nullptr), m_functor(arg_functor), m_policy(arg_policy) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -893,7 +889,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_returnvalue(arg_returnvalue) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -1023,7 +1019,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -1224,7 +1220,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
@@ -1241,7 +1237,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {
-    if(t_openmp_instance) {
+    if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
