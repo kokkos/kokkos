@@ -293,34 +293,68 @@ class plus {
   }
 };
 
+class multiplies {
+ public:
+  template <class T>
+  auto on_host(T const& a, T const& b) const
+  {
+    return a * b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const
+  {
+    return a * b;
+  }
+};
+
 template <class Abi>
 inline void host_check_addition()
 {
-  std::size_t constexpr n = 7;
-  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2};
-  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2};
+  std::size_t constexpr n = 11;
+  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
+  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
   host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
 }
 
 template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_addition()
 {
-  std::size_t constexpr n = 7;
-  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2};
-  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2};
+  std::size_t constexpr n = 11;
+  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
+  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
   device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+}
+
+template <class Abi>
+inline void host_check_multiplication()
+{
+  std::size_t constexpr n = 11;
+  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
+  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
+  host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
+}
+
+template <class Abi>
+KOKKOS_INLINE_FUNCTION void device_check_multiplication()
+{
+  std::size_t constexpr n = 11;
+  double const first_args[n] =  {1, 2, -1, 10, 0,  1, -2, 10, 0,  1, -2};
+  double const second_args[n] = {1, 2,  1,  1, 0, -3, -2,  1, 0, -3, -2};
+  device_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
 }
 
 template <class Abi>
 inline void host_check_abi()
 {
   host_check_addition<Abi>();
+  host_check_multiplication<Abi>();
 }
 
 template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_abi()
 {
   device_check_addition<Abi>();
+  device_check_multiplication<Abi>();
 }
 
 inline void host_check_abis(Kokkos::Experimental::simd_abi::abi_set<> set)
