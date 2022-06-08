@@ -883,6 +883,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 template <size_t RemainingRank>
 struct ParallelForMDTeamThreadRangeHostImpl {
  private:
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
   template <typename Boundaries, typename Closure>
   KOKKOS_INLINE_FUNCTION static void next_rank(
       Boundaries const& boundaries, Closure const& closure,
@@ -891,6 +899,9 @@ struct ParallelForMDTeamThreadRangeHostImpl {
     ParallelForMDTeamThreadRangeHostImpl<RemainingRank - 1>::parallel_for_impl(
         boundaries, newClosure);
   }
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic pop
+#endif
 
  public:
   static constexpr size_t remaining_rank = RemainingRank;
@@ -942,6 +953,14 @@ KOKKOS_INLINE_FUNCTION
 template <Kokkos::Iterate Direction, size_t RemainingRank>
 struct ParallelForMDThreadVectorRangeHostImpl {
  private:
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
   template <typename Boundaries, typename Closure>
   KOKKOS_INLINE_FUNCTION static void next_rank(
       Boundaries const& boundaries, Closure const& closure,
@@ -951,6 +970,9 @@ struct ParallelForMDThreadVectorRangeHostImpl {
         Boundaries::inner_direction,
         RemainingRank - 1>::parallel_for_impl(boundaries, newClosure);
   }
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic pop
+#endif
 
  public:
   static constexpr Kokkos::Iterate direction = Direction;
@@ -1147,6 +1169,14 @@ Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
   loop_boundaries.thread.team_reduce( reducer );
 }*/
 
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
 template <Kokkos::Iterate Direction, size_t Rank, typename iType,
           typename Member, typename Closure, typename Reducer>
 KOKKOS_INLINE_FUNCTION
@@ -1176,6 +1206,13 @@ KOKKOS_INLINE_FUNCTION
 
   parallel_reduce(boundaries, closure, reducer);
 }
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic pop
+#endif
 
 //----------------------------------------------------------------------------
 /** \brief  Inter-thread vector parallel_reduce.
@@ -1214,6 +1251,14 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
   }
 }
 
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
 template <Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
           size_t Rank, typename iType, typename Member, typename Closure,
           typename Reducer>
@@ -1278,6 +1323,13 @@ KOKKOS_INLINE_FUNCTION
 
   parallel_reduce(boundaries, closure, reducer);
 }
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic pop
+#endif
 
 //----------------------------------------------------------------------------
 

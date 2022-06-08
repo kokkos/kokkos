@@ -1560,6 +1560,8 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
   {
     TestMDTeamParallelFor<TEST_EXECSPACE>::test_parallel_single_direction_test<
         Left>(dims);
+    TestMDTeamParallelFor<TEST_EXECSPACE>::test_parallel_single_direction_test<
+        Right>(dims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::test_parallel_double_direction_test<
         Left, Left>(dims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::test_parallel_double_direction_test<
