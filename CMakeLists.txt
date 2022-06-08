@@ -193,8 +193,12 @@ KOKKOS_SETUP_BUILD_ENVIRONMENT()
 
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
-SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms Kokkos::kokkossimd)
-SET(KOKKOS_INT_LIBRARIES kokkos kokkoscore kokkoscontainers kokkosalgorithms kokkossimd)
+SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
+SET(KOKKOS_INT_LIBRARIES kokkos kokkoscore kokkoscontainers kokkosalgorithms)
+IF (KOKKOS_CXX_STANDARD GREATER_EQUAL 17)
+  LIST(APPEND KOKKOS_EXT_LIBRARIES Kokkos::kokkossimd)
+  LIST(APPEND KOKKOS_INT_LIBRARIES kokkossimd)
+ENDIF()
 SET_PROPERTY(GLOBAL PROPERTY KOKKOS_INT_LIBRARIES ${KOKKOS_INT_LIBRARIES})
 
 IF (KOKKOS_HAS_TRILINOS)
