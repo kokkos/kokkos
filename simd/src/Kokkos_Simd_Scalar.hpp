@@ -2,6 +2,7 @@
 #define KOKKOS_SIMD_SCALAR_HPP
 
 #include <type_traits>
+#include <limits.h>
 
 #include <Kokkos_Simd_Common.hpp>
 
@@ -284,6 +285,15 @@ T reduce(
     BinaryOp)
 {
   return static_cast<bool>(x.mask()) ? static_cast<T>(x.value()) : identity_element;
+}
+
+// these are specialized because NumericTraits is in KokkosKernels not Kokkos
+
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+int hmax(
+    const_where_expression<simd_mask<int, simd_abi::scalar>, simd<int, simd_abi::scalar>> const& x)
+{
+  return static_cast<bool>(x.mask()) ? static_cast<int>(x.value()) : INT_MIN;
 }
 
 }
