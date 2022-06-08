@@ -31,7 +31,7 @@ class simd_mask<T, simd_abi::scalar> {
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION
   simd_mask(simd_mask<U, simd_abi::scalar> const& other)
-    :m_value(static_cast<U>(other))
+    :m_value(static_cast<bool>(other))
   {
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool () const { return m_value; }
