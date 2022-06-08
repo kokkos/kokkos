@@ -296,6 +296,13 @@ int hmax(
   return static_cast<bool>(x.mask()) ? static_cast<int>(x.value()) : INT_MIN;
 }
 
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+int hmin(
+    const_where_expression<simd_mask<int, simd_abi::scalar>, simd<int, simd_abi::scalar>> const& x)
+{
+  return static_cast<bool>(x.mask()) ? static_cast<int>(x.value()) : INT_MAX;
+}
+
 }
 }
 
