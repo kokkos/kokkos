@@ -2,6 +2,7 @@
 #define KOKKOS_SIMD_COMMON_HPP
 
 #include <cmath>
+#include <cstring>
 
 #include <Kokkos_Macros.hpp>
 
