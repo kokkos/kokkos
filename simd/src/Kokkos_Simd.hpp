@@ -14,22 +14,22 @@ namespace Experimental {
 
 namespace simd_abi {
 
-template <class ... Abis>
+template <class... Abis>
 class abi_set {};
 
 using host_abi_set = abi_set<scalar
 #ifdef KOKKOS_ARCH_AVX512XEON
-      ,avx512_fixed_size<8>
+                             ,
+                             avx512_fixed_size<8>
 #endif
-      >;
+                             >;
 
-using device_abi_set = abi_set<scalar
-      >;
+using device_abi_set = abi_set<scalar>;
 
 #if defined(KOKKOS_ARCH_AVX512XEON)
 using host_native = avx512_fixed_size<8>;
 #else
-using host_native = scalar;
+using host_native   = scalar;
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
@@ -40,14 +40,14 @@ using device_native = host_native;
 
 using native = host_native;
 
-}
+}  // namespace simd_abi
 
 template <class T>
 using device_simd = simd<T, simd_abi::device_native>;
 template <class T>
 using device_simd_mask = simd_mask<T, simd_abi::device_native>;
 
-}
-}
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #endif
