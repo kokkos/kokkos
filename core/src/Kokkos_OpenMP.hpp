@@ -75,6 +75,8 @@ class OpenMP {
 
   OpenMP();
 
+  OpenMP(int pool_size);
+
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 

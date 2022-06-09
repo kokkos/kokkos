@@ -393,6 +393,15 @@ OpenMP::OpenMP()
       "OpenMP instance constructor");
 }
 
+OpenMP::OpenMP(int pool_size)
+    : m_space_instance(new Impl::OpenMPInternal(pool_size),
+                       [](Impl::OpenMPInternal *ptr) {
+                         ptr->finalize();
+                         delete ptr;
+                       }) {
+  m_space_instance->verify_is_initialized("OpenMP instance constructor");
+}
+
 int OpenMP::impl_get_current_max_threads() noexcept {
   return Impl::OpenMPInternal::get_current_max_threads();
 }
