@@ -226,7 +226,6 @@ namespace Experimental {
 template <>
 struct DeviceTypeTraits<Serial> {
   static constexpr DeviceType id = DeviceType::Serial;
-  static int device_id(const Serial&) { return 0; }
 };
 }  // namespace Experimental
 }  // namespace Tools

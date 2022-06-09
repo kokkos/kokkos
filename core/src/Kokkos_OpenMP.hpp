@@ -179,7 +179,6 @@ namespace Experimental {
 template <>
 struct DeviceTypeTraits<OpenMP> {
   static constexpr DeviceType id = DeviceType::OpenMP;
-  static int device_id(const OpenMP&) { return 0; }
 };
 }  // namespace Experimental
 }  // namespace Tools
