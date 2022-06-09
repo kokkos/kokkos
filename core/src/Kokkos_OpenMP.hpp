@@ -121,13 +121,12 @@ class OpenMP {
   /// \brief Free any resources being consumed by the default execution space
   static void impl_finalize();
 
-  inline static int impl_thread_pool_size() noexcept;
+  inline static int impl_thread_pool_size(OpenMP const& = OpenMP()) noexcept;
 
   /** \brief  The rank of the executing thread in this thread pool */
-  KOKKOS_INLINE_FUNCTION
-  static int impl_thread_pool_rank() noexcept;
+  inline static int impl_thread_pool_rank() noexcept;
 
-  inline static int impl_thread_pool_size(int depth);
+  inline static int impl_thread_pool_size(int depth, OpenMP const& = OpenMP());
 
   // use UniqueToken
   inline static int impl_max_hardware_threads() noexcept;

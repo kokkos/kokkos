@@ -78,6 +78,8 @@ class OpenMPInternal {
 
   void clear_thread_data();
 
+  int thread_pool_size() const { return m_pool_size; }
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   static void validate_partition_impl(const int nthreads, int& num_partitions,
                                       int& partition_size);
@@ -106,28 +108,25 @@ inline bool OpenMP::impl_is_initialized() noexcept {
   return Impl::OpenMPInternal::singleton().is_initialized();
 }
 
-inline bool OpenMP::in_parallel(OpenMP const&) noexcept {
-  // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
-  // static and does not use the OpenMP object
-  return ((Impl::OpenMPInternal::singleton().m_level < omp_get_level()) &&
-          (!Impl::t_openmp_instance ||
-           Impl::t_openmp_instance->m_level < omp_get_level()));
+inline bool OpenMP::in_parallel(OpenMP const& exec_space) noexcept {
+  return (
+      (exec_space.impl_internal_space_instance()->m_level < omp_get_level()) &&
+      (!Impl::t_openmp_instance ||
+       Impl::t_openmp_instance->m_level < omp_get_level()));
 }
 
-inline int OpenMP::impl_thread_pool_size() noexcept {
-  // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
-  // static
-  return OpenMP::in_parallel()
+inline int OpenMP::impl_thread_pool_size(OpenMP const& exec_space) noexcept {
+  return OpenMP::in_parallel(exec_space)
              ? omp_get_num_threads()
              : (Impl::t_openmp_instance
                     ? Impl::t_openmp_instance->m_pool_size
-                    : Impl::OpenMPInternal::singleton().m_pool_size);
+                    : exec_space.impl_internal_space_instance()->m_pool_size);
 }
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::impl_thread_pool_rank() noexcept {
-  // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
-  // static
+  // FIXME_OPENMP Can we remove this when removing partition_master? It's only
+  // used in one partition_master test
   KOKKOS_IF_ON_HOST(
       (return Impl::t_openmp_instance ? 0 : omp_get_thread_num();))
 
@@ -313,8 +312,8 @@ class UniqueToken<OpenMP, UniqueTokenScope::Global> {
 
 }  // namespace Experimental
 
-inline int OpenMP::impl_thread_pool_size(int depth) {
-  return depth < 2 ? impl_thread_pool_size() : 1;
+inline int OpenMP::impl_thread_pool_size(int depth, OpenMP const& exec_space) {
+  return depth < 2 ? impl_thread_pool_size(exec_space) : 1;
 }
 
 KOKKOS_INLINE_FUNCTION
