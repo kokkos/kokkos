@@ -1086,6 +1086,123 @@ struct TestMDTeamParallelReduce {
     EXPECT_EQ(finalSum, expectedSum);
   }
 
+  // MDRangePolicy only allows up to rank of 6. Because of this, expectedSum
+  // array had to be constructed from a nested parallel_for loop.
+  template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
+  static void test_parallel_reduce_for_7D_MDTeamThreadRange(
+      DimsType const& dims) {
+    using ViewType = typename Kokkos::View<DataType*******, ExecSpace>;
+
+    int leagueSize = dims[0];
+    int n0         = dims[1];
+    int n1         = dims[2];
+    int n2         = dims[3];
+    int n3         = dims[4];
+    int n4         = dims[5];
+    int n5         = dims[6];
+
+    ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5);
+    FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5);
+
+    Kokkos::parallel_for(
+        leagueSize, KOKKOS_LAMBDA(const int leagueRank) {
+          Kokkos::parallel_for(
+              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+                  {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5}),
+              KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
+                            const int m, const int n) {
+                v(leagueRank, i, j, k, l, m, n) =
+                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
+              });
+        });
+
+    int finalSum = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
+        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
+          auto leagueRank = team.league_rank();
+          int teamSum     = 0;
+
+          Kokkos::parallel_reduce(
+              Kokkos::MDTeamThreadRange<Direction>(team, n0, n1, n2, n3, n4,
+                                                   n5),
+              [=](const int& i, const int& j, const int& k, const int& l,
+                  const int& m, const int& n, int& threadSum) {
+                threadSum += v(leagueRank, i, j, k, l, m, n);
+              },
+              teamSum);
+
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+        },
+        finalSum);
+
+    int expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
+
+    EXPECT_EQ(finalSum, expectedSum);
+  }
+
+  template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
+  static void test_parallel_reduce_for_8D_MDTeamThreadRange(
+      DimsType const& dims) {
+    using ViewType = typename Kokkos::View<DataType********, ExecSpace>;
+
+    int leagueSize = dims[0];
+    int n0         = dims[1];
+    int n1         = dims[2];
+    int n2         = dims[3];
+    int n3         = dims[4];
+    int n4         = dims[5];
+    int n5         = dims[6];
+    int n6         = dims[7];
+
+    ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5, n6);
+    FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5,
+                                          n6);
+
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0},
+                                                          {leagueSize, n0}),
+
+        KOKKOS_LAMBDA(const int leagueRank, const int i) {
+          Kokkos::parallel_for(
+              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+                  {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6}),
+              KOKKOS_LAMBDA(const int j, const int k, const int l, const int m,
+                            const int n, const int o) {
+                v(leagueRank, i, j, k, l, m, n, o) =
+                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
+              });
+        });
+
+    int finalSum = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
+        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
+          auto leagueRank = team.league_rank();
+          int teamSum     = 0;
+
+          Kokkos::parallel_reduce(
+              Kokkos::MDTeamThreadRange<Direction>(team, n0, n1, n2, n3, n4, n5,
+                                                   n6),
+              [=](const int& i, const int& j, const int& k, const int& l,
+                  const int& m, const int& n, const int& o, int& threadSum) {
+                threadSum += v(leagueRank, i, j, k, l, m, n, o);
+              },
+              teamSum);
+
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+        },
+        finalSum);
+
+    int expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
+
+    EXPECT_EQ(finalSum, expectedSum);
+  }
+
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDThreadVectorRange(
@@ -1259,6 +1376,138 @@ struct TestMDTeamParallelReduce {
 
   template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
             Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
+  static void test_parallel_reduce_for_7D_MDThreadVectorRange(
+      DimsType const& dims) {
+    using ViewType = typename Kokkos::View<DataType*******, ExecSpace>;
+
+    int leagueSize = dims[0];
+    int n0         = dims[1];
+    int n1         = dims[2];
+    int n2         = dims[3];
+    int n3         = dims[4];
+    int n4         = dims[5];
+    int n5         = dims[6];
+
+    ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5);
+    FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5);
+
+    Kokkos::parallel_for(
+        leagueSize, KOKKOS_LAMBDA(const int leagueRank) {
+          Kokkos::parallel_for(
+              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+                  {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5}),
+              KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
+                            const int m, const int n) {
+                v(leagueRank, i, j, k, l, m, n) =
+                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
+              });
+        });
+
+    int finalSum = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
+        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
+          auto leagueRank = team.league_rank();
+          int teamSum     = 0;
+
+          auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
+          auto threadVectorRange =
+              Kokkos::MDThreadVectorRange<OuterDirection, InnerDirection>(
+                  team, n1, n2, n3, n4, n5);
+
+          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+            int threadSum = 0;
+            Kokkos::parallel_reduce(
+                threadVectorRange,
+                [=](const int& j, const int& k, const int& l, const int& m,
+                    const int& n, int& vectorSum) {
+                  vectorSum += v(leagueRank, i, j, k, l, m, n);
+                },
+                threadSum);
+
+            teamSum += threadSum;
+          });
+
+          leagueSum += teamSum;
+        },
+        finalSum);
+
+    int expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
+
+    EXPECT_EQ(finalSum, expectedSum);
+  }
+
+  template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
+            Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
+  static void test_parallel_reduce_for_8D_MDThreadVectorRange(
+      DimsType const& dims) {
+    using ViewType = typename Kokkos::View<DataType********, ExecSpace>;
+
+    int leagueSize = dims[0];
+    int n0         = dims[1];
+    int n1         = dims[2];
+    int n2         = dims[3];
+    int n3         = dims[4];
+    int n4         = dims[5];
+    int n5         = dims[6];
+    int n6         = dims[7];
+
+    ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5, n6);
+    FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5,
+                                          n6);
+
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0},
+                                                          {leagueSize, n0}),
+        KOKKOS_LAMBDA(const int leagueRank, const int i) {
+          Kokkos::parallel_for(
+              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+                  {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6}),
+              KOKKOS_LAMBDA(const int j, const int k, const int l, const int m,
+                            const int n, const int o) {
+                v(leagueRank, i, j, k, l, m, n, o) =
+                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
+              });
+        });
+
+    int finalSum = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
+        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
+          auto leagueRank = team.league_rank();
+          int teamSum     = 0;
+
+          auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
+          auto threadVectorRange =
+              Kokkos::MDThreadVectorRange<OuterDirection, InnerDirection>(
+                  team, n1, n2, n3, n4, n5, n6);
+
+          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+            int threadSum = 0;
+            Kokkos::parallel_reduce(
+                threadVectorRange,
+                [=](const int& j, const int& k, const int& l, const int& m,
+                    const int& n, const int& o, int& vectorSum) {
+                  vectorSum += v(leagueRank, i, j, k, l, m, n, o);
+                },
+                threadSum);
+
+            teamSum += threadSum;
+          });
+
+          leagueSum += teamSum;
+        },
+        finalSum);
+
+    int expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
+
+    EXPECT_EQ(finalSum, expectedSum);
+  }
+
+  template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
+            Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_4D_MDTeamVectorRange(
       DimsType const& dims) {
     using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
@@ -1411,6 +1660,127 @@ struct TestMDTeamParallelReduce {
 
     EXPECT_EQ(finalSum, expectedSum);
   }
+
+  template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
+            Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
+  static void test_parallel_reduce_for_7D_MDTeamVectorRange(
+      DimsType const& dims) {
+    using ViewType = typename Kokkos::View<DataType*******, ExecSpace>;
+
+    int leagueSize = dims[0];
+    int n0         = dims[1];
+    int n1         = dims[2];
+    int n2         = dims[3];
+    int n3         = dims[4];
+    int n4         = dims[5];
+    int n5         = dims[6];
+
+    ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5);
+    FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5);
+    Kokkos::parallel_for(
+        leagueSize, KOKKOS_LAMBDA(const int leagueRank) {
+          Kokkos::parallel_for(
+              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+                  {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5}),
+              KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
+                            const int m, const int n) {
+                v(leagueRank, i, j, k, l, m, n) =
+                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
+              });
+        });
+
+    int finalSum = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
+        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
+          auto leagueRank = team.league_rank();
+          int teamSum     = 0;
+
+          auto teamVectorRange =
+              Kokkos::MDTeamVectorRange<OuterDirection, InnerDirection>(
+                  team, n0, n1, n2, n3, n4, n5);
+
+          Kokkos::parallel_reduce(
+              teamVectorRange,
+              [=](const int& i, const int& j, const int& k, const int& l,
+                  const int& m, const int& n, int& vectorSum) {
+                vectorSum += v(leagueRank, i, j, k, l, m, n);
+              },
+              teamSum);
+
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+        },
+        finalSum);
+
+    int expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
+
+    EXPECT_EQ(finalSum, expectedSum);
+  }
+
+  template <Kokkos::Iterate OuterDirection = Kokkos::Iterate::Default,
+            Kokkos::Iterate InnerDirection = Kokkos::Iterate::Default>
+  static void test_parallel_reduce_for_8D_MDTeamVectorRange(
+      DimsType const& dims) {
+    using ViewType = typename Kokkos::View<DataType********, ExecSpace>;
+
+    int leagueSize = dims[0];
+    int n0         = dims[1];
+    int n1         = dims[2];
+    int n2         = dims[3];
+    int n3         = dims[4];
+    int n4         = dims[5];
+    int n5         = dims[6];
+    int n6         = dims[7];
+
+    ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5, n6);
+    FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5,
+                                          n6);
+
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0},
+                                                          {leagueSize, n0}),
+        KOKKOS_LAMBDA(const int leagueRank, const int i) {
+          Kokkos::parallel_for(
+              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+                  {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6}),
+              KOKKOS_LAMBDA(const int j, const int k, const int l, const int m,
+                            const int n, const int o) {
+                v(leagueRank, i, j, k, l, m, n, o) =
+                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
+              });
+        });
+
+    int finalSum = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
+        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
+          auto leagueRank = team.league_rank();
+          int teamSum     = 0;
+
+          auto teamVectorRange =
+              Kokkos::MDTeamVectorRange<OuterDirection, InnerDirection>(
+                  team, n0, n1, n2, n3, n4, n5, n6);
+
+          Kokkos::parallel_reduce(
+              teamVectorRange,
+              [=](const int& i, const int& j, const int& k, const int& l,
+                  const int& m, const int& n, const int& o, int& vectorSum) {
+                vectorSum += v(leagueRank, i, j, k, l, m, n, o);
+              },
+              teamSum);
+
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+        },
+        finalSum);
+
+    int expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
+
+    EXPECT_EQ(finalSum, expectedSum);
+  }
 };
 
 /*--------------------------------------------------------------------------*/
@@ -1418,10 +1788,13 @@ struct TestMDTeamParallelReduce {
 constexpr auto Left  = Kokkos::Iterate::Left;
 constexpr auto Right = Kokkos::Iterate::Right;
 
+// Using prime numbers makes debugging easier
+// small dimensions were needed for larger dimensions to reduce test run time
+int dims[]      = {3, 5, 7, 11, 13, 17, 19, 23};
+int smallDims[] = {2, 3, 2, 3, 5, 2, 3, 5};
+
 TEST(TEST_CATEGORY, MDTeamParallelFor) {
   using namespace MDTeamParallelism;
-  int dims[] = {3, 5, 7, 11, 13, 17, 19, 23};
-
   {
     TestMDTeamParallelFor<
         TEST_EXECSPACE>::test_parallel_for_3D_MDTeamThreadRange<Left>(dims);
@@ -1443,15 +1816,15 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
     TestMDTeamParallelFor<
         TEST_EXECSPACE>::test_parallel_for_6D_MDTeamThreadRange<Right>(dims);
 
-    TestMDTeamParallelFor<
-        TEST_EXECSPACE>::test_parallel_for_7D_MDTeamThreadRange<Left>(dims);
-    TestMDTeamParallelFor<
-        TEST_EXECSPACE>::test_parallel_for_7D_MDTeamThreadRange<Right>(dims);
+    TestMDTeamParallelFor<TEST_EXECSPACE>::
+        test_parallel_for_7D_MDTeamThreadRange<Left>(smallDims);
+    TestMDTeamParallelFor<TEST_EXECSPACE>::
+        test_parallel_for_7D_MDTeamThreadRange<Right>(smallDims);
 
-    TestMDTeamParallelFor<
-        TEST_EXECSPACE>::test_parallel_for_8D_MDTeamThreadRange<Left>(dims);
-    TestMDTeamParallelFor<
-        TEST_EXECSPACE>::test_parallel_for_8D_MDTeamThreadRange<Right>(dims);
+    TestMDTeamParallelFor<TEST_EXECSPACE>::
+        test_parallel_for_8D_MDTeamThreadRange<Left>(smallDims);
+    TestMDTeamParallelFor<TEST_EXECSPACE>::
+        test_parallel_for_8D_MDTeamThreadRange<Right>(smallDims);
   }
 
   {
@@ -1483,22 +1856,22 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
         test_parallel_for_6D_MDThreadVectorRange<Right, Right>(dims);
 
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDThreadVectorRange<Left, Left>(dims);
+        test_parallel_for_7D_MDThreadVectorRange<Left, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDThreadVectorRange<Left, Right>(dims);
+        test_parallel_for_7D_MDThreadVectorRange<Left, Right>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDThreadVectorRange<Right, Left>(dims);
+        test_parallel_for_7D_MDThreadVectorRange<Right, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDThreadVectorRange<Right, Right>(dims);
+        test_parallel_for_7D_MDThreadVectorRange<Right, Right>(smallDims);
 
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDThreadVectorRange<Left, Left>(dims);
+        test_parallel_for_8D_MDThreadVectorRange<Left, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDThreadVectorRange<Left, Right>(dims);
+        test_parallel_for_8D_MDThreadVectorRange<Left, Right>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDThreadVectorRange<Right, Left>(dims);
+        test_parallel_for_8D_MDThreadVectorRange<Right, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDThreadVectorRange<Right, Right>(dims);
+        test_parallel_for_8D_MDThreadVectorRange<Right, Right>(smallDims);
   }
 
   {
@@ -1539,22 +1912,22 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
         test_parallel_for_6D_MDTeamVectorRange<Right, Right>(dims);
 
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDTeamVectorRange<Left, Left>(dims);
+        test_parallel_for_7D_MDTeamVectorRange<Left, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDTeamVectorRange<Left, Right>(dims);
+        test_parallel_for_7D_MDTeamVectorRange<Left, Right>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDTeamVectorRange<Right, Left>(dims);
+        test_parallel_for_7D_MDTeamVectorRange<Right, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_7D_MDTeamVectorRange<Right, Right>(dims);
+        test_parallel_for_7D_MDTeamVectorRange<Right, Right>(smallDims);
 
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDTeamVectorRange<Left, Left>(dims);
+        test_parallel_for_8D_MDTeamVectorRange<Left, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDTeamVectorRange<Left, Right>(dims);
+        test_parallel_for_8D_MDTeamVectorRange<Left, Right>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDTeamVectorRange<Right, Left>(dims);
+        test_parallel_for_8D_MDTeamVectorRange<Right, Left>(smallDims);
     TestMDTeamParallelFor<TEST_EXECSPACE>::
-        test_parallel_for_8D_MDTeamVectorRange<Right, Right>(dims);
+        test_parallel_for_8D_MDTeamVectorRange<Right, Right>(smallDims);
   }
 
   {
@@ -1575,8 +1948,6 @@ TEST(TEST_CATEGORY, MDTeamParallelFor) {
 
 TEST(TEST_CATEGORY, MDTeamParallelReduce) {
   using namespace MDTeamParallelism;
-  int dims[] = {3, 5, 7, 11, 13, 17, 19, 23};
-
   {
     TestMDTeamParallelReduce<TEST_EXECSPACE>::
         test_parallel_reduce_for_3D_MDTeamThreadRange<Left>(dims);
@@ -1597,6 +1968,16 @@ TEST(TEST_CATEGORY, MDTeamParallelReduce) {
         test_parallel_reduce_for_6D_MDTeamThreadRange<Left>(dims);
     TestMDTeamParallelReduce<TEST_EXECSPACE>::
         test_parallel_reduce_for_6D_MDTeamThreadRange<Right>(dims);
+
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDTeamThreadRange<Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDTeamThreadRange<Right>(smallDims);
+
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDTeamThreadRange<Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDTeamThreadRange<Right>(smallDims);
   }
 
   {
@@ -1626,6 +2007,26 @@ TEST(TEST_CATEGORY, MDTeamParallelReduce) {
         test_parallel_reduce_for_6D_MDThreadVectorRange<Right, Left>(dims);
     TestMDTeamParallelReduce<TEST_EXECSPACE>::
         test_parallel_reduce_for_6D_MDThreadVectorRange<Right, Right>(dims);
+
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDThreadVectorRange<Left, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDThreadVectorRange<Left, Right>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDThreadVectorRange<Right, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDThreadVectorRange<Right, Right>(
+            smallDims);
+
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDThreadVectorRange<Left, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDThreadVectorRange<Left, Right>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDThreadVectorRange<Right, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDThreadVectorRange<Right, Right>(
+            smallDims);
   }
 
   {
@@ -1655,6 +2056,24 @@ TEST(TEST_CATEGORY, MDTeamParallelReduce) {
         test_parallel_reduce_for_6D_MDTeamVectorRange<Right, Left>(dims);
     TestMDTeamParallelReduce<TEST_EXECSPACE>::
         test_parallel_reduce_for_6D_MDTeamVectorRange<Right, Right>(dims);
+
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDTeamVectorRange<Left, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDTeamVectorRange<Left, Right>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDTeamVectorRange<Right, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_MDTeamVectorRange<Right, Right>(smallDims);
+
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDTeamVectorRange<Left, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDTeamVectorRange<Left, Right>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDTeamVectorRange<Right, Left>(smallDims);
+    TestMDTeamParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_MDTeamVectorRange<Right, Right>(smallDims);
   }
 }
 
