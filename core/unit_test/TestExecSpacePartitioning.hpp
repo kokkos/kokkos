@@ -84,7 +84,7 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
 
 TEST(TEST_CATEGORY, partitioning_by_args) {
   auto instances =
-      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1.);
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   ASSERT_EQ(int(instances.size()), 2);
   test_partitioning(instances);
 }
