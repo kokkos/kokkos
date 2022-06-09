@@ -36,6 +36,10 @@
 
 #include <omp.h>
 
+#include <numeric>
+#include <type_traits>
+#include <vector>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -327,6 +331,48 @@ inline int OpenMP::impl_max_hardware_threads() noexcept {
   return Impl::g_openmp_hardware_max_threads;
 }
 
+namespace Experimental {
+namespace Impl {
+// Partitioning an Execution Space: expects space and integer arguments for
+// relative weight
+template <typename T>
+inline std::vector<OpenMP> create_OpenMP_instances(
+    OpenMP const& main_instance, std::vector<T> const& weights) {
+  static_assert(
+      std::is_arithmetic<T>::value,
+      "Kokkos Error: partitioning arguments must be integers or floats");
+  std::vector<OpenMP> instances(weights.size());
+  T total_weight = std::accumulate(weights.begin(), weights.end(), 0);
+  int const main_pool_size =
+      main_instance.impl_internal_space_instance()->thread_pool_size();
+
+  int resources_used = 0;
+  for (unsigned int i = 0; i < weights.size() - 1; ++i) {
+    int instance_pool_size = (weights[i] / total_weight) * main_pool_size;
+    instances[i]           = OpenMP(instance_pool_size);
+    resources_used += instance_pool_size;
+  }
+  // Last instance get all resources left
+  instances[weights.size() - 1] = main_pool_size - resources_used;
+
+  return instances;
+}
+}  // namespace Impl
+
+template <typename... Args>
+std::vector<OpenMP> partition_space(OpenMP const& main_instance, Args... args) {
+  // Unpack the arguments and create the weight vector. Note that if some of the
+  // types are not same, you will get a narrowing warning.
+  std::vector<std::common_type_t<Args...>> const weights = {args...};
+  return Impl::create_OpenMP_instances(main_instance, weights);
+}
+
+template <typename T>
+std::vector<OpenMP> partition_space(OpenMP const& main_instance,
+                                    std::vector<T>& weights) {
+  return Impl::create_OpenMP_instances(main_instance, weights);
+}
+}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif
