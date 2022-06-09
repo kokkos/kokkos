@@ -1,16 +1,3 @@
-IF (KOKKOS_ENABLE_IMPL_MDSPAN)
-  MESSAGE(STATUS "Experimental mdspan support is enabled")
-  if (KOKKOS_USE_EXTERNAL_MDSPAN)
-    find_package(mdspan REQUIRED)
-    MESSAGE(STATUS "Using external mdspan")
-  else()
-    KOKKOS_INCLUDE_DIRECTORIES(
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include
-    )
-    MESSAGE(STATUS "Using internal mdspan")
-  endif()
-ENDIF()
-
 KOKKOS_INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -123,6 +110,20 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
+ENDIF()
+
+IF (KOKKOS_ENABLE_IMPL_MDSPAN)
+  MESSAGE(STATUS "Experimental mdspan support is enabled")
+  if (KOKKOS_USE_EXTERNAL_MDSPAN)
+    find_package(mdspan REQUIRED)
+    MESSAGE(STATUS "Using external mdspan")
+  else()
+  KOKKOS_LIB_INCLUDE_DIRECTORIES(
+      kokkoscore
+      ${PROJECT_SOURCE_DIR}/tpls/mdspan/include
+    )
+    MESSAGE(STATUS "Using internal mdspan directory ${PROJECT_SOURCE_DIR}/tpls/mdspan/include")
+  endif()
 ENDIF()
 
 KOKKOS_LINK_TPL(kokkoscore PUBLIC HWLOC)
