@@ -1035,6 +1035,14 @@ KOKKOS_INLINE_FUNCTION
 template <Kokkos::Iterate Direction, size_t RemainingRank>
 struct ParallelForMDTeamVectorRangeHostImpl {
  private:
+// Incorrect shadow warning in older gcc compilers, see
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
+// FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
+// minimum requirement
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
   template <typename Boundaries, typename Closure>
   KOKKOS_INLINE_FUNCTION static void next_rank(
       Boundaries const& boundaries, Closure const& closure,
@@ -1045,6 +1053,9 @@ struct ParallelForMDTeamVectorRangeHostImpl {
                                              1>::parallel_for_impl(boundaries,
                                                                    newClosure);
   }
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#pragma GCC diagnostic pop
+#endif
 
  public:
   static constexpr Kokkos::Iterate direction = Direction;
