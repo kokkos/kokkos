@@ -199,15 +199,6 @@ void HPXSpaceInitializer::print_configuration(std::ostream &msg,
 }
 
 }  // namespace Impl
-
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Kokkos::Experimental::HPX>::id;
-}
-}  // namespace Tools
-#endif
-
 }  // namespace Kokkos
 
 #else
