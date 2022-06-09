@@ -127,8 +127,7 @@ inline int OpenMP::impl_thread_pool_size(OpenMP const& exec_space) noexcept {
                     : exec_space.impl_internal_space_instance()->m_pool_size);
 }
 
-KOKKOS_INLINE_FUNCTION
-int OpenMP::impl_thread_pool_rank() noexcept {
+inline int OpenMP::impl_thread_pool_rank() noexcept {
   // FIXME_OPENMP Can we remove this when removing partition_master? It's only
   // used in one partition_master test
   KOKKOS_IF_ON_HOST(
@@ -342,7 +341,7 @@ inline std::vector<OpenMP> create_OpenMP_instances(
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
   std::vector<OpenMP> instances(weights.size());
-  T total_weight = std::accumulate(weights.begin(), weights.end(), 0);
+  T total_weight = std::accumulate(weights.begin(), weights.end(), T(0));
   int const main_pool_size =
       main_instance.impl_internal_space_instance()->thread_pool_size();
 
