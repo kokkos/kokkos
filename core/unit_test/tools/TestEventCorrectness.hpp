@@ -250,6 +250,7 @@ TEST(kokkosp, test_id_gen) {
  */
 TEST(kokkosp, test_kernel_sequence) {
   test_wrapper([&]() {
+    Kokkos::DefaultExecutionSpace ex;
     auto root = Kokkos::Tools::Experimental::device_id_root<
         Kokkos::DefaultExecutionSpace>();
     std::vector<FencePayload> expected{
@@ -257,11 +258,10 @@ TEST(kokkosp, test_kernel_sequence) {
         {"named_instance", FencePayload::distinguishable_devices::no,
          root + num_instances},
         {"test_kernel", FencePayload::distinguishable_devices::no,
-         root + num_instances}
+         Kokkos::Tools::Experimental::device_id(ex)}
 
     };
     expect_fence_events(expected, [=]() {
-      Kokkos::DefaultExecutionSpace ex;
       TestFunctor tf;
       ex.fence("named_instance");
       Kokkos::parallel_for(
