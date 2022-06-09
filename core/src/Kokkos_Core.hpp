@@ -256,7 +256,7 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 template <class ExecSpace, class... Args>
-std::vector<ExecSpace> partition_space(ExecSpace space, Args...) {
+std::vector<ExecSpace> partition_space(ExecSpace const& space, Args...) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
@@ -269,7 +269,7 @@ std::vector<ExecSpace> partition_space(ExecSpace space, Args...) {
 }
 
 template <class ExecSpace, class T>
-std::vector<ExecSpace> partition_space(ExecSpace space,
+std::vector<ExecSpace> partition_space(ExecSpace const& space,
                                        std::vector<T>& weights) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
