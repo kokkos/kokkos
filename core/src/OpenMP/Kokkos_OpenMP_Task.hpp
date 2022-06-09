@@ -152,7 +152,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
   }
 
   static uint32_t get_max_team_count(execution_space const& espace) {
-    return static_cast<uint32_t>(espace.impl_thread_pool_size());
+    return static_cast<uint32_t>(OpenMP::impl_thread_pool_size(espace));
   }
 
   // TODO @tasking @optimization DSH specialize this for trivially destructible
@@ -230,7 +230,7 @@ class TaskQueueSpecializationConstrained<
 
     Impl::OpenMPInternal* instance =
         execution_space().impl_internal_space_instance();
-    const int pool_size = OpenMP::impl_thread_pool_size();
+    const int pool_size = instance->thread_pool_size();
 
     const int team_size = 1;       // Threads per core
     instance->resize_thread_data(0 /* global reduce buffer */
