@@ -2,7 +2,8 @@
 #define KOKKOS_SIMD_SCALAR_HPP
 
 #include <type_traits>
-#include <limits.h>
+#include <climits>
+#include <cfloat>
 
 #include <Kokkos_Simd_Common.hpp>
 
@@ -291,6 +292,12 @@ reduce(const_where_expression<simd_mask<T, simd_abi::scalar>,
     const_where_expression<simd_mask<int, simd_abi::scalar>,
                            simd<int, simd_abi::scalar>> const& x) {
   return static_cast<bool>(x.mask()) ? static_cast<int>(x.value()) : INT_MAX;
+}
+
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION double hmin(
+    const_where_expression<simd_mask<double, simd_abi::scalar>,
+                           simd<double, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.mask()) ? static_cast<double>(x.value()) : DBL_MAX;
 }
 
 }  // namespace Experimental
