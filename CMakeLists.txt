@@ -194,7 +194,7 @@ KOKKOS_SETUP_BUILD_ENVIRONMENT()
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
-SET(KOKKOS_SUB_LIBRARIES kokkos kokkoscore kokkoscontainers kokkosalgorithms)
+SET(KOKKOS_SUB_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms)
 IF (KOKKOS_CXX_STANDARD GREATER_EQUAL 17)
   LIST(APPEND KOKKOS_EXT_LIBRARIES Kokkos::kokkossimd)
   LIST(APPEND KOKKOS_SUB_LIBRARIES kokkossimd)
