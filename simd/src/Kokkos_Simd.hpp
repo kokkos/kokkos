@@ -17,12 +17,11 @@ namespace simd_abi {
 template <class... Abis>
 class abi_set {};
 
-using host_abi_set = abi_set<scalar
 #ifdef KOKKOS_ARCH_AVX512XEON
-                             ,
-                             avx512_fixed_size<8>
+using host_abi_set = abi_set<scalar, avx512_fixed_size<8>>;
+#else
+using host_abi_set = abi_set<scalar>;
 #endif
-                             >;
 
 using device_abi_set = abi_set<scalar>;
 
