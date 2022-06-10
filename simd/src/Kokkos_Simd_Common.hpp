@@ -6,6 +6,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Utilities.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
 
 #include <desul/atomics/Common.hpp>
 
@@ -177,7 +178,7 @@ template <class T, class Abi>
   T a_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
   for (int i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = std::exp(a_array[i]);
+    a_array[i] = Kokkos::exp(a_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
   return a;
@@ -191,7 +192,7 @@ template <class T, class Abi>
   a.copy_to(a_array, element_aligned_tag());
   b.copy_to(b_array, element_aligned_tag());
   for (int i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = std::pow(a_array[i], b_array[i]);
+    a_array[i] = Kokkos::pow(a_array[i], b_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
   return a;
@@ -202,7 +203,7 @@ template <class T, class Abi>
   T a_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
   for (int i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = std::sin(a_array[i]);
+    a_array[i] = Kokkos::sin(a_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
   return a;
@@ -213,7 +214,7 @@ template <class T, class Abi>
   T a_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
   for (int i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = std::cos(a_array[i]);
+    a_array[i] = Kokkos::cos(a_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
   return a;
