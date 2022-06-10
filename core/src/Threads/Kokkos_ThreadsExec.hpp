@@ -128,6 +128,8 @@ class ThreadsExec {
   ThreadsExec(const ThreadsExec &);
   ThreadsExec &operator=(const ThreadsExec &);
 
+  static void execute_serial(void (*)(ThreadsExec &, const void *));
+
  public:
   KOKKOS_INLINE_FUNCTION int pool_size() const { return m_pool_size; }
   KOKKOS_INLINE_FUNCTION int pool_rank() const { return m_pool_rank; }
