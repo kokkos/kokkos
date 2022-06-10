@@ -399,8 +399,8 @@ bool ThreadsExec::wake() {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::execute_serial(void (*func)(ThreadsExec &, const void *)) {
-  s_current_function     = func;
+void ThreadsExec::execute_resize_scratch_in_serial() {
+  s_current_function     = &execute_resize_scratch;
   s_current_function_arg = &s_threads_process;
 
   // Make sure function and arguments are written before activating threads.
@@ -417,8 +417,15 @@ void ThreadsExec::execute_serial(void (*func)(ThreadsExec &, const void *)) {
   }
 
   if (s_threads_process.m_pool_base) {
+    if (s_threads_process.m_scratch) {
+      using Record =
+          Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
+      Record *const r = Record::get_record(s_threads_process.m_scratch);
+      s_threads_process.m_scratch = nullptr;
+      Record::decrement(r);
+    }
     s_threads_process.m_pool_state = ThreadsExec::Active;
-    (*func)(s_threads_process, nullptr);
+    execute_resize_scratch(s_threads_process, nullptr);
     s_threads_process.m_pool_state = ThreadsExec::Inactive;
   }
 
@@ -437,14 +444,6 @@ void *ThreadsExec::root_reduce_scratch() {
 
 void ThreadsExec::execute_resize_scratch(ThreadsExec &exec, const void *) {
   using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-
-  if (exec.m_scratch) {
-    Record *const r = Record::get_record(exec.m_scratch);
-
-    exec.m_scratch = nullptr;
-
-    Record::decrement(r);
-  }
 
   exec.m_scratch_reduce_end = s_threads_process.m_scratch_reduce_end;
   exec.m_scratch_thread_end = s_threads_process.m_scratch_thread_end;
@@ -493,7 +492,7 @@ void *ThreadsExec::resize_scratch(size_t reduce_size, size_t thread_size) {
     s_threads_process.m_scratch_reduce_end = reduce_size;
     s_threads_process.m_scratch_thread_end = reduce_size + thread_size;
 
-    execute_serial(&execute_resize_scratch);
+    execute_resize_scratch_in_serial();
 
     s_threads_process.m_scratch = s_threads_exec[0]->m_scratch;
   }
