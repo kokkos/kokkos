@@ -50,49 +50,45 @@ class where_expression : public const_where_expression<Mask, Value> {
 };
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION where_expression<simd_mask<T, Abi>,
-                                                           simd<T, Abi>>
-where(Kokkos::Impl::identity_t<simd_mask<T, Abi>> const& mask,
-      simd<T, Abi>& value) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    where_expression<simd_mask<T, Abi>, simd<T, Abi>>
+    where(Kokkos::Impl::identity_t<simd_mask<T, Abi>> const& mask,
+          simd<T, Abi>& value) {
   return where_expression(mask, value);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const_where_expression<
-    simd_mask<T, Abi>, simd<T, Abi>>
-where(Kokkos::Impl::identity_t<simd_mask<T, Abi>> const& mask,
-      simd<T, Abi> const& value) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>>
+    where(Kokkos::Impl::identity_t<simd_mask<T, Abi>> const& mask,
+          simd<T, Abi> const& value) {
   return const_where_expression(mask, value);
 }
 
 template <class T, class Abi>
 KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator+=(
-    simd<T, Abi>& a,
-    Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
+    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
   a = a + b;
   return a;
 }
 
 template <class T, class Abi>
 KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator-=(
-    simd<T, Abi>& a,
-    Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
+    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
   a = a - b;
   return a;
 }
 
 template <class T, class Abi>
 KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator*=(
-    simd<T, Abi>& a,
-    Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
+    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
   a = a * b;
   return a;
 }
 
 template <class T, class Abi>
 KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator/=(
-    simd<T, Abi>& a,
-    Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
+    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
   a = a / b;
   return a;
 }

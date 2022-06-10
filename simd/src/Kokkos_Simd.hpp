@@ -20,7 +20,7 @@ class abi_set {};
 #ifdef KOKKOS_ARCH_AVX512XEON
 using host_abi_set = abi_set<scalar, avx512_fixed_size<8>>;
 #else
-using host_abi_set = abi_set<scalar>;
+using host_abi_set  = abi_set<scalar>;
 #endif
 
 using device_abi_set = abi_set<scalar>;
