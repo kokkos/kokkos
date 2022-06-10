@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Utilities.hpp>
 
 #include <desul/atomics/Common.hpp>
 
