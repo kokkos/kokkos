@@ -663,7 +663,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
         throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
-            "'--kokkos-numdevices'. Raised by "
+            "'--kokkos-num-devices'. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
       }
       if (check_arg(arg[iarg], "--kokkos-num-devices") ||
@@ -871,7 +871,7 @@ void parse_environment_variables(InitArguments& arguments) {
           "integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
     if ((device != -1) && (env_device != device))
       Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-device and "
+          "Error: expecting a match between --kokkos-device-id and "
           "KOKKOS_DEVICE_ID if both are set. Raised by Kokkos::initialize(int "
           "narg, char* argc[]).");
     else
@@ -901,7 +901,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "argc[]).");
       if ((ndevices != -1) && (env_ndevices != ndevices))
         Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-ndevices and "
+            "Error: expecting a match between --kokkos-num-devices and "
             "KOKKOS_NUM_DEVICES if both are set. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
       else
@@ -936,7 +936,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "argc[]).");
       if ((skip_device != 9999) && (env_skip_device != skip_device))
         Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-ndevices and "
+            "Error: expecting a match between --kokkos-num-devices and "
             "KOKKOS_SKIP_DEVICE if both are set. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
       else
