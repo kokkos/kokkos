@@ -25,7 +25,7 @@ class simd;
 template <class T, class Abi>
 class simd_mask;
 
-class element_aligned_tag {};
+struct element_aligned_tag {};
 
 template <class Mask, class Value>
 class const_where_expression {
