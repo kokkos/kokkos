@@ -44,7 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_PartitioningOperations.hpp>
+#include <std_algorithms/Kokkos_partition_copy.hpp>
 #include <utility>
 #include <algorithm>
 

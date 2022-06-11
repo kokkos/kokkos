@@ -44,7 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
+#include <std_algorithms/Kokkos_remove_copy.hpp>
 #include <utility>
 #include <algorithm>
 

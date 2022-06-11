@@ -45,7 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <iterator>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
+#include <std_algorithms/Kokkos_mismatch.hpp>
 #include <algorithm>
 #include <numeric>
 

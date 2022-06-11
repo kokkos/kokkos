@@ -44,7 +44,8 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
+#include <std_algorithms/Kokkos_for_each.hpp>
+#include <std_algorithms/Kokkos_for_each_n.hpp>
 #include <algorithm>
 
 namespace Test {

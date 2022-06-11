@@ -44,7 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_Numeric.hpp>
+#include <std_algorithms/Kokkos_exclusive_scan.hpp>
 #include <utility>
 
 namespace Test {
