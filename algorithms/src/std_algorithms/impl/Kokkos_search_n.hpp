@@ -105,7 +105,6 @@ struct StdSearchNFunctor {
         m_p(std::move(p)) {}
 };
 
-
 template <class ExecutionSpace, class IteratorType, class SizeType,
           class ValueType, class BinaryPredicateType>
 IteratorType search_n_impl(const std::string& label, const ExecutionSpace& ex,

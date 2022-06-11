@@ -92,7 +92,6 @@ OutputIterator copy_impl(const std::string& label, const ExecutionSpace& ex,
   return d_first + num_elements;
 }
 
-
 template <class ExecutionSpace, class InputIterator, class Size,
           class OutputIterator>
 OutputIterator copy_n_impl(const std::string& label, const ExecutionSpace& ex,

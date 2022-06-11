@@ -133,7 +133,6 @@ struct ExclusiveScanDefaultFunctor {
   }
 };
 
-
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
 OutputIteratorType exclusive_scan_custom_op_impl(

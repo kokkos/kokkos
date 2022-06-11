@@ -56,7 +56,6 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-
 template <class IteratorType, class ValueType>
 struct StdReduceDefaultFunctor {
   using index_type = typename IteratorType::difference_type;

@@ -57,7 +57,6 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-
 template <class IndexType, class InputIt, class OutputIt,
           class BinaryPredicateType>
 struct StdUniqueFunctor {

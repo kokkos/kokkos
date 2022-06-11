@@ -51,7 +51,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-
 //
 // overload set 1
 //
