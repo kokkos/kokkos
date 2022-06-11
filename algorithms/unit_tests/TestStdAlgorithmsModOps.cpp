@@ -43,7 +43,8 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_ModifyingOperations.hpp>
+#include <std_algorithms/Kokkos_swap.hpp>
+#include <std_algorithms/Kokkos_iter_swap.hpp>
 
 namespace Test {
 namespace stdalgos {
