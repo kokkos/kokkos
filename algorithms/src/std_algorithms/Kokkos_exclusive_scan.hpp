@@ -51,7 +51,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-
 // overload set 1
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>

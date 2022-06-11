@@ -73,7 +73,6 @@ struct StdCountIfFunctor {
       : m_first(std::move(_first)), m_predicate(std::move(_predicate)) {}
 };
 
-
 template <class ExecutionSpace, class IteratorType, class Predicate>
 typename IteratorType::difference_type count_if_impl(const std::string& label,
                                                      const ExecutionSpace& ex,

@@ -51,7 +51,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-
 // overload set1
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 std::enable_if_t<!::Kokkos::is_view<InputIterator>::value, OutputIterator>

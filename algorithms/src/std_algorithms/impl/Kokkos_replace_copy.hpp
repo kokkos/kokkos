@@ -115,7 +115,6 @@ OutputIteratorType replace_copy_impl(const std::string& label,
   return first_dest + num_elements;
 }
 
-
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

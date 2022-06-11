@@ -139,7 +139,6 @@ InputIterator find_impl(const std::string& label, ExecutionSpace ex,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
 }
 
-
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
