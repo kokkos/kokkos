@@ -735,6 +735,9 @@ void parse_command_line_arguments(int& narg, char* arg[],
       if (check_arg(arg[iarg], "--kokkos-help")) {
         remove_flag = true;
       }
+    } else if (strncmp("--kokkos", arg[iarg], 8) == 0) {
+      std::cerr << "Warning: command line argument '" << arg[iarg]
+                << "' is not recognized and will be ignored" << std::endl;
     }
 
     if (remove_flag) {
