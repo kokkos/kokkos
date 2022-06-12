@@ -596,49 +596,38 @@ void parse_command_line_arguments(int& narg, char* arg[],
   int iarg = 0;
 
   while (iarg < narg) {
+    bool remove_flag = false;
     if (check_int_arg(arg[iarg], "--kokkos-num-threads", &num_threads) ||
         check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
       if (check_arg(arg[iarg], "--kokkos-threads")) {
         warn_deprecated_command_line_argument("--kokkos-threads",
                                               "--kokkos-num-threads");
       }
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
+      remove_flag          = true;
       kokkos_threads_found = true;
-      narg--;
     } else if (!kokkos_threads_found &&
                (check_int_arg(arg[iarg], "--num-threads", &num_threads) ||
                 check_int_arg(arg[iarg], "--threads", &num_threads))) {
       warn_deprecated_command_line_argument("--threads", "--num-threads");
-      iarg++;
     } else if (check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
+      remove_flag       = true;
       kokkos_numa_found = true;
-      narg--;
     } else if (!kokkos_numa_found &&
                check_int_arg(arg[iarg], "--numa", &numa)) {
-      iarg++;
     } else if (check_int_arg(arg[iarg], "--kokkos-device-id", &device) ||
                check_int_arg(arg[iarg], "--kokkos-device", &device)) {
       if (check_arg(arg[iarg], "--kokkos-device")) {
         warn_deprecated_command_line_argument("--kokkos-device",
                                               "--kokkos-device-id");
       }
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
+      remove_flag         = true;
       kokkos_device_found = true;
-      narg--;
     } else if (!kokkos_device_found &&
                (check_int_arg(arg[iarg], "--device-id", &device) ||
                 check_int_arg(arg[iarg], "--device", &device))) {
       if (check_arg(arg[iarg], "--device")) {
         warn_deprecated_command_line_argument("--device", "--device-id");
       }
-      iarg++;
     } else if (check_arg(arg[iarg], "--kokkos-num-devices") ||
                check_arg(arg[iarg], "--num-devices") ||
                check_arg(arg[iarg], "--kokkos-ndevices") ||
@@ -694,26 +683,14 @@ void parse_command_line_arguments(int& narg, char* arg[],
       // --num-devices
       if (check_arg(arg[iarg], "--kokkos-num-devices") ||
           check_arg(arg[iarg], "--kokkos-ndevices")) {
-        for (int k = iarg; k < narg - 1; k++) {
-          arg[k] = arg[k + 1];
-        }
-        kokkos_ndevices_found = true;
-        narg--;
-      } else {
-        iarg++;
+        remove_flag = true;
       }
     } else if (check_arg(arg[iarg], "--kokkos-disable-warnings")) {
+      remove_flag      = true;
       disable_warnings = true;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
     } else if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
+      remove_flag    = true;
       tune_internals = true;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
     } else if (check_arg(arg[iarg], "--kokkos-help") ||
                check_arg(arg[iarg], "--help")) {
       auto const help_message = R"(
@@ -762,15 +739,18 @@ void parse_command_line_arguments(int& narg, char* arg[],
 
       // Remove the --kokkos-help argument from the list but leave --help
       if (check_arg(arg[iarg], "--kokkos-help")) {
-        for (int k = iarg; k < narg - 1; k++) {
-          arg[k] = arg[k + 1];
-        }
-        narg--;
-      } else {
-        iarg++;
+        remove_flag = true;
       }
-    } else
+    }
+
+    if (remove_flag) {
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+    } else {
       iarg++;
+    }
   }
   if ((tools_init_arguments.args ==
        Kokkos::Tools::InitArguments::unset_string_option) &&
