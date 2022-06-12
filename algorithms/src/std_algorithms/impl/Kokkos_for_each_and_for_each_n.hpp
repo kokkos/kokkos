@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_FOR_EACH_IMPL_HPP
-#define KOKKOS_FOR_EACH_IMPL_HPP
+#ifndef KOKKOS_STD_ALGORITHMS_FOR_EACH_IMPL_HPP
+#define KOKKOS_STD_ALGORITHMS_FOR_EACH_IMPL_HPP
 
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"

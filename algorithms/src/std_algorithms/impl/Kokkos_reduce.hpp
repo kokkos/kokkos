@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_REDUCE_IMPL_HPP
-#define KOKKOS_REDUCE_IMPL_HPP
+#ifndef KOKKOS_STD_ALGORITHMS_REDUCE_IMPL_HPP
+#define KOKKOS_STD_ALGORITHMS_REDUCE_IMPL_HPP
 
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"

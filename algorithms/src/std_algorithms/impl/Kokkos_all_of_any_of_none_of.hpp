@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_ALL_OF_ANY_OF_NONE_OF_IMPL_HPP
-#define KOKKOS_ALL_OF_ANY_OF_NONE_OF_IMPL_HPP
+#ifndef KOKKOS_STD_ALGORITHMS_ALL_OF_ANY_OF_NONE_OF_IMPL_HPP
+#define KOKKOS_STD_ALGORITHMS_ALL_OF_ANY_OF_NONE_OF_IMPL_HPP
 
 #include "Kokkos_find_and_find_if_and_find_if_not.hpp"
 
