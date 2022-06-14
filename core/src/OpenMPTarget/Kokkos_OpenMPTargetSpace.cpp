@@ -191,42 +191,6 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
-namespace Impl {
-
-template <class>
-struct ViewOperatorBoundsErrorAbort;
-
-template <>
-struct ViewOperatorBoundsErrorAbort<Kokkos::Experimental::OpenMPTargetSpace> {
-  static void apply(const size_t rank, const size_t n0, const size_t n1,
-                    const size_t n2, const size_t n3, const size_t n4,
-                    const size_t n5, const size_t n6, const size_t n7,
-                    const size_t i0, const size_t i1, const size_t i2,
-                    const size_t i3, const size_t i4, const size_t i5,
-                    const size_t i6, const size_t i7);
-};
-
-void ViewOperatorBoundsErrorAbort<Kokkos::Experimental::OpenMPTargetSpace>::
-    apply(const size_t rank, const size_t n0, const size_t n1, const size_t n2,
-          const size_t n3, const size_t n4, const size_t n5, const size_t n6,
-          const size_t n7, const size_t i0, const size_t i1, const size_t i2,
-          const size_t i3, const size_t i4, const size_t i5, const size_t i6,
-          const size_t i7) {
-  printf(
-      "View operator bounds error : rank(%lu) "
-      "dim(%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu) "
-      "index(%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu)",
-      rank, n0, n1, n2, n3, n4, n5, n6, n7, i0, i1, i2, i3, i4, i5, i6, i7);
-  // Kokkos::Impl::throw_runtime_exception( buffer );
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
 /*
 namespace Kokkos {
 namespace {

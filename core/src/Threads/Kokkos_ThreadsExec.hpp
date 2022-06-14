@@ -98,7 +98,7 @@ class ThreadsExec {
 
   void *m_scratch;
   int m_scratch_reduce_end;
-  int m_scratch_thread_end;
+  size_t m_scratch_thread_end;
   int m_numa_rank;
   int m_numa_core_rank;
   int m_pool_rank;
@@ -185,7 +185,7 @@ class ThreadsExec {
     // Make sure there is enough scratch space:
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
-    *((volatile int *)reduce_memory()) = value;
+    *static_cast<volatile int *>(reduce_memory()) = value;
 
     memory_fence();
 
@@ -206,11 +206,12 @@ class ThreadsExec {
       int accum = 0;
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        accum += *((volatile int *)get_thread(rank)->reduce_memory());
+        accum +=
+            *static_cast<volatile int *>(get_thread(rank)->reduce_memory());
       }
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        *((volatile int *)get_thread(rank)->reduce_memory()) = accum;
+        *static_cast<volatile int *>(get_thread(rank)->reduce_memory()) = accum;
       }
 
       memory_fence();
@@ -220,7 +221,7 @@ class ThreadsExec {
       }
     }
 
-    return *((volatile int *)reduce_memory());
+    return *static_cast<volatile int *>(reduce_memory());
   }
 
   inline void barrier() {

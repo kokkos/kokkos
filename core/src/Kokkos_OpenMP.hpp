@@ -62,6 +62,7 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
@@ -72,7 +73,7 @@
 namespace Kokkos {
 
 namespace Impl {
-class OpenMPExec;
+class OpenMPInternal;
 }
 
 /// \class OpenMP
@@ -95,6 +96,8 @@ class OpenMP {
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<OpenMP>;
 
+  OpenMP();
+
   /// \brief Print configuration information to the given output stream.
   static void print_configuration(std::ostream&, const bool verbose = false);
 
@@ -116,6 +119,7 @@ class OpenMP {
   /// This always returns false on OpenMP
   inline static bool is_asynchronous(OpenMP const& = OpenMP()) noexcept;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   /// \brief Partition the default instance into new instances without creating
   ///  new masters
   ///
@@ -129,7 +133,6 @@ class OpenMP {
   /// This is a no-op on OpenMP since a non default instance cannot be created
   static OpenMP create_instance(...);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   /// \brief Partition the default instance and call 'f' on each new 'master'
   /// thread
   ///
@@ -170,8 +173,15 @@ class OpenMP {
 
   static int impl_get_current_max_threads() noexcept;
 
+  Impl::OpenMPInternal* impl_internal_space_instance() const {
+    return m_space_instance.get();
+  }
+
   static constexpr const char* name() noexcept { return "OpenMP"; }
   uint32_t impl_instance_id() const noexcept { return 1; }
+
+ private:
+  Kokkos::Impl::HostSharedPtr<Impl::OpenMPInternal> m_space_instance;
 };
 
 namespace Tools {
@@ -179,6 +189,7 @@ namespace Experimental {
 template <>
 struct DeviceTypeTraits<OpenMP> {
   static constexpr DeviceType id = DeviceType::OpenMP;
+  static int device_id(const OpenMP&) { return 0; }
 };
 }  // namespace Experimental
 }  // namespace Tools
@@ -219,7 +230,7 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMP/Kokkos_OpenMP_Exec.hpp>
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <OpenMP/Kokkos_OpenMP_Team.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 #include <OpenMP/Kokkos_OpenMP_Task.hpp>

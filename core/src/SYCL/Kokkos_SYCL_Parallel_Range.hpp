@@ -56,7 +56,7 @@ struct FunctorWrapperRangePolicyParallelFor {
 
   void operator()(sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
-    if constexpr (std::is_same<WorkTag, void>::value)
+    if constexpr (std::is_void<WorkTag>::value)
       m_functor_wrapper.get_functor()(id);
     else
       m_functor_wrapper.get_functor()(WorkTag(), id);

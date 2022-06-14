@@ -112,7 +112,7 @@ struct rank_dynamic<Val, Args...> {
   template <unsigned RD>                                                    \
   struct ViewDimension##R<0u, RD> {                                         \
     static constexpr size_t ArgN##R = 0;                                    \
-    typename std::conditional<(RD < 3), size_t, unsigned>::type N##R;       \
+    std::conditional_t<(RD < 3), size_t, unsigned> N##R;                    \
     ViewDimension##R()                        = default;                    \
     ViewDimension##R(const ViewDimension##R&) = default;                    \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
@@ -347,13 +347,13 @@ struct is_integral_extent_type<std::initializer_list<iType>> {
 template <unsigned I, class... Args>
 struct is_integral_extent {
   // get_type is void when sizeof...(Args) <= I
-  using type = typename std::remove_cv<typename std::remove_reference<
-      typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
+  using type = std::remove_cv_t<std::remove_reference_t<
+      typename Kokkos::Impl::get_type<I, Args...>::type>>;
 
   enum : bool { value = is_integral_extent_type<type>::value };
 
   static_assert(value || std::is_integral<type>::value ||
-                    std::is_same<type, void>::value,
+                    std::is_void<type>::value,
                 "subview argument must be either integral or integral extent");
 };
 
@@ -754,8 +754,8 @@ struct ViewDataType<T, ViewDimension<N, Args...>> {
 template <class T>
 struct ViewArrayAnalysis {
   using value_type           = T;
-  using const_value_type     = typename std::add_const<T>::type;
-  using non_const_value_type = typename std::remove_const<T>::type;
+  using const_value_type     = std::add_const_t<T>;
+  using non_const_value_type = std::remove_const_t<T>;
   using static_dimension     = ViewDimension<>;
   using dynamic_dimension    = ViewDimension<>;
   using dimension            = ViewDimension<>;
@@ -870,8 +870,7 @@ struct ViewOffset {
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutLeft,
-    typename std::enable_if<(1 >= Dimension::rank ||
-                             0 == Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 >= Dimension::rank || 0 == Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -1153,8 +1152,7 @@ struct ViewOffset<
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutLeft,
-    typename std::enable_if<(1 < Dimension::rank &&
-                             0 < Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 < Dimension::rank && 0 < Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -1497,8 +1495,7 @@ struct ViewOffset<
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutRight,
-    typename std::enable_if<(1 >= Dimension::rank ||
-                             0 == Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 >= Dimension::rank || 0 == Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -1784,8 +1781,7 @@ struct ViewOffset<
 template <class Dimension>
 struct ViewOffset<
     Dimension, Kokkos::LayoutRight,
-    typename std::enable_if<(1 < Dimension::rank &&
-                             0 < Dimension::rank_dynamic)>::type> {
+    std::enable_if_t<(1 < Dimension::rank && 0 < Dimension::rank_dynamic)>> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::true_type;
 
@@ -2673,11 +2669,11 @@ struct ViewDataHandle {
 
 template <class Traits>
 struct ViewDataHandle<
-    Traits, typename std::enable_if<(
-                std::is_same<typename Traits::non_const_value_type,
-                             typename Traits::value_type>::value &&
-                std::is_same<typename Traits::specialize, void>::value &&
-                Traits::memory_traits::is_atomic)>::type> {
+    Traits,
+    std::enable_if_t<(std::is_same<typename Traits::non_const_value_type,
+                                   typename Traits::value_type>::value &&
+                      std::is_void<typename Traits::specialize>::value &&
+                      Traits::memory_traits::is_atomic)>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Kokkos::Impl::AtomicViewDataHandle<Traits>;
   using return_type = typename Kokkos::Impl::AtomicDataElement<Traits>;
@@ -2698,17 +2694,17 @@ struct ViewDataHandle<
 
 template <class Traits>
 struct ViewDataHandle<
-    Traits, typename std::enable_if<(
-                std::is_same<typename Traits::specialize, void>::value &&
-                (!Traits::memory_traits::is_aligned) &&
-                Traits::memory_traits::is_restrict
+    Traits,
+    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
+                      (!Traits::memory_traits::is_aligned) &&
+                      Traits::memory_traits::is_restrict
 #ifdef KOKKOS_ENABLE_CUDA
-                && (!(std::is_same<typename Traits::memory_space,
-                                   Kokkos::CudaSpace>::value ||
-                      std::is_same<typename Traits::memory_space,
-                                   Kokkos::CudaUVMSpace>::value))
+                      && (!(std::is_same<typename Traits::memory_space,
+                                         Kokkos::CudaSpace>::value ||
+                            std::is_same<typename Traits::memory_space,
+                                         Kokkos::CudaUVMSpace>::value))
 #endif
-                && (!Traits::memory_traits::is_atomic))>::type> {
+                      && (!Traits::memory_traits::is_atomic))>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Traits::value_type* KOKKOS_RESTRICT;
   using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
@@ -2728,17 +2724,17 @@ struct ViewDataHandle<
 
 template <class Traits>
 struct ViewDataHandle<
-    Traits, typename std::enable_if<(
-                std::is_same<typename Traits::specialize, void>::value &&
-                Traits::memory_traits::is_aligned &&
-                (!Traits::memory_traits::is_restrict)
+    Traits,
+    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
+                      Traits::memory_traits::is_aligned &&
+                      (!Traits::memory_traits::is_restrict)
 #ifdef KOKKOS_ENABLE_CUDA
-                && (!(std::is_same<typename Traits::memory_space,
-                                   Kokkos::CudaSpace>::value ||
-                      std::is_same<typename Traits::memory_space,
-                                   Kokkos::CudaUVMSpace>::value))
+                      && (!(std::is_same<typename Traits::memory_space,
+                                         Kokkos::CudaSpace>::value ||
+                            std::is_same<typename Traits::memory_space,
+                                         Kokkos::CudaUVMSpace>::value))
 #endif
-                && (!Traits::memory_traits::is_atomic))>::type> {
+                      && (!Traits::memory_traits::is_atomic))>> {
   using value_type = typename Traits::value_type;
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
@@ -2774,16 +2770,16 @@ struct ViewDataHandle<
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    typename std::enable_if<(
-        std::is_same<typename Traits::specialize, void>::value &&
-        Traits::memory_traits::is_aligned && Traits::memory_traits::is_restrict
+    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
+                      Traits::memory_traits::is_aligned &&
+                      Traits::memory_traits::is_restrict
 #ifdef KOKKOS_ENABLE_CUDA
-        && (!(std::is_same<typename Traits::memory_space,
-                           Kokkos::CudaSpace>::value ||
-              std::is_same<typename Traits::memory_space,
-                           Kokkos::CudaUVMSpace>::value))
+                      && (!(std::is_same<typename Traits::memory_space,
+                                         Kokkos::CudaSpace>::value ||
+                            std::is_same<typename Traits::memory_space,
+                                         Kokkos::CudaUVMSpace>::value))
 #endif
-        && (!Traits::memory_traits::is_atomic))>::type> {
+                      && (!Traits::memory_traits::is_atomic))>> {
   using value_type = typename Traits::value_type;
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
@@ -3105,10 +3101,10 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 template <class Traits>
 class ViewMapping<
     Traits,
-    typename std::enable_if<(
-        std::is_same<typename Traits::specialize, void>::value &&
+    std::enable_if_t<(
+        std::is_void<typename Traits::specialize>::value &&
         ViewOffset<typename Traits::dimension, typename Traits::array_layout,
-                   void>::is_mapping_plugin::value)>::type> {
+                   void>::is_mapping_plugin::value)>> {
  public:
   using offset_type = ViewOffset<typename Traits::dimension,
                                  typename Traits::array_layout, void>;
@@ -3239,26 +3235,26 @@ class ViewMapping<
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(std::is_integral<I0>::value &&
-                               // if layout is neither stride nor irregular,
-                               // then just use the handle directly
-                               !(std::is_same<typename Traits::array_layout,
-                                              Kokkos::LayoutStride>::value ||
-                                 !is_regular::value)),
-                              reference_type>::type
+      std::enable_if_t<(std::is_integral<I0>::value &&
+                        // if layout is neither stride nor irregular,
+                        // then just use the handle directly
+                        !(std::is_same<typename Traits::array_layout,
+                                       Kokkos::LayoutStride>::value ||
+                          !is_regular::value)),
+                       reference_type>
       reference(const I0& i0) const {
     return m_impl_handle[i0];
   }
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<(std::is_integral<I0>::value &&
-                               // if the layout is strided or irregular, then
-                               // we have to use the offset
-                               (std::is_same<typename Traits::array_layout,
-                                             Kokkos::LayoutStride>::value ||
-                                !is_regular::value)),
-                              reference_type>::type
+      std::enable_if_t<(std::is_integral<I0>::value &&
+                        // if the layout is strided or irregular, then
+                        // we have to use the offset
+                        (std::is_same<typename Traits::array_layout,
+                                      Kokkos::LayoutStride>::value ||
+                         !is_regular::value)),
+                       reference_type>
       reference(const I0& i0) const {
     return m_impl_handle[m_impl_offset(i0)];
   }
@@ -3448,13 +3444,13 @@ class ViewMapping<
 template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
-    typename std::enable_if<(
+    std::enable_if_t<(
         !(std::is_same<typename SrcTraits::array_layout, LayoutStride>::
               value) &&  // Added to have a new specialization for SrcType of
                          // LayoutStride
         // default mappings
-        std::is_same<typename DstTraits::specialize, void>::value &&
-        std::is_same<typename SrcTraits::specialize, void>::value &&
+        std::is_void<typename DstTraits::specialize>::value &&
+        std::is_void<typename SrcTraits::specialize>::value &&
         (
             // same layout
             std::is_same<typename DstTraits::array_layout,
@@ -3471,7 +3467,7 @@ class ViewMapping<
               std::is_same<typename SrcTraits::array_layout,
                            Kokkos::LayoutRight>::value ||
               std::is_same<typename SrcTraits::array_layout,
-                           Kokkos::LayoutStride>::value))))>::type> {
+                           Kokkos::LayoutStride>::value))))>> {
  private:
   enum {
     is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
@@ -3589,11 +3585,11 @@ class ViewMapping<
 template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
-    typename std::enable_if<(
+    std::enable_if_t<(
         std::is_same<typename SrcTraits::array_layout,
                      Kokkos::LayoutStride>::value &&
-        std::is_same<typename DstTraits::specialize, void>::value &&
-        std::is_same<typename SrcTraits::specialize, void>::value &&
+        std::is_void<typename DstTraits::specialize>::value &&
+        std::is_void<typename SrcTraits::specialize>::value &&
         (
             // same layout
             std::is_same<typename DstTraits::array_layout,
@@ -3604,7 +3600,7 @@ class ViewMapping<
              std::is_same<typename DstTraits::array_layout,
                           Kokkos::LayoutRight>::value ||
              std::is_same<typename DstTraits::array_layout,
-                          Kokkos::LayoutStride>::value)))>::type> {
+                          Kokkos::LayoutStride>::value)))>> {
  private:
   enum {
     is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
@@ -3754,8 +3750,7 @@ struct SubViewDataTypeImpl<void, ValueType, Kokkos::Experimental::Extents<>> {
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
           class... Args>
 struct SubViewDataTypeImpl<
-    typename std::enable_if<
-        std::is_integral<typename std::decay<Integral>::type>::value>::type,
+    std::enable_if_t<std::is_integral<std::decay_t<Integral>>::value>,
     ValueType, Kokkos::Experimental::Extents<Ext, Exts...>, Integral, Args...>
     : SubViewDataTypeImpl<void, ValueType,
                           Kokkos::Experimental::Extents<Exts...>, Args...> {};
@@ -3775,7 +3770,7 @@ struct SubViewDataTypeImpl<void, ValueType,
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike,
           class... Args>
 struct SubViewDataTypeImpl<
-    typename std::enable_if<is_pair_like<PairLike>::value>::type, ValueType,
+    std::enable_if_t<is_pair_like<PairLike>::value>, ValueType,
     Kokkos::Experimental::Extents<Ext, Exts...>, PairLike, Args...>
     : SubViewDataTypeImpl<
           void, typename make_all_extents_into_pointers<ValueType>::type*,
@@ -3788,14 +3783,13 @@ struct SubViewDataType : SubViewDataTypeImpl<void, ValueType, Exts, Args...> {};
 
 template <class SrcTraits, class... Args>
 class ViewMapping<
-    typename std::enable_if<(
-        std::is_same<typename SrcTraits::specialize, void>::value &&
-        (std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutLeft>::value ||
-         std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutRight>::value ||
-         std::is_same<typename SrcTraits::array_layout,
-                      Kokkos::LayoutStride>::value))>::type,
+    std::enable_if_t<(std::is_void<typename SrcTraits::specialize>::value &&
+                      (std::is_same<typename SrcTraits::array_layout,
+                                    Kokkos::LayoutLeft>::value ||
+                       std::is_same<typename SrcTraits::array_layout,
+                                    Kokkos::LayoutRight>::value ||
+                       std::is_same<typename SrcTraits::array_layout,
+                                    Kokkos::LayoutStride>::value))>,
     SrcTraits, Args...> {
  private:
   static_assert(SrcTraits::rank == sizeof...(Args),
@@ -3842,7 +3836,7 @@ class ViewMapping<
   };
 
   // Subview's layout
-  using array_layout = typename std::conditional<
+  using array_layout = std::conditional_t<
       (            /* Same array layout IF */
        (rank == 0) /* output rank zero */
        || SubviewLegalArgsCompileTime<typename SrcTraits::array_layout,
@@ -3860,7 +3854,7 @@ class ViewMapping<
         std::is_same<typename SrcTraits::array_layout,
                      Kokkos::LayoutRight>::value)  // replace input rank
        ),
-      typename SrcTraits::array_layout, Kokkos::LayoutStride>::type;
+      typename SrcTraits::array_layout, Kokkos::LayoutStride>;
 
   using value_type = typename SrcTraits::value_type;
 

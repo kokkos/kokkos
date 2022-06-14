@@ -316,11 +316,23 @@ Architecture-specific optimizations can be enabled by specifying `-DKokkos_ARCH_
 * Kokkos_ARCH_POWER9
     * Whether to optimize for the POWER9 architecture
     * BOOL Default: OFF
+* Kokkos_ARCH_ICL
+    * Whether to optimize for the ICL architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_ICX
+    * Whether to optimize for the ICX architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_SKL
+    * Whether to optimize for the SKL architecture
+    * BOOL Default: OFF
 * Kokkos_ARCH_SKX
     * Whether to optimize for the SKX architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_SNB
     * Whether to optimize for the SNB architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_SPR
+    * Whether to optimize for the SPR architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_TURING75
     * Whether to optimize for the TURING75 architecture

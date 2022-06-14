@@ -65,7 +65,7 @@ struct Sum {
  public:
   // Required
   using reducer    = Sum<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -105,7 +105,7 @@ struct Prod {
  public:
   // Required
   using reducer    = Prod<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -145,7 +145,7 @@ struct Min {
  public:
   // Required
   using reducer    = Min<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -187,7 +187,7 @@ struct Max {
  public:
   // Required
   using reducer    = Max<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -230,7 +230,7 @@ struct LAnd {
  public:
   // Required
   using reducer    = LAnd<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -271,7 +271,7 @@ struct LOr {
  public:
   // Required
   using reducer    = LOr<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -313,7 +313,7 @@ struct BAnd {
  public:
   // Required
   using reducer    = BAnd<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -355,7 +355,7 @@ struct BOr {
  public:
   // Required
   using reducer    = BOr<Scalar, Space>;
-  using value_type = typename std::remove_cv<Scalar>::type;
+  using value_type = std::remove_cv_t<Scalar>;
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -407,8 +407,8 @@ struct ValLocScalar {
 template <class Scalar, class Index, class Space>
 struct MinLoc {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -454,8 +454,8 @@ struct MinLoc {
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -512,7 +512,7 @@ struct MinMaxScalar {
 template <class Scalar, class Space>
 struct MinMax {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
 
  public:
   // Required
@@ -577,8 +577,8 @@ struct MinMaxLocScalar {
 template <class Scalar, class Index, class Space>
 struct MinMaxLoc {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -640,8 +640,8 @@ struct MinMaxLoc {
 template <class Scalar, class Index, class Space>
 struct MaxFirstLoc {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -695,8 +695,8 @@ struct MaxFirstLoc {
 template <class Scalar, class Index, class ComparatorType, class Space>
 struct MaxFirstLocCustomComparator {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -753,8 +753,8 @@ struct MaxFirstLocCustomComparator {
 template <class Scalar, class Index, class Space>
 struct MinFirstLoc {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -808,8 +808,8 @@ struct MinFirstLoc {
 template <class Scalar, class Index, class ComparatorType, class Space>
 struct MinFirstLocCustomComparator {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -866,8 +866,8 @@ struct MinFirstLocCustomComparator {
 template <class Scalar, class Index, class Space>
 struct MinMaxFirstLastLoc {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -932,8 +932,8 @@ struct MinMaxFirstLastLoc {
 template <class Scalar, class Index, class ComparatorType, class Space>
 struct MinMaxFirstLastLocCustomComparator {
  private:
-  using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -1008,7 +1008,7 @@ struct FirstLocScalar {
 template <class Index, class Space>
 struct FirstLoc {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -1066,7 +1066,7 @@ struct LastLocScalar {
 template <class Index, class Space>
 struct LastLoc {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -1127,7 +1127,7 @@ struct StdIsPartScalar {
 template <class Index, class Space>
 struct StdIsPartitioned {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -1193,7 +1193,7 @@ struct StdPartPointScalar {
 template <class Index, class Space>
 struct StdPartitionPoint {
  private:
-  using index_type = typename std::remove_cv<Index>::type;
+  using index_type = std::remove_cv_t<Index>;
 
  public:
   // Required
@@ -1247,8 +1247,8 @@ struct ParallelReduceReturnValue;
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<Kokkos::is_view<ReturnType>::value>::type,
-    ReturnType, FunctorType> {
+    std::enable_if_t<Kokkos::is_view<ReturnType>::value>, ReturnType,
+    FunctorType> {
   using return_type  = ReturnType;
   using reducer_type = InvalidType;
 
@@ -1265,10 +1265,10 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<!Kokkos::is_view<ReturnType>::value &&
-                            (!std::is_array<ReturnType>::value &&
-                             !std::is_pointer<ReturnType>::value) &&
-                            !Kokkos::is_reducer<ReturnType>::value>::type,
+    std::enable_if_t<!Kokkos::is_view<ReturnType>::value &&
+                     (!std::is_array<ReturnType>::value &&
+                      !std::is_pointer<ReturnType>::value) &&
+                     !Kokkos::is_reducer<ReturnType>::value>,
     ReturnType, FunctorType> {
   using return_type =
       Kokkos::View<ReturnType, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
@@ -1284,10 +1284,10 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<(std::is_array<ReturnType>::value ||
-                             std::is_pointer<ReturnType>::value)>::type,
+    std::enable_if_t<(std::is_array<ReturnType>::value ||
+                      std::is_pointer<ReturnType>::value)>,
     ReturnType, FunctorType> {
-  using return_type = Kokkos::View<typename std::remove_const<ReturnType>::type,
+  using return_type = Kokkos::View<std::remove_const_t<ReturnType>,
                                    Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
   using reducer_type = InvalidType;
@@ -1305,8 +1305,8 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<Kokkos::is_reducer<ReturnType>::value>::type,
-    ReturnType, FunctorType> {
+    std::enable_if_t<Kokkos::is_reducer<ReturnType>::value>, ReturnType,
+    FunctorType> {
   using return_type  = ReturnType;
   using reducer_type = ReturnType;
   using value_type   = typename return_type::value_type;
@@ -1321,8 +1321,7 @@ struct ParallelReducePolicyType;
 
 template <class PolicyType, class FunctorType>
 struct ParallelReducePolicyType<
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type,
+    std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>,
     PolicyType, FunctorType> {
   using policy_type = PolicyType;
   static PolicyType policy(const PolicyType& policy_) { return policy_; }
@@ -1330,8 +1329,8 @@ struct ParallelReducePolicyType<
 
 template <class PolicyType, class FunctorType>
 struct ParallelReducePolicyType<
-    typename std::enable_if<std::is_integral<PolicyType>::value>::type,
-    PolicyType, FunctorType> {
+    std::enable_if_t<std::is_integral<PolicyType>::value>, PolicyType,
+    FunctorType> {
   using execution_space =
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                  void>::execution_space;
@@ -1692,8 +1691,8 @@ template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor,
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
+        nullptr) {
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType>;
@@ -1717,8 +1716,8 @@ inline void parallel_reduce(
 template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
+    std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
+        nullptr) {
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType>;

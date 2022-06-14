@@ -323,43 +323,39 @@ struct FunctorAnalysis {
   //----------------------------------------
 
  public:
-  using execution_space = typename std::conditional<
-      functor_has_space::value, typename functor_has_space::type,
-      typename std::conditional<policy_has_space::value,
-                                typename policy_has_space::type,
-                                Kokkos::DefaultExecutionSpace>::type>::type;
+  using execution_space =
+      std::conditional_t<functor_has_space::value,
+                         typename functor_has_space::type,
+                         std::conditional_t<policy_has_space::value,
+                                            typename policy_has_space::type,
+                                            Kokkos::DefaultExecutionSpace>>;
 
-  using value_type = typename std::remove_extent<candidate_type>::type;
+  using value_type = std::remove_extent_t<candidate_type>;
 
   static_assert(!std::is_const<value_type>::value,
                 "Kokkos functor operator reduce argument cannot be const");
 
  private:
   // Stub to avoid defining a type 'void &'
-  using ValueType =
-      typename std::conditional<candidate_is_void, VOID, value_type>::type;
+  using ValueType = std::conditional_t<candidate_is_void, VOID, value_type>;
 
  public:
-  using pointer_type =
-      typename std::conditional<candidate_is_void, void, ValueType*>::type;
+  using pointer_type = std::conditional_t<candidate_is_void, void, ValueType*>;
 
-  using reference_type = typename std::conditional<
+  using reference_type = std::conditional_t<
       candidate_is_array, ValueType*,
-      typename std::conditional<!candidate_is_void, ValueType&,
-                                void>::type>::type;
+      std::conditional_t<!candidate_is_void, ValueType&, void>>;
 
  private:
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr
-      typename std::enable_if<IsArray, unsigned>::type
-      get_length(FF const& f) {
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray, unsigned>
+  get_length(FF const& f) {
     return f.value_count;
   }
 
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr
-      typename std::enable_if<!IsArray, unsigned>::type
-      get_length(FF const&) {
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray, unsigned>
+  get_length(FF const&) {
     return candidate_is_void ? 0 : 1;
   }
 
@@ -861,8 +857,7 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct DeduceTeamShmem<
-      F, typename std::enable_if<0 < sizeof(&F::team_shmem_size)>::type> {
+  struct DeduceTeamShmem<F, std::enable_if_t<0 < sizeof(&F::team_shmem_size)>> {
     enum : bool { value = true };
 
     static size_t team_shmem_size(F const* const f, int team_size) {
@@ -871,8 +866,7 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct DeduceTeamShmem<
-      F, typename std::enable_if<0 < sizeof(&F::shmem_size)>::type> {
+  struct DeduceTeamShmem<F, std::enable_if_t<0 < sizeof(&F::shmem_size)>> {
     enum : bool { value = true };
 
     static size_t team_shmem_size(F const* const f, int team_size) {
@@ -903,15 +897,14 @@ struct FunctorAnalysis {
     Functor const* const m_functor;
 
     template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<IsArray, int>::type
-    len() const noexcept {
+    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
+        noexcept {
       return m_functor->value_count;
     }
 
     template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr
-        typename std::enable_if<!IsArray, int>::type
-        len() const noexcept {
+    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<!IsArray, int> len() const
+        noexcept {
       return candidate_is_void ? 0 : 1;
     }
 

@@ -118,8 +118,7 @@ struct ChunkedArrayManager {
   template <typename Space>
   static ChunkedArrayManager<Space, ValueType> create_mirror(
       ChunkedArrayManager<MemorySpace, ValueType> const& other,
-      typename std::enable_if<IsAccessibleFrom<Space>::value>::type* =
-          nullptr) {
+      std::enable_if_t<IsAccessibleFrom<Space>::value>* = nullptr) {
     return ChunkedArrayManager<Space, ValueType>{
         ACCESSIBLE_TAG{}, other.m_chunks, other.m_chunk_max};
   }
@@ -127,8 +126,7 @@ struct ChunkedArrayManager {
   template <typename Space>
   static ChunkedArrayManager<Space, ValueType> create_mirror(
       ChunkedArrayManager<MemorySpace, ValueType> const& other,
-      typename std::enable_if<!IsAccessibleFrom<Space>::value>::type* =
-          nullptr) {
+      std::enable_if_t<!IsAccessibleFrom<Space>::value>* = nullptr) {
     using tag_type =
         typename ChunkedArrayManager<Space, ValueType>::INACCESSIBLE_TAG;
     return ChunkedArrayManager<Space, ValueType>{tag_type{}, other.m_chunk_max,
@@ -218,14 +216,14 @@ struct ChunkedArrayManager {
   pointer_type* get_ptr() const { return m_chunks; }
 
   template <typename Space>
-  typename std::enable_if<!IsAccessibleFrom<Space>::value>::type deep_copy_to(
+  std::enable_if_t<!IsAccessibleFrom<Space>::value> deep_copy_to(
       ChunkedArrayManager<Space, ValueType> const& other) {
     Kokkos::Impl::DeepCopy<Space, MemorySpace>(
         other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
   }
 
   template <typename Space>
-  typename std::enable_if<IsAccessibleFrom<Space>::value>::type deep_copy_to(
+  std::enable_if_t<IsAccessibleFrom<Space>::value> deep_copy_to(
       ChunkedArrayManager<Space, ValueType> const&) {
     // no-op
   }
@@ -278,7 +276,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   // It is assumed that the value_type is trivially copyable;
   // when this is not the case, potential problems can occur.
-  static_assert(std::is_same<typename traits::specialize, void>::value,
+  static_assert(std::is_void<typename traits::specialize>::value,
                 "DynamicView only implemented for non-specialized View type");
 
  private:
@@ -600,8 +598,8 @@ struct MirrorDynamicViewType {
       Kokkos::Experimental::DynamicView<data_type, array_layout, Space>;
   // If it is the same memory_space return the existing view_type
   // This will also keep the unmanaged trait if necessary
-  using view_type = typename std::conditional<is_same_memspace, src_view_type,
-                                              dest_view_type>::type;
+  using view_type =
+      std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 }  // namespace Impl
 

@@ -48,7 +48,9 @@
 #include <TestMemoryPool.hpp>
 #include <TestCXX11.hpp>
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 #include <TestViewCtorPropEmbeddedDim.hpp>
+#endif
 // with VS 16.11.3 and CUDA 11.4.2 getting cudafe stackoverflow crash
 #if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
 #include <TestViewLayoutTiled.hpp>

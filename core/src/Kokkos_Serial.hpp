@@ -225,6 +225,7 @@ namespace Experimental {
 template <>
 struct DeviceTypeTraits<Serial> {
   static constexpr DeviceType id = DeviceType::Serial;
+  static int device_id(const Serial&) { return 0; }
 };
 }  // namespace Experimental
 }  // namespace Tools
@@ -250,6 +251,23 @@ class SerialSpaceInitializer : public ExecSpaceInitializerBase {
 
 namespace Kokkos {
 namespace Impl {
+
+// We only need to provide a specialization for Serial if there is a host
+// parallel execution space since the specialization for
+// DefaultHostExecutionSpace is defined elsewhere.
+struct DummyExecutionSpace;
+template <class DT, class... DP>
+struct ZeroMemset<
+    std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
+                       Serial, DummyExecutionSpace>,
+    DT, DP...> : public ZeroMemset<DefaultHostExecutionSpace, DT, DP...> {
+  using Base = ZeroMemset<DefaultHostExecutionSpace, DT, DP...>;
+  using Base::Base;
+
+  ZeroMemset(const Serial&, const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type& value)
+      : Base(dst, value) {}
+};
 
 template <>
 struct MemorySpaceAccess<Kokkos::Serial::memory_space,
@@ -472,8 +490,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
   const Policy m_policy;
 
   template <class TagType>
-  typename std::enable_if<std::is_same<TagType, void>::value>::type exec()
-      const {
+  std::enable_if_t<std::is_void<TagType>::value> exec() const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
       m_functor(i);
@@ -481,8 +498,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
   }
 
   template <class TagType>
-  typename std::enable_if<!std::is_same<TagType, void>::value>::type exec()
-      const {
+  std::enable_if_t<!std::is_void<TagType>::value> exec() const {
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -529,7 +545,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const pointer_type m_result_ptr;
 
   template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(
+  inline std::enable_if_t<std::is_void<TagType>::value> exec(
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -538,8 +554,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec(reference_type update) const {
+  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+      reference_type update) const {
     const TagType t{};
 
     const typename Policy::member_type e = m_policy.end();
@@ -581,12 +597,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class HostViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const HostViewType& arg_result_view,
-      typename std::enable_if<Kokkos::is_view<HostViewType>::value &&
-                                  !Kokkos::is_reducer<ReducerType>::value,
-                              void*>::type = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const HostViewType& arg_result_view,
+                 std::enable_if_t<Kokkos::is_view<HostViewType>::value &&
+                                      !Kokkos::is_reducer<ReducerType>::value,
+                                  void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -632,7 +647,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(
+  inline std::enable_if_t<std::is_void<TagType>::value> exec(
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -641,8 +656,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec(reference_type update) const {
+  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+      reference_type update) const {
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -696,7 +711,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   ReturnType& m_returnvalue;
 
   template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(
+  inline std::enable_if_t<std::is_void<TagType>::value> exec(
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -705,8 +720,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec(reference_type update) const {
+  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+      reference_type update) const {
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -879,12 +894,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   template <class HostViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const MDRangePolicy& arg_policy,
-      const HostViewType& arg_result_view,
-      typename std::enable_if<Kokkos::is_view<HostViewType>::value &&
-                                  !Kokkos::is_reducer<ReducerType>::value,
-                              void*>::type = nullptr)
+  ParallelReduce(const FunctorType& arg_functor,
+                 const MDRangePolicy& arg_policy,
+                 const HostViewType& arg_result_view,
+                 std::enable_if_t<Kokkos::is_view<HostViewType>::value &&
+                                      !Kokkos::is_reducer<ReducerType>::value,
+                                  void*> = nullptr)
       : m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
@@ -935,10 +950,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const FunctorType m_functor;
   const Policy m_policy;
   const int m_league;
-  const int m_shared;
+  const size_t m_shared;
 
   template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(
+  inline std::enable_if_t<std::is_void<TagType>::value> exec(
       HostThreadTeamData& data) const {
     for (int ileague = 0; ileague < m_league; ++ileague) {
       m_functor(Member(data, ileague, m_league));
@@ -946,8 +961,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec(HostThreadTeamData& data) const {
+  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+      HostThreadTeamData& data) const {
     const TagType t{};
     for (int ileague = 0; ileague < m_league; ++ileague) {
       m_functor(t, Member(data, ileague, m_league));
@@ -1013,10 +1028,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_league;
   const ReducerType m_reducer;
   pointer_type m_result_ptr;
-  const int m_shared;
+  size_t m_shared;
 
   template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type exec(
+  inline std::enable_if_t<std::is_void<TagType>::value> exec(
       HostThreadTeamData& data, reference_type update) const {
     for (int ileague = 0; ileague < m_league; ++ileague) {
       m_functor(Member(data, ileague, m_league), update);
@@ -1024,8 +1039,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  exec(HostThreadTeamData& data, reference_type update) const {
+  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+      HostThreadTeamData& data, reference_type update) const {
     const TagType t{};
 
     for (int ileague = 0; ileague < m_league; ++ileague) {
@@ -1067,12 +1082,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result,
-      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-                                  !Kokkos::is_reducer<ReducerType>::value,
-                              void*>::type = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ViewType& arg_result,
+                 std::enable_if_t<Kokkos::is_view<ViewType>::value &&
+                                      !Kokkos::is_reducer<ReducerType>::value,
+                                  void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_league(arg_policy.league_size()),

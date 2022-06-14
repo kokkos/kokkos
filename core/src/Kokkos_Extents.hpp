@@ -98,9 +98,8 @@ struct _parse_impl {
 // We have to treat the case of int**[x] specially, since it *doesn't* go
 // backwards
 template <class T, ptrdiff_t... ExtentSpec>
-struct _parse_impl<
-    T*, Kokkos::Experimental::Extents<ExtentSpec...>,
-    typename std::enable_if<_all_remaining_extents_dynamic<T>::value>::type>
+struct _parse_impl<T*, Kokkos::Experimental::Extents<ExtentSpec...>,
+                   std::enable_if_t<_all_remaining_extents_dynamic<T>::value>>
     : _parse_impl<T, Kokkos::Experimental::Extents<
                          Kokkos::Experimental::dynamic_extent, ExtentSpec...>> {
 };
@@ -109,7 +108,7 @@ struct _parse_impl<
 template <class T, ptrdiff_t... ExtentSpec>
 struct _parse_impl<
     T*, Kokkos::Experimental::Extents<ExtentSpec...>,
-    typename std::enable_if<!_all_remaining_extents_dynamic<T>::value>::type> {
+    std::enable_if_t<!_all_remaining_extents_dynamic<T>::value>> {
   using _next = Kokkos::Experimental::AppendExtent<
       typename _parse_impl<T, Kokkos::Experimental::Extents<ExtentSpec...>,
                            void>::type,

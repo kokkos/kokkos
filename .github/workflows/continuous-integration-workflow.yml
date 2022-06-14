@@ -13,24 +13,45 @@ jobs:
         distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
-        openmp: ['ON']
+        backend: ['OPENMP']
+        hwloc: ['ON']
+        clang-tidy: ['']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Release'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Debug'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            hwloc: 'ON'
+            clang-tidy: ''
+          - distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            hwloc: 'OFF'
+            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            hwloc: 'OFF'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -50,13 +71,17 @@ jobs:
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
+      - name: maybe_install_clang_tidy
+        if: ${{ matrix.clang-tidy != '' }}
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy
       - name: CMake
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            ${{ matrix.clang-tidy }} \
             -DKokkos_ARCH_NATIVE=ON \
-            -DKokkos_ENABLE_HWLOC=ON \
-            -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
+            -DKokkos_ENABLE_HWLOC=${{ matrix.hwloc }} \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \

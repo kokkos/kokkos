@@ -116,12 +116,12 @@ struct Array {
 
  public:
   using reference       = T&;
-  using const_reference = typename std::add_const<T>::type&;
+  using const_reference = std::add_const_t<T>&;
   using size_type       = size_t;
   using difference_type = ptrdiff_t;
   using value_type      = T;
   using pointer         = T*;
-  using const_pointer   = typename std::add_const<T>::type*;
+  using const_pointer   = std::add_const_t<T>*;
 
   KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return N; }
   KOKKOS_INLINE_FUNCTION static constexpr bool empty() { return false; }
@@ -158,12 +158,12 @@ template <class T, class Proxy>
 struct Array<T, 0, Proxy> {
  public:
   using reference       = T&;
-  using const_reference = typename std::add_const<T>::type&;
+  using const_reference = std::add_const_t<T>&;
   using size_type       = size_t;
   using difference_type = ptrdiff_t;
   using value_type      = T;
   using pointer         = T*;
-  using const_pointer   = typename std::add_const<T>::type*;
+  using const_pointer   = std::add_const_t<T>*;
 
   KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return 0; }
   KOKKOS_INLINE_FUNCTION static constexpr bool empty() { return true; }
@@ -215,12 +215,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 
  public:
   using reference       = T&;
-  using const_reference = typename std::add_const<T>::type&;
+  using const_reference = std::add_const_t<T>&;
   using size_type       = size_t;
   using difference_type = ptrdiff_t;
   using value_type      = T;
   using pointer         = T*;
-  using const_pointer   = typename std::add_const<T>::type*;
+  using const_pointer   = std::add_const_t<T>*;
 
   KOKKOS_INLINE_FUNCTION constexpr size_type size() const { return m_size; }
   KOKKOS_INLINE_FUNCTION constexpr bool empty() const { return 0 != m_size; }
@@ -284,12 +284,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 
  public:
   using reference       = T&;
-  using const_reference = typename std::add_const<T>::type&;
+  using const_reference = std::add_const_t<T>&;
   using size_type       = size_t;
   using difference_type = ptrdiff_t;
   using value_type      = T;
   using pointer         = T*;
-  using const_pointer   = typename std::add_const<T>::type*;
+  using const_pointer   = std::add_const_t<T>*;
 
   KOKKOS_INLINE_FUNCTION constexpr size_type size() const { return m_size; }
   KOKKOS_INLINE_FUNCTION constexpr bool empty() const { return 0 != m_size; }

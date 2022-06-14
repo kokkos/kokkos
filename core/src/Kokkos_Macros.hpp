@@ -579,15 +579,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 //----------------------------------------------------------------------------
-
-#if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || \
-    (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
-#if defined(KOKKOS_ENABLE_PERFORMANCE_POSIX_MEMALIGN)
-#define KOKKOS_ENABLE_POSIX_MEMALIGN 1
-#endif
-#endif
-
-//----------------------------------------------------------------------------
 // If compiling with CUDA, we must use relocatable device code to enable the
 // task policy.
 
@@ -609,11 +600,11 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 #endif
 
-// Guard intel compiler version <= 1900
+// Guard intel compiler version 19 and older
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__) && \
-    (!defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL > 1900)
+    (!defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL >= 2021)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
@@ -661,11 +652,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #undef __CUDA_ARCH__
 #endif
 
-#if (defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)) || \
-    (defined(KOKKOS_COMPILER_INTEL) && defined(_WIN32))
-#define KOKKOS_THREAD_LOCAL __declspec(thread)
-#else
-#define KOKKOS_THREAD_LOCAL __thread
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+#define KOKKOS_THREAD_LOCAL \
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") thread_local
 #endif
 
 #if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \

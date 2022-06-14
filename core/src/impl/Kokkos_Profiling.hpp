@@ -56,6 +56,7 @@
 namespace Kokkos {
 
 // forward declaration
+bool show_warnings() noexcept;
 bool tune_internals() noexcept;
 
 namespace Tools {

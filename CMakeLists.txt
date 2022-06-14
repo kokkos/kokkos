@@ -75,7 +75,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   # downstream dependencies need to match this!
   SET(KOKKOS_COMPILE_LANGUAGE CXX)
   # use lower case here since we didn't parse options yet
-  IF (Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+  IF (Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE AND Kokkos_ENABLE_CUDA)
 
     # Without this as a language for the package we would get a C++ compiler enabled.
     # but we still need a C++ compiler even if we build all our cpp files as CUDA only
@@ -85,9 +85,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     # days.
     SET(KOKKOS_INTERNAL_EXTRA_COMPILE_LANGUAGE CXX)
 
-    IF (Kokkos_ENABLE_CUDA)
-      SET(KOKKOS_COMPILE_LANGUAGE CUDA)
-    ENDIF()
+    SET(KOKKOS_COMPILE_LANGUAGE CUDA)
   ENDIF()
 
   IF (Spack_WORKAROUND)
