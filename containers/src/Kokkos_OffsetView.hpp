@@ -1896,21 +1896,21 @@ struct MirrorOffsetType {
 }  // namespace Impl
 
 namespace Impl {
-template <class T, class... P, class... I>
+template <class T, class... P, class... ViewCtorArgs>
 inline typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror
 create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
-              const I&... arg_prop) {
+              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
-      Kokkos::create_mirror(arg_prop..., src.view()), src.begins());
+      Kokkos::create_mirror(arg_prop, src.view()), src.begins());
 }
 
-template <class Space, class T, class... P, class... I>
+template <class Space, class T, class... P, class... ViewCtorArgs>
 inline typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
 create_mirror(const Space&,
               const Kokkos::Experimental::OffsetView<T, P...>& src,
-              const I&... arg_prop) {
+              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
-      Kokkos::view_alloc(src.label(), arg_prop...), src.layout(),
+      Kokkos::create_mirror(arg_prop, src.view()), src.layout(),
       {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
        src.begin(5), src.begin(6), src.begin(7)});
 }
@@ -1931,10 +1931,10 @@ inline auto create_mirror(
 }
 
 // Create a mirror in a new space
-template <class Space, class T, class... P>
+template <class Space, class T, class... P, typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror(
     const Space& space, const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror(space, src);
+  return Impl::create_mirror(space, src, Impl::ViewCtorProp<>{});
 }
 
 template <class Space, class T, class... P>
@@ -1944,8 +1944,15 @@ create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
   return Impl::create_mirror(space, src, wi);
 }
 
+template <class T, class... P, class... ViewCtorArgs>
+inline auto
+create_mirror(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+              const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror(src, arg_prop);
+}
+
 namespace Impl {
-template <class T, class... P, class... I>
+template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
     (std::is_same<
          typename Kokkos::Experimental::OffsetView<T, P...>::memory_space,
@@ -1957,11 +1964,11 @@ inline std::enable_if_t<
     typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror>
 create_mirror_view(
     const typename Kokkos::Experimental::OffsetView<T, P...>& src,
-    const I&...) {
+    const Impl::ViewCtorProp<ViewCtorArgs...>&) {
   return src;
 }
 
-template <class T, class... P, class... I>
+template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
     !(std::is_same<
           typename Kokkos::Experimental::OffsetView<T, P...>::memory_space,
@@ -1973,28 +1980,32 @@ inline std::enable_if_t<
               T, P...>::HostMirror::data_type>::value),
     typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::Experimental::OffsetView<T, P...>& src,
-                   const I&... arg_prop) {
-  return Kokkos::create_mirror(arg_prop..., src);
+                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  return Kokkos::create_mirror(arg_prop, src);
 }
 
-template <class Space, class T, class... P, class... I>
+template <class Space, class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
     Impl::MirrorOffsetViewType<Space, T, P...>::is_same_memspace,
-    typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type>
+    Kokkos::Experimental::OffsetView<T, P...>>
 create_mirror_view(const Space&,
                    const Kokkos::Experimental::OffsetView<T, P...>& src,
-                   const I&...) {
+                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   return src;
 }
 
-template <class Space, class T, class... P, class... I>
+template <class Space, class T, class... P, class... ViewCtorArgs>
 std::enable_if_t<
     !Impl::MirrorOffsetViewType<Space, T, P...>::is_same_memspace,
     typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type>
 create_mirror_view(const Space& space,
                    const Kokkos::Experimental::OffsetView<T, P...>& src,
-                   const I&... arg_prop) {
-  return Kokkos::create_mirror(arg_prop..., space, src);
+                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+
+  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., Space>;
+  alloc_prop prop_copy(arg_prop);
+  static_cast<Impl::ViewCtorProp<void, Space>&>(prop_copy).value = space;
+  return Kokkos::create_mirror(prop_copy, src);
 }
 }  // namespace Impl
 
@@ -2002,7 +2013,7 @@ create_mirror_view(const Space& space,
 template <class T, class... P>
 inline auto create_mirror_view(
     const typename Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror_view(src);
+  return Impl::create_mirror_view(src, Impl::ViewCtorProp<>{});
 }
 
 template <class T, class... P>
@@ -2013,10 +2024,10 @@ inline auto create_mirror_view(
 }
 
 // Create a mirror view in a new space
-template <class Space, class T, class... P>
+template <class Space, class T, class... P, typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror_view(
     const Space& space, const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror_view(space, src);
+  return Impl::create_mirror_view(space, src, Impl::ViewCtorProp<>{});
 }
 
 template <class Space, class T, class... P>
@@ -2024,6 +2035,13 @@ inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror_view(space, src, wi);
+}
+
+template <class T, class... P, class... ViewCtorArgs>
+inline auto create_mirror_view(
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return Impl::create_mirror_view(src, arg_prop);
 }
 
 // Create a mirror view and deep_copy in a new space

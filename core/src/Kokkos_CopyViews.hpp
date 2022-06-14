@@ -3355,13 +3355,9 @@ create_mirror(Space const& space, Kokkos::View<T, P...> const& v) {
   return Impl::create_mirror(space, v, Impl::ViewCtorProp<>{});
 }
 
-template <class T, class... P, class... ViewCtorArgs>
-std::enable_if_t<
-    std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
-        Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
-    typename Impl::MirrorType<
-        typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-        P...>::view_type>
+template <class T, class... P, class... ViewCtorArgs, typename Enable = std::enable_if_t<
+    std::is_void<typename ViewTraits<T, P...>::specialize>::value && Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>>
+auto
 create_mirror(Impl::ViewCtorProp<ViewCtorArgs...> const& arg_prop,
               Kokkos::View<T, P...> const& v) {
   using MemorySpaceType =
@@ -3381,8 +3377,7 @@ std::enable_if_t<
     typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(Impl::ViewCtorProp<ViewCtorArgs...> const& arg_prop,
               Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(
-      v, Impl::remove_property<Kokkos::is_memory_space>(arg_prop));
+  return Impl::create_mirror(v, arg_prop);
 }
 
 template <class Space, class T, class... P,
