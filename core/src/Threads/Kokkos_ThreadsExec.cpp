@@ -443,14 +443,14 @@ void *ThreadsExec::root_reduce_scratch() {
 }
 
 void ThreadsExec::execute_resize_scratch(ThreadsExec &exec, const void *) {
-  using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-
   exec.m_scratch_reduce_end = s_threads_process.m_scratch_reduce_end;
   exec.m_scratch_thread_end = s_threads_process.m_scratch_thread_end;
 
   if (s_threads_process.m_scratch_thread_end) {
     // Allocate tracked memory:
     {
+      using Record =
+          Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
       Record *const r =
           Record::allocate(Kokkos::HostSpace(), "Kokkos::thread_scratch",
                            s_threads_process.m_scratch_thread_end);
