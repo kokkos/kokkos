@@ -1103,12 +1103,13 @@ struct TestMDTeamParallelReduce {
 
     ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5);
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5);
+    auto mdRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+        {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5});
 
     Kokkos::parallel_for(
         leagueSize, KOKKOS_LAMBDA(const int leagueRank) {
           Kokkos::parallel_for(
-              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
-                  {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5}),
+              mdRangePolicy,
               KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                             const int m, const int n) {
                 v(leagueRank, i, j, k, l, m, n) =
@@ -1160,6 +1161,8 @@ struct TestMDTeamParallelReduce {
     ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5, n6);
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5,
                                           n6);
+    auto mdRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+        {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6});
 
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0},
@@ -1167,8 +1170,7 @@ struct TestMDTeamParallelReduce {
 
         KOKKOS_LAMBDA(const int leagueRank, const int i) {
           Kokkos::parallel_for(
-              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
-                  {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6}),
+              mdRangePolicy,
               KOKKOS_LAMBDA(const int j, const int k, const int l, const int m,
                             const int n, const int o) {
                 v(leagueRank, i, j, k, l, m, n, o) =
@@ -1390,12 +1392,13 @@ struct TestMDTeamParallelReduce {
 
     ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5);
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5);
+    auto mdRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+        {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5});
 
     Kokkos::parallel_for(
         leagueSize, KOKKOS_LAMBDA(const int leagueRank) {
           Kokkos::parallel_for(
-              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
-                  {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5}),
+              mdRangePolicy,
               KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                             const int m, const int n) {
                 v(leagueRank, i, j, k, l, m, n) =
@@ -1456,14 +1459,15 @@ struct TestMDTeamParallelReduce {
     ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5, n6);
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5,
                                           n6);
+    auto mdRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+        {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6});
 
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0},
                                                           {leagueSize, n0}),
         KOKKOS_LAMBDA(const int leagueRank, const int i) {
           Kokkos::parallel_for(
-              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
-                  {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6}),
+              mdRangePolicy,
               KOKKOS_LAMBDA(const int j, const int k, const int l, const int m,
                             const int n, const int o) {
                 v(leagueRank, i, j, k, l, m, n, o) =
@@ -1677,11 +1681,13 @@ struct TestMDTeamParallelReduce {
 
     ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5);
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5);
+    auto mdRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+        {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5});
+
     Kokkos::parallel_for(
         leagueSize, KOKKOS_LAMBDA(const int leagueRank) {
           Kokkos::parallel_for(
-              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
-                  {0, 0, 0, 0, 0, 0}, {n0, n1, n2, n3, n4, n5}),
+              mdRangePolicy,
               KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
                             const int m, const int n) {
                 v(leagueRank, i, j, k, l, m, n) =
@@ -1737,14 +1743,15 @@ struct TestMDTeamParallelReduce {
     ViewType v("v", leagueSize, n0, n1, n2, n3, n4, n5, n6);
     FillFlattenedIndex fillFlattenedIndex(leagueSize, n0, n1, n2, n3, n4, n5,
                                           n6);
+    auto mdRangePolicy = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
+        {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6});
 
     Kokkos::parallel_for(
         Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0},
                                                           {leagueSize, n0}),
         KOKKOS_LAMBDA(const int leagueRank, const int i) {
           Kokkos::parallel_for(
-              Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>>(
-                  {0, 0, 0, 0, 0, 0}, {n1, n2, n3, n4, n5, n6}),
+              mdRangePolicy,
               KOKKOS_LAMBDA(const int j, const int k, const int l, const int m,
                             const int n, const int o) {
                 v(leagueRank, i, j, k, l, m, n, o) =
