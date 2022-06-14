@@ -682,7 +682,7 @@ template <class T, class... P>
 inline auto create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror(src, wi);
+  return Impl::create_mirror(src, Kokkos::view_alloc(wi));
 }
 
 // Create a mirror in a new space
@@ -696,7 +696,7 @@ template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
               const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror(space, src, wi);
+  return Impl::create_mirror(space, src, Kokkos::view_alloc(wi));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -772,7 +772,7 @@ template <class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi,
     const typename Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror_view(src, wi);
+  return Impl::create_mirror_view(src, Kokkos::view_alloc(wi));
 }
 
 // Create a mirror in a new space
@@ -786,7 +786,7 @@ template <class Space, class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror_view(space, src, wi);
+  return Impl::create_mirror_view(space, src, Kokkos::view_alloc(wi));
 }
 
 template <class T, class... P, class ... ViewCtorArgs>

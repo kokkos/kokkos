@@ -1906,11 +1906,15 @@ create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
 
 template <class Space, class T, class... P, class... ViewCtorArgs>
 inline typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
-create_mirror(const Space&,
+create_mirror(const Space& space,
               const Kokkos::Experimental::OffsetView<T, P...>& src,
               const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., Space>;
+  alloc_prop prop_copy(arg_prop);
+  static_cast<Impl::ViewCtorProp<void, Space>&>(prop_copy).value = space;
+
   return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
-      Kokkos::create_mirror(arg_prop, src.view()), src.layout(),
+      prop_copy, src.layout(),
       {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
        src.begin(5), src.begin(6), src.begin(7)});
 }
@@ -1927,7 +1931,7 @@ template <class T, class... P>
 inline auto create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi,
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror(src, wi);
+  return Impl::create_mirror(src, Kokkos::view_alloc(wi));
 }
 
 // Create a mirror in a new space
@@ -1941,7 +1945,7 @@ template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
               const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror(space, src, wi);
+  return Impl::create_mirror(space, src, Kokkos::view_alloc(wi));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -1990,7 +1994,7 @@ inline std::enable_if_t<
     Kokkos::Experimental::OffsetView<T, P...>>
 create_mirror_view(const Space&,
                    const Kokkos::Experimental::OffsetView<T, P...>& src,
-                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                   const Impl::ViewCtorProp<ViewCtorArgs...>&) {
   return src;
 }
 
@@ -2020,7 +2024,7 @@ template <class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi,
     const typename Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror_view(src, wi);
+  return Impl::create_mirror_view(src, Kokkos::view_alloc(wi));
 }
 
 // Create a mirror view in a new space
@@ -2034,7 +2038,7 @@ template <class Space, class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror_view(space, src, wi);
+  return Impl::create_mirror_view(space, src, Kokkos::view_alloc(wi));
 }
 
 template <class T, class... P, class... ViewCtorArgs>

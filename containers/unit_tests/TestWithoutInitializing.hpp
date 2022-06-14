@@ -193,6 +193,35 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview) {
 
   auto success = validate_absence(
       [&]() {
+        auto mirror_device =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
+        auto mirror_host =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing,
+                                  Kokkos::DefaultExecutionSpace{}, host_view);
+        auto mirror_device_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, device_view);
+        auto mirror_host_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, Kokkos::DefaultExecutionSpace{},
+            host_view);
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      });
+  ASSERT_TRUE(success);
+}
+
+TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview_viewctor) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  Kokkos::DynRankView<int, Kokkos::DefaultExecutionSpace> device_view(
+      "device view", 10);
+  Kokkos::DynRankView<int, Kokkos::HostSpace> host_view("host view", 10);
+
+  auto success = validate_absence(
+      [&]() {
         auto mirror_device = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
         auto mirror_host = Kokkos::create_mirror(
@@ -216,6 +245,36 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview) {
 }
 
 TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  Kokkos::Experimental::OffsetView<int*, Kokkos::DefaultExecutionSpace>
+      device_view("device view", {0, 10});
+  Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
+      "host view", {0, 10});
+
+  auto success = validate_absence(
+      [&]() {
+        auto mirror_device =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
+        auto mirror_host =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing,
+                                  Kokkos::DefaultExecutionSpace{}, host_view);
+        auto mirror_device_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, device_view);
+        auto mirror_host_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, Kokkos::DefaultExecutionSpace{},
+            host_view);
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      });
+  ASSERT_TRUE(success);
+}
+
+TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::OffsetView<int*, Kokkos::DefaultExecutionSpace>
@@ -250,6 +309,39 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
 // FIXME OPENMPTARGET
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  Kokkos::Experimental::DynamicView<int*, Kokkos::DefaultExecutionSpace>
+      device_view("device view", 2, 10);
+  Kokkos::Experimental::DynamicView<int*, Kokkos::HostSpace> host_view(
+      "host view", 2, 10);
+
+  auto success = validate_absence(
+      [&]() {
+        auto mirror_device = Kokkos::create_mirror(
+            Kokkos::WithoutInitializing, device_view);
+        auto mirror_host =
+            Kokkos::create_mirror(Kokkos::WithoutInitializing,
+                                  Kokkos::DefaultExecutionSpace{}, host_view);
+        auto mirror_device_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, device_view);
+        auto mirror_host_view = Kokkos::create_mirror_view(
+            Kokkos::WithoutInitializing, Kokkos::DefaultExecutionSpace{},
+            host_view);
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      });
+  ASSERT_TRUE(success);
+}
+#endif
+
+// FIXME OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
+TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview_view_ctor) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::DynamicView<int*, Kokkos::DefaultExecutionSpace>
