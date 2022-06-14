@@ -276,10 +276,15 @@ struct TypeList {};
 template <class... TypeLists>
 struct TypeListCat;
 
-template <typename... Types1, typename... Types2>
+template <typename... Types1>
+struct TypeListCat<TypeList<Types1...>> {
+  using type = TypeList<Types1...>;
+};
+
+/*template <typename... Types1, typename... Types2>
 struct TypeListCat<TypeList<Types1...>, TypeList<Types2...>> {
   using type = TypeList<Types1..., Types2...>;
-};
+};*/
 
 template <typename... Types1, typename... Types2, class... TypeLists>
 struct TypeListCat<TypeList<Types1...>, TypeList<Types2...>, TypeLists...> {

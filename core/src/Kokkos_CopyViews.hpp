@@ -3435,7 +3435,11 @@ std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
                  typename Impl::MirrorViewType<Space, T, P...>::view_type>
 create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  return Kokkos::create_mirror(arg_prop, src);
+  using MemorySpace = typename Space::memory_space;
+  using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., MemorySpace>;
+  alloc_prop prop_copy(arg_prop);
+
+  return Kokkos::create_mirror(prop_copy, src);
 }
 }  // namespace Impl
 

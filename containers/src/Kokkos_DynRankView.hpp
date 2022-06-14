@@ -2086,11 +2086,11 @@ inline std::enable_if_t<
         !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace,
     typename Impl::MirrorDRViewType<Space, T, P...>::view_type>
 create_mirror_view(
-    const Space& space, const Kokkos::DynRankView<T, P...>& src,
+    const Space&, const Kokkos::DynRankView<T, P...>& src,
     const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., Space>;
+  using MemorySpace = typename Space::memory_space;
+  using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., MemorySpace>;
   alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, Space>&>(prop_copy).value = space;
 
   return Kokkos::create_mirror(prop_copy, src);
 }

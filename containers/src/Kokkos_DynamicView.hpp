@@ -757,7 +757,7 @@ std::enable_if_t<
 create_mirror_view(const Space& space,
                    const Kokkos::Experimental::DynamicView<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  return Kokkos::create_mirror(arg_prop, space, src);
+  return create_mirror(space, src, arg_prop);
 }
 }  // namespace Impl
 
