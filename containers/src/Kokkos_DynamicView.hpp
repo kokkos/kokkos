@@ -632,8 +632,8 @@ create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
 
-  return typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(prop_copy,
-      src.chunk_size(), src.chunk_max() * src.chunk_size());
+  return typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
+      prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
 }
 
 template <class Space, class T, class... P, class... ViewCtorArgs>
@@ -641,7 +641,7 @@ inline typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type
 create_mirror(const Space&,
               const Kokkos::Experimental::DynamicView<T, P...>& src,
               const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-	  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(
       !alloc_prop_input::has_label,
@@ -666,8 +666,8 @@ create_mirror(const Space&,
       std::string(src.label()).append("_mirror");
 
   return
-      typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type(prop_copy,
-          src.chunk_size(), src.chunk_max() * src.chunk_size());
+      typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type(
+          prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
 }
 }  // namespace Impl
 
@@ -789,7 +789,7 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(space, src, Kokkos::view_alloc(wi));
 }
 
-template <class T, class... P, class ... ViewCtorArgs>
+template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror_view(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
