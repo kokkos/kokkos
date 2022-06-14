@@ -1790,7 +1790,7 @@ struct TestMDTeamParallelReduce {
 
     EXPECT_EQ(finalSum, expectedSum);
   }
-};  // namespace MDTeamParallelism
+};
 
 /*--------------------------------------------------------------------------*/
 
