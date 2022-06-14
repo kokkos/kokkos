@@ -564,8 +564,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 #if !defined(KOKKOS_IF_ON_HOST) && !defined(KOKKOS_IF_ON_DEVICE)
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
-    defined(__SYCL_DEVICE_ONLY__)
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+    (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
 #define KOKKOS_IF_ON_DEVICE(CODE) \
   { KOKKOS_IMPL_STRIP_PARENS(CODE) }
 #define KOKKOS_IF_ON_HOST(CODE) \
