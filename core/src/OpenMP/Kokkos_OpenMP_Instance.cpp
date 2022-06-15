@@ -320,7 +320,7 @@ void OpenMPInternal::initialize(int thread_count) {
     std::cerr << "                                    Requested: "
               << thread_count << " threads per process." << std::endl;
   }
-  // Init the array for used for arbitrarily sized atomics
+  // Init the array used for arbitrarily sized atomics
   init_lock_array_host_space();
 
   m_initialized = true;
@@ -399,7 +399,8 @@ OpenMP::OpenMP(int pool_size)
                          ptr->finalize();
                          delete ptr;
                        }) {
-  m_space_instance->verify_is_initialized("OpenMP instance constructor");
+  Impl::OpenMPInternal::singleton().verify_is_initialized(
+      "OpenMP instance constructor");
 }
 
 int OpenMP::impl_get_current_max_threads() noexcept {

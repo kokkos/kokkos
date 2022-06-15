@@ -340,19 +340,30 @@ inline std::vector<OpenMP> create_OpenMP_instances(
   static_assert(
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
+  if (weights.size() == 0) {
+    Kokkos::abort("Kokkos::abort: Partition weights vector is empty.");
+  }
   std::vector<OpenMP> instances(weights.size());
-  T total_weight = std::accumulate(weights.begin(), weights.end(), T(0));
+  double total_weight = std::accumulate(weights.begin(), weights.end(), 0);
   int const main_pool_size =
       main_instance.impl_internal_space_instance()->thread_pool_size();
 
-  int resources_used = 0;
+  int resources_left = main_pool_size;
   for (unsigned int i = 0; i < weights.size() - 1; ++i) {
     int instance_pool_size = (weights[i] / total_weight) * main_pool_size;
-    instances[i]           = OpenMP(instance_pool_size);
-    resources_used += instance_pool_size;
+    if (instance_pool_size == 0) {
+      Kokkos::abort("Kokkos::abort: Instance has no resource allocated to it");
+    }
+    instances[i] = OpenMP(instance_pool_size);
+    resources_left -= instance_pool_size;
   }
   // Last instance get all resources left
-  instances[weights.size() - 1] = main_pool_size - resources_used;
+  if (resources_left <= 0) {
+    Kokkos::abort(
+        "Kokkos::abort: Partition not enough resources left to create the last "
+        "instance.");
+  }
+  instances[weights.size() - 1] = resources_left;
 
   return instances;
 }
