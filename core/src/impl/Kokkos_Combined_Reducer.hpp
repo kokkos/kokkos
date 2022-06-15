@@ -260,7 +260,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
   }
 
   template <class ExecutionSpace, int Idx, class View>
-  constexpr static void write_one_value_back(
+  static void write_one_value_back(
       const ExecutionSpace& exec_space, View const& view,
       typename View::const_value_type& value) noexcept {
     if (Kokkos::SpaceAccessibility<typename View::memory_space,
@@ -271,7 +271,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
   }
 
   template <class ExecutionSpace>
-  constexpr static void write_value_back_to_original_references(
+  static void write_value_back_to_original_references(
       const ExecutionSpace& exec_space, value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
     emulate_fold_comma_operator(
