@@ -596,14 +596,21 @@ void parse_command_line_arguments(int& narg, char* arg[],
   int iarg = 0;
 
   while (iarg < narg) {
-    if (check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
+    if (check_int_arg(arg[iarg], "--kokkos-num-threads", &num_threads) ||
+        check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
+      if (check_arg(arg[iarg], "--kokkos-threads")) {
+        warn_deprecated_command_line_argument("--kokkos-threads",
+                                              "--kokkos-num-threads");
+      }
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_threads_found = true;
       narg--;
     } else if (!kokkos_threads_found &&
-               check_int_arg(arg[iarg], "--threads", &num_threads)) {
+               (check_int_arg(arg[iarg], "--num-threads", &num_threads) ||
+                check_int_arg(arg[iarg], "--threads", &num_threads))) {
+      warn_deprecated_command_line_argument("--threads", "--num-threads");
       iarg++;
     } else if (check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
       for (int k = iarg; k < narg - 1; k++) {
@@ -724,7 +731,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
                                        tuning features through the tuning system. If
                                        left off, Kokkos uses heuristics
-      --kokkos-threads=INT           : specify total number of threads or
+      --kokkos-num-threads=INT       : specify total number of threads or
                                        number of threads per NUMA region if
                                        used in conjunction with '--numa' option.
       --kokkos-numa=INT              : specify number of NUMA regions used by process.
@@ -831,7 +838,7 @@ void parse_environment_variables(InitArguments& arguments) {
           "an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
     if ((num_threads != -1) && (env_num_threads != num_threads))
       Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-threads and "
+          "Error: expecting a match between --kokkos-num-threads and "
           "KOKKOS_NUM_THREADS if both are set. Raised by "
           "Kokkos::initialize(int narg, char* argc[]).");
     else
