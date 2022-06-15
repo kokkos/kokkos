@@ -270,42 +270,6 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   }
 };
 
-template <typename... Types>
-struct TypeList {};
-
-template <class... TypeLists>
-struct TypeListCat;
-
-template <typename... Types1>
-struct TypeListCat<TypeList<Types1...>> {
-  using type = TypeList<Types1...>;
-};
-
-/*template <typename... Types1, typename... Types2>
-struct TypeListCat<TypeList<Types1...>, TypeList<Types2...>> {
-  using type = TypeList<Types1..., Types2...>;
-};*/
-
-template <typename... Types1, typename... Types2, class... TypeLists>
-struct TypeListCat<TypeList<Types1...>, TypeList<Types2...>, TypeLists...> {
-  using type =
-      typename TypeListCat<TypeList<Types1..., Types2...>, TypeLists...>::type;
-};
-
-template <typename... P, typename... Types>
-auto copy_subset(const ViewCtorProp<P...> &view_ctor_prop, TypeList<Types...>) {
-  return ViewCtorProp<Types...>(
-      static_cast<const ViewCtorProp<void, Types> &>(view_ctor_prop).value...);
-}
-
-template <template <typename> class Condition, typename... P>
-auto remove_property(const ViewCtorProp<P...> &view_ctor_prop) {
-  using TypeListWithRemovedTypes =
-      typename TypeListCat<std::conditional_t<Condition<P>::value, TypeList<>,
-                                              TypeList<P>>...>::type;
-  return copy_subset(view_ctor_prop, TypeListWithRemovedTypes{});
-}
-
 } /* namespace Impl */
 } /* namespace Kokkos */
 
