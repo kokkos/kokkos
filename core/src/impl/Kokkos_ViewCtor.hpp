@@ -134,7 +134,7 @@ struct ViewCtorProp<
 
   ViewCtorProp(const type &) {}
 
-  static constexpr type value = type();
+  type value = type();
 };
 
 /* Map input label type to std::string */
