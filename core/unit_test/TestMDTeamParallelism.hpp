@@ -1110,11 +1110,10 @@ struct TestMDTeamParallelReduce {
         mdRangePolicy,
         KOKKOS_LAMBDA(const int leagueRank, const int i, const int j,
                       const int k, const int l, const int m) {
-          Kokkos::parallel_for(
-              n5, KOKKOS_LAMBDA(const int n) {
-                v(leagueRank, i, j, k, l, m, n) =
-                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
-              });
+          for (int n = 0; n < n5; ++n) {
+            v(leagueRank, i, j, k, l, m, n) =
+                fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
+          }
         });
 
     int finalSum = 0;
@@ -1168,14 +1167,12 @@ struct TestMDTeamParallelReduce {
         mdRangePolicy,
         KOKKOS_LAMBDA(const int leagueRank, const int i, const int j,
                       const int k, const int l, const int m) {
-          Kokkos::parallel_for(
-              n5, KOKKOS_LAMBDA(const int n) {
-                Kokkos::parallel_for(
-                    n6, KOKKOS_LAMBDA(const int o) {
-                      v(leagueRank, i, j, k, l, m, n, o) =
-                          fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
-                    });
-              });
+          for (int n = 0; n < n5; ++n) {
+            for (int o = 0; o < n6; ++o) {
+              v(leagueRank, i, j, k, l, m, n, o) =
+                  fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
+            }
+          }
         });
 
     int finalSum = 0;
@@ -1399,11 +1396,10 @@ struct TestMDTeamParallelReduce {
         mdRangePolicy,
         KOKKOS_LAMBDA(const int leagueRank, const int i, const int j,
                       const int k, const int l, const int m) {
-          Kokkos::parallel_for(
-              n5, KOKKOS_LAMBDA(const int n) {
-                v(leagueRank, i, j, k, l, m, n) =
-                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
-              });
+          for (int n = 0; n < n5; ++n) {
+            v(leagueRank, i, j, k, l, m, n) =
+                fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
+          }
         });
 
     int finalSum = 0;
@@ -1466,14 +1462,12 @@ struct TestMDTeamParallelReduce {
         mdRangePolicy,
         KOKKOS_LAMBDA(const int leagueRank, const int i, const int j,
                       const int k, const int l, const int m) {
-          Kokkos::parallel_for(
-              n5, KOKKOS_LAMBDA(const int n) {
-                Kokkos::parallel_for(
-                    n6, KOKKOS_LAMBDA(const int o) {
-                      v(leagueRank, i, j, k, l, m, n, o) =
-                          fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
-                    });
-              });
+          for (int n = 0; n < n5; ++n) {
+            for (int o = 0; o < n6; ++o) {
+              v(leagueRank, i, j, k, l, m, n, o) =
+                  fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
+            }
+          }
         });
 
     int finalSum = 0;
@@ -1689,11 +1683,10 @@ struct TestMDTeamParallelReduce {
         mdRangePolicy,
         KOKKOS_LAMBDA(const int leagueRank, const int i, const int j,
                       const int k, const int l, const int m) {
-          Kokkos::parallel_for(
-              n5, KOKKOS_LAMBDA(const int n) {
-                v(leagueRank, i, j, k, l, m, n) =
-                    fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
-              });
+          for (int n = 0; n < n5; ++n) {
+            v(leagueRank, i, j, k, l, m, n) =
+                fillFlattenedIndex(leagueRank, i, j, k, l, m, n);
+          }
         });
 
     int finalSum = 0;
@@ -1751,14 +1744,12 @@ struct TestMDTeamParallelReduce {
         mdRangePolicy,
         KOKKOS_LAMBDA(const int leagueRank, const int i, const int j,
                       const int k, const int l, const int m) {
-          Kokkos::parallel_for(
-              n5, KOKKOS_LAMBDA(const int n) {
-                Kokkos::parallel_for(
-                    n6, KOKKOS_LAMBDA(const int o) {
-                      v(leagueRank, i, j, k, l, m, n, o) =
-                          fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
-                    });
-              });
+          for (int n = 0; n < n5; ++n) {
+            for (int o = 0; o < n6; ++o) {
+              v(leagueRank, i, j, k, l, m, n, o) =
+                  fillFlattenedIndex(leagueRank, i, j, k, l, m, n, o);
+            }
+          }
         });
 
     int finalSum = 0;
