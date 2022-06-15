@@ -3342,8 +3342,8 @@ template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Impl::MirrorType<Space, T, P...>::view_type>
-create_mirror(Space const& space, Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(space, v, Impl::ViewCtorProp<>{});
+create_mirror(Space const&, Kokkos::View<T, P...> const& v) {
+  return Impl::create_mirror(v, view_alloc(typename Space::memory_space{}));
 }
 
 template <class T, class... P, class... ViewCtorArgs,

@@ -1909,9 +1909,29 @@ inline typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
 create_mirror(const Space&,
               const Kokkos::Experimental::OffsetView<T, P...>& src,
               const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  using MemorySpace = typename Space::memory_space;
-  using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., MemorySpace>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+
+  static_assert(
+      !alloc_prop_input::has_label,
+      "The view constructor arguments passed to Kokkos::create_mirror "
+      "must not include a label!");
+  static_assert(
+      !alloc_prop_input::has_pointer,
+      "The view constructor arguments passed to Kokkos::create_mirror must "
+      "not include a pointer!");
+  static_assert(
+      !alloc_prop_input::has_memory_space,
+      "The view constructor arguments passed to Kokkos::create_mirror must "
+      "not include a memory space instance!");
+  static_assert(
+      !alloc_prop_input::allow_padding,
+      "The view constructor arguments passed to Kokkos::create_mirror must "
+      "not explicitly allow padding!");
+
+  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
   alloc_prop prop_copy(arg_prop);
+  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
+      std::string(src.label()).append("_mirror");
 
   return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
       prop_copy, src.layout(),
