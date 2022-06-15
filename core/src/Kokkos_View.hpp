@@ -80,10 +80,9 @@ class ViewMapping {
 };
 
 template <typename IntType>
-inline std::size_t count_valid_integers(const IntType i0, const IntType i1,
-                                        const IntType i2, const IntType i3,
-                                        const IntType i4, const IntType i5,
-                                        const IntType i6, const IntType i7) {
+KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
+    const IntType i0, const IntType i1, const IntType i2, const IntType i3,
+    const IntType i4, const IntType i5, const IntType i6, const IntType i7) {
   static_assert(std::is_integral<IntType>::value,
                 "count_valid_integers() must have integer arguments.");
 
@@ -93,22 +92,28 @@ inline std::size_t count_valid_integers(const IntType i0, const IntType i1,
          (i6 != KOKKOS_INVALID_INDEX) + (i7 != KOKKOS_INVALID_INDEX);
 }
 
-inline runtime_check_rank(const size_t dyn_rank, const bool is_void_spec,
-                          const size_t i0, const size_t i1, const size_t i2,
-                          const size_t i3, const size_t i4, const size_t i5,
-                          const size_t i6, const size_t i7,
-                          const std::string& label) {
+KOKKOS_INLINE_FUNCTION
+void runtime_check_rank(const size_t dyn_rank, const bool is_void_spec,
+                        const size_t i0, const size_t i1, const size_t i2,
+                        const size_t i3, const size_t i4, const size_t i5,
+                        const size_t i6, const size_t i7,
+                        const std::string& label) {
+  (void)(label);
+
   if (is_void_spec) {
     const size_t num_passed_args =
         count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
 
     if (num_passed_args != dyn_rank) {
-      const std::string message =
-          "Constructor for Kokkos View '" + label +
-          "' has mismatched number of arguments. Number of arguments = " +
-          std::to_string(num_passed_args) +
-          " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
-      Kokkos::abort(message.c_str());
+      KOKKOS_IF_ON_HOST(
+          const std::string message =
+              "Constructor for Kokkos View '" + label +
+              "' has mismatched number of arguments. Number of arguments = " +
+              std::to_string(num_passed_args) +
+              " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
+          Kokkos::abort(message.c_str());)
+      KOKKOS_IF_ON_DEVICE(Kokkos::abort("Constructor for Kokkos View has "
+                                        "mismatched number of arguments.");)
     }
   }
 }
