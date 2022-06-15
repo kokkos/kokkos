@@ -62,6 +62,7 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
@@ -94,6 +95,8 @@ class OpenMP {
   using array_layout         = LayoutRight;
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<OpenMP>;
+
+  OpenMP();
 
   /// \brief Print configuration information to the given output stream.
   static void print_configuration(std::ostream&, const bool verbose = false);
@@ -170,8 +173,15 @@ class OpenMP {
 
   static int impl_get_current_max_threads() noexcept;
 
+  Impl::OpenMPInternal* impl_internal_space_instance() const {
+    return m_space_instance.get();
+  }
+
   static constexpr const char* name() noexcept { return "OpenMP"; }
   uint32_t impl_instance_id() const noexcept { return 1; }
+
+ private:
+  Kokkos::Impl::HostSharedPtr<Impl::OpenMPInternal> m_space_instance;
 };
 
 namespace Tools {

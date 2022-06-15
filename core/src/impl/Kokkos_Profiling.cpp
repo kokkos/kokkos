@@ -67,6 +67,32 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+
+namespace {
+void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
+#ifndef KOKKOS_TOOLS_ENABLE_LIBDL
+  if (Kokkos::show_warnings()) {
+    std::cerr << "Warning: command line argument '" << arg
+              << "' ignored because kokkos-tools is disabled." << std::endl;
+  }
+#else
+  (void)arg;
+#endif
+}
+void warn_env_var_ignored_when_kokkos_tools_disabled(char const* env_var,
+                                                     char const* val) {
+#ifndef KOKKOS_TOOLS_ENABLE_LIBDL
+  if (Kokkos::show_warnings()) {
+    std::cerr << "Warning: environment variable '" << env_var << "=" << val
+              << "' ignored because kokkos-tools is disabled." << std::endl;
+  }
+#else
+  (void)env_var;
+  (void)val;
+#endif
+}
+}  // namespace
+
 namespace Kokkos {
 
 namespace Tools {
@@ -89,22 +115,16 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& help           = arguments.help;
   auto& tune_internals = arguments.tune_internals;
   while (iarg < narg) {
+    bool remove_flag = false;
     if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
       tune_internals = InitArguments::PossiblyUnsetOption::on;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
+      remove_flag    = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", lib)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
+      warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
+      remove_flag = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", args)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
+      warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
+      remove_flag = true;
       // strip any leading and/or trailing quotes if they were retained in the
       // string because this will very likely cause parsing issues for tools.
       // If the quotes are retained (via bypassing the shell):
@@ -121,12 +141,16 @@ void parse_command_line_arguments(int& narg, char* arg[],
       if (narg > 0) args = std::string(arg[0]) + " " + args;
     } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
       help = InitArguments::PossiblyUnsetOption::on;
+      warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
+      remove_flag = true;
+    } else {
+      iarg++;
+    }
+    if (remove_flag) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       narg--;
-    } else {
-      iarg++;
     }
     if ((args == Kokkos::Tools::InitArguments::unset_string_option) && narg > 0)
       args = arg[0];
@@ -138,6 +162,8 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
   auto& tune_internals = arguments.tune_internals;
   auto env_tool_lib    = std::getenv("KOKKOS_PROFILE_LIBRARY");
   if (env_tool_lib != nullptr) {
+    warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_PROFILE_LIBRARY",
+                                                    env_tool_lib);
     if ((tool_lib != Kokkos::Tools::InitArguments::unset_string_option) &&
         std::string(env_tool_lib) != tool_lib)
       return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
@@ -168,6 +194,7 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
 }
 InitializationStatus initialize_tools_subsystem(
     const Kokkos::Tools::InitArguments& args) {
+#ifdef KOKKOS_TOOLS_ENABLE_LIBDL
   Kokkos::Profiling::initialize(args.lib);
   auto final_args =
       (args.args != Kokkos::Tools::InitArguments::unset_string_option)
@@ -181,6 +208,9 @@ InitializationStatus initialize_tools_subsystem(
     return {InitializationStatus::InitializationResult::help_request};
   }
   Kokkos::Tools::parseArgs(final_args);
+#else
+  (void)args;
+#endif
   return {InitializationStatus::InitializationResult::success};
 }
 

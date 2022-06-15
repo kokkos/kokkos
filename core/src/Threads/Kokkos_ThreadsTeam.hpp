@@ -96,9 +96,9 @@ class ThreadsExecTeamMember {
   int m_team_alloc;
 
   inline void set_team_shared() {
-    new (&m_team_shared)
-        space(((char*)(*m_team_base)->scratch_memory()) + TEAM_REDUCE_SIZE,
-              m_team_shared_size);
+    new (&m_team_shared) space(
+        static_cast<char*>((*m_team_base)->scratch_memory()) + TEAM_REDUCE_SIZE,
+        m_team_shared_size);
   }
 
  public:

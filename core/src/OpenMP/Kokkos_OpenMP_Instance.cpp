@@ -61,8 +61,9 @@ namespace Impl {
 
 int g_openmp_hardware_max_threads = 1;
 
-thread_local int t_openmp_hardware_id                = 0;
-thread_local Impl::OpenMPInternal *t_openmp_instance = nullptr;
+thread_local int t_openmp_hardware_id = 0;
+// FIXME_OPENMP we can remove this after we remove partition_master
+thread_local OpenMPInternal *t_openmp_instance = nullptr;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 void OpenMPInternal::validate_partition_impl(const int nthreads,
@@ -118,23 +119,6 @@ void OpenMPInternal::validate_partition_impl(const int nthreads,
   }
 }
 #endif
-
-void OpenMPInternal::verify_is_master(const char *const label) {
-  if (!t_openmp_instance) {
-    std::string msg(label);
-    msg.append(" ERROR: in parallel or not initialized");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
 
 void OpenMPInternal::clear_thread_data() {
   const size_t member_bytes =
@@ -241,17 +225,16 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
   }
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+OpenMPInternal &OpenMPInternal::singleton() {
+  static OpenMPInternal *self = nullptr;
+  if (self == nullptr) {
+    self = new OpenMPInternal(get_current_max_threads());
+  }
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+  return *self;
+}
 
-namespace Kokkos {
-
-//----------------------------------------------------------------------------
-
-int OpenMP::impl_get_current_max_threads() noexcept {
+int OpenMPInternal::get_current_max_threads() noexcept {
   // Using omp_get_max_threads(); is problematic in conjunction with
   // Hwloc on Intel (essentially an initial call to the OpenMP runtime
   // without a parallel region before will set a process mask for a single core
@@ -270,14 +253,15 @@ int OpenMP::impl_get_current_max_threads() noexcept {
   return count;
 }
 
-void OpenMP::impl_initialize(int thread_count) {
+void OpenMPInternal::initialize(int thread_count) {
+  if (m_initialized) {
+    Kokkos::abort(
+        "Calling OpenMP::initialize after OpenMP::finalize is illegal\n");
+  }
+
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
-  }
-
-  if (Impl::t_openmp_instance) {
-    finalize();
   }
 
   {
@@ -297,7 +281,7 @@ void OpenMP::impl_initialize(int thread_count) {
     // Before any other call to OMP query the maximum number of threads
     // and save the value for re-initialization unit testing.
 
-    Impl::g_openmp_hardware_max_threads = impl_get_current_max_threads();
+    Impl::g_openmp_hardware_max_threads = get_current_max_threads();
 
     int process_num_threads = Impl::g_openmp_hardware_max_threads;
 
@@ -333,21 +317,12 @@ void OpenMP::impl_initialize(int thread_count) {
 // setup thread local
 #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads)
     {
-      Impl::t_openmp_instance    = nullptr;
       Impl::t_openmp_hardware_id = omp_get_thread_num();
       Impl::SharedAllocationRecord<void, void>::tracking_enable();
     }
 
-    void *ptr = nullptr;
-    try {
-      ptr = space.allocate(sizeof(Impl::OpenMPInternal));
-    } catch (Kokkos::Experimental::RawMemoryAllocationFailure const &f) {
-      // For now, just rethrow the error message the existing way
-      Kokkos::Impl::throw_runtime_exception(f.get_error_message());
-    }
-
-    Impl::t_openmp_instance =
-        new (ptr) Impl::OpenMPInternal(Impl::g_openmp_hardware_max_threads);
+    auto &instance       = OpenMPInternal::singleton();
+    instance.m_pool_size = Impl::g_openmp_hardware_max_threads;
 
     // New, unified host thread team data:
     {
@@ -356,9 +331,8 @@ void OpenMP::impl_initialize(int thread_count) {
       size_t team_shared_bytes  = 1024 * thread_count;
       size_t thread_local_bytes = 1024;
 
-      Impl::t_openmp_instance->resize_thread_data(
-          pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
-          thread_local_bytes);
+      instance.resize_thread_data(pool_reduce_bytes, team_reduce_bytes,
+                                  team_shared_bytes, thread_local_bytes);
     }
   }
 
@@ -378,38 +352,31 @@ void OpenMP::impl_initialize(int thread_count) {
               << thread_count << " threads per process." << std::endl;
   }
   // Init the array for used for arbitrarily sized atomics
-  Impl::init_lock_array_host_space();
+  init_lock_array_host_space();
+
+  m_initialized = true;
 }
 
-//----------------------------------------------------------------------------
-
-void OpenMP::impl_finalize() {
+void OpenMPInternal::finalize() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
-    if (!Impl::t_openmp_instance) msg.append(": not initialized");
+    if (this != &singleton()) msg.append(": not initialized");
     if (omp_in_parallel()) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  if (Impl::t_openmp_instance) {
+  if (this == &singleton()) {
+    auto const &instance = singleton();
     // Silence Cuda Warning
-    const int nthreads = Impl::t_openmp_instance->m_pool_size <=
-                                 Impl::g_openmp_hardware_max_threads
-                             ? Impl::g_openmp_hardware_max_threads
-                             : Impl::t_openmp_instance->m_pool_size;
+    const int nthreads =
+        instance.m_pool_size <= Impl::g_openmp_hardware_max_threads
+            ? Impl::g_openmp_hardware_max_threads
+            : instance.m_pool_size;
     (void)nthreads;
-
-    using Exec     = Impl::OpenMPInternal;
-    Exec *instance = Impl::t_openmp_instance;
-    instance->~Exec();
-
-    OpenMP::memory_space space;
-    space.deallocate(instance, sizeof(Exec));
 
 #pragma omp parallel num_threads(nthreads)
     {
       Impl::t_openmp_hardware_id = 0;
-      Impl::t_openmp_instance    = nullptr;
       Impl::SharedAllocationRecord<void, void>::tracking_disable();
     }
 
@@ -419,19 +386,15 @@ void OpenMP::impl_finalize() {
     Impl::g_openmp_hardware_max_threads = 1;
   }
 
+  m_initialized = false;
+
   Kokkos::Profiling::finalize();
 }
 
-//----------------------------------------------------------------------------
-
-void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
+void OpenMPInternal::print_configuration(std::ostream &s) const {
   s << "Kokkos::OpenMP";
 
-  const bool is_initialized = Impl::t_openmp_instance != nullptr;
-
-  if (is_initialized) {
-    Impl::OpenMPInternal::verify_is_master("OpenMP::print_configuration");
-
+  if (m_initialized) {
     const int numa_count      = 1;
     const int core_per_numa   = Impl::g_openmp_hardware_max_threads;
     const int thread_per_core = 1;
@@ -441,6 +404,38 @@ void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   } else {
     s << " not initialized" << std::endl;
   }
+}
+
+bool OpenMPInternal::verify_is_initialized(const char *const label) const {
+  if (!m_initialized) {
+    std::cerr << "Kokkos::OpenMP " << label
+              << " : ERROR OpenMP is not initialized" << std::endl;
+  }
+  return m_initialized;
+}
+}  // namespace Impl
+
+//----------------------------------------------------------------------------
+
+OpenMP::OpenMP()
+    : m_space_instance(&Impl::OpenMPInternal::singleton(),
+                       [](Impl::OpenMPInternal *) {}) {
+  Impl::OpenMPInternal::singleton().verify_is_initialized(
+      "OpenMP instance constructor");
+}
+
+int OpenMP::impl_get_current_max_threads() noexcept {
+  return Impl::OpenMPInternal::get_current_max_threads();
+}
+
+void OpenMP::impl_initialize(int thread_count) {
+  Impl::OpenMPInternal::singleton().initialize(thread_count);
+}
+
+void OpenMP::impl_finalize() { Impl::OpenMPInternal::singleton().finalize(); }
+
+void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
+  Impl::OpenMPInternal::singleton().print_configuration(s);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
@@ -473,9 +468,6 @@ void OpenMPSpaceInitializer::initialize(const InitArguments &args) {
   if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value) {
     Kokkos::OpenMP::impl_initialize(num_threads);
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
-    // initialized" << std::endl ;
   }
 }
 

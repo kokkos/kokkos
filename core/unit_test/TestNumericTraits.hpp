@@ -213,8 +213,8 @@ struct TestNumericTraits {
   }
 };
 
-#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_SYCL) || \
-    defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA)) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 template <class Tag>
 struct TestNumericTraits<
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -600,8 +600,9 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_CONSTANT(long double, max_exponent10);
 // Workaround compiler issue error: expression must have a constant value
 // See kokkos/kokkos#4574
 // There is the same bug with CUDA 11.6
-// FIXME_NVHPC FIXME_CUDA
-#if !defined(KOKKOS_COMPILER_NVHPC) && (CUDA_VERSION < 11060)
+// FIXME_NVHPC FIXME_CUDA FIXME_NVCC
+#if !defined(KOKKOS_COMPILER_NVHPC) && (CUDA_VERSION < 11060) && \
+    !(defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_ENABLE_CUDA))
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, quiet_NaN);
 CHECK_NAN_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, quiet_NaN);

@@ -436,10 +436,11 @@ __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
   int64_t threadid = 0;
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
-    int64_t const wraparound_len = Kokkos::Experimental::min(
-        int64_t(league_size),
-        (int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n)) /
-            (blockDim.x * blockDim.y));
+    int64_t const wraparound_len = Kokkos::Experimental::max(
+        int64_t(1), Kokkos::Experimental::min(
+                        int64_t(league_size),
+                        (int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n)) /
+                            (blockDim.x * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;
@@ -872,9 +873,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #endif
                                  !std::is_same<ReducerType, InvalidType>::value;
     if (!is_empty_range || need_device_set) {
-      const int block_count =
-          UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
-                           : std::min(int(m_league_size), m_team_size);
+      const int block_count = std::max(
+          1u, UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
+                               : std::min(int(m_league_size), m_team_size));
 
       m_scratch_space = cuda_internal_scratch_space(
           m_policy.space(), Analysis::value_size(ReducerConditional::select(

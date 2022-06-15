@@ -564,8 +564,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 #if !defined(KOKKOS_IF_ON_HOST) && !defined(KOKKOS_IF_ON_DEVICE)
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
-    defined(__SYCL_DEVICE_ONLY__)
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+    (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
 #define KOKKOS_IF_ON_DEVICE(CODE) \
   { KOKKOS_IMPL_STRIP_PARENS(CODE) }
 #define KOKKOS_IF_ON_HOST(CODE) \
@@ -600,11 +601,11 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 #endif
 
-// Guard intel compiler version <= 1900
+// Guard intel compiler version 19 and older
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__) && \
-    (!defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL > 1900)
+    (!defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL >= 2021)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
