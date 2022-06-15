@@ -660,7 +660,9 @@ create_mirror(const Space&,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
+  using MemorySpace = typename Space::memory_space;
+  using alloc_prop =
+      Impl::ViewCtorProp<ViewCtorArgs..., std::string, MemorySpace>;
   alloc_prop prop_copy(arg_prop);
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
@@ -675,7 +677,7 @@ create_mirror(const Space&,
 template <class T, class... P>
 inline auto create_mirror(
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror(src);
+  return Impl::create_mirror(src, Impl::ViewCtorProp<>{});
 }
 
 template <class T, class... P>
@@ -689,7 +691,7 @@ inline auto create_mirror(
 template <class Space, class T, class... P>
 inline auto create_mirror(
     const Space& space, const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror(space, src);
+  return Impl::create_mirror(space, src, Impl::ViewCtorProp<>{});
 }
 
 template <class Space, class T, class... P>
@@ -765,7 +767,7 @@ create_mirror_view(const Space& space,
 template <class T, class... P>
 inline auto create_mirror_view(
     const typename Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror_view(src);
+  return Impl::create_mirror_view(src, Impl::ViewCtorProp<>{});
 }
 
 template <class T, class... P>
@@ -779,7 +781,7 @@ inline auto create_mirror_view(
 template <class Space, class T, class... P>
 inline auto create_mirror_view(
     const Space& space, const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror_view(space, src);
+  return Impl::create_mirror_view(space, src, Impl::ViewCtorProp<>{});
 }
 
 template <class Space, class T, class... P>

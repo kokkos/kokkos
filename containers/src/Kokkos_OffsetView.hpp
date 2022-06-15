@@ -1924,7 +1924,7 @@ create_mirror(const Space&,
 template <class T, class... P>
 inline auto create_mirror(
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return Impl::create_mirror(src);
+  return Impl::create_mirror(src, Impl::ViewCtorProp<>{});
 }
 
 template <class T, class... P>
