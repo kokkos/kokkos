@@ -557,8 +557,10 @@ void test_memory_pool_huge() {
 namespace Test {
 
 TEST(TEST_CATEGORY, memory_pool) {
-  TestMemoryPool::test_host_memory_pool_defaults<TEST_EXECSPACE>();
-  TestMemoryPool::test_host_memory_pool_stats<TEST_EXECSPACE>();
+  TestMemoryPool::test_host_memory_pool_defaults<
+      typename Kokkos::Impl::HostMirror<TEST_EXECSPACE>::Space>();
+  TestMemoryPool::test_host_memory_pool_stats<
+      typename Kokkos::Impl::HostMirror<TEST_EXECSPACE>::Space>();
   TestMemoryPool::test_memory_pool_v2<TEST_EXECSPACE>(false, false);
   TestMemoryPool::test_memory_pool_corners<TEST_EXECSPACE>(false, false);
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
