@@ -129,7 +129,7 @@ class ThreadsExec {
   ThreadsExec(const ThreadsExec &);
   ThreadsExec &operator=(const ThreadsExec &);
 
-  static void first_touch_allocate_thread_private_scratch_in_serial();
+  static void execute_resize_scratch_in_serial();
 
  public:
   KOKKOS_INLINE_FUNCTION int pool_size() const { return m_pool_size; }

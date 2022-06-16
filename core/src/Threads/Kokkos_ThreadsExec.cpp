@@ -399,7 +399,7 @@ bool ThreadsExec::wake() {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::first_touch_allocate_thread_private_scratch_in_serial() {
+void ThreadsExec::execute_resize_scratch_in_serial() {
   const unsigned begin = s_threads_process.m_pool_base ? 1 : 0;
 
   auto deallocate_scratch_memory = [](ThreadsExec &exec) {
@@ -502,7 +502,7 @@ void *ThreadsExec::resize_scratch(size_t reduce_size, size_t thread_size) {
     s_threads_process.m_scratch_reduce_end = reduce_size;
     s_threads_process.m_scratch_thread_end = reduce_size + thread_size;
 
-    first_touch_allocate_thread_private_scratch_in_serial();
+    execute_resize_scratch_in_serial();
 
     s_threads_process.m_scratch = s_threads_exec[0]->m_scratch;
   }
