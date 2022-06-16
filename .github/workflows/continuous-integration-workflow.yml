@@ -14,44 +14,37 @@ jobs:
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
-        hwloc: ['ON']
         clang-tidy: ['']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
-            hwloc: 'OFF'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
           - distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
-            hwloc: 'OFF'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -80,7 +73,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
             -DKokkos_ARCH_NATIVE=ON \
-            -DKokkos_ENABLE_HWLOC=${{ matrix.hwloc }} \
+            -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
