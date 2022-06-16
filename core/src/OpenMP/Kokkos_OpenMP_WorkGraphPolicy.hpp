@@ -46,7 +46,9 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
  public:
   inline void execute() {
-#pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
+    // Work around NVHPC 11.6 ICE
+    int pool_size = OpenMP::impl_thread_pool_size();
+#pragma omp parallel num_threads(pool_size)
     {
       // Spin until COMPLETED_TOKEN.
       // END_TOKEN indicates no work is currently available.
