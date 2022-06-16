@@ -460,15 +460,7 @@ int g_openmp_space_factory_initialized =
     initialize_space_factory<OpenMPSpaceInitializer>("050_OpenMP");
 
 void OpenMPSpaceInitializer::initialize(const InitArguments &args) {
-  // Prevent "unused variable" warning for 'args' input struct.  If
-  // Serial::initialize() ever needs to take arguments from the input
-  // struct, you may remove this line of code.
-  const int num_threads = args.num_threads;
-
-  if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value) {
-    Kokkos::OpenMP::impl_initialize(num_threads);
-  }
+  Kokkos::OpenMP::impl_initialize(args.num_threads);
 }
 
 void OpenMPSpaceInitializer::finalize(const bool) {
