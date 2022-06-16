@@ -46,8 +46,6 @@
 #define KOKKOS_STD_ALGORITHMS_SWAP_HPP
 
 #include <Kokkos_Core.hpp>
-#include "Kokkos_BeginEnd.hpp"
-#include "impl/Kokkos_Constraints.hpp"
 
 namespace Kokkos {
 namespace Experimental {

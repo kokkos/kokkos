@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_DISTANCE_HPP
 #define KOKKOS_STD_ALGORITHMS_DISTANCE_HPP
 
-#include "impl/Kokkos_Constraints.hpp"
-#include "impl/Kokkos_RandomAccessIterator.hpp"
+#include <std_algorithms/impl/Kokkos_Constraints.hpp>
+#include <std_algorithms/impl/Kokkos_RandomAccessIterator.hpp>
 
 namespace Kokkos {
 namespace Experimental {

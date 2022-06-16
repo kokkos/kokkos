@@ -44,7 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include "std_algorithms/Kokkos_adjacent_find.hpp"
+#include "std_algorithms/Kokkos_AdjacentFind.hpp"
 #include <utility>
 
 namespace Test {

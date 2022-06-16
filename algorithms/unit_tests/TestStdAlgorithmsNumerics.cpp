@@ -43,8 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_reduce.hpp>
-#include <std_algorithms/Kokkos_transform_reduce.hpp>
 
 namespace KE = Kokkos::Experimental;
 

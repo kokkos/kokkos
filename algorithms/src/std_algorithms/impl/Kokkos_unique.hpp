@@ -46,11 +46,11 @@
 #define KOKKOS_STD_ALGORITHMS_UNIQUE_IMPL_HPP
 
 #include <Kokkos_Core.hpp>
-#include "Kokkos_Constraints.hpp"
-#include "Kokkos_HelperPredicates.hpp"
-#include "Kokkos_move.hpp"
-#include "../Kokkos_Distance.hpp"
-#include "../Kokkos_adjacent_find.hpp"
+#include <std_algorithms/impl/Kokkos_Constraints.hpp>
+#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
+#include <std_algorithms/Kokkos_Move.hpp>
+#include <std_algorithms/Kokkos_Distance.hpp>
+#include <std_algorithms/Kokkos_AdjacentFind.hpp>
 #include <string>
 
 namespace Kokkos {

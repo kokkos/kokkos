@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REPLACE_HPP
 #define KOKKOS_STD_ALGORITHMS_REPLACE_HPP
 
-#include "impl/Kokkos_replace.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_Replace.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

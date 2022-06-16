@@ -59,80 +59,80 @@
 // following the std classification.
 
 // modifying ops
-#include "std_algorithms/Kokkos_swap.hpp"
-#include "std_algorithms/Kokkos_iter_swap.hpp"
+#include <std_algorithms/Kokkos_Swap.hpp>
+#include <std_algorithms/Kokkos_IterSwap.hpp>
 
 // non-modifying sequence
-#include "std_algorithms/Kokkos_adjacent_find.hpp"
-#include "std_algorithms/Kokkos_count.hpp"
-#include "std_algorithms/Kokkos_count_if.hpp"
-#include "std_algorithms/Kokkos_all_of.hpp"
-#include "std_algorithms/Kokkos_any_of.hpp"
-#include "std_algorithms/Kokkos_none_of.hpp"
-#include "std_algorithms/Kokkos_equal.hpp"
-#include "std_algorithms/Kokkos_find.hpp"
-#include "std_algorithms/Kokkos_find_if.hpp"
-#include "std_algorithms/Kokkos_find_if_not.hpp"
-#include "std_algorithms/Kokkos_find_end.hpp"
-#include "std_algorithms/Kokkos_find_first_of.hpp"
-#include "std_algorithms/Kokkos_for_each.hpp"
-#include "std_algorithms/Kokkos_for_each_n.hpp"
-#include "std_algorithms/Kokkos_lexicographical_compare.hpp"
-#include "std_algorithms/Kokkos_mismatch.hpp"
-#include "std_algorithms/Kokkos_search.hpp"
-#include "std_algorithms/Kokkos_search_n.hpp"
+#include <std_algorithms/Kokkos_AdjacentFind.hpp>
+#include <std_algorithms/Kokkos_Count.hpp>
+#include <std_algorithms/Kokkos_CountIf.hpp>
+#include <std_algorithms/Kokkos_AllOf.hpp>
+#include <std_algorithms/Kokkos_AnyOf.hpp>
+#include <std_algorithms/Kokkos_NoneOf.hpp>
+#include <std_algorithms/Kokkos_Equal.hpp>
+#include <std_algorithms/Kokkos_Find.hpp>
+#include <std_algorithms/Kokkos_FindIf.hpp>
+#include <std_algorithms/Kokkos_FindIfNot.hpp>
+#include <std_algorithms/Kokkos_FindEnd.hpp>
+#include <std_algorithms/Kokkos_FindFirstOf.hpp>
+#include <std_algorithms/Kokkos_ForEach.hpp>
+#include <std_algorithms/Kokkos_ForEachN.hpp>
+#include <std_algorithms/Kokkos_LexicographicalCompare.hpp>
+#include <std_algorithms/Kokkos_Mismatch.hpp>
+#include <std_algorithms/Kokkos_Search.hpp>
+#include <std_algorithms/Kokkos_SearchN.hpp>
 
 // modifying sequence
-#include "std_algorithms/Kokkos_fill.hpp"
-#include "std_algorithms/Kokkos_fill_n.hpp"
-#include "std_algorithms/Kokkos_replace.hpp"
-#include "std_algorithms/Kokkos_replace_if.hpp"
-#include "std_algorithms/Kokkos_replace_copy_if.hpp"
-#include "std_algorithms/Kokkos_replace_copy.hpp"
-#include "std_algorithms/Kokkos_copy.hpp"
-#include "std_algorithms/Kokkos_copy_n.hpp"
-#include "std_algorithms/Kokkos_copy_backward.hpp"
-#include "std_algorithms/Kokkos_copy_if.hpp"
-#include "std_algorithms/Kokkos_transform.hpp"
-#include "std_algorithms/Kokkos_generate.hpp"
-#include "std_algorithms/Kokkos_generate_n.hpp"
-#include "std_algorithms/Kokkos_reverse.hpp"
-#include "std_algorithms/Kokkos_reverse_copy.hpp"
-#include "std_algorithms/Kokkos_move.hpp"
-#include "std_algorithms/Kokkos_move_backward.hpp"
-#include "std_algorithms/Kokkos_swap_ranges.hpp"
-#include "std_algorithms/Kokkos_unique.hpp"
-#include "std_algorithms/Kokkos_unique_copy.hpp"
-#include "std_algorithms/Kokkos_rotate.hpp"
-#include "std_algorithms/Kokkos_rotate_copy.hpp"
-#include "std_algorithms/Kokkos_remove.hpp"
-#include "std_algorithms/Kokkos_remove_if.hpp"
-#include "std_algorithms/Kokkos_remove_copy.hpp"
-#include "std_algorithms/Kokkos_remove_copy_if.hpp"
-#include "std_algorithms/Kokkos_shift_left.hpp"
-#include "std_algorithms/Kokkos_shift_right.hpp"
+#include <std_algorithms/Kokkos_Fill.hpp>
+#include <std_algorithms/Kokkos_FillN.hpp>
+#include <std_algorithms/Kokkos_Replace.hpp>
+#include <std_algorithms/Kokkos_ReplaceIf.hpp>
+#include <std_algorithms/Kokkos_ReplaceCopyIf.hpp>
+#include <std_algorithms/Kokkos_ReplaceCopy.hpp>
+#include <std_algorithms/Kokkos_Copy.hpp>
+#include <std_algorithms/Kokkos_CopyN.hpp>
+#include <std_algorithms/Kokkos_CopyBackward.hpp>
+#include <std_algorithms/Kokkos_CopyIf.hpp>
+#include <std_algorithms/Kokkos_Transform.hpp>
+#include <std_algorithms/Kokkos_Generate.hpp>
+#include <std_algorithms/Kokkos_GenerateN.hpp>
+#include <std_algorithms/Kokkos_Reverse.hpp>
+#include <std_algorithms/Kokkos_ReverseCopy.hpp>
+#include <std_algorithms/Kokkos_Move.hpp>
+#include <std_algorithms/Kokkos_MoveBackward.hpp>
+#include <std_algorithms/Kokkos_SwapRanges.hpp>
+#include <std_algorithms/Kokkos_Unique.hpp>
+#include <std_algorithms/Kokkos_UniqueCopy.hpp>
+#include <std_algorithms/Kokkos_Rotate.hpp>
+#include <std_algorithms/Kokkos_RotateCopy.hpp>
+#include <std_algorithms/Kokkos_Remove.hpp>
+#include <std_algorithms/Kokkos_RemoveIf.hpp>
+#include <std_algorithms/Kokkos_RemoveCopy.hpp>
+#include <std_algorithms/Kokkos_RemoveCopyIf.hpp>
+#include <std_algorithms/Kokkos_ShiftLeft.hpp>
+#include <std_algorithms/Kokkos_ShiftRight.hpp>
 
 // sorting ops
-#include "std_algorithms/Kokkos_is_sorted_until.hpp"
-#include "std_algorithms/Kokkos_is_sorted.hpp"
+#include <std_algorithms/Kokkos_IsSortedUntil.hpp>
+#include <std_algorithms/Kokkos_IsSorted.hpp>
 
 // min/max element
-#include "std_algorithms/Kokkos_min_element.hpp"
-#include "std_algorithms/Kokkos_max_element.hpp"
-#include "std_algorithms/Kokkos_minmax_element.hpp"
+#include <std_algorithms/Kokkos_MinElement.hpp>
+#include <std_algorithms/Kokkos_MaxElement.hpp>
+#include <std_algorithms/Kokkos_MinMaxElement.hpp>
 
 // partitioning ops
-#include "std_algorithms/Kokkos_is_partitioned.hpp"
-#include "std_algorithms/Kokkos_partition_copy.hpp"
-#include "std_algorithms/Kokkos_partition_point.hpp"
+#include <std_algorithms/Kokkos_IsPartitioned.hpp>
+#include <std_algorithms/Kokkos_PartitionCopy.hpp>
+#include <std_algorithms/Kokkos_PartitionPoint.hpp>
 
 // numeric
-#include "std_algorithms/Kokkos_adjacent_difference.hpp"
-#include "std_algorithms/Kokkos_reduce.hpp"
-#include "std_algorithms/Kokkos_transform_reduce.hpp"
-#include "std_algorithms/Kokkos_exclusive_scan.hpp"
-#include "std_algorithms/Kokkos_transform_exclusive_scan.hpp"
-#include "std_algorithms/Kokkos_inclusive_scan.hpp"
-#include "std_algorithms/Kokkos_transform_inclusive_scan.hpp"
+#include <std_algorithms/Kokkos_AdjacentDifference.hpp>
+#include <std_algorithms/Kokkos_Reduce.hpp>
+#include <std_algorithms/Kokkos_TransformReduce.hpp>
+#include <std_algorithms/Kokkos_ExclusiveScan.hpp>
+#include <std_algorithms/Kokkos_TransformExclusiveScan.hpp>
+#include <std_algorithms/Kokkos_InclusiveScan.hpp>
+#include <std_algorithms/Kokkos_TransformInclusiveScan.hpp>
 
 #endif

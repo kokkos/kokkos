@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REVERSE_HPP
 #define KOKKOS_STD_ALGORITHMS_REVERSE_HPP
 
-#include "impl/Kokkos_reverse.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_Reverse.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

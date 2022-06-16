@@ -43,9 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_equal.hpp>
-#include <std_algorithms/Kokkos_fill.hpp>
 #include <algorithm>
 
 namespace Test {

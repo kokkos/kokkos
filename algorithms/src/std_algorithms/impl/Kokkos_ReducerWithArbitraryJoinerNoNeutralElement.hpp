@@ -46,7 +46,7 @@
 #define KOKKOS_STD_ALGORITHMS_REDUCER_WITH_ARBITRARY_JOINER_NONEUTRAL_ELEMENT_HPP
 
 #include <Kokkos_Core.hpp>
-#include "Kokkos_ValueWrapperForNoNeutralElement.hpp"
+#include <std_algorithms/impl/Kokkos_ValueWrapperForNoNeutralElement.hpp>
 
 namespace Kokkos {
 namespace Experimental {
