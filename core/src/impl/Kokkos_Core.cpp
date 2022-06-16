@@ -607,7 +607,14 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else if (!kokkos_threads_found &&
                (check_int_arg(arg[iarg], "--num-threads", &num_threads) ||
                 check_int_arg(arg[iarg], "--threads", &num_threads))) {
-      warn_deprecated_command_line_argument("--threads", "--num-threads");
+      if (check_arg(arg[iarg], "--num-threads")) {
+        warn_deprecated_command_line_argument("--num-threads",
+                                              "--kokkos-num-threads");
+      }
+      if (check_arg(arg[iarg], "--threads")) {
+        warn_deprecated_command_line_argument("--threads",
+                                              "--kokkos-num-threads");
+      }
     } else if (check_int_arg(arg[iarg], "--kokkos-numa", &ignored_numa) ||
                check_int_arg(arg[iarg], "--numa", &ignored_numa)) {
       if (check_arg(arg[iarg], "--kokkos-numa")) {
@@ -627,15 +634,24 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else if (!kokkos_device_found &&
                (check_int_arg(arg[iarg], "--device-id", &device) ||
                 check_int_arg(arg[iarg], "--device", &device))) {
+      if (check_arg(arg[iarg], "--device-id")) {
+        warn_deprecated_command_line_argument("--device-id",
+                                              "--kokkos-device-id");
+      }
       if (check_arg(arg[iarg], "--device")) {
-        warn_deprecated_command_line_argument("--device", "--device-id");
+        warn_deprecated_command_line_argument("--device", "--kokkos-device-id");
       }
     } else if (check_arg(arg[iarg], "--kokkos-num-devices") ||
                check_arg(arg[iarg], "--num-devices") ||
                check_arg(arg[iarg], "--kokkos-ndevices") ||
                check_arg(arg[iarg], "--ndevices")) {
+      if (check_arg(arg[iarg], "--num-devices")) {
+        warn_deprecated_command_line_argument("--num-devices",
+                                              "--kokkos-num-devices");
+      }
       if (check_arg(arg[iarg], "--ndevices")) {
-        warn_deprecated_command_line_argument("--ndevices", "--num-devices");
+        warn_deprecated_command_line_argument("--ndevices",
+                                              "--kokkos-num-devices");
       }
       if (check_arg(arg[iarg], "--kokkos-ndevices")) {
         warn_deprecated_command_line_argument("--kokkos-ndevices",
