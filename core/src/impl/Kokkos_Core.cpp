@@ -557,8 +557,8 @@ unsigned get_process_id() {
 
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
+  int ignored_numa;
   auto& num_threads      = arguments.num_threads;
-  auto& numa             = arguments.num_numa;
   auto& device           = arguments.device_id;
   auto& ndevices         = arguments.ndevices;
   auto& skip_device      = arguments.skip_device;
@@ -569,7 +569,6 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& tool_lib         = arguments.tool_lib;
 
   bool kokkos_threads_found  = false;
-  bool kokkos_numa_found     = false;
   bool kokkos_device_found   = false;
   bool kokkos_ndevices_found = false;
   auto tools_init_arguments  = arguments.impl_get_tools_init_arguments();
@@ -609,11 +608,14 @@ void parse_command_line_arguments(int& narg, char* arg[],
                (check_int_arg(arg[iarg], "--num-threads", &num_threads) ||
                 check_int_arg(arg[iarg], "--threads", &num_threads))) {
       warn_deprecated_command_line_argument("--threads", "--num-threads");
-    } else if (check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
-      remove_flag       = true;
-      kokkos_numa_found = true;
-    } else if (!kokkos_numa_found &&
-               check_int_arg(arg[iarg], "--numa", &numa)) {
+    } else if (check_int_arg(arg[iarg], "--kokkos-numa", &ignored_numa) ||
+               check_int_arg(arg[iarg], "--numa", &ignored_numa)) {
+      if (check_arg(arg[iarg], "--kokkos-numa")) {
+        warn_deprecated_command_line_argument("--kokkos-numa");
+        remove_flag = true;
+      } else {
+        warn_deprecated_command_line_argument("--numa");
+      }
     } else if (check_int_arg(arg[iarg], "--kokkos-device-id", &device) ||
                check_int_arg(arg[iarg], "--kokkos-device", &device)) {
       if (check_arg(arg[iarg], "--kokkos-device")) {
@@ -760,7 +762,6 @@ void parse_command_line_arguments(int& narg, char* arg[],
 
 void parse_environment_variables(InitArguments& arguments) {
   auto& num_threads      = arguments.num_threads;
-  auto& numa             = arguments.num_numa;
   auto& device           = arguments.device_id;
   auto& ndevices         = arguments.ndevices;
   auto& skip_device      = arguments.skip_device;
@@ -826,23 +827,7 @@ void parse_environment_variables(InitArguments& arguments) {
   }
   auto env_numa_str = std::getenv("KOKKOS_NUMA");
   if (env_numa_str != nullptr) {
-    errno         = 0;
-    auto env_numa = std::strtol(env_numa_str, &endptr, 10);
-    if (endptr == env_numa_str)
-      Impl::throw_runtime_exception(
-          "Error: cannot convert KOKKOS_NUMA to an integer. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    if (errno == ERANGE)
-      Impl::throw_runtime_exception(
-          "Error: KOKKOS_NUMA out of range of representable values by an "
-          "integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-    if ((numa != -1) && (env_numa != numa))
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-numa and KOKKOS_NUMA if "
-          "both are set. Raised by Kokkos::initialize(int narg, char* "
-          "argc[]).");
-    else
-      numa = env_numa;
+    warn_deprecated_environment_variable("KOKKOS_NUMA");
   }
   auto env_device_str = std::getenv("KOKKOS_DEVICE_ID");
   if (env_device_str != nullptr) {
