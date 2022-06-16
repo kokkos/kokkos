@@ -840,22 +840,7 @@ int g_threads_space_factory_initialized =
     initialize_space_factory<ThreadsSpaceInitializer>("050_Threads");
 
 void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
-  const int num_threads = args.num_threads;
-  if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::Threads,
-                   Kokkos::HostSpace::execution_space>::value) {
-    if (num_threads > 0) {
-      Kokkos::Threads::impl_initialize(num_threads);
-    } else {
-      Kokkos::Threads::impl_initialize();
-    }
-    // std::cout << "Kokkos::initialize() fyi: CppThread enabled and
-    // initialized"
-    // << std::endl ;
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: CppThread enabled but not
-    // initialized" << std::endl ;
-  }
+  Kokkos::Threads::impl_initialize(args.num_threads);
 }
 
 void ThreadsSpaceInitializer::finalize(const bool all_spaces) {
