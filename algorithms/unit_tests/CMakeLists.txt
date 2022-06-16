@@ -156,3 +156,7 @@ KOKKOS_ADD_EXECUTABLE(
   UnitTest_StdAlgoCompileOnly
   SOURCES TestStdAlgorithmsCompileOnly.cpp
 )
+
+if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
+  add_subdirectory(headers_self_contained)
+endif()
