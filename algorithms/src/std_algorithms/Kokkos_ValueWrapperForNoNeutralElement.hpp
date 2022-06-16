@@ -45,6 +45,8 @@
 #ifndef KOKKOS_STD_VALUE_WRAPPER_FOR_NO_NEUTRAL_ELEMENT_HPP
 #define KOKKOS_STD_VALUE_WRAPPER_FOR_NO_NEUTRAL_ELEMENT_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
