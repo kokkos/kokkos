@@ -123,11 +123,25 @@ bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected,
   }
   return true;
 }
-void Kokkos::Impl::warn_deprecated_command_line_argument(std::string deprecated,
-                                                         std::string valid) {
-  std::cerr
-      << "Warning: command line argument '" << deprecated
-      << "' is deprecated. Use '" << valid
-      << "' instead. Raised by Kokkos::initialize(int narg, char* argc[])."
-      << std::endl;
+void Kokkos::Impl::warn_deprecated_environment_variable(
+    std::string deprecated) {
+  std::cerr << "Warning: environment variable '" << deprecated
+            << "' is deprecated."
+            << " Raised by Kokkos::initialize(int narg, char* argc[])."
+            << std::endl;
+}
+void Kokkos::Impl::warn_deprecated_command_line_argument(
+    std::string deprecated) {
+  std::cerr << "Warning: command line argument '" << deprecated
+            << "' is deprecated."
+            << " Raised by Kokkos::initialize(int narg, char* argc[])."
+            << std::endl;
+}
+void Kokkos::Impl::warn_deprecated_command_line_argument(
+    std::string deprecated, std::string use_instead) {
+  std::cerr << "Warning: command line argument '" << deprecated
+            << "' is deprecated."
+            << " Use '" << use_instead << "' instead."
+            << " Raised by Kokkos::initialize(int narg, char* argc[])."
+            << std::endl;
 }
