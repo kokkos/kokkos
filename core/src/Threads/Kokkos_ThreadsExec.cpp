@@ -797,7 +797,8 @@ int g_threads_space_factory_initialized =
 
 void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
   const int num_threads = args.num_threads;
-  const int use_numa    = args.num_numa;
+  const int use_numa    = -1;  // args.num_numa is deprecated.
+                               // setting to legacy default value.
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value) {
