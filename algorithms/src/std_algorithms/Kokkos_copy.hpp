@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_COPY_HPP
 #define KOKKOS_STD_ALGORITHMS_COPY_HPP
 
-#include "impl/Kokkos_copy_and_copy_n.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_CopyCopyN.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

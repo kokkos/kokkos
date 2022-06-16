@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REMOVE_HPP
 #define KOKKOS_STD_ALGORITHMS_REMOVE_HPP
 
-#include "impl/Kokkos_remove_all_variants.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_RemoveAllVariants.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FIND_HPP
 #define KOKKOS_STD_ALGORITHMS_FIND_HPP
 
-#include "impl/Kokkos_find_and_find_if_and_find_if_not.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_FindIfOrNot.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

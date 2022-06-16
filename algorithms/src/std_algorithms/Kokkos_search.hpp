@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SEARCH_HPP
 #define KOKKOS_STD_ALGORITHMS_SEARCH_HPP
 
-#include "impl/Kokkos_search.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_Search.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

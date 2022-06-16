@@ -43,9 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_min_element.hpp>
-#include <std_algorithms/Kokkos_max_element.hpp>
-#include <std_algorithms/Kokkos_minmax_element.hpp>
 
 namespace KE = Kokkos::Experimental;
 

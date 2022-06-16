@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REDUCE_HPP
 #define KOKKOS_STD_ALGORITHMS_REDUCE_HPP
 
-#include "impl/Kokkos_reduce.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <std_algorithms/impl/Kokkos_Reduce.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 
 namespace Kokkos {
 namespace Experimental {

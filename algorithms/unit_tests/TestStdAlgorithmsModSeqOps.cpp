@@ -43,17 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_copy.hpp>
-#include <std_algorithms/Kokkos_copy_n.hpp>
-#include <std_algorithms/Kokkos_copy_backward.hpp>
-#include <std_algorithms/Kokkos_reverse_copy.hpp>
-#include <std_algorithms/Kokkos_fill.hpp>
-#include <std_algorithms/Kokkos_fill_n.hpp>
-#include <std_algorithms/Kokkos_transform.hpp>
-#include <std_algorithms/Kokkos_generate.hpp>
-#include <std_algorithms/Kokkos_generate_n.hpp>
-#include <std_algorithms/Kokkos_swap_ranges.hpp>
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
 
 namespace KE = Kokkos::Experimental;
 

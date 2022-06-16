@@ -44,10 +44,6 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <iterator>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_find.hpp>
-#include <std_algorithms/Kokkos_find_if.hpp>
-#include <std_algorithms/Kokkos_find_if_not.hpp>
 #include <algorithm>
 
 namespace Test {

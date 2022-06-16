@@ -43,9 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_fill.hpp>
-#include <std_algorithms/Kokkos_lexicographical_compare.hpp>
 #include <algorithm>
 
 namespace Test {

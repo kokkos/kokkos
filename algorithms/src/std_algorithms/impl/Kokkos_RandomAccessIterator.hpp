@@ -48,7 +48,7 @@
 #include <iterator>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_View.hpp>
-#include "Kokkos_Constraints.hpp"
+#include <std_algorithms/impl/Kokkos_Constraints.hpp>
 
 namespace Kokkos {
 namespace Experimental {
