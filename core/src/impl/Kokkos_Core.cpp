@@ -710,10 +710,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
       --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
                                        tuning features through the tuning system. If
                                        left off, Kokkos uses heuristics
-      --kokkos-num-threads=INT       : specify total number of threads or
-                                       number of threads per NUMA region if
-                                       used in conjunction with '--numa' option.
-      --kokkos-numa=INT              : specify number of NUMA regions used by process.
+      --kokkos-num-threads=INT       : specify total number of threads to use for
+                                       parallel regions on the host.
       --kokkos-device-id=INT         : specify device id to be used by Kokkos.
       --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
                                        devices per node to be used. Process to device
