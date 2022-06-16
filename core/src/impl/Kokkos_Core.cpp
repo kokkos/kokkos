@@ -659,12 +659,12 @@ void parse_command_line_arguments(int& narg, char* arg[],
       }
       // Find the number of device (expecting --device=XX)
       if (!((strncmp(arg[iarg], "--kokkos-num-devices=", 21) == 0) ||
-            (strncmp(arg[iarg], "--num-ndevices=", 14) == 0) ||
+            (strncmp(arg[iarg], "--num-devices=", 14) == 0) ||
             (strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
             (strncmp(arg[iarg], "--ndevices=", 11) == 0)))
         throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
-            "'--num-devices/--kokkos-num-devices'. Raised by "
+            "'--kokkos-num-devices'. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
 
       char* num1      = strchr(arg[iarg], '=') + 1;
