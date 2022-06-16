@@ -712,44 +712,47 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else if (check_arg(arg[iarg], "--kokkos-help") ||
                check_arg(arg[iarg], "--help")) {
       auto const help_message = R"(
-      --------------------------------------------------------------------------------
-      -------------Kokkos command line arguments--------------------------------------
-      --------------------------------------------------------------------------------
-      The following arguments exist also without prefix 'kokkos' (e.g. --help).
-      The prefixed arguments will be removed from the list by Kokkos::initialize(),
-      the non-prefixed ones are not removed. Prefixed versions take precedence over
-      non prefixed ones, and the last occurrence of an argument overwrites prior
-      settings.
+--------------------------------------------------------------------------------
+-------------Kokkos command line arguments--------------------------------------
+--------------------------------------------------------------------------------
+This program is using Kokkos.  You can use the following command line flags to
+control its behavior:
 
-      --kokkos-help                  : print this message
-      --kokkos-disable-warnings      : disable kokkos warning messages
-      --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
-                                       tuning features through the tuning system. If
-                                       left off, Kokkos uses heuristics
-      --kokkos-num-threads=INT       : specify total number of threads to use for
-                                       parallel regions on the host.
-      --kokkos-device-id=INT         : specify device id to be used by Kokkos.
-      --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
-                                       devices per node to be used. Process to device
-                                       mapping happens by obtaining the local MPI rank
-                                       and assigning devices round-robin. The optional
-                                       second argument allows for an existing device
-                                       to be ignored. This is most useful on workstations
-                                       with multiple GPUs of which one is used to drive
-                                       screen output.
-      --kokkos-tools-library         : Equivalent to KOKKOS_PROFILE_LIBRARY environment
-                                       variable. Must either be full path to library or
-                                       name of library if the path is present in the
-                                       runtime library search path (e.g. LD_LIBRARY_PATH)
-      --kokkos-tools-help            : Query the (loaded) kokkos-tool for its command-line
-                                       option support (which should then be passed via
-                                       --kokkos-tools-args="...")
-      --kokkos-tools-args=STR        : A single (quoted) string of options which will be
-                                       whitespace delimited and passed to the loaded
-                                       kokkos-tool as command-line arguments. E.g.
-                                       `<EXE> --kokkos-tools-args="-c input.txt"` will
-                                       pass `<EXE> -c input.txt` as argc/argv to tool
-      --------------------------------------------------------------------------------
+Kokkos Core Options:
+  --kokkos-help                  : print this message
+  --kokkos-disable-warnings      : disable kokkos warning messages
+  --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
+                                   tuning features through the tuning system. If
+                                   left off, Kokkos uses heuristics
+  --kokkos-num-threads=INT       : specify total number of threads to use for
+                                   parallel regions on the host.
+  --kokkos-device-id=INT         : specify device id to be used by Kokkos.
+  --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
+                                   devices per node to be used. Process to device
+                                   mapping happens by obtaining the local MPI rank
+                                   and assigning devices round-robin. The optional
+                                   second argument allows for an existing device
+                                   to be ignored. This is most useful on workstations
+                                   with multiple GPUs of which one is used to drive
+                                   screen output.
+
+Kokkos Tools Options:
+  --kokkos-tools-library         : Equivalent to KOKKOS_PROFILE_LIBRARY environment
+                                   variable. Must either be full path to library or
+                                   name of library if the path is present in the
+                                   runtime library search path (e.g. LD_LIBRARY_PATH)
+  --kokkos-tools-help            : Query the (loaded) kokkos-tool for its command-line
+                                   option support (which should then be passed via
+                                   --kokkos-tools-args="...")
+  --kokkos-tools-args=STR        : A single (quoted) string of options which will be
+                                   whitespace delimited and passed to the loaded
+                                   kokkos-tool as command-line arguments. E.g.
+                                   `<EXE> --kokkos-tools-args="-c input.txt"` will
+                                   pass `<EXE> -c input.txt` as argc/argv to tool
+
+Join us on Slack, visit https://kokkosteam.slack.com
+Report bugs to https://github.com/kokkos/kokkos/issues
+--------------------------------------------------------------------------------
 )";
       std::cout << help_message << std::endl;
 
