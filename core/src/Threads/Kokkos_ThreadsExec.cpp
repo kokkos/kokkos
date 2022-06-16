@@ -541,9 +541,12 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
 int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
 
-void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
-                             unsigned use_cores_per_numa,
-                             bool allow_asynchronous_threadpool) {
+void ThreadsExec::initialize(int thread_count_arg) {
+  // legacy arguments
+  unsigned thread_count       = thread_count_arg == -1 ? 0 : thread_count_arg;
+  unsigned use_numa_count     = 0;
+  unsigned use_cores_per_numa = 0;
+  bool allow_asynchronous_threadpool = false;
   // need to provide an initializer for Intel compilers
   static const Sentinel sentinel = {};
 

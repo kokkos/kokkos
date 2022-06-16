@@ -127,18 +127,7 @@ class Threads {
   //! \name Space-specific functions
   //@{
 
-  /**
-   *  Teams of threads are distributed as evenly as possible across
-   *  the requested number of numa regions and cores per numa region.
-   *  A team will not be split across a numa region.
-   *
-   *  If the 'use_' arguments are not supplied, the hwloc is queried
-   *  to use all available cores.
-   */
-  static void impl_initialize(unsigned threads_count             = 0,
-                              unsigned use_numa_count            = 0,
-                              unsigned use_cores_per_numa        = 0,
-                              bool allow_asynchronous_threadpool = false);
+  static void impl_initialize(int thread_count = -1);
 
   static int impl_is_initialized();
 
