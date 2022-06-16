@@ -797,16 +797,11 @@ int g_threads_space_factory_initialized =
 
 void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
   const int num_threads = args.num_threads;
-  const int use_numa    = args.num_numa;
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value) {
     if (num_threads > 0) {
-      if (use_numa > 0) {
-        Kokkos::Threads::impl_initialize(num_threads, use_numa);
-      } else {
-        Kokkos::Threads::impl_initialize(num_threads);
-      }
+      Kokkos::Threads::impl_initialize(num_threads);
     } else {
       Kokkos::Threads::impl_initialize();
     }
