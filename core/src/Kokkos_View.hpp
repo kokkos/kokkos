@@ -1500,9 +1500,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout> const& arg_layout,
-      check_input_args /*ignored*/ =
-          check_input_args::no)  // not checking on device
-      : m_track()                // No memory tracking
+      check_input_args /*ignored*/ = check_input_args::no)  // Not checking
+      : m_track()  // No memory tracking
         ,
         m_map(arg_prop, arg_layout) {
     static_assert(
