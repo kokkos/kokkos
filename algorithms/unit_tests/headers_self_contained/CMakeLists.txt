@@ -6,7 +6,7 @@ SET(BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
 file(GLOB KOKKOS_ALGORITHMS_HEADERS RELATIVE  ${BASE_DIR}/algorithms/src
      ${BASE_DIR}/algorithms/src/*.hpp ${BASE_DIR}/algorithms/src/std_algorithms/*.hpp)
 
-foreach (_header ${KOKKOS_CORE_HEADERS} ${KOKKOS_CONTAINERS_HEADERS} ${KOKKOS_ALGORITHMS_HEADERS})
+foreach (_header ${KOKKOS_ALGORITHMS_HEADERS})
   string(REGEX REPLACE "[\./]" "_" header_test_name ${_header})
   set(header_test_name Kokkos_HeaderSelfContained_${header_test_name})
   set_source_files_properties(tstHeader.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
