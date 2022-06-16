@@ -56,6 +56,9 @@ class simd_mask<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION bool operator==(simd_mask const& other) const {
     return m_value == other.m_value;
   }
+  KOKKOS_FORCEINLINE_FUNCTION bool operator!=(simd_mask const& other) const {
+    return m_value != other.m_value;
+  }
 };
 
 template <class T>
