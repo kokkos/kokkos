@@ -68,7 +68,8 @@ class kokkos_checker {
   }
   template <class T>
   KOKKOS_INLINE_FUNCTION void equality(T const& a, T const& b) const {
-    if (a != b) Kokkos::abort("SIMD unit test equality condition failed on device");
+    if (a != b)
+      Kokkos::abort("SIMD unit test equality condition failed on device");
   }
 };
 
