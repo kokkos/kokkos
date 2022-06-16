@@ -57,7 +57,7 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
   # Make sure this appears in the cache with the appropriate DOCSTRING
   SET(${CAMEL_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
 
-  #I don't love doing it this way because it's N^2 in number options, but cest la vie
+  #I don't love doing it this way because it's N^2 in number options, but c'est la vie
   FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})
     STRING(TOUPPER ${opt} OPT_UC)
     IF ("${OPT_UC}" STREQUAL "${UC_NAME}")
@@ -96,7 +96,7 @@ FUNCTION(kokkos_dependent_option CAMEL_SUFFIX DOCSTRING DEFAULT DEPENDENCY)
 
   CMAKE_DEPENDENT_OPTION(${CAMEL_NAME} ${DOCSTRING} ${DEFAULT} "${DEPENDENCY}" OFF)
 
-  #I don't love doing it this way because it's N^2 in number options, but cest la vie
+  #I don't love doing it this way because it's N^2 in number options, but c'est la vie
   FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})
     STRING(TOUPPER ${opt} OPT_UC)
     IF ("${OPT_UC}" STREQUAL "${UC_NAME}")
