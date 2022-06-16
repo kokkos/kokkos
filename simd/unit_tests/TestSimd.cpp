@@ -63,10 +63,12 @@ class gtest_checker {
 
 class kokkos_checker {
  public:
-  KOKKOS_INLINE_FUNCTION void truth(bool x) const { KOKKOS_ASSERT(x); }
+  KOKKOS_INLINE_FUNCTION void truth(bool x) const {
+    if (!x) Kokkos::abort("SIMD unit test truth condition failed on device");
+  }
   template <class T>
   KOKKOS_INLINE_FUNCTION void equality(T const& a, T const& b) const {
-    KOKKOS_ASSERT(a == b);
+    if (a != b) Kokkos::abort("SIMD unit test equality condition failed on device");
   }
 };
 
@@ -341,21 +343,21 @@ KOKKOS_INLINE_FUNCTION void device_check_abi() {
   device_check_math_ops<Abi>();
 }
 
-inline void host_check_abis(Kokkos::Experimental::simd_abi::abi_set<> set) {}
+inline void host_check_abis(Kokkos::Experimental::simd_abi::abi_set<>) {}
 
 KOKKOS_INLINE_FUNCTION void device_check_abis(
-    Kokkos::Experimental::simd_abi::abi_set<> set) {}
+    Kokkos::Experimental::simd_abi::abi_set<>) {}
 
 template <class FirstAbi, class... RestAbis>
 inline void host_check_abis(
-    Kokkos::Experimental::simd_abi::abi_set<FirstAbi, RestAbis...> set) {
+    Kokkos::Experimental::simd_abi::abi_set<FirstAbi, RestAbis...>) {
   host_check_abi<FirstAbi>();
   host_check_abis(Kokkos::Experimental::simd_abi::abi_set<RestAbis...>());
 }
 
 template <class FirstAbi, class... RestAbis>
 KOKKOS_INLINE_FUNCTION void device_check_abis(
-    Kokkos::Experimental::simd_abi::abi_set<FirstAbi, RestAbis...> set) {
+    Kokkos::Experimental::simd_abi::abi_set<FirstAbi, RestAbis...>) {
   device_check_abi<FirstAbi>();
   device_check_abis(Kokkos::Experimental::simd_abi::abi_set<RestAbis...>());
 }
