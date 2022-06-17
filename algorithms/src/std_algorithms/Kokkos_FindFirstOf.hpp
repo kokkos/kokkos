@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FIND_FIRST_OF_HPP
 #define KOKKOS_STD_ALGORITHMS_FIND_FIRST_OF_HPP
 
-#include <std_algorithms/impl/Kokkos_FindFirstOf.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_FindFirstOf.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

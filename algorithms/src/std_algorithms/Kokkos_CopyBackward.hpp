@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_COPY_BACKWARD_HPP
 #define KOKKOS_STD_ALGORITHMS_COPY_BACKWARD_HPP
 
-#include <std_algorithms/impl/Kokkos_CopyBackward.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_CopyBackward.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

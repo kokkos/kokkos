@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MIN_ELEMENT_HPP
 #define KOKKOS_STD_ALGORITHMS_MIN_ELEMENT_HPP
 
-#include <std_algorithms/impl/Kokkos_MinMaxMinmaxElement.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_MinMaxMinmaxElement.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

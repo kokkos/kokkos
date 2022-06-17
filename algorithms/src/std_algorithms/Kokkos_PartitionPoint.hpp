@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_PARTITION_POINT_HPP
 #define KOKKOS_STD_ALGORITHMS_PARTITION_POINT_HPP
 
-#include <std_algorithms/impl/Kokkos_PartitionPoint.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_PartitionPoint.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

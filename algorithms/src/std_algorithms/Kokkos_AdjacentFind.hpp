@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ADJACENT_FIND_HPP
 #define KOKKOS_STD_ALGORITHMS_ADJACENT_FIND_HPP
 
-#include <std_algorithms/impl/Kokkos_AdjacentFind.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_AdjacentFind.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
