@@ -112,3 +112,35 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
       });
   ASSERT_TRUE(success);
 }
+
+TEST(kokkosp, create_mirror_view_and_copy) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
+                     Config::EnableFences());
+  Kokkos::View<int*, Kokkos::DefaultExecutionSpace> device_view;
+  Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
+
+  auto success = validate_absence(
+      [&]() {
+        auto mirror_device = Kokkos::create_mirror_view_and_copy(
+            Kokkos::view_alloc(
+                Kokkos::DefaultExecutionSpace{},
+                typename Kokkos::DefaultExecutionSpace::memory_space{}),
+            host_view);
+        // Avoid fences for deallocation when mirror_device goes out of scope.
+        device_view = mirror_device;
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](EndParallelForEvent) {
+        return MatchDiagnostic{true, {"Found end event"}};
+      });
+  ASSERT_TRUE(success);
+}
