@@ -57,7 +57,46 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
   # Make sure this appears in the cache with the appropriate DOCSTRING
   SET(${CAMEL_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
 
-  #I don't love doing it this way because it's N^2 in number options, but cest la vie
+  #I don't love doing it this way because it's N^2 in number options, but c'est la vie
+  FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})
+    STRING(TOUPPER ${opt} OPT_UC)
+    IF ("${OPT_UC}" STREQUAL "${UC_NAME}")
+      IF (NOT "${opt}" STREQUAL "${CAMEL_NAME}")
+        IF (KOKKOS_HAS_TRILINOS)
+          #Allow this for now if Trilinos... we need to bootstrap our way to integration
+          MESSAGE(WARNING "Deprecated option ${opt} found - please change spelling to ${CAMEL_NAME}")
+          SET(${CAMEL_NAME} "${${opt}}" CACHE ${TYPE} ${DOCSTRING} FORCE)
+          UNSET(${opt} CACHE)
+        ELSE()
+          MESSAGE(FATAL_ERROR "Matching option found for ${CAMEL_NAME} with the wrong case ${opt}. Please delete your CMakeCache.txt and change option to -D${CAMEL_NAME}=${${opt}}. This is now enforced to avoid hard-to-debug CMake cache inconsistencies.")
+        ENDIF()
+      ENDIF()
+    ENDIF()
+  ENDFOREACH()
+
+  #okay, great, we passed the validation test - use the default
+  IF (DEFINED ${CAMEL_NAME})
+    SET(${UC_NAME} ${${CAMEL_NAME}} PARENT_SCOPE)
+  ELSE()
+    SET(${UC_NAME} ${DEFAULT} PARENT_SCOPE)
+  ENDIF()
+ENDFUNCTION()
+
+INCLUDE (CMakeDependentOption)
+FUNCTION(kokkos_dependent_option CAMEL_SUFFIX DOCSTRING DEFAULT DEPENDENCY FORCE)
+  SET(CAMEL_NAME Kokkos_${CAMEL_SUFFIX})
+  STRING(TOUPPER ${CAMEL_NAME} UC_NAME)
+
+  LIST(APPEND KOKKOS_OPTION_KEYS ${CAMEL_SUFFIX})
+  SET(KOKKOS_OPTION_KEYS ${KOKKOS_OPTION_KEYS} PARENT_SCOPE)
+  LIST(APPEND KOKKOS_OPTION_VALUES "${DOCSTRING}")
+  SET(KOKKOS_OPTION_VALUES ${KOKKOS_OPTION_VALUES} PARENT_SCOPE)
+  LIST(APPEND KOKKOS_OPTION_TYPES BOOL)
+  SET(KOKKOS_OPTION_TYPES ${KOKKOS_OPTION_TYPES} PARENT_SCOPE)
+
+  CMAKE_DEPENDENT_OPTION(${CAMEL_NAME} ${DOCSTRING} ${DEFAULT} "${DEPENDENCY}" ${FORCE})
+
+  #I don't love doing it this way because it's N^2 in number options, but c'est la vie
   FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})
     STRING(TOUPPER ${opt} OPT_UC)
     IF ("${OPT_UC}" STREQUAL "${UC_NAME}")
