@@ -1,8 +1,3 @@
-#I have to leave these here for tribits
-IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS)
-  find_package(desul_atomics QUIET)
-ENDIF()
-
 KOKKOS_INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
