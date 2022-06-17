@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SHIFT_LEFT_HPP
 #define KOKKOS_STD_ALGORITHMS_SHIFT_LEFT_HPP
 
-#include <std_algorithms/impl/Kokkos_ShiftLeft.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_ShiftLeft.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

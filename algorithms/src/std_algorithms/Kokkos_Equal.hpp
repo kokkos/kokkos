@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_EQUAL_HPP
 #define KOKKOS_STD_ALGORITHMS_EQUAL_HPP
 
-#include <std_algorithms/impl/Kokkos_Equal.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_Equal.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

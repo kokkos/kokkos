@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_TRANSFORM_HPP
 #define KOKKOS_STD_ALGORITHMS_TRANSFORM_HPP
 
-#include <std_algorithms/impl/Kokkos_Transform.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_Transform.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ALL_OF_HPP
 #define KOKKOS_STD_ALGORITHMS_ALL_OF_HPP
 
-#include <std_algorithms/impl/Kokkos_AllOfAnyOfNoneOf.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_AllOfAnyOfNoneOf.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

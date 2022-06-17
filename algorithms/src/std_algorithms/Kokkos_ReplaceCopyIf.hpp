@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REPLACE_COPY_IF_HPP
 #define KOKKOS_STD_ALGORITHMS_REPLACE_COPY_IF_HPP
 
-#include <std_algorithms/impl/Kokkos_ReplaceCopyIf.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include "./impl/Kokkos_ReplaceCopyIf.hpp"
+#include "./Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
