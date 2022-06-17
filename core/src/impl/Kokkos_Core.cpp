@@ -555,6 +555,8 @@ unsigned get_process_id() {
 #endif
 }
 
+}  // namespace
+
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
   int ignored_numa;
@@ -961,8 +963,6 @@ void parse_environment_variables(InitArguments& arguments) {
           "Kokkos::initialize(int narg, char* argc[]).");
   }
 }
-
-}  // namespace
 
 }  // namespace Impl
 }  // namespace Kokkos
