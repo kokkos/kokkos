@@ -51,6 +51,21 @@ jobs:
       # see https://github.com/actions/virtual-environments/issues/3812
       options: --security-opt seccomp=unconfined
     steps:
+      - name: Checkout desul
+        uses: actions/checkout@v2.2.0
+        with:
+          repository: desul/desul
+          ref: 7a85900031e382616f84d8e35ff58be5e7ded504
+          path: desul
+      - name: Install desul
+        working-directory: desul
+        run: |
+          git submodule init
+          git submodule update
+          mkdir build
+          cd build
+          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
+          sudo cmake --build . --target install --parallel 2
       - name: Checkout code
         uses: actions/checkout@v2.2.0
       - uses: actions/cache@v2
@@ -67,12 +82,14 @@ jobs:
       - name: maybe_install_clang_tidy
         if: ${{ matrix.clang-tidy != '' }}
         run: sudo apt-get update && sudo apt-get install -y clang-tidy
-      - name: CMake
+      - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
+            -Ddesul_atomics_ROOT=/usr/desul-install/lib/cmake/desul/ \
             -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
