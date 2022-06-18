@@ -3651,7 +3651,7 @@ auto create_mirror_view(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
 template <class... ViewCtorArgs, class T, class... P>
 auto create_mirror_view_and_copy(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    const Impl::ViewCtorProp<ViewCtorArgs...>&,
     const Kokkos::View<T, P...>& src,
     std::enable_if_t<
         std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
