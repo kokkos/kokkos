@@ -4,11 +4,7 @@
 #include <cmath>
 #include <cstring>
 
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Utilities.hpp>
-#include <Kokkos_MathematicalFunctions.hpp>
-
-#include <desul/atomics/Common.hpp>
+#include <Kokkos_Core.hpp>
 
 namespace Kokkos {
 namespace Experimental {

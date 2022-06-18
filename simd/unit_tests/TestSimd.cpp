@@ -46,8 +46,6 @@
 
 #include <Kokkos_Simd.hpp>
 
-#include <Kokkos_Core.hpp>
-
 class gtest_checker {
  public:
   void truth(bool x) const { EXPECT_TRUE(x); }
