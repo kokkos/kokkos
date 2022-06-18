@@ -203,7 +203,8 @@ void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
     if (!(loaded_first_arg && loaded_second_arg)) continue;
     simd_type expected_result;
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] = binary_op.on_host(first_arg[lane], second_arg[lane]);
+      expected_result[lane] =
+          binary_op.on_host(first_arg[lane], second_arg[lane]);
     }
     simd_type const computed_result = binary_op.on_host(first_arg, second_arg);
     host_check_equality(expected_result, computed_result, nlanes);
@@ -229,7 +230,8 @@ KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
     if (!(loaded_first_arg && loaded_second_arg)) continue;
     simd_type expected_result;
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] = binary_op.on_device(first_arg[lane], second_arg[lane]);
+      expected_result[lane] =
+          binary_op.on_device(first_arg[lane], second_arg[lane]);
     }
     simd_type const computed_result =
         binary_op.on_device(first_arg, second_arg);
