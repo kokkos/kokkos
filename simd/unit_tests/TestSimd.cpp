@@ -46,10 +46,6 @@
 
 #include <Kokkos_Simd.hpp>
 
-#include <impl/Kokkos_Error.hpp>
-
-#include <Kokkos_MinMaxClamp.hpp>
-
 #include <Kokkos_Core.hpp>
 
 class gtest_checker {
