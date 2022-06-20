@@ -3708,12 +3708,12 @@ auto create_mirror_view_and_copy(
   using alloc_prop = Impl::ViewCtorProp<
       ViewCtorArgs...,
       std::conditional_t<alloc_prop_input::has_label,
-                         std::integral_constant<unsigned int, 2>, std::string>,
+                         std::integral_constant<unsigned int, 12>, std::string>,
       std::conditional_t<!alloc_prop_input::initialize,
-                         std::integral_constant<unsigned int, 3>,
+                         std::integral_constant<unsigned int, 13>,
                          Impl::WithoutInitializing_t>,
       std::conditional_t<alloc_prop_input::has_execution_space,
-                         std::integral_constant<unsigned int, 4>,
+                         std::integral_constant<unsigned int, 14>,
                          typename Space::execution_space>>;
   alloc_prop arg_prop_copy(arg_prop);
 
