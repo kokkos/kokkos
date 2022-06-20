@@ -101,6 +101,8 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
             Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        mirror_host_view = Kokkos::create_mirror_view(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing), host_view);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
