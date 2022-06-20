@@ -133,14 +133,11 @@ TEST(kokkosp, create_mirror_view_and_copy) {
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
       },
-      [&](EndParallelForEvent) {
-        return MatchDiagnostic{true, {"Found end event"}};
-      },
-      [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found begin event"}};
-      },
-      [&](EndParallelForEvent) {
-        return MatchDiagnostic{true, {"Found end event"}};
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "fence after copying header from HostSpace") ==
+            std::string::npos};
       });
   ASSERT_TRUE(success);
 }

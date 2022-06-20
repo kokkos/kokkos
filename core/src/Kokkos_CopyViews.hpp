@@ -3733,8 +3733,7 @@ auto create_mirror_view_and_copy(
 }
 
 template <class Space, class T, class... P>
-typename Impl::MirrorViewType<Space, T, P...>::view_type
-create_mirror_view_and_copy(
+auto create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     std::enable_if_t<
