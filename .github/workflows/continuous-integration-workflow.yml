@@ -15,7 +15,6 @@ jobs:
         cmake_build_type: ['Release', 'Debug']
         cmake_cxx_flags: ['']
         backend: ['OPENMP']
-        hwloc: ['ON']
         memkind: ['OFF']
         clang-tidy: ['']
         include:
@@ -24,7 +23,6 @@ jobs:
             cmake_build_type: 'Release'
             cmake_cxx_flags: ''
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
             memkind: 'OFF'
           - distro: 'fedora:intel'
@@ -32,7 +30,6 @@ jobs:
             cmake_build_type: 'Debug'
             cmake_cxx_flags: ''
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
             memkind: 'OFF'
           - distro: 'fedora:intel'
@@ -40,7 +37,6 @@ jobs:
             cmake_build_type: 'Release'
             cmake_cxx_flags: ''
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
             memkind: 'OFF'
           - distro: 'fedora:intel'
@@ -48,7 +44,6 @@ jobs:
             cmake_build_type: 'Debug'
             cmake_cxx_flags: ''
             backend: 'OPENMP'
-            hwloc: 'ON'
             clang-tidy: ''
             memkind: 'OFF'
           - distro: 'ubuntu:latest'
@@ -56,7 +51,6 @@ jobs:
             cmake_build_type: 'RelWithDebInfo'
             cmake_cxx_flags: ''
             backend: 'THREADS'
-            hwloc: 'OFF'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
             memkind: 'OFF'
           - distro: 'ubuntu:latest'
@@ -64,7 +58,6 @@ jobs:
             cmake_build_type: 'RelWithDebInfo'
             cmake_cxx_flags: ''
             backend: 'THREADS'
-            hwloc: 'OFF'
             clang-tidy: ''
             memkind: 'OFF'
           - distro: 'ubuntu:latest'
@@ -72,7 +65,6 @@ jobs:
             cmake_build_type: 'Debug'
             cmake_cxx_flags: '-DMEMKIND_TYPE=MEMKIND_DEFAULT'
             backend: 'OPENMP'
-            hwloc: 'OFF'
             clang-tidy: ''
             memkind: 'ON'
     runs-on: ubuntu-latest
@@ -106,7 +98,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
             -DKokkos_ARCH_NATIVE=ON \
-            -DKokkos_ENABLE_HWLOC=${{ matrix.hwloc }} \
+            -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_MEMKIND=${{ matrix.memkind }} \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \

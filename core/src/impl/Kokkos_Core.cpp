@@ -557,8 +557,8 @@ unsigned get_process_id() {
 
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
+  int ignored_numa;
   auto& num_threads      = arguments.num_threads;
-  auto& numa             = arguments.num_numa;
   auto& device           = arguments.device_id;
   auto& ndevices         = arguments.ndevices;
   auto& skip_device      = arguments.skip_device;
@@ -569,7 +569,6 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& tool_lib         = arguments.tool_lib;
 
   bool kokkos_threads_found  = false;
-  bool kokkos_numa_found     = false;
   bool kokkos_device_found   = false;
   bool kokkos_ndevices_found = false;
   auto tools_init_arguments  = arguments.impl_get_tools_init_arguments();
@@ -596,48 +595,63 @@ void parse_command_line_arguments(int& narg, char* arg[],
   int iarg = 0;
 
   while (iarg < narg) {
-    if (check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
+    bool remove_flag = false;
+    if (check_int_arg(arg[iarg], "--kokkos-num-threads", &num_threads) ||
+        check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
+      if (check_arg(arg[iarg], "--kokkos-threads")) {
+        warn_deprecated_command_line_argument("--kokkos-threads",
+                                              "--kokkos-num-threads");
       }
+      remove_flag          = true;
       kokkos_threads_found = true;
-      narg--;
     } else if (!kokkos_threads_found &&
-               check_int_arg(arg[iarg], "--threads", &num_threads)) {
-      iarg++;
-    } else if (check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
+               (check_int_arg(arg[iarg], "--num-threads", &num_threads) ||
+                check_int_arg(arg[iarg], "--threads", &num_threads))) {
+      if (check_arg(arg[iarg], "--num-threads")) {
+        warn_deprecated_command_line_argument("--num-threads",
+                                              "--kokkos-num-threads");
       }
-      kokkos_numa_found = true;
-      narg--;
-    } else if (!kokkos_numa_found &&
-               check_int_arg(arg[iarg], "--numa", &numa)) {
-      iarg++;
+      if (check_arg(arg[iarg], "--threads")) {
+        warn_deprecated_command_line_argument("--threads",
+                                              "--kokkos-num-threads");
+      }
+    } else if (check_int_arg(arg[iarg], "--kokkos-numa", &ignored_numa) ||
+               check_int_arg(arg[iarg], "--numa", &ignored_numa)) {
+      if (check_arg(arg[iarg], "--kokkos-numa")) {
+        warn_deprecated_command_line_argument("--kokkos-numa");
+        remove_flag = true;
+      } else {
+        warn_deprecated_command_line_argument("--numa");
+      }
     } else if (check_int_arg(arg[iarg], "--kokkos-device-id", &device) ||
                check_int_arg(arg[iarg], "--kokkos-device", &device)) {
       if (check_arg(arg[iarg], "--kokkos-device")) {
         warn_deprecated_command_line_argument("--kokkos-device",
                                               "--kokkos-device-id");
       }
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
+      remove_flag         = true;
       kokkos_device_found = true;
-      narg--;
     } else if (!kokkos_device_found &&
                (check_int_arg(arg[iarg], "--device-id", &device) ||
                 check_int_arg(arg[iarg], "--device", &device))) {
-      if (check_arg(arg[iarg], "--device")) {
-        warn_deprecated_command_line_argument("--device", "--device-id");
+      if (check_arg(arg[iarg], "--device-id")) {
+        warn_deprecated_command_line_argument("--device-id",
+                                              "--kokkos-device-id");
       }
-      iarg++;
+      if (check_arg(arg[iarg], "--device")) {
+        warn_deprecated_command_line_argument("--device", "--kokkos-device-id");
+      }
     } else if (check_arg(arg[iarg], "--kokkos-num-devices") ||
                check_arg(arg[iarg], "--num-devices") ||
                check_arg(arg[iarg], "--kokkos-ndevices") ||
                check_arg(arg[iarg], "--ndevices")) {
+      if (check_arg(arg[iarg], "--num-devices")) {
+        warn_deprecated_command_line_argument("--num-devices",
+                                              "--kokkos-num-devices");
+      }
       if (check_arg(arg[iarg], "--ndevices")) {
-        warn_deprecated_command_line_argument("--ndevices", "--num-devices");
+        warn_deprecated_command_line_argument("--ndevices",
+                                              "--kokkos-num-devices");
       }
       if (check_arg(arg[iarg], "--kokkos-ndevices")) {
         warn_deprecated_command_line_argument("--kokkos-ndevices",
@@ -645,12 +659,12 @@ void parse_command_line_arguments(int& narg, char* arg[],
       }
       // Find the number of device (expecting --device=XX)
       if (!((strncmp(arg[iarg], "--kokkos-num-devices=", 21) == 0) ||
-            (strncmp(arg[iarg], "--num-ndevices=", 14) == 0) ||
+            (strncmp(arg[iarg], "--num-devices=", 14) == 0) ||
             (strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
             (strncmp(arg[iarg], "--ndevices=", 11) == 0)))
         throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
-            "'--num-devices/--kokkos-num-devices'. Raised by "
+            "'--kokkos-num-devices'. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
 
       char* num1      = strchr(arg[iarg], '=') + 1;
@@ -663,7 +677,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
         throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
-            "'--kokkos-numdevices'. Raised by "
+            "'--kokkos-num-devices'. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
       }
       if (check_arg(arg[iarg], "--kokkos-num-devices") ||
@@ -687,83 +701,75 @@ void parse_command_line_arguments(int& narg, char* arg[],
       // --num-devices
       if (check_arg(arg[iarg], "--kokkos-num-devices") ||
           check_arg(arg[iarg], "--kokkos-ndevices")) {
-        for (int k = iarg; k < narg - 1; k++) {
-          arg[k] = arg[k + 1];
-        }
-        kokkos_ndevices_found = true;
-        narg--;
-      } else {
-        iarg++;
+        remove_flag = true;
       }
     } else if (check_arg(arg[iarg], "--kokkos-disable-warnings")) {
+      remove_flag      = true;
       disable_warnings = true;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
     } else if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
+      remove_flag    = true;
       tune_internals = true;
-      for (int k = iarg; k < narg - 1; k++) {
-        arg[k] = arg[k + 1];
-      }
-      narg--;
     } else if (check_arg(arg[iarg], "--kokkos-help") ||
                check_arg(arg[iarg], "--help")) {
       auto const help_message = R"(
-      --------------------------------------------------------------------------------
-      -------------Kokkos command line arguments--------------------------------------
-      --------------------------------------------------------------------------------
-      The following arguments exist also without prefix 'kokkos' (e.g. --help).
-      The prefixed arguments will be removed from the list by Kokkos::initialize(),
-      the non-prefixed ones are not removed. Prefixed versions take precedence over
-      non prefixed ones, and the last occurrence of an argument overwrites prior
-      settings.
+--------------------------------------------------------------------------------
+-------------Kokkos command line arguments--------------------------------------
+--------------------------------------------------------------------------------
+This program is using Kokkos.  You can use the following command line flags to
+control its behavior:
 
-      --kokkos-help                  : print this message
-      --kokkos-disable-warnings      : disable kokkos warning messages
-      --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
-                                       tuning features through the tuning system. If
-                                       left off, Kokkos uses heuristics
-      --kokkos-threads=INT           : specify total number of threads or
-                                       number of threads per NUMA region if
-                                       used in conjunction with '--numa' option.
-      --kokkos-numa=INT              : specify number of NUMA regions used by process.
-      --kokkos-device-id=INT         : specify device id to be used by Kokkos.
-      --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
-                                       devices per node to be used. Process to device
-                                       mapping happens by obtaining the local MPI rank
-                                       and assigning devices round-robin. The optional
-                                       second argument allows for an existing device
-                                       to be ignored. This is most useful on workstations
-                                       with multiple GPUs of which one is used to drive
-                                       screen output.
-      --kokkos-tools-library         : Equivalent to KOKKOS_PROFILE_LIBRARY environment
-                                       variable. Must either be full path to library or
-                                       name of library if the path is present in the
-                                       runtime library search path (e.g. LD_LIBRARY_PATH)
-      --kokkos-tools-help            : Query the (loaded) kokkos-tool for its command-line
-                                       option support (which should then be passed via
-                                       --kokkos-tools-args="...")
-      --kokkos-tools-args=STR        : A single (quoted) string of options which will be
-                                       whitespace delimited and passed to the loaded
-                                       kokkos-tool as command-line arguments. E.g.
-                                       `<EXE> --kokkos-tools-args="-c input.txt"` will
-                                       pass `<EXE> -c input.txt` as argc/argv to tool
-      --------------------------------------------------------------------------------
+Kokkos Core Options:
+  --kokkos-help                  : print this message
+  --kokkos-disable-warnings      : disable kokkos warning messages
+  --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
+                                   tuning features through the tuning system. If
+                                   left off, Kokkos uses heuristics
+  --kokkos-num-threads=INT       : specify total number of threads to use for
+                                   parallel regions on the host.
+  --kokkos-device-id=INT         : specify device id to be used by Kokkos.
+  --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
+                                   devices per node to be used. Process to device
+                                   mapping happens by obtaining the local MPI rank
+                                   and assigning devices round-robin. The optional
+                                   second argument allows for an existing device
+                                   to be ignored. This is most useful on workstations
+                                   with multiple GPUs of which one is used to drive
+                                   screen output.
+
+Kokkos Tools Options:
+  --kokkos-tools-library         : Equivalent to KOKKOS_PROFILE_LIBRARY environment
+                                   variable. Must either be full path to library or
+                                   name of library if the path is present in the
+                                   runtime library search path (e.g. LD_LIBRARY_PATH)
+  --kokkos-tools-help            : Query the (loaded) kokkos-tool for its command-line
+                                   option support (which should then be passed via
+                                   --kokkos-tools-args="...")
+  --kokkos-tools-args=STR        : A single (quoted) string of options which will be
+                                   whitespace delimited and passed to the loaded
+                                   kokkos-tool as command-line arguments. E.g.
+                                   `<EXE> --kokkos-tools-args="-c input.txt"` will
+                                   pass `<EXE> -c input.txt` as argc/argv to tool
+
+Join us on Slack, visit https://kokkosteam.slack.com
+Report bugs to https://github.com/kokkos/kokkos/issues
+--------------------------------------------------------------------------------
 )";
       std::cout << help_message << std::endl;
 
       // Remove the --kokkos-help argument from the list but leave --help
       if (check_arg(arg[iarg], "--kokkos-help")) {
-        for (int k = iarg; k < narg - 1; k++) {
-          arg[k] = arg[k + 1];
-        }
-        narg--;
-      } else {
-        iarg++;
+        remove_flag = true;
       }
-    } else
+    }
+
+    if (remove_flag) {
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+    } else {
       iarg++;
+    }
   }
   if ((tools_init_arguments.args ==
        Kokkos::Tools::InitArguments::unset_string_option) &&
@@ -773,7 +779,6 @@ void parse_command_line_arguments(int& narg, char* arg[],
 
 void parse_environment_variables(InitArguments& arguments) {
   auto& num_threads      = arguments.num_threads;
-  auto& numa             = arguments.num_numa;
   auto& device           = arguments.device_id;
   auto& ndevices         = arguments.ndevices;
   auto& skip_device      = arguments.skip_device;
@@ -831,7 +836,7 @@ void parse_environment_variables(InitArguments& arguments) {
           "an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
     if ((num_threads != -1) && (env_num_threads != num_threads))
       Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-threads and "
+          "Error: expecting a match between --kokkos-num-threads and "
           "KOKKOS_NUM_THREADS if both are set. Raised by "
           "Kokkos::initialize(int narg, char* argc[]).");
     else
@@ -839,23 +844,7 @@ void parse_environment_variables(InitArguments& arguments) {
   }
   auto env_numa_str = std::getenv("KOKKOS_NUMA");
   if (env_numa_str != nullptr) {
-    errno         = 0;
-    auto env_numa = std::strtol(env_numa_str, &endptr, 10);
-    if (endptr == env_numa_str)
-      Impl::throw_runtime_exception(
-          "Error: cannot convert KOKKOS_NUMA to an integer. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    if (errno == ERANGE)
-      Impl::throw_runtime_exception(
-          "Error: KOKKOS_NUMA out of range of representable values by an "
-          "integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-    if ((numa != -1) && (env_numa != numa))
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-numa and KOKKOS_NUMA if "
-          "both are set. Raised by Kokkos::initialize(int narg, char* "
-          "argc[]).");
-    else
-      numa = env_numa;
+    warn_deprecated_environment_variable("KOKKOS_NUMA");
   }
   auto env_device_str = std::getenv("KOKKOS_DEVICE_ID");
   if (env_device_str != nullptr) {
@@ -871,7 +860,7 @@ void parse_environment_variables(InitArguments& arguments) {
           "integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
     if ((device != -1) && (env_device != device))
       Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-device and "
+          "Error: expecting a match between --kokkos-device-id and "
           "KOKKOS_DEVICE_ID if both are set. Raised by Kokkos::initialize(int "
           "narg, char* argc[]).");
     else
@@ -901,7 +890,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "argc[]).");
       if ((ndevices != -1) && (env_ndevices != ndevices))
         Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-ndevices and "
+            "Error: expecting a match between --kokkos-num-devices and "
             "KOKKOS_NUM_DEVICES if both are set. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
       else
@@ -936,7 +925,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "argc[]).");
       if ((skip_device != 9999) && (env_skip_device != skip_device))
         Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-ndevices and "
+            "Error: expecting a match between --kokkos-num-devices and "
             "KOKKOS_SKIP_DEVICE if both are set. Raised by "
             "Kokkos::initialize(int narg, char* argc[]).");
       else
