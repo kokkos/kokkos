@@ -703,6 +703,7 @@ if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
 else()
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp
     default/TestDefaultDeviceType_b1.cpp
