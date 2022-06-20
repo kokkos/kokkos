@@ -158,6 +158,7 @@ static
 }
 
 }  // namespace Impl
+}  // namespace desul
 
 #endif /* defined( __CUDACC__ ) */
 
