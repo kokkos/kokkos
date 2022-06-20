@@ -632,21 +632,35 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
   constexpr uint64_t nw = 1000;
 
   uint64_t nsum = (nw / 2) * (nw + 1);
-
-  auto result1_v = Kokkos::View<int64_t, Kokkos::HostSpace>{"result1_v"};
-
-  int64_t result2 = 0;
-
-  auto result3_v = Kokkos::View<int64_t, Kokkos::HostSpace>{"result3_v"};
-
-  Kokkos::parallel_reduce("int_combined-reduce_mixed",
-                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
-                          functor_type(nw), result1_v, result2,
-                          Kokkos::Sum<int64_t, Kokkos::HostSpace>{result3_v});
-
-  ASSERT_EQ(int64_t(nw), result1_v());
-  ASSERT_EQ(int64_t(nsum), result2);
-  ASSERT_EQ(int64_t(nsum), result3_v());
+  {
+    auto result1_v  = Kokkos::View<int64_t, Kokkos::HostSpace>{"result1_v"};
+    int64_t result2 = 0;
+    auto result3_v  = Kokkos::View<int64_t, Kokkos::HostSpace>{"result3_v"};
+    Kokkos::parallel_reduce("int_combined-reduce_mixed",
+                            Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                            functor_type(nw), result1_v, result2,
+                            Kokkos::Sum<int64_t, Kokkos::HostSpace>{result3_v});
+    ASSERT_EQ(int64_t(nw), result1_v());
+    ASSERT_EQ(int64_t(nsum), result2);
+    ASSERT_EQ(int64_t(nsum), result3_v());
+  }
+  {
+    using MemorySpace = typename TEST_EXECSPACE::memory_space;
+    auto result1_v    = Kokkos::View<int64_t, MemorySpace>{"result1_v"};
+    int64_t result2   = 0;
+    auto result3_v    = Kokkos::View<int64_t, MemorySpace>{"result3_v"};
+    Kokkos::parallel_reduce("int_combined-reduce_mixed",
+                            Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                            functor_type(nw), result1_v, result2,
+                            Kokkos::Sum<int64_t, MemorySpace>{result3_v});
+    int64_t result1;
+    Kokkos::deep_copy(result1, result1_v);
+    ASSERT_EQ(int64_t(nw), result1);
+    ASSERT_EQ(int64_t(nsum), result2);
+    int64_t result3;
+    Kokkos::deep_copy(result3, result3_v);
+    ASSERT_EQ(int64_t(nsum), result3);
+  }
 }
 #endif
 }  // namespace Test
