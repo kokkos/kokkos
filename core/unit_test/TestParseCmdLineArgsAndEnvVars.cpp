@@ -48,6 +48,9 @@
 
 #include <TestDefaultDeviceType_Category.hpp>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <cstdlib>
 #include <memory>
 #include <mutex>
@@ -85,9 +88,13 @@ class EnvVarsHelper {
         skip_ = std::make_unique<std::string>(name);
         break;
       }
+#ifdef _WIN32
+      if (!SetEnvironmentVariable(name.c_str(), value.c_str())) {
+#else
       int const error_code =
           setenv(name.c_str(), value.c_str(), /*overwrite=*/0);
       if (error_code != 0) {
+#endif
         std::cerr << "failed to set environment variable '" << name << "="
                   << value << "'\n";
         std::abort();
@@ -97,8 +104,12 @@ class EnvVarsHelper {
   }
   ~EnvVarsHelper() {
     for (auto const& name : vars_) {
+#ifdef _WIN32
+      if (!SetEnvironmentVariable(name.c_str(), nullptr)) {
+#else
       int const error_code = unsetenv(name.c_str());
       if (error_code != 0) {
+#endif
         std::cerr << "failed to unset environment variable '" << name << "'\n";
         std::abort();
       }
