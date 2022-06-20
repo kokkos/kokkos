@@ -207,6 +207,42 @@ TEST(defaultdevicetype, cmd_line_args_tune_internals) {
   EXPECT_EQ(ia.num_threads, 3);
 }
 
+TEST(defaultdevicetype, cmd_line_args_help) {
+  CmdLineArgsHelper cla = {{
+      "--help",
+  }};
+  Kokkos::InitArguments ia;
+  ::testing::internal::CaptureStdout();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  auto captured = ::testing::internal::GetCapturedStdout();
+  // check that errmor message was only printed once
+  EXPECT_EQ(captured.find("--kokkos-help"), captured.rfind("--kokkos-help"));
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(*cla.argv(), "--help");
+  auto const help_message_length = captured.length();
+
+  cla = {{
+      {"--kokkos-help"},
+  }};
+  ::testing::internal::CaptureStdout();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  captured = ::testing::internal::GetCapturedStdout();
+  EXPECT_EQ(captured.length(), help_message_length);
+  EXPECT_EQ(cla.argc(), 0);
+
+  cla = {{
+      {"--kokkos-help"},
+      {"--help"},
+      {"--kokkos-help"},
+  }};
+  ::testing::internal::CaptureStdout();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  captured = ::testing::internal::GetCapturedStdout();
+  EXPECT_EQ(captured.length(), help_message_length);
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(*cla.argv(), "--help");
+}
+
 TEST(defaultdevicetype, env_vars_num_threads) {
   EnvVarsHelper ev = {{
       {"KOKKOS_NUM_THREADS", "24"},
