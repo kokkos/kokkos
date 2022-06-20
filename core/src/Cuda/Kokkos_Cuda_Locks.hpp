@@ -168,9 +168,9 @@ static
 #ifndef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-void inline ensure_cuda_lock_arrays_on_device() {}
+inline void ensure_cuda_lock_arrays_on_device() {}
 #else
-void static inline ensure_cuda_lock_arrays_on_device() {
+inline static void ensure_cuda_lock_arrays_on_device() {
   copy_cuda_lock_arrays_to_device();
 }
 #endif
@@ -178,10 +178,10 @@ void static inline ensure_cuda_lock_arrays_on_device() {
 #else
 
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-void inline ensure_cuda_lock_arrays_on_device() {}
+inline void ensure_cuda_lock_arrays_on_device() {}
 #else
 // Still Need COPY_CUDA_LOCK_ARRAYS for team scratch etc.
-void static inline ensure_cuda_lock_arrays_on_device() {
+inline static void ensure_cuda_lock_arrays_on_device() {
   copy_cuda_lock_arrays_to_device();
   desul::ensure_cuda_lock_arrays_on_device();
 }
