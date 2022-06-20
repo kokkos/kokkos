@@ -4,6 +4,7 @@
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.6.00...3.6.01)
 
 ### Bug Fixes:
+- Fix Threads: Fix serial resizing scratch space (3.6.01 cherry-pick) [\#5109](https://github.com/kokkos/kokkos/pull/5109)
 - Fix ScatterMin/ScatterMax to use proper atomics (3.6.01 cherry-pick) [\#5046](https://github.com/kokkos/kokkos/pull/5046)
 - Fix allocating large Views [\#4907](https://github.com/kokkos/kokkos/pull/4907)
 - Fix bounds errors with Kokkos::sort [\#4980](https://github.com/kokkos/kokkos/pull/4980)

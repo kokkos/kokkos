@@ -13,24 +13,32 @@ jobs:
         distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
-        openmp: ['ON']
+        backend: ['OPENMP']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Release'
-            openmp: 'ON'
+            backend: 'OPENMP'
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Debug'
-            openmp: 'ON'
+            backend: 'OPENMP'
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
-            openmp: 'ON'
+            backend: 'OPENMP'
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
-            openmp: 'ON'
+            backend: 'OPENMP'
+          - distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+          - distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -54,8 +62,9 @@ jobs:
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_HWLOC=ON \
-            -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
