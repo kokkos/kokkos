@@ -605,9 +605,11 @@ struct MirrorDynamicViewType {
 
 namespace Impl {
 template <class T, class... P, class... ViewCtorArgs>
-inline typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror
-create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
-              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+inline auto create_mirror(
+    const Kokkos::Experimental::DynamicView<T, P...>& src,
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    std::enable_if_t<!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* =
+        nullptr) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(
@@ -618,10 +620,6 @@ create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
       !alloc_prop_input::has_pointer,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::has_memory_space,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a memory space instance!");
   static_assert(
       !alloc_prop_input::allow_padding,
       "The view constructor arguments passed to Kokkos::create_mirror must "
@@ -636,11 +634,12 @@ create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
       prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
 }
 
-template <class Space, class T, class... P, class... ViewCtorArgs>
-inline typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type
-create_mirror(const Space&,
-              const Kokkos::Experimental::DynamicView<T, P...>& src,
-              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+template <class T, class... P, class... ViewCtorArgs>
+inline auto create_mirror(
+    const Kokkos::Experimental::DynamicView<T, P...>& src,
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    std::enable_if_t<Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* =
+        nullptr) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(
@@ -652,24 +651,19 @@ create_mirror(const Space&,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not include a pointer!");
   static_assert(
-      !alloc_prop_input::has_memory_space,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a memory space instance!");
-  static_assert(
       !alloc_prop_input::allow_padding,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using MemorySpace = typename Space::memory_space;
-  using alloc_prop =
-      Impl::ViewCtorProp<ViewCtorArgs..., std::string, MemorySpace>;
+  using MemorySpace = typename alloc_prop_input::memory_space;
+  using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
   alloc_prop prop_copy(arg_prop);
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
 
-  return
-      typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type(
-          prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
+  return typename Kokkos::Impl::MirrorDynamicViewType<
+      MemorySpace, T, P...>::view_type(prop_copy, src.chunk_size(),
+                                       src.chunk_max() * src.chunk_size());
 }
 }  // namespace Impl
 
@@ -691,14 +685,16 @@ inline auto create_mirror(
 template <class Space, class T, class... P>
 inline auto create_mirror(
     const Space& space, const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror(space, src, Impl::ViewCtorProp<>{});
+  return Impl::create_mirror(
+      src, Impl::ViewCtorProp<>{typename Space::memory_space{}});
 }
 
 template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
               const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror(space, src, Kokkos::view_alloc(wi));
+  return Impl::create_mirror(
+      src, Kokkos::view_alloc(wi, typename Space::memory_space{}));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -750,16 +746,6 @@ create_mirror_view(const Space&,
                    const Kokkos::Experimental::DynamicView<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>&) {
   return src;
-}
-
-template <class Space, class T, class... P, class... ViewCtorArgs>
-std::enable_if_t<
-    !Impl::MirrorDynamicViewType<Space, T, P...>::is_same_memspace,
-    typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type>
-create_mirror_view(const Space& space,
-                   const Kokkos::Experimental::DynamicView<T, P...>& src,
-                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  return create_mirror(space, src, arg_prop);
 }
 }  // namespace Impl
 
