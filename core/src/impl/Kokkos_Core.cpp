@@ -971,6 +971,26 @@ void parse_environment_variables(InitArguments& arguments) {
   }
 }
 
+void combine(InitArguments& out, InitArguments const& in) {
+  InitArguments default_;
+#define KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(DATA_MEMBER) \
+  if (out.DATA_MEMBER == default_.DATA_MEMBER) {      \
+    out.DATA_MEMBER = in.DATA_MEMBER;                 \
+  }                                                   \
+  static_assert(true, "no-op to require trailing semicolon")
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(num_threads);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(num_numa);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(device_id);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(ndevices);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(skip_device);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(disable_warnings);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(tune_internals);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(tool_help);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(tool_lib);
+  KOKKOS_IMPL_OVERWRITE_IF_DEFAULT(tool_args);
+#undef KOKKOS_IMPL_OVERWRITE_IF_DEFAULT
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 

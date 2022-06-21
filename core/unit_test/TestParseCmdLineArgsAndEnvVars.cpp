@@ -130,6 +130,12 @@ class EnvVarsHelper {
   EnvVarsHelper& operator=(EnvVarsHelper&) = delete;
 };
 std::mutex EnvVarsHelper::mutex_;
+#define SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev)       \
+  if (ev.skip()) {                                         \
+    GTEST_SKIP() << "environment variable '" << *ev.skip() \
+                 << "' is already set";                    \
+  }                                                        \
+  static_assert(true, "no-op to require trailing semicolon")
 
 class CmdLineArgsHelper {
   int argc_;
@@ -263,10 +269,7 @@ TEST(defaultdevicetype, env_vars_num_threads) {
       {"KOKKOS_NUM_THREADS", "24"},
       {"KOKKOS_DISABLE_WARNINGS", "1"},
   }};
-  if (ev.skip()) {
-    GTEST_SKIP() << "environment variable '" << *ev.skip()
-                 << "' is already set";
-  }
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
   Kokkos::InitArguments ia;
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_EQ(ia.num_threads, 24);
@@ -277,10 +280,7 @@ TEST(defaultdevicetype, env_vars_device_id) {
   EnvVarsHelper ev = {{
       {"KOKKOS_DEVICE_ID", "33"},
   }};
-  if (ev.skip()) {
-    GTEST_SKIP() << "environment variable '" << *ev.skip()
-                 << "' is already set";
-  }
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
   Kokkos::InitArguments ia;
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_EQ(ia.device_id, 33);
@@ -291,10 +291,7 @@ TEST(defaultdevicetype, env_vars_num_devices) {
       {"KOKKOS_NUM_DEVICES", "4"},
       {"KOKKOS_SKIP_DEVICE", "1"},
   }};
-  if (ev.skip()) {
-    GTEST_SKIP() << "environment variable '" << *ev.skip()
-                 << "' is already set";
-  }
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
   Kokkos::InitArguments ia;
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_EQ(ia.ndevices, 4);
@@ -305,10 +302,7 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
   EnvVarsHelper ev = {{
       {"KOKKOS_DISABLE_WARNINGS", "1"},
   }};
-  if (ev.skip()) {
-    GTEST_SKIP() << "environment variable '" << *ev.skip()
-                 << "' is already set";
-  }
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
   Kokkos::InitArguments ia;
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_TRUE(ia.disable_warnings);
@@ -316,10 +310,7 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
   ev = {{
       {"KOKKOS_DISABLE_WARNINGS", "0"},
   }};
-  if (ev.skip()) {
-    GTEST_SKIP() << "environment variable '" << *ev.skip()
-                 << "' is already set";
-  }
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
   ia = {};
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_FALSE(ia.disable_warnings);
@@ -329,10 +320,7 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
   EnvVarsHelper ev = {{
       {"KOKKOS_TUNE_INTERNALS", "1"},
   }};
-  if (ev.skip()) {
-    GTEST_SKIP() << "environment variable '" << *ev.skip()
-                 << "' is already set";
-  }
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
   Kokkos::InitArguments ia;
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_TRUE(ia.tune_internals);
