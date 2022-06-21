@@ -843,13 +843,7 @@ void parse_environment_variables(InitArguments& arguments) {
       Impl::throw_runtime_exception(
           "Error: KOKKOS_NUM_THREADS out of range of representable values by "
           "an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-    if ((num_threads != -1) && (env_num_threads != num_threads))
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-num-threads and "
-          "KOKKOS_NUM_THREADS if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    else
-      num_threads = env_num_threads;
+    num_threads = env_num_threads;
   }
   auto env_numa_str = std::getenv("KOKKOS_NUMA");
   if (env_numa_str != nullptr) {
@@ -867,13 +861,7 @@ void parse_environment_variables(InitArguments& arguments) {
       Impl::throw_runtime_exception(
           "Error: KOKKOS_DEVICE_ID out of range of representable values by an "
           "integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-    if ((device != -1) && (env_device != device))
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-device-id and "
-          "KOKKOS_DEVICE_ID if both are set. Raised by Kokkos::initialize(int "
-          "narg, char* argc[]).");
-    else
-      device = env_device;
+    device = env_device;
   }
   auto env_rdevices_str = std::getenv("KOKKOS_RAND_DEVICES");
   auto env_ndevices_str = std::getenv("KOKKOS_NUM_DEVICES");
@@ -897,13 +885,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
             "an integer. Raised by Kokkos::initialize(int narg, char* "
             "argc[]).");
-      if ((ndevices != -1) && (env_ndevices != ndevices))
-        Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-num-devices and "
-            "KOKKOS_NUM_DEVICES if both are set. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
-      else
-        ndevices = env_ndevices;
+      ndevices = env_ndevices;
     } else {  // you set KOKKOS_RAND_DEVICES
       auto env_rdevices = std::strtol(env_rdevices_str, &endptr, 10);
       if (endptr == env_ndevices_str)
@@ -932,13 +914,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "Error: KOKKOS_SKIP_DEVICE out of range of representable values by "
             "an integer. Raised by Kokkos::initialize(int narg, char* "
             "argc[]).");
-      if ((skip_device != 9999) && (env_skip_device != skip_device))
-        Impl::throw_runtime_exception(
-            "Error: expecting a match between --kokkos-num-devices and "
-            "KOKKOS_SKIP_DEVICE if both are set. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
-      else
-        skip_device = env_skip_device;
+      skip_device = env_skip_device;
     }
     if (rdevices > 0) {
       if (skip_device > 0 && rdevices == 1)
@@ -955,19 +931,10 @@ void parse_environment_variables(InitArguments& arguments) {
   }
   char* env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
   if (env_disablewarnings_str != nullptr) {
-    std::string env_str(env_disablewarnings_str);  // deep-copies string
-    for (char& c : env_str) {
-      c = toupper(c);
-    }
-    const auto _rc = std::regex_constants::icase | std::regex_constants::egrep;
-    const auto _re = std::regex("^(true|on|yes|[1-9])$", _rc);
-    if (std::regex_match(env_str, _re))
-      disable_warnings = true;
-    else if (disable_warnings)
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-disable-warnings and "
-          "KOKKOS_DISABLE_WARNINGS if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
+    auto const regex =
+        std::regex("^(true|on|yes|[1-9])$",
+                   std::regex_constants::icase | std::regex_constants::egrep);
+    disable_warnings = std::regex_match(env_disablewarnings_str, regex);
   }
 }
 
