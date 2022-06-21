@@ -2067,6 +2067,16 @@ inline auto create_mirror_view(
 }
 
 // Create a mirror view and deep_copy in a new space
+template <class... ViewCtorArgs, class T, class... P>
+typename Kokkos::Impl::MirrorOffsetViewType<
+    typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
+    P...>::view_type
+create_mirror_view_and_copy(
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    const Kokkos::Experimental::OffsetView<T, P...>& src) {
+  return {create_mirror_view_and_copy(arg_prop, src.view()), src.begins()};
+}
+
 template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type
 create_mirror_view_and_copy(

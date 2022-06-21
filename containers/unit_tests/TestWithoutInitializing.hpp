@@ -454,6 +454,43 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
   ASSERT_TRUE(success);
 }
 
+TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
+                     Config::EnableFences());
+
+  Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
+      "host view", {0, 10});
+  decltype(Kokkos::create_mirror_view_and_copy(Kokkos::DefaultExecutionSpace{},
+                                               host_view)) device_view;
+
+  auto success = validate_absence(
+      [&]() {
+        auto mirror_device = Kokkos::create_mirror_view_and_copy(
+            Kokkos::view_alloc(
+                Kokkos::DefaultExecutionSpace{},
+                typename Kokkos::DefaultExecutionSpace::memory_space{}),
+            host_view);
+        // Avoid fences for deallocation when mirror_device goes out of scope.
+        device_view               = mirror_device;
+        auto mirror_device_mirror = Kokkos::create_mirror_view_and_copy(
+            Kokkos::view_alloc(
+                Kokkos::DefaultExecutionSpace{},
+                typename Kokkos::DefaultExecutionSpace::memory_space{}),
+            mirror_device);
+      },
+      [&](BeginParallelForEvent) {
+        return MatchDiagnostic{true, {"Found begin event"}};
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "fence after copying header from HostSpace") ==
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+}
+
 // FIXME OPENMPTARGET
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview) {
