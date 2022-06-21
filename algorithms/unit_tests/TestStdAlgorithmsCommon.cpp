@@ -53,5 +53,9 @@ std::string view_tag_to_string(StridedTwoTag) { return "stride2_view"; }
 
 std::string view_tag_to_string(StridedThreeTag) { return "stride3_view"; }
 
+std::string view_tag_to_string(StridedTwoThreeTag) { return "stride2and3_view"; }
+
+std::string view_tag_to_string(StridedThreeFourTag) { return "stride3and4_view"; }
+
 }  // namespace stdalgos
 }  // namespace Test

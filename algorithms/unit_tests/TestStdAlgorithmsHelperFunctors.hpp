@@ -65,6 +65,24 @@ struct CopyFunctor {
   void operator()(int i) const { m_view_to(i) = m_view_from(i); }
 };
 
+template <class ViewTypeFrom, class ViewTypeTo>
+struct CopyFunctorRank2 {
+  ViewTypeFrom m_view_from;
+  ViewTypeTo m_view_to;
+
+  CopyFunctorRank2() = delete;
+
+  CopyFunctorRank2(const ViewTypeFrom view_from, const ViewTypeTo view_to)
+      : m_view_from(view_from), m_view_to(view_to) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int k) const {
+    const auto i = k / m_view_from.extent(1);
+    const auto j = k % m_view_from.extent(1);
+    m_view_to(i,j) = m_view_from(i,j);
+  }
+};
+
 template <class ItTypeFrom, class ViewTypeTo>
 struct CopyFromIteratorFunctor {
   ItTypeFrom m_it_from;
