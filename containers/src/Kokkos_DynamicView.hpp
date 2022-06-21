@@ -772,9 +772,10 @@ inline auto create_mirror_view(
 
 template <class Space, class T, class... P>
 inline auto create_mirror_view(
-    Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
+    Kokkos::Impl::WithoutInitializing_t wi, const Space&,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
-  return Impl::create_mirror_view(space, src, Kokkos::view_alloc(wi));
+  return Impl::create_mirror_view(
+      src, Kokkos::view_alloc(wi, typename Space::memory_space{}));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
