@@ -216,16 +216,13 @@ struct ChunkedArrayManager {
   pointer_type* get_ptr() const { return m_chunks; }
 
   template <typename Space>
-  std::enable_if_t<!IsAccessibleFrom<Space>::value> deep_copy_to(
+  void deep_copy_to(
       ChunkedArrayManager<Space, ValueType> const& other) const {
-    Kokkos::Impl::DeepCopy<Space, MemorySpace>(
-        other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
-  }
-
-  template <typename Space>
-  std::enable_if_t<IsAccessibleFrom<Space>::value> deep_copy_to(
-      ChunkedArrayManager<Space, ValueType> const&) {
-    // no-op
+    if (other.m_chunks != m_chunks)
+    {
+      Kokkos::Impl::DeepCopy<Space, MemorySpace>(
+          other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
