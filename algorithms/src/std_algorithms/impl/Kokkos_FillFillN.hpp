@@ -85,15 +85,12 @@ void fill_impl(const std::string& label, const ExecutionSpace& ex,
 }
 
 template <class TeamHandleType, class IteratorType, class T>
-void fill_team_impl(const std::string& label,
-			   const TeamHandleType& teamHandle,
-			   IteratorType first, IteratorType last,
-			   const T& value)
-{
+void fill_team_impl(const std::string& label, const TeamHandleType& teamHandle,
+                    IteratorType first, IteratorType last, const T& value) {
   // label is not used now because a nested par_for cannot yet take
   // a string but we leave the label in the args since later on
   // we will be able to use it when things are refactored
-  (void) label;
+  (void)label;
 
   using exe_space_t = typename TeamHandleType::execution_space;
   Impl::static_assert_random_access_and_accessible(exe_space_t(), first);

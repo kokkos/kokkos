@@ -77,9 +77,9 @@ struct CopyFunctorRank2 {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int k) const {
-    const auto i = k / m_view_from.extent(1);
-    const auto j = k % m_view_from.extent(1);
-    m_view_to(i,j) = m_view_from(i,j);
+    const auto i    = k / m_view_from.extent(1);
+    const auto j    = k % m_view_from.extent(1);
+    m_view_to(i, j) = m_view_from(i, j);
   }
 };
 

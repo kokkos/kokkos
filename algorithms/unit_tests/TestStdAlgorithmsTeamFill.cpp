@@ -57,42 +57,38 @@ struct FillTeamFunctorA {
   int m_api_pick;
 
   FillTeamFunctorA(const ViewTypeToFill view, int apiPick)
-    : m_view_from(view), m_api_pick(apiPick) {}
+      : m_view_from(view), m_api_pick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType & member) const
-  {
+  void operator()(const MemberType& member) const {
     const auto leagueRank = member.league_rank();
-    const auto fillValue = static_cast<typename ViewTypeToFill::value_type>(leagueRank);
+    const auto fillValue =
+        static_cast<typename ViewTypeToFill::value_type>(leagueRank);
     const auto myRowIndex = member.league_rank();
     auto myRowView = Kokkos::subview(m_view_from, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0){
-      KE::fill(member, KE::begin(myRowView), KE::end(myRowView), (double) leagueRank);
-    }
-    else if (m_api_pick == 1){
-      KE::fill("somethingelse", member, KE::begin(myRowView), KE::end(myRowView), (double) leagueRank);
-    }
-    else if (m_api_pick == 2){
+    if (m_api_pick == 0) {
+      KE::fill(member, KE::begin(myRowView), KE::end(myRowView),
+               (double)leagueRank);
+    } else if (m_api_pick == 1) {
+      KE::fill("somethingelse", member, KE::begin(myRowView),
+               KE::end(myRowView), (double)leagueRank);
+    } else if (m_api_pick == 2) {
       KE::fill(member, myRowView, fillValue);
-    }
-    else if (m_api_pick == 3){
+    } else if (m_api_pick == 3) {
       KE::fill("something", member, myRowView, fillValue);
     }
   }
-
 };
 
 template <class ViewType>
-void test_fill_team(ViewType view_to_fill, int num_teams)
-{
-  using space_t = Kokkos::DefaultExecutionSpace;
-  using policy_type = Kokkos::TeamPolicy<space_t>;
+void test_fill_team(ViewType view_to_fill, int num_teams) {
+  using space_t          = Kokkos::DefaultExecutionSpace;
+  using policy_type      = Kokkos::TeamPolicy<space_t>;
   using team_member_type = typename policy_type::member_type;
   policy_type policy(num_teams, Kokkos::AUTO());
 
-  for (int apiIt : {0,1,2,3})
-  {
+  for (int apiIt : {0, 1, 2, 3}) {
     /* each team fills a row with its leauge_rank value */
     using functor_type = FillTeamFunctorA<ViewType, team_member_type>;
     functor_type fnc(view_to_fill, apiIt);
@@ -100,36 +96,32 @@ void test_fill_team(ViewType view_to_fill, int num_teams)
 
     // check results
     using value_type = typename ViewType::value_type;
-    auto v_h = create_host_space_copy(view_to_fill);
-    for (int i=0; i<v_h.extent(0); ++i){
-      for (int j=0; j<v_h.extent(1); ++j){
-	EXPECT_TRUE( v_h(i,j) == static_cast<value_type>(i));
+    auto v_h         = create_host_space_copy(view_to_fill);
+    for (int i = 0; i < v_h.extent(0); ++i) {
+      for (int j = 0; j < v_h.extent(1); ++j) {
+        EXPECT_TRUE(v_h(i, j) == static_cast<value_type>(i));
       }
     }
   }
-
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
-
-  for (int num_teams : team_sizes_to_test){
-    for (const auto& scenario : default_scenarios){
-      auto view = create_view<ValueType>(Tag{}, num_teams, scenario.second, "fill");
+void run_all_scenarios() {
+  for (int num_teams : team_sizes_to_test) {
+    for (const auto& scenario : default_scenarios) {
+      auto view =
+          create_view<ValueType>(Tag{}, num_teams, scenario.second, "fill");
       test_fill_team(view, num_teams);
     }
 
     // {
-    //   auto view = create_view<ValueType>(Tag{}, scenario.second, "for_each_n");
-    //   test_for_each_n(view);
+    //   auto view = create_view<ValueType>(Tag{}, scenario.second,
+    //   "for_each_n"); test_for_each_n(view);
     // }
   }
 }
 
-TEST(std_algorithms_fill_team_test, test)
-{
-
+TEST(std_algorithms_fill_team_test, test) {
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
