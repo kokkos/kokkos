@@ -58,18 +58,16 @@ template <class T>
 class RandomAccessIterator;
 
 template <class DataType, class... Args>
-class RandomAccessIterator< ::Kokkos::View<DataType, Args...> >
-    : public std::iterator<
-          std::random_access_iterator_tag,
-          typename ::Kokkos::View<DataType, Args...>::value_type, ptrdiff_t,
-          typename ::Kokkos::View<DataType, Args...>::pointer_type,
-          typename ::Kokkos::View<DataType, Args...>::reference_type> {
+class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
  public:
-  using view_type       = ::Kokkos::View<DataType, Args...>;
-  using iterator_type   = RandomAccessIterator<view_type>;
-  using difference_type = ptrdiff_t;
-  using value_type      = typename view_type::value_type;
-  using reference       = typename view_type::reference_type;
+  using view_type     = ::Kokkos::View<DataType, Args...>;
+  using iterator_type = RandomAccessIterator<view_type>;
+
+  using iterator_category = std::random_access_iterator_tag;
+  using value_type        = typename view_type::value_type;
+  using difference_type   = ptrdiff_t;
+  using pointer           = typename view_type::pointer_type;
+  using reference         = typename view_type::reference_type;
 
   static_assert(view_type::rank == 1 &&
                     (std::is_same<typename view_type::traits::array_layout,
