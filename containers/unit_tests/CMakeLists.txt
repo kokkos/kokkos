@@ -13,7 +13,20 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
     foreach(Name
+        Bitset
+        DualView
+        DynamicView
+        DynViewAPI_generic
+        DynViewAPI_rank12345
+        DynViewAPI_rank67
+        ErrorReporter
+        OffsetView
+        ScatterView
+        StaticCrsGraph
         WithoutInitializing
+        UnorderedMap
+        Vector
+        ViewCtorPropEmbeddedDim
         )
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
