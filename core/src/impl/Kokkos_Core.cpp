@@ -1000,13 +1000,15 @@ namespace Kokkos {
 
 void initialize(int& narg, char* arg[]) {
   InitArguments arguments;
-  Impl::parse_command_line_arguments(narg, arg, arguments);
   Impl::parse_environment_variables(arguments);
+  Impl::parse_command_line_arguments(narg, arg, arguments);
   Impl::initialize_internal(arguments);
 }
 
 void initialize(InitArguments arguments) {
-  Impl::parse_environment_variables(arguments);
+  InitArguments tmp;
+  Impl::parse_environment_variables(tmp);
+  Impl::combine(arguments, tmp);
   Impl::initialize_internal(arguments);
 }
 
