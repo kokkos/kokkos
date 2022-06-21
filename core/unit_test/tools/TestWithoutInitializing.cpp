@@ -114,6 +114,11 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
 }
 
 TEST(kokkosp, create_mirror_view_and_copy) {
+// FIXME_OPENMPTARGET
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  return;
+#endif
+
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableFences());
