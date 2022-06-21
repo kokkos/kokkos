@@ -362,6 +362,10 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview_viewctor) {
 }
 
 TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynrankview) {
+#ifdef KOKKOS_ENABLE_CUDA
+	if (std::is_same<typename TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>::value)
+		return;
+#endif
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableFences());
@@ -455,6 +459,10 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
 }
 
 TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
+	#ifdef KOKKOS_ENABLE_CUDA
+        if (std::is_same<typename TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>::value)
+                return;
+#endif
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableFences());
@@ -524,6 +532,10 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview) {
 }
 
 TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
+	#ifdef KOKKOS_ENABLE_CUDA
+        if (std::is_same<typename TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>::value)
+                return;
+#endif
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableFences());
