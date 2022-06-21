@@ -93,33 +93,31 @@ template <class TeamHandleType, class IteratorType, class T>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
 fill(const TeamHandleType& th, IteratorType first, IteratorType last,
      const T& value) {
-  Impl::fill_team_impl("Kokkos::fill_team_iterator_api_default", th, first,
-                       last, value);
+  Impl::fill_team_impl(th, first, last, value);
 }
 
-template <class TeamHandleType, class IteratorType, class T>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-fill(const std::string& label, const TeamHandleType& th, IteratorType first,
-     IteratorType last, const T& value) {
-  Impl::fill_team_impl(label, th, first, last, value);
-}
+// template <class TeamHandleType, class IteratorType, class T>
+// KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
+// fill(const std::string& label, const TeamHandleType& th, IteratorType first,
+//      IteratorType last, const T& value) {
+//   Impl::fill_team_impl(label, th, first, last, value);
+// }
 
 template <class TeamHandleType, class DataType, class... Properties, class T>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
 fill(const TeamHandleType& th,
      const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
-  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  Impl::fill_team_impl("Kokkos::fill_team_view_api_default", th, begin(view),
-                       end(view), value);
+  // Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::fill_team_impl(th, begin(view), end(view), value);
 }
 
-template <class TeamHandleType, class DataType, class... Properties, class T>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-fill(const std::string& label, const TeamHandleType& th,
-     const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
-  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  Impl::fill_team_impl(label, th, begin(view), end(view), value);
-}
+// template <class TeamHandleType, class DataType, class... Properties, class T>
+// KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
+// fill(const std::string& label, const TeamHandleType& th,
+//      const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
+//   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+//   Impl::fill_team_impl(label, th, begin(view), end(view), value);
+// }
 
 }  // namespace Experimental
 }  // namespace Kokkos

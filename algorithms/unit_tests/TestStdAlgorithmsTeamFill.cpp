@@ -68,15 +68,9 @@ struct FillTeamFunctorA {
     auto myRowView = Kokkos::subview(m_view_from, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      KE::fill(member, KE::begin(myRowView), KE::end(myRowView),
-               (double)leagueRank);
+      KE::fill(member, KE::begin(myRowView), KE::end(myRowView), fillValue);
     } else if (m_api_pick == 1) {
-      KE::fill("somethingelse", member, KE::begin(myRowView),
-               KE::end(myRowView), (double)leagueRank);
-    } else if (m_api_pick == 2) {
       KE::fill(member, myRowView, fillValue);
-    } else if (m_api_pick == 3) {
-      KE::fill("something", member, myRowView, fillValue);
     }
   }
 };
@@ -88,7 +82,7 @@ void test_fill_team(ViewType view_to_fill, int num_teams) {
   using team_member_type = typename policy_type::member_type;
   policy_type policy(num_teams, Kokkos::AUTO());
 
-  for (int apiIt : {0, 1, 2, 3}) {
+  for (int apiIt : {0, 1}) {
     /* each team fills a row with its leauge_rank value */
     using functor_type = FillTeamFunctorA<ViewType, team_member_type>;
     functor_type fnc(view_to_fill, apiIt);
