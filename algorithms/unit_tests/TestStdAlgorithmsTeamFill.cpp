@@ -97,8 +97,8 @@ void test_fill_team(ViewType view_to_fill, int num_teams) {
     // check results
     using value_type = typename ViewType::value_type;
     auto v_h         = create_host_space_copy(view_to_fill);
-    for (int i = 0; i < v_h.extent(0); ++i) {
-      for (int j = 0; j < v_h.extent(1); ++j) {
+    for (std::size_t i = 0; i < v_h.extent(0); ++i) {
+      for (std::size_t j = 0; j < v_h.extent(1); ++j) {
         EXPECT_TRUE(v_h(i, j) == static_cast<value_type>(i));
       }
     }
