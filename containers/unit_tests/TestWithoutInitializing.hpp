@@ -361,7 +361,7 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview_viewctor) {
   ASSERT_TRUE(success);
 }
 
-TEST(kokkosp, create_mirror_view_and_copy_dynrankview) {
+TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynrankview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableFences());
