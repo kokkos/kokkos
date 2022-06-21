@@ -222,7 +222,7 @@ KOKKOS_INLINE_FUNCTION constexpr void static_assert_is_not_openmptarget(
 // valid range
 //
 template <class IteratorType>
-void expect_valid_range(IteratorType first, IteratorType last) {
+KOKKOS_INLINE_FUNCTION void expect_valid_range(IteratorType first, IteratorType last) {
   // this is a no-op for release
   KOKKOS_EXPECTS(last >= first);
   // avoid compiler complaining when KOKKOS_EXPECTS is no-op
