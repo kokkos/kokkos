@@ -73,10 +73,7 @@ class EnvVarsHelper {
   // in which case unit test is skipped
   std::unique_ptr<std::string> skip_;
 
- public:
-  auto& skip() { return skip_; }
-  EnvVarsHelper(std::unordered_map<std::string, std::string> const& vars) {
-    mutex_.lock();
+  void setup(std::unordered_map<std::string, std::string> const& vars) {
     for (auto const& x : vars) {
       auto const& name  = x.first;
       auto const& value = x.second;
@@ -99,7 +96,7 @@ class EnvVarsHelper {
       vars_.push_back(name);
     }
   }
-  ~EnvVarsHelper() {
+  void teardown() {
     for (auto const& name : vars_) {
 #ifdef _WIN32
       int const error_code = _putenv((name + "=").c_str());
@@ -111,8 +108,26 @@ class EnvVarsHelper {
         std::abort();
       }
     }
+  }
+
+ public:
+  auto& skip() { return skip_; }
+  EnvVarsHelper(std::unordered_map<std::string, std::string> const& vars) {
+    mutex_.lock();
+    setup(vars);
+  }
+  EnvVarsHelper& operator=(
+      std::unordered_map<std::string, std::string> const& vars) {
+    teardown();
+    setup(vars);
+    return *this;
+  }
+  ~EnvVarsHelper() {
+    teardown();
     mutex_.unlock();
   }
+  EnvVarsHelper(EnvVarsHelper&) = delete;
+  EnvVarsHelper& operator=(EnvVarsHelper&) = delete;
 };
 std::mutex EnvVarsHelper::mutex_;
 
@@ -207,6 +222,42 @@ TEST(defaultdevicetype, cmd_line_args_tune_internals) {
   EXPECT_EQ(ia.num_threads, 3);
 }
 
+TEST(defaultdevicetype, cmd_line_args_help) {
+  CmdLineArgsHelper cla = {{
+      "--help",
+  }};
+  Kokkos::InitArguments ia;
+  ::testing::internal::CaptureStdout();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  auto captured = ::testing::internal::GetCapturedStdout();
+  // check that error message was only printed once
+  EXPECT_EQ(captured.find("--kokkos-help"), captured.rfind("--kokkos-help"));
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(*cla.argv(), "--help");
+  auto const help_message_length = captured.length();
+
+  cla = {{
+      {"--kokkos-help"},
+  }};
+  ::testing::internal::CaptureStdout();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  captured = ::testing::internal::GetCapturedStdout();
+  EXPECT_EQ(captured.length(), help_message_length);
+  EXPECT_EQ(cla.argc(), 0);
+
+  cla = {{
+      {"--kokkos-help"},
+      {"--help"},
+      {"--kokkos-help"},
+  }};
+  ::testing::internal::CaptureStdout();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  captured = ::testing::internal::GetCapturedStdout();
+  EXPECT_EQ(captured.length(), help_message_length);
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(*cla.argv(), "--help");
+}
+
 TEST(defaultdevicetype, env_vars_num_threads) {
   EnvVarsHelper ev = {{
       {"KOKKOS_NUM_THREADS", "24"},
@@ -251,31 +302,27 @@ TEST(defaultdevicetype, env_vars_num_devices) {
 }
 
 TEST(defaultdevicetype, env_vars_disable_warnings) {
-  {
-    EnvVarsHelper ev = {{
-        {"KOKKOS_DISABLE_WARNINGS", "1"},
-    }};
-    if (ev.skip()) {
-      GTEST_SKIP() << "environment variable '" << *ev.skip()
-                   << "' is already set";
-    }
-    Kokkos::InitArguments ia;
-    Kokkos::Impl::parse_environment_variables(ia);
-    EXPECT_TRUE(ia.disable_warnings);
+  EnvVarsHelper ev = {{
+      {"KOKKOS_DISABLE_WARNINGS", "1"},
+  }};
+  if (ev.skip()) {
+    GTEST_SKIP() << "environment variable '" << *ev.skip()
+                 << "' is already set";
   }
+  Kokkos::InitArguments ia;
+  Kokkos::Impl::parse_environment_variables(ia);
+  EXPECT_TRUE(ia.disable_warnings);
 
-  {
-    EnvVarsHelper ev = {{
-        {"KOKKOS_DISABLE_WARNINGS", "0"},
-    }};
-    if (ev.skip()) {
-      GTEST_SKIP() << "environment variable '" << *ev.skip()
-                   << "' is already set";
-    }
-    Kokkos::InitArguments ia;
-    Kokkos::Impl::parse_environment_variables(ia);
-    EXPECT_FALSE(ia.disable_warnings);
+  ev = {{
+      {"KOKKOS_DISABLE_WARNINGS", "0"},
+  }};
+  if (ev.skip()) {
+    GTEST_SKIP() << "environment variable '" << *ev.skip()
+                 << "' is already set";
   }
+  ia = {};
+  Kokkos::Impl::parse_environment_variables(ia);
+  EXPECT_FALSE(ia.disable_warnings);
 }
 
 TEST(defaultdevicetype, env_vars_tune_internals) {
