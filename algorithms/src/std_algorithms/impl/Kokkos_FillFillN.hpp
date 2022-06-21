@@ -88,7 +88,7 @@ template <class TeamHandleType, class IteratorType, class T>
 KOKKOS_FUNCTION void fill_team_impl(const TeamHandleType& teamHandle,
                                     IteratorType first, IteratorType last,
                                     const T& value) {
-  using exe_space_t = typename TeamHandleType::execution_space;
+  // using exe_space_t = typename TeamHandleType::execution_space;
   // Impl::static_assert_random_access_and_accessible(exe_space_t(), first);
   Impl::expect_valid_range(first, last);
 
