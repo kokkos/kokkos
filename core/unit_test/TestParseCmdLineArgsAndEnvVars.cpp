@@ -230,7 +230,7 @@ TEST(defaultdevicetype, cmd_line_args_help) {
   ::testing::internal::CaptureStdout();
   Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
   auto captured = ::testing::internal::GetCapturedStdout();
-  // check that errmor message was only printed once
+  // check that error message was only printed once
   EXPECT_EQ(captured.find("--kokkos-help"), captured.rfind("--kokkos-help"));
   EXPECT_EQ(cla.argc(), 1);
   EXPECT_STREQ(*cla.argv(), "--help");
