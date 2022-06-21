@@ -84,6 +84,28 @@ void fill_impl(const std::string& label, const ExecutionSpace& ex,
   ex.fence("Kokkos::fill: fence after operation");
 }
 
+template <class TeamHandleType, class IteratorType, class T>
+void fill_team_impl(const std::string& label,
+			   const TeamHandleType& teamHandle,
+			   IteratorType first, IteratorType last,
+			   const T& value)
+{
+  // label is not used now because a nested par_for cannot yet take
+  // a string but we leave the label in the args since later on
+  // we will be able to use it when things are refactored
+  (void) label;
+
+  using exe_space_t = typename TeamHandleType::execution_space;
+  Impl::static_assert_random_access_and_accessible(exe_space_t(), first);
+  Impl::expect_valid_range(first, last);
+
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         StdFillFunctor<IteratorType, T>(first, value));
+
+  teamHandle.team_barrier();
+}
+
 template <class ExecutionSpace, class IteratorType, class SizeType, class T>
 IteratorType fill_n_impl(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, SizeType n, const T& value) {
