@@ -684,14 +684,14 @@ inline auto create_mirror(
 // Create a mirror in a new space
 template <class Space, class T, class... P>
 inline auto create_mirror(
-    const Space& space, const Kokkos::Experimental::DynamicView<T, P...>& src) {
+    const Space&, const Kokkos::Experimental::DynamicView<T, P...>& src) {
   return Impl::create_mirror(
       src, Impl::ViewCtorProp<>{typename Space::memory_space{}});
 }
 
 template <class Space, class T, class... P>
 typename Kokkos::Impl::MirrorDynamicViewType<Space, T, P...>::view_type
-create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space& space,
+create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
               const Kokkos::Experimental::DynamicView<T, P...>& src) {
   return Impl::create_mirror(
       src, Kokkos::view_alloc(wi, typename Space::memory_space{}));
