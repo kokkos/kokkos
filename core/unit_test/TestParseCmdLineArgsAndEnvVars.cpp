@@ -299,31 +299,48 @@ TEST(defaultdevicetype, env_vars_num_devices) {
 }
 
 TEST(defaultdevicetype, env_vars_disable_warnings) {
-  EnvVarsHelper ev = {{
-      {"KOKKOS_DISABLE_WARNINGS", "1"},
-  }};
-  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_TRUE(ia.disable_warnings);
-
-  ev = {{
-      {"KOKKOS_DISABLE_WARNINGS", "0"},
-  }};
-  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  ia = {};
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_FALSE(ia.disable_warnings);
+  for (auto const& value_true : {"1", "true", "TRUE", "3", "yEs", "ON"}) {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_DISABLE_WARNINGS", value_true},
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    Kokkos::InitArguments ia;
+    Kokkos::Impl::parse_environment_variables(ia);
+    EXPECT_TRUE(ia.disable_warnings)
+        << "KOKKOS_DISABLE_WARNINGS=" << value_true;
+  }
+  for (auto const& value_false : {"0", "false", "whatever", "123"}) {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_DISABLE_WARNINGS", value_false},
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    Kokkos::InitArguments ia;
+    Kokkos::Impl::parse_environment_variables(ia);
+    EXPECT_FALSE(ia.disable_warnings)
+        << "KOKKOS_DISABLE_WARNINGS=" << value_false;
+  }
 }
 
 TEST(defaultdevicetype, env_vars_tune_internals) {
-  EnvVarsHelper ev = {{
-      {"KOKKOS_TUNE_INTERNALS", "1"},
-  }};
-  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_TRUE(ia.tune_internals);
+  for (auto const& value_true : {"1", "true", "TRUE", "on", "tRuE"}) {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_TUNE_INTERNALS", value_true},
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    Kokkos::InitArguments ia;
+    Kokkos::Impl::parse_environment_variables(ia);
+    EXPECT_TRUE(ia.tune_internals) << "KOKKOS_TUNE_INTERNALS=" << value_true;
+  }
+  for (auto const& value_false :
+       {"0", "false", "whatever", "123", "3", "YES"}) {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_TUNE_INTERNALS", value_false},
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    Kokkos::InitArguments ia;
+    Kokkos::Impl::parse_environment_variables(ia);
+    EXPECT_FALSE(ia.tune_internals) << "KOKKOS_TUNE_INTERNALS=" << value_false;
+  }
 }
 
 }  // namespace
