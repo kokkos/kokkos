@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v2.2.0
         with:
           repository: desul/desul
-          ref: 7a85900031e382616f84d8e35ff58be5e7ded504
+          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
           path: desul
       - name: Install desul
         working-directory: desul
@@ -87,7 +87,7 @@ jobs:
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
-            -Ddesul_atomics_ROOT=/usr/desul-install/lib/cmake/desul/ \
+            -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \

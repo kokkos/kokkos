@@ -86,8 +86,8 @@ KOKKOS_IMPORT_TPL(ROCM INTERFACE)
 KOKKOS_IMPORT_TPL(LIBQUADMATH)
 
 IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL)
-  find_package(desul_atomics REQUIRED)
-  KOKKOS_EXPORT_CMAKE_TPL(desul_atomics)
+  find_package(desul REQUIRED COMPONENTS atomics)
+  KOKKOS_EXPORT_CMAKE_TPL(desul REQUIRED COMPONENTS atomics)
 ENDIF()
 
 #Convert list to newlines (which CMake doesn't always like in cache variables)

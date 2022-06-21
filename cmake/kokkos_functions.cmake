@@ -141,6 +141,8 @@ FUNCTION(kokkos_append_config_line LINE)
 ENDFUNCTION()
 
 MACRO(kokkos_export_cmake_tpl NAME)
+  cmake_parse_arguments(KOKKOS_EXTRA_ARG "REQUIRED" "" "COMPONENTS" ${ARGN})
+
   #CMake TPLs are located with a call to find_package
   #find_package locates XConfig.cmake files through
   #X_DIR or X_ROOT variables set prior to calling find_package
@@ -164,7 +166,15 @@ MACRO(kokkos_export_cmake_tpl NAME)
     KOKKOS_APPEND_CONFIG_LINE("  SET(${NAME}_ROOT  ${${NAME}_ROOT})")
     KOKKOS_APPEND_CONFIG_LINE("ENDIF()")
   ENDIF()
-  KOKKOS_APPEND_CONFIG_LINE("FIND_DEPENDENCY(${NAME})")
+  SET(KOKKOS_CONFIG_STRING "FIND_DEPENDENCY(${NAME}")
+
+  IF(KOKKOS_EXTRA_ARG_REQUIRED)
+    STRING(APPEND KOKKOS_CONFIG_STRING " REQUIRED")
+  ENDIF()
+  IF(KOKKOS_EXTRA_ARG_COMPONENTS)
+    STRING(APPEND KOKKOS_CONFIG_STRING " COMPONENTS ${KOKKOS_EXTRA_ARG_COMPONENTS})")
+  ENDIF()
+  KOKKOS_APPEND_CONFIG_LINE(${KOKKOS_CONFIG_STRING})
 ENDMACRO()
 
 MACRO(kokkos_export_imported_tpl NAME)

@@ -3,7 +3,7 @@ KOKKOS_INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${KOKKOS_TOP_BUILD_DIR}
 )
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
+IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   KOKKOS_INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
@@ -70,7 +70,7 @@ IF (KOKKOS_ENABLE_SYCL)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/SYCL/*.hpp)
 ENDIF()
 
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
+IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/src/*.cpp)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*.hpp)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*.hpp)
@@ -88,7 +88,7 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
   MESSAGE(STATUS "Using internal desul_atomics copy")
 ELSE()
   MESSAGE(STATUS "Using external desul_atomics install found at:")
-  MESSAGE(STATUS "  " ${desul_atomics_DIR})
+  MESSAGE(STATUS "  " ${desul_DIR})
 ENDIF()
 
 
@@ -104,7 +104,7 @@ KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_atomics_FOUND)
+IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
@@ -133,7 +133,7 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND
   target_link_libraries(kokkoscore PUBLIC atomic)
 ENDIF()
 
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND desul_atomics_FOUND)
+IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND desul_FOUND)
   target_link_libraries(kokkoscore PUBLIC desul_atomics)
 ENDIF()
 
