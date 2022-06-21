@@ -216,10 +216,8 @@ struct ChunkedArrayManager {
   pointer_type* get_ptr() const { return m_chunks; }
 
   template <typename Space>
-  void deep_copy_to(
-      ChunkedArrayManager<Space, ValueType> const& other) const {
-    if (other.m_chunks != m_chunks)
-    {
+  void deep_copy_to(ChunkedArrayManager<Space, ValueType> const& other) const {
+    if (other.m_chunks != m_chunks) {
       Kokkos::Impl::DeepCopy<Space, MemorySpace>(
           other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
     }
