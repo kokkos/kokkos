@@ -89,7 +89,9 @@ KOKKOS_FUNCTION void fill_team_impl(const TeamHandleType& teamHandle,
                                     IteratorType first, IteratorType last,
                                     const T& value) {
   using exe_space_t = typename TeamHandleType::execution_space;
-  Impl::static_assert_random_access_and_accessible(exe_space_t(), first);
+  // Impl::static_assert_random_access_and_accessible(exe_space_t(), first);
+  static_assert(iterators_are_accessible_from<exe_space_t, IteratorType>::value,
+                "Incompatible view/iterator and execution space");
   Impl::expect_valid_range(first, last);
 
   const auto num_elements = Kokkos::Experimental::distance(first, last);
