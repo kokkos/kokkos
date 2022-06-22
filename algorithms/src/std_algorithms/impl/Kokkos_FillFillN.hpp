@@ -120,8 +120,9 @@ KOKKOS_FUNCTION void fill_team_impl(const TeamHandleType& teamHandle,
 }
 
 template <class TeamHandleType, class IteratorType, class SizeType, class T>
-IteratorType fill_n_team_impl(const TeamHandleType& teamHandle,
-                              IteratorType first, SizeType n, const T& value) {
+KOKKOS_FUNCTION IteratorType fill_n_team_impl(const TeamHandleType& teamHandle,
+                                              IteratorType first, SizeType n,
+                                              const T& value) {
   auto last = first + n;
   Impl::static_assert_random_access_and_accessible(teamHandle, first);
   Impl::expect_valid_range(first, last);
