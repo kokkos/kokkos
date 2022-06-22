@@ -164,15 +164,7 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
   if (env_tool_lib != nullptr) {
     warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_PROFILE_LIBRARY",
                                                     env_tool_lib);
-    if ((tool_lib != Kokkos::Tools::InitArguments::unset_string_option) &&
-        std::string(env_tool_lib) != tool_lib)
-      return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
-                  environment_argument_mismatch,
-              "Error: expecting a match between --kokkos-tools-library and "
-              "KOKKOS_PROFILE_LIBRARY if both are set. Raised by "
-              "Kokkos::initialize(int narg, char* argc[])."};
-    else
-      tool_lib = env_tool_lib;
+    tool_lib = env_tool_lib;
   }
   char* env_tuneinternals_str = std::getenv("KOKKOS_TUNE_INTERNALS");
   if (env_tuneinternals_str != nullptr) {
@@ -182,12 +174,8 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
     }
     if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
       tune_internals = InitArguments::PossiblyUnsetOption::on;
-    else if (tune_internals)
-      return {Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
-                  environment_argument_mismatch,
-              "Error: expecting a match between --kokkos-tune-internals and "
-              "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
-              "Kokkos::initialize(int narg, char* argc[])."};
+    else
+      tune_internals = InitArguments::PossiblyUnsetOption::off;
   }
   return {
       Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
@@ -220,8 +208,8 @@ void initialize(const InitArguments& arguments) {
 }
 void initialize(int argc, char* argv[]) {
   InitArguments arguments;
-  Impl::parse_command_line_arguments(argc, argv, arguments);
   Impl::parse_environment_variables(arguments);
+  Impl::parse_command_line_arguments(argc, argv, arguments);
   initialize(arguments);
 }
 
