@@ -47,40 +47,55 @@
 
 namespace Test {
 namespace stdalgos {
-namespace TeamFill {
+namespace TeamFill_n {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewTypeToFill, class MemberType>
+template <class ViewTypeToFill, class AuxView, class MemberType>
 struct FillTeamFunctorA {
+  AuxView m_viewOfDistances;
   ViewTypeToFill m_view;
   int m_api_pick;
+  int m_numFills;
 
-  FillTeamFunctorA(const ViewTypeToFill view, int apiPick)
-      : m_view(view), m_api_pick(apiPick) {}
+  FillTeamFunctorA(AuxView viewOfDistances,
+		   const ViewTypeToFill view,
+		   int apiPick,
+		   int numFills)
+    : m_viewOfDistances(viewOfDistances),
+      m_view(view), m_api_pick(apiPick),
+      m_numFills(numFills) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  void operator()(const MemberType& member) const
+  {
     const auto leagueRank = member.league_rank();
-    const auto fillValue =
-        static_cast<typename ViewTypeToFill::value_type>(leagueRank);
+    const auto fillValue = static_cast<typename ViewTypeToFill::value_type>(leagueRank);
     const auto myRowIndex = member.league_rank();
-    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    auto myRowView = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      KE::fill(member, KE::begin(myRowView), KE::end(myRowView), fillValue);
-    } else if (m_api_pick == 1) {
-      KE::fill(member, myRowView, fillValue);
+      auto it = KE::fill_n(member, KE::begin(myRowView), m_numFills, fillValue);
+      const auto itDist = KE::distance(KE::begin(myRowView), it);
+      m_viewOfDistances(myRowIndex, 0) = itDist;
+    }
+
+    else if (m_api_pick == 1) {
+      auto it = KE::fill_n(member, myRowView, m_numFills, fillValue);
+      const auto itDist = KE::distance(KE::begin(myRowView), it);
+      m_viewOfDistances(myRowIndex, 0) = itDist;
     }
   }
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
+void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills, int apiId)
+{
   /* description:
      use a rank-2 matrix, team policy with one row per team,
-     each row is filled with the league_rank of the team
-     in charge of it.
+     n elements of each row are filled up with the league_rank of the team
+     in charge of it, while the other elements in the row
+     are filled with zeros
    */
 
   auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
@@ -90,37 +105,67 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   using team_member_type = typename policy_type::member_type;
   policy_type policy(num_teams, Kokkos::AUTO());
 
-  using functor_type = FillTeamFunctorA<decltype(v), team_member_type>;
-  functor_type fnc(v, apiId);
+  // make view that will contain the computed distances
+  // from begin(v) of the iterators returned by the fill_n
+  Kokkos::View<std::size_t**> computedDistances("cd", num_teams, 1);
+
+  /* each team fills a row with its leauge_rank value */
+  using functor_type = FillTeamFunctorA<decltype(v), decltype(computedDistances), team_member_type>;
+  functor_type fnc(computedDistances, v, apiId, num_fills);
   Kokkos::parallel_for(policy, fnc);
 
-  // each row should be filled with the row index
-  // since the league_rank of a team here coincides with row index
-  auto v_h = create_host_space_copy(v);
+  auto cd_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), computedDistances);
+  for (std::size_t i = 0; i < cd_h.extent(0); ++i) {
+    EXPECT_TRUE(cd_h(i, 0) == num_fills);
+  }
+
+  // check results
+  auto v_h         = create_host_space_copy(v);
   for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(i));
+      if (j < num_fills){
+	EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(i));
+      }else{
+	EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
+      }
     }
   }
 }
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
-    for (const auto& scenario : default_scenarios) {
-      for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, scenario.second, apiId);
+
+  // key = num of columns,
+  // value = list of num of elemenents to fill
+  using v_t = std::vector<int>;
+  const std::map<int, v_t> scenarios =
+  {
+    {0,  v_t{0}},
+    {2,  v_t{0,1,2}},
+    {6,  v_t{0,1,2,5}},
+    {13, v_t{0,1,2,8,11}}
+  };
+
+  for (int num_teams : team_sizes_to_test){
+    for (const auto & scenario : scenarios)
+    {
+      const std::size_t numCols = scenario.first;
+      for (int numFills : scenario.second)
+      {
+	for (int apiId : {0, 1}) {
+	  test_A<Tag, ValueType>(num_teams, numCols, numFills, apiId);
+	}
       }
     }
   }
 }
 
-TEST(std_algorithms_fill_team_test, test) {
+TEST(std_algorithms_fill_n_team_test, test) {
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-}  // namespace TeamFill
+}  // namespace TeamFill_n
 }  // namespace stdalgos
 }  // namespace Test
