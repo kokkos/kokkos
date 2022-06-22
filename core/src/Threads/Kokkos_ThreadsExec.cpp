@@ -582,9 +582,12 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
 int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
 
-void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
-                             unsigned use_cores_per_numa,
-                             bool allow_asynchronous_threadpool) {
+void ThreadsExec::initialize(int thread_count_arg) {
+  // legacy arguments
+  unsigned thread_count       = thread_count_arg == -1 ? 0 : thread_count_arg;
+  unsigned use_numa_count     = 0;
+  unsigned use_cores_per_numa = 0;
+  bool allow_asynchronous_threadpool = false;
   // need to provide an initializer for Intel compilers
   static const Sentinel sentinel = {};
 
@@ -837,22 +840,7 @@ int g_threads_space_factory_initialized =
     initialize_space_factory<ThreadsSpaceInitializer>("050_Threads");
 
 void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
-  const int num_threads = args.num_threads;
-  if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::Threads,
-                   Kokkos::HostSpace::execution_space>::value) {
-    if (num_threads > 0) {
-      Kokkos::Threads::impl_initialize(num_threads);
-    } else {
-      Kokkos::Threads::impl_initialize();
-    }
-    // std::cout << "Kokkos::initialize() fyi: CppThread enabled and
-    // initialized"
-    // << std::endl ;
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: CppThread enabled but not
-    // initialized" << std::endl ;
-  }
+  Kokkos::Threads::impl_initialize(args.num_threads);
 }
 
 void ThreadsSpaceInitializer::finalize(const bool all_spaces) {
