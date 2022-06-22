@@ -112,7 +112,7 @@
 #include "std_algorithms/Kokkos_ShiftLeft.hpp"
 #include "std_algorithms/Kokkos_ShiftRight.hpp"
 
-// sorting ops
+// sorting
 #include "std_algorithms/Kokkos_IsSortedUntil.hpp"
 #include "std_algorithms/Kokkos_IsSorted.hpp"
 
@@ -121,7 +121,7 @@
 #include "std_algorithms/Kokkos_MaxElement.hpp"
 #include "std_algorithms/Kokkos_MinMaxElement.hpp"
 
-// partitioning ops
+// partitioning
 #include "std_algorithms/Kokkos_IsPartitioned.hpp"
 #include "std_algorithms/Kokkos_PartitionCopy.hpp"
 #include "std_algorithms/Kokkos_PartitionPoint.hpp"
