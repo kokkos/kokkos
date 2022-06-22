@@ -284,6 +284,12 @@ TEST(TEST_CATEGORY, view_allocation_int) {
 }
 
 TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::EnableAll());
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
@@ -297,12 +303,7 @@ TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
         // Avoid testing the destructor
         outer_view = inner_view;
       },
-      [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "fence after copying header from HostSpace") !=
-            std::string::npos};
-      });
+      [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
