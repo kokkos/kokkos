@@ -88,6 +88,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
 
 //
 // overload set accepting team handle
+// (for now omit the ones accepting a label since it causes issues on device)
 //
 template <class TeamHandleType, class IteratorType, class T>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
@@ -96,28 +97,13 @@ fill(const TeamHandleType& th, IteratorType first, IteratorType last,
   Impl::fill_team_impl(th, first, last, value);
 }
 
-// template <class TeamHandleType, class IteratorType, class T>
-// KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-// fill(const std::string& label, const TeamHandleType& th, IteratorType first,
-//      IteratorType last, const T& value) {
-//   Impl::fill_team_impl(label, th, first, last, value);
-// }
-
 template <class TeamHandleType, class DataType, class... Properties, class T>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
 fill(const TeamHandleType& th,
      const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
-  // Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::fill_team_impl(th, begin(view), end(view), value);
 }
-
-// template <class TeamHandleType, class DataType, class... Properties, class T>
-// KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-// fill(const std::string& label, const TeamHandleType& th,
-//      const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
-//   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-//   Impl::fill_team_impl(label, th, begin(view), end(view), value);
-// }
 
 }  // namespace Experimental
 }  // namespace Kokkos
