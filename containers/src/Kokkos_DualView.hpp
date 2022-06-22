@@ -954,10 +954,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// This method only copies the old contents into the new View
   /// objects for the device which was last marked as modified.
   template <class... ViewCtorArgs>
-  void impl_resize(const size_t n0, const size_t n1, const size_t n2,
+  void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+                   const size_t n0, const size_t n1, const size_t n2,
                    const size_t n3, const size_t n4, const size_t n5,
-                   const size_t n6, const size_t n7,
-                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                   const size_t n6, const size_t n7) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
     static_assert(!alloc_prop_input::has_label,
@@ -1023,7 +1023,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    impl_resize(n0, n1, n2, n3, n4, n5, n6, n7, Impl::ViewCtorProp<>{});
+    impl_resize(Impl::ViewCtorProp<>{}, n0, n1, n2, n3, n4, n5, n6, n7);
   }
 
   template <class... ViewCtorArgs>
@@ -1036,7 +1036,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    impl_resize(n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+    impl_resize(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
   }
 
   template <class I>
@@ -1049,7 +1049,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    impl_resize(n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
+    impl_resize(Kokkos::view_alloc(arg_prop), n0, n1, n2, n3, n4, n5, n6, n7);
   }
 
   //@}

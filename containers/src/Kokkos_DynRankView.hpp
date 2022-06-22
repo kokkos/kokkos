@@ -2104,11 +2104,11 @@ namespace Kokkos {
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
 template <class... ViewCtorArgs, class T, class... P>
-inline void impl_resize(DynRankView<T, P...>& v, const size_t n0,
+inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+                        DynRankView<T, P...>& v, const size_t n0,
                         const size_t n1, const size_t n2, const size_t n3,
                         const size_t n4, const size_t n5, const size_t n6,
-                        const size_t n7,
-                        const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                        const size_t n7) {
   using drview_type      = DynRankView<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -2161,7 +2161,7 @@ inline void resize(DynRankView<T, P...>& v,
                    const size_t n5 = KOKKOS_INVALID_INDEX,
                    const size_t n6 = KOKKOS_INVALID_INDEX,
                    const size_t n7 = KOKKOS_INVALID_INDEX) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, Impl::ViewCtorProp<>{});
+  impl_resize(Impl::ViewCtorProp<>{}, v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 template <class... ViewCtorArgs, class T, class... P>
@@ -2175,7 +2175,7 @@ void resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
             const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
             const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
             const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+  impl_resize(arg_prop, v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 template <class I, class T, class... P>
@@ -2189,7 +2189,7 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> resize(
     const size_t n5 = KOKKOS_INVALID_INDEX,
     const size_t n6 = KOKKOS_INVALID_INDEX,
     const size_t n7 = KOKKOS_INVALID_INDEX) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
+  impl_resize(Kokkos::view_alloc(arg_prop), v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 /** \brief  Resize a view with copying old data to new data at the corresponding

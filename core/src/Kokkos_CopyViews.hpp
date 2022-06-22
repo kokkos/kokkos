@@ -2921,10 +2921,10 @@ inline typename std::enable_if<
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutRight>::value>::type
-impl_resize(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
+impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+            Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
             const size_t n2, const size_t n3, const size_t n4, const size_t n5,
-            const size_t n6, const size_t n7,
-            const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+            const size_t n6, const size_t n7) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -2996,7 +2996,7 @@ resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
        const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+  impl_resize(arg_prop, v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 template <class T, class... P>
@@ -3013,7 +3013,7 @@ resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, Impl::ViewCtorProp<>{});
+  impl_resize(Impl::ViewCtorProp<>{}, v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 template <class I, class T, class... P>
@@ -3033,7 +3033,7 @@ resize(const I& arg_prop, Kokkos::View<T, P...>& v,
        const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
+  impl_resize(Kokkos::view_alloc(arg_prop), v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -3045,9 +3045,9 @@ inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutStride>::value ||
     is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value>
-impl_resize(Kokkos::View<T, P...>& v,
-            const typename Kokkos::View<T, P...>::array_layout& layout,
-            const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+            Kokkos::View<T, P...>& v,
+            const typename Kokkos::View<T, P...>::array_layout& layout) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -3106,9 +3106,9 @@ inline std::enable_if_t<
       std::is_same<typename Kokkos::View<T, P...>::array_layout,
                    Kokkos::LayoutStride>::value ||
       is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value)>
-impl_resize(Kokkos::View<T, P...>& v,
-            const typename Kokkos::View<T, P...>::array_layout& layout,
-            const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+            Kokkos::View<T, P...>& v,
+            const typename Kokkos::View<T, P...>::array_layout& layout) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -3157,7 +3157,7 @@ template <class T, class... P, class... ViewCtorArgs>
 inline void resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                    Kokkos::View<T, P...>& v,
                    const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_resize(v, layout, arg_prop);
+  impl_resize(arg_prop, v, layout);
 }
 
 template <class I, class T, class... P>
@@ -3165,19 +3165,19 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value ||
                         Kokkos::is_execution_space<I>::value>
 resize(const I& arg_prop, Kokkos::View<T, P...>& v,
        const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_resize(v, layout, arg_prop);
+  impl_resize(arg_prop, v, layout);
 }
 
 template <class ExecutionSpace, class T, class... P>
 inline void resize(const ExecutionSpace& exec_space, Kokkos::View<T, P...>& v,
                    const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_resize(exec_space, v, layout, Impl::ViewCtorProp<>{});
+  impl_resize(Impl::ViewCtorProp<>(), exec_space, v, layout);
 }
 
 template <class T, class... P>
 inline void resize(Kokkos::View<T, P...>& v,
                    const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_resize(v, layout, Impl::ViewCtorProp<>{});
+  impl_resize(Impl::ViewCtorProp<>{}, v, layout);
 }
 
 /** \brief  Resize a view with discarding old data. */
