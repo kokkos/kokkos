@@ -199,8 +199,10 @@ void finalize();
  */
 void push_finalize_hook(std::function<void()> f);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 /** \brief  Finalize all known execution spaces */
-void finalize_all();
+KOKKOS_DEPRECATED void finalize_all();
+#endif
 
 void fence();
 void fence(const std::string&);

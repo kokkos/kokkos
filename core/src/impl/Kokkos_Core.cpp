@@ -995,10 +995,12 @@ void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
 
 void finalize() { Impl::finalize_internal(); }
 
-void finalize_all() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+KOKKOS_DEPRECATED void finalize_all() {
   enum : bool { all_spaces = true };
   Impl::finalize_internal(all_spaces);
 }
+#endif
 
 void fence() { Impl::fence_internal("Kokkos::fence: Unnamed Global Fence"); }
 void fence(const std::string& name) { Impl::fence_internal(name); }
