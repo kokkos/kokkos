@@ -87,8 +87,9 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
 }
 
 //
-// overload set accepting team handle
-// (for now omit the ones accepting a label since it causes issues on device)
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType, class T>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
