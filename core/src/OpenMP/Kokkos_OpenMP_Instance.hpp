@@ -36,6 +36,7 @@
 
 #include <omp.h>
 
+#include <mutex>
 #include <numeric>
 #include <type_traits>
 #include <vector>
@@ -72,6 +73,8 @@ class OpenMPInternal {
 
  public:
   friend class Kokkos::OpenMP;
+
+  std::mutex m_pool_mutex;
 
   static OpenMPInternal& singleton();
 
