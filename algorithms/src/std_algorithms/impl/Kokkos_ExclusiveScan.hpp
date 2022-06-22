@@ -46,10 +46,10 @@
 #define KOKKOS_STD_ALGORITHMS_EXCLUSIVE_SCAN_IMPL_HPP
 
 #include <Kokkos_Core.hpp>
-#include <std_algorithms/impl/Kokkos_Constraints.hpp>
-#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
-#include <std_algorithms/impl/Kokkos_ValueWrapperForNoNeutralElement.hpp>
-#include <std_algorithms/impl/Kokkos_IdentityReferenceUnaryFunctor.hpp>
+#include "Kokkos_Constraints.hpp"
+#include "Kokkos_HelperPredicates.hpp"
+#include "Kokkos_ValueWrapperForNoNeutralElement.hpp"
+#include "Kokkos_IdentityReferenceUnaryFunctor.hpp"
 #include <std_algorithms/Kokkos_TransformExclusiveScan.hpp>
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>

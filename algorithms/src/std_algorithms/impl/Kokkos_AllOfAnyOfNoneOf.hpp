@@ -45,7 +45,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ALL_OF_ANY_OF_NONE_OF_IMPL_HPP
 #define KOKKOS_STD_ALGORITHMS_ALL_OF_ANY_OF_NONE_OF_IMPL_HPP
 
-#include <std_algorithms/impl/Kokkos_FindIfOrNot.hpp>
+#include "Kokkos_FindIfOrNot.hpp"
 
 namespace Kokkos {
 namespace Experimental {
