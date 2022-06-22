@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_LEXICOGRAPHICAL_COMPARE_HPP
 #define KOKKOS_STD_ALGORITHMS_LEXICOGRAPHICAL_COMPARE_HPP
 
-#include "./impl/Kokkos_LexicographicalCompare.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_LexicographicalCompare.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

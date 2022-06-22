@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FILL_HPP
 #define KOKKOS_STD_ALGORITHMS_FILL_HPP
 
-#include "./impl/Kokkos_FillFillN.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_FillFillN.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

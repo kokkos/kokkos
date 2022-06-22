@@ -45,9 +45,9 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FIND_END_HPP
 #define KOKKOS_STD_ALGORITHMS_FIND_END_HPP
 
-#include "./impl/Kokkos_FindEnd.hpp"
-#include "./Kokkos_Equal.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_FindEnd.hpp"
+#include "Kokkos_Equal.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

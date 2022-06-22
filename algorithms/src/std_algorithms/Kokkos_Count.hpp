@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_COUNT_HPP
 #define KOKKOS_STD_ALGORITHMS_COUNT_HPP
 
-#include "./impl/Kokkos_CountCountIf.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_CountCountIf.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

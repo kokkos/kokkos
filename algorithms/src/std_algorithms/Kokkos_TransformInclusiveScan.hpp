@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_TRANSFORM_INCLUSIVE_SCAN_HPP
 #define KOKKOS_STD_ALGORITHMS_TRANSFORM_INCLUSIVE_SCAN_HPP
 
-#include "./impl/Kokkos_TransformInclusiveScan.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_TransformInclusiveScan.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

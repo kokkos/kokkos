@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MOVE_HPP
 #define KOKKOS_STD_ALGORITHMS_MOVE_HPP
 
-#include "./impl/Kokkos_Move.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_Move.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

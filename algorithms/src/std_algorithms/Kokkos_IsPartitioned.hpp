@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_IS_PARTITIONED_HPP
 #define KOKKOS_STD_ALGORITHMS_IS_PARTITIONED_HPP
 
-#include "./impl/Kokkos_IsPartitioned.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_IsPartitioned.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

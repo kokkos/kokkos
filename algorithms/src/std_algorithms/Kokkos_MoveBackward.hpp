@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MOVE_BACKWARD_HPP
 #define KOKKOS_STD_ALGORITHMS_MOVE_BACKWARD_HPP
 
-#include "./impl/Kokkos_MoveBackward.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_MoveBackward.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ROTATE_COPY_HPP
 #define KOKKOS_STD_ALGORITHMS_ROTATE_COPY_HPP
 
-#include "./impl/Kokkos_RotateCopy.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_RotateCopy.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

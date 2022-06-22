@@ -46,8 +46,8 @@
 #define KOKKOS_STD_ALGORITHMS_ITER_SWAP_HPP
 
 #include <Kokkos_Core.hpp>
-#include "./impl/Kokkos_Constraints.hpp"
-#include "./Kokkos_Swap.hpp"
+#include "impl/Kokkos_Constraints.hpp"
+#include "Kokkos_Swap.hpp"
 
 namespace Kokkos {
 namespace Experimental {

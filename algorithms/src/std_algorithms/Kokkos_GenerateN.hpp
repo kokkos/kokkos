@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_GENERATE_N_HPP
 #define KOKKOS_STD_ALGORITHMS_GENERATE_N_HPP
 
-#include "./impl/Kokkos_GenerateGenerateN.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_GenerateGenerateN.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

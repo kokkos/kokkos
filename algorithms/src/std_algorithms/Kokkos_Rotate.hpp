@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ROTATE_HPP
 #define KOKKOS_STD_ALGORITHMS_ROTATE_HPP
 
-#include "./impl/Kokkos_Rotate.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_Rotate.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {

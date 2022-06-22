@@ -45,8 +45,8 @@
 #ifndef KOKKOS_STD_ALGORITHMS_IS_SORTED_HPP
 #define KOKKOS_STD_ALGORITHMS_IS_SORTED_HPP
 
-#include "./impl/Kokkos_IsSorted.hpp"
-#include "./Kokkos_BeginEnd.hpp"
+#include "impl/Kokkos_IsSorted.hpp"
+#include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
