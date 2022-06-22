@@ -119,6 +119,12 @@ TEST(kokkosp, create_mirror_view_and_copy) {
   return;
 #endif
 
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename Kokkos::DefaultExecutionSpace::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    return;
+#endif
+
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableFences());
