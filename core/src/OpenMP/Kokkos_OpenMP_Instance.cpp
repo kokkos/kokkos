@@ -425,7 +425,9 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   m_space_instance->print_configuration(os);
 }
 
-int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
+int OpenMP::concurrency(OpenMP const &instance) {
+  return impl_thread_pool_size(instance);
+}
 
 void OpenMP::fence(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
