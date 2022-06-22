@@ -47,6 +47,7 @@
 
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_View.hpp>
+#include "Kokkos_IsTeamHandle.hpp"
 
 namespace Kokkos {
 namespace Experimental {
@@ -142,7 +143,8 @@ struct iterators_are_accessible_from<ExeSpace, Head, Tail...> {
 };
 
 template <class ExecutionSpace, class... IteratorTypes>
-KOKKOS_INLINE_FUNCTION constexpr void
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    ::Kokkos::is_execution_space<ExecutionSpace>::value>
 static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
                                            IteratorTypes... /* iterators */) {
   static_assert(
@@ -151,6 +153,21 @@ static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
   static_assert(
       iterators_are_accessible_from<ExecutionSpace, IteratorTypes...>::value,
       "Incompatible view/iterator and execution space");
+}
+
+template <class TeamHandleType, class... IteratorTypes>
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    is_team_handle<TeamHandleType>::value>
+static_assert_random_access_and_accessible(const TeamHandleType& /* th */,
+                                           IteratorTypes... /* iterators */) {
+  static_assert(
+      are_random_access_iterators<IteratorTypes...>::value,
+      "Currently, Kokkos standard algorithms require random access iterators.");
+
+  static_assert(
+      iterators_are_accessible_from<typename TeamHandleType::execution_space,
+                                    IteratorTypes...>::value,
+      "Incompatible view/iterator and team-handle execution space");
 }
 
 //
