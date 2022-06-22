@@ -58,30 +58,29 @@ struct FillTeamFunctorA {
   int m_api_pick;
   int m_numFills;
 
-  FillTeamFunctorA(AuxView viewOfDistances,
-		   const ViewTypeToFill view,
-		   int apiPick,
-		   int numFills)
-    : m_viewOfDistances(viewOfDistances),
-      m_view(view), m_api_pick(apiPick),
-      m_numFills(numFills) {}
+  FillTeamFunctorA(AuxView viewOfDistances, const ViewTypeToFill view,
+                   int apiPick, int numFills)
+      : m_viewOfDistances(viewOfDistances),
+        m_view(view),
+        m_api_pick(apiPick),
+        m_numFills(numFills) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const
-  {
+  void operator()(const MemberType& member) const {
     const auto leagueRank = member.league_rank();
-    const auto fillValue = static_cast<typename ViewTypeToFill::value_type>(leagueRank);
+    const auto fillValue =
+        static_cast<typename ViewTypeToFill::value_type>(leagueRank);
     const auto myRowIndex = member.league_rank();
-    auto myRowView = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
       auto it = KE::fill_n(member, KE::begin(myRowView), m_numFills, fillValue);
-      const auto itDist = KE::distance(KE::begin(myRowView), it);
+      const auto itDist                = KE::distance(KE::begin(myRowView), it);
       m_viewOfDistances(myRowIndex, 0) = itDist;
     }
 
     else if (m_api_pick == 1) {
-      auto it = KE::fill_n(member, myRowView, m_numFills, fillValue);
+      auto it           = KE::fill_n(member, myRowView, m_numFills, fillValue);
       const auto itDist = KE::distance(KE::begin(myRowView), it);
       m_viewOfDistances(myRowIndex, 0) = itDist;
     }
@@ -89,8 +88,8 @@ struct FillTeamFunctorA {
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills, int apiId)
-{
+void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills,
+            int apiId) {
   /* description:
      use a rank-2 matrix, team policy with one row per team,
      n elements of each row are filled up with the league_rank of the team
@@ -110,23 +109,26 @@ void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills, 
   Kokkos::View<std::size_t**> computedDistances("cd", num_teams, 1);
 
   /* each team fills a row with its leauge_rank value */
-  using functor_type = FillTeamFunctorA<decltype(v), decltype(computedDistances), team_member_type>;
+  using functor_type =
+      FillTeamFunctorA<decltype(v), decltype(computedDistances),
+                       team_member_type>;
   functor_type fnc(computedDistances, v, apiId, num_fills);
   Kokkos::parallel_for(policy, fnc);
 
-  auto cd_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), computedDistances);
+  auto cd_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(),
+                                                  computedDistances);
   for (std::size_t i = 0; i < cd_h.extent(0); ++i) {
     EXPECT_TRUE(cd_h(i, 0) == num_fills);
   }
 
   // check results
-  auto v_h         = create_host_space_copy(v);
+  auto v_h = create_host_space_copy(v);
   for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      if (j < num_fills){
-	EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(i));
-      }else{
-	EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
+      if (j < num_fills) {
+        EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(i));
+      } else {
+        EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
       }
     }
   }
@@ -134,27 +136,21 @@ void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills, 
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-
   // key = num of columns,
   // value = list of num of elemenents to fill
-  using v_t = std::vector<int>;
-  const std::map<int, v_t> scenarios =
-  {
-    {0,  v_t{0}},
-    {2,  v_t{0,1,2}},
-    {6,  v_t{0,1,2,5}},
-    {13, v_t{0,1,2,8,11}}
-  };
+  using v_t                          = std::vector<int>;
+  const std::map<int, v_t> scenarios = {{0, v_t{0}},
+                                        {2, v_t{0, 1, 2}},
+                                        {6, v_t{0, 1, 2, 5}},
+                                        {13, v_t{0, 1, 2, 8, 11}}};
 
-  for (int num_teams : team_sizes_to_test){
-    for (const auto & scenario : scenarios)
-    {
+  for (int num_teams : team_sizes_to_test) {
+    for (const auto& scenario : scenarios) {
       const std::size_t numCols = scenario.first;
-      for (int numFills : scenario.second)
-      {
-	for (int apiId : {0, 1}) {
-	  test_A<Tag, ValueType>(num_teams, numCols, numFills, apiId);
-	}
+      for (int numFills : scenario.second) {
+        for (int apiId : {0, 1}) {
+          test_A<Tag, ValueType>(num_teams, numCols, numFills, apiId);
+        }
       }
     }
   }
