@@ -90,7 +90,7 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
     scatterSize = n;
     auto policy =
         Kokkos::RangePolicy<typename DeviceType::execution_space, int>(0, n);
-    Kokkos::parallel_for(policy, *this, "scatter_view_test: Sum");
+    Kokkos::parallel_for("scatter_view_test: Sum", policy, *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -235,7 +235,7 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
     scatterSize = n;
     auto policy =
         Kokkos::RangePolicy<typename DeviceType::execution_space, int>(0, n);
-    Kokkos::parallel_for(policy, *this, "scatter_view_test: Prod");
+    Kokkos::parallel_for("scatter_view_test: Prod", policy, *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -336,7 +336,7 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
     scatterSize = n;
     auto policy =
         Kokkos::RangePolicy<typename DeviceType::execution_space, int>(0, n);
-    Kokkos::parallel_for(policy, *this, "scatter_view_test: Prod");
+    Kokkos::parallel_for("scatter_view_test: Prod", policy, *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -435,7 +435,7 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
   void run_parallel(int n) {
     scatterSize = n;
     Kokkos::RangePolicy<typename DeviceType::execution_space, int> policy(0, n);
-    Kokkos::parallel_for(policy, *this, "scatter_view_test: Prod");
+    Kokkos::parallel_for("scatter_view_test: Prod", policy, *this);
   }
 
   KOKKOS_INLINE_FUNCTION
