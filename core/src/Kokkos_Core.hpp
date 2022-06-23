@@ -137,7 +137,7 @@ class ExecSpaceManager {
   void register_space_factory(std::string name,
                               std::unique_ptr<ExecSpaceInitializerBase> ptr);
   void initialize_spaces(const Kokkos::InitArguments& args);
-  void finalize_spaces(const bool all_spaces);
+  void finalize_spaces();
   void static_fence();
   void static_fence(const std::string&);
   void print_configuration(std::ostream& msg, const bool detail);
@@ -199,8 +199,10 @@ void finalize();
  */
 void push_finalize_hook(std::function<void()> f);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 /** \brief  Finalize all known execution spaces */
-void finalize_all();
+KOKKOS_DEPRECATED void finalize_all();
+#endif
 
 void fence();
 void fence(const std::string&);
