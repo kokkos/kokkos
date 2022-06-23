@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 
 namespace Test {

@@ -43,9 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_RandomAccessIterator.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 
 namespace KE = Kokkos::Experimental;
 

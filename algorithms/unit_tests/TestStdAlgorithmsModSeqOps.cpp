@@ -43,8 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
 
 namespace KE = Kokkos::Experimental;
 

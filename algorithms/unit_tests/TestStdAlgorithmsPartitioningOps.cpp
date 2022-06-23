@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_PartitioningOperations.hpp>
 
 namespace KE = Kokkos::Experimental;
 

@@ -46,8 +46,9 @@
 #define KOKKOS_ALGORITHMS_UNITTESTS_TEST_STD_ALGOS_COMMON_HPP
 
 #include <gtest/gtest.h>
+#include <Kokkos_StdAlgorithms.hpp>
 #include <TestStdAlgorithmsHelperFunctors.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <utility>
 #include <numeric>
 #include <random>
 
