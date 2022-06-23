@@ -120,9 +120,9 @@ void ExecSpaceManager::initialize_spaces(const Kokkos::InitArguments& args) {
   }
 }
 
-void ExecSpaceManager::finalize_spaces(const bool all_spaces) {
+void ExecSpaceManager::finalize_spaces() {
   for (auto& to_finalize : exec_space_factory_list) {
-    to_finalize.second->finalize(all_spaces);
+    to_finalize.second->finalize(/*all_spaces=*/true);
   }
 }
 
@@ -536,7 +536,7 @@ void finalize_internal() {
 
   Kokkos::Profiling::finalize();
 
-  Impl::ExecSpaceManager::get_instance().finalize_spaces(/*all_spaces=*/true);
+  Impl::ExecSpaceManager::get_instance().finalize_spaces();
 
   g_is_initialized = false;
   g_show_warnings  = true;
