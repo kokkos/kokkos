@@ -506,7 +506,7 @@ void initialize_internal(const InitArguments& args) {
   post_initialize_internal(args);
 }
 
-void finalize_internal(const bool all_spaces = false) {
+void finalize_internal() {
   typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
   while (!finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
@@ -536,7 +536,7 @@ void finalize_internal(const bool all_spaces = false) {
 
   Kokkos::Profiling::finalize();
 
-  Impl::ExecSpaceManager::get_instance().finalize_spaces(all_spaces);
+  Impl::ExecSpaceManager::get_instance().finalize_spaces(/*all_spaces=*/true);
 
   g_is_initialized = false;
   g_show_warnings  = true;
@@ -996,10 +996,7 @@ void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
 void finalize() { Impl::finalize_internal(); }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-KOKKOS_DEPRECATED void finalize_all() {
-  enum : bool { all_spaces = true };
-  Impl::finalize_internal(all_spaces);
-}
+KOKKOS_DEPRECATED void finalize_all() { Impl::finalize_internal(); }
 #endif
 
 void fence() { Impl::fence_internal("Kokkos::fence: Unnamed Global Fence"); }
