@@ -274,6 +274,22 @@ TEST(defaultdevicetype, env_vars_num_threads) {
   Kokkos::Impl::parse_environment_variables(ia);
   EXPECT_EQ(ia.num_threads, 24);
   EXPECT_TRUE(ia.disable_warnings);
+
+  ev = {{
+      {"KOKKOS_NUM_THREADS", "1ABC"},
+  }};
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+  ia = {};
+  Kokkos::Impl::parse_environment_variables(ia);
+  EXPECT_EQ(ia.num_threads, 1);
+
+  ev = {{
+      {"KOKKOS_NUM_THREADS", "-1"},
+  }};
+  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+  ia = {};
+  Kokkos::Impl::parse_environment_variables(ia);
+  EXPECT_EQ(ia.num_threads, -1);
 }
 
 TEST(defaultdevicetype, env_vars_device_id) {
