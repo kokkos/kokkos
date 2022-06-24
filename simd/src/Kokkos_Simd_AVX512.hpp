@@ -180,9 +180,9 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
     return 8;
   }
   template <class U,
-            typename std::enable_if<
+            std::enable_if_t<
                 std::is_convertible_v<U, value_type>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm256_set1_epi32(value_type(value))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
@@ -191,12 +191,12 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::uint64_t, abi_type> const& other);
   template <class G,
-            typename std::enable_if<
+            std::enable_if_t<
                 // basically, can you do { value_type r =
                 // gen(std::integral_constant<std::size_t, i>()); }
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(
             _mm256_setr_epi32(gen(std::integral_constant<std::size_t, 0>()),
@@ -318,9 +318,9 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
     return 8;
   }
   template <class U,
-            typename std::enable_if<
+            std::enable_if_t<
                 std::is_convertible_v<U, value_type>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm256_set1_epi32(bit_cast<std::int32_t>(value_type(value)))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
@@ -422,9 +422,9 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
     return 8;
   }
   template <class U,
-            typename std::enable_if<
+            std::enable_if_t<
                 std::is_convertible_v<U, value_type>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm512_set1_epi64(value_type(value))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(
@@ -555,9 +555,9 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
     return 8;
   }
   template <class U,
-            typename std::enable_if<
+            std::enable_if_t<
                 std::is_convertible_v<U, value_type>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm512_set1_epi64(bit_cast<std::int64_t>(value_type(value)))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
@@ -693,9 +693,9 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
     return 8;
   }
   template <class U,
-            typename std::enable_if<
+            std::enable_if_t<
                 std::is_convertible_v<U, value_type>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm512_set1_pd(value_type(value))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(double a, double b, double c, double d,

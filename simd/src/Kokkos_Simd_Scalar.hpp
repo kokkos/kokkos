@@ -139,20 +139,20 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
   template <class U,
-            typename std::enable_if<
+            std::enable_if_t<
                 std::is_convertible_v<U, value_type>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(U&& value) : m_value(value) {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION explicit simd(simd<U, abi_type> const& other)
       : m_value(static_cast<U>(other)) {}
   template <class G,
-            typename std::enable_if<
+            std::enable_if_t<
                 // basically, can you do { value_type r =
                 // gen(std::integral_constant<std::size_t, i>()); }
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
-                bool>::type = false>
+                bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
   KOKKOS_FORCEINLINE_FUNCTION simd operator-() const { return simd(-m_value); }
