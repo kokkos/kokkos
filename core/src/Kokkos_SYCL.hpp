@@ -111,10 +111,12 @@ class SYCL {
   static bool wake();
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
-  static void impl_static_fence();
-  static void impl_static_fence(const std::string&);
-  void fence() const;
-  void fence(const std::string&) const;
+  static void impl_static_fence(const std::string& name =
+                                    "Kokkos::Experimental::SYCL::impl_static_"
+                                    "fence: Unnamed Static Fence");
+  void fence(
+      const std::string& name =
+          "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence") const;
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream&, const bool detail = false);

@@ -90,11 +90,13 @@ class OpenMPTarget {
 
   inline static bool in_parallel() { return omp_in_parallel(); }
 
-  static void fence();
-  static void fence(const std::string&);
+  static void fence(const std::string& name =
+                        "Kokkos::OpenMPTarget::fence: Unnamed Instance Fence");
 
-  static void impl_static_fence();
-  static void impl_static_fence(const std::string&);
+  static void impl_static_fence(
+      const std::string& name =
+          "Kokkos::OpenMPTarget::impl_static_fence: Unnamed Static Fence");
+
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
 

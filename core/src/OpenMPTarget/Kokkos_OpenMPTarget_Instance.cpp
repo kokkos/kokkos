@@ -145,18 +145,11 @@ uint32_t OpenMPTarget::impl_instance_id() const noexcept {
 int OpenMPTarget::concurrency() {
   return Impl::OpenMPTargetInternal::impl_singleton()->concurrency();
 }
-void OpenMPTarget::fence() {
-  Impl::OpenMPTargetInternal::impl_singleton()->fence(
-      "Kokkos::OpenMPTarget::fence: Unnamed Instance Fence");
-}
+
 void OpenMPTarget::fence(const std::string& name) {
   Impl::OpenMPTargetInternal::impl_singleton()->fence(name);
 }
-void OpenMPTarget::impl_static_fence() {
-  Impl::OpenMPTargetInternal::impl_singleton()->fence(
-      "Kokkos::OpenMPTarget::fence: Unnamed Instance Fence",
-      Kokkos::Experimental::Impl::openmp_fence_is_static::yes);
-}
+
 void OpenMPTarget::impl_static_fence(const std::string& name) {
   Impl::OpenMPTargetInternal::impl_singleton()->fence(
       name, Kokkos::Experimental::Impl::openmp_fence_is_static::yes);

@@ -111,18 +111,11 @@ void SYCL::print_configuration(std::ostream& s, const bool detailed) {
     SYCL::impl_sycl_info(s, m_space_instance->m_queue->get_device());
 }
 
-void SYCL::fence() const {
-  fence("Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
-}
 void SYCL::fence(const std::string& name) const {
   Impl::SYCLInternal::fence(*m_space_instance->m_queue, name,
                             impl_instance_id());
 }
 
-void SYCL::impl_static_fence() {
-  impl_static_fence(
-      "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
-}
 void SYCL::impl_static_fence(const std::string& name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::SYCL>(

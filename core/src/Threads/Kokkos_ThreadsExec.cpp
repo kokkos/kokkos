@@ -807,9 +807,6 @@ void ThreadsExec::finalize() {
 namespace Kokkos {
 
 int Threads::concurrency() { return impl_thread_pool_size(0); }
-void Threads::fence() const {
-  Impl::ThreadsExec::internal_fence(Impl::fence_is_static::no);
-}
 void Threads::fence(const std::string &name) const {
   Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::no);
 }

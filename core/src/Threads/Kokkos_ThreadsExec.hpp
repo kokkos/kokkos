@@ -626,9 +626,6 @@ inline void Threads::print_configuration(std::ostream &s, const bool detail) {
   Impl::ThreadsExec::print_configuration(s, detail);
 }
 
-inline void Threads::impl_static_fence() {
-  Impl::ThreadsExec::internal_fence(Impl::fence_is_static::yes);
-}
 inline void Threads::impl_static_fence(const std::string &name) {
   Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::yes);
 }
