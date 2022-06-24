@@ -179,8 +179,12 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
-      : m_value(_mm256_set1_epi32(value)) {}
+  template <class U,
+            typename std::enable_if<
+                std::is_convertible_v<U, value_type>,
+                bool>::type = false>
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+      : m_value(_mm256_set1_epi32(value_type(value))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256i const& value_in)
       : m_value(value_in) {}
@@ -208,18 +212,6 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
-    return simd(_mm256_mullo_epi32(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator+(simd const& other) const {
-    return simd(_mm256_add_epi32(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-(simd const& other) const {
-    return simd(_mm256_sub_epi32(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-() const {
-    return simd(0) - *this;
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
                                                 element_aligned_tag) const {
@@ -260,6 +252,44 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
+operator*(
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
+      _mm256_mullo_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
+operator+(
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
+      _mm256_add_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
+operator-(
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
+      _mm256_sub_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
+operator-(
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& a)
+{
+  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(0) - a;
+}
+
 KOKKOS_HOST_FORCEINLINE_FUNCTION
 simd<std::int32_t, simd_abi::avx512_fixed_size<8>> condition(
     simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& a,
@@ -287,8 +317,12 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
-      : m_value(_mm256_set1_epi32(bit_cast<std::int32_t>(value))) {}
+  template <class U,
+            typename std::enable_if<
+                std::is_convertible_v<U, value_type>,
+                bool>::type = false>
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+      : m_value(_mm256_set1_epi32(bit_cast<std::int32_t>(value_type(value)))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256i const& value_in)
       : m_value(value_in) {}
@@ -300,15 +334,6 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
-    return simd(_mm256_mullo_epi32(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator+(simd const& other) const {
-    return simd(_mm256_add_epi32(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-(simd const& other) const {
-    return simd(_mm256_sub_epi32(m_value, other.m_value));
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256i() const {
     return m_value;
@@ -339,6 +364,36 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
+operator*(
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
+      _mm256_mullo_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
+operator+(
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
+      _mm256_add_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
+operator-(
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
+      _mm256_sub_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
 KOKKOS_HOST_FORCEINLINE_FUNCTION
 simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> condition(
     simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& a,
@@ -366,8 +421,12 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
-      : m_value(_mm512_set1_epi64(value)) {}
+  template <class U,
+            typename std::enable_if<
+                std::is_convertible_v<U, value_type>,
+                bool>::type = false>
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+      : m_value(_mm512_set1_epi64(value_type(value))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& other)
       : m_value(_mm512_cvtepi32_epi64(static_cast<__m256i>(other))) {}
@@ -380,18 +439,6 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
-    return _mm512_mullo_epi64(m_value, other.m_value);
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator+(simd const& other) const {
-    return _mm512_add_epi64(m_value, other.m_value);
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-(simd const& other) const {
-    return _mm512_sub_epi64(m_value, other.m_value);
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-() const {
-    return simd(0) - *this;
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
                                                 element_aligned_tag) const {
@@ -443,6 +490,43 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
+operator*(
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
+      _mm512_mullo_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
+operator+(
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
+      _mm512_add_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
+operator-(
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
+      _mm512_sub_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
+operator-(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a)
+{
+  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(0) - a;
+}
+
 KOKKOS_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx512_fixed_size<8>> condition(
     simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a,
@@ -470,8 +554,12 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
-      : m_value(_mm512_set1_epi64(bit_cast<std::int64_t>(value))) {}
+  template <class U,
+            typename std::enable_if<
+                std::is_convertible_v<U, value_type>,
+                bool>::type = false>
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+      : m_value(_mm512_set1_epi64(bit_cast<std::int64_t>(value_type(value)))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
       : m_value(value_in) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION explicit simd(
@@ -485,15 +573,6 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
-    return _mm512_mullo_epi64(m_value, other.m_value);
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator+(simd const& other) const {
-    return _mm512_add_epi64(m_value, other.m_value);
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-(simd const& other) const {
-    return _mm512_sub_epi64(m_value, other.m_value);
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator>>(unsigned int rhs) const {
     return _mm512_srli_epi64(m_value, rhs);
@@ -546,6 +625,36 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
+operator*(
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
+      _mm512_mullo_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
+operator+(
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
+      _mm512_add_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
+operator-(
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
+      _mm512_sub_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+}
+
 KOKKOS_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> condition(
     simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& a,
@@ -583,8 +692,12 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(value_type const& value)
-      : m_value(_mm512_set1_pd(value)) {}
+  template <class U,
+            typename std::enable_if<
+                std::is_convertible_v<U, value_type>,
+                bool>::type = false>
+  KOKKOS_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+      : m_value(_mm512_set1_pd(value_type(value))) {}
   KOKKOS_HOST_FORCEINLINE_FUNCTION simd(double a, double b, double c, double d,
                                         double e, double f, double g, double h)
       : m_value(_mm512_setr_pd(a, b, c, d, e, f, g, h)) {}
@@ -596,21 +709,6 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION value_type operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
-    return simd(_mm512_mul_pd(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator/(simd const& other) const {
-    return simd(_mm512_div_pd(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator+(simd const& other) const {
-    return simd(_mm512_add_pd(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-(simd const& other) const {
-    return simd(_mm512_sub_pd(m_value, other.m_value));
-  }
-  KOKKOS_HOST_FORCEINLINE_FUNCTION simd operator-() const {
-    return simd(_mm512_sub_pd(_mm512_set1_pd(0.0), m_value));
   }
   KOKKOS_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                   element_aligned_tag) {
@@ -648,6 +746,54 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
     return mask_type(_mm512_cmpneq_pd_mask(m_value, other.m_value));
   }
 };
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<double, simd_abi::avx512_fixed_size<8>>
+operator*(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<double, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<double, simd_abi::avx512_fixed_size<8>>(
+      _mm512_mul_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<double, simd_abi::avx512_fixed_size<8>>
+operator/(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<double, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<double, simd_abi::avx512_fixed_size<8>>(
+      _mm512_div_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<double, simd_abi::avx512_fixed_size<8>>
+operator+(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<double, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<double, simd_abi::avx512_fixed_size<8>>(
+      _mm512_add_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<double, simd_abi::avx512_fixed_size<8>>
+operator-(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
+    simd<double, simd_abi::avx512_fixed_size<8>> const& rhs)
+{
+  return simd<double, simd_abi::avx512_fixed_size<8>>(
+      _mm512_sub_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION
+simd<double, simd_abi::avx512_fixed_size<8>>
+operator-(simd<double, simd_abi::avx512_fixed_size<8>> const& a)
+{
+  return simd<double, simd_abi::avx512_fixed_size<8>>(
+      _mm512_sub_pd(_mm512_set1_pd(0.0), static_cast<__m512d>(a)));
+}
 
 KOKKOS_HOST_FORCEINLINE_FUNCTION
 simd<double, simd_abi::avx512_fixed_size<8>> copysign(

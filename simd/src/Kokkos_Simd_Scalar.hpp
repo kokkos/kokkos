@@ -138,7 +138,11 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
-  KOKKOS_FORCEINLINE_FUNCTION simd(value_type value) : m_value(value) {}
+  template <class U,
+            typename std::enable_if<
+                std::is_convertible_v<U, value_type>,
+                bool>::type = false>
+  KOKKOS_FORCEINLINE_FUNCTION simd(U&& value) : m_value(value) {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION explicit simd(simd<U, abi_type> const& other)
       : m_value(static_cast<U>(other)) {}
@@ -151,18 +155,6 @@ class simd<T, simd_abi::scalar> {
                 bool>::type = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
-  KOKKOS_FORCEINLINE_FUNCTION simd operator*(simd const& other) const {
-    return simd(m_value * other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator/(simd const& other) const {
-    return simd(m_value / other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator+(simd const& other) const {
-    return simd(m_value + other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator-(simd const& other) const {
-    return simd(m_value - other.m_value);
-  }
   KOKKOS_FORCEINLINE_FUNCTION simd operator-() const { return simd(-m_value); }
   KOKKOS_FORCEINLINE_FUNCTION simd operator>>(int rhs) const {
     return simd(m_value >> rhs);
@@ -219,6 +211,34 @@ class simd<T, simd_abi::scalar> {
     return m_value;
   }
 };
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+simd<T, simd_abi::scalar> operator*(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
+{
+  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) * static_cast<T>(rhs));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+simd<T, simd_abi::scalar> operator/(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
+{
+  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) / static_cast<T>(rhs));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+simd<T, simd_abi::scalar> operator+(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
+{
+  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) + static_cast<T>(rhs));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+simd<T, simd_abi::scalar> operator-(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
+{
+  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) - static_cast<T>(rhs));
+}
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> abs(
