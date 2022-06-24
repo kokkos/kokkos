@@ -1395,7 +1395,7 @@ struct ParallelReduceAdaptor {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename Dummy = ReturnType>
   KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Array reductions with a raw pointer return type a deprecated. Use a "
+      "Array reductions with a raw pointer return type are deprecated. Use a "
       "Kokkos::View as return argument!")
   static inline std::
       enable_if_t<is_array_reduction && std::is_pointer<Dummy>::value> execute(
