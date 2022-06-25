@@ -326,9 +326,7 @@ class HPX {
         });
   }
 
-  static void impl_fence_global(const std::string &name =
-                                    "Kokkos::Experimental::HPX::impl_fence_"
-                                    "global: Unnamed Global Fence") {
+  static void impl_fence_global(const std::string &name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
@@ -353,8 +351,16 @@ class HPX {
     return hpx::execution::parallel_executor();
   }
 
-  void fence() const { impl_fence_instance(); }
-  void fence(const std::string &name) const { impl_fence_instance(name); }
+  void fence(
+      const std::string &name =
+          "Kokkos::Experimental::HPX::fence: Unnamed Instance Fence") const {
+    impl_fence_instance(name);
+  }
+  static void impl_static_fence(
+      const std::string &name
+      "Kokkos::Experimental::HPX::impl_static_fence: Unnamed Global Fence") {
+    impl_fence_instance(name);
+  }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
