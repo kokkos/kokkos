@@ -297,7 +297,7 @@ void ThreadsExec::fence(const std::string &name) {
 void ThreadsExec::internal_fence(Impl::fence_is_static is_static) {
   internal_fence((is_static == Impl::fence_is_static::no)
                      ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
-                     : "Kokkos::ThreadsExec::fence: Unnamed Global Fence",
+                     : "Kokkos::ThreadsExec::fence: Unnamed Static Fence",
                  is_static);
 }
 
