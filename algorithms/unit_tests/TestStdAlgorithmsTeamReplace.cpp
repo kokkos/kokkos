@@ -116,13 +116,8 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   UnifDist<int> howManyColsToChangeProducer(maxColInd, 3123377);
   UnifDist<int> colIndicesProducer(maxColInd, 455225);
   for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
-    const std::size_t numToChange = howManyColsToChangeProducer();
-    std::vector<std::size_t> colIndices(numToChange);
-    for (std::size_t k = 0; k < numToChange; ++k) {
-      colIndices[k] = colIndicesProducer();
-    }
-
-    for (std::size_t j : colIndices) {
+    for (std::size_t j = 0; j < (std::size_t)howManyColsToChangeProducer();
+         ++j) {
       v_dc_h(i, j) = targetVal;
       rowIndOfTargetElements.push_back(i);
       colIndOfTargetElements.push_back(j);
