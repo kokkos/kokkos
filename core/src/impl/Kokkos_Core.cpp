@@ -999,7 +999,6 @@ void finalize() { Impl::finalize_internal(); }
 KOKKOS_DEPRECATED void finalize_all() { Impl::finalize_internal(); }
 #endif
 
-void fence() { Impl::fence_internal("Kokkos::fence: Unnamed Global Fence"); }
 void fence(const std::string& name) { Impl::fence_internal(name); }
 
 void print_helper(std::ostringstream& out,

@@ -292,8 +292,7 @@ class LogicalMemorySpace;
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-void fence();
-void fence(const std::string &);
+void fence(const std::string &name = "Kokkos::fence: Unnamed Global Fence");
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
