@@ -142,6 +142,19 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
       list(APPEND STDALGO_SOURCES_E Test${Name}.cpp)
     endforeach()
 
+    # ------------------------------------------
+    # std team A
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_A)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamFill
+	StdAlgorithmsTeamFill_n
+	StdAlgorithmsTeamReplace
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
+    endforeach()
+
   endif()
 endforeach()
 
