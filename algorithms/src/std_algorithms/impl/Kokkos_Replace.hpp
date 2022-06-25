@@ -72,9 +72,10 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
 // team-level impl
 //
 template <class TeamHandleType, class IteratorType, class ValueType>
-void replace_team_impl(const TeamHandleType& teamHandle, IteratorType first,
-                       IteratorType last, const ValueType& old_value,
-                       const ValueType& new_value) {
+KOKKOS_FUNCTION void replace_team_impl(const TeamHandleType& teamHandle,
+                                       IteratorType first, IteratorType last,
+                                       const ValueType& old_value,
+                                       const ValueType& new_value) {
   // checks
   Impl::static_assert_random_access_and_accessible(teamHandle, first);
   Impl::expect_valid_range(first, last);
