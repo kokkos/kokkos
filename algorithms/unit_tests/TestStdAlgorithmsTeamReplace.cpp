@@ -105,16 +105,17 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
 
   // v might not deep copyable so to modify it on the host
-  auto v_h = create_host_space_copy(v);
+  auto v_dc = create_deep_copyable_compatible_view_with_same_extent(v);
+  auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
 
   std::vector<std::size_t> rowIndOfTargetElements;
   std::vector<std::size_t> colIndOfTargetElements;
   // I need one rand num obj to generate how many cols to change
   // and one object to produce the random indices to change
-  const std::size_t maxColInd = v_h.extent(1) > 0 ? v_h.extent(1) - 1 : 0;
+  const std::size_t maxColInd = v_dc_h.extent(1) > 0 ? v_dc_h.extent(1) - 1 : 0;
   UnifDist<int> howManyColsToChangeProducer(maxColInd, 3123377);
   UnifDist<int> colIndicesProducer(maxColInd, 455225);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
+  for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
     const std::size_t numToChange = howManyColsToChangeProducer();
     std::vector<std::size_t> colIndices(numToChange);
     for (std::size_t k = 0; k < numToChange; ++k) {
@@ -122,14 +123,15 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
     }
 
     for (std::size_t j : colIndices) {
-      v_h(i, j) = targetVal;
+      v_dc_h(i, j) = targetVal;
       rowIndOfTargetElements.push_back(i);
       colIndOfTargetElements.push_back(j);
     }
   }
 
-  // copy from v_h to v (deep copy might not be applicable)
-  CopyFunctorRank2<decltype(v_h), decltype(v)> F1(v_h, v);
+  // copy to v_dc and then to v
+  Kokkos::deep_copy(v_dc, v_dc_h);
+  CopyFunctorRank2<decltype(v_dc), decltype(v)> F1(v_dc, v);
   Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
 
   // launch kernel
