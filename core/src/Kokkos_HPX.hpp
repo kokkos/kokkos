@@ -358,7 +358,7 @@ class HPX {
   }
   static void impl_static_fence(const std::string &name =
                                     "Kokkos::Experimental::HPX::impl_static_"
-                                    "fence: Unnamed Global Fence") {
+                                    "fence: Unnamed Static Fence") {
     impl_fence_instance(name);
   }
 
