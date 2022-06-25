@@ -105,7 +105,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
 
   // v might not deep copyable so to modify it on the host
-  auto v_dc = create_deep_copyable_compatible_view_with_same_extent(v);
+  auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
   auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
 
   std::vector<std::size_t> rowIndOfTargetElements;
