@@ -72,16 +72,17 @@ struct TestFunctorA {
   int m_api_pick;
 
   TestFunctorA(const ViewType view, ValueType val, int apiPick)
-    : m_view(view), m_targetValue(val), m_api_pick(apiPick) {}
+      : m_view(view), m_targetValue(val), m_api_pick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
-    const auto newValue = static_cast<ValueType>(123);
+    const auto newValue   = static_cast<ValueType>(123);
 
     if (m_api_pick == 0) {
-      KE::replace(member, KE::begin(myRowView), KE::end(myRowView), m_targetValue, newValue);
+      KE::replace(member, KE::begin(myRowView), KE::end(myRowView),
+                  m_targetValue, newValue);
     } else if (m_api_pick == 1) {
       KE::replace(member, myRowView, m_targetValue, newValue);
     }
@@ -110,18 +111,17 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   std::vector<std::size_t> colIndOfTargetElements;
   // I need one rand num obj to generate how many cols to change
   // and one object to produce the random indices to change
-  const std::size_t maxColInd = v_h.extent(1) > 0 ? v_h.extent(1)-1 : 0;
+  const std::size_t maxColInd = v_h.extent(1) > 0 ? v_h.extent(1) - 1 : 0;
   UnifDist<int> howManyColsToChangeProducer(maxColInd, 3123377);
   UnifDist<int> colIndicesProducer(maxColInd, 455225);
-  for (std::size_t i=0; i<v_h.extent(0); ++i)
-  {
+  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     const std::size_t numToChange = howManyColsToChangeProducer();
     std::vector<std::size_t> colIndices(numToChange);
-    for (std::size_t k=0; k<numToChange; ++k){
+    for (std::size_t k = 0; k < numToChange; ++k) {
       colIndices[k] = colIndicesProducer();
     }
 
-    for (std::size_t j : colIndices){
+    for (std::size_t j : colIndices) {
       v_h(i, j) = targetVal;
       rowIndOfTargetElements.push_back(i);
       colIndOfTargetElements.push_back(j);
@@ -130,7 +130,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
 
   // copy from v_h to v (deep copy might not be applicable)
   CopyFunctorRank2<decltype(v_h), decltype(v)> F1(v_h, v);
-  Kokkos::parallel_for("copy", v.extent(0)*v.extent(1), F1);
+  Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
 
   // launch kernel
   using space_t          = Kokkos::DefaultExecutionSpace;
@@ -144,9 +144,9 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
 
   // check
   auto v2_h = create_host_space_copy(v);
-  for (std::size_t k=0; k<rowIndOfTargetElements.size(); ++k){
-    EXPECT_TRUE(v2_h(rowIndOfTargetElements[k], colIndOfTargetElements[k])
-		== static_cast<ValueType>(123));
+  for (std::size_t k = 0; k < rowIndOfTargetElements.size(); ++k) {
+    EXPECT_TRUE(v2_h(rowIndOfTargetElements[k], colIndOfTargetElements[k]) ==
+                static_cast<ValueType>(123));
   }
 }
 
@@ -155,7 +155,7 @@ void run_all_scenarios() {
   for (int num_teams : team_sizes_to_test) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
       for (int apiId : {0, 1}) {
-	test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<Tag, ValueType>(num_teams, numCols, apiId);
       }
     }
   }
