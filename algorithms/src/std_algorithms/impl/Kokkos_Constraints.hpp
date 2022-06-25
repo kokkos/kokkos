@@ -47,6 +47,7 @@
 
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_View.hpp>
+#include "Kokkos_IsTeamHandle.hpp"
 
 namespace Kokkos {
 namespace Experimental {
@@ -141,8 +142,11 @@ struct iterators_are_accessible_from<ExeSpace, Head, Tail...> {
       iterators_are_accessible_from<ExeSpace, Tail...>::value;
 };
 
+// this is used in the algorithms when called from the host
+// because the API alwasys accepts an execution space instance
 template <class ExecutionSpace, class... IteratorTypes>
-KOKKOS_INLINE_FUNCTION constexpr void
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    ::Kokkos::is_execution_space<ExecutionSpace>::value>
 static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
                                            IteratorTypes... /* iterators */) {
   static_assert(
@@ -151,6 +155,50 @@ static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
   static_assert(
       iterators_are_accessible_from<ExecutionSpace, IteratorTypes...>::value,
       "Incompatible view/iterator and execution space");
+}
+
+/* the following overload to check random access and accessibility using
+   a team handle is needed because for the team-level algorithms
+   one calls the algorithm directly within a parallel region where they
+   have access to a team handle but NOT an execution space "instance".
+   For the sake of explanation, take the team-level impl of the "fill",
+   and let's say that we really do not want to add a new overload and
+   wanted to use the above static_assert that accepts an execution space
+   instance. If we were to do this:
+
+   template <class TeamHandleType, class IteratorType, class T>
+   KOKKOS_FUNCTION void fill_team_impl(const TeamHandleType& teamHandle,
+                                       IteratorType first,
+                                       IteratorType last, const T& value)
+   {
+     using exe_space_t = typename TeamHandleType::execution_space;
+     Impl::static_assert_random_access_and_accessible(exe_space_t(), first);
+     Impl::expect_valid_range(first, last);
+     const auto num_elements = Kokkos::Experimental::distance(first, last);
+     ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                            StdFillFunctor<IteratorType, T>(first, value));
+     teamHandle.team_barrier();
+   }
+
+   this would fail because we are default constructing the exe space
+   inside the parallel region just so that we can do the static assertion.
+   So having this overload for static assertion accepting a team handle
+   allows us to bypass all that and work correctly, and also has the
+   advantages that it is unique.
+*/
+template <class TeamHandleType, class... IteratorTypes>
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    is_team_handle<TeamHandleType>::value>
+static_assert_random_access_and_accessible(const TeamHandleType& /* th */,
+                                           IteratorTypes... /* iterators */) {
+  static_assert(
+      are_random_access_iterators<IteratorTypes...>::value,
+      "Currently, Kokkos standard algorithms require random access iterators.");
+
+  static_assert(
+      iterators_are_accessible_from<typename TeamHandleType::execution_space,
+                                    IteratorTypes...>::value,
+      "Incompatible view/iterator and team-handle execution space");
 }
 
 //

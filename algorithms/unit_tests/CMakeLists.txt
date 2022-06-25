@@ -152,6 +152,15 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
+foreach(ID A)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_StdSet_Team_${ID}
+    SOURCES
+    UnitTestMain.cpp
+    ${STDALGO_TEAM_SOURCES_${ID}}
+    )
+endforeach()
+
 KOKKOS_ADD_EXECUTABLE(
   UnitTest_StdAlgoCompileOnly
   SOURCES TestStdAlgorithmsCompileOnly.cpp

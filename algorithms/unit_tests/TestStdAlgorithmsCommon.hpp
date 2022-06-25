@@ -57,10 +57,23 @@ namespace stdalgos {
 
 using exespace = Kokkos::DefaultExecutionSpace;
 
+//
+// tags
+//
 struct DynamicTag {};
+
+// these are for rank-1
 struct StridedTwoTag {};
 struct StridedThreeTag {};
 
+// these are for rank-2
+struct StridedTwoRowsTag {};
+struct StridedThreeRowsTag {};
+
+const std::vector<int> team_sizes_to_test = {1, 2, 23, 77, 123};
+
+// map of scenarios where the key is a description
+// and the value is the extent
 const std::map<std::string, std::size_t> default_scenarios = {
     {"empty", 0},          {"one-element", 1}, {"two-elements-a", 2},
     {"two-elements-b", 2}, {"small-a", 9},     {"small-b", 13},
@@ -71,7 +84,14 @@ const std::map<std::string, std::size_t> default_scenarios = {
 std::string view_tag_to_string(DynamicTag);
 std::string view_tag_to_string(StridedTwoTag);
 std::string view_tag_to_string(StridedThreeTag);
+std::string view_tag_to_string(StridedTwoRowsTag);
+std::string view_tag_to_string(StridedThreeRowsTag);
 
+//
+// overload set for create_view for rank1
+//
+
+// dynamic
 template <class ValueType>
 auto create_view(DynamicTag, std::size_t ext, const std::string label) {
   using view_t = Kokkos::View<ValueType*>;
@@ -79,23 +99,62 @@ auto create_view(DynamicTag, std::size_t ext, const std::string label) {
   return view;
 }
 
+// stride2
 template <class ValueType>
 auto create_view(StridedTwoTag, std::size_t ext, const std::string label) {
   using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
   Kokkos::LayoutStride layout{ext, 2};
-  view_t view{label + "_" + view_tag_to_string(DynamicTag{}), layout};
+  view_t view{label + "_" + view_tag_to_string(StridedTwoTag{}), layout};
   return view;
 }
 
+// stride3
 template <class ValueType>
 auto create_view(StridedThreeTag, std::size_t ext, const std::string label) {
   using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
   Kokkos::LayoutStride layout{ext, 3};
-  view_t view{label + "_" + view_tag_to_string(DynamicTag{}), layout};
+  view_t view{label + "_" + view_tag_to_string(StridedThreeTag{}), layout};
   return view;
 }
 
-template <class ViewType>
+//
+// overload set for create_view for rank2
+//
+
+// dynamic
+template <class ValueType>
+auto create_view(DynamicTag, std::size_t ext0, std::size_t ext1,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType**>;
+  view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext0, ext1};
+  return view;
+}
+
+// stride2rows
+template <class ValueType>
+auto create_view(StridedTwoRowsTag, std::size_t ext0, std::size_t ext1,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride>;
+  Kokkos::LayoutStride layout{ext0, 2, ext1, ext0 * 2};
+  view_t view{label + "_" + view_tag_to_string(StridedTwoRowsTag{}), layout};
+  return view;
+}
+
+// stride3rows
+template <class ValueType>
+auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride>;
+  Kokkos::LayoutStride layout{ext0, 3, ext1, ext0 * 3};
+  view_t view{label + "_" + view_tag_to_string(StridedThreeRowsTag{}), layout};
+  return view;
+}
+
+//
+// overload set for create_deep_copyable_compatible_view_with_same_extent
+//
+// rank1
+template <class ViewType, std::enable_if_t<ViewType::rank == 1, int> = 0>
 auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   const std::size_t ext      = view.extent(0);
   using view_value_type      = typename ViewType::value_type;
@@ -105,7 +164,23 @@ auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   return view_dc;
 }
 
-template <class ViewType>
+// rank2
+template <class ViewType, std::enable_if_t<ViewType::rank == 2, int> = 0>
+auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
+  const std::size_t ext0     = view.extent(0);
+  const std::size_t ext1     = view.extent(1);
+  using view_value_type      = typename ViewType::value_type;
+  using view_exespace        = typename ViewType::execution_space;
+  using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
+  view_deep_copyable_t view_dc("view_dc", ext0, ext1);
+  return view_dc;
+}
+
+//
+// overload set for create_deep_copyable_compatible_clone
+//
+// rank1
+template <class ViewType, std::enable_if_t<ViewType::rank == 1, int> = 0>
 auto create_deep_copyable_compatible_clone(ViewType view) {
   auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
   using view_dc_t = decltype(view_dc);
@@ -114,6 +189,19 @@ auto create_deep_copyable_compatible_clone(ViewType view) {
   return view_dc;
 }
 
+// rank2
+template <class ViewType, std::enable_if_t<ViewType::rank == 2, int> = 0>
+auto create_deep_copyable_compatible_clone(ViewType view) {
+  auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
+  using view_dc_t = decltype(view_dc);
+  CopyFunctorRank2<ViewType, view_dc_t> F1(view, view_dc);
+  Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
+  return view_dc;
+}
+
+//
+// others
+//
 template <class ViewType>
 auto create_host_space_copy(ViewType view) {
   auto view_dc = create_deep_copyable_compatible_clone(view);

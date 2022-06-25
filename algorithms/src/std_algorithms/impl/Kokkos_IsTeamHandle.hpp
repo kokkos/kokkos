@@ -42,22 +42,32 @@
 //@HEADER
 */
 
-#include <TestStdAlgorithmsCommon.hpp>
+#ifndef KOKKOS_STD_ALGORITHMS_IS_TEAM_HANDLE_IMPL_HPP
+#define KOKKOS_STD_ALGORITHMS_IS_TEAM_HANDLE_IMPL_HPP
 
-namespace Test {
-namespace stdalgos {
+#include <Kokkos_Core.hpp>
 
-std::string view_tag_to_string(DynamicTag) { return "dynamic_view"; }
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
 
-std::string view_tag_to_string(StridedTwoTag) { return "stride2_view"; }
+// this is just a draft to get started and finish later
 
-std::string view_tag_to_string(StridedThreeTag) { return "stride3_view"; }
+template <class T, class = void>
+struct is_team_handle : std::false_type {};
 
-std::string view_tag_to_string(StridedTwoRowsTag) { return "stride2rows_view"; }
+template <class T>
+struct is_team_handle<
+    T,
+    std::enable_if_t<
+        std::is_same<decltype(std::declval<T>().team_rank()), int>::value &&
+        std::is_same<decltype(std::declval<T>().team_size()), int>::value &&
+        std::is_same<decltype(std::declval<T>().league_rank()), int>::value &&
+        std::is_same<decltype(std::declval<T>().league_size()), int>::value> >
+    : std::true_type {};
 
-std::string view_tag_to_string(StridedThreeRowsTag) {
-  return "stride3rows_view";
-}
+}  // namespace Impl
+}  // namespace Experimental
+}  // namespace Kokkos
 
-}  // namespace stdalgos
-}  // namespace Test
+#endif
