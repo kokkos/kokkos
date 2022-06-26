@@ -193,9 +193,6 @@ void OpenMPTargetSpaceInitializer::finalize(const bool all_spaces) {
   }
 }
 
-void OpenMPTargetSpaceInitializer::fence() {
-  Kokkos::Experimental::OpenMPTarget::impl_static_fence();
-}
 void OpenMPTargetSpaceInitializer::fence(const std::string& name) {
   Kokkos::Experimental::OpenMPTarget::impl_static_fence(name);
 }

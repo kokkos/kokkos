@@ -209,7 +209,6 @@ void SerialSpaceInitializer::finalize(const bool) {
   if (Kokkos::Serial::impl_is_initialized()) Kokkos::Serial::impl_finalize();
 }
 
-void SerialSpaceInitializer::fence() { Kokkos::Serial::impl_static_fence(); }
 void SerialSpaceInitializer::fence(const std::string& name) {
   Kokkos::Serial::impl_static_fence(name);
 }

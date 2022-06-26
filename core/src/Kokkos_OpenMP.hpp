@@ -203,7 +203,6 @@ class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
   ~OpenMPSpaceInitializer() = default;
   void initialize(const InitArguments& args) final;
   void finalize(const bool) final;
-  void fence() final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };

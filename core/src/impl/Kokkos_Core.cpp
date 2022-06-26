@@ -126,11 +126,6 @@ void ExecSpaceManager::finalize_spaces() {
   }
 }
 
-void ExecSpaceManager::static_fence() {
-  for (auto& to_fence : exec_space_factory_list) {
-    to_fence.second->fence();
-  }
-}
 void ExecSpaceManager::static_fence(const std::string& name) {
   for (auto& to_fence : exec_space_factory_list) {
     to_fence.second->fence(name);

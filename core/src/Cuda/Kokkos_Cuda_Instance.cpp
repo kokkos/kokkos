@@ -956,13 +956,7 @@ void CudaSpaceInitializer::finalize(bool all_spaces) {
   }
 }
 
-void CudaSpaceInitializer::fence() {
-  Kokkos::Cuda::impl_static_fence(
-      "Kokkos::CudaSpaceInitializer::fence: Initializer Fence");
-}
 void CudaSpaceInitializer::fence(const std::string &name) {
-  // Kokkos::Cuda::impl_static_fence("Kokkos::CudaSpaceInitializer::fence:
-  // "+name); //TODO: or this
   Kokkos::Cuda::impl_static_fence(name);
 }
 

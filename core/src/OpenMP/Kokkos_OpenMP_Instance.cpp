@@ -464,8 +464,6 @@ void OpenMPSpaceInitializer::finalize(const bool) {
   if (Kokkos::OpenMP::impl_is_initialized()) Kokkos::OpenMP::impl_finalize();
 }
 
-void OpenMPSpaceInitializer::fence() { Kokkos::OpenMP::impl_static_fence(); }
-
 void OpenMPSpaceInitializer::fence(const std::string &name) {
   Kokkos::OpenMP::impl_static_fence(name);
 }
