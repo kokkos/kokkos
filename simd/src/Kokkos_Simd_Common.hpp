@@ -69,24 +69,60 @@ class simd_mask;
 
 struct element_aligned_tag {};
 
-template <class Mask, class Value>
+// class template declarations for const_where_expression and where_expression
+
+template <class M, class T>
 class const_where_expression {
  protected:
-  Value& m_value;
-  Mask const& m_mask;
+  T& m_value;
+  M const& m_mask;
 
  public:
-  const_where_expression(Mask const& mask_arg, Value const& value_arg)
-      : m_value(const_cast<Value&>(value_arg)), m_mask(mask_arg) {}
+  const_where_expression(M const& mask_arg, T const& value_arg)
+      : m_value(const_cast<T&>(value_arg)), m_mask(mask_arg) {}
 };
 
-template <class Mask, class Value>
-class where_expression : public const_where_expression<Mask, Value> {
-  using base_type = const_where_expression<Mask, Value>;
+template <class M, class T>
+class where_expression : public const_where_expression<M, T> {
+  using base_type = const_where_expression<M, T>;
 
  public:
-  where_expression(Mask const& mask_arg, Value& value_arg)
+  where_expression(M const& mask_arg, T& value_arg)
       : base_type(mask_arg, value_arg) {}
+};
+
+// specializations of where expression templates for the case when the
+// mask type is bool, to allow generic code to use where() on both
+// SIMD types and non-SIMD builtin arithmetic types
+
+template <class T>
+class const_where_expression<bool, T> {
+ protected:
+  T& m_value;
+  bool m_mask;
+
+ public:
+  KOKKOS_FORCEINLINE_FUNCTION
+  const_where_expression(bool mask_arg, T const& value_arg)
+      : m_value(const_cast<T&>(value_arg)), m_mask(mask_arg) {}
+};
+
+template <class T>
+class where_expression<bool, T> : public const_where_expression<bool, T> {
+  using base_type = const_where_expression<bool, T>;
+
+ public:
+  KOKKOS_FORCEINLINE_FUNCTION
+  where_expression(bool mask_arg, T& value_arg)
+      : base_type(mask_arg, value_arg) {}
+  template <class U,
+           std::enable_if_t<
+             std::is_convertible_v<U, T>,
+           bool> = false>
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator=(U&& x) {
+    if (this->m_mask) this->m_value = x;
+  }
 };
 
 template <class T, class Abi>

@@ -313,10 +313,13 @@ class where_expression<simd_mask<T, simd_abi::scalar>,
     if (static_cast<bool>(this->m_mask))
       this->m_value = mem[static_cast<Integral>(index)];
   }
-  template <class U>
-  KOKKOS_FORCEINLINE_FUNCTION void operator=(U const& other) {
+  template <class U,
+           std::enable_if_t<
+             std::is_convertible_v<U, simd<T, simd_abi::scalar>>,
+           bool> = false>
+  KOKKOS_FORCEINLINE_FUNCTION void operator=(U&& x) {
     if (static_cast<bool>(this->m_mask))
-      this->m_value = static_cast<simd<T, simd_abi::scalar>>(other);
+      this->m_value = static_cast<simd<T, simd_abi::scalar>>(std::forward<U>(x));
   }
 };
 

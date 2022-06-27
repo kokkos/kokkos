@@ -132,7 +132,7 @@ class load_masked {
     }
     where(mask, result)
         .copy_from(mem, Kokkos::Experimental::element_aligned_tag());
-    where(!mask, result) = T(0);
+    where(!mask, result) = 0;
     return true;
   }
   template <class T, class Abi>

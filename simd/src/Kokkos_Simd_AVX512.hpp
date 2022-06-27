@@ -921,13 +921,16 @@ class where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
         _mm512_set1_pd(0.0), static_cast<__mmask8>(m_mask),
         static_cast<__m256i>(index), mem, 8));
   }
-  template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U const& other) {
-    auto const other_as_value_type =
-        static_cast<simd<double, simd_abi::avx512_fixed_size<8>>>(other);
+  template <class U,
+           std::enable_if_t<
+             std::is_convertible_v<U, simd<double, simd_abi::avx512_fixed_size<8>>>,
+           bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
+    auto const x_as_value_type =
+        static_cast<simd<double, simd_abi::avx512_fixed_size<8>>>(std::forward<U>(x));
     m_value = simd<double, simd_abi::avx512_fixed_size<8>>(_mm512_mask_blend_pd(
         static_cast<__mmask8>(m_mask), static_cast<__m512d>(m_value),
-        static_cast<__m512d>(other_as_value_type)));
+        static_cast<__m512d>(x_as_value_type)));
   }
 };
 
