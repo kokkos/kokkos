@@ -264,12 +264,12 @@
 #define KOKKOS_ENABLE_ASM 1
 #endif
 
-#if !defined(KOKKOS_HOST_FORCEINLINE_FUNCTION)
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #if !defined(_WIN32)
-#define KOKKOS_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
 #else
-#define KOKKOS_HOST_FORCEINLINE_FUNCTION inline
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
 #endif
 #endif
 
@@ -320,8 +320,8 @@
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 //#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
-#if !defined(KOKKOS_HOST_FORCEINLINE_FUNCTION)
-#define KOKKOS_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
@@ -345,8 +345,8 @@
 #define KOKKOS_ENABLE_RFO_PREFETCH 1
 #endif
 
-#if !defined(KOKKOS_HOST_FORCEINLINE_FUNCTION)
-#define KOKKOS_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
@@ -380,8 +380,8 @@
 //----------------------------------------------------------------------------
 // Define function marking macros if compiler specific macros are undefined:
 
-#if !defined(KOKKOS_HOST_FORCEINLINE_FUNCTION)
-#define KOKKOS_HOST_FORCEINLINE_FUNCTION inline
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
 #endif
 
 #if !defined(KOKKOS_HOST_FORCEINLINE)
@@ -389,7 +389,7 @@
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION KOKKOS_HOST_FORCEINLINE_FUNCTION
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
