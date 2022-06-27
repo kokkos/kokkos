@@ -68,7 +68,7 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -279,9 +279,11 @@ class HPX {
   HPX() noexcept {}
 #endif
 
-  static void print_configuration(std::ostream &,
-                                  const bool /* verbose */ = false) {
-    std::cout << "HPX backend" << std::endl;
+  void print_configuration(std::ostream &os, bool /*verbose*/ = false) const {
+    os << "HPX backend\n";
+    os << "HPX Execution Space:\n";
+    os << "  KOKKOS_ENABLE_HPX: yes\n";
+    os << "\nHPX Runtime Configuration:\n";
   }
   uint32_t impl_instance_id() const noexcept { return m_instance_id; }
 
@@ -379,8 +381,7 @@ class HPX {
 #endif
 
   static int concurrency();
-  static void impl_initialize(int thread_count);
-  static void impl_initialize();
+  static void impl_initialize(InitializationSettings const &);
   static bool impl_is_initialized() noexcept;
   static void impl_finalize();
 
@@ -494,16 +495,6 @@ struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
 }  // namespace Tools
 
 namespace Impl {
-
-class HPXSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  HPXSpaceInitializer()  = default;
-  ~HPXSpaceInitializer() = default;
-  void initialize(const InitializationSettings &settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string &) final;
-  void print_configuration(std::ostream &msg, const bool detail) final;
-};
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 template <typename Closure>

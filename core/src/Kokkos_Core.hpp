@@ -74,45 +74,13 @@
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <functional>
 #include <iosfwd>
-#include <map>
 #include <memory>
 #include <vector>
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
-/* ExecSpaceManager - Responsible for initializing all of the registered
- * backends. Backends are registered using the register_space_initializer()
- * function which should be called from a global context so that it is called
- * prior to initialize_spaces() which is called from Kokkos::initialize()
- */
-class ExecSpaceManager {
-  std::map<std::string, std::unique_ptr<ExecSpaceInitializerBase>>
-      exec_space_factory_list;
 
- public:
-  ExecSpaceManager() = default;
-
-  void register_space_factory(std::string name,
-                              std::unique_ptr<ExecSpaceInitializerBase> ptr);
-  void initialize_spaces(const InitializationSettings& settings);
-  void finalize_spaces();
-  void static_fence();
-  void static_fence(const std::string&);
-  void print_configuration(std::ostream& msg, const bool detail);
-  static ExecSpaceManager& get_instance();
-};
-
-template <class SpaceInitializerType>
-int initialize_space_factory(std::string name) {
-  auto space_ptr = std::make_unique<SpaceInitializerType>();
-  ExecSpaceManager::get_instance().register_space_factory(name,
-                                                          std::move(space_ptr));
-  return 1;
-}
-
-}  // namespace Impl
 void initialize(int& argc, char* argv[]);
 
 void initialize(
@@ -168,7 +136,7 @@ KOKKOS_DEPRECATED void finalize_all();
 void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
 
 /** \brief Print "Bill of Materials" */
-void print_configuration(std::ostream&, const bool detail = false);
+void print_configuration(std::ostream& os, bool verbose = false);
 
 }  // namespace Kokkos
 

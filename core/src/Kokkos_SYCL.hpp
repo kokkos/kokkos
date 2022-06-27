@@ -52,9 +52,9 @@
 #include <Kokkos_SYCL_Space.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -118,7 +118,7 @@ class SYCL {
           "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence") const;
 
   /// \brief Print configuration information to the given output stream.
-  void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   /// \brief Free any resources being consumed by the device.
   static void impl_finalize();
@@ -143,7 +143,7 @@ class SYCL {
     sycl::device m_device;
   };
 
-  static void impl_initialize(SYCLDevice = SYCLDevice());
+  static void impl_initialize(InitializationSettings const&);
 
   int sycl_device() const;
 
@@ -163,17 +163,6 @@ class SYCL {
   Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
 };
 
-namespace Impl {
-
-class SYCLSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
- public:
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Experimental
 
 namespace Tools {

@@ -50,6 +50,7 @@
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 
 namespace {
 template <typename C>
@@ -100,10 +101,15 @@ bool SYCL::impl_is_initialized() {
 
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
-void SYCL::print_configuration(std::ostream& s, const bool detailed) {
-  s << "macro  KOKKOS_ENABLE_SYCL : defined" << '\n';
-  if (detailed)
-    SYCL::impl_sycl_info(s, m_space_instance->m_queue->get_device());
+void SYCL::print_configuration(std::ostream& os, bool verbose) const {
+  os << "Devices:\n";
+  os << "  KOKKOS_ENABLE_SYCL: yes\n";
+
+  os << "\nRuntime Configuration:\n";
+
+  os << "macro  KOKKOS_ENABLE_SYCL : defined\n";
+  if (verbose)
+    SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
 }
 
 void SYCL::fence(const std::string& name) const {
@@ -155,8 +161,27 @@ SYCL::SYCLDevice::SYCLDevice(size_t id) {
 
 sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
 
-void SYCL::impl_initialize(SYCL::SYCLDevice d) {
-  Impl::SYCLInternal::singleton().initialize(d.get_device());
+void SYCL::impl_initialize(InitializationSettings const& settings) {
+  // If there are no GPUs return whatever else we can run on if no specific GPU
+  // is requested.
+  const auto num_gpus =
+      sycl::device::get_devices(sycl::info::device_type::gpu).size();
+  int use_gpu = num_gpus == 0
+                    ? (settings.has_device_id() ? settings.get_device_id() : -1)
+                    : Kokkos::Impl::get_gpu(settings);
+
+  if (std::is_same<Kokkos::Experimental::SYCL,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    if (use_gpu > -1) {
+      Impl::SYCLInternal::singleton().initialize(
+          Kokkos::Experimental::SYCL::SYCLDevice(use_gpu).get_device());
+    } else {
+      Impl::SYCLInternal::singleton().initialize(
+          Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector())
+              .get_device());
+    }
+  }
 }
 
 std::ostream& SYCL::impl_sycl_info(std::ostream& os,
@@ -266,53 +291,8 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
 namespace Impl {
 
 int g_sycl_space_factory_initialized =
-    Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
+    Kokkos::Impl::initialize_space_factory<SYCL>("170_SYCL");
 
-void SYCLSpaceInitializer::initialize(const InitializationSettings& settings) {
-  // If there are no GPUs return whatever else we can run on if no specific GPU
-  // is requested.
-  const auto num_gpus =
-      sycl::device::get_devices(sycl::info::device_type::gpu).size();
-  int use_gpu = num_gpus == 0
-                    ? (settings.has_device_id() ? settings.get_device_id() : -1)
-                    : Kokkos::Impl::get_gpu(settings);
-
-  if (std::is_same<Kokkos::Experimental::SYCL,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Kokkos::Experimental::SYCL::impl_initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(use_gpu));
-    } else {
-      Kokkos::Experimental::SYCL::impl_initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector()));
-    }
-  }
 }
-
-void SYCLSpaceInitializer::finalize(const bool all_spaces) {
-  if (std::is_same<Kokkos::Experimental::SYCL,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::SYCL::impl_is_initialized())
-      Kokkos::Experimental::SYCL::impl_finalize();
-  }
-}
-
-void SYCLSpaceInitializer::fence(const std::string& name) {
-  Kokkos::Experimental::SYCL::impl_static_fence(name);
-}
-
-void SYCLSpaceInitializer::print_configuration(std::ostream& msg,
-                                               const bool detail) {
-  msg << "Devices:" << std::endl;
-  msg << "  KOKKOS_ENABLE_SYCL: ";
-  msg << "yes" << std::endl;
-
-  msg << "\nRuntime Configuration:" << std::endl;
-  Experimental::SYCL{}.print_configuration(msg, detail);
-}
-
-}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

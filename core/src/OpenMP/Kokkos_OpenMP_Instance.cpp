@@ -54,7 +54,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Tools.hpp>
-#include "Kokkos_OpenMP_Instance.hpp"
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -428,14 +428,28 @@ int OpenMP::impl_get_current_max_threads() noexcept {
   return Impl::OpenMPInternal::get_current_max_threads();
 }
 
-void OpenMP::impl_initialize(int thread_count) {
-  Impl::OpenMPInternal::singleton().initialize(thread_count);
+void OpenMP::impl_initialize(InitializationSettings const &settings) {
+  Impl::OpenMPInternal::singleton().initialize(
+      settings.has_num_threads() ? settings.get_num_threads() : -1);
 }
 
 void OpenMP::impl_finalize() { Impl::OpenMPInternal::singleton().finalize(); }
 
-void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
-  Impl::OpenMPInternal::singleton().print_configuration(s);
+void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
+  os << "Host Parallel Execution Space:\n";
+  os << "  KOKKOS_ENABLE_OPENMP: yes\n";
+
+  os << "OpenMP Atomics:\n";
+  os << "  KOKKOS_ENABLE_OPENMP_ATOMICS: ";
+#ifdef KOKKOS_ENABLE_OPENMP_ATOMICS
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
+
+  os << "\nOpenMP Runtime Configuration:\n";
+
+  m_space_instance->print_configuration(os);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
@@ -454,39 +468,7 @@ void OpenMP::fence(const std::string &name) const {
 namespace Impl {
 
 int g_openmp_space_factory_initialized =
-    initialize_space_factory<OpenMPSpaceInitializer>("050_OpenMP");
-
-void OpenMPSpaceInitializer::initialize(
-    const InitializationSettings &settings) {
-  Kokkos::OpenMP::impl_initialize(
-      settings.has_num_threads() ? settings.get_num_threads() : -1);
-}
-
-void OpenMPSpaceInitializer::finalize(const bool) {
-  if (Kokkos::OpenMP::impl_is_initialized()) Kokkos::OpenMP::impl_finalize();
-}
-
-void OpenMPSpaceInitializer::fence(const std::string &name) {
-  Kokkos::OpenMP::impl_static_fence(name);
-}
-
-void OpenMPSpaceInitializer::print_configuration(std::ostream &msg,
-                                                 const bool detail) {
-  msg << "Host Parallel Execution Space:" << std::endl;
-  msg << "  KOKKOS_ENABLE_OPENMP: ";
-  msg << "yes" << std::endl;
-
-  msg << "OpenMP Atomics:" << std::endl;
-  msg << "  KOKKOS_ENABLE_OPENMP_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_OPENMP_ATOMICS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-
-  msg << "\nOpenMP Runtime Configuration:" << std::endl;
-  OpenMP::print_configuration(msg, detail);
-}
+    initialize_space_factory<OpenMP>("050_OpenMP");
 
 }  // namespace Impl
 

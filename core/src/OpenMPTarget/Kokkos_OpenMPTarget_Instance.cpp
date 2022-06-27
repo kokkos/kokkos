@@ -53,6 +53,7 @@
 #include <Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 
 #include <sstream>
 
@@ -89,10 +90,10 @@ void OpenMPTargetInternal::fence(const std::string& name,
 }
 int OpenMPTargetInternal::concurrency() { return 128000; }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
-void OpenMPTargetInternal::print_configuration(std::ostream& /*stream*/,
-                                               const bool) {
+void OpenMPTargetInternal::print_configuration(std::ostream& os,
+                                               bool /*verbose*/) const {
   // FIXME_OPENMPTARGET
-  printf("Using OpenMPTarget\n");
+  os << "Using OpenMPTarget\n";
 }
 
 void OpenMPTargetInternal::impl_finalize() {
@@ -133,9 +134,13 @@ OpenMPTarget::OpenMPTarget()
 const char* OpenMPTarget::name() {
   return Impl::OpenMPTargetInternal::impl_singleton()->name();
 }
-void OpenMPTarget::print_configuration(std::ostream& stream,
-                                       const bool detail) {
-  m_space_instance->print_configuration(stream, detail);
+void OpenMPTarget::print_configuration(std::ostream& os, bool verbose) const {
+  os << "OpenMPTarget Execution Space:\n";
+  os << "  KOKKOS_ENABLE_OPENMPTARGET: yes\n";
+
+  os << "\nOpenMPTarget Runtime Configuration:\n";
+
+  m_space_instance->print_configuration(os, verbose);
 }
 
 uint32_t OpenMPTarget::impl_instance_id() const noexcept {
@@ -155,8 +160,12 @@ void OpenMPTarget::impl_static_fence(const std::string& name) {
       name, Kokkos::Experimental::Impl::openmp_fence_is_static::yes);
 }
 
-void OpenMPTarget::impl_initialize() { m_space_instance->impl_initialize(); }
-void OpenMPTarget::impl_finalize() { m_space_instance->impl_finalize(); }
+void OpenMPTarget::impl_initialize(InitializationSettings const&) {
+  Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize();
+}
+void OpenMPTarget::impl_finalize() {
+  Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
+}
 int OpenMPTarget::impl_is_initialized() {
   return Impl::OpenMPTargetInternal::impl_singleton()->impl_is_initialized();
 }
@@ -164,49 +173,8 @@ int OpenMPTarget::impl_is_initialized() {
 
 namespace Impl {
 int g_openmptarget_space_factory_initialized =
-    Kokkos::Impl::initialize_space_factory<OpenMPTargetSpaceInitializer>(
+    Kokkos::Impl::initialize_space_factory<Experimental::OpenMPTarget>(
         "160_OpenMPTarget");
-
-void OpenMPTargetSpaceInitializer::initialize(
-    const InitializationSettings& settings) {
-  // Prevent "unused variable" warning for 'settings' input struct.  If
-  // Serial::initialize() ever needs to take arguments from the input
-  // struct, you may remove this line of code.
-  (void)settings;
-
-  if (std::is_same<Kokkos::Experimental::OpenMPTarget,
-                   Kokkos::DefaultExecutionSpace>::value) {
-    Kokkos::Experimental::OpenMPTarget().impl_initialize();
-    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
-    // << std::endl ;
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
-    // initialized" << std::endl ;
-  }
-}
-
-void OpenMPTargetSpaceInitializer::finalize(const bool all_spaces) {
-  if (std::is_same<Kokkos::Experimental::OpenMPTarget,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::OpenMPTarget().impl_is_initialized())
-      Kokkos::Experimental::OpenMPTarget().impl_finalize();
-  }
-}
-
-void OpenMPTargetSpaceInitializer::fence(const std::string& name) {
-  Kokkos::Experimental::OpenMPTarget::impl_static_fence(name);
-}
-
-void OpenMPTargetSpaceInitializer::print_configuration(std::ostream& msg,
-                                                       const bool detail) {
-  msg << "OpenMPTarget Execution Space:" << std::endl;
-  msg << "  KOKKOS_ENABLE_OPENMPTARGET: ";
-  msg << "yes" << std::endl;
-
-  msg << "\nOpenMPTarget Runtime Configuration:" << std::endl;
-  Kokkos::Experimental::OpenMPTarget().print_configuration(msg, detail);
-}
 
 }  // namespace Impl
 }  // Namespace Kokkos

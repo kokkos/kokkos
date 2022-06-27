@@ -44,10 +44,10 @@
 
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <cctype>
 #include <cstring>
 #include <iostream>
@@ -164,7 +164,7 @@ Kokkos::Impl::ExecSpaceManager& Kokkos::Impl::ExecSpaceManager::get_instance() {
 }
 
 void Kokkos::Impl::ExecSpaceManager::register_space_factory(
-    const std::string name, std::unique_ptr<ExecSpaceInitializerBase> space) {
+    const std::string name, std::unique_ptr<ExecSpaceBase> space) {
   exec_space_factory_list[name] = std::move(space);
 }
 
@@ -181,19 +181,19 @@ void Kokkos::Impl::ExecSpaceManager::initialize_spaces(
 
 void Kokkos::Impl::ExecSpaceManager::finalize_spaces() {
   for (auto& to_finalize : exec_space_factory_list) {
-    to_finalize.second->finalize(/*all_spaces=*/true);
+    to_finalize.second->finalize();
   }
 }
 
 void Kokkos::Impl::ExecSpaceManager::static_fence(const std::string& name) {
   for (auto& to_fence : exec_space_factory_list) {
-    to_fence.second->fence(name);
+    to_fence.second->static_fence(name);
   }
 }
-void Kokkos::Impl::ExecSpaceManager::print_configuration(std::ostream& msg,
-                                                         const bool detail) {
-  for (auto& to_print : exec_space_factory_list) {
-    to_print.second->print_configuration(msg, detail);
+void Kokkos::Impl::ExecSpaceManager::print_configuration(std::ostream& os,
+                                                         bool verbose) {
+  for (auto const& to_print : exec_space_factory_list) {
+    to_print.second->print_configuration(os, verbose);
   }
 }
 
@@ -1000,40 +1000,36 @@ KOKKOS_DEPRECATED void Kokkos::finalize_all() { finalize_internal(); }
 void Kokkos::fence(const std::string& name) { fence_internal(name); }
 
 namespace {
-void print_helper(std::ostringstream& out,
+void print_helper(std::ostream& os,
                   const std::map<std::string, std::string>& print_me) {
   for (const auto& kv : print_me) {
-    out << kv.first << ": " << kv.second << '\n';
+    os << kv.first << ": " << kv.second << '\n';
   }
 }
 }  // namespace
 
-void Kokkos::print_configuration(std::ostream& out, const bool detail) {
-  std::ostringstream msg;
+void Kokkos::print_configuration(std::ostream& os, bool verbose) {
+  print_helper(os, metadata_map["version_info"]);
 
-  print_helper(msg, metadata_map["version_info"]);
+  os << "Compiler:\n";
+  print_helper(os, metadata_map["compiler_version"]);
 
-  msg << "Compiler:" << std::endl;
-  print_helper(msg, metadata_map["compiler_version"]);
+  os << "Architecture:\n";
+  print_helper(os, metadata_map["architecture"]);
 
-  msg << "Architecture:" << std::endl;
-  print_helper(msg, metadata_map["architecture"]);
+  os << "Atomics:\n";
+  print_helper(os, metadata_map["atomics"]);
 
-  msg << "Atomics:" << std::endl;
-  print_helper(msg, metadata_map["atomics"]);
+  os << "Vectorization:\n";
+  print_helper(os, metadata_map["vectorization"]);
 
-  msg << "Vectorization:" << std::endl;
-  print_helper(msg, metadata_map["vectorization"]);
+  os << "Memory:\n";
+  print_helper(os, metadata_map["memory"]);
 
-  msg << "Memory:" << std::endl;
-  print_helper(msg, metadata_map["memory"]);
+  os << "Options:\n";
+  print_helper(os, metadata_map["options"]);
 
-  msg << "Options:" << std::endl;
-  print_helper(msg, metadata_map["options"]);
-
-  Impl::ExecSpaceManager::get_instance().print_configuration(msg, detail);
-
-  out << msg.str() << std::endl;
+  Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
 bool Kokkos::is_initialized() noexcept { return g_is_initialized; }
@@ -1052,7 +1048,6 @@ namespace Impl {
 void _kokkos_pgi_compiler_bug_workaround() {}
 }  // end namespace Impl
 #endif
-
 }  // namespace Kokkos
 
 Kokkos::Impl::InitializationSettingsHelper<std::string>::storage_type const

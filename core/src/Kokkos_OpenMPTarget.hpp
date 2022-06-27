@@ -59,8 +59,8 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
@@ -99,18 +99,18 @@ class OpenMPTarget {
   static int concurrency();
 
   //! Print configuration information to the given output stream.
-  void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   static const char* name();
 
   //! Free any resources being consumed by the device.
-  void impl_finalize();
+  static void impl_finalize();
 
   //! Has been initialized
   static int impl_is_initialized();
 
   //! Initialize, telling the CUDA run-time library which device to use.
-  void impl_initialize();
+  static void impl_initialize(InitializationSettings const&);
 
   inline Impl::OpenMPTargetInternal* impl_internal_space_instance() const {
     return m_space_instance;
@@ -148,19 +148,6 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 }  // namespace Experimental
 }  // namespace Tools
 
-namespace Impl {
-
-class OpenMPTargetSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  OpenMPTargetSpaceInitializer()  = default;
-  ~OpenMPTargetSpaceInitializer() = default;
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
