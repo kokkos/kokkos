@@ -913,13 +913,7 @@ void Cuda::print_configuration(std::ostream &s, const bool) {
 void Cuda::impl_static_fence(const std::string &name) {
   Kokkos::Impl::cuda_device_synchronize(name);
 }
-void Cuda::impl_static_fence() {
-  impl_static_fence("Kokkos::Cuda::impl_static_fence(): Unnamed Static Fence");
-}
 
-void Cuda::fence() const {
-  fence("Kokkos::Cuda::fence(): Unnamed Instance Fence");
-}
 void Cuda::fence(const std::string &name) const {
   m_space_instance->fence(name);
 }
@@ -962,13 +956,7 @@ void CudaSpaceInitializer::finalize(bool all_spaces) {
   }
 }
 
-void CudaSpaceInitializer::fence() {
-  Kokkos::Cuda::impl_static_fence(
-      "Kokkos::CudaSpaceInitializer::fence: Initializer Fence");
-}
 void CudaSpaceInitializer::fence(const std::string &name) {
-  // Kokkos::Cuda::impl_static_fence("Kokkos::CudaSpaceInitializer::fence:
-  // "+name); //TODO: or this
   Kokkos::Cuda::impl_static_fence(name);
 }
 

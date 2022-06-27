@@ -107,11 +107,10 @@ class OpenMP {
   /// \brief Wait until all dispatched functors complete on the given instance
   ///
   ///  This is a no-op on OpenMP
-  static void impl_static_fence(OpenMP const&           = OpenMP(),
-                                const std::string& name = "") noexcept;
+  static void impl_static_fence(std::string const& name);
 
-  void fence() const;
-  void fence(const std::string& name) const;
+  void fence(std::string const& name =
+                 "Kokkos::OpenMP::fence: Unnamed Instance Fence") const;
 
   /// \brief Does the given instance return immediately after launching
   /// a parallel algorithm
@@ -202,7 +201,6 @@ class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
   ~OpenMPSpaceInitializer() = default;
   void initialize(const InitArguments& args) final;
   void finalize(const bool) final;
-  void fence() final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };

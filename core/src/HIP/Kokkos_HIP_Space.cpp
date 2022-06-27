@@ -385,15 +385,9 @@ void HIP::impl_static_fence(const std::string& name) {
           GlobalDeviceSynchronization,
       [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
 }
-void HIP::impl_static_fence() {
-  impl_static_fence("Kokkos::HIP::impl_static_fence: Unnamed Static Fence");
-}
 
 void HIP::fence(const std::string& name) const {
   m_space_instance->fence(name);
-}
-void HIP::fence() const {
-  fence("Kokkos::HIP::fence(): Unnamed Instance Fence");
 }
 
 hipStream_t HIP::hip_stream() const { return m_space_instance->m_stream; }
@@ -437,9 +431,6 @@ void HIPSpaceInitializer::finalize(const bool all_spaces) {
   }
 }
 
-void HIPSpaceInitializer::fence() {
-  Kokkos::Experimental::HIP::impl_static_fence();
-}
 void HIPSpaceInitializer::fence(const std::string& name) {
   Kokkos::Experimental::HIP::impl_static_fence(name);
 }

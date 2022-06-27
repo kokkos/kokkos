@@ -183,11 +183,10 @@ class Cuda {
   /// return asynchronously, before the functor completes.  This
   /// method does not return until all dispatched functors on this
   /// device have completed.
-  static void impl_static_fence();
-  static void impl_static_fence(const std::string&);
+  static void impl_static_fence(const std::string& name);
 
-  void fence() const;
-  void fence(const std::string&) const;
+  void fence(const std::string& name =
+                 "Kokkos::Cuda::fence(): Unnamed Instance Fence") const;
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
@@ -273,7 +272,6 @@ class CudaSpaceInitializer : public ExecSpaceInitializerBase {
   ~CudaSpaceInitializer() = default;
   void initialize(const InitArguments& args) final;
   void finalize(const bool all_spaces) final;
-  void fence() final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };

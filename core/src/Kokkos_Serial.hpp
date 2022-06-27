@@ -150,10 +150,6 @@ class Serial {
   /// return asynchronously, before the functor completes.  This
   /// method does not return until all dispatched functors on this
   /// device have completed.
-  static void impl_static_fence() {
-    impl_static_fence(
-        "Kokkos::Serial::impl_static_fence: Unnamed Static Fence");
-  }
   static void impl_static_fence(const std::string& name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
         name,
@@ -163,8 +159,8 @@ class Serial {
     Kokkos::memory_fence();
   }
 
-  void fence() const { fence("Kokkos::Serial::fence: Unnamed Instance Fence"); }
-  void fence(const std::string& name) const {
+  void fence(const std::string& name =
+                 "Kokkos::Serial::fence: Unnamed Instance Fence") const {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
         name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
         []() {});  // TODO: correct device ID
@@ -238,7 +234,6 @@ class SerialSpaceInitializer : public ExecSpaceInitializerBase {
   ~SerialSpaceInitializer() = default;
   void initialize(const InitArguments& args) final;
   void finalize(const bool) final;
-  void fence() final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };

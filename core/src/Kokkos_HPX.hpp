@@ -308,9 +308,9 @@ class HPX {
   }
 #endif
 
-  void impl_fence_instance(const std::string &name =
-                               "Kokkos::Experimental::HPX::impl_fence_instance:"
-                               " Unnamed Instance Fence") const {
+  void fence(
+      const std::string &name =
+          "Kokkos::Experimental::HPX::fence: Unnamed Instance Fence") const {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
@@ -326,9 +326,7 @@ class HPX {
         });
   }
 
-  static void impl_fence_global(const std::string &name =
-                                    "Kokkos::Experimental::HPX::impl_fence_"
-                                    "global: Unnamed Global Fence") {
+  static void impl_static_fence(const std::string &name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
@@ -343,7 +341,7 @@ class HPX {
           // Reset the future to free variables that may have been captured in
           // parallel regions (however, we don't have access to futures from
           // instances other than the default instances, they will only be
-          // released by impl_fence_instance).
+          // released by fence).
           HPX().impl_get_future() = hpx::make_ready_future<void>();
 #endif
         });
@@ -352,9 +350,6 @@ class HPX {
   static hpx::execution::parallel_executor impl_get_executor() {
     return hpx::execution::parallel_executor();
   }
-
-  void fence() const { impl_fence_instance(); }
-  void fence(const std::string &name) const { impl_fence_instance(name); }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -506,7 +501,6 @@ class HPXSpaceInitializer : public ExecSpaceInitializerBase {
   ~HPXSpaceInitializer() = default;
   void initialize(const InitArguments &args) final;
   void finalize(const bool) final;
-  void fence() final;
   void fence(const std::string &) final;
   void print_configuration(std::ostream &msg, const bool detail) final;
 };

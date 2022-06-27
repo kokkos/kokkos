@@ -297,7 +297,7 @@ void ThreadsExec::fence(const std::string &name) {
 void ThreadsExec::internal_fence(Impl::fence_is_static is_static) {
   internal_fence((is_static == Impl::fence_is_static::no)
                      ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
-                     : "Kokkos::ThreadsExec::fence: Unnamed Global Fence",
+                     : "Kokkos::ThreadsExec::fence: Unnamed Static Fence",
                  is_static);
 }
 
@@ -807,9 +807,6 @@ void ThreadsExec::finalize() {
 namespace Kokkos {
 
 int Threads::concurrency() { return impl_thread_pool_size(0); }
-void Threads::fence() const {
-  Impl::ThreadsExec::internal_fence(Impl::fence_is_static::no);
-}
 void Threads::fence(const std::string &name) const {
   Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::no);
 }
@@ -853,7 +850,6 @@ void ThreadsSpaceInitializer::finalize(const bool all_spaces) {
   }
 }
 
-void ThreadsSpaceInitializer::fence() { Kokkos::Threads::impl_static_fence(); }
 void ThreadsSpaceInitializer::fence(const std::string &name) {
   Kokkos::Threads::impl_static_fence(name);
 }

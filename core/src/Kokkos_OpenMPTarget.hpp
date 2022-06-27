@@ -90,11 +90,11 @@ class OpenMPTarget {
 
   inline static bool in_parallel() { return omp_in_parallel(); }
 
-  static void fence();
-  static void fence(const std::string&);
+  static void fence(const std::string& name =
+                        "Kokkos::OpenMPTarget::fence: Unnamed Instance Fence");
 
-  static void impl_static_fence();
-  static void impl_static_fence(const std::string&);
+  static void impl_static_fence(const std::string& name);
+
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
 
@@ -156,7 +156,6 @@ class OpenMPTargetSpaceInitializer : public ExecSpaceInitializerBase {
   ~OpenMPTargetSpaceInitializer() = default;
   void initialize(const InitArguments& args) final;
   void finalize(const bool) final;
-  void fence() final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
