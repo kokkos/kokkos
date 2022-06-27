@@ -52,10 +52,6 @@
 
 #include <immintrin.h>
 
-#ifndef __AVX512DQ__
-#error "Kokkos AVX512 SIMD backend requires AVX512DQ"
-#endif
-
 namespace Kokkos {
 namespace Experimental {
 
