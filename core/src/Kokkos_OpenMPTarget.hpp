@@ -93,9 +93,7 @@ class OpenMPTarget {
   static void fence(const std::string& name =
                         "Kokkos::OpenMPTarget::fence: Unnamed Instance Fence");
 
-  static void impl_static_fence(
-      const std::string& name =
-          "Kokkos::OpenMPTarget::impl_static_fence: Unnamed Static Fence");
+  static void impl_static_fence(const std::string& name);
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();

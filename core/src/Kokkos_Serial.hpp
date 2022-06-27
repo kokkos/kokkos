@@ -150,9 +150,7 @@ class Serial {
   /// return asynchronously, before the functor completes.  This
   /// method does not return until all dispatched functors on this
   /// device have completed.
-  static void impl_static_fence(
-      const std::string& name =
-          "Kokkos::Serial::impl_static_fence: Unnamed Static Fence") {
+  static void impl_static_fence(const std::string& name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
         name,
         Kokkos::Tools::Experimental::SpecialSynchronizationCases::

@@ -326,9 +326,7 @@ class HPX {
         });
   }
 
-  static void impl_static_fence(const std::string &name =
-                                    "Kokkos::Experimental::HPX::impl_static_"
-                                    "fence: Unnamed Static Fence") {
+  static void impl_static_fence(const std::string &name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,

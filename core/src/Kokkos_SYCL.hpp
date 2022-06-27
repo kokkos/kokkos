@@ -111,9 +111,8 @@ class SYCL {
   static bool wake();
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
-  static void impl_static_fence(const std::string& name =
-                                    "Kokkos::Experimental::SYCL::impl_static_"
-                                    "fence: Unnamed Static Fence");
+  static void impl_static_fence(const std::string& name);
+
   void fence(
       const std::string& name =
           "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence") const;

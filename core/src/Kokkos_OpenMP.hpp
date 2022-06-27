@@ -107,9 +107,7 @@ class OpenMP {
   /// \brief Wait until all dispatched functors complete on the given instance
   ///
   ///  This is a no-op on OpenMP
-  static void impl_static_fence(
-      std::string const& name =
-          "Kokkos::OpenMP::impl_static_fence: Unnamed Static Fence");
+  static void impl_static_fence(std::string const& name);
 
   void fence(std::string const& name =
                  "Kokkos::OpenMP::fence: Unnamed Instance Fence") const;
