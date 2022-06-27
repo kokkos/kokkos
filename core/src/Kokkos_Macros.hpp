@@ -266,7 +266,8 @@
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #if !defined(_WIN32)
-#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  inline __attribute__((always_inline))
 #define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
 #else
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
@@ -321,7 +322,8 @@
 //#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
-#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  inline __attribute__((always_inline))
 #define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
@@ -346,7 +348,8 @@
 #endif
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
-#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  inline __attribute__((always_inline))
 #define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 

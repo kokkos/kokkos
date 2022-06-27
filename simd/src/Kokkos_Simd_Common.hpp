@@ -116,11 +116,8 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
   where_expression(bool mask_arg, T& value_arg)
       : base_type(mask_arg, value_arg) {}
   template <class U,
-           std::enable_if_t<
-             std::is_convertible_v<U, T>,
-           bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION
-  void operator=(U&& x) {
+            std::enable_if_t<std::is_convertible_v<U, T>, bool> = false>
+  KOKKOS_FORCEINLINE_FUNCTION void operator=(U&& x) {
     if (this->m_mask) this->m_value = x;
   }
 };
@@ -128,8 +125,7 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
     where_expression<simd_mask<T, Abi>, simd<T, Abi>>
-    where(typename simd<T, Abi>::mask_type const& mask,
-          simd<T, Abi>& value) {
+    where(typename simd<T, Abi>::mask_type const& mask, simd<T, Abi>& value) {
   return where_expression(mask, value);
 }
 
@@ -142,16 +138,14 @@ template <class T, class Abi>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-    where_expression<bool, T>
-    where(bool mask, T& value) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION where_expression<bool, T> where(
+    bool mask, T& value) {
   return where_expression(mask, value);
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-    const_where_expression<bool, T>
-    where(bool mask, T const& value) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const_where_expression<bool, T> where(
+    bool mask, T const& value) {
   return const_where_expression(mask, value);
 }
 
@@ -201,17 +195,20 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator/=(
 // fallback implementations of reductions across simd_mask:
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(
+    simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(true);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(
+    simd_mask<T, Abi> const& a) {
   return a != simd_mask<T, Abi>(false);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
+    simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(false);
 }
 

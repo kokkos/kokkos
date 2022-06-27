@@ -120,10 +120,8 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd&&) = default;
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
-  template <class U,
-            std::enable_if_t<
-                std::is_convertible_v<U, value_type>,
-                bool> = false>
+  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
+                                      bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(U&& value) : m_value(value) {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION explicit simd(simd<U, abi_type> const& other)
@@ -195,30 +193,30 @@ class simd<T, simd_abi::scalar> {
 };
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-simd<T, simd_abi::scalar> operator*(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
-{
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator*(
+    simd<T, simd_abi::scalar> const& lhs,
+    simd<T, simd_abi::scalar> const& rhs) {
   return simd<T, simd_abi::scalar>(static_cast<T>(lhs) * static_cast<T>(rhs));
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-simd<T, simd_abi::scalar> operator/(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
-{
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator/(
+    simd<T, simd_abi::scalar> const& lhs,
+    simd<T, simd_abi::scalar> const& rhs) {
   return simd<T, simd_abi::scalar>(static_cast<T>(lhs) / static_cast<T>(rhs));
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-simd<T, simd_abi::scalar> operator+(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
-{
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator+(
+    simd<T, simd_abi::scalar> const& lhs,
+    simd<T, simd_abi::scalar> const& rhs) {
   return simd<T, simd_abi::scalar>(static_cast<T>(lhs) + static_cast<T>(rhs));
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-simd<T, simd_abi::scalar> operator-(simd<T, simd_abi::scalar> const& lhs, simd<T, simd_abi::scalar> const& rhs)
-{
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator-(
+    simd<T, simd_abi::scalar> const& lhs,
+    simd<T, simd_abi::scalar> const& rhs) {
   return simd<T, simd_abi::scalar>(static_cast<T>(lhs) - static_cast<T>(rhs));
 }
 
@@ -313,13 +311,13 @@ class where_expression<simd_mask<T, simd_abi::scalar>,
     if (static_cast<bool>(this->m_mask))
       this->m_value = mem[static_cast<Integral>(index)];
   }
-  template <class U,
-           std::enable_if_t<
-             std::is_convertible_v<U, simd<T, simd_abi::scalar>>,
-           bool> = false>
+  template <class U, std::enable_if_t<
+                         std::is_convertible_v<U, simd<T, simd_abi::scalar>>,
+                         bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION void operator=(U&& x) {
     if (static_cast<bool>(this->m_mask))
-      this->m_value = static_cast<simd<T, simd_abi::scalar>>(std::forward<U>(x));
+      this->m_value =
+          static_cast<simd<T, simd_abi::scalar>>(std::forward<U>(x));
   }
 };
 
@@ -333,19 +331,19 @@ reduce(const_where_expression<simd_mask<T, simd_abi::scalar>,
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T hmax(
-    const_where_expression<simd_mask<T, simd_abi::scalar>,
-                           simd<T, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value()) :
-    Kokkos::reduction_identity<T>::max();
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+hmax(const_where_expression<simd_mask<T, simd_abi::scalar>,
+                            simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value())
+                                     : Kokkos::reduction_identity<T>::max();
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T hmin(
-    const_where_expression<simd_mask<T, simd_abi::scalar>,
-                           simd<T, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value()) :
-    Kokkos::reduction_identity<T>::min();
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+hmin(const_where_expression<simd_mask<T, simd_abi::scalar>,
+                            simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value())
+                                     : Kokkos::reduction_identity<T>::min();
 }
 
 }  // namespace Experimental
