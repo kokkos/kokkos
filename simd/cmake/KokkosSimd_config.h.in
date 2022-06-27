@@ -1,4 +1,0 @@
-#ifndef KOKKOS_SIMD_CONFIG_H
-#define KOKKOS_SIMD_CONFIG_H
-
-#endif
