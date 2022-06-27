@@ -149,7 +149,7 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> exp(simd<T, Abi> a) {
   T a_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
-  for (int i = 0; i < simd<T, Abi>::size(); ++i) {
+  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
     a_array[i] = Kokkos::exp(a_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
@@ -163,7 +163,7 @@ template <class T, class Abi>
   T b_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
   b.copy_to(b_array, element_aligned_tag());
-  for (int i = 0; i < simd<T, Abi>::size(); ++i) {
+  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
     a_array[i] = Kokkos::pow(a_array[i], b_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
@@ -174,7 +174,7 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> sin(simd<T, Abi> a) {
   T a_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
-  for (int i = 0; i < simd<T, Abi>::size(); ++i) {
+  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
     a_array[i] = Kokkos::sin(a_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
@@ -185,7 +185,7 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> cos(simd<T, Abi> a) {
   T a_array[simd<T, Abi>::size()];
   a.copy_to(a_array, element_aligned_tag());
-  for (int i = 0; i < simd<T, Abi>::size(); ++i) {
+  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
     a_array[i] = Kokkos::cos(a_array[i]);
   }
   a.copy_from(a_array, element_aligned_tag());
