@@ -136,7 +136,7 @@ template <class T, class Abi>
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
     const_where_expression<simd_mask<T, Abi>, simd<T, Abi>>
-    where(simd<T, Abi>::mask_type const& mask,
+    where(typename simd<T, Abi>::mask_type const& mask,
           simd<T, Abi> const& value) {
   return const_where_expression(mask, value);
 }
