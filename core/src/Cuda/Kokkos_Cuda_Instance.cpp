@@ -346,8 +346,9 @@ CudaInternal::~CudaInternal() {
 
 int CudaInternal::verify_is_initialized(const char *const label) const {
   if (m_cudaDev < 0) {
-    std::cerr << "Kokkos::Cuda::" << label << " : ERROR device not initialized"
-              << std::endl;
+    Kokkos::Impl::throw_runtime_exception(std::string("Kokkos::Cuda::") +
+                                          label +
+                                          " : ERROR device not initialized\n");
   }
   return 0 <= m_cudaDev;
 }

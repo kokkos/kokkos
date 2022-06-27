@@ -175,8 +175,9 @@ HIPInternal::~HIPInternal() {
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
   if (m_hipDev < 0) {
-    std::cerr << "Kokkos::Experimental::HIP::" << label
-              << " : ERROR device not initialized" << std::endl;
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Kokkos::Experimental::HIP::") + label +
+        " : ERROR device not initialized\n");
   }
   return 0 <= m_hipDev;
 }
