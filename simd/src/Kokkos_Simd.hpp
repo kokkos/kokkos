@@ -75,7 +75,7 @@ using host_native = avx512_fixed_size<8>;
 using host_native   = scalar;
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 using device_native = scalar;
 #else
 using device_native = host_native;
