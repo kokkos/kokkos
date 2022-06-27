@@ -135,30 +135,6 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
-template <class T>
-[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION bool all_of(
-    simd_mask<T, simd_abi::avx512_fixed_size<8>> const& a) {
-  static const __mmask16 false_value(-std::int16_t(false));
-  const __mmask16 a_value(0xFF00 | static_cast<__mmask8>(a));
-  return _kortestc_mask16_u8(a_value, false_value);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION bool any_of(
-    simd_mask<T, simd_abi::avx512_fixed_size<8>> const& a) {
-  static const __mmask16 false_value(-std::int16_t(false));
-  const __mmask16 a_value(0x0000 | static_cast<__mmask8>(a));
-  return !_kortestc_mask16_u8(~a_value, false_value);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_HOST_FORCEINLINE_FUNCTION bool none_of(
-    simd_mask<T, simd_abi::avx512_fixed_size<8>> const& a) {
-  return static_cast<__mmask8>(a) ==
-         static_cast<__mmask8>(
-             simd_mask<T, simd_abi::avx512_fixed_size<8>>(false));
-}
-
 template <>
 class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   __m256i m_value;

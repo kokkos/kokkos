@@ -106,24 +106,6 @@ class simd_mask<T, simd_abi::scalar> {
 };
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
-    simd_mask<T, simd_abi::scalar> const& mask) {
-  return !static_cast<bool>(mask);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(
-    simd_mask<T, simd_abi::scalar> const& mask) {
-  return static_cast<bool>(mask);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(
-    simd_mask<T, simd_abi::scalar> const& mask) {
-  return static_cast<bool>(mask);
-}
-
-template <class T>
 class simd<T, simd_abi::scalar> {
   T m_value;
 

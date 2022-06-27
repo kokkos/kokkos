@@ -133,12 +133,36 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator/=(
   return a;
 }
 
+// implement mask reductions for type bool to allow generic code to accept
+// both simd<double, Abi> and just double
+
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr bool all_of(bool a) {
   return a;
 }
 
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr bool any_of(bool a) {
   return a;
+}
+
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr bool none_of(bool a) {
+  return !a;
+}
+
+// fallback implementations of reductions across simd_mask:
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(simd_mask<T, Abi> const& a) {
+  return a == simd_mask<T, Abi>(true);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(simd_mask<T, Abi> const& a) {
+  return a != simd_mask<T, Abi>(false);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(simd_mask<T, Abi> const& a) {
+  return a == simd_mask<T, Abi>(false);
 }
 
 // fallback implementations of transcendental functions.
