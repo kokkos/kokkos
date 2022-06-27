@@ -77,12 +77,13 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
    public:
     KOKKOS_HOST_FORCEINLINE_FUNCTION reference(__mmask8& mask_arg, int lane_arg)
         : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_HOST_FORCEINLINE_FUNCTION void operator=(bool value) const {
+    KOKKOS_HOST_FORCEINLINE_FUNCTION reference operator=(bool value) const {
       if (value) {
         m_mask |= bit_mask();
       } else {
         m_mask &= ~bit_mask();
       }
+      return *this;
     }
     KOKKOS_HOST_FORCEINLINE_FUNCTION operator bool() const {
       return (m_mask & bit_mask()) != 0;
