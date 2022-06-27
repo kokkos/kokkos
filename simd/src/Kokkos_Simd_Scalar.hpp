@@ -329,24 +329,20 @@ reduce(const_where_expression<simd_mask<T, simd_abi::scalar>,
                                      : identity_element;
 }
 
-// these are specialized because NumericTraits is in KokkosKernels not Kokkos
-
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION int hmax(
-    const_where_expression<simd_mask<int, simd_abi::scalar>,
-                           simd<int, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(x.mask()) ? static_cast<int>(x.value()) : INT_MIN;
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T hmax(
+    const_where_expression<simd_mask<T, simd_abi::scalar>,
+                           simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value()) :
+    Kokkos::reduction_identity<T>::max();
 }
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION int hmin(
-    const_where_expression<simd_mask<int, simd_abi::scalar>,
-                           simd<int, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(x.mask()) ? static_cast<int>(x.value()) : INT_MAX;
-}
-
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION double hmin(
-    const_where_expression<simd_mask<double, simd_abi::scalar>,
-                           simd<double, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(x.mask()) ? static_cast<double>(x.value()) : DBL_MAX;
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T hmin(
+    const_where_expression<simd_mask<T, simd_abi::scalar>,
+                           simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.mask()) ? static_cast<T>(x.value()) :
+    Kokkos::reduction_identity<T>::min();
 }
 
 }  // namespace Experimental
