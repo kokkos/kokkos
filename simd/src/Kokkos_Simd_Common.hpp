@@ -128,7 +128,7 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
     where_expression<simd_mask<T, Abi>, simd<T, Abi>>
-    where(Kokkos::Impl::identity_t<simd_mask<T, Abi>> const& mask,
+    where(typename simd<T, Abi>::mask_type const& mask,
           simd<T, Abi>& value) {
   return where_expression(mask, value);
 }
@@ -136,8 +136,22 @@ template <class T, class Abi>
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
     const_where_expression<simd_mask<T, Abi>, simd<T, Abi>>
-    where(Kokkos::Impl::identity_t<simd_mask<T, Abi>> const& mask,
+    where(simd<T, Abi>::mask_type const& mask,
           simd<T, Abi> const& value) {
+  return const_where_expression(mask, value);
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    where_expression<bool, T>
+    where(bool mask, T& value) {
+  return where_expression(mask, value);
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    const_where_expression<bool, T>
+    where(bool mask, T const& value) {
   return const_where_expression(mask, value);
 }
 
