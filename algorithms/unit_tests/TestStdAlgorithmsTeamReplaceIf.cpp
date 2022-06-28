@@ -89,7 +89,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   /* description:
      randomly fill a rank-2 view with values between 0 and 523
      and then we run a team-level replace_if where we replace
-     the values that are greater than 251 with 1
+     the values that are greater than 151 with 1
      (note that these are purely arbitrary numbers)
    */
 
