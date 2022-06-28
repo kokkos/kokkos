@@ -423,8 +423,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           } else {
             const int size = Analysis::value_size(
                 ReducerConditional::select(m_functor, m_reducer));
-            DeepCopy<HostSpace, CudaSpace>(m_policy.space(), m_result_ptr,
-                                           m_scratch_space, size);
+            DeepCopy<HostSpace, CudaSpace, Cuda>(m_policy.space(), m_result_ptr,
+                                                 m_scratch_space, size);
           }
         }
       }

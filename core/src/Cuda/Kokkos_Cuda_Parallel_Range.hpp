@@ -420,8 +420,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           } else {
             const int size = Analysis::value_size(
                 ReducerConditional::select(m_functor, m_reducer));
-            DeepCopy<HostSpace, CudaSpace>(m_policy.space(), m_result_ptr,
-                                           m_scratch_space, size);
+            DeepCopy<HostSpace, CudaSpace, Cuda>(m_policy.space(), m_result_ptr,
+                                                 m_scratch_space, size);
           }
         }
       }
@@ -1043,11 +1043,11 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       const int size = Analysis::value_size(m_functor);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial)
-        DeepCopy<HostSpace, CudaSpace>(m_policy.space(), &m_returnvalue,
-                                       m_scratch_space, size);
+        DeepCopy<HostSpace, CudaSpace, Cuda>(m_policy.space(), &m_returnvalue,
+                                             m_scratch_space, size);
       else
 #endif
-        DeepCopy<HostSpace, CudaSpace>(
+        DeepCopy<HostSpace, CudaSpace, Cuda>(
             m_policy.space(), &m_returnvalue,
             m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
     }
