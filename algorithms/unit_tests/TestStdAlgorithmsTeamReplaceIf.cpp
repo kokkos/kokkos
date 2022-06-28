@@ -100,7 +100,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
   auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
 
-  Kokkos::Random_XorShift64_Pool<> pool(12371);
+  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
   Kokkos::fill_random(v_dc_h, pool, 0, 523);
 
   std::vector<std::size_t> rowIndOfTargetElements;
