@@ -123,8 +123,8 @@ class simd<T, simd_abi::scalar> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(U&& value) : m_value(value) {}
-  template <class U,
-           std::enable_if_t<std::is_convertible_v<U, value_type>, bool> = false>
+  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
+                                      bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION explicit simd(simd<U, abi_type> const& other)
       : m_value(static_cast<U>(other)) {}
   template <class G,

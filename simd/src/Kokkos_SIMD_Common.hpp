@@ -150,81 +150,65 @@ template <class T>
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator+(
-    simd<T, Abi> const& lhs,
-    U const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator+(
+    simd<T, Abi> const& lhs, U const& rhs) {
   using result_type = decltype(T() + U());
   return simd<result_type, Abi>(lhs) + simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator+(
-    U const& lhs,
-    simd<T, Abi> const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator+(
+    U const& lhs, simd<T, Abi> const& rhs) {
   using result_type = decltype(U() + T());
   return simd<result_type, Abi>(lhs) + simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator-(
-    simd<T, Abi> const& lhs,
-    U const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator-(
+    simd<T, Abi> const& lhs, U const& rhs) {
   using result_type = decltype(T() - U());
   return simd<result_type, Abi>(lhs) - simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator-(
-    U const& lhs,
-    simd<T, Abi> const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator-(
+    U const& lhs, simd<T, Abi> const& rhs) {
   using result_type = decltype(U() - T());
   return simd<result_type, Abi>(lhs) - simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator*(
-    simd<T, Abi> const& lhs,
-    U const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator*(
+    simd<T, Abi> const& lhs, U const& rhs) {
   using result_type = decltype(T() * U());
   return simd<result_type, Abi>(lhs) * simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator*(
-    U const& lhs,
-    simd<T, Abi> const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator*(
+    U const& lhs, simd<T, Abi> const& rhs) {
   using result_type = decltype(U() * T());
   return simd<result_type, Abi>(lhs) * simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator/(
-    simd<T, Abi> const& lhs,
-    U const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(
+    simd<T, Abi> const& lhs, U const& rhs) {
   using result_type = decltype(T() / U());
   return simd<result_type, Abi>(lhs) / simd<result_type, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
-         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-auto operator/(
-    U const& lhs,
-    simd<T, Abi> const& rhs) {
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(
+    U const& lhs, simd<T, Abi> const& rhs) {
   using result_type = decltype(U() / T());
   return simd<result_type, Abi>(lhs) / simd<result_type, Abi>(rhs);
 }
