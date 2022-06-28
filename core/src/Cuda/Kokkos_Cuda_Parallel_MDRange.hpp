@@ -409,12 +409,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence(
-            "Kokkos::Impl::ParallelReduce<Cuda, MDRangePolicy>::execute: "
-            "Result Not Device Accessible");
-
         if (m_result_ptr) {
           if (m_unified_space) {
+            m_policy.space().fence(
+                "Kokkos::Impl::ParallelReduce<Cuda, MDRangePolicy>::execute: "
+                "Result Not Device Accessible");
+
             const int count = Analysis::value_count(
                 ReducerConditional::select(m_functor, m_reducer));
             for (int i = 0; i < count; ++i) {
@@ -423,7 +423,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           } else {
             const int size = Analysis::value_size(
                 ReducerConditional::select(m_functor, m_reducer));
-            DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space, size);
+            DeepCopy<HostSpace, CudaSpace>(m_policy.space(), m_result_ptr,
+                                           m_scratch_space, size);
           }
         }
       }

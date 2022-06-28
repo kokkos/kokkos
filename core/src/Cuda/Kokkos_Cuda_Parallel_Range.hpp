@@ -406,12 +406,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence(
-            "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: Result "
-            "Not Device Accessible");
-
         if (m_result_ptr) {
           if (m_unified_space) {
+            m_policy.space().fence(
+                "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: "
+                "Result "
+                "Not Device Accessible");
             const int count = Analysis::value_count(
                 ReducerConditional::select(m_functor, m_reducer));
             for (int i = 0; i < count; ++i) {
@@ -420,7 +420,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           } else {
             const int size = Analysis::value_size(
                 ReducerConditional::select(m_functor, m_reducer));
-            DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space, size);
+            DeepCopy<HostSpace, CudaSpace>(m_policy.space(), m_result_ptr,
+                                           m_scratch_space, size);
           }
         }
       }
@@ -1042,12 +1043,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       const int size = Analysis::value_size(m_functor);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial)
-        DeepCopy<HostSpace, CudaSpace>(&m_returnvalue, m_scratch_space, size);
+        DeepCopy<HostSpace, CudaSpace>(m_policy.space(), &m_returnvalue,
+                                       m_scratch_space, size);
       else
 #endif
         DeepCopy<HostSpace, CudaSpace>(
-            &m_returnvalue, m_scratch_space + (grid_x - 1) * size / sizeof(int),
-            size);
+            m_policy.space(), &m_returnvalue,
+            m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
     }
   }
 
