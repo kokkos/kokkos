@@ -48,7 +48,7 @@
 #include <functional>
 #include <type_traits>
 
-#include <Kokkos_Simd_Common.hpp>
+#include <Kokkos_SIMD_Common.hpp>
 
 #include <immintrin.h>
 

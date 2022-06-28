@@ -1,5 +1,5 @@
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Simd
+  UnitTest_SIMD
   SOURCES
   UnitTestMain.cpp
-  TestSimd.cpp)
+  TestSIMD.cpp)

@@ -44,7 +44,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Simd.hpp>
+#include <Kokkos_SIMD.hpp>
 
 class gtest_checker {
  public:

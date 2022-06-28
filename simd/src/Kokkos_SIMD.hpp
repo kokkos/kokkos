@@ -45,12 +45,12 @@
 #ifndef KOKKOS_SIMD_HPP
 #define KOKKOS_SIMD_HPP
 
-#include <Kokkos_Simd_Common.hpp>
+#include <Kokkos_SIMD_Common.hpp>
 
-#include <Kokkos_Simd_Scalar.hpp>
+#include <Kokkos_SIMD_Scalar.hpp>
 
 #ifdef KOKKOS_ARCH_AVX512XEON
-#include <Kokkos_Simd_AVX512.hpp>
+#include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
 namespace Kokkos {

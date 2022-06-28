@@ -49,7 +49,7 @@
 #include <climits>
 #include <cfloat>
 
-#include <Kokkos_Simd_Common.hpp>
+#include <Kokkos_SIMD_Common.hpp>
 
 namespace Kokkos {
 namespace Experimental {
