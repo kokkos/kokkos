@@ -70,6 +70,29 @@ void replace_if_impl(const std::string& label, const ExecutionSpace& ex,
   ex.fence("Kokkos::replace_if: fence after operation");
 }
 
+//
+// team-level impl
+//
+template <class TeamHandleType, class IteratorType, class PredicateType,
+          class ValueType>
+KOKKOS_FUNCTION void replace_if_team_impl(const TeamHandleType& teamHandle,
+                                          IteratorType first, IteratorType last,
+                                          PredicateType pred,
+                                          const ValueType& new_value) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  // aliases
+  using func_t = StdReplaceIfFunctor<IteratorType, PredicateType, ValueType>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         func_t(first, std::move(pred), new_value));
+  teamHandle.team_barrier();
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
