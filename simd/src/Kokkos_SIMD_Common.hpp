@@ -117,7 +117,7 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
       : base_type(mask_arg, value_arg) {}
   template <class U,
             std::enable_if_t<std::is_convertible_v<U, T>, bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION void operator=(U&& x) {
+  KOKKOS_FORCEINLINE_FUNCTION void operator=(U const& x) {
     if (this->m_mask) this->m_value = x;
   }
 };
@@ -147,6 +147,86 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION const_where_expression<bool, T> where(
     bool mask, T const& value) {
   return const_where_expression(mask, value);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator+(
+    simd<T, Abi> const& lhs,
+    U const& rhs) {
+  using result_type = decltype(T() + U());
+  return simd<result_type, Abi>(lhs) + simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator+(
+    U const& lhs,
+    simd<T, Abi> const& rhs) {
+  using result_type = decltype(U() + T());
+  return simd<result_type, Abi>(lhs) + simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator-(
+    simd<T, Abi> const& lhs,
+    U const& rhs) {
+  using result_type = decltype(T() - U());
+  return simd<result_type, Abi>(lhs) - simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator-(
+    U const& lhs,
+    simd<T, Abi> const& rhs) {
+  using result_type = decltype(U() - T());
+  return simd<result_type, Abi>(lhs) - simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator*(
+    simd<T, Abi> const& lhs,
+    U const& rhs) {
+  using result_type = decltype(T() * U());
+  return simd<result_type, Abi>(lhs) * simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator*(
+    U const& lhs,
+    simd<T, Abi> const& rhs) {
+  using result_type = decltype(U() * T());
+  return simd<result_type, Abi>(lhs) * simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator/(
+    simd<T, Abi> const& lhs,
+    U const& rhs) {
+  using result_type = decltype(T() / U());
+  return simd<result_type, Abi>(lhs) / simd<result_type, Abi>(rhs);
+}
+
+template <class T, class U, class Abi,
+         std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+auto operator/(
+    U const& lhs,
+    simd<T, Abi> const& rhs) {
+  using result_type = decltype(U() / T());
+  return simd<result_type, Abi>(lhs) / simd<result_type, Abi>(rhs);
 }
 
 template <class T, class Abi>
