@@ -593,6 +593,7 @@ if(Kokkos_ENABLE_HIP)
       UnitTestMainInit.cpp
       ${HIP_SOURCES}
       hip/TestHIP_ScanUnit.cpp
+      hip/TestHIP_Spaces.cpp
       hip/TestHIP_TeamScratchStreams.cpp
       hip/TestHIP_AsyncLauncher.cpp
       hip/TestHIP_BlocksizeDeduction.cpp
