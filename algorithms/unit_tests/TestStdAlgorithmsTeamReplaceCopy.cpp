@@ -65,32 +65,37 @@ struct UnifDist<int> {
   int operator()() { return m_dist(m_gen); }
 };
 
-template <class ViewFromType, class ViewDestType, class MemberType, class ValueType>
+template <class ViewFromType, class ViewDestType, class MemberType,
+          class ValueType>
 struct TestFunctorA {
   ViewFromType m_from_view;
   ViewDestType m_dest_view;
   ValueType m_targetValue;
   int m_api_pick;
 
-  TestFunctorA(const ViewFromType viewFrom,
-	       const ViewDestType viewDest,
-	       ValueType val, int apiPick)
-    : m_from_view(viewFrom), m_dest_view(viewDest),
-      m_targetValue(val), m_api_pick(apiPick) {}
+  TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
+               ValueType val, int apiPick)
+      : m_from_view(viewFrom),
+        m_dest_view(viewDest),
+        m_targetValue(val),
+        m_api_pick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const
-  {
+  void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom    = Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
-    auto myRowViewDest    = Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
-    const auto newValue   = static_cast<ValueType>(123);
+    auto myRowViewFrom =
+        Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
+    auto myRowViewDest =
+        Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
+    const auto newValue = static_cast<ValueType>(123);
 
     if (m_api_pick == 0) {
-      auto it = KE::replace_copy(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
-				 KE::begin(myRowViewDest), m_targetValue, newValue);
+      auto it = KE::replace_copy(
+          member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
+          KE::begin(myRowViewDest), m_targetValue, newValue);
     } else if (m_api_pick == 1) {
-      auto it = KE::replace_copy(member, myRowViewFrom, myRowViewDest, m_targetValue, newValue);
+      auto it = KE::replace_copy(member, myRowViewFrom, myRowViewDest,
+                                 m_targetValue, newValue);
     }
   }
 };
@@ -123,9 +128,8 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   UnifDist<int> colIndicesProducer(maxColInd, 455225);
   for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
     const std::size_t numToChange = howManyColsToChangeProducer();
-    for (std::size_t j = 0; j < numToChange; ++j)
-    {
-      const int colInd = colIndicesProducer();
+    for (std::size_t j = 0; j < numToChange; ++j) {
+      const int colInd  = colIndicesProducer();
       v_dc_h(i, colInd) = targetVal;
       rowIndOfTargetElements.push_back(i);
       colIndOfTargetElements.push_back(colInd);
@@ -144,15 +148,17 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   policy_type policy(num_teams, Kokkos::AUTO());
 
   auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
-  using functor_type = TestFunctorA<decltype(v), decltype(v2), team_member_type, ValueType>;
+  using functor_type =
+      TestFunctorA<decltype(v), decltype(v2), team_member_type, ValueType>;
   functor_type fnc(v, v2, targetVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // check
-  auto v_h = create_host_space_copy(v);
+  auto v_h  = create_host_space_copy(v);
   auto v2_h = create_host_space_copy(v2);
   for (std::size_t k = 0; k < rowIndOfTargetElements.size(); ++k) {
-    EXPECT_TRUE(v_h(rowIndOfTargetElements[k], colIndOfTargetElements[k]) == targetVal);
+    EXPECT_TRUE(v_h(rowIndOfTargetElements[k], colIndOfTargetElements[k]) ==
+                targetVal);
     EXPECT_TRUE(v2_h(rowIndOfTargetElements[k], colIndOfTargetElements[k]) ==
                 static_cast<ValueType>(123));
   }
