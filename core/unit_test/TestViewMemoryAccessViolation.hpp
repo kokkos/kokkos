@@ -46,6 +46,9 @@
 
 #include <gtest/gtest.h>
 
+// FIXME_SYCL
+#if !(defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_SYCL))
+
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
 template <class View, class ExecutionSpace>
 struct TestViewMemoryAccessViolation {
@@ -215,4 +218,5 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
 
   test_view_memory_access_violations_from_device<ExecutionSpace>();
 }
+#endif
 #endif
