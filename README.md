@@ -48,11 +48,12 @@ Building and installation instructions are described [here](https://kokkos.githu
 
 Please refer to the [following page](https://kokkos.github.io/kokkos-core-wiki/citation.html).
 
-##### [LICENSE](https://github.com/kokkos/kokkos/blob/master/LICENSE)
+# License
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 Under the terms of Contract DE-NA0003525 with NTESS,
 the U.S. Government retains certain rights in this software.
 
-The full license statement used in all headers is available [here](https://kokkos.github.io/kokkos-core-wiki/license.html).
+The full license statement used in all headers is available [here](https://kokkos.github.io/kokkos-core-wiki/license.html) or
+[here](https://github.com/kokkos/kokkos/blob/master/LICENSE).
