@@ -152,6 +152,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamFill_n
 	StdAlgorithmsTeamReplace
 	StdAlgorithmsTeamReplaceIf
+	StdAlgorithmsTeamReplaceCopy
 	)
       list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
     endforeach()
