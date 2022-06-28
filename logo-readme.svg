@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="343.84mm"
+   height="27.719mm"
+   version="1.1"
+   viewBox="0 0 343.84 27.719"
+   id="svg922">
+  <defs
+     id="defs926" />
+  <metadata
+     id="metadata908">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(19.976 -88.95)"
+     id="g920">
+    <text
+       x="-20.683182"
+       y="104.95208"
+       fill="#000000"
+       font-family="Avenir"
+       font-size="21.167px"
+       font-weight="500"
+       stroke-width="0.26458"
+       style="line-height:1.25;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       xml:space="preserve"
+       id="text916"><tspan
+         x="-20.683182"
+         y="104.95208"
+         font-family="Avenir"
+         font-size="21.167px"
+         font-weight="500"
+         stroke-width="0.26458"
+         style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+         id="tspan914"><tspan
+           fill="#b3b3b3"
+           id="tspan910">kokkos.github.io/</tspan><tspan
+           fill="#ff7f2a"
+           font-family="Avenir"
+           font-size="21.167px"
+           font-weight="500"
+           style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+           id="tspan912">kokkos-core-wiki</tspan></tspan></text>
+    <path
+       d="m321.85 116.11v-0.55905c-68.365 0-273.46 0.55905-341.83 0.55905 68.365 0 273.46 0.55903 341.83 0.55903v-0.55903z"
+       id="path918" />
+  </g>
+</svg>
