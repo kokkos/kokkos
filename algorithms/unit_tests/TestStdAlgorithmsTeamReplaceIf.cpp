@@ -56,13 +56,10 @@ struct IsGreaterThanValueFunctor {
   ValueType m_val;
 
   KOKKOS_INLINE_FUNCTION
-  IsGreaterThanValueFunctor(ValueType val)
-    : m_val(val){}
+  IsGreaterThanValueFunctor(ValueType val) : m_val(val) {}
 
   KOKKOS_INLINE_FUNCTION
-  bool operator()(ValueType val) const {
-    return (val > m_val);
-  }
+  bool operator()(ValueType val) const { return (val > m_val); }
 };
 
 template <class ViewType, class MemberType, class ReplaceIfUnaryOpType>
@@ -80,7 +77,7 @@ struct TestFunctorA {
 
     if (m_api_pick == 0) {
       KE::replace_if(member, KE::begin(myRowView), KE::end(myRowView),
-		     ReplaceIfUnaryOpType(151), 1);
+                     ReplaceIfUnaryOpType(151), 1);
     } else if (m_api_pick == 1) {
       KE::replace_if(member, myRowView, ReplaceIfUnaryOpType(151), 1);
     }
@@ -109,10 +106,10 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   std::vector<std::size_t> rowIndOfTargetElements;
   std::vector<std::size_t> colIndOfTargetElements;
   for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v_dc_h.extent(1); ++j){
-      if (v_dc_h(i, j) > static_cast<ValueType>(151)){
-	rowIndOfTargetElements.push_back(i);
-	colIndOfTargetElements.push_back(j);
+    for (std::size_t j = 0; j < v_dc_h.extent(1); ++j) {
+      if (v_dc_h(i, j) > static_cast<ValueType>(151)) {
+        rowIndOfTargetElements.push_back(i);
+        colIndOfTargetElements.push_back(j);
       }
     }
   }
@@ -128,7 +125,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   using team_member_type = typename policy_type::member_type;
   policy_type policy(num_teams, Kokkos::AUTO());
 
-  using bop_t = IsGreaterThanValueFunctor<ValueType>;
+  using bop_t        = IsGreaterThanValueFunctor<ValueType>;
   using functor_type = TestFunctorA<decltype(v), team_member_type, bop_t>;
   functor_type fnc(v, apiId);
   Kokkos::parallel_for(policy, fnc);
