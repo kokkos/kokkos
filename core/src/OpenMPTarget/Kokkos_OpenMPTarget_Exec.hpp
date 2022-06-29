@@ -51,8 +51,6 @@
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
 
-#include <iostream>
-
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical reducers. It avoids hitting the code path which we wanted to
 // write but doesn't work. undef'ed at the end.
@@ -1721,8 +1719,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-  printf("terminating\n");
-  exit(0);
 #pragma omp simd
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
