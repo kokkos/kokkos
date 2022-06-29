@@ -866,7 +866,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 1> {
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
     if (dst.extent(0) == src.extent(0)) {
-      view_copy(dst, src);
+      view_copy(exec_space..., dst, src);
     } else {
       p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
       using sv_adapter_type = CommonSubview<DstType, SrcType, 1, p_type>;
@@ -885,7 +885,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
             const OptExecSpace&... exec_space) {
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(1) == src.extent(1)) {
-        view_copy(dst, src);
+        view_copy(exec_space..., dst, src);
       } else {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         using sv_adapter_type =
