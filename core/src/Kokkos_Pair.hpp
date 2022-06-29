@@ -84,17 +84,28 @@ struct pair {
   ///
   /// This calls the copy constructors of T1 and T2.  It won't compile
   /// if those copy constructors are not defined and public.
-  KOKKOS_FORCEINLINE_FUNCTION constexpr pair(first_type const& f,
-                                             second_type const& s)
-      : first(f), second(s) {}
+#ifdef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC bug in NVHPC regarding constexpr
+                              // constructors used in device code
+  KOKKOS_FORCEINLINE_FUNCTION
+#else
+  KOKKOS_FORCEINLINE_FUNCTION constexpr
+#endif
+  pair(first_type const& f, second_type const& s) : first(f), second(s) {}
 
   /// \brief Copy constructor.
   ///
   /// This calls the copy constructors of T1 and T2.  It won't compile
   /// if those copy constructors are not defined and public.
   template <class U, class V>
-  KOKKOS_FORCEINLINE_FUNCTION constexpr pair(const pair<U, V>& p)
-      : first(p.first), second(p.second) {}
+#ifdef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC bug in NVHPC regarding constexpr
+                              // constructors used in device code
+  KOKKOS_FORCEINLINE_FUNCTION
+#else
+  KOKKOS_FORCEINLINE_FUNCTION constexpr
+#endif
+  pair(const pair<U, V>& p)
+      : first(p.first), second(p.second) {
+  }
 
   /// \brief Copy constructor.
   ///
