@@ -170,6 +170,8 @@ void test_view_memory_access_violations_from_device() {
   // clang-format on
 }
 
+// FIXME_SYCL
+#if !(defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_SYCL))
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
@@ -183,6 +185,7 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
 
   test_view_memory_access_violations_from_host<ExecutionSpace>();
 }
+#endif
 
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
