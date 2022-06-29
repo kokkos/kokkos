@@ -88,6 +88,40 @@ OutputIteratorType replace_copy_if_impl(const std::string& label,
   return first_dest + num_elements;
 }
 
+//
+// team-level impl
+//
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class PredicateType, class ValueType>
+KOKKOS_FUNCTION OutputIteratorType replace_copy_if_team_impl(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest,
+    PredicateType pred, const ValueType& new_value) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
+
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
+  using func_t =
+      StdReplaceIfCopyFunctor<index_type, InputIteratorType, OutputIteratorType,
+                              PredicateType, ValueType>;
+
+  // run
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+  ::Kokkos::parallel_for(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      func_t(first_from, first_dest, std::move(pred), new_value));
+  teamHandle.team_barrier();
+
+  // return
+  return first_dest + num_elements;
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
