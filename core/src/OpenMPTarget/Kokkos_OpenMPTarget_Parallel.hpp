@@ -715,10 +715,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       base_t::impl_execute(element_values, chunk_values, count);
 
       const int size = base_t::Analysis::value_size(base_t::m_functor);
-      DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace,
-               Kokkos::Experimental::OpenMPTarget>(
-          base_t::m_policy.space(), &m_returnvalue,
-          chunk_values.data() + (n_chunks - 1), size);
+      DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace>(
+          &m_returnvalue, chunk_values.data() + (n_chunks - 1), size);
     } else {
       m_returnvalue = 0;
     }
