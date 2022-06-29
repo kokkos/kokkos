@@ -431,6 +431,7 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES1}
     serial/TestSerial_Task.cpp
+    serial/TestSerial_MDTeamParallelism.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial2
