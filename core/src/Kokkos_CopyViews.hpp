@@ -3401,7 +3401,7 @@ inline std::enable_if_t<
     typename Kokkos::View<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  return Kokkos::create_mirror(arg_prop, src);
+  return Kokkos::Impl::create_mirror(src, arg_prop);
 }
 
 // Create a mirror view in a new space (specialization for same space)
@@ -3423,7 +3423,7 @@ create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
   using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., MemorySpace>;
   alloc_prop prop_copy(arg_prop);
 
-  return Kokkos::create_mirror(prop_copy, src);
+  return Kokkos::Impl::create_mirror(src, prop_copy);
 }
 }  // namespace Impl
 

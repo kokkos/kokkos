@@ -1925,39 +1925,13 @@ struct MirrorDRVType {
 
 }  // namespace Impl
 
-// Create a mirror in host space
-template <class T, class... P>
-inline typename DynRankView<T, P...>::HostMirror create_mirror(
-    const DynRankView<T, P...>& src,
-    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
-                                  void>::value>* = nullptr) {
-  using src_type = DynRankView<T, P...>;
-  using dst_type = typename src_type::HostMirror;
-
-  return dst_type(std::string(src.label()).append("_mirror"),
-                  Impl::reconstructLayout(src.layout(), src.rank()));
-}
-
-template <class T, class... P>
-inline typename DynRankView<T, P...>::HostMirror create_mirror(
-    Kokkos::Impl::WithoutInitializing_t wi, const DynRankView<T, P...>& src,
-    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
-                                  void>::value>* = nullptr) {
-  using src_type = DynRankView<T, P...>;
-  using dst_type = typename src_type::HostMirror;
-
-  return dst_type(
-      Kokkos::view_alloc(std::string(src.label()).append("_mirror"), wi),
-      Impl::reconstructLayout(src.layout(), src.rank()));
-}
-
+namespace Impl {
 template <class T, class... P, class... ViewCtorArgs>
 inline typename DynRankView<T, P...>::HostMirror create_mirror(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const DynRankView<T, P...>& src,
-    std::enable_if_t<
-        std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
-        !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* = nullptr) {
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    std::enable_if_t<!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* =
+        nullptr) {
   using src_type = DynRankView<T, P...>;
   using dst_type = typename src_type::HostMirror;
 
@@ -1984,35 +1958,12 @@ inline typename DynRankView<T, P...>::HostMirror create_mirror(
   return dst_type(prop_copy, Impl::reconstructLayout(src.layout(), src.rank()));
 }
 
-// Create a mirror in a new space
-template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
-typename Impl::MirrorDRVType<Space, T, P...>::view_type create_mirror(
-    const Space&, const Kokkos::DynRankView<T, P...>& src) {
-  return typename Impl::MirrorDRVType<Space, T, P...>::view_type(
-      src.label(), Impl::reconstructLayout(src.layout(), src.rank()));
-}
-
-template <class Space, class T, class... P>
-typename Impl::MirrorDRVType<Space, T, P...>::view_type create_mirror(
-    Kokkos::Impl::WithoutInitializing_t wi, const Space&,
-    const Kokkos::DynRankView<T, P...>& src,
-    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
-                                  void>::value>* = nullptr) {
-  return typename Impl::MirrorDRVType<Space, T, P...>::view_type(
-      Kokkos::view_alloc(std::string(src.label()).append("_mirror"), wi),
-      Impl::reconstructLayout(src.layout(), src.rank()));
-}
-
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const DynRankView<T, P...>& src,
-    std::enable_if_t<
-        std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
-        Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* = nullptr) {
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    std::enable_if_t<Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* =
+        nullptr) {
   using dst_type = typename Impl::MirrorDRVType<
       typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
       P...>::view_type;
@@ -2038,6 +1989,69 @@ inline auto create_mirror(
       std::string(src.label()).append("_mirror");
 
   return dst_type(prop_copy, Impl::reconstructLayout(src.layout(), src.rank()));
+}
+
+}  // namespace Impl
+
+// Create a mirror in host space
+template <class T, class... P>
+inline typename DynRankView<T, P...>::HostMirror create_mirror(
+    const DynRankView<T, P...>& src,
+    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
+                                  void>::value>* = nullptr) {
+  return Impl::create_mirror(src, Kokkos::Impl::ViewCtorProp<>{});
+}
+
+template <class T, class... P>
+inline typename DynRankView<T, P...>::HostMirror create_mirror(
+    Kokkos::Impl::WithoutInitializing_t wi, const DynRankView<T, P...>& src,
+    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
+                                  void>::value>* = nullptr) {
+  return Impl::create_mirror(src, Kokkos::view_alloc(wi));
+}
+
+template <class T, class... P, class... ViewCtorArgs>
+inline typename DynRankView<T, P...>::HostMirror create_mirror(
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    const DynRankView<T, P...>& src,
+    std::enable_if_t<
+        std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
+        !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* = nullptr) {
+  return Impl::create_mirror(src, arg_prop);
+}
+
+// Create a mirror in a new space
+template <class Space, class T, class... P,
+          typename Enable = std::enable_if_t<
+              Kokkos::is_space<Space>::value &&
+              std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
+typename Impl::MirrorDRVType<Space, T, P...>::view_type create_mirror(
+    const Space&, const Kokkos::DynRankView<T, P...>& src) {
+  return Impl::create_mirror(
+      src, Kokkos::view_alloc(typename Space::memory_space{}));
+}
+
+template <class Space, class T, class... P>
+typename Impl::MirrorDRVType<Space, T, P...>::view_type create_mirror(
+    Kokkos::Impl::WithoutInitializing_t wi, const Space&,
+    const Kokkos::DynRankView<T, P...>& src,
+    std::enable_if_t<std::is_same<typename ViewTraits<T, P...>::specialize,
+                                  void>::value>* = nullptr) {
+  return Impl::create_mirror(
+      src, Kokkos::view_alloc(wi, typename Space::memory_space{}));
+}
+
+template <class T, class... P, class... ViewCtorArgs>
+inline auto create_mirror(
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    const DynRankView<T, P...>& src,
+    std::enable_if_t<
+        std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
+        Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>* = nullptr) {
+  using ReturnType = typename Impl::MirrorDRVType<
+      typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
+      P...>::view_type;
+  return ReturnType{Impl::create_mirror(src, arg_prop)};
 }
 
 namespace Impl {
@@ -2067,7 +2081,7 @@ inline std::enable_if_t<
 create_mirror_view(
     const DynRankView<T, P...>& src,
     const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  return Kokkos::create_mirror(arg_prop, src);
+  return Kokkos::Impl::create_mirror(src, arg_prop);
 }
 
 template <class Space, class T, class... P, class... ViewCtorArgs>
@@ -2092,7 +2106,7 @@ create_mirror_view(
   using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., MemorySpace>;
   alloc_prop prop_copy(arg_prop);
 
-  return Kokkos::create_mirror(prop_copy, src);
+  return Kokkos::Impl::create_mirror(src, prop_copy);
 }
 }  // namespace Impl
 
