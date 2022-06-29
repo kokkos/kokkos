@@ -93,40 +93,27 @@ KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
 }
 
 KOKKOS_INLINE_FUNCTION
-void runtime_check_rank_device(const size_t dyn_rank, const bool is_void_spec,
-                               const size_t i0, const size_t i1,
-                               const size_t i2, const size_t i3,
-                               const size_t i4, const size_t i5,
-                               const size_t i6, const size_t i7) {
-  if (is_void_spec) {
-    const size_t num_passed_args =
-        count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
+void runtime_check_rank(const size_t dyn_rank, const bool is_void_spec,
+                        const size_t i0, const size_t i1, const size_t i2,
+                        const size_t i3, const size_t i4, const size_t i5,
+                        const size_t i6, const size_t i7,
+                        const std::string& label) {
+  (void)(label);
 
-    if (num_passed_args != dyn_rank && is_void_spec) {
-      Kokkos::abort(
-          "Number of arguments passed to Kokkos::View() constructor must match "
-          "the dynamic rank of the view.");
-    }
-  }
-}
-
-inline void runtime_check_rank_host(const size_t dyn_rank,
-                                    const bool is_void_spec, const size_t i0,
-                                    const size_t i1, const size_t i2,
-                                    const size_t i3, const size_t i4,
-                                    const size_t i5, const size_t i6,
-                                    const size_t i7, const std::string& label) {
   if (is_void_spec) {
     const size_t num_passed_args =
         count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
 
     if (num_passed_args != dyn_rank) {
-      const std::string message =
-          "Constructor for Kokkos View '" + label +
-          "' has mismatched number of arguments. Number of arguments = " +
-          std::to_string(num_passed_args) +
-          " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
-      Kokkos::abort(message.c_str());
+      KOKKOS_IF_ON_HOST(
+          const std::string message =
+              "Constructor for Kokkos View '" + label +
+              "' has mismatched number of arguments. Number of arguments = " +
+              std::to_string(num_passed_args) +
+              " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
+          Kokkos::abort(message.c_str());)
+      KOKKOS_IF_ON_DEVICE(Kokkos::abort("Constructor for Kokkos View has "
+                                        "mismatched number of arguments.");)
     }
   }
 }
@@ -1403,6 +1390,10 @@ class View : public ViewTraits<DataType, Properties...> {
         .template get_label<typename traits::memory_space>();
   }
 
+ private:
+  enum class check_input_args : bool { yes = true, no = false };
+
+ public:
   //----------------------------------------
   // Allocation according to allocation properties and array layout
 
@@ -1410,7 +1401,8 @@ class View : public ViewTraits<DataType, Properties...> {
   explicit inline View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
-                       typename traits::array_layout> const& arg_layout)
+                       typename traits::array_layout> const& arg_layout,
+      check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
@@ -1443,6 +1435,26 @@ class View : public ViewTraits<DataType, Properties...> {
 
     // Copy the input allocation properties with possibly defaulted properties
     alloc_prop prop_copy(arg_prop);
+
+    if (check_args == check_input_args::yes) {
+      size_t i0 = arg_layout.dimension[0];
+      size_t i1 = arg_layout.dimension[1];
+      size_t i2 = arg_layout.dimension[2];
+      size_t i3 = arg_layout.dimension[3];
+      size_t i4 = arg_layout.dimension[4];
+      size_t i5 = arg_layout.dimension[5];
+      size_t i6 = arg_layout.dimension[6];
+      size_t i7 = arg_layout.dimension[7];
+
+      const std::string& alloc_name =
+          static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
+              prop_copy)
+              .value;
+      Impl::runtime_check_rank(
+          traits::rank_dynamic,
+          std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
+          i3, i4, i5, i6, i7, alloc_name);
+    }
 
 //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -1487,7 +1499,8 @@ class View : public ViewTraits<DataType, Properties...> {
   explicit KOKKOS_INLINE_FUNCTION View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
-                       typename traits::array_layout> const& arg_layout)
+                       typename traits::array_layout> const& arg_layout,
+      check_input_args /*ignored*/ = check_input_args::no)  // Not checking
       : m_track()  // No memory tracking
         ,
         m_map(arg_prop, arg_layout) {
@@ -1513,18 +1526,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    KOKKOS_IF_ON_HOST(
-        (Impl::runtime_check_rank_host(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
-    KOKKOS_IF_ON_DEVICE(
-        (Impl::runtime_check_rank_device(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
-  }
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {}
 
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1540,18 +1543,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    KOKKOS_IF_ON_HOST(
-        (Impl::runtime_check_rank_host(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
-    KOKKOS_IF_ON_DEVICE(
-        (Impl::runtime_check_rank_device(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
-  }
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {}
 
   // Allocate with label and layout
   template <typename Label>
@@ -1559,7 +1552,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const Label& arg_label,
       std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
                        typename traits::array_layout> const& arg_layout)
-      : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
+      : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout,
+             check_input_args::yes) {}
 
   // Allocate label and layout, must disambiguate from subview constructor.
   template <typename Label>
@@ -1576,21 +1570,11 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not extent constructible. A layout object should "
                   "be passed too.\n");
-
-    KOKKOS_IF_ON_HOST(
-        (Impl::runtime_check_rank_host(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
-    KOKKOS_IF_ON_DEVICE(
-        (Impl::runtime_check_rank_device(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
   }
 
   // Construct view from ViewTracker and map
@@ -1644,18 +1628,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(arg_ptr),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    KOKKOS_IF_ON_HOST(
-        (Impl::runtime_check_rank_host(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
-    KOKKOS_IF_ON_DEVICE(
-        (Impl::runtime_check_rank_device(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
-  }
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {}
 
   explicit KOKKOS_INLINE_FUNCTION View(
       pointer_type arg_ptr, const typename traits::array_layout& arg_layout)
@@ -1723,18 +1697,8 @@ class View : public ViewTraits<DataType, Properties...> {
                          arg_N7)),
                      sizeof(typename traits::value_type)))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    KOKKOS_IF_ON_HOST(
-        (Impl::runtime_check_rank_host(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7, label());))
-    KOKKOS_IF_ON_DEVICE(
-        (Impl::runtime_check_rank_device(
-             traits::rank_dynamic,
-             std::is_void<typename traits::specialize>::value, arg_N0, arg_N1,
-             arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);))
-  }
+                                           arg_N4, arg_N5, arg_N6, arg_N7),
+             check_input_args::yes) {}
 };
 
 /** \brief Temporary free function rank()
