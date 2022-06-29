@@ -1402,7 +1402,7 @@ KOKKOS_INLINE_FUNCTION auto MDThreadVectorRange(
   static constexpr Kokkos::Iterate inner_direction =
       InnerDirection == Kokkos::Iterate::Default
           ? Kokkos::layout_iterate_type_selector<
-                array_layout>::outer_iteration_pattern
+                array_layout>::inner_iteration_pattern
           : InnerDirection;
   using iType = std::common_type_t<Ns...>;
 
@@ -1434,7 +1434,7 @@ KOKKOS_INLINE_FUNCTION auto MDTeamVectorRange(
   static constexpr Kokkos::Iterate inner_direction =
       InnerDirection == Kokkos::Iterate::Default
           ? Kokkos::layout_iterate_type_selector<
-                array_layout>::outer_iteration_pattern
+                array_layout>::inner_iteration_pattern
           : InnerDirection;
   using iType = std::common_type_t<Ns...>;
 
