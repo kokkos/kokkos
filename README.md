@@ -12,11 +12,7 @@ backends in development.
 
 Kokkos Core is part of the Kokkos C++ Performance Portability Programming EcoSystem.
 
-For the complete documentation, click below:
-
-<a href="https://kokkos.github.io/kokkos-core-wiki/index.html" target="_blank">
-    <img src='logo-readme.svg' width='85%'>
-</a>
+# [Complete Documentation](kokkos.github.io/kokkos-core-wiki)
 
 # Learning about Kokkos
 
