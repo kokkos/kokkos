@@ -258,7 +258,7 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
 TEST(TEST_CATEGORY, numeric_traits_round_error) {
   TestNumericTraits<TEST_EXECSPACE, float, RoundError>();
   TestNumericTraits<TEST_EXECSPACE, double, RoundError>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, RoundError>();
@@ -268,7 +268,7 @@ TEST(TEST_CATEGORY, numeric_traits_round_error) {
 TEST(TEST_CATEGORY, numeric_traits_norm_min) {
   TestNumericTraits<TEST_EXECSPACE, float, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, NormMin>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, NormMin>();
@@ -278,7 +278,7 @@ TEST(TEST_CATEGORY, numeric_traits_norm_min) {
 TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
   TestNumericTraits<TEST_EXECSPACE, float, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, DenormMin>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, DenormMin>();
@@ -288,7 +288,7 @@ TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
 TEST(TEST_CATEGORY, numeric_traits_reciprocal_overflow_threshold) {
   TestNumericTraits<TEST_EXECSPACE, float, ReciprocalOverflowThreshold>();
   TestNumericTraits<TEST_EXECSPACE, double, ReciprocalOverflowThreshold>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, ReciprocalOverflowThreshold>();
@@ -327,7 +327,7 @@ TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
   TestNumericTraits<TEST_EXECSPACE, float, FiniteMax>();
   TestNumericTraits<TEST_EXECSPACE, double, FiniteMin>();
   TestNumericTraits<TEST_EXECSPACE, double, FiniteMax>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, FiniteMin>();
@@ -350,7 +350,7 @@ TEST(TEST_CATEGORY, numeric_traits_digits) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits>();
   TestNumericTraits<TEST_EXECSPACE, float, Digits>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, Digits>();
@@ -372,7 +372,7 @@ TEST(TEST_CATEGORY, numeric_traits_digits10) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, float, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits10>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, Digits10>();
@@ -382,7 +382,7 @@ TEST(TEST_CATEGORY, numeric_traits_digits10) {
 TEST(TEST_CATEGORY, numeric_traits_max_digits10) {
   TestNumericTraits<TEST_EXECSPACE, float, MaxDigits10>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxDigits10>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, MaxDigits10>();
@@ -403,7 +403,7 @@ TEST(TEST_CATEGORY, numeric_traits_radix) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Radix>();
   TestNumericTraits<TEST_EXECSPACE, float, Radix>();
   TestNumericTraits<TEST_EXECSPACE, double, Radix>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, Radix>();
@@ -415,7 +415,7 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
   TestNumericTraits<TEST_EXECSPACE, float, MaxExponent>();
   TestNumericTraits<TEST_EXECSPACE, double, MinExponent>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxExponent>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, MinExponent>();
@@ -428,7 +428,7 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
   TestNumericTraits<TEST_EXECSPACE, float, MaxExponent10>();
   TestNumericTraits<TEST_EXECSPACE, double, MinExponent10>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxExponent10>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // nvc++-Fatal-/home/projects/x86-64/nvidia/hpc_sdk/Linux_x86_64/22.3/compilers/bin/tools/cpp2
   // TERMINATED by signal 11
   TestNumericTraits<TEST_EXECSPACE, long double, MinExponent10>();
@@ -440,7 +440,7 @@ TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
   TestNumericTraits<TEST_EXECSPACE, float, SignalingNaN>();
   TestNumericTraits<TEST_EXECSPACE, double, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, double, SignalingNaN>();
-#ifndef KOKKOS_COMPILER_NVHPC  // WORKAROUND FIXME:
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC:
   // Unsupported unknown data type 38.
   // Unsupported unknown data type 38.
   // Unsupported unknown data type 38.

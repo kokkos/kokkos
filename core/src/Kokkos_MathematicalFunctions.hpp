@@ -243,8 +243,8 @@ KOKKOS_INLINE_FUNCTION int abs(int n) {
   return abs(n);
 }
 KOKKOS_INLINE_FUNCTION long abs(long n) {
-#ifdef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND ptxas fatal   : unresolved
-                              // extern function 'labs'
+// FIXME_NVHPC ptxas fatal   : unresolved extern function 'labs'
+#ifdef KOKKOS_COMPILER_NVHPC
   return n > 0 ? n : -n;
 #else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -252,8 +252,8 @@ KOKKOS_INLINE_FUNCTION long abs(long n) {
 #endif
 }
 KOKKOS_INLINE_FUNCTION long long abs(long long n) {
-#ifdef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND ptxas fatal   : unresolved
-                              // extern function 'labs'
+// FIXME_NVHPC ptxas fatal   : unresolved extern function 'labs'
+#ifdef KOKKOS_COMPILER_NVHPC
   return n > 0 ? n : -n;
 #else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -302,7 +302,8 @@ KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(
     })
 // Exponential functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp)
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME WORKAROUND nvc++ has issues with exp2
+// FIXME_NVHPC nvc++ has issues with exp2
+#ifndef KOKKOS_COMPILER_NVHPC
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp2)
 #else
 KOKKOS_INLINE_FUNCTION float exp2(float val) {
