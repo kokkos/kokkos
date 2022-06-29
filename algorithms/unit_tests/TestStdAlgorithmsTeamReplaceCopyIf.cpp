@@ -62,22 +62,19 @@ struct IsGreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewFromType, class ViewDestType, class MemberType, class ReplaceCopyIfUnaryOpType>
-struct TestFunctorA
-{
+template <class ViewFromType, class ViewDestType, class MemberType,
+          class ReplaceCopyIfUnaryOpType>
+struct TestFunctorA {
   ViewFromType m_from_view;
   ViewDestType m_dest_view;
   int m_api_pick;
 
   TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
                int apiPick)
-      : m_from_view(viewFrom),
-        m_dest_view(viewDest),
-        m_api_pick(apiPick) {}
+      : m_from_view(viewFrom), m_dest_view(viewDest), m_api_pick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const
-  {
+  void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
 
     auto myRowViewFrom =
@@ -86,15 +83,14 @@ struct TestFunctorA
         Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto it = KE::replace_copy_if(member,
-				    KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
-				    KE::begin(myRowViewDest),
-				    ReplaceCopyIfUnaryOpType(151), 1);
-      (void) it;
+      auto it = KE::replace_copy_if(
+          member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
+          KE::begin(myRowViewDest), ReplaceCopyIfUnaryOpType(151), 1);
+      (void)it;
     } else if (m_api_pick == 1) {
       auto it = KE::replace_copy_if(member, myRowViewFrom, myRowViewDest,
-				    ReplaceCopyIfUnaryOpType(151), 1);
-      (void) it;
+                                    ReplaceCopyIfUnaryOpType(151), 1);
+      (void)it;
     }
   }
 };
@@ -140,9 +136,10 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   policy_type policy(num_teams, Kokkos::AUTO());
 
   // v2 is the destination view where we copy values to
-  auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
-  using bop_t        = IsGreaterThanValueFunctor<ValueType>;
-  using functor_type = TestFunctorA<decltype(v), decltype(v2), team_member_type, bop_t>;
+  auto v2     = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
+  using bop_t = IsGreaterThanValueFunctor<ValueType>;
+  using functor_type =
+      TestFunctorA<decltype(v), decltype(v2), team_member_type, bop_t>;
   functor_type fnc(v, v2, apiId);
   Kokkos::parallel_for(policy, fnc);
 
@@ -162,7 +159,7 @@ void run_all_scenarios() {
   for (int num_teams : team_sizes_to_test) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
       for (int apiId : {0, 1}) {
-	test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<Tag, ValueType>(num_teams, numCols, apiId);
       }
     }
   }
