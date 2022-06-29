@@ -487,6 +487,8 @@ inline void parallel_scan(
 
 #ifdef KOKKOS_ENABLE_DISABLE_DEPRECATED_CODE_3
 template <class ExecutionPolicy, class FunctorType, class ReturnType>
+KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use the overload taking the label as first argument instead!")
 inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     ReturnType& return_value, const std::string& str,
