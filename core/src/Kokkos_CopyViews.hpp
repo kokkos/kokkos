@@ -865,6 +865,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 1> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       view_copy(exec_space..., dst, src);
     } else {
@@ -883,6 +887,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(1) == src.extent(1)) {
         view_copy(exec_space..., dst, src);
@@ -922,6 +930,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(2) == src.extent(2)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
@@ -972,6 +984,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(3) == src.extent(3)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
@@ -1027,6 +1043,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(4) == src.extent(4)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
@@ -1087,6 +1107,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(5) == src.extent(5)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
@@ -1156,6 +1180,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(6) == src.extent(6)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
@@ -1227,6 +1255,10 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
   template <typename... OptExecSpace>
   ViewRemap(const DstType& dst, const SrcType& src,
             const OptExecSpace&... exec_space) {
+    static_assert(
+        sizeof...(OptExecSpace) <= 1,
+        "OptExecSpace must be either empty or be an execution space!");
+
     if (dst.extent(0) == src.extent(0)) {
       if (dst.extent(7) == src.extent(7)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
