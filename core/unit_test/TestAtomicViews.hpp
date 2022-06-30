@@ -180,7 +180,9 @@ class TestAtomicViewAPI {
   TestAtomicViewAPI() {
     // FIXME_OPENMPTARGET
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
     TestViewOperator_LeftAndRight<int[2], device>::testit();
+#endif
 #endif
     run_test_rank0();
     run_test_rank4();

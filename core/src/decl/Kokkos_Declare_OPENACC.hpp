@@ -42,18 +42,13 @@
 //@HEADER
 */
 
-#include <TestMDRange.hpp>
+#ifndef KOKKOS_DECLARE_OPENACC_HPP
+#define KOKKOS_DECLARE_OPENACC_HPP
 
-namespace Test {
-
-TEST(TEST_CATEGORY, mdrange_6d) {
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6(10, 10, 10, 10, 5, 5);
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-  // FIXME_OPENMPTARGET requires MDRange parallel_reduce
-#ifndef KOKKOS_ENABLE_OPENACC
-  TestMDRange_6D<TEST_EXECSPACE>::test_reduce6(100, 10, 10, 10, 5, 5);
+#if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
+#include <Kokkos_OpenACC.hpp>
+#include <Kokkos_OpenACCSpace.hpp>
+//#include <OpenACC/Kokkos_OpenACC_UniqueToken.hpp>
 #endif
-#endif
-}
 
-}  // namespace Test
+#endif

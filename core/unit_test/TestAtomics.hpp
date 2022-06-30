@@ -526,7 +526,8 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 2)));
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 3)));
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC       // FIXME_OPENACC
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3)));
@@ -562,6 +563,7 @@ TEST(TEST_CATEGORY, atomics) {
       (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 2)));
   ASSERT_TRUE(
       (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 3)));
+#endif
 #endif
 #endif
 #endif

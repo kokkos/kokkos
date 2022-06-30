@@ -65,6 +65,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     # ------------------------------------------
     # std set C
     # ------------------------------------------
+	if(NOT Kokkos_ENABLE_OPENACC)
     set(STDALGO_SOURCES_C)
     foreach(Name
 	StdAlgorithmsCommon
@@ -83,10 +84,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	)
       list(APPEND STDALGO_SOURCES_C Test${Name}.cpp)
     endforeach()
+	endif()
 
     # ------------------------------------------
     # std set D
     # ------------------------------------------
+	if(NOT Kokkos_ENABLE_OPENACC)
     set(STDALGO_SOURCES_D)
     foreach(Name
 	StdAlgorithmsCommon
@@ -111,10 +114,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	)
       list(APPEND STDALGO_SOURCES_D Test${Name}.cpp)
     endforeach()
+	endif()
 
     # ------------------------------------------
     # std set E
     # ------------------------------------------
+	if(NOT Kokkos_ENABLE_OPENACC)
     set(STDALGO_SOURCES_E)
     foreach(Name
 	StdAlgorithmsCommon
@@ -132,6 +137,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	)
       list(APPEND STDALGO_SOURCES_E Test${Name}.cpp)
     endforeach()
+	endif()
 
   endif()
 endforeach()

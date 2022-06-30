@@ -946,6 +946,7 @@ class TestViewAPI {
       Kokkos::fence();
     }
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
     TestViewOperator_LeftAndRight<int[2][3][4][2][3][4], device> f6;
     f6.testit();
     TestViewOperator_LeftAndRight<int[2][3][4][2][3], device> f5;
@@ -959,19 +960,24 @@ class TestViewAPI {
     TestViewOperator_LeftAndRight<int[2], device> f1;
     f1.testit();
 #endif
+#endif
   }
 
   static void run_test_view_operator_b() {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
     TestViewOperator_LeftAndRight<int[2][3][4][2][3][4][2], device> f7;
     f7.testit();
+#endif
 #endif
   }
 
   static void run_test_view_operator_c() {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
     TestViewOperator_LeftAndRight<int[2][3][4][2][3][4][2][3], device> f8;
     f8.testit();
+#endif
 #endif
   }
 
@@ -1010,7 +1016,9 @@ class TestViewAPI {
     Kokkos::deep_copy(dy, dx);
     Kokkos::deep_copy(hy, dy);
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
     ASSERT_EQ(hx(), hy());
+#endif
 #endif
   }
 
@@ -1142,6 +1150,10 @@ class TestViewAPI {
               unsigned(N0) * unsigned(N1) * unsigned(N2) * unsigned(N3));
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     return;
+#else
+#ifdef KOKKOS_ENABLE_OPENACC
+    return;
+#endif
 #endif
     hx = Kokkos::create_mirror(dx);
     hy = Kokkos::create_mirror(dy);
@@ -1483,6 +1495,12 @@ class TestViewAPI {
     if (std::is_same<typename dView1::memory_space,
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
       return;
+#else
+#ifdef KOKKOS_ENABLE_OPENACC
+    if (std::is_same<typename dView1::memory_space,
+                     Kokkos::Experimental::OpenACCSpace>::value)
+      return;
+#endif
 #endif
 // FIXME_MSVC_WITH_CUDA
 // This test doesn't behave as expected on Windows with CUDA

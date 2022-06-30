@@ -59,6 +59,7 @@ namespace Experimental {
 class SYCL;
 class HIP;
 class OpenMPTarget;
+class OpenACC;
 class HPX;
 }  // namespace Experimental
 }  // namespace Kokkos
@@ -309,6 +310,7 @@ TEST(kokkosp, test_streams) {
 #endif
 /** FIXME: OpenMPTarget currently has unexpected fences */
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
 TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
@@ -333,6 +335,7 @@ TEST(kokkosp, async_deep_copy) {
       });
   ASSERT_TRUE(success);
 }
+#endif
 #endif
 TEST(kokkosp, parallel_for) {
   using namespace Kokkos::Test::Tools;
@@ -395,8 +398,8 @@ TEST(kokkosp, parallel_scan) {
         }
         return MatchDiagnostic{true};
       });
-// Currently, this test is known to fail with OpenMPTarget
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+// Currently, this test is known to fail with OpenMPTarget and OpenACC
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   ASSERT_TRUE(success);
 #else
   (void)success;

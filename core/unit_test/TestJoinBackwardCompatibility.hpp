@@ -45,6 +45,10 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
+#ifndef KOKKOS_ENABLE_OPENACC
+// FIXME_OPENACC: NVC++-S-1002-Reduction type not supported for this variable
+// datatype
+
 namespace {
 
 enum MyErrorCode {
@@ -148,3 +152,4 @@ TEST(TEST_CATEGORY, join_backward_compatibility) {
 }
 
 }  // namespace
+#endif

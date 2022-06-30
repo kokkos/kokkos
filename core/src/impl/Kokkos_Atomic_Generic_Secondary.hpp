@@ -48,7 +48,8 @@
 
 namespace Kokkos {
 
-#ifndef KOKKOS_ENABLE_SERIAL_ATOMICS
+#if !defined(KOKKOS_ENABLE_SERIAL_ATOMICS) && \
+    !defined(KOKKOS_ENABLE_OPENACC_ATOMICS)
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_exchange(volatile T* const dest, const T val) {
   T oldval = *dest;

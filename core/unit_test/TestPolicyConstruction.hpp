@@ -576,6 +576,11 @@ class TestTeamPolicyConstruction {
                      Kokkos::Experimental::OpenMPTarget>::value)
       team_size = 32;
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+    if (std::is_same<typename policy_t::execution_space,
+                     Kokkos::Experimental::OpenACC>::value)
+      team_size = 32;
+#endif
     int chunk_size         = 4;
     int per_team_scratch   = 1024;
     int per_thread_scratch = 16;
@@ -719,6 +724,7 @@ TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
 
 #ifndef KOKKOS_COMPILER_NVHPC       // FIXME_NVHPC
 #ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC       // FIXME_OPENACC
 TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::IndexType<unsigned>>;
@@ -730,6 +736,7 @@ TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
       },
       "unsafe narrowing conversion");
 }
+#endif
 #endif
 #endif
 

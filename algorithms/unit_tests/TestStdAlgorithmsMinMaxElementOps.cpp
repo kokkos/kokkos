@@ -337,6 +337,7 @@ void std_algorithms_min_max_element_test::test_minmax_element_non_trivial_data(
 }
 
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if not defined KOKKOS_ENABLE_OPENACC
 template <class ViewType>
 void std_algorithms_min_max_element_test::
     test_max_element_non_trivial_data_custom_comp(ViewType view) {
@@ -418,6 +419,7 @@ void std_algorithms_min_max_element_test::
   }
 }
 #endif
+#endif
 
 // trivial case
 TEST_F(std_algorithms_min_max_element_test, min_element_empty_range) {
@@ -432,6 +434,7 @@ TEST_F(std_algorithms_min_max_element_test, max_element_empty_range) {
   test_max_element_trivial_data(m_strided_view);
 }
 
+#if not defined KOKKOS_ENABLE_OPENACC
 // non-trivial data
 TEST_F(std_algorithms_min_max_element_test, min_element_non_trivial_data) {
   test_min_element_non_trivial_data(m_static_view);
@@ -444,8 +447,10 @@ TEST_F(std_algorithms_min_max_element_test, max_element_non_trivial_data) {
   test_max_element_non_trivial_data(m_dynamic_view);
   test_max_element_non_trivial_data(m_strided_view);
 }
+#endif
 
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if not defined KOKKOS_ENABLE_OPENACC
 // non-trivial data, custom comp
 TEST_F(std_algorithms_min_max_element_test,
        min_element_non_trivial_data_custom_comp) {
@@ -460,6 +465,7 @@ TEST_F(std_algorithms_min_max_element_test,
   test_max_element_non_trivial_data_custom_comp(m_dynamic_view);
   test_max_element_non_trivial_data_custom_comp(m_strided_view);
 }
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
@@ -478,6 +484,7 @@ TEST_F(std_algorithms_min_max_element_test, minmax_element_non_trivial_data) {
 #endif
 
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if not defined KOKKOS_ENABLE_OPENACC
 // OpenMPTarget does not yet support custom comparator
 TEST_F(std_algorithms_min_max_element_test,
        minmax_element_non_trivial_data_custom_comp) {
@@ -485,6 +492,7 @@ TEST_F(std_algorithms_min_max_element_test,
   test_minmax_element_non_trivial_data_custom_comp(m_dynamic_view);
   test_minmax_element_non_trivial_data_custom_comp(m_strided_view);
 }
+#endif
 #endif
 
 }  // namespace stdalgos

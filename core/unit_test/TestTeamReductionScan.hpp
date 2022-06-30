@@ -61,6 +61,12 @@ TEST(TEST_CATEGORY, team_long_reduce) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET: Not implemented
   if constexpr (!std::is_same<TEST_EXECSPACE,
                               Kokkos::Experimental::OpenMPTarget>::value)
+#else
+#ifdef KOKKOS_ENABLE_OPENACC
+  // WORKAROUND OPENACC: Not implemented
+  if constexpr (!std::is_same<TEST_EXECSPACE,
+                              Kokkos::Experimental::OpenACC>::value)
+#endif
 #endif
   {
     TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
@@ -78,6 +84,12 @@ TEST(TEST_CATEGORY, team_double_reduce) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET: Not implemented
   if constexpr (!std::is_same<TEST_EXECSPACE,
                               Kokkos::Experimental::OpenMPTarget>::value)
+#else
+#ifdef KOKKOS_ENABLE_OPENACC
+  // WORKAROUND OPENACC: Not implemented
+  if constexpr (!std::is_same<TEST_EXECSPACE,
+                              Kokkos::Experimental::OpenACC>::value)
+#endif
 #endif
   {
     TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(

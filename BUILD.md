@@ -128,6 +128,9 @@ Device backends can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_HIP (Experimental)
     * Whether to build HIP backend
     * BOOL Default: OFF
+* Kokkos_ENABLE_OPENACC (Experimental)
+    * Whether to build the OpenACC backend
+    * BOOL Default: OFF
 * Kokkos_ENABLE_OPENMPTARGET (Experimental)
     * Whether to build the OpenMP target backend
     * BOOL Default: OFF

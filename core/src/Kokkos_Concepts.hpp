@@ -356,6 +356,8 @@ struct is_space {
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
       std::is_same<execution_space,
                    Kokkos::Experimental::OpenMPTarget>::value ||
+#elif defined(KOKKOS_ENABLE_OPENACC)
+      std::is_same<execution_space, Kokkos::Experimental::OpenACC>::value ||
 #endif
           false,
       Kokkos::DefaultHostExecutionSpace, execution_space>;

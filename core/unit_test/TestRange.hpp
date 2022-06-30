@@ -433,6 +433,7 @@ TEST(TEST_CATEGORY, range_reduce) {
 }
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
 TEST(TEST_CATEGORY, range_scan) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
@@ -482,5 +483,6 @@ TEST(TEST_CATEGORY, range_scan) {
   }
 #endif
 }
+#endif
 #endif
 }  // namespace Test

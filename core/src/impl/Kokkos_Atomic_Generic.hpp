@@ -286,6 +286,25 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     std::enable_if_t<(sizeof(T) != 4) && (sizeof(T) != 8), const T> val) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#if defined(KOKKOS_ENABLE_OPENACC)
+  if (acc_on_device(acc_device_host)) {
+    while (!Impl::lock_address_host_space((void*)dest))
+      ;
+    Kokkos::memory_fence();
+    T return_val = *dest;
+    *dest        = op.apply(return_val, val);
+    Kokkos::memory_fence();
+    Impl::unlock_address_host_space((void*)dest);
+    return return_val;
+  } else {
+    // FIXME_OPENACC
+    Kokkos::abort("Not implemented!");
+    (void)op;
+    (void)dest;
+    (void)val;
+    return 0;
+  }
+#else
   while (!Impl::lock_address_host_space((void*)dest))
     ;
   Kokkos::memory_fence();
@@ -294,6 +313,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   Kokkos::memory_fence();
   Impl::unlock_address_host_space((void*)dest);
   return return_val;
+#endif
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
   // This is a way to (hopefully) avoid dead lock in a warp
   T return_val;
@@ -354,6 +374,25 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
                                    const T>& val) {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#if defined(KOKKOS_ENABLE_OPENACC)
+  if (acc_on_device(acc_device_host)) {
+    while (!Impl::lock_address_host_space((void*)dest))
+      ;
+    Kokkos::memory_fence();
+    T return_val = op.apply(*dest, val);
+    *dest        = return_val;
+    Kokkos::memory_fence();
+    Impl::unlock_address_host_space((void*)dest);
+    return return_val;
+  } else {
+    // FIXME_OPENACC
+    std::abort();
+    (void)op;
+    (void)dest;
+    (void)val;
+    return 0;
+  }
+#else
   while (!Impl::lock_address_host_space((void*)dest))
     ;
   Kokkos::memory_fence();
@@ -362,6 +401,7 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
   Kokkos::memory_fence();
   Impl::unlock_address_host_space((void*)dest);
   return return_val;
+#endif
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
@@ -416,6 +456,7 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
 namespace Kokkos {
 
 // Fetch_Oper atomics: return value before operation
+#if !defined(KOKKOS_ENABLE_OPENACC_ATOMICS)
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_max(volatile T* const dest, const T val) {
   return Impl::atomic_fetch_oper(Impl::MaxOper<T, const T>(), dest, val);
@@ -440,9 +481,10 @@ template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_mod(volatile T* const dest, const T val) {
   return Impl::atomic_fetch_oper(Impl::ModOper<T, const T>(), dest, val);
 }
+#endif
 
-#if !defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
-
+#if !defined(KOKKOS_ENABLE_SERIAL_ATOMICS) && \
+    !defined(KOKKOS_ENABLE_OPENACC_ATOMICS)
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_and(volatile T* const dest, const T val) {
   return Impl::atomic_fetch_oper(Impl::AndOper<T, const T>(), dest, val);
@@ -455,6 +497,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_or(volatile T* const dest, const T val) {
 
 #endif
 
+#if !defined(KOKKOS_ENABLE_OPENACC_ATOMICS)
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_xor(volatile T* const dest, const T val) {
   return Impl::atomic_fetch_oper(Impl::XorOper<T, const T>(), dest, val);
@@ -528,6 +571,7 @@ KOKKOS_INLINE_FUNCTION T atomic_rshift_fetch(volatile T* const dest,
   return Impl::atomic_oper_fetch(Impl::RShiftOper<T, const unsigned int>(),
                                  dest, val);
 }
+#endif
 
 #ifdef _WIN32
 template <typename T>

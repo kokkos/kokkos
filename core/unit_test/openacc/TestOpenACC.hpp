@@ -42,18 +42,67 @@
 //@HEADER
 */
 
-#include <TestMDRange.hpp>
+#ifndef KOKKOS_TEST_OPENACC_HPP
+#define KOKKOS_TEST_OPENACC_HPP
+
+#include <gtest/gtest.h>
+
+#include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_LAMBDA
+#undef KOKKOS_LAMBDA
+#endif
+#define KOKKOS_LAMBDA [=]
+
+#include <Kokkos_Core.hpp>
+
+//#include <TestViewAPI.hpp>
+//#include <TestViewOfClass.hpp>
+//#include <TestViewSubview.hpp>
+//#include <TestAtomic.hpp>
+//#include <TestAtomicOperations.hpp>
+//#include <TestAtomicViews.hpp>
+#include <TestRange.hpp>
+#include <TestTeam.hpp>
+//#include <TestReduce.hpp>
+//#include <TestScan.hpp>
+//#include <TestAggregate.hpp>
+//#include <TestCompilerMacros.hpp>
+
+// TODO enable task scheduler tests for openacc
+//#include <TestTaskScheduler.hpp>
+
+//#include <TestMemoryPool.hpp>
+//#include <TestCXX11.hpp>
+//#include <TestCXX11Deduction.hpp>
+#include <TestTeamVector.hpp>
+//#include <TestTemplateMetaFunctions.hpp>
+//#include <TestPolicyConstruction.hpp>
+//#include <TestMDRange.hpp>
 
 namespace Test {
 
-TEST(TEST_CATEGORY, mdrange_6d) {
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6(10, 10, 10, 10, 5, 5);
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-  // FIXME_OPENMPTARGET requires MDRange parallel_reduce
-#ifndef KOKKOS_ENABLE_OPENACC
-  TestMDRange_6D<TEST_EXECSPACE>::test_reduce6(100, 10, 10, 10, 5, 5);
-#endif
-#endif
-}
+class openacc : public ::testing::Test {
+ protected:
+  static void SetUpTestCase() {
+    const unsigned numa_count = Kokkos::hwloc::get_available_numa_count();
+    const unsigned cores_per_numa =
+        Kokkos::hwloc::get_available_cores_per_numa();
+    const unsigned openacc_per_core =
+        Kokkos::hwloc::get_available_openacc_per_core();
+
+    unsigned openacc_count = 0;
+
+    openacc_count = std::max(1u, numa_count) *
+                    std::max(2u, cores_per_numa * openacc_per_core);
+
+    Kokkos::OpenACC::initialize(openacc_count);
+    Kokkos::print_configuration(std::cout, true /* detailed */);
+  }
+
+  static void TearDownTestCase() { Kokkos::OpenACC::finalize(); }
+};
 
 }  // namespace Test
+
+#endif

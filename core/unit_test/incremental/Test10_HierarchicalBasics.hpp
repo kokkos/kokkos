@@ -96,7 +96,7 @@ TEST(TEST_CATEGORY, IncrTest_10_Hierarchical_Basics) {
   HierarchicalBasics<TEST_EXECSPACE> test;
 
   // OpenMPTarget backend only accepts >= 32 threads per team
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
   test.run(1, 32);
   test.run(8, 64);
   test.run(11, 128);

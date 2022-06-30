@@ -45,6 +45,8 @@
 #ifndef KOKKOS_TEST_REDUCTIONS_HPP
 #define KOKKOS_TEST_REDUCTIONS_HPP
 #include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_OPENACC
 #include <TestReduce.hpp>
+#endif
 #include <TestCXX11Deduction.hpp>
 #endif

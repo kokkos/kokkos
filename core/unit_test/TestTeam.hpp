@@ -71,8 +71,17 @@ struct TestTeamPolicy {
                            : 1)
                     .team_size_max(*this, Kokkos::ParallelReduceTag()),
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+                Kokkos::TeamPolicy<ScheduleType, ExecSpace>(
+                    1, std::is_same<ExecSpace,
+                                    Kokkos::Experimental::OpenACC>::value
+                           ? 32
+                           : 1)
+                    .team_size_max(*this, Kokkos::ParallelReduceTag()),
+#else
                 Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 1).team_size_max(
                     *this, Kokkos::ParallelReduceTag()),
+#endif
 #endif
                 league_size) {
   }
@@ -140,8 +149,17 @@ struct TestTeamPolicy {
             : smallest_work,
         smallest_work);
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> none_auto(
+        smallest_work,
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value
+            ? 32
+            : smallest_work,
+        smallest_work);
+#else
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> none_auto(
         smallest_work, smallest_work, smallest_work);
+#endif
 #endif
     (void)none_auto;
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> both_auto(
@@ -156,8 +174,17 @@ struct TestTeamPolicy {
             : smallest_work,
         Kokkos::AUTO());
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(
+        smallest_work,
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value
+            ? 32
+            : smallest_work,
+        Kokkos::AUTO());
+#else
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(
         smallest_work, smallest_work, Kokkos::AUTO());
+#endif
 #endif
     (void)auto_vector;
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_team(
@@ -174,7 +201,7 @@ struct TestTeamPolicy {
 
       // FIXME_OPENMPTARGET temporary restriction for team size to be at least
       // 32
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
       const int team_size =
           policy_type(
               league_size,
@@ -190,12 +217,27 @@ struct TestTeamPolicy {
                   : 1)
               .team_size_max(functor, Kokkos::ParallelForTag());
 #else
+#if defined(KOKKOS_ENABLE_OPENACC)
+      const int team_size =
+          policy_type(
+              league_size,
+              std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32
+                                                                            : 1)
+              .team_size_max(functor, Kokkos::ParallelForTag());
+      const int team_size_init =
+          policy_type_init(
+              league_size,
+              std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32
+                                                                            : 1)
+              .team_size_max(functor, Kokkos::ParallelForTag());
+#else
       const int team_size =
           policy_type(league_size, 1)
               .team_size_max(functor, Kokkos::ParallelForTag());
       const int team_size_init =
           policy_type_init(league_size, 1)
               .team_size_max(functor, Kokkos::ParallelForTag());
+#endif
 #endif
 
       Kokkos::parallel_for(policy_type(league_size, team_size), functor);
@@ -231,7 +273,7 @@ struct TestTeamPolicy {
         Kokkos::TeamPolicy<ScheduleType, ExecSpace, ReduceTag>;
 
     // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
     const int team_size =
         policy_type_reduce(
             league_size,
@@ -240,9 +282,18 @@ struct TestTeamPolicy {
                 : 1)
             .team_size_max(functor, Kokkos::ParallelReduceTag());
 #else
+#if defined(KOKKOS_ENABLE_OPENACC)
+    const int team_size =
+        policy_type_reduce(
+            league_size,
+            std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32
+                                                                          : 1)
+            .team_size_max(functor, Kokkos::ParallelReduceTag());
+#else
     const int team_size =
         policy_type_reduce(league_size, 1)
             .team_size_max(functor, Kokkos::ParallelReduceTag());
+#endif
 #endif
 
     const int64_t N = team_size * league_size;
@@ -589,7 +640,7 @@ struct TestSharedTeam {
         Kokkos::View<typename Functor::value_type, Kokkos::HostSpace,
                      Kokkos::MemoryUnmanaged>;
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
     const size_t team_size =
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value
             ? Kokkos::TeamPolicy<ScheduleType, ExecSpace>(64, 32).team_size_max(
@@ -603,12 +654,27 @@ struct TestSharedTeam {
             : 8192 / team_size,
         team_size);
 #else
+#if defined(KOKKOS_ENABLE_OPENACC)
+    const size_t team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value
+            ? Kokkos::TeamPolicy<ScheduleType, ExecSpace>(64, 32).team_size_max(
+                  Functor(), Kokkos::ParallelReduceTag())
+            : Kokkos::TeamPolicy<ScheduleType, ExecSpace>(8192, 1)
+                  .team_size_max(Functor(), Kokkos::ParallelReduceTag());
+
+    Kokkos::TeamPolicy<ScheduleType, ExecSpace> team_exec(
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value
+            ? 32 / team_size
+            : 8192 / team_size,
+        team_size);
+#else
     const size_t team_size =
         Kokkos::TeamPolicy<ScheduleType, ExecSpace>(8192, 1).team_size_max(
             Functor(), Kokkos::ParallelReduceTag());
 
     Kokkos::TeamPolicy<ScheduleType, ExecSpace> team_exec(8192 / team_size,
                                                           team_size);
+#endif
 #endif
 
     typename Functor::value_type error_count = 0;
@@ -646,7 +712,12 @@ struct TestLambdaSharedTeam {
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    int team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32 : 1;
+#else
     int team_size = 1;
+#endif
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
@@ -817,11 +888,26 @@ struct TestScratchTeam {
                       Functor::SHARED_TEAM_COUNT)),
                   Kokkos::PerThread(thread_scratch_size + 3 * sizeof(int)));
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    p_type team_exec =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value
+            ? p_type(64, 32).set_scratch_size(
+                  1,
+                  Kokkos::PerTeam(Functor::shared_int_array_type::shmem_size(
+                      Functor::SHARED_TEAM_COUNT)),
+                  Kokkos::PerThread(thread_scratch_size + 3 * sizeof(int)))
+            : p_type(8192, 1).set_scratch_size(
+                  1,
+                  Kokkos::PerTeam(Functor::shared_int_array_type::shmem_size(
+                      Functor::SHARED_TEAM_COUNT)),
+                  Kokkos::PerThread(thread_scratch_size + 3 * sizeof(int)));
+#else
     p_type team_exec = p_type(8192, 1).set_scratch_size(
         1,
         Kokkos::PerTeam(Functor::shared_int_array_type::shmem_size(
             Functor::SHARED_TEAM_COUNT)),
         Kokkos::PerThread(thread_scratch_size + 3 * sizeof(int)));
+#endif
 #endif
 
     const size_t team_size =
@@ -837,7 +923,13 @@ struct TestScratchTeam {
             ? p_type(64 / team_size, team_size)
             : p_type(8192 / team_size, team_size);
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    team_exec = std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value
+                    ? p_type(64 / team_size, team_size)
+                    : p_type(8192 / team_size, team_size);
+#else
     team_exec          = p_type(8192 / team_size, team_size);
+#endif
 #endif
 
     Kokkos::parallel_reduce(
@@ -1023,7 +1115,7 @@ struct ClassNoShmemSizeFunction {
 #ifdef KOKKOS_ENABLE_SYCL
     int team_size = 4;
 #else
-    int team_size      = 8;
+    int team_size = 8;
 #endif
     if (team_size > ExecSpace::concurrency())
       team_size = ExecSpace::concurrency();
@@ -1350,7 +1442,12 @@ struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
+#ifdef KOKKOS_ENABLE_OPENMPACC
+    int fake_team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32 : 1;
+#else
     int fake_team_size = 1;
+#endif
 #endif
     const int team_size =
         policy_type_f(league_size, fake_team_size)
@@ -1501,7 +1598,12 @@ struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    int fake_team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32 : 1;
+#else
     int fake_team_size = 1;
+#endif
 #endif
     const int team_size =
         policy_type_f(league_size, fake_team_size)
@@ -1565,7 +1667,12 @@ struct TestScratchAlignment {
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
+#ifdef KOKKOS_ENABLE_OPENACC
+    int team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenACC>::value ? 32 : 1;
+#else
     int team_size      = 1;
+#endif
 #endif
     if (allocate_small) shmem_size += ScratchViewInt::shmem_size(1);
     Kokkos::parallel_for(

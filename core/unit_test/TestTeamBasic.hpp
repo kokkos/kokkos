@@ -66,7 +66,7 @@ TEST(TEST_CATEGORY, team_for) {
 }
 
 // FIXME_OPENMPTARGET wrong results
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
@@ -346,7 +346,7 @@ TEST(TEST_CATEGORY, team_handle_by_value) {
 
 }  // namespace Test
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 #include <TestTeamVector.hpp>
 #endif
 #endif

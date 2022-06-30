@@ -445,6 +445,7 @@ TEST(TEST_CATEGORY, range_reduce_require) {
 }
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENACC
 TEST(TEST_CATEGORY, range_scan_require) {
   using Property = Kokkos::Experimental::WorkItemProperty::HintLightWeight_t;
   {
@@ -510,5 +511,6 @@ TEST(TEST_CATEGORY, range_scan_require) {
   }
 #endif
 }
+#endif
 #endif
 }  // namespace Test

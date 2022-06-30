@@ -27,7 +27,11 @@ KOKKOS_CFG_DEPENDS(OPTIONS COMPILER_ID)
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
 # Set the Default for Desul Atomics usage.
+IF (KOKKOS_ENABLE_OPENACC)
+set(_DESUL_ATOMICS_DEFAULT OFF)
+ELSE()
 set(_DESUL_ATOMICS_DEFAULT ON)
+ENDIF()
 
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
@@ -60,8 +64,17 @@ KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake 
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
+IF (KOKKOS_ENABLE_OPENACC)
+KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   OFF  "Whether to use desul based atomics - option only during beta")
+ELSE()
 KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ON  "Whether to use desul based atomics - option only during beta")
+ENDIF()
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
+
+IF (KOKKOS_ENABLE_OPENACC)
+KOKKOS_ENABLE_OPTION(CUDA_ATOMIC_INTRINSICS   ON  "Whether to use CUDA atomic intrinsics for OpenACC")
+KOKKOS_ENABLE_OPTION(COLLAPSE_HIERARCHICAL_CONSTRUCTS   ON  "Whether to manually collapse hierarchically parallel constructs for OpenACC")
+ENDIF()
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")

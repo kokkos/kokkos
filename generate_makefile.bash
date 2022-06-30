@@ -28,6 +28,9 @@ get_kokkos_device_list() {
      if [ "${UC_DEVICE}" == "HIP" ]; then
        WITH_HIP_BACKEND=ON
      fi
+     if [ "${UC_DEVICE}" == "OPENACC" ]; then
+       WITH_ACC_BACKEND=ON
+     fi
      if [ "${UC_DEVICE}" == "OPENMPTARGET" ]; then
        WITH_OMPT_BACKEND=ON
      fi

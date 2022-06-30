@@ -349,6 +349,7 @@ void run_inclusive_scan_all_scenarios() {
     run_single_scenario_default_op<Tag, ValueType>(it);
 
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if not defined KOKKOS_ENABLE_OPENACC
     // the sum custom op is always run
     using sum_binary_op = SumFunctor<ValueType>;
     sum_binary_op sbop;
@@ -368,6 +369,7 @@ void run_inclusive_scan_all_scenarios() {
       run_single_scenario_custom_op<Tag, ValueType>(it, mbop, ValueType{-2});
       run_single_scenario_custom_op<Tag, ValueType>(it, mbop, ValueType{3});
     }
+#endif
 #endif
   }
 }

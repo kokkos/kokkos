@@ -147,12 +147,17 @@ KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
 
 #define KOKKOS_ENABLE_HIP_ATOMICS
 
+#elif defined(KOKKOS_ENABLE_OPENACC)
+
+#define KOKKOS_ENABLE_OPENACC_ATOMICS
+
 #endif
 
-#if !defined(KOKKOS_ENABLE_GNU_ATOMICS) &&    \
-    !defined(KOKKOS_ENABLE_INTEL_ATOMICS) &&  \
-    !defined(KOKKOS_ENABLE_OPENMP_ATOMICS) && \
-    !defined(KOKKOS_ENABLE_STD_ATOMICS) &&    \
+#if !defined(KOKKOS_ENABLE_GNU_ATOMICS) &&     \
+    !defined(KOKKOS_ENABLE_INTEL_ATOMICS) &&   \
+    !defined(KOKKOS_ENABLE_OPENMP_ATOMICS) &&  \
+    !defined(KOKKOS_ENABLE_OPENACC_ATOMICS) && \
+    !defined(KOKKOS_ENABLE_STD_ATOMICS) &&     \
     !defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
 
 // Compiling for non-Cuda atomic implementation has not been pre-selected.
@@ -212,6 +217,8 @@ inline const char* atomic_query_version() {
   return "KOKKOS_ENABLE_INTEL_ATOMICS";
 #elif defined(KOKKOS_ENABLE_OPENMP_ATOMICS)
   return "KOKKOS_ENABLE_OPENMP_ATOMICS";
+#elif defined(KOKKOS_ENABLE_OPENACC_ATOMICS)
+  return "KOKKOS_ENABLE_OPENACC_ATOMICS";
 #elif defined(KOKKOS_ENABLE_WINDOWS_ATOMICS)
   return "KOKKOS_ENABLE_WINDOWS_ATOMICS";
 #elif defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
@@ -231,6 +238,10 @@ inline const char* atomic_query_version() {
 
 #if defined(KOKKOS_ENABLE_HIP)
 #include <HIP/Kokkos_HIP_Atomic.hpp>
+#endif
+
+#if defined(KOKKOS_ENABLE_OPENACC)
+#include <OpenACC/Kokkos_OpenACC_Atomic.hpp>
 #endif
 
 #if defined(KOKKOS_ENABLE_WINDOWS_ATOMICS)

@@ -172,6 +172,23 @@ struct DefaultContribution<Kokkos::Threads,
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENACC
+template <>
+struct DefaultDuplication<Kokkos::Experimental::OpenACC> {
+  using type = Kokkos::Experimental::ScatterNonDuplicated;
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::OpenACC,
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using type = Kokkos::Experimental::ScatterAtomic;
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::OpenACC,
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using type = Kokkos::Experimental::ScatterAtomic;
+};
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct DefaultDuplication<Kokkos::Cuda> {

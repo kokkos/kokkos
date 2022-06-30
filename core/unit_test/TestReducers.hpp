@@ -1000,6 +1000,8 @@ struct TestReducers {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
     (KOKKOS_COMPILER_CLANG < 1300)
     // FIXME_OPENMPTARGET - The minmaxloc test fails llvm <= 13 version.
+#elif defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - The minmaxloc test is not supported yet.
 #else
     test_minmaxloc(10007);
 #endif
@@ -1018,6 +1020,8 @@ struct TestReducers {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
     (KOKKOS_COMPILER_CLANG < 1300)
     // FIXME_OPENMPTARGET - The minmaxloc test fails llvm <= 13 version.
+#elif defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - The minmaxloc test is not supported yet.
 #else
     test_minmaxloc(10007);
 #endif

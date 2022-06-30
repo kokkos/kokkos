@@ -205,7 +205,8 @@ struct TestNumericTraits {
   }
 
   KOKKOS_FUNCTION void use_on_device() const {
-#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC)
     take_by_value(trait<T>::value);
 #else
     (void)take_address_of(trait<T>::value);
@@ -213,14 +214,17 @@ struct TestNumericTraits {
   }
 };
 
-#if (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA)) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA)) ||     \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC)
 template <class Tag>
 struct TestNumericTraits<
 #if defined(KOKKOS_ENABLE_CUDA)
     Kokkos::Cuda,
 #elif defined(KOKKOS_ENABLE_SYCL)
     Kokkos::Experimental::SYCL,
+#elif defined(KOKKOS_ENABLE_OPENACC)
+    Kokkos::Experimental::OpenACC,
 #else
     Kokkos::Experimental::OpenMPTarget,
 #endif
@@ -249,7 +253,9 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
 #ifndef KOKKOS_COMPILER_IBM  // fails with XL 16.1.1
+#ifndef KOKKOS_COMPILER_PGI  // [FIXME_NVC++] fails with nvc++ 21.2-0
   TestNumericTraits<TEST_EXECSPACE, long double, Epsilon>();
+#endif
 #endif
 }
 

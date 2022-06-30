@@ -42,18 +42,54 @@
 //@HEADER
 */
 
-#include <TestMDRange.hpp>
+#ifndef KOKKOS_OPENACC_INSTANCE_HPP
+#define KOKKOS_OPENACC_INSTANCE_HPP
 
-namespace Test {
+#include <Kokkos_Core.hpp>
 
-TEST(TEST_CATEGORY, mdrange_6d) {
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6(10, 10, 10, 10, 5, 5);
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-  // FIXME_OPENMPTARGET requires MDRange parallel_reduce
-#ifndef KOKKOS_ENABLE_OPENACC
-  TestMDRange_6D<TEST_EXECSPACE>::test_reduce6(100, 10, 10, 10, 5, 5);
-#endif
-#endif
-}
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
 
-}  // namespace Test
+enum class openacc_fence_is_static { yes, no };
+
+class OpenACCInternal {
+ private:
+  OpenACCInternal()                       = default;
+  OpenACCInternal(const OpenACCInternal&) = default;
+  OpenACCInternal& operator=(const OpenACCInternal&) = default;
+
+ public:
+  void fence(openacc_fence_is_static is_static = openacc_fence_is_static::no);
+  void fence(const std::string& name,
+             openacc_fence_is_static is_static = openacc_fence_is_static::no);
+
+  /** \brief  Return the maximum amount of concurrency.  */
+  int concurrency();
+
+  //! Print configuration information to the given output stream.
+  void print_configuration(std::ostream&, const bool detail = false);
+
+  static const char* name();
+
+  //! Free any resources being consumed by the device.
+  void impl_finalize();
+
+  //! Has been initialized
+  int impl_is_initialized();
+  uint32_t impl_get_instance_id() const noexcept;
+  //! Initialize, telling the OpenACC run-time library which device to use.
+  void impl_initialize();
+
+  static OpenACCInternal* impl_singleton();
+
+ private:
+  bool m_is_initialized  = false;
+  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::OpenACC>(reinterpret_cast<uintptr_t>(this));
+};
+}  // Namespace Impl
+}  // Namespace Experimental
+}  // Namespace Kokkos
+
+#endif  // KOKKOS_OPENACC_INSTANCE_HPP

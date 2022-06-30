@@ -223,6 +223,12 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
                    Kokkos::Experimental::OpenMPTarget>::value)
     return;
 #endif
+// FIXME_OPENACC The OpenACC backend doesn't implement ZeroMemset
+#ifdef KOKKOS_ENABLE_OPENACC
+  if (std::is_same<typename TEST_EXECSPACE,
+                   Kokkos::Experimental::OpenACC>::value)
+    return;
+#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());

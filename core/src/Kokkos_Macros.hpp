@@ -52,6 +52,8 @@
  *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_HPX                 Kokkos::Experimental::HPX execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
+ *  KOKKOS_ENABLE_OPENACC             Kokkos::Experimental::OpenACC execution
+ *                                    space
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget
  *                                    execution space
  *  KOKKOS_ENABLE_HIP                 Kokkos::Experimental::HIP execution space
@@ -86,6 +88,7 @@
  *  KOKKOS_ENABLE_GNU_ATOMICS
  *  KOKKOS_ENABLE_INTEL_ATOMICS
  *  KOKKOS_ENABLE_OPENMP_ATOMICS
+ *  KOKKOS_ENABLE_OPENACC_ATOMICS
  *
  *  A suite of 'KOKKOS_ENABLE_PRAGMA_...' are defined for internal use.
  *
@@ -101,7 +104,7 @@
 #if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&     \
     !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&       \
     !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL)
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
 #define KOKKOS_INTERNAL_NOT_PARALLEL
 #endif
 
@@ -466,6 +469,7 @@
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC) ? 1 : 0) +      \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS) ? 1 : 0) +      \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX) ? 1 : 0) +          \
@@ -474,10 +478,12 @@
 #endif
 
 // If default is not specified then chose from enabled execution spaces.
-// Priority: CUDA, HIP, SYCL, OPENMPTARGET, OPENMP, THREADS, HPX, SERIAL
+// Priority: CUDA, HIP, SYCL, OPENACC, OPENMPTARGET, OPENMP, THREADS, HPX,
+// SERIAL
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
@@ -489,6 +495,8 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
+#elif defined(KOKKOS_ENABLE_OPENACC)
+#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_OPENMP)
@@ -559,6 +567,28 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IF_ON_HOST(CODE)         \
   if constexpr (kokkos_omp_on_host()) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)      \
+  }
+#endif
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENACC
+#ifdef KOKKOS_COMPILER_NVHPC
+#define KOKKOS_IF_ON_DEVICE(CODE)   \
+  if (__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
+  }
+#define KOKKOS_IF_ON_HOST(CODE)      \
+  if (!__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)   \
+  }
+#else
+#define KOKKOS_IF_ON_DEVICE(CODE)                     \
+  if constexpr (acc_on_device(acc_device_not_host)) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)                    \
+  }
+#define KOKKOS_IF_ON_HOST(CODE)                   \
+  if constexpr (acc_on_device(acc_device_host)) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)                \
   }
 #endif
 #endif
