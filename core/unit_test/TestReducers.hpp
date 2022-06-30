@@ -298,10 +298,10 @@ struct TestReducers {
       int denom = sizeof(Scalar) <= 2 ? 10 : 100;
       // clang-format off
       // For bhalf, we start overflowing integer values at 2^8.
-      //            after 2^8,  we loose representation of odd numbers;
-      //            after 2^9,  we loose representation of odd and even numbers in position 1.
-      //            after 2^10, we loose representation of odd and even numbers in position 1-3.
-      //            after 2^11, we loose representation of odd and even numbers in position 1-7.
+      //            after 2^8,  we lose representation of odd numbers;
+      //            after 2^9,  we lose representation of odd and even numbers in position 1.
+      //            after 2^10, we lose representation of odd and even numbers in position 1-3.
+      //            after 2^11, we lose representation of odd and even numbers in position 1-7.
       //            ...
       // Generally, for IEEE 754 floating point numbers, we start this overflow pattern at: 2^(num_fraction_bits+1).
       // brain float has num_fraction_bits = 7.
