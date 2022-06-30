@@ -880,7 +880,7 @@ struct ParallelForMDTeamThreadRangeHostImpl {
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
@@ -892,7 +892,7 @@ struct ParallelForMDTeamThreadRangeHostImpl {
     ParallelForMDTeamThreadRangeHostImpl<RemainingRank - 1>::parallel_for_impl(
         boundaries, newClosure);
   }
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic pop
 #endif
 
@@ -950,7 +950,7 @@ struct ParallelForMDThreadVectorRangeHostImpl {
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
@@ -963,7 +963,7 @@ struct ParallelForMDThreadVectorRangeHostImpl {
         Boundaries::inner_direction,
         RemainingRank - 1>::parallel_for_impl(boundaries, newClosure);
   }
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic pop
 #endif
 
@@ -1032,7 +1032,7 @@ struct ParallelForMDTeamVectorRangeHostImpl {
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
@@ -1046,7 +1046,7 @@ struct ParallelForMDTeamVectorRangeHostImpl {
                                              1>::parallel_for_impl(boundaries,
                                                                    newClosure);
   }
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic pop
 #endif
 
@@ -1177,7 +1177,7 @@ Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
@@ -1214,7 +1214,7 @@ KOKKOS_INLINE_FUNCTION
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic pop
 #endif
 
@@ -1259,7 +1259,7 @@ KOKKOS_INLINE_FUNCTION
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
@@ -1331,7 +1331,7 @@ KOKKOS_INLINE_FUNCTION
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67273
 // FIXME: These pragmas can be deleted for Kokkos 4 when GCC 7 becomes the
 // minimum requirement
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU <= 600)
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 700)
 #pragma GCC diagnostic pop
 #endif
 
