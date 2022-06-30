@@ -47,7 +47,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <impl/Kokkos_Serial_Task.hpp>
+#include <Serial/Kokkos_Serial_Task.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
 //----------------------------------------------------------------------------

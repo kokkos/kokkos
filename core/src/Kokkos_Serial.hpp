@@ -1180,7 +1180,7 @@ class UniqueToken<Serial, UniqueTokenScope::Global> {
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#include <impl/Kokkos_Serial_Task.hpp>
+#include <Serial/Kokkos_Serial_Task.hpp>
 
 #endif  // defined( KOKKOS_ENABLE_SERIAL )
 #endif  /* #define KOKKOS_SERIAL_HPP */
