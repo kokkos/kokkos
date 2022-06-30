@@ -261,30 +261,32 @@ TEST(TEST_CATEGORY, view_allocation_int) {
     GTEST_SKIP() << "skipping since the OpenMPTarget has unexpected fences";
 #endif
 
-  if (!Kokkos::SpaceAccessibility<
-          Kokkos::HostSpace,
-          typename TEST_EXECSPACE::memory_space>::accessible) {
-    using namespace Kokkos::Test::Tools;
-    listen_tool_events(Config::EnableAll());
-    using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
-    view_type outer_view;
-
-    auto success = validate_existence(
-        [&]() {
-          view_type inner_view(
-              Kokkos::view_alloc(Kokkos::WithoutInitializing, "bla"), 8);
-          // Avoid testing the destructor
-          outer_view = inner_view;
-        },
-        [&](BeginFenceEvent event) {
-          return MatchDiagnostic{
-              event.descriptor().find(
-                  "fence after copying header from HostSpace") !=
-              std::string::npos};
-        });
-    ASSERT_TRUE(success);
-    listen_tool_events(Config::DisableAll());
+  using ExecutionSpace = TEST_EXECSPACE;
+  if (Kokkos::SpaceAccessibility<
+          /*AccessSpace=*/Kokkos::HostSpace,
+          /*MemorySpace=*/ExecutionSpace::memory_space>::accessible) {
+    GTEST_SKIP() << "skipping since the fence checked for isn't necessary";
   }
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::EnableAll());
+  using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
+  view_type outer_view;
+
+  auto success = validate_existence(
+      [&]() {
+        view_type inner_view(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+      },
+      [&](BeginFenceEvent event) {
+        return MatchDiagnostic{
+            event.descriptor().find(
+                "fence after copying header from HostSpace") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
 }
 
 TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
