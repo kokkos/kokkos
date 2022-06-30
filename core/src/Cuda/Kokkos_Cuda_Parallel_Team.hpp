@@ -437,10 +437,9 @@ __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
     int64_t const wraparound_len = Kokkos::max(
-        int64_t(1),
-        Kokkos::min(int64_t(league_size),
-                                  (int64_t(g_device_cuda_lock_arrays.n)) /
-                                      (blockDim.x * blockDim.y)));
+        int64_t(1), Kokkos::min(int64_t(league_size),
+                                (int64_t(g_device_cuda_lock_arrays.n)) /
+                                    (blockDim.x * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;
