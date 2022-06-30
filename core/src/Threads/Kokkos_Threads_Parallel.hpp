@@ -919,12 +919,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          Policy, FunctorType>;
 
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
-  ReturnType &m_returnvalue;
+  const pointer_type m_result_ptr;
 
   template <class TagType>
   inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
@@ -975,7 +976,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     exec.fan_in();
 
     if (exec.pool_rank() == exec.pool_size() - 1) {
-      self.m_returnvalue = update;
+      *self.m_result_ptr = update;
     }
   }
 
@@ -986,11 +987,25 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     ThreadsExec::fence();
   }
 
+  template <class ViewType,
+            class Enable = std::enable_if_t<Kokkos::is_view<ViewType>::value>>
   ParallelScanWithTotal(const FunctorType &arg_functor,
-                        const Policy &arg_policy, ReturnType &arg_returnvalue)
+                        const Policy &arg_policy,
+                        const ViewType &arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_returnvalue(arg_returnvalue) {}
+        m_result_ptr(arg_result_view.data()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::Serial parallel_scan result must be host-accessible!");
+  }
+
+  ParallelScanWithTotal(const FunctorType &arg_functor,
+                        const Policy &arg_policy, value_type &arg_returnvalue)
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_result_ptr(&arg_returnvalue) {}
 };
 
 }  // namespace Impl

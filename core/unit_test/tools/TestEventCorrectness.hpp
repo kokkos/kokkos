@@ -403,6 +403,73 @@ TEST(kokkosp, parallel_scan) {
 #endif
 }
 
+TEST(kokkosp, parallel_scan_no_fence) {
+  // FIXME_THREADS
+#ifdef KOKKOS_ENABLE_THREADS
+  if (std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Threads>::value)
+    return;
+#endif
+    // FIXME_OPENMPTARGET
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  if (std::is_same<Kokkos::DefaultExecutionSpace,
+                   Kokkos::Experimental::OpenMPTarget>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
+                     Config::EnableFences());
+  auto success = validate_absence(
+      [=]() {
+        TestScanFunctor tf;
+        Kokkos::parallel_scan("dogs", Kokkos::RangePolicy<>(0, 1), tf);
+      },
+      [=](BeginFenceEvent begin_event) {
+        if (begin_event.name.find("Debug Only Check for Execution Error") !=
+                std::string::npos ||
+            begin_event.name.find("Kokkos Profile Tool Fence") !=
+                std::string::npos)
+          return MatchDiagnostic{false};
+        else
+          return MatchDiagnostic{true};
+      });
+  ASSERT_TRUE(success);
+}
+
+TEST(kokkosp, parallel_scan_no_fence_view) {
+  // FIXME_THREADS
+#ifdef KOKKOS_ENABLE_THREADS
+  if (std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Threads>::value)
+    return;
+#endif
+    // FIXME_OPENMPTARGET
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  if (std::is_same<Kokkos::DefaultExecutionSpace,
+                   Kokkos::Experimental::OpenMPTarget>::value)
+    return;
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
+                     Config::EnableFences());
+  Kokkos::View<typename TestScanFunctor::value_type> v("scan_result");
+  auto success = validate_absence(
+      [=]() {
+        TestScanFunctor tf;
+        Kokkos::parallel_scan("dogs", Kokkos::RangePolicy<>(0, 1), tf, v);
+      },
+      [=](BeginFenceEvent begin_event) {
+        if (begin_event.name.find("Debug Only Check for Execution Error") !=
+                std::string::npos ||
+            begin_event.name.find("Kokkos Profile Tool Fence") !=
+                std::string::npos)
+          return MatchDiagnostic{false};
+        else
+          return MatchDiagnostic{true};
+      });
+  ASSERT_TRUE(success);
+}
+
 TEST(kokkosp, regions) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableRegions());

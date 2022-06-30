@@ -473,8 +473,9 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 
   Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 
-  policy.space().fence(
-      "Kokkos::parallel_scan: fence due to result being a value, not a view");
+  if (!Kokkos::is_view<ReturnType>::value)
+    policy.space().fence(
+        "Kokkos::parallel_scan: fence due to result being a value, not a view");
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>
