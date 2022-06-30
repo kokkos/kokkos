@@ -1253,7 +1253,7 @@ struct ParallelReduceReturnValue<
   using reducer_type = InvalidType;
 
   using value_type_scalar = typename return_type::value_type;
-  using value_type_array  = typename return_type::value_type* const;
+  using value_type_array  = typename return_type::value_type[];
 
   using value_type = std::conditional_t<return_type::rank == 0,
                                         value_type_scalar, value_type_array>;
@@ -1369,6 +1369,7 @@ struct ParallelReduceAdaptor {
 
     Kokkos::Impl::shared_allocation_tracking_disable();
     Impl::ParallelReduce<FunctorType, PolicyType,
+                         typename return_value_adapter::value_type,
                          typename return_value_adapter::reducer_type>
         closure(functor, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
@@ -1381,8 +1382,9 @@ struct ParallelReduceAdaptor {
   }
 
   static constexpr bool is_array_reduction =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType>::StaticValueSize == 0;
+      Impl::FunctorAnalysis<
+          Impl::FunctorPatternInterface::REDUCE, PolicyType, FunctorType,
+          typename return_value_adapter::value_type>::StaticValueSize == 0;
 
   template <typename Dummy = ReturnType>
   static inline std::enable_if_t<!(is_array_reduction &&

@@ -512,9 +512,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
 
 /*--------------------------------------------------------------------------*/
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
-                     Kokkos::Serial> {
+template <class FunctorType, class ValueType, class ReducerType,
+          class... Traits>
+class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ValueType,
+                     ReducerType, Kokkos::Serial> {
  private:
   using Policy  = Kokkos::RangePolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
@@ -528,8 +529,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -806,9 +807,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
 };
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
-                     Kokkos::Serial> {
+template <class FunctorType, class ValueType, class ReducerType,
+          class... Traits>
+class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ValueType,
+                     ReducerType, Kokkos::Serial> {
  private:
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
@@ -993,8 +995,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 /*--------------------------------------------------------------------------*/
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
+template <class FunctorType, class ValueType, class ReducerType,
+          class... Properties>
+class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>, ValueType,
                      ReducerType, Kokkos::Serial> {
  private:
   enum { TEAM_REDUCE_SIZE = 512 };

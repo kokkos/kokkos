@@ -99,7 +99,8 @@ struct DeduceFunctorPatternInterface<ParallelScanWithTotal<
  *  For the REDUCE pattern generate a Reducer and finalization function
  *  derived from what is available within the functor.
  */
-template <typename PatternInterface, class Policy, class Functor>
+template <typename PatternInterface, class Policy, class Functor,
+          typename OverrideValueType = void>
 struct FunctorAnalysis {
  private:
   using FOR    = FunctorPatternInterface::FOR;
@@ -154,7 +155,7 @@ struct FunctorAnalysis {
 
   template <typename F, typename = std::false_type>
   struct has_value_type {
-    using type = void;
+    using type = OverrideValueType;
   };
 
   template <typename F>

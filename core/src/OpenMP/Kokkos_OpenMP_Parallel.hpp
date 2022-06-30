@@ -309,9 +309,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
-                     Kokkos::OpenMP> {
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
+class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ValueType,
+                     ReducerType, Kokkos::OpenMP> {
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
@@ -328,8 +329,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                          void>;
 
   // Static Assert WorkTag void if ReducerType not InvalidType
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -483,9 +484,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 };
 
 // MDRangePolicy impl
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
-                     Kokkos::OpenMP> {
+template <class FunctorType, class ValueType, class ReducerType,
+          class... Traits>
+class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ValueType,
+                     ReducerType, Kokkos::OpenMP> {
  private:
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
@@ -503,7 +505,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                          void>;
 
   using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
-                                   MDRangePolicy, ReducerTypeFwd>;
+                                   MDRangePolicy, ReducerTypeFwd, ValueType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
@@ -1029,8 +1031,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
+template <class FunctorType, class ValueType, class ReducerType,
+          class... Properties>
+class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>, ValueType,
                      ReducerType, Kokkos::OpenMP> {
  private:
   enum { TEAM_REDUCE_SIZE = 512 };
@@ -1051,8 +1054,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
