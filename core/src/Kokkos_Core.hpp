@@ -191,6 +191,39 @@ class InitializationSettings {
 #undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE
 #undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER
 #undef KOKKOS_IMPL_DECLARE
+
+ public:
+  InitializationSettings() = default;
+
+  InitializationSettings(InitArguments const& old) {
+    if (old.num_threads != -1) {
+      (void)set_num_threads(old.num_threads);
+    }
+    if (old.device_id != -1) {
+      (void)set_device_id(old.device_id);
+    }
+    if (old.ndevices != -1) {
+      (void)set_num_devices(old.ndevices);
+    }
+    if (old.skip_device != 9999) {
+      (void)set_skip_device(old.skip_device);
+    }
+    if (old.disable_warnings) {
+      (void)set_disable_warnings(true);
+    }
+    if (old.tune_internals) {
+      (void)set_tune_internals(true);
+    }
+    if (old.tool_help) {
+      (void)set_tool_help(true);
+    }
+    if (!old.tool_lib.empty()) {
+      (void)set_tool_lib(old.tool_lib);
+    }
+    if (!old.tool_args.empty()) {
+      (void)set_tool_args(old.tool_args);
+    }
+  }
 };
 
 namespace Impl {
