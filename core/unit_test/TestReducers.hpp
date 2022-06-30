@@ -310,8 +310,8 @@ struct TestReducers {
       // clang-format on
       int mask =
           std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value && N > 25
-              ? 0xfffffffe
-              : 0xffffffff;
+              ? (int)0xfffffffe
+              : (int)0xffffffff;
       h_values(i) = (Scalar)((rand() % denom) & mask);
       reference_sum += h_values(i);
     }
