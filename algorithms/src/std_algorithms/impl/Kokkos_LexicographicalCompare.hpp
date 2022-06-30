@@ -131,7 +131,7 @@ bool lexicographical_compare_impl(const std::string& label,
   // run
   const auto d1    = Kokkos::Experimental::distance(first1, last1);
   const auto d2    = Kokkos::Experimental::distance(first2, last2);
-  const auto range = Kokkos::Experimental::min(d1, d2);
+  const auto range = Kokkos::min(d1, d2);
   reduction_value_type red_result;
   reducer_type reducer(red_result);
   using func1_t =

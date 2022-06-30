@@ -51,7 +51,6 @@
 #include <initializer_list>
 
 namespace Kokkos {
-namespace Experimental {
 
 // clamp
 template <class T>
@@ -223,7 +222,6 @@ KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
   return result;
 }
 
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif
