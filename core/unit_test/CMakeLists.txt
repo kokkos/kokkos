@@ -687,11 +687,13 @@ endif()
 if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestInitializationSettings.cpp
     default/TestDefaultDeviceType.cpp
   )
 else()
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp
