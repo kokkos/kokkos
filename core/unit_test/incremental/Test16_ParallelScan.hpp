@@ -67,15 +67,18 @@ struct TestScan {
         Kokkos::RangePolicy<ExecSpace>(0, N),
         KOKKOS_LAMBDA(const int i) { d_data(i) = i * 0.5; });
 
+    value_type total;
     // Exclusive parallel_scan call.
     Kokkos::parallel_scan(
         Kokkos::RangePolicy<ExecSpace>(0, N),
-        KOKKOS_LAMBDA(const int i, value_type &update_value, const bool final) {
+        KOKKOS_LAMBDA(const auto i, value_type &update_value,
+                      const bool final) {
           const value_type val_i = d_data(i);
           if (final) d_data(i) = update_value;
 
           update_value += val_i;
-        });
+        },
+        total);
 
     // Copy back the data.
     auto h_data =
@@ -88,6 +91,7 @@ struct TestScan {
       upd += (i - 1) * 0.5;
       ASSERT_EQ(h_data(i), upd);
     }
+    ASSERT_EQ(total, N * (N - 1) * 0.25);
   }
 };
 

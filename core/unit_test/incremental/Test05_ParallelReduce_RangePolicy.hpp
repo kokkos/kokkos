@@ -56,8 +56,9 @@ using value_type       = double;
 constexpr double value = 0.5;
 
 struct ReduceFunctor {
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, double &UpdateSum) const {
+  template <typename SizeType>
+  KOKKOS_INLINE_FUNCTION void operator()(const SizeType i,
+                                         double &UpdateSum) const {
     UpdateSum += (i + 1) * value;
   }
 };
