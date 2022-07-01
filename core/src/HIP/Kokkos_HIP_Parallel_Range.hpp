@@ -132,7 +132,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::HIP, ValueType> {
  public:
@@ -449,8 +450,9 @@ class ParallelScanHIPBase {
   using WorkRange    = typename Policy::WorkRange;
   using LaunchBounds = typename Policy::launch_bounds;
 
-  using Analysis = Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN,
-                                                 Policy, FunctorType, ValueType>;
+  using Analysis =
+      Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                    FunctorType, ValueType>;
 
  public:
   using pointer_type   = typename Analysis::pointer_type;

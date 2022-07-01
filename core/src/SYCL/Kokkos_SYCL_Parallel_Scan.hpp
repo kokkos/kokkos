@@ -129,8 +129,8 @@ class ParallelScanSYCLBase {
   using LaunchBounds = typename Policy::launch_bounds;
 
  public:
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, ValueType>;
+  using Analysis       = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ValueType>;
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;

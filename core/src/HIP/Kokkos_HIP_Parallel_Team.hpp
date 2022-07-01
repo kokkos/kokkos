@@ -630,7 +630,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Properties, class ValueType>
+template <class FunctorType, class ReducerType, class... Properties,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Experimental::HIP, ValueType> {
  public:

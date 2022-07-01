@@ -1156,7 +1156,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
 namespace Kokkos {
 namespace Impl {
-template <class FunctorType, class ValueType, class ReducerType, class... Traits>
+template <class FunctorType, class ValueType, class ReducerType,
+          class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::HPX, ValueType> {
  private:
@@ -1168,10 +1169,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd, ValueType>;
-  using value_type     = typename Analysis::value_type;
-  using pointer_type   = typename Analysis::pointer_type;
+  using Analysis     = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
+  using value_type   = typename Analysis::value_type;
+  using pointer_type = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
@@ -1413,7 +1414,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_force_synchronous(!reducer.view().impl_track().has_record()) {}
 };
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::HPX, ValueType> {
  private:
@@ -1681,12 +1683,12 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HPX> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, ReturnType>;
+  using Policy         = Kokkos::RangePolicy<Traits...>;
+  using WorkTag        = typename Policy::work_tag;
+  using WorkRange      = typename Policy::WorkRange;
+  using Member         = typename Policy::member_type;
+  using Analysis       = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ReturnType>;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
@@ -1911,7 +1913,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      arg_functor, arg_policy.team_size())) {}
 };
 
-template <class FunctorType, class ReducerType, class... Properties, class ValueType>
+template <class FunctorType, class ReducerType, class... Properties,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Experimental::HPX, ValueType> {
  private:
@@ -1922,9 +1925,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd, ValueType>;
-  using pointer_type   = typename Analysis::pointer_type;
+  using Analysis     = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
+  using pointer_type = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
 

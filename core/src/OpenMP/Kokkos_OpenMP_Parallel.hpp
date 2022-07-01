@@ -311,8 +311,8 @@ namespace Impl {
 
 template <class FunctorType, class ReducerType, class... Traits,
           class ValueType>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>,
-                     ReducerType, Kokkos::OpenMP, ValueType> {
+class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
+                     Kokkos::OpenMP, ValueType> {
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
@@ -486,8 +486,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>,
 // MDRangePolicy impl
 template <class FunctorType, class ValueType, class ReducerType,
           class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                     ReducerType, Kokkos::OpenMP, ValueType> {
+class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
+                     Kokkos::OpenMP, ValueType> {
  private:
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
@@ -786,8 +786,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, ReturnType>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ReturnType>;
 
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;

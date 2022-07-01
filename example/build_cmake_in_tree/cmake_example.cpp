@@ -10,11 +10,11 @@ struct MyFunctor {
     res += view(i0);
   }
 
- template <class I0>
-  KOKKOS_FUNCTION void operator()(I0 i0, typename V::value_type &res, bool) const {
+  template <class I0>
+  KOKKOS_FUNCTION void operator()(I0 i0, typename V::value_type &res,
+                                  bool) const {
     res += view(i0);
   }
-
 };
 
 int main(int argc, char **argv) {

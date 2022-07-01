@@ -438,7 +438,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::OpenMPTarget, ValueType> {
  private:
@@ -455,7 +456,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          Policy, ReducerTypeFwd, ValueType>;
 
-  using value_type     = typename Analysis::value_type; 
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
@@ -523,7 +524,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:value_type                                                   \
+    custom:value_type                                                  \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -574,7 +575,7 @@ reduction(+:result)
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:value_type                                                   \
+    custom:value_type                                                  \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -631,7 +632,7 @@ reduction(+:result)
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:value_type                                                   \
+    custom:value_type                                                  \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -696,7 +697,7 @@ reduction(+:result)
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:value_type                                                   \
+    custom:value_type                                                  \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -769,7 +770,7 @@ reduction(+:result)
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:value_type                                                   \
+    custom:value_type                                                  \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 

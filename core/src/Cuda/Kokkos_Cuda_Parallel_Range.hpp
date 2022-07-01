@@ -143,7 +143,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Cuda, ValueType> {
  public:
@@ -325,7 +326,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);
-    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType, Kokkos::Cuda, ValueType>;
+    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType,
+                                              Kokkos::Cuda, ValueType>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();

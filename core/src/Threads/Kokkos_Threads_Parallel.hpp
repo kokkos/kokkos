@@ -352,7 +352,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 /* ParallelReduce with Kokkos::Threads and RangePolicy */
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Threads, ValueType> {
  private:
@@ -526,7 +527,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 };
 
 // MDRangePolicy impl
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Threads, ValueType> {
  private:
@@ -545,8 +547,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
 
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         MDRangePolicy, ReducerTypeFwd, ValueType>;
+  using Analysis =
+      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                            MDRangePolicy, ReducerTypeFwd, ValueType>;
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;
@@ -694,7 +697,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 //----------------------------------------------------------------------------
 /* ParallelReduce with Kokkos::Threads and TeamPolicy */
 
-template <class FunctorType, class ReducerType, class... Properties, class ValueType>
+template <class FunctorType, class ReducerType, class... Properties,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Threads, ValueType> {
  private:

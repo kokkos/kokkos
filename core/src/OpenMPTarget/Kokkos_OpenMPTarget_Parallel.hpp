@@ -410,7 +410,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::OpenMPTarget, ValueType> {
  private:
@@ -675,7 +676,8 @@ class ParallelScanOpenMPTargetBase {
 
   //----------------------------------------
 
-  ParallelScanOpenMPTargetBase(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelScanOpenMPTargetBase(const FunctorType& arg_functor,
+                               const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
 
   //----------------------------------------
@@ -683,7 +685,7 @@ class ParallelScanOpenMPTargetBase {
 
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                            Kokkos::Experimental::OpenMPTarget>
+                   Kokkos::Experimental::OpenMPTarget>
     : public ParallelScanOpenMPTargetBase<FunctorType, void, Traits...> {
   using base_t     = ParallelScanOpenMPTargetBase<FunctorType, void, Traits...>;
   using value_type = typename base_t::value_type;
@@ -713,7 +715,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   ParallelScan(const FunctorType& arg_functor,
-                        const typename base_t::Policy& arg_policy)
+               const typename base_t::Policy& arg_policy)
       : base_t(arg_functor, arg_policy) {}
 };
 
@@ -721,7 +723,8 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::OpenMPTarget>
     : public ParallelScanOpenMPTargetBase<FunctorType, ReturnType, Traits...> {
-  using base_t     = ParallelScanOpenMPTargetBase<FunctorType, ReturnType, Traits...>;
+  using base_t =
+      ParallelScanOpenMPTargetBase<FunctorType, ReturnType, Traits...>;
   using value_type = typename base_t::value_type;
   value_type& m_returnvalue;
 
@@ -1201,9 +1204,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Properties, class ValueType>
+template <class FunctorType, class ReducerType, class... Properties,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::OpenMPTarget, ValueType> {
+                     ReducerType, Kokkos::Experimental::OpenMPTarget,
+                     ValueType> {
  private:
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,

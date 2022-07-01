@@ -207,7 +207,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
 }  // namespace SYCLReduction
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::SYCL, ValueType> {
  public:
@@ -218,8 +219,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd, ValueType>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
   using execution_space = typename Analysis::execution_space;
   using value_type      = typename Analysis::value_type;
   using pointer_type    = typename Analysis::pointer_type;
@@ -496,7 +497,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   std::scoped_lock<std::mutex> m_shared_memory_lock;
 };
 
-template <class FunctorType, class ReducerType, class... Traits, class ValueType>
+template <class FunctorType, class ReducerType, class... Traits,
+          class ValueType>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::SYCL, ValueType> {
  public:
@@ -507,8 +509,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd, ValueType>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+                                   ReducerTypeFwd, ValueType>;
   using execution_space = typename Analysis::execution_space;
   using value_type      = typename Analysis::value_type;
   using pointer_type    = typename Analysis::pointer_type;

@@ -1370,7 +1370,8 @@ struct ParallelReduceAdaptor {
     Kokkos::Impl::shared_allocation_tracking_disable();
     Impl::ParallelReduce<FunctorType, PolicyType,
                          typename return_value_adapter::reducer_type,
-			 typename Impl::FunctorPolicyExecutionSpace<FunctorType, PolicyType>::execution_space, 
+                         typename Impl::FunctorPolicyExecutionSpace<
+                             FunctorType, PolicyType>::execution_space,
                          typename return_value_adapter::value_type>
 
         closure(functor, inner_policy,
