@@ -154,7 +154,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   using Analysis =
       Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
-                                    ReducerTypeFwd>;
+                                    ReducerTypeFwd, ValueType>;
 
  public:
   using pointer_type   = typename Analysis::pointer_type;
@@ -324,7 +324,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                                       WorkTag>(f, n);
     };
     using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
-                                      Kokkos::Experimental::HIP>;
+                                      Kokkos::Experimental::HIP, ValueType>;
     return Kokkos::Experimental::Impl::hip_get_preferred_blocksize<
         DriverType, LaunchBounds>(instance, shmem_functor);
   }
@@ -375,7 +375,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                                                   block.y);
 
       using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
-                                        Kokkos::Experimental::HIP>;
+                                        Kokkos::Experimental::HIP, ValueType>;
       Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
@@ -438,7 +438,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  ->m_mutexSharedMemory) {}
 };
 
-template <class FunctorType, class... Traits, class ValueType = void>
+template <class FunctorType, class ValueType, class... Traits>
 class ParallelScanHIPBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -664,7 +664,7 @@ class ParallelScanHIPBase {
       m_final = false;
       // these ones are OK to be just the base because the specializations
       // do not modify the kernel at all
-      using DriverType = ParallelScanHIPBase<FunctorType, Traits...>;
+      using DriverType = ParallelScanHIPBase<FunctorType, ValueType, Traits...>;
       Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
@@ -689,7 +689,7 @@ class ParallelScanHIPBase {
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::HIP>
-    : public ParallelScanHIPBase<FunctorType, Traits...> {
+    : public ParallelScanHIPBase<FunctorType, void, Traits...> {
  public:
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();
@@ -720,12 +720,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReturnType, class... Traits, class ValueType>
+template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
-                            ReturnType, Kokkos::Experimental::HIP, ValueType>
-    : public ParallelScanHIPBase<FunctorType, Traits..., ValueType> {
+                            ReturnType, Kokkos::Experimental::HIP>
+    : public ParallelScanHIPBase<FunctorType, ReturnType, Traits...> {
  public:
-  using Base = ParallelScanHIPBase<FunctorType, Traits...>;
+  using Base = ParallelScanHIPBase<FunctorType, ReturnType, Traits...>;
   using Base::operator();
 
   ReturnType& m_returnvalue;

@@ -551,7 +551,7 @@ hip_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
                                          const unsigned BlockSize) {
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          RangePolicy<Experimental::HIP, ArgTag>,
-                                         FunctorType>;
+                                         FunctorType, /*dummy*/ int>;
 
   return (BlockSize + 2) * Analysis::value_size(functor);
 }
@@ -562,7 +562,7 @@ hip_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
                                          const unsigned BlockSize) {
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                          RangePolicy<Experimental::HIP, ArgTag>,
-                                         FunctorType>;
+                                         FunctorType, /*dummy*/ int>;
 
   return (BlockSize + 2) * Analysis::value_size(functor);
 }

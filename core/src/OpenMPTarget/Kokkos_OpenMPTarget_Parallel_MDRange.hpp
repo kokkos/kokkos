@@ -438,9 +438,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class ReducerType, class... Traits>
+template <class FunctorType, class ReducerType, class... Traits, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
-                     Kokkos::Experimental::OpenMPTarget> {
+                     Kokkos::Experimental::OpenMPTarget, ValueType> {
  private:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
@@ -453,8 +453,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                        FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, ReducerTypeFwd>;
+                                         Policy, ReducerTypeFwd, ValueType>;
 
+  using value_type     = typename Analysis::value_type; 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
@@ -506,7 +507,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible) {}
 
-  template <int Rank, class ValueType>
+  template <int Rank>
   inline std::enable_if_t<Rank == 2> execute_tile(const FunctorType& functor,
                                                   const Policy& policy,
                                                   pointer_type ptr) const {
@@ -516,13 +517,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const Index end_0 = policy.m_upper[0];
     const Index end_1 = policy.m_upper[1];
 
-    ValueType result = ValueType();
+    value_type result = value_type();
 
     // FIXME_OPENMPTARGET: Unable to separate directives and their companion
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
+    custom:value_type                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -551,11 +552,11 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(value_type),
                                    m_result_ptr_on_device);
   }
 
-  template <int Rank, class ValueType>
+  template <int Rank>
   inline std::enable_if_t<Rank == 3> execute_tile(const FunctorType& functor,
                                                   const Policy& policy,
                                                   pointer_type ptr) const {
@@ -567,13 +568,13 @@ reduction(+:result)
     const Index end_1 = policy.m_upper[1];
     const Index end_2 = policy.m_upper[2];
 
-    ValueType result = ValueType();
+    value_type result = value_type();
 
     // FIXME_OPENMPTARGET: Unable to separate directives and their companion
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
+    custom:value_type                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -606,11 +607,11 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(value_type),
                                    m_result_ptr_on_device);
   }
 
-  template <int Rank, class ValueType>
+  template <int Rank>
   inline std::enable_if_t<Rank == 4> execute_tile(const FunctorType& functor,
                                                   const Policy& policy,
                                                   pointer_type ptr) const {
@@ -624,13 +625,13 @@ reduction(+:result)
     const Index end_2 = policy.m_upper[2];
     const Index end_3 = policy.m_upper[3];
 
-    ValueType result = ValueType();
+    value_type result = value_type();
 
     // FIXME_OPENMPTARGET: Unable to separate directives and their companion
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
+    custom:value_type                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -669,11 +670,11 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(value_type),
                                    m_result_ptr_on_device);
   }
 
-  template <int Rank, class ValueType>
+  template <int Rank>
   inline std::enable_if_t<Rank == 5> execute_tile(const FunctorType& functor,
                                                   const Policy& policy,
                                                   pointer_type ptr) const {
@@ -689,13 +690,13 @@ reduction(+:result)
     const Index end_3 = policy.m_upper[3];
     const Index end_4 = policy.m_upper[4];
 
-    ValueType result = ValueType();
+    value_type result = value_type();
 
     // FIXME_OPENMPTARGET: Unable to separate directives and their companion
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
+    custom:value_type                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -740,11 +741,11 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(value_type),
                                    m_result_ptr_on_device);
   }
 
-  template <int Rank, class ValueType>
+  template <int Rank>
   inline std::enable_if_t<Rank == 6> execute_tile(const FunctorType& functor,
                                                   const Policy& policy,
                                                   pointer_type ptr) const {
@@ -762,13 +763,13 @@ reduction(+:result)
     const Index end_4 = policy.m_upper[4];
     const Index end_5 = policy.m_upper[5];
 
-    ValueType result = ValueType();
+    value_type result = value_type();
 
     // FIXME_OPENMPTARGET: Unable to separate directives and their companion
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
-    custom:ValueType                                                   \
+    custom:value_type                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
@@ -817,7 +818,7 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(value_type),
                                    m_result_ptr_on_device);
   }
 

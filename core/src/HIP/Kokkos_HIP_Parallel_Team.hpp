@@ -118,7 +118,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         FunctorType>::reducer_type;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type>;
+                             reducer_type, Kokkos::Experimental::HIP, void>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -127,7 +127,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
                            const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType>;
+                             ReducerType, Kokkos::Experimental::HIP, void>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -150,7 +150,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         FunctorType>::reducer_type;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type>;
+                             reducer_type, Kokkos::Experimental::HIP, void>;
     return internal_team_size_recommended<closure_type>(f);
   }
 
@@ -159,7 +159,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
                             ParallelReduceTag const&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType>;
+                             ReducerType, Kokkos::Experimental::HIP, void>;
     return internal_team_size_recommended<closure_type>(f);
   }
 
@@ -859,7 +859,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       using closure_type =
           ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                         ReducerType, Kokkos::Experimental::HIP>;
+                         ReducerType, Kokkos::Experimental::HIP, ValueType>;
       Kokkos::Experimental::Impl::hip_parallel_launch<closure_type,
                                                       launch_bounds>(
           *this, grid, block, shmem_size_total,

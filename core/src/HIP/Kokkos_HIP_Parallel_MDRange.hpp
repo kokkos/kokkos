@@ -321,7 +321,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                                       WorkTag>(f, n);
     };
     using closure_type = ParallelReduce<FunctorType, Policy, ReducerType,
-                                        Kokkos::Experimental::HIP>;
+                                        Kokkos::Experimental::HIP, ValueType>;
 
     unsigned block_size =
         Kokkos::Experimental::Impl::hip_get_preferred_blocksize<closure_type,
@@ -340,7 +340,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         &ReducerConditional::select(m_functor, m_reducer));
 
     using ClosureType = ParallelReduce<FunctorType, Policy, ReducerType,
-                                       Kokkos::Experimental::HIP>;
+                                       Kokkos::Experimental::HIP, ValueType>;
     const auto nwork  = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
@@ -439,7 +439,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   static int max_tile_size_product(const Policy&, const Functor&) {
     using closure_type =
         ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                       ReducerType, Kokkos::Experimental::HIP>;
+                       ReducerType, Kokkos::Experimental::HIP, ValueType>;
     unsigned block_size =
         Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
                                                           LaunchBounds>();

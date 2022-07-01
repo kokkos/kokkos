@@ -149,7 +149,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd>;
+                                         PolicyType, ReducerTypeFwd, ValueType>;
   using ReferenceType = typename Analysis::reference_type;
 
   using ParReduceCommon = ParallelReduceCommon<PointerType>;
@@ -410,9 +410,9 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Traits>
+template <class FunctorType, class ReducerType, class... Traits, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
-                     Kokkos::Experimental::OpenMPTarget> {
+                     Kokkos::Experimental::OpenMPTarget, ValueType> {
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
@@ -423,14 +423,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, ReducerTypeFwd>;
+                                         Policy, ReducerTypeFwd, ValueType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
   static constexpr int HasJoin =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
-                            FunctorType>::has_join_member_function;
+                            FunctorType, ValueType>::has_join_member_function;
   static constexpr int UseReducer = is_reducer<ReducerType>::value;
   static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
@@ -521,9 +521,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class... Traits>
-class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                   Kokkos::Experimental::OpenMPTarget> {
+template <class FunctorType, class ValueType, class... Traits>
+class ParallelScanOpenMPTargetBase {
  protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
@@ -533,7 +532,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using idx_type  = typename Policy::index_type;
 
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
-                                         Policy, FunctorType>;
+                                         Policy, FunctorType, ValueType>;
 
   using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
@@ -676,19 +675,53 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   //----------------------------------------
 
-  ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelScanOpenMPTargetBase(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
 
   //----------------------------------------
 };
 
+template <class FunctorType, class... Traits>
+class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                            Kokkos::Experimental::OpenMPTarget>
+    : public ParallelScanOpenMPTargetBase<FunctorType, void, Traits...> {
+  using base_t     = ParallelScanOpenMPTargetBase<FunctorType, void, Traits...>;
+  using value_type = typename base_t::value_type;
+
+ public:
+  void execute() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const int64_t N        = base_t::m_policy.end() - base_t::m_policy.begin();
+    const int chunk_size   = 128;
+    const int64_t n_chunks = (N + chunk_size - 1) / chunk_size;
+
+    if (N > 0) {
+      // This could be scratch memory per team
+      Kokkos::View<value_type**, Kokkos::LayoutRight,
+                   Kokkos::Experimental::OpenMPTargetSpace>
+          element_values("element_values", n_chunks, chunk_size);
+      Kokkos::View<value_type*, Kokkos::Experimental::OpenMPTargetSpace>
+          chunk_values("chunk_values", n_chunks);
+      Kokkos::View<int64_t, Kokkos::Experimental::OpenMPTargetSpace> count(
+          "Count");
+
+      base_t::impl_execute(element_values, chunk_values, count);
+    }
+  }
+
+  ParallelScan(const FunctorType& arg_functor,
+                        const typename base_t::Policy& arg_policy)
+      : base_t(arg_functor, arg_policy) {}
+};
+
 template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::OpenMPTarget>
-    : public ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                          Kokkos::Experimental::OpenMPTarget> {
-  using base_t     = ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                              Kokkos::Experimental::OpenMPTarget>;
+    : public ParallelScanOpenMPTargetBase<FunctorType, ReturnType, Traits...> {
+  using base_t     = ParallelScanOpenMPTargetBase<FunctorType, ReturnType, Traits...>;
   using value_type = typename base_t::value_type;
   value_type& m_returnvalue;
 
@@ -1168,9 +1201,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Properties>
+template <class FunctorType, class ReducerType, class... Properties, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::OpenMPTarget> {
+                     ReducerType, Kokkos::Experimental::OpenMPTarget, ValueType> {
  private:
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
@@ -1185,7 +1218,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, ReducerTypeFwd>;
+                                         Policy, ReducerTypeFwd, ValueType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
