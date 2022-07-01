@@ -888,7 +888,6 @@ Impl::VectorSingleStruct<Impl::ThreadsExecTeamMember> PerThread(
     const Impl::ThreadsExecTeamMember& thread) {
   return Impl::VectorSingleStruct<Impl::ThreadsExecTeamMember>(thread);
 }
-
 }  // namespace Kokkos
 
 namespace Kokkos {
