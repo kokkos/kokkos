@@ -693,7 +693,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::HIP>
     : public ParallelScanHIPBase<FunctorType, void, Traits...> {
  public:
-  using Base = ParallelScanHIPBase<FunctorType, Traits...>;
+  using Base = ParallelScanHIPBase<FunctorType, void, Traits...>;
   using Base::operator();
 
   inline void execute() { Base::impl_execute(); }
