@@ -56,6 +56,7 @@ template <typename ScalarType, class DeviceType>
 class ReduceFunctor {
  public:
   using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
 
   struct value_type {
     ScalarType value[3];
@@ -63,8 +64,8 @@ class ReduceFunctor {
 
   const size_type nwork;
 
-  template <typename KOKKOS_INLINE_FUNCTION ReduceFunctor(
-      const size_type& arg_nwork) : nwork(arg_nwork) {}
+  KOKKOS_INLINE_FUNCTION
+  ReduceFunctor(const size_type& arg_nwork) : nwork(arg_nwork) {}
 
   KOKKOS_INLINE_FUNCTION
   ReduceFunctor(const ReduceFunctor& rhs) : nwork(rhs.nwork) {}
