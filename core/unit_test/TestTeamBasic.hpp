@@ -66,6 +66,7 @@ TEST(TEST_CATEGORY, team_for) {
 }
 
 // FIXME_OPENMPTARGET wrong results
+// FIXME_OPENACC
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
@@ -346,6 +347,7 @@ TEST(TEST_CATEGORY, team_handle_by_value) {
 
 }  // namespace Test
 
+// FIXME_OPENACC FIXME_OPENMPTARGET
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 #include <TestTeamVector.hpp>
 #endif
