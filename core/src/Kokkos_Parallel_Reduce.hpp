@@ -75,7 +75,11 @@ struct Sum {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  Sum(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  Sum(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   Sum(const result_view_type& value_)
@@ -115,7 +119,11 @@ struct Prod {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  Prod(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  Prod(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   Prod(const result_view_type& value_)
@@ -155,7 +163,11 @@ struct Min {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  Min(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  Min(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   Min(const result_view_type& value_)
@@ -197,7 +209,11 @@ struct Max {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  Max(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  Max(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   Max(const result_view_type& value_)
@@ -240,7 +256,11 @@ struct LAnd {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  LAnd(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  LAnd(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   LAnd(const result_view_type& value_)
@@ -281,7 +301,11 @@ struct LOr {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  LOr(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  LOr(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   LOr(const result_view_type& value_)
@@ -323,7 +347,11 @@ struct BAnd {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  BAnd(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  BAnd(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   BAnd(const result_view_type& value_)
@@ -365,7 +393,11 @@ struct BOr {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  BOr(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  BOr(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   BOr(const result_view_type& value_)
@@ -423,7 +455,11 @@ struct MinLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  MinLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  MinLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinLoc(const result_view_type& value_)
@@ -470,7 +506,11 @@ struct MaxLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  MaxLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  MaxLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MaxLoc(const result_view_type& value_)
@@ -527,7 +567,11 @@ struct MinMax {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  MinMax(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  MinMax(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinMax(const result_view_type& value_)
@@ -593,7 +637,11 @@ struct MinMaxLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  MinMaxLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  MinMaxLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinMaxLoc(const result_view_type& value_)
@@ -656,7 +704,11 @@ struct MaxFirstLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  MaxFirstLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  MaxFirstLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MaxFirstLoc(const result_view_type& value_)
@@ -714,7 +766,11 @@ struct MaxFirstLocCustomComparator {
  public:
   KOKKOS_INLINE_FUNCTION
   MaxFirstLocCustomComparator(value_type& value_, ComparatorType comp_)
-      : value(&value_), references_scalar_v(true), m_comp(comp_) {}
+      : value(&value_), references_scalar_v(true), m_comp(comp_) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MaxFirstLocCustomComparator(const result_view_type& value_,
@@ -769,7 +825,11 @@ struct MinFirstLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  MinFirstLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  MinFirstLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinFirstLoc(const result_view_type& value_)
@@ -827,7 +887,11 @@ struct MinFirstLocCustomComparator {
  public:
   KOKKOS_INLINE_FUNCTION
   MinFirstLocCustomComparator(value_type& value_, ComparatorType comp_)
-      : value(&value_), references_scalar_v(true), m_comp(comp_) {}
+      : value(&value_), references_scalar_v(true), m_comp(comp_) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinFirstLocCustomComparator(const result_view_type& value_,
@@ -883,7 +947,11 @@ struct MinMaxFirstLastLoc {
  public:
   KOKKOS_INLINE_FUNCTION
   MinMaxFirstLastLoc(value_type& value_)
-      : value(&value_), references_scalar_v(true) {}
+      : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinMaxFirstLastLoc(const result_view_type& value_)
@@ -951,7 +1019,11 @@ struct MinMaxFirstLastLocCustomComparator {
  public:
   KOKKOS_INLINE_FUNCTION
   MinMaxFirstLastLocCustomComparator(value_type& value_, ComparatorType comp_)
-      : value(&value_), references_scalar_v(true), m_comp(comp_) {}
+      : value(&value_), references_scalar_v(true), m_comp(comp_) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   MinMaxFirstLastLocCustomComparator(const result_view_type& value_,
@@ -1023,7 +1095,11 @@ struct FirstLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  FirstLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  FirstLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   FirstLoc(const result_view_type& value_)
@@ -1081,7 +1157,11 @@ struct LastLoc {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  LastLoc(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  LastLoc(value_type& value_) : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   LastLoc(const result_view_type& value_)
@@ -1143,7 +1223,11 @@ struct StdIsPartitioned {
  public:
   KOKKOS_INLINE_FUNCTION
   StdIsPartitioned(value_type& value_)
-      : value(&value_), references_scalar_v(true) {}
+      : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   StdIsPartitioned(const result_view_type& value_)
@@ -1209,7 +1293,11 @@ struct StdPartitionPoint {
  public:
   KOKKOS_INLINE_FUNCTION
   StdPartitionPoint(value_type& value_)
-      : value(&value_), references_scalar_v(true) {}
+      : value(&value_), references_scalar_v(true) {
+    static_assert(
+        SpaceAccessibility<typename Space::memory_space, HostSpace>::assignable,
+        "Space must be assignable from HostSpace!");
+  }
 
   KOKKOS_INLINE_FUNCTION
   StdPartitionPoint(const result_view_type& value_)
