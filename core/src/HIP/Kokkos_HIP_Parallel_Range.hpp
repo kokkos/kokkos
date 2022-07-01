@@ -132,9 +132,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Traits>
+template <class FunctorType, class ReducerType, class... Traits, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
-                     Kokkos::Experimental::HIP> {
+                     Kokkos::Experimental::HIP, ValueType> {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
@@ -438,7 +438,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  ->m_mutexSharedMemory) {}
 };
 
-template <class FunctorType, class... Traits>
+template <class FunctorType, class... Traits, class ValueType = void>
 class ParallelScanHIPBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -450,7 +450,7 @@ class ParallelScanHIPBase {
   using LaunchBounds = typename Policy::launch_bounds;
 
   using Analysis = Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN,
-                                                 Policy, FunctorType>;
+                                                 Policy, FunctorType, ValueType>;
 
  public:
   using pointer_type   = typename Analysis::pointer_type;
@@ -720,10 +720,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReturnType, class... Traits>
+template <class FunctorType, class ReturnType, class... Traits, class ValueType>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
-                            ReturnType, Kokkos::Experimental::HIP>
-    : public ParallelScanHIPBase<FunctorType, Traits...> {
+                            ReturnType, Kokkos::Experimental::HIP, ValueType>
+    : public ParallelScanHIPBase<FunctorType, Traits..., ValueType> {
  public:
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();

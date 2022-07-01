@@ -630,9 +630,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Properties>
+template <class FunctorType, class ReducerType, class... Properties, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::HIP> {
+                     ReducerType, Kokkos::Experimental::HIP, ValueType> {
  public:
   using Policy = TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>;
 
@@ -650,7 +650,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                   work_tag, void>::type;
 
   using analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, reducer_type_fwd>;
+                                         Policy, reducer_type_fwd, ValueType>;
 
   using pointer_type   = typename analysis::pointer_type;
   using reference_type = typename analysis::reference_type;

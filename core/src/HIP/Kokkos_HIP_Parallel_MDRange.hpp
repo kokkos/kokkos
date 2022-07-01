@@ -204,9 +204,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 };
 
 // ParallelReduce
-template <class FunctorType, class ReducerType, class... Traits>
+template <class FunctorType, class ReducerType, class... Traits, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
-                     Kokkos::Experimental::HIP> {
+                     Kokkos::Experimental::HIP, ValueType> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
@@ -228,7 +228,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   using Analysis =
       Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
-                                    ReducerTypeFwd>;
+                                    ReducerTypeFwd, ValueType>;
 
  public:
   using pointer_type   = typename Analysis::pointer_type;

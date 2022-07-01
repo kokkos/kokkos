@@ -117,7 +117,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
     final_reducer.join(&local_value, &local_mem[sg_group_id - 1]);
 }
 
-template <class FunctorType, class... Traits>
+template <class FunctorType, class... Traits, class ValueType = void>
 class ParallelScanSYCLBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -130,7 +130,7 @@ class ParallelScanSYCLBase {
 
  public:
   using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, ValueType>;
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;
@@ -341,12 +341,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReturnType, class... Traits>
+template <class FunctorType, class ReturnType, class... Traits, class ValueType>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
-                            ReturnType, Kokkos::Experimental::SYCL>
-    : private ParallelScanSYCLBase<FunctorType, Traits...> {
+                            ReturnType, Kokkos::Experimental::SYCL, ValueType>
+    : private ParallelScanSYCLBase<FunctorType, Traits..., ValueType> {
  public:
-  using Base = ParallelScanSYCLBase<FunctorType, Traits...>;
+  using Base = ParallelScanSYCLBase<FunctorType, Traits..., ValueType>;
 
   ReturnType& m_returnvalue;
   const Kokkos::Experimental::SYCL& m_exec;
