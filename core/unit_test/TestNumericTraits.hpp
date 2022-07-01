@@ -240,8 +240,8 @@ struct TestNumericTraits<
 TEST(TEST_CATEGORY, numeric_traits_infinity) {
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, double, Infinity>();
-#if !defined(KOKKOS_COMPILER_IBM) && \  // fails with XL 16.1.1 see issue #4100
-  !defined(KOKKOS_COMPILER_NVHPC)       // FIXME_NVHPC long double not supported
+// fails with XL 16.1.1 see issue #4100, // FIXME_NVHPC long double not supported
+#if !defined(KOKKOS_COMPILER_IBM) && !defined(KOKKOS_COMPILER_NVHPC)       
       TestNumericTraits<TEST_EXECSPACE, long double, Infinity>();
 #endif
 }
