@@ -57,6 +57,7 @@
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -931,13 +932,11 @@ const cudaDeviceProp &Cuda::cuda_device_prop() const {
 
 namespace Impl {
 
-int get_gpu(const InitArguments &args);
-
 int g_cuda_space_factory_initialized =
     initialize_space_factory<CudaSpaceInitializer>("150_Cuda");
 
-void CudaSpaceInitializer::initialize(const InitArguments &args) {
-  int use_gpu = get_gpu(args);
+void CudaSpaceInitializer::initialize(const InitializationSettings &settings) {
+  int use_gpu = get_gpu(settings);
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
       0 < use_gpu) {
     if (use_gpu > -1) {

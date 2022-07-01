@@ -456,8 +456,10 @@ namespace Impl {
 int g_openmp_space_factory_initialized =
     initialize_space_factory<OpenMPSpaceInitializer>("050_OpenMP");
 
-void OpenMPSpaceInitializer::initialize(const InitArguments &args) {
-  Kokkos::OpenMP::impl_initialize(args.num_threads);
+void OpenMPSpaceInitializer::initialize(
+    const InitializationSettings &settings) {
+  Kokkos::OpenMP::impl_initialize(
+      settings.has_num_threads() ? settings.get_num_threads() : -1);
 }
 
 void OpenMPSpaceInitializer::finalize(const bool) {

@@ -154,7 +154,7 @@ class OpenMPTargetSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   OpenMPTargetSpaceInitializer()  = default;
   ~OpenMPTargetSpaceInitializer() = default;
-  void initialize(const InitArguments& args) final;
+  void initialize(const InitializationSettings& settings) final;
   void finalize(const bool) final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;

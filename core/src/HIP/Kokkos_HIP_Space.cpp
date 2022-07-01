@@ -50,6 +50,7 @@
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 #include <stdlib.h>
 #include <iostream>
@@ -476,9 +477,6 @@ SharedAllocationRecord<Kokkos::Experimental::HIPManagedSpace, void>::
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
-namespace Impl {
-int get_gpu(const InitArguments& args);
-}
 namespace Experimental {
 
 int HIP::concurrency() {
@@ -550,8 +548,8 @@ namespace Impl {
 int g_hip_space_factory_initialized =
     initialize_space_factory<HIPSpaceInitializer>("150_HIP");
 
-void HIPSpaceInitializer::initialize(const InitArguments& args) {
-  int use_gpu = Impl::get_gpu(args);
+void HIPSpaceInitializer::initialize(const InitializationSettings& settings) {
+  int use_gpu = Impl::get_gpu(settings);
 
   if (std::is_same<Kokkos::Experimental::HIP,
                    Kokkos::DefaultExecutionSpace>::value ||

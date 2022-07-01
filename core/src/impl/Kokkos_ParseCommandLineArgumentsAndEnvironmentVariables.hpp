@@ -42,26 +42,17 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXEC_SPACE_INITIALIZER_HPP
-#define KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+#ifndef KOKKOS_PARSE_COMMAND_LINE_ARGUMENTS_AND_ENVIRONMENT_VARIABLES_HPP
+#define KOKKOS_PARSE_COMMAND_LINE_ARGUMENTS_AND_ENVIRONMENT_VARIABLES_HPP
 
-#include <iosfwd>
-
+// These declaration are only provided for testing purposes
 namespace Kokkos {
 class InitializationSettings;
 namespace Impl {
-
-class ExecSpaceInitializerBase {
- public:
-  virtual void initialize(const InitializationSettings &settings)        = 0;
-  virtual void finalize(const bool all_spaces)                           = 0;
-  virtual void fence(const std::string &)                                = 0;
-  virtual void print_configuration(std::ostream &msg, const bool detail) = 0;
-  ExecSpaceInitializerBase()          = default;
-  virtual ~ExecSpaceInitializerBase() = default;
-};
-
+void parse_command_line_arguments(int& argc, char* argv[],
+                                  InitializationSettings& settings);
+void parse_environment_variables(InitializationSettings& settings);
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+#endif
