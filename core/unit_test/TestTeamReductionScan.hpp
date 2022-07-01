@@ -63,7 +63,7 @@ TEST(TEST_CATEGORY, team_long_reduce) {
                               Kokkos::Experimental::OpenMPTarget>::value)
 #else
 #ifdef KOKKOS_ENABLE_OPENACC
-  // WORKAROUND OPENACC: Not implemented
+  // FIXME_OPENACC: Not implemented
   if constexpr (!std::is_same<TEST_EXECSPACE,
                               Kokkos::Experimental::OpenACC>::value)
 #endif
