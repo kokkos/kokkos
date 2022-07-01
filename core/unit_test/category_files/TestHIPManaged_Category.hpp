@@ -42,17 +42,13 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_FWD_HPP_
-#define KOKKOS_HIP_FWD_HPP_
+#ifndef KOKKOS_TEST_HIPUNIFIED_HPP
+#define KOKKOS_TEST_HIPUNIFIED_HPP
 
-#if defined(KOKKOS_ENABLE_HIP)
-namespace Kokkos {
-namespace Experimental {
-class HIPSpace;            ///< Memory space on HIP GPU
-class HIPHostPinnedSpace;  ///< Memory space on Host accessible to HIP GPU
-class HIPManagedSpace;     ///< Memory migratable between Host and HIP GPU
-class HIP;                 ///< Execution space for HIP GPU
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
+#include <gtest/gtest.h>
+
+#define TEST_CATEGORY hip_managed
+#define TEST_CATEGORY_DEATH hip_managed_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::HIPManagedSpace
+
 #endif

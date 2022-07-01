@@ -466,8 +466,8 @@ namespace {
  * that we keep the semantics of UVM DualViews intact.
  */
 // modify if we have other UVM enabled backends
-#if defined(KOKKOS_ENABLE_CUDA) || \
-    defined(KOKKOS_ENABLE_SYCL)  // OR other UVM builds
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_SYCL) || \
+    defined(KOKKOS_ENABLE_HIP)  // OR other UVM builds
 #define UVM_ENABLED_BUILD
 #endif
 
@@ -487,6 +487,13 @@ struct UVMSpaceFor<Kokkos::Cuda> {
 template <>
 struct UVMSpaceFor<Kokkos::Experimental::SYCL> {
   using type = Kokkos::Experimental::SYCLSharedUSMSpace;
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_HIP  // specific to HIP
+template <>
+struct UVMSpaceFor<Kokkos::Experimental::HIP> {
+  using type = Kokkos::Experimental::HIPManagedSpace;
 };
 #endif
 

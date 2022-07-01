@@ -220,7 +220,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     if (Tag STREQUAL "Cuda")
       set(TagHostAccessible CudaUVM)
     elseif(Tag STREQUAL "HIP")
-      set(TagHostAccessible HIPHostPinned)
+      set(TagHostAccessible HIPManaged)
     elseif(Tag STREQUAL "SYCL")
       set(TagHostAccessible SYCLSharedUSM)
     endif()
@@ -289,7 +289,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   endif()
 endforeach()
 
-foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
+foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
   string(REGEX REPLACE "([^-]*)-(.*)" "\\1" DEVICE ${PairDeviceSpace})
   string(REGEX REPLACE "([^-]*)-(.*)" "\\2" SPACE ${PairDeviceSpace})
 
@@ -596,6 +596,7 @@ if(Kokkos_ENABLE_HIP)
       ${HIP_SOURCES}
       hip/TestHIP_ScanUnit.cpp
       hip/TestHIP_Spaces.cpp
+      hip/TestHIP_Memory_Requirements.cpp
       hip/TestHIP_TeamScratchStreams.cpp
       hip/TestHIP_AsyncLauncher.cpp
       hip/TestHIP_BlocksizeDeduction.cpp

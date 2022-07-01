@@ -289,6 +289,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 	OBJ_HIP += TestHIP_Reductions.o
 	OBJ_HIP += TestHIP_MDRange_a.o TestHIP_MDRange_b.o TestHIP_MDRange_c.o TestHIP_MDRange_d.o TestHIP_MDRange_e.o
 	OBJ_HIP += TestHIP_Spaces.o
+	OBJ_HIP += TestHIP_Memory_Requirements.o
 	OBJ_HIP += TestHIPHostPinned_ViewAPI_a.o TestHIPHostPinned_ViewAPI_b.o TestHIPHostPinned_ViewAPI_c.o TestHIPHostPinned_ViewAPI_d.o TestHIPHostPinned_ViewAPI_e.o
 	OBJ_HIP += TestHIPHostPinned_ViewCopy_a.o TestHIPHostPinned_ViewCopy_b.o
 	OBJ_HIP += TestHIPHostPinned_ViewMapping_a.o TestHIPHostPinned_ViewMapping_b.o TestHIPHostPinned_ViewMapping_subview.o

@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,17 +43,42 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_FWD_HPP_
-#define KOKKOS_HIP_FWD_HPP_
+#include <Kokkos_Core.hpp>
+#include <TestHIP_Category.hpp>
 
-#if defined(KOKKOS_ENABLE_HIP)
-namespace Kokkos {
-namespace Experimental {
-class HIPSpace;            ///< Memory space on HIP GPU
-class HIPHostPinnedSpace;  ///< Memory space on Host accessible to HIP GPU
-class HIPManagedSpace;     ///< Memory migratable between Host and HIP GPU
-class HIP;                 ///< Execution space for HIP GPU
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
-#endif
+namespace {
+
+template <class HIPMemoryContainer>
+bool checkMemoryCoarseGrainedness(HIPMemoryContainer const& container) {
+  auto size           = container.size();
+  auto allocationSize = HIPMemoryContainer::required_allocation_size(size);
+  hipMemRangeCoherencyMode memInfo;
+
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemRangeGetAttribute(
+      &memInfo, sizeof(hipMemRangeCoherencyMode),
+      hipMemRangeAttributeCoherencyMode, container.data(), allocationSize));
+
+  return (hipMemRangeCoherencyModeCoarseGrain == memInfo);
+}
+
+#define KOKKOS_TEST_MEMORY_COARSEGRAINEDNESS(MEMORY_SPACE, DATATYPE, SIZE)    \
+  {                                                                           \
+    Kokkos::View<DATATYPE*, MEMORY_SPACE> view(#MEMORY_SPACE, SIZE);          \
+    ASSERT_TRUE(view.is_allocated())                                          \
+        << "View in " << #MEMORY_SPACE << " with size " << SIZE               \
+        << " was not allocated. This prevents checks of the grainedness.";    \
+    ASSERT_TRUE(checkMemoryCoarseGrainedness(view))                           \
+        << "The memory in views in " << #MEMORY_SPACE                         \
+        << " is not coarse-grained. Kokkos relies on all user facing memory " \
+           "being coarse-grained.";                                           \
+  }
+
+TEST(hip, memory_requirements) {
+  // we want all user-facing memory in hip to be coarse grained. As of
+  // today(07.01.22) the documentation is not reliable/correct, we test the
+  // memory on the device as well as the managed memory
+  KOKKOS_TEST_MEMORY_COARSEGRAINEDNESS(Kokkos::Experimental::HIPSpace, int, 10);
+  KOKKOS_TEST_MEMORY_COARSEGRAINEDNESS(Kokkos::Experimental::HIPManagedSpace,
+                                       int, 10);
+}
+}  // namespace
