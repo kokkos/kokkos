@@ -514,8 +514,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
 
 template <class FunctorType, class ValueType, class ReducerType,
           class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ValueType,
-                     ReducerType, Kokkos::Serial> {
+class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>,
+                     ReducerType, Kokkos::Serial, ValueType> {
  private:
   using Policy  = Kokkos::RangePolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
@@ -697,7 +697,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkTag = typename Policy::work_tag;
 
   using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, ReturnType>;
 
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
@@ -809,8 +809,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
 template <class FunctorType, class ValueType, class ReducerType,
           class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ValueType,
-                     ReducerType, Kokkos::Serial> {
+class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
+                     ReducerType, Kokkos::Serial, ValueType> {
  private:
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
@@ -997,8 +997,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 template <class FunctorType, class ValueType, class ReducerType,
           class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>, ValueType,
-                     ReducerType, Kokkos::Serial> {
+class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
+                     ReducerType, Kokkos::Serial, ValueType> {
  private:
   enum { TEAM_REDUCE_SIZE = 512 };
 

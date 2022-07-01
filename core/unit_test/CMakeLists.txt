@@ -440,12 +440,12 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
-  #KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  #  UnitTest_SerialGraph
-  #  SOURCES
-  #  UnitTestMainInit.cpp
-  #  serial/TestSerial_Graph.cpp
-  #)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SerialGraph
+    SOURCES
+    UnitTestMainInit.cpp
+    serial/TestSerial_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_THREADS)

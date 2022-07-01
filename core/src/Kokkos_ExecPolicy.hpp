@@ -1001,7 +1001,7 @@ struct PatternImplSpecializationFromTag<Kokkos::ParallelForTag, Args...>
 
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelReduceTag, Args...>
-    : identity<ParallelReduce<Args...>> {};
+    : identity<ParallelReduce<Args..., void>> {};
 
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelScanTag, Args...>
