@@ -549,9 +549,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Properties>
+template <class FunctorType, class ReducerType, class... Properties, class ValueType>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::SYCL> {
+                     ReducerType, Kokkos::Experimental::SYCL, ValueType> {
  public:
   using Policy = TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>;
 
