@@ -308,8 +308,9 @@ TEST(kokkosp, test_streams) {
 }
 
 #endif
-/** FIXME: OpenMPTarget currently has unexpected fences */
+/** FIXME_OPENMPTARGET: OpenMPTarget currently has unexpected fences */
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+//FIXME_OPENACC
 #ifndef KOKKOS_ENABLE_OPENACC
 TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
@@ -399,6 +400,7 @@ TEST(kokkosp, parallel_scan) {
         return MatchDiagnostic{true};
       });
 // Currently, this test is known to fail with OpenMPTarget and OpenACC
+// FIXME_OPENMPTARGET FIXME_OPENACC
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   ASSERT_TRUE(success);
 #else

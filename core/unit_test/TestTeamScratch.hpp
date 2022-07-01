@@ -74,6 +74,7 @@ TEST(TEST_CATEGORY, multi_level_scratch) {
   // FIXME_OPENMPTARGET This unit test needs ~350KB of scratch memory for L0 and
   // L1 combined per team. Currently OpenMPTarget cannot allocate this high
   // amount of scratch memory.
+  // FIXME_OPENACC
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   TestMultiLevelScratchTeam<TEST_EXECSPACE,
                             Kokkos::Schedule<Kokkos::Static> >();

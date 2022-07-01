@@ -395,6 +395,7 @@ bool test_scalar(int nteams, int team_size, int test) {
 
   // FIXME_OPENMPTARGET - Need to allocate scratch space via set_scratch_space
   // for the OPENMPTARGET backend.
+  // FIXME_OPENACC
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
   using scratch_t = Kokkos::View<Scalar*, ExecutionSpace,
                                  Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
@@ -452,6 +453,7 @@ bool Test(int test) {
   passed = passed && test_scalar<double, ExecutionSpace>(317, team_size, test);
   // FIXME_OPENMPTARGET - Use of custom reducers currently results in runtime
   // memory errors.
+  // FIXME_OPENACC
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   passed =
       passed && test_scalar<my_complex, ExecutionSpace>(317, team_size, test);
@@ -469,6 +471,7 @@ TEST(TEST_CATEGORY, team_teamvector_range) {
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(1)));
   // FIXME_OPENMPTARGET - Use of kokkos reducers currently results in runtime
   // memory errors.
+  // FIXME_OPENACC
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(2)));
 #endif

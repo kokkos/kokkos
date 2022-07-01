@@ -48,6 +48,7 @@ namespace Test {
 
 TEST(TEST_CATEGORY, mdrange_4d) {
 // FIXME_OPENMPTARGET requires MDRange parallel_reduce
+// FIXME_OPENACC
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 #ifndef KOKKOS_ENABLE_OPENACC
   TestMDRange_4D<TEST_EXECSPACE>::test_reduce4(100, 10, 10, 10);
