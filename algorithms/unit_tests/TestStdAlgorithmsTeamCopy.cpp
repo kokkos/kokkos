@@ -57,10 +57,9 @@ struct TestFunctorA {
   ViewDestType m_dest_view;
   int m_api_pick;
 
-  TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest, int apiPick)
-      : m_from_view(viewFrom),
-        m_dest_view(viewDest),
-        m_api_pick(apiPick) {}
+  TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
+               int apiPick)
+      : m_from_view(viewFrom), m_dest_view(viewDest), m_api_pick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const MemberType& member) const {
@@ -71,11 +70,12 @@ struct TestFunctorA {
         Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto it = KE::copy(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom), KE::begin(myRowViewDest));
-      (void) it;
+      auto it = KE::copy(member, KE::begin(myRowViewFrom),
+                         KE::end(myRowViewFrom), KE::begin(myRowViewDest));
+      (void)it;
     } else if (m_api_pick == 1) {
       auto it = KE::copy(member, myRowViewFrom, myRowViewDest);
-      (void) it;
+      (void)it;
     }
   }
 };
@@ -108,7 +108,8 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   policy_type policy(num_teams, Kokkos::AUTO());
 
   auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
-  using functor_type = TestFunctorA<decltype(v), decltype(v2), team_member_type>;
+  using functor_type =
+      TestFunctorA<decltype(v), decltype(v2), team_member_type>;
   functor_type fnc(v, v2, apiId);
   Kokkos::parallel_for(policy, fnc);
 
@@ -117,7 +118,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   auto v2_h = create_host_space_copy(v2);
   for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      EXPECT_TRUE(v_h(i,j) == v2_h(i,j));
+      EXPECT_TRUE(v_h(i, j) == v2_h(i, j));
     }
   }
 }
