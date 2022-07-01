@@ -82,6 +82,7 @@
 
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 struct InitArguments {
   int num_threads;
   int num_numa;
@@ -94,6 +95,7 @@ struct InitArguments {
   std::string tool_lib  = {};
   std::string tool_args = {};
 
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use InitializationSettings instead!")
   InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
                 bool ti = false)
       : num_threads{nt},
@@ -104,6 +106,7 @@ struct InitArguments {
         disable_warnings{dw},
         tune_internals{ti} {}
 };
+#endif
 
 namespace Impl {
 // FIXME_CXX17 replace with std::optional
@@ -176,6 +179,7 @@ class InitializationSettings {
 #undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER
 #undef KOKKOS_IMPL_DECLARE
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
  public:
   InitializationSettings() = default;
 
@@ -208,6 +212,7 @@ class InitializationSettings {
       (void)set_tool_args(old.tool_args);
     }
   }
+#endif
 };
 
 namespace Impl {
