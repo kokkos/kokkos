@@ -59,6 +59,13 @@
 #define KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 #endif
 
+// FIXME_OPENMPTARGET - Using this macro to implement a workaround for
+// hierarchical scan. It avoids hitting the code path which we wanted to
+// write but doesn't work. undef'ed at the end.
+#ifndef KOKKOS_ARCH_INTEL_GPU
+#define KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1584,6 +1591,9 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_bounds,
     const FunctorType& lambda) {
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                         TeamPolicy<Experimental::OpenMPTarget>,
+                                         FunctorType>;
   // Extract value_type from lambda
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void,
@@ -1591,15 +1601,26 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
   const auto start = loop_bounds.start;
   const auto end   = loop_bounds.end;
-  // Note this thing is called .member in the CUDA specialization of
-  // TeamThreadRangeBoundariesStruct
+  //   Note this thing is called .member in the CUDA specialization of
+  //   TeamThreadRangeBoundariesStruct
   auto& member         = loop_bounds.team;
   const auto team_size = member.team_size();
   const auto team_rank = member.team_rank();
-  const auto nchunk    = (end - start + team_size - 1) / team_size;
-  value_type accum     = 0;
-  // each team has to process one or more chunks of the prefix scan
-  for (iType i = 0; i < nchunk; ++i) {
+
+#if defined(KOKKOS_IMPL_TEAM_SCAN_WORKAROUND)
+  value_type scan_val = value_type();
+
+  if (team_rank == 0) {
+    for (iType i = start; i < end; ++i) {
+      lambda(i, scan_val, true);
+    }
+  }
+#pragma omp barrier
+#else
+  const auto nchunk = (end - start + team_size - 1) / team_size;
+  value_type accum  = 0;
+  each team has to process one or
+      more chunks of the prefix scan for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
     value_type local_accum = 0;
@@ -1616,6 +1637,12 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     // broadcast last value to rest of the team
     member.team_broadcast(accum, team_size - 1);
   }
+#endif
+
+  // for (iType i = 0; i < nchunk; ++i) {
+  // if(omp_get_thread_num() == 0)
+  // lambda(i, accum, true);
+  //}
 }
 
 }  // namespace Kokkos
@@ -1752,6 +1779,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 }
 
 }  // namespace Kokkos
+
+#ifdef KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
+#undef KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
+#endif
 
 namespace Kokkos {
 /** \brief  Intra-team vector parallel_for. Executes lambda(iType i) for each
