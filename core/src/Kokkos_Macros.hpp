@@ -268,7 +268,7 @@
 #if !defined(_WIN32)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
   inline __attribute__((always_inline))
-#define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE __attribute__((always_inline))
 #else
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
 #endif
@@ -324,7 +324,7 @@
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
   inline __attribute__((always_inline))
-#define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
 #if !defined(KOKKOS_IMPL_ALIGN_PTR)
@@ -350,7 +350,7 @@
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
   inline __attribute__((always_inline))
-#define KOKKOS_HOST_FORCEINLINE __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
 #define KOKKOS_RESTRICT __restrict__
@@ -387,8 +387,8 @@
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
 #endif
 
-#if !defined(KOKKOS_HOST_FORCEINLINE)
-#define KOKKOS_HOST_FORCEINLINE inline
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE)
+#define KOKKOS_IMPL_HOST_FORCEINLINE inline
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
@@ -396,7 +396,7 @@
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
-#define KOKKOS_IMPL_FORCEINLINE KOKKOS_HOST_FORCEINLINE
+#define KOKKOS_IMPL_FORCEINLINE KOKKOS_IMPL_HOST_FORCEINLINE
 #endif
 
 #if !defined(KOKKOS_IMPL_INLINE_FUNCTION)
