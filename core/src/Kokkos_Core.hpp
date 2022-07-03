@@ -71,7 +71,7 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
-#include <climits>
+#include <impl/Kokkos_InitializationSettings.hpp>
 #include <functional>
 #include <iosfwd>
 #include <map>
@@ -81,140 +81,6 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-struct InitArguments {
-  int num_threads;
-  int num_numa;
-  int device_id;
-  int ndevices;
-  int skip_device;
-  bool disable_warnings;
-  bool tune_internals;
-  bool tool_help        = false;
-  std::string tool_lib  = {};
-  std::string tool_args = {};
-
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use InitializationSettings instead!")
-  InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
-                bool ti = false)
-      : num_threads{nt},
-        num_numa{nn},
-        device_id{dv},
-        ndevices{-1},
-        skip_device{9999},
-        disable_warnings{dw},
-        tune_internals{ti} {}
-};
-#endif
-
-namespace Impl {
-// FIXME_CXX17 replace with std::optional
-template <class>
-struct InitializationSettingsHelper;
-template <>
-struct InitializationSettingsHelper<int> {
-  using value_type   = int;
-  using storage_type = int;
-
-  static constexpr storage_type unspecified = INT_MIN;
-};
-template <>
-struct InitializationSettingsHelper<bool> {
-  using value_type   = bool;
-  using storage_type = char;
-
-  static constexpr storage_type unspecified = CHAR_MIN;
-};
-template <>
-struct InitializationSettingsHelper<std::string> {
-  using value_type   = std::string;
-  using storage_type = std::string;
-
-  static storage_type const unspecified;
-};
-}  // namespace Impl
-
-class InitializationSettings {
-#define KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) \
-  impl_do_not_use_i_really_mean_it_##NAME##_
-
-#define KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME) impl_##NAME##_type
-
-#define KOKKOS_IMPL_DECLARE(TYPE, NAME)                                      \
- private:                                                                    \
-  using KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME) = TYPE;                 \
-  Impl::InitializationSettingsHelper<TYPE>::storage_type                     \
-      KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) =                              \
-          Impl::InitializationSettingsHelper<TYPE>::unspecified;             \
-                                                                             \
- public:                                                                     \
-  InitializationSettings& set_##NAME(                                        \
-      Impl::InitializationSettingsHelper<TYPE>::value_type NAME) {           \
-    KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) = NAME;                          \
-    return *this;                                                            \
-  }                                                                          \
-  bool has_##NAME() const noexcept {                                         \
-    return KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) !=                        \
-           Impl::InitializationSettingsHelper<                               \
-               KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME)>::unspecified;   \
-  }                                                                          \
-  KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME) get_##NAME() const noexcept { \
-    return KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME);                          \
-  }                                                                          \
-  static_assert(true, "no-op to require trailing semicolon")
-
- public:
-  KOKKOS_IMPL_DECLARE(int, num_threads);
-  KOKKOS_IMPL_DECLARE(int, device_id);
-  KOKKOS_IMPL_DECLARE(int, num_devices);
-  KOKKOS_IMPL_DECLARE(int, skip_device);
-  KOKKOS_IMPL_DECLARE(bool, disable_warnings);
-  KOKKOS_IMPL_DECLARE(bool, tune_internals);
-  KOKKOS_IMPL_DECLARE(bool, tool_help);
-  KOKKOS_IMPL_DECLARE(std::string, tool_lib);
-  KOKKOS_IMPL_DECLARE(std::string, tool_args);
-
-#undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE
-#undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER
-#undef KOKKOS_IMPL_DECLARE
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
- public:
-  InitializationSettings() = default;
-
-  InitializationSettings(InitArguments const& old) {
-    if (old.num_threads != -1) {
-      (void)set_num_threads(old.num_threads);
-    }
-    if (old.device_id != -1) {
-      (void)set_device_id(old.device_id);
-    }
-    if (old.ndevices != -1) {
-      (void)set_num_devices(old.ndevices);
-    }
-    if (old.skip_device != 9999) {
-      (void)set_skip_device(old.skip_device);
-    }
-    if (old.disable_warnings) {
-      (void)set_disable_warnings(true);
-    }
-    if (old.tune_internals) {
-      (void)set_tune_internals(true);
-    }
-    if (old.tool_help) {
-      (void)set_tool_help(true);
-    }
-    if (!old.tool_lib.empty()) {
-      (void)set_tool_lib(old.tool_lib);
-    }
-    if (!old.tool_args.empty()) {
-      (void)set_tool_args(old.tool_args);
-    }
-  }
-#endif
-};
-
 namespace Impl {
 /* ExecSpaceManager - Responsible for initializing all of the registered
  * backends. Backends are registered using the register_space_initializer()
