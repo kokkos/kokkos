@@ -44,10 +44,8 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
-
-#include <TestDefaultDeviceType_Category.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <cstdlib>
 #include <memory>

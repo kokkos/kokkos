@@ -44,7 +44,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 namespace {
 
