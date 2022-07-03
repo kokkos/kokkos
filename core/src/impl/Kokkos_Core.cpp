@@ -759,7 +759,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
             "'--kokkos-num-devices'. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
+            "Kokkos::initialize(int argc, char* argv[]).");
 
       char* num1      = strchr(argv[iarg], '=') + 1;
       char* num2      = strpbrk(num1, ",");
@@ -772,7 +772,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
             "'--kokkos-num-devices'. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
+            "Kokkos::initialize(int argc, char* argv[]).");
       }
       if (check_arg(argv[iarg], "--kokkos-num-devices") ||
           check_arg(argv[iarg], "--kokkos-ndevices") ||
@@ -787,7 +787,7 @@ void Kokkos::Impl::parse_command_line_arguments(
           throw_runtime_exception(
               "Error: expecting an integer number after command line argument "
               "'--kokkos-num-devices=XX,'. Raised by "
-              "Kokkos::initialize(int narg, char* argc[]).");
+              "Kokkos::initialize(int argc, char* argv[]).");
 
         if (check_arg(argv[iarg], "--kokkos-num-devices") ||
             check_arg(argv[iarg], "--kokkos-ndevices") ||
@@ -858,11 +858,11 @@ void Kokkos::Impl::parse_environment_variables(
     if (endptr == env_num_threads_str)
       Impl::throw_runtime_exception(
           "Error: cannot convert KOKKOS_NUM_THREADS to an integer. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
+          "Kokkos::initialize(int argc, char* argv[]).");
     if (errno == ERANGE)
       Impl::throw_runtime_exception(
           "Error: KOKKOS_NUM_THREADS out of range of representable values by "
-          "an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+          "an integer. Raised by Kokkos::initialize(int argc, char* argv[]).");
     settings.set_num_threads(env_num_threads);
   }
   auto env_numa_str = std::getenv("KOKKOS_NUMA");
@@ -876,11 +876,11 @@ void Kokkos::Impl::parse_environment_variables(
     if (endptr == env_device_id_str)
       Impl::throw_runtime_exception(
           "Error: cannot convert KOKKOS_DEVICE_ID to an integer. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
+          "Kokkos::initialize(int argc, char* argv[]).");
     if (errno == ERANGE)
       Impl::throw_runtime_exception(
           "Error: KOKKOS_DEVICE_ID out of range of representable values by an "
-          "integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
+          "integer. Raised by Kokkos::initialize(int argc, char* argv[]).");
     settings.set_device_id(env_device_id);
   }
   auto env_rdevices_str    = std::getenv("KOKKOS_RAND_DEVICES");
@@ -891,7 +891,7 @@ void Kokkos::Impl::parse_environment_variables(
       Impl::throw_runtime_exception(
           "Error: cannot specify both KOKKOS_NUM_DEVICES and "
           "KOKKOS_RAND_DEVICES. "
-          "Raised by Kokkos::initialize(int narg, char* argc[]).");
+          "Raised by Kokkos::initialize(int argc, char* argv[]).");
     }
     int rdevices = -1;
     if (env_num_devices_str != nullptr) {
@@ -899,24 +899,24 @@ void Kokkos::Impl::parse_environment_variables(
       if (endptr == env_num_devices_str)
         Impl::throw_runtime_exception(
             "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
+            "Kokkos::initialize(int argc, char* argv[]).");
       if (errno == ERANGE)
         Impl::throw_runtime_exception(
             "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
-            "an integer. Raised by Kokkos::initialize(int narg, char* "
-            "argc[]).");
+            "an integer. Raised by Kokkos::initialize(int argc, char* "
+            "argv[]).");
       settings.set_num_devices(env_num_devices);
     } else {  // you set KOKKOS_RAND_DEVICES
       auto env_rdevices = std::strtol(env_rdevices_str, &endptr, 10);
       if (endptr == env_rdevices_str)
         Impl::throw_runtime_exception(
             "Error: cannot convert KOKKOS_RAND_DEVICES to an integer. Raised "
-            "by Kokkos::initialize(int narg, char* argc[]).");
+            "by Kokkos::initialize(int argc, char* argv[]).");
       if (errno == ERANGE)
         Impl::throw_runtime_exception(
             "Error: KOKKOS_RAND_DEVICES out of range of representable values "
-            "by an integer. Raised by Kokkos::initialize(int narg, char* "
-            "argc[]).");
+            "by an integer. Raised by Kokkos::initialize(int argc, char* "
+            "argv[]).");
       else
         rdevices = env_rdevices;
     }
@@ -928,19 +928,19 @@ void Kokkos::Impl::parse_environment_variables(
       if (endptr == env_skip_device_str)
         Impl::throw_runtime_exception(
             "Error: cannot convert KOKKOS_SKIP_DEVICE to an integer. Raised by "
-            "Kokkos::initialize(int narg, char* argc[]).");
+            "Kokkos::initialize(int argc, char* argv[]).");
       if (errno == ERANGE)
         Impl::throw_runtime_exception(
             "Error: KOKKOS_SKIP_DEVICE out of range of representable values by "
-            "an integer. Raised by Kokkos::initialize(int narg, char* "
-            "argc[]).");
+            "an integer. Raised by Kokkos::initialize(int argc, char* "
+            "argv[]).");
       settings.set_skip_device(env_skip_device);
     }
     if (rdevices > 0) {
       if (settings.has_skip_device() && rdevices == 1)
         Impl::throw_runtime_exception(
             "Error: cannot KOKKOS_SKIP_DEVICE the only KOKKOS_RAND_DEVICE. "
-            "Raised by Kokkos::initialize(int narg, char* argc[]).");
+            "Raised by Kokkos::initialize(int argc, char* argv[]).");
 
       std::srand(get_process_id());
       while (settings.has_device_id()) {
