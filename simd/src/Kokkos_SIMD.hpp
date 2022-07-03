@@ -58,17 +58,6 @@ namespace Experimental {
 
 namespace simd_abi {
 
-template <class... Abis>
-class abi_set {};
-
-#ifdef KOKKOS_ARCH_AVX512XEON
-using host_abi_set = abi_set<scalar, avx512_fixed_size<8>>;
-#else
-using host_abi_set  = abi_set<scalar>;
-#endif
-
-using device_abi_set = abi_set<scalar>;
-
 #if defined(KOKKOS_ARCH_AVX512XEON)
 using host_native = avx512_fixed_size<8>;
 #else
@@ -85,6 +74,21 @@ using device_native = host_native;
 using native = host_native;
 
 }  // namespace simd_abi
+
+namespace Impl {
+
+template <class... Abis>
+class abi_set {};
+
+#ifdef KOKKOS_ARCH_AVX512XEON
+using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>>;
+#else
+using host_abi_set  = abi_set<simd_abi::scalar>;
+#endif
+
+using device_abi_set = abi_set<simd_abi::scalar>;
+
+}
 
 template <class T>
 using device_simd = simd<T, simd_abi::device_native>;
