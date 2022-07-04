@@ -337,7 +337,7 @@ template <class Abi>                                                          \
 Experimental::simd<double, Abi> FUNC(                                         \
     Experimental::simd<double, Abi> const& a) {                               \
   Experimental::simd<double, Abi> result;                                     \
-  for (std::size_t i = 0; i < Experimental::simd<T, Abi>::size(); ++i) {      \
+  for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size(); ++i) {      \
     result[i] = Kokkos::FUNC(a[i]);                                           \
   }                                                                           \
   return result;                                                              \
