@@ -48,6 +48,7 @@
 
 namespace {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 void take_initialization_settings(Kokkos::InitializationSettings const&) {}
 
 TEST(defaultdevicetype,
@@ -69,6 +70,7 @@ TEST(defaultdevicetype,
   EXPECT_FALSE(settings.has_tool_lib());
   EXPECT_FALSE(settings.has_tool_args());
 }
+#endif
 
 TEST(defaultdevicetype, initialization_settings) {
   auto const settings = Kokkos::InitializationSettings()
