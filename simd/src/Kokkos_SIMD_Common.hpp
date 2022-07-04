@@ -51,6 +51,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace Kokkos {
+
 namespace Experimental {
 
 template <class To, class From>
@@ -149,97 +150,50 @@ template <class T>
   return const_where_expression(mask, value);
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator+(
-    simd<T, Abi> const& lhs, U const& rhs) {
-  using result_type = decltype(T() + U());
-  return simd<result_type, Abi>(lhs) + simd<result_type, Abi>(rhs);
+// The code below provides:
+// operator@(simd<T, Abi>, Arithmetic)
+// operator@(Arithmetic, simd<T, Abi>)
+// operator@=(simd<T, Abi>&, U&&)
+// operator@=(where_expression<M, T>&, U&&)
+
+#define KOKKOS_IMPL_SIMD_OPERATOR(OP)                                     \
+                                                                          \
+template <class T, class U, class Abi,                                    \
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>        \
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator##OP(              \
+    Experimental::simd<T, Abi> const& lhs, U rhs) {                       \
+  using result_member = decltype(lhs[0] OP rhs);                          \
+  return Experimental::simd<result_member, Abi>(lhs) OP                   \
+      Experimental::simd<result_member, Abi>(rhs);                        \
+}                                                                         \
+                                                                          \
+template <class T, class U, class Abi,                                    \
+          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>        \
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator##OP(              \
+    U lhs, Experimental::simd<T, Abi> const& rhs) {                       \
+  using result_member = decltype(lhs OP rhs[0]);                          \
+  return Experimental::simd<result_member, Abi>(lhs) OP                   \
+      Experimental::simd<result_member, Abi>(rhs);                        \
+}                                                                         \
+                                                                          \
+template <class T, class U, class Abi>                                    \
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator##OP##=(                \
+    simd<T, Abi>& lhs, U&& rhs) {                                         \
+  lhs = lhs OP std::forward<U>(rhs);                                      \
+  return lhs;                                                             \
+}                                                                         \
+                                                                          \
+template <class M, class T, class U>                                      \
+KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator##OP##=(      \
+    where_expression<M, T>& lhs, U&& rhs) {                               \
+  lhs = lhs OP std::forward<U>(rhs);                                      \
+  return lhs;                                                             \
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator+(
-    U const& lhs, simd<T, Abi> const& rhs) {
-  using result_type = decltype(U() + T());
-  return simd<result_type, Abi>(lhs) + simd<result_type, Abi>(rhs);
-}
-
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator-(
-    simd<T, Abi> const& lhs, U const& rhs) {
-  using result_type = decltype(T() - U());
-  return simd<result_type, Abi>(lhs) - simd<result_type, Abi>(rhs);
-}
-
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator-(
-    U const& lhs, simd<T, Abi> const& rhs) {
-  using result_type = decltype(U() - T());
-  return simd<result_type, Abi>(lhs) - simd<result_type, Abi>(rhs);
-}
-
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator*(
-    simd<T, Abi> const& lhs, U const& rhs) {
-  using result_type = decltype(T() * U());
-  return simd<result_type, Abi>(lhs) * simd<result_type, Abi>(rhs);
-}
-
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator*(
-    U const& lhs, simd<T, Abi> const& rhs) {
-  using result_type = decltype(U() * T());
-  return simd<result_type, Abi>(lhs) * simd<result_type, Abi>(rhs);
-}
-
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(
-    simd<T, Abi> const& lhs, U const& rhs) {
-  using result_type = decltype(T() / U());
-  return simd<result_type, Abi>(lhs) / simd<result_type, Abi>(rhs);
-}
-
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(
-    U const& lhs, simd<T, Abi> const& rhs) {
-  using result_type = decltype(U() / T());
-  return simd<result_type, Abi>(lhs) / simd<result_type, Abi>(rhs);
-}
-
-template <class T, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator+=(
-    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
-  a = a + b;
-  return a;
-}
-
-template <class T, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator-=(
-    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
-  a = a - b;
-  return a;
-}
-
-template <class T, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator*=(
-    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
-  a = a * b;
-  return a;
-}
-
-template <class T, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator/=(
-    simd<T, Abi>& a, Kokkos::Impl::identity_t<simd<T, Abi>> const& b) {
-  a = a / b;
-  return a;
-}
+KOKKOS_IMPL_SIMD_OPERATOR(+)
+KOKKOS_IMPL_SIMD_OPERATOR(-)
+KOKKOS_IMPL_SIMD_OPERATOR(*)
+KOKKOS_IMPL_SIMD_OPERATOR(/)
 
 // implement mask reductions for type bool to allow generic code to accept
 // both simd<double, Abi> and just double
@@ -276,58 +230,88 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(false);
 }
 
-// fallback implementations of transcendental functions.
+}  // namespace Experimental
+
+// fallback implementations of <cmath> functions.
 // individual Abi types may provide overloads with more efficient
 // implementations.
+// These are not in the Experimental namespace because their double
+// overloads are not either
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> exp(simd<T, Abi> a) {
-  T a_array[simd<T, Abi>::size()];
-  a.copy_to(a_array, element_aligned_tag());
-  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = Kokkos::exp(a_array[i]);
-  }
-  a.copy_from(a_array, element_aligned_tag());
-  return a;
+#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                 \
+template <class Abi>                                                          \
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION                                     \
+Experimental::simd<double, Abi> FUNC(                                         \
+    Experimental::simd<double, Abi> const& a) {                               \
+  Experimental::simd<double, Abi> result;                                     \
+  for (std::size_t i = 0; i < Experimental::simd<T, Abi>::size(); ++i) {      \
+    result[i] = Kokkos::FUNC(a[i]);                                           \
+  }                                                                           \
+  return result;                                                              \
 }
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> pow(
-    simd<T, Abi> a, simd<T, Abi> const& b) {
-  T a_array[simd<T, Abi>::size()];
-  T b_array[simd<T, Abi>::size()];
-  a.copy_to(a_array, element_aligned_tag());
-  b.copy_to(b_array, element_aligned_tag());
-  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = Kokkos::pow(a_array[i], b_array[i]);
-  }
-  a.copy_from(a_array, element_aligned_tag());
-  return a;
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(abs)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(exp)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(exp2)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(log)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(log10)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(log2)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(sqrt)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(cbrt)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(sin)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(cos)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(tan)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(asin)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(acos)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(atan)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(sinh)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(cosh)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(tanh)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(asinh)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(acosh)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(atanh)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(erf)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(erfc)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(tgamma)
+KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
+
+#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                                \
+template <class Abi>                                                          \
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION                                     \
+Experimental::simd<double, Abi> FUNC(                                         \
+    Experimental::simd<double, Abi> const& a,                                 \
+    Experimental::simd<double, Abi> const& b) {                               \
+  Experimental::simd<double, Abi> result;                                     \
+  for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size(); ++i) { \
+    result[i] = Kokkos::FUNC(a[i], b[i]);                                     \
+  }                                                                           \
+  return result;                                                              \
 }
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> sin(simd<T, Abi> a) {
-  T a_array[simd<T, Abi>::size()];
-  a.copy_to(a_array, element_aligned_tag());
-  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = Kokkos::sin(a_array[i]);
-  }
-  a.copy_from(a_array, element_aligned_tag());
-  return a;
+KOKKOS_IMPL_SIMD_BINARY_FUNCTION(min)
+KOKKOS_IMPL_SIMD_BINARY_FUNCTION(max)
+KOKKOS_IMPL_SIMD_BINARY_FUNCTION(pow)
+KOKKOS_IMPL_SIMD_BINARY_FUNCTION(hypot)
+KOKKOS_IMPL_SIMD_BINARY_FUNCTION(atan2)
+KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
+
+#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                               \
+template <class Abi>                                                          \
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION                                     \
+Experimental::simd<double, Abi> FUNC(                                         \
+    Experimental::simd<double, Abi> const& a,                                 \
+    Experimental::simd<double, Abi> const& b,                                 \
+    Experimental::simd<double, Abi> const& c) {                               \
+  Experimental::simd<double, Abi> result;                                     \
+  for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size(); ++i) { \
+    result[i] = Kokkos::FUNC(a[i], b[i], c[i]);                               \
+  }                                                                           \
+  return result;                                                              \
 }
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> cos(simd<T, Abi> a) {
-  T a_array[simd<T, Abi>::size()];
-  a.copy_to(a_array, element_aligned_tag());
-  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
-    a_array[i] = Kokkos::cos(a_array[i]);
-  }
-  a.copy_from(a_array, element_aligned_tag());
-  return a;
-}
+KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(fma)
+KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(hypot)
 
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif
