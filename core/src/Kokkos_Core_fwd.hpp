@@ -341,8 +341,10 @@ class ParallelFor;
 ///
 /// This is an implementation detail of parallel_reduce.  Users should
 /// skip this and go directly to the nonmember function parallel_reduce.
-template <class FunctorType, class ExecPolicy, class ReducerType,
-          class ExecutionSpace, class ValueType>
+template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
+          class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
+              FunctorType, ExecPolicy>::execution_space,
+          class ValueType = void>
 class ParallelReduce;
 
 /// \class ParallelScan
