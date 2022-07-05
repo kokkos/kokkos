@@ -395,7 +395,7 @@ BENCHMARK_DISABLE_DEPRECATED_WARNING
 
 std::unique_ptr<BenchmarkReporter> CreateReporter(
     std::string const& name, ConsoleReporter::OutputOptions output_opts) {
-  typedef std::unique_ptr<BenchmarkReporter> PtrType;
+  using PtrType = std::unique_ptr<BenchmarkReporter>;
   if (name == "console") {
     return PtrType(new ConsoleReporter(output_opts));
   } else if (name == "json") {

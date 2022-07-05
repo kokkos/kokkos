@@ -183,7 +183,7 @@ double ThreadCPUUsage() {
 
 std::string LocalDateTimeString() {
   // Write the local time in RFC3339 format yyyy-mm-ddTHH:MM:SS+/-HH:MM.
-  typedef std::chrono::system_clock Clock;
+  using Clock = std::chrono::system_clock;
   std::time_t now = Clock::to_time_t(Clock::now());
   const std::size_t kTzOffsetLen = 6;
   const std::size_t kTimestampLen = 19;
@@ -222,7 +222,7 @@ std::string LocalDateTimeString() {
     // RFC3339 specifies an offset as +HH:MM or -HH:MM. To convert, we parse
     // the offset as an integer, then reprint it to a string.
 
-    offset_minutes = ::strtol(tz_offset, NULL, 10);
+    offset_minutes = ::strtol(tz_offset, nullptr, 10);
     if (offset_minutes < 0) {
       offset_minutes *= -1;
       tz_offset_sign = '-';

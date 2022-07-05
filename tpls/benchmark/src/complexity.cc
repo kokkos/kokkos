@@ -156,7 +156,7 @@ LeastSq MinimalLeastSq(const std::vector<int64_t>& n,
 
 std::vector<BenchmarkReporter::Run> ComputeBigO(
     const std::vector<BenchmarkReporter::Run>& reports) {
-  typedef BenchmarkReporter::Run Run;
+  using Run = BenchmarkReporter::Run;
   std::vector<Run> results;
 
   if (reports.size() < 2) return results;

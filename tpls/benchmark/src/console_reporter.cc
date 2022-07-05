@@ -121,7 +121,7 @@ static std::string FormatTime(double time) {
 }
 
 void ConsoleReporter::PrintRunData(const Run& result) {
-  typedef void(PrinterFn)(std::ostream&, LogColor, const char*, ...);
+  using PrinterFn = void (std::ostream &, LogColor, const char *, ...);
   auto& Out = GetOutputStream();
   PrinterFn* printer = (output_options_ & OO_Color)
                            ? static_cast<PrinterFn*>(ColorPrintf)

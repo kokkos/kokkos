@@ -36,7 +36,7 @@ namespace {
 #ifdef BENCHMARK_OS_WINDOWS
 typedef WORD PlatformColorCode;
 #else
-typedef const char* PlatformColorCode;
+using PlatformColorCode = const char *;
 #endif
 
 PlatformColorCode GetPlatformColorCode(LogColor color) {

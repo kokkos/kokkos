@@ -86,7 +86,7 @@ double StatisticsCV(const std::vector<double>& v) {
 
 std::vector<BenchmarkReporter::Run> ComputeStats(
     const std::vector<BenchmarkReporter::Run>& reports) {
-  typedef BenchmarkReporter::Run Run;
+  using Run = BenchmarkReporter::Run;
   std::vector<Run> results;
 
   auto error_count =
