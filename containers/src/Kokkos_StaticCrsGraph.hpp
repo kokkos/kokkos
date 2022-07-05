@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_STATICCRSGRAPH_HPP
 #define KOKKOS_STATICCRSGRAPH_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STATICCRSGRAPH
+#endif
 
 #include <string>
 #include <vector>
@@ -496,4 +500,8 @@ DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STATICCRSGRAPH
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STATICCRSGRAPH
+#endif
 #endif /* #ifndef KOKKOS_CRSARRAY_HPP */

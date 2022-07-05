@@ -42,6 +42,10 @@
 
 #ifndef KOKKOS_FUNCTIONAL_HPP
 #define KOKKOS_FUNCTIONAL_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Functional_impl.hpp>
@@ -154,4 +158,8 @@ struct less_equal {
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
+#endif
 #endif  // KOKKOS_FUNCTIONAL_HPP

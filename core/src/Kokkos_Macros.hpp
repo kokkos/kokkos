@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_MACROS_HPP
 #define KOKKOS_MACROS_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
+#endif
 
 //----------------------------------------------------------------------------
 /** Pick up configure / build options via #define macros:
@@ -668,4 +672,8 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
+#endif
 #endif  // #ifndef KOKKOS_MACROS_HPP

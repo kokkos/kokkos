@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_CORE_FWD_HPP
 #define KOKKOS_CORE_FWD_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE_FWD
+#endif
 
 //----------------------------------------------------------------------------
 // Kokkos_Macros.hpp does introspection on configuration options
@@ -417,4 +421,8 @@ template <class Index, class Space = HostSpace>
 struct StdPartitionPoint;
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE_FWD
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE_FWD
+#endif
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */

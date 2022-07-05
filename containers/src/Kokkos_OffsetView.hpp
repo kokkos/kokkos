@@ -7,6 +7,10 @@
 
 #ifndef KOKKOS_OFFSETVIEW_HPP_
 #define KOKKOS_OFFSETVIEW_HPP_
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_OFFSETVIEW
+#endif
 
 #include <Kokkos_Core.hpp>
 
@@ -2039,4 +2043,8 @@ create_mirror_view_and_copy(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_OFFSETVIEW
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_OFFSETVIEW
+#endif
 #endif /* KOKKOS_OFFSETVIEW_HPP_ */

@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_SORT_HPP_
 #define KOKKOS_SORT_HPP_
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
+#endif
 
 #include <Kokkos_Core.hpp>
 
@@ -663,4 +667,8 @@ void sort(ViewType view, size_t const begin, size_t const end) {
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
+#endif
 #endif

@@ -50,6 +50,10 @@
 
 #ifndef KOKKOS_DYNRANKVIEW_HPP
 #define KOKKOS_DYNRANKVIEW_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
+#endif
 
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -2237,4 +2241,8 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
+#endif
 #endif

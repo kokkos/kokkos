@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_DYNAMIC_VIEW_HPP
 #define KOKKOS_DYNAMIC_VIEW_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNAMICVIEW
+#endif
 
 #include <cstdio>
 
@@ -870,4 +874,8 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
 }  // namespace Impl
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNAMICVIEW
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNAMICVIEW
+#endif
 #endif /* #ifndef KOKKOS_DYNAMIC_VIEW_HPP */
