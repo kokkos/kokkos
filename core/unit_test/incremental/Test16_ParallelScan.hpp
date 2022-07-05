@@ -58,26 +58,30 @@ template <class ExecSpace>
 struct TestScan {
   // 1D  View of double
   using View_1D = typename Kokkos::View<value_type *, ExecSpace>;
+  View_1D d_data = View_1D("data", N);
 
-  void parallel_scan() {
-    View_1D d_data("data", N);
+  template <typename SizeType>
+  KOKKOS_FUNCTION void operator()(SizeType i) const {
+	  d_data(i) = i * 0.5;
+  }
 
-    // Initialize data.
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N),
-        KOKKOS_LAMBDA(const int i) { d_data(i) = i * 0.5; });
-
-    value_type total;
-    // Exclusive parallel_scan call.
-    Kokkos::parallel_scan(
-        Kokkos::RangePolicy<ExecSpace>(0, N),
-        KOKKOS_LAMBDA(const auto i, value_type &update_value,
-                      const bool final) {
+  template <typename SizeType>
+  KOKKOS_FUNCTION void operator()(SizeType i, value_type&update_value, const bool final) const {
           const value_type val_i = d_data(i);
           if (final) d_data(i) = update_value;
 
           update_value += val_i;
-        },
+			}
+
+  void parallel_scan() {
+    // Initialize data.
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+
+    value_type total;
+    // Exclusive parallel_scan call.
+    Kokkos::parallel_scan(
+        Kokkos::RangePolicy<ExecSpace>(0, N), *this,
         total);
 
     // Copy back the data.
