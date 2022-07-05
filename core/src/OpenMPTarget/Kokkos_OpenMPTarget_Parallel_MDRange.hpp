@@ -478,8 +478,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    execute_tile<Policy::rank, typename Analysis::value_type>(
-        m_functor, m_policy, m_result_ptr);
+    execute_tile<Policy::rank>(m_functor, m_policy, m_result_ptr);
   }
 
   template <class ViewType>
