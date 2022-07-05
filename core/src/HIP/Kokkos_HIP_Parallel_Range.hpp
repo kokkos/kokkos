@@ -372,8 +372,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           UseShflReduction
               ? 0
               : hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                         WorkTag, ValueType>(m_functor,
-                                                                  block.y);
+                                                         WorkTag, ValueType>(
+                    m_functor, block.y);
 
       using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
                                         Kokkos::Experimental::HIP, ValueType>;
@@ -709,9 +709,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const auto& instance =
         Base::m_policy.space().impl_internal_space_instance();
     auto shmem_functor = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                      typename Base::WorkTag, void>(
-          f, n);
+      return hip_single_inter_block_reduce_scan_shmem<
+          true, FunctorType, typename Base::WorkTag, void>(f, n);
     };
     using DriverType = ParallelScan<FunctorType, typename Base::Policy,
                                     Kokkos::Experimental::HIP>;
@@ -757,9 +756,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const auto& instance =
         Base::m_policy.space().impl_internal_space_instance();
     auto shmem_functor = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                      typename Base::WorkTag, ReturnType>(
-          f, n);
+      return hip_single_inter_block_reduce_scan_shmem<
+          true, FunctorType, typename Base::WorkTag, ReturnType>(f, n);
     };
     using DriverType =
         ParallelScanWithTotal<FunctorType, typename Base::Policy, ReturnType,

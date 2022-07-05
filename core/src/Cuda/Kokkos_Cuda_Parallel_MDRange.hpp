@@ -341,8 +341,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
     int shmem_size =
-        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag, ValueType>(
-            f, n);
+        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                  ValueType>(f, n);
     using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType,
                                               Kokkos::Cuda, ValueType>;
     cudaFuncAttributes attr =
@@ -358,8 +358,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                  m_policy.space().impl_internal_space_instance(), attr, f, 1,
                  shmem_size, 0)))) {
       n >>= 1;
-      shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                             WorkTag, ValueType>(f, n);
+      shmem_size =
+          cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                    ValueType>(f, n);
     }
     return n;
   }
@@ -402,8 +403,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           UseShflReduction
               ? 0
               : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                          WorkTag, ValueType>(m_functor,
-                                                                   block.y);
+                                                          WorkTag, ValueType>(
+                    m_functor, block.y);
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,

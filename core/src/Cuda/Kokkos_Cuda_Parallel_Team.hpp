@@ -974,8 +974,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         UseShflReduction
             ? 0
             : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                        WorkTag, ValueType>(arg_functor,
-                                                                 m_team_size);
+                                                        WorkTag, ValueType>(
+                  arg_functor, m_team_size);
     m_shmem_begin = sizeof(double) * (m_team_size + 2);
     m_shmem_size =
         m_policy.scratch_size(0, m_team_size) +
@@ -1082,8 +1082,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         UseShflReduction
             ? 0
             : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                        WorkTag, ValueType>(arg_functor,
-                                                                 m_team_size);
+                                                        WorkTag, ValueType>(
+                  arg_functor, m_team_size);
     m_shmem_begin = sizeof(double) * (m_team_size + 2);
     m_shmem_size =
         m_policy.scratch_size(0, m_team_size) +

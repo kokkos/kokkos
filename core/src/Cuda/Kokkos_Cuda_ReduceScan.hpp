@@ -726,13 +726,15 @@ cuda_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
   return (BlockSize + 2) * Analysis::value_size(functor);
 }
 
-template <typename ValueType, typename WorkTag, typename Policy, typename FunctorType>
+template <typename ValueType, typename WorkTag, typename Policy,
+          typename FunctorType>
 inline void check_reduced_view_shmem_size(const Policy& policy,
                                           const FunctorType& functor) {
   size_t minBlockSize = CudaTraits::WarpSize * 1;
   unsigned reqShmemSize =
-      cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag, ValueType>(
-          functor, minBlockSize);
+      cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                ValueType>(functor,
+                                                           minBlockSize);
   size_t maxShmemPerBlock =
       policy.space().impl_internal_space_instance()->m_maxShmemPerBlock;
 
