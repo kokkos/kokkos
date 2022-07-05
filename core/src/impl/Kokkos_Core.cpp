@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>

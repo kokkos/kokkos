@@ -41,6 +41,7 @@
 // ************************************************************************
 //@HEADER
 */
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <iostream>
 #include <string>
 #include <sstream>

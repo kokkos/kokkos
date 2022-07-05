@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 

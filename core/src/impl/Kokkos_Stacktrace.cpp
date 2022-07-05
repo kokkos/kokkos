@@ -1,3 +1,5 @@
+
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_Stacktrace.hpp"
 

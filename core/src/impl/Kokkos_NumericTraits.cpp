@@ -1,3 +1,5 @@
+
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_NumericTraits.hpp>
 
 // NOTE These out-of class definitions are only required with C++14.  Since

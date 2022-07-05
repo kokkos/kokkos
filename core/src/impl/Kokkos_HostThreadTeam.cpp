@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <limits>
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>

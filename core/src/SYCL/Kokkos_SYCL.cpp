@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <Kokkos_SYCL.hpp>

@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <impl/Kokkos_Error.hpp>
 
 #include <ostream>
