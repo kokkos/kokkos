@@ -68,6 +68,33 @@ IteratorType2 copy_backward_impl(const std::string& label,
   return d_last - num_elements;
 }
 
+//
+// team-level impl
+//
+template <class TeamHandleType, class IteratorType1, class IteratorType2>
+KOKKOS_FUNCTION IteratorType2 copy_backward_team_impl(const TeamHandleType& teamHandle,
+						      IteratorType1 first,
+						      IteratorType1 last, IteratorType2 d_last)
+{
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first, d_last);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_last);
+  Impl::expect_valid_range(first, last);
+
+  // aliases
+  using index_type = typename IteratorType1::difference_type;
+  using func_t = StdCopyBackwardFunctor<index_type, IteratorType1, IteratorType2>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         func_t(last, d_last));
+  teamHandle.team_barrier();
+
+  // return
+  return d_last - num_elements;
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
