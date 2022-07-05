@@ -341,7 +341,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
     int shmem_size =
-        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
+        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag, ValueType>(
             f, n);
     using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType,
                                               Kokkos::Cuda, ValueType>;
@@ -359,7 +359,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                  shmem_size, 0)))) {
       n >>= 1;
       shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                             WorkTag>(f, n);
+                                                             WorkTag, ValueType>(f, n);
     }
     return n;
   }
@@ -402,7 +402,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           UseShflReduction
               ? 0
               : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                          WorkTag>(m_functor,
+                                                          WorkTag, ValueType>(m_functor,
                                                                    block.y);
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
@@ -452,7 +452,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+    check_reduced_view_shmem_size<ValueType, WorkTag>(m_policy, m_functor);
   }
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
@@ -468,7 +468,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<WorkTag>(m_policy, m_functor);
+    check_reduced_view_shmem_size<ValueType, WorkTag>(m_policy, m_functor);
   }
 };
 }  // namespace Impl
