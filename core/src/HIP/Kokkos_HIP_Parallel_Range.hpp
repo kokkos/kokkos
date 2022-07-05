@@ -322,7 +322,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const auto& instance = m_policy.space().impl_internal_space_instance();
     auto shmem_functor   = [&f](unsigned n) {
       return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                      WorkTag>(f, n);
+                                                      WorkTag, ValueType>(f, n);
     };
     using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
                                       Kokkos::Experimental::HIP, ValueType>;
@@ -372,7 +372,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           UseShflReduction
               ? 0
               : hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                         WorkTag>(m_functor,
+                                                         WorkTag, ValueType>(m_functor,
                                                                   block.y);
 
       using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
@@ -710,7 +710,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         Base::m_policy.space().impl_internal_space_instance();
     auto shmem_functor = [&f](unsigned n) {
       return hip_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                      typename Base::WorkTag>(
+                                                      typename Base::WorkTag, void>(
           f, n);
     };
     using DriverType = ParallelScan<FunctorType, typename Base::Policy,
@@ -758,7 +758,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         Base::m_policy.space().impl_internal_space_instance();
     auto shmem_functor = [&f](unsigned n) {
       return hip_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                      typename Base::WorkTag>(
+                                                      typename Base::WorkTag, ReturnType>(
           f, n);
     };
     using DriverType =

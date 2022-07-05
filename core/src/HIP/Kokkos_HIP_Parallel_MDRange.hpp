@@ -319,7 +319,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const auto& instance = m_policy.space().impl_internal_space_instance();
     auto shmem_functor   = [&f](unsigned n) {
       return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                      WorkTag>(f, n);
+                                                      WorkTag, ValueType>(f, n);
     };
     using closure_type = ParallelReduce<FunctorType, Policy, ReducerType,
                                         Kokkos::Experimental::HIP, ValueType>;
@@ -375,7 +375,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       const int shmem =
           ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-              false, FunctorType, WorkTag>(m_functor, block.y);
+              false, FunctorType, WorkTag, ValueType>(m_functor, block.y);
 
       Kokkos::Experimental::Impl::hip_parallel_launch<ClosureType,
                                                       LaunchBounds>(
