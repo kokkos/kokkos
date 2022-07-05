@@ -60,8 +60,10 @@ struct TestFunctorA {
 
   TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
                int apiPick, int n_to_copy)
-    : m_from_view(viewFrom), m_dest_view(viewDest), m_api_pick(apiPick),
-      m_num_to_copy(n_to_copy){}
+      : m_from_view(viewFrom),
+        m_dest_view(viewDest),
+        m_api_pick(apiPick),
+        m_num_to_copy(n_to_copy) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const MemberType& member) const {
@@ -72,7 +74,8 @@ struct TestFunctorA {
         Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto it = KE::copy_n(member, KE::begin(myRowViewFrom), m_num_to_copy, KE::begin(myRowViewDest));
+      auto it = KE::copy_n(member, KE::begin(myRowViewFrom), m_num_to_copy,
+                           KE::begin(myRowViewDest));
       (void)it;
     } else if (m_api_pick == 1) {
       auto it = KE::copy_n(member, myRowViewFrom, m_num_to_copy, myRowViewDest);
@@ -82,8 +85,8 @@ struct TestFunctorA {
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t n_to_copy, int apiId)
-{
+void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t n_to_copy,
+            int apiId) {
   /* description:
      fill randomly a matrix and copy to another matrix
      using a team par_for where each team handles one row
@@ -121,7 +124,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t n_to_copy, 
   for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_h.extent(1); ++j) {
       if (j < n_to_copy) {
-	EXPECT_TRUE(v_h(i, j) == v2_h(i, j));
+        EXPECT_TRUE(v_h(i, j) == v2_h(i, j));
       } else {
         EXPECT_TRUE(v2_h(i, j) == static_cast<ValueType>(0));
       }
@@ -130,8 +133,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t n_to_copy, 
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
+void run_all_scenarios() {
   // key = num of columns,
   // value = list of num of elemenents to fill
   using v_t                          = std::vector<int>;

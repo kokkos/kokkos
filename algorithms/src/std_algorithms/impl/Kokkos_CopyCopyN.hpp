@@ -110,15 +110,18 @@ KOKKOS_FUNCTION OutputIterator copy_team_impl(const TeamHandleType& teamHandle,
 
 template <class TeamHandleType, class InputIterator, class Size,
           class OutputIterator>
-KOKKOS_FUNCTION OutputIterator copy_n_team_impl(const TeamHandleType& teamHandle,
-						InputIterator first_from, Size count,
-						OutputIterator first_dest) {
+KOKKOS_FUNCTION OutputIterator
+copy_n_team_impl(const TeamHandleType& teamHandle, InputIterator first_from,
+                 Size count, OutputIterator first_dest) {
   // checks
-  Impl::static_assert_random_access_and_accessible(teamHandle, first_from, first_dest);
-  Impl::static_assert_iterators_have_matching_difference_type(first_from, first_dest);
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
 
   if (count > 0) {
-    return copy_team_impl(teamHandle, first_from, first_from + count, first_dest);
+    return copy_team_impl(teamHandle, first_from, first_from + count,
+                          first_dest);
   } else {
     return first_dest;
   }

@@ -70,8 +70,9 @@ struct TestFunctorA {
         Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto it = KE::copy_backward(member, KE::begin(myRowViewFrom),
-				  KE::end(myRowViewFrom), KE::end(myRowViewDest));
+      auto it =
+          KE::copy_backward(member, KE::begin(myRowViewFrom),
+                            KE::end(myRowViewFrom), KE::end(myRowViewDest));
       (void)it;
     } else if (m_api_pick == 1) {
       auto it = KE::copy_backward(member, myRowViewFrom, myRowViewDest);
@@ -81,8 +82,7 @@ struct TestFunctorA {
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
-{
+void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   /* description:
    */
 
@@ -106,8 +106,9 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
   using team_member_type = typename policy_type::member_type;
   policy_type policy(num_teams, Kokkos::AUTO());
 
-  auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols+5, "v2");
-  using functor_type = TestFunctorA<decltype(v), decltype(v2), team_member_type>;
+  auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols + 5, "v2");
+  using functor_type =
+      TestFunctorA<decltype(v), decltype(v2), team_member_type>;
   functor_type fnc(v, v2, apiId);
   Kokkos::parallel_for(policy, fnc);
 
@@ -115,13 +116,11 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
   auto v_h  = create_host_space_copy(v);
   auto v2_h = create_host_space_copy(v2);
   for (std::size_t i = 0; i < v2_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v2_h.extent(1); ++j)
-    {
-      if (j<5){
-	EXPECT_TRUE(v2_h(i, 0) == static_cast<ValueType>(0));
-      }
-      else{
-	EXPECT_TRUE(v_h(i, j-5) == v2_h(i, j));
+    for (std::size_t j = 0; j < v2_h.extent(1); ++j) {
+      if (j < 5) {
+        EXPECT_TRUE(v2_h(i, 0) == static_cast<ValueType>(0));
+      } else {
+        EXPECT_TRUE(v_h(i, j - 5) == v2_h(i, j));
       }
     }
   }
@@ -138,8 +137,7 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_copy_backward_team_test, test)
-{
+TEST(std_algorithms_copy_backward_team_test, test) {
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();

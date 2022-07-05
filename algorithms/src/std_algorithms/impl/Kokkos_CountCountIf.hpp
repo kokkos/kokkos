@@ -81,12 +81,9 @@ auto count_impl(const std::string& label, const ExecutionSpace& ex,
 // team-level impl
 //
 template <class TeamHandleType, class IteratorType, class Predicate>
-KOKKOS_FUNCTION
-typename IteratorType::difference_type count_if_team_impl(const TeamHandleType& teamHandle,
-							  IteratorType first,
-							  IteratorType last,
-							  Predicate predicate)
-{
+KOKKOS_FUNCTION typename IteratorType::difference_type count_if_team_impl(
+    const TeamHandleType& teamHandle, IteratorType first, IteratorType last,
+    Predicate predicate) {
   // checks
   Impl::static_assert_random_access_and_accessible(teamHandle, first);
   Impl::expect_valid_range(first, last);
@@ -103,7 +100,6 @@ typename IteratorType::difference_type count_if_team_impl(const TeamHandleType& 
 
   return count;
 }
-
 
 }  // namespace Impl
 }  // namespace Experimental

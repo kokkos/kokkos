@@ -62,9 +62,9 @@ struct IsGreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewFromType, class ViewDestType, class MemberType, class UnaryOpType>
-struct TestFunctorA
-{
+template <class ViewFromType, class ViewDestType, class MemberType,
+          class UnaryOpType>
+struct TestFunctorA {
   ViewFromType m_from_view;
   ViewDestType m_dest_view;
   int m_api_pick;
@@ -83,12 +83,13 @@ struct TestFunctorA
         Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto it = KE::copy_if(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
-			    KE::begin(myRowViewDest), UnaryOpType(151));
+      auto it =
+          KE::copy_if(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
+                      KE::begin(myRowViewDest), UnaryOpType(151));
       (void)it;
     } else if (m_api_pick == 1) {
-      auto it = KE::copy_if(member, myRowViewFrom, myRowViewDest,
-			    UnaryOpType(151));
+      auto it =
+          KE::copy_if(member, myRowViewFrom, myRowViewDest, UnaryOpType(151));
       (void)it;
     }
   }
@@ -120,9 +121,8 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
       if (v_dc_h(i, j) > static_cast<ValueType>(151)) {
         rowIndOfTargetElements.push_back(i);
         colIndOfTargetElements.push_back(j);
-	newColIndOfTargetElements.push_back(newColInd++);
-      }
-      else{
+        newColIndOfTargetElements.push_back(newColInd++);
+      } else {
         rowIndOfNonTargetElements.push_back(i);
         colIndOfNonTargetElements.push_back(j);
       }
@@ -162,7 +162,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
 
   for (std::size_t i = 0; i < v2_h.extent(0); ++i) {
     const auto thiscount = countPerRow[i];
-    for (std::size_t j = thiscount; j<v2_h.extent(1); ++j) {
+    for (std::size_t j = thiscount; j < v2_h.extent(1); ++j) {
       EXPECT_TRUE(v2_h(i, j) == static_cast<ValueType>(0));
     }
   }

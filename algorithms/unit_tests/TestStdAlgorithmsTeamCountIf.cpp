@@ -62,9 +62,9 @@ struct IsGreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewFromType, class ViewDestType, class MemberType, class UnaryOpType>
-struct TestFunctorA
-{
+template <class ViewFromType, class ViewDestType, class MemberType,
+          class UnaryOpType>
+struct TestFunctorA {
   ViewFromType m_from_view;
   ViewDestType m_dest_view;
   int m_api_pick;
@@ -81,8 +81,8 @@ struct TestFunctorA
         Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto count = KE::count_if(member, KE::begin(myRowViewFrom),
-				KE::end(myRowViewFrom), UnaryOpType(151));
+      auto count              = KE::count_if(member, KE::begin(myRowViewFrom),
+                                KE::end(myRowViewFrom), UnaryOpType(151));
       m_dest_view(myRowIndex) = count;
 
     } else if (m_api_pick == 1) {
@@ -110,7 +110,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_dc_h.extent(1); ++j) {
       if (v_dc_h(i, j) > static_cast<ValueType>(151)) {
-	countForEachRow[i]++;
+        countForEachRow[i]++;
       }
     }
   }
@@ -126,9 +126,10 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   using team_member_type = typename policy_type::member_type;
   policy_type policy(num_teams, Kokkos::AUTO());
 
-  auto v2 = create_view<int>(DynamicTag{}, num_teams, "v2");
+  auto v2     = create_view<int>(DynamicTag{}, num_teams, "v2");
   using bop_t = IsGreaterThanValueFunctor<ValueType>;
-  using functor_type = TestFunctorA<decltype(v), decltype(v2), team_member_type, bop_t>;
+  using functor_type =
+      TestFunctorA<decltype(v), decltype(v2), team_member_type, bop_t>;
   functor_type fnc(v, v2, apiId);
   Kokkos::parallel_for(policy, fnc);
 
