@@ -77,6 +77,34 @@ auto count_impl(const std::string& label, const ExecutionSpace& ex,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
 }
 
+//
+// team-level impl
+//
+template <class TeamHandleType, class IteratorType, class Predicate>
+KOKKOS_FUNCTION
+typename IteratorType::difference_type count_if_team_impl(const TeamHandleType& teamHandle,
+							  IteratorType first,
+							  IteratorType last,
+							  Predicate predicate)
+{
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  // aliases
+  using func_t = StdCountIfFunctor<IteratorType, Predicate>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  typename IteratorType::difference_type count = 0;
+  ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, 0, num_elements),
+                            func_t(first, predicate), count);
+  teamHandle.team_barrier();
+
+  return count;
+}
+
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
