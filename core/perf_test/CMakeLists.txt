@@ -202,10 +202,10 @@ ENDFUNCTION()
 SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
-  Benchmark_Sample.cpp
+  Benchmark_ViewCopy.cpp
 )
 
 KOKKOS_ADD_BENCHMARK(
-  PerformanceTest_SampleBenchmark
+  PerformanceTest_Benchmark
   SOURCES ${BENCHMARK_SOURCES}
 )
