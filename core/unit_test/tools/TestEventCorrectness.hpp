@@ -310,7 +310,7 @@ TEST(kokkosp, test_streams) {
 #endif
 /** FIXME_OPENMPTARGET: OpenMPTarget currently has unexpected fences */
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
-//FIXME_OPENACC
+// FIXME_OPENACC
 #ifndef KOKKOS_ENABLE_OPENACC
 TEST(kokkosp, async_deep_copy) {
   using namespace Kokkos::Test::Tools;
