@@ -150,7 +150,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same<typename TEST_EXECSPACE::memory_space,
                    Kokkos::CudaUVMSpace>::value)
-    return;
+    GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
 #endif
 
   using namespace Kokkos::Test::Tools;
@@ -239,11 +239,12 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same<typename TEST_EXECSPACE::memory_space,
                    Kokkos::CudaUVMSpace>::value)
-    return;
+    GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
 #endif
 // FIXME_THREADS The Threads backend fences every parallel_for
 #ifdef KOKKOS_ENABLE_THREADS
-  if (std::is_same<typename TEST_EXECSPACE, Kokkos::Threads>::value) return;
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Threads>::value)
+    GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
 
   using namespace Kokkos::Test::Tools;
@@ -375,7 +376,12 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same<typename TEST_EXECSPACE::memory_space,
                    Kokkos::CudaUVMSpace>::value)
-    return;
+    GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
+#endif
+// FIXME_THREADS The Threads backend fences every parallel_for
+#ifdef KOKKOS_ENABLE_THREADS
+  if (std::is_same<typename TEST_EXECSPACE, Kokkos::Threads>::value)
+    GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
 
   using namespace Kokkos::Test::Tools;

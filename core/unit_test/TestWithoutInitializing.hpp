@@ -103,7 +103,7 @@ TEST(TEST_CATEGORY, realloc_exec_space) {
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same<typename TEST_EXECSPACE::memory_space,
                    Kokkos::CudaUVMSpace>::value)
-    return;
+    GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
 #endif
 
   using namespace Kokkos::Test::Tools;
