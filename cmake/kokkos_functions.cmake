@@ -631,11 +631,16 @@ ENDMACRO()
 #
 #   ``LIBRARY <name>``
 #
-#     If specified, this gives the name of the library to look for
+#     If specified, this gives the name of the library to look for.
+#     The full path for the library found will be used as IMPORTED_LOCATION
+#     for the target created. Thus, this cannot be used for interface libraries.
 #
 #   ``LIBRARIES <name1> <name2> ...``
 #
-#     If specified, this gives a list of libraries to find for the package
+#     If specified, this gives a list of libraries to find for the package.
+#     As opposed to the LIBRARY argument, this can be used with interface
+#     libraries. In that case, we directly use the names provided here
+#     for linking when creating the new target.
 #
 #   ``LIBRARY_PATHS <path1> <path2> ...``
 #
