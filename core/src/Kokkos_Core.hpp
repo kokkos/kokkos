@@ -45,8 +45,8 @@
 #ifndef KOKKOS_CORE_HPP
 #define KOKKOS_CORE_HPP
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #define KOKKOS_IMPL_PUBLIC_INCLUDE
-  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
 #endif
 
 //----------------------------------------------------------------------------
@@ -354,7 +354,7 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 //----------------------------------------------------------------------------
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
-  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
 #endif
 #endif

@@ -45,8 +45,8 @@
 #ifndef KOKKOS_MACROS_HPP
 #define KOKKOS_MACROS_HPP
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #define KOKKOS_IMPL_PUBLIC_INCLUDE
-  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
 #endif
 
 //----------------------------------------------------------------------------
@@ -673,7 +673,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
-  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MACROS
 #endif
 #endif  // #ifndef KOKKOS_MACROS_HPP

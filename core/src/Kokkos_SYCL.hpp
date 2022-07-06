@@ -43,11 +43,12 @@
 */
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static_assert(false, "Including non-public Kokkos header files is not allowed.");
-  #else
-  KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is deprecated.")
-  #endif
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#else
+KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is deprecated.")
+#endif
 #endif
 #ifndef KOKKOS_SYCL_HPP
 #define KOKKOS_SYCL_HPP
