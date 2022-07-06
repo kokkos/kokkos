@@ -47,7 +47,6 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_THREADS)
 
 #include <cstdint>
 #include <limits>
@@ -852,8 +851,3 @@ constexpr DeviceType DeviceTypeTraits<Threads>::id;
 #endif
 
 } /* namespace Kokkos */
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-#else
-void KOKKOS_CORE_SRC_THREADS_EXEC_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_THREADS ) */

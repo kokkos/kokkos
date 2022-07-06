@@ -46,7 +46,6 @@
 #define KOKKOS_THREADSEXEC_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_THREADS)
 
 #include <cstdio>
 
@@ -747,5 +746,4 @@ class UniqueToken<Threads, UniqueTokenScope::Global> {
 }  // namespace Kokkos
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-#endif
 #endif /* #define KOKKOS_THREADSEXEC_HPP */
