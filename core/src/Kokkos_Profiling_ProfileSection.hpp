@@ -42,15 +42,12 @@
  //@HEADER
  */
 
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static_assert(false, "Including non-public Kokkos header files is not allowed.");
-  #else
-  KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is deprecated.")
-  #endif
-#endif
 #ifndef KOKKOSP_PROFILE_SECTION_HPP
 #define KOKKOSP_PROFILE_SECTION_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_PROFILING_PROFILESECTION
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -110,4 +107,8 @@ class ProfilingSection {
 }  // namespace Profiling
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PROFILING_PROFILESECTION
+#endif
 #endif

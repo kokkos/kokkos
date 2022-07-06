@@ -47,8 +47,6 @@
 #include <Kokkos_Core.hpp>
 #include <type_traits>
 #include <limits>
-#include "Kokkos_NumericTraits.hpp"
-#include "Kokkos_ExecPolicy.hpp"
 
 struct extrema {
 #define DEFINE_EXTREMA(T, m, M)                 \

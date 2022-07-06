@@ -41,15 +41,12 @@
 // ************************************************************************
 //@HEADER
 */
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-  #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static_assert(false, "Including non-public Kokkos header files is not allowed.");
-  #else
-  KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is deprecated.")
-  #endif
-#endif
 #ifndef KOKKOS_DETECTION_IDIOM_HPP
 #define KOKKOS_DETECTION_IDIOM_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE
+  #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
+#endif
 
 #include <impl/Kokkos_Utilities.hpp>  // void_t
 #include <type_traits>
@@ -120,4 +117,8 @@ inline constexpr bool is_detected_convertible_v =
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE
+  #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
+#endif
 #endif
