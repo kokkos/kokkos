@@ -105,6 +105,45 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
   listen_tool_events(Config::DisableAll());
 }
 
+TEST(TEST_CATEGORY, resize_exec_space_dualview) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences(),
+                     Config::EnableKernels());
+  Kokkos::DualView<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6,
+                                                              5);
+
+  auto success = validate_absence(
+      [&]() {
+        Kokkos::resize(
+            Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
+            bla, 5, 6, 7, 8);
+      },
+      [&](BeginFenceEvent event) {
+        if (event.descriptor().find("Kokkos::resize(View)") !=
+            std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndFenceEvent event) {
+        if (event.descriptor().find("Kokkos::resize(View)") !=
+            std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](BeginParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
 TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -114,6 +153,44 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+      },
+      [&](BeginParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, resize_exec_space_dynrankview) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences(),
+                     Config::EnableKernels());
+  Kokkos::DynRankView<int, TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
+
+  auto success = validate_absence(
+      [&]() {
+        Kokkos::resize(
+            Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
+            bla, 5, 6, 7, 8);
+      },
+      [&](BeginFenceEvent event) {
+        if (event.descriptor().find("Kokkos::resize(View)") !=
+            std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndFenceEvent event) {
+        if (event.descriptor().find("Kokkos::resize(View)") !=
+            std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -179,6 +256,46 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_scatterview) {
       },
       [&](DeallocateDataEvent) {
         return MatchDiagnostic{true, {"Found dealloc event"}};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, resize_exec_space_scatterview) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences(),
+                     Config::EnableKernels());
+  Kokkos::Experimental::ScatterView<
+      int*** * [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      bla("bla", 7, 6, 5, 4);
+
+  auto success = validate_absence(
+      [&]() {
+        Kokkos::resize(
+            Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
+            bla, 5, 6, 7, 8);
+      },
+      [&](BeginFenceEvent event) {
+        if (event.descriptor().find("Kokkos::resize(View)") !=
+            std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndFenceEvent event) {
+        if (event.descriptor().find("Kokkos::resize(View)") !=
+            std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](BeginParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{false};
+      },
+      [&](EndParallelForEvent event) {
+        if (event.descriptor().find("initialization") != std::string::npos)
+          return MatchDiagnostic{true, {"Found end event"}};
+        return MatchDiagnostic{false};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());

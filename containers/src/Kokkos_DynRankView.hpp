@@ -1636,6 +1636,24 @@ struct DynRankViewRemap {
   const size_t n6;
   const size_t n7;
 
+  DynRankViewRemap(const ExecSpace& exec_space, const OutputView& arg_out,
+                   const InputView& arg_in)
+      : output(arg_out),
+        input(arg_in),
+        n0(std::min((size_t)arg_out.extent(0), (size_t)arg_in.extent(0))),
+        n1(std::min((size_t)arg_out.extent(1), (size_t)arg_in.extent(1))),
+        n2(std::min((size_t)arg_out.extent(2), (size_t)arg_in.extent(2))),
+        n3(std::min((size_t)arg_out.extent(3), (size_t)arg_in.extent(3))),
+        n4(std::min((size_t)arg_out.extent(4), (size_t)arg_in.extent(4))),
+        n5(std::min((size_t)arg_out.extent(5), (size_t)arg_in.extent(5))),
+        n6(std::min((size_t)arg_out.extent(6), (size_t)arg_in.extent(6))),
+        n7(std::min((size_t)arg_out.extent(7), (size_t)arg_in.extent(7))) {
+    using Policy = Kokkos::RangePolicy<ExecSpace>;
+
+    Kokkos::parallel_for("Kokkos::DynRankViewRemap", Policy(exec_space, 0, n0),
+                         *this);
+  }
+
   DynRankViewRemap(const OutputView& arg_out, const InputView& arg_in)
       : output(arg_out),
         input(arg_in),
@@ -2085,20 +2103,47 @@ create_mirror_view_and_copy(
 namespace Kokkos {
 /** \brief  Resize a view with copying old data to new data at the corresponding
  * indices. */
-template <class... I, class T, class... P>
-inline void impl_resize(DynRankView<T, P...>& v, const size_t n0,
+template <class... ViewCtorArgs, class T, class... P>
+inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+                        DynRankView<T, P...>& v, const size_t n0,
                         const size_t n1, const size_t n2, const size_t n3,
                         const size_t n4, const size_t n5, const size_t n6,
-                        const size_t n7, const I&... arg_prop) {
-  using drview_type = DynRankView<T, P...>;
+                        const size_t n7) {
+  using drview_type      = DynRankView<T, P...>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::resize "
+                "must not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::resize must "
+                "not include a memory space instance!");
 
-  drview_type v_resized(view_alloc(v.label(), arg_prop...), n0, n1, n2, n3, n4,
-                        n5, n6, n7);
+  // Add execution space here to avoid the need for if constexpr below
+  using alloc_prop = Impl::ViewCtorProp<
+      ViewCtorArgs..., std::string,
+      std::conditional_t<alloc_prop_input::has_execution_space,
+                         std::integral_constant<unsigned int, 10>,
+                         typename drview_type::execution_space>>;
+  alloc_prop prop_copy(arg_prop);
+  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
+      v.label();
 
-  Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
+  drview_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+
+  if (alloc_prop_input::has_execution_space)
+    Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
+        static_cast<const Impl::ViewCtorProp<
+            void, typename alloc_prop::execution_space>&>(prop_copy)
+            .value,
+        v_resized, v);
+  else
+    Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
 
   v = v_resized;
 }
@@ -2113,7 +2158,21 @@ inline void resize(DynRankView<T, P...>& v,
                    const size_t n5 = KOKKOS_INVALID_INDEX,
                    const size_t n6 = KOKKOS_INVALID_INDEX,
                    const size_t n7 = KOKKOS_INVALID_INDEX) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7);
+  impl_resize(Impl::ViewCtorProp<>{}, v, n0, n1, n2, n3, n4, n5, n6, n7);
+}
+
+template <class... ViewCtorArgs, class T, class... P>
+void resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+            DynRankView<T, P...>& v,
+            const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+  impl_resize(arg_prop, v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 template <class I, class T, class... P>
@@ -2127,7 +2186,7 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> resize(
     const size_t n5 = KOKKOS_INVALID_INDEX,
     const size_t n6 = KOKKOS_INVALID_INDEX,
     const size_t n7 = KOKKOS_INVALID_INDEX) {
-  impl_resize(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+  impl_resize(Kokkos::view_alloc(arg_prop), v, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 /** \brief  Resize a view with copying old data to new data at the corresponding
