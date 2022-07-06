@@ -46,6 +46,7 @@
 
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_View.hpp>
 
 namespace Test {
 template <class DeviceType>

@@ -48,6 +48,8 @@
 #include <algorithm>
 #include <initializer_list>
 #include <type_traits>
+#include "Kokkos_ExecPolicy.hpp"
+#include "Kokkos_Parallel_Reduce.hpp"
 
 #include <cfloat>
 

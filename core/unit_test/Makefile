@@ -25,7 +25,7 @@ else
   CXX = g++
 endif
 
-CXXFLAGS = -O3
+CXXFLAGS = -O3 -DKOKKOS_IMPL_PUBLIC_INCLUDE
 LINK ?= $(CXX)
 LDFLAGS ?=
 override LDFLAGS += -lpthread
