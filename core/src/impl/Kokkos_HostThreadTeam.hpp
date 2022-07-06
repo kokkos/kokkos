@@ -741,6 +741,103 @@ ThreadVectorRange(
       member, iType(arg_begin), iType(arg_end));
 }
 
+template <
+    Kokkos::Iterate Direction, typename Member, typename... Ns,
+    typename = std::enable_if_t<Impl::is_thread_team_member<Member>::value>>
+KOKKOS_INLINE_FUNCTION auto MDTeamThreadRange(Member const& member,
+                                              Ns&&... ns) {
+  using execution_space = typename Member::execution_space;
+  using array_layout    = typename execution_space::array_layout;
+  static constexpr Kokkos::Iterate outer_direction =
+      Direction == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : Direction;
+  using iType = std::common_type_t<Ns...>;
+
+  return Impl::MDTeamThreadRangeBoundariesStruct<outer_direction, sizeof...(ns),
+                                                 iType, Member>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
+template <
+    typename Member, typename... Ns,
+    typename = std::enable_if_t<Impl::is_thread_team_member<Member>::value>>
+KOKKOS_INLINE_FUNCTION auto MDTeamThreadRange(Member const& member,
+                                              Ns&&... ns) {
+  return MDTeamThreadRange<Kokkos::Iterate::Default>(member,
+                                                     static_cast<Ns&&>(ns)...);
+}
+
+template <
+    Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+    typename Member, typename... Ns,
+    typename = std::enable_if_t<Impl::is_thread_team_member<Member>::value>>
+KOKKOS_INLINE_FUNCTION auto MDThreadVectorRange(Member const& member,
+                                                Ns&&... ns) {
+  using execution_space = typename Member::execution_space;
+  using array_layout    = typename execution_space::array_layout;
+  static constexpr Kokkos::Iterate outer_direction =
+      OuterDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : OuterDirection;
+  static constexpr Kokkos::Iterate inner_direction =
+      InnerDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::inner_iteration_pattern
+          : InnerDirection;
+  using iType = std::common_type_t<Ns...>;
+
+  return Impl::MDThreadVectorRangeBoundariesStruct<
+      outer_direction, inner_direction, sizeof...(ns), iType, Member>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
+template <
+    typename Member, typename... Ns,
+    typename = std::enable_if_t<Impl::is_thread_team_member<Member>::value>>
+KOKKOS_INLINE_FUNCTION auto MDThreadVectorRange(Member const& member,
+                                                Ns&&... ns) {
+  return MDThreadVectorRange<Kokkos::Iterate::Default,
+                             Kokkos::Iterate::Default>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
+template <
+    Kokkos::Iterate OuterDirection, Kokkos::Iterate InnerDirection,
+    typename Member, typename... Ns,
+    typename = std::enable_if_t<Impl::is_thread_team_member<Member>::value>>
+KOKKOS_INLINE_FUNCTION auto MDTeamVectorRange(Member const& member,
+                                              Ns&&... ns) {
+  using execution_space = typename Member::execution_space;
+  using array_layout    = typename execution_space::array_layout;
+  static constexpr Kokkos::Iterate outer_direction =
+      OuterDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::outer_iteration_pattern
+          : OuterDirection;
+  static constexpr Kokkos::Iterate inner_direction =
+      InnerDirection == Kokkos::Iterate::Default
+          ? Kokkos::layout_iterate_type_selector<
+                array_layout>::inner_iteration_pattern
+          : InnerDirection;
+  using iType = std::common_type_t<Ns...>;
+
+  return Impl::MDTeamVectorRangeBoundariesStruct<
+      outer_direction, inner_direction, sizeof...(ns), iType, Member>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
+template <
+    typename Member, typename... Ns,
+    typename = std::enable_if_t<Impl::is_thread_team_member<Member>::value>>
+KOKKOS_INLINE_FUNCTION auto MDTeamVectorRange(Member const& member,
+                                              Ns&&... ns) {
+  return MDTeamVectorRange<Kokkos::Iterate::Default, Kokkos::Iterate::Default>(
+      member, static_cast<Ns&&>(ns)...);
+}
+
 //----------------------------------------------------------------------------
 /** \brief  Inter-thread parallel_for.
  *
