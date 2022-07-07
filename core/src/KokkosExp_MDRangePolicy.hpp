@@ -48,7 +48,7 @@
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is deprecated.")
+KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #endif
 #endif
 #ifndef KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
