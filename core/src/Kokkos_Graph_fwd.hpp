@@ -42,17 +42,12 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
-static_assert(false,
-              "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
-#endif
 #ifndef KOKKOS_KOKKOS_GRAPH_FWD_HPP
 #define KOKKOS_KOKKOS_GRAPH_FWD_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH_FWD
+#endif
 
 #include <Kokkos_Macros.hpp>
 
@@ -71,4 +66,8 @@ class GraphNodeRef;
 }  // end namespace Experimental
 }  // end namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH_FWD
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH_FWD
+#endif
 #endif  // KOKKOS_KOKKOS_GRAPH_FWD_HPP
