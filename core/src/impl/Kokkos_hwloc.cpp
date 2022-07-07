@@ -42,7 +42,9 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
 #define DEBUG_PRINT 0
 
 #include <iostream>

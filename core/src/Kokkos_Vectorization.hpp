@@ -45,6 +45,7 @@
 /// \file Kokkos_Vectorization.hpp
 /// \brief Declaration and definition of Kokkos::Vectorization interface.
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");

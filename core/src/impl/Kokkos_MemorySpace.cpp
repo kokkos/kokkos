@@ -47,7 +47,9 @@
  *  implementations thereof.
  */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
 #include <impl/Kokkos_MemorySpace.hpp>
 
 #include <iostream>

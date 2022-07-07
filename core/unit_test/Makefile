@@ -25,14 +25,14 @@ else
   CXX = g++
 endif
 
-CXXFLAGS = -O3 -DKOKKOS_IMPL_PUBLIC_INCLUDE
+CXXFLAGS = -O3
 LINK ?= $(CXX)
 LDFLAGS ?=
 override LDFLAGS += -lpthread
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
-KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test -I${KOKKOS_PATH}/core/unit_test/category_files
+KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test -I${KOKKOS_PATH}/core/unit_test/category_files -DKOKKOS_IMPL_PUBLIC_INCLUDE
 
 TEST_TARGETS =
 TARGETS =
@@ -509,7 +509,7 @@ test-push-finalize-hook: KokkosCore_UnitTest_PushFinalizeHook
 
 test-push-finalize-hook-terminate: KokkosCore_UnitTest_PushFinalizeHook_terminate
 	./KokkosCore_UnitTest_PushFinalizeHook_terminate
-	
+
 test-stack-trace: KokkosCore_UnitTest_StackTraceTestExec
 	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*normal$(STACK_TRACE_TERMINATE_FILTER)
 
