@@ -123,6 +123,63 @@ OutputIterator transform_impl(const std::string& label,
   return d_first + num_elements;
 }
 
+//
+// team-level impl
+//
+
+template <class TeamHandleType, class InputIterator, class OutputIterator,
+          class UnaryOperation>
+KOKKOS_FUNCTION OutputIterator transform_team_impl(
+    const TeamHandleType& teamHandle, InputIterator first1, InputIterator last1,
+    OutputIterator d_first, UnaryOperation unary_op) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first1, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, d_first);
+  Impl::expect_valid_range(first1, last1);
+
+  // aliases
+  using index_type = typename InputIterator::difference_type;
+  using func_t = StdTransformFunctor<index_type, InputIterator, OutputIterator,
+                                     UnaryOperation>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first1, last1);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         func_t(first1, d_first, unary_op));
+  teamHandle.team_barrier();
+
+  // return
+  return d_first + num_elements;
+}
+
+template <class TeamHandleType, class InputIterator1, class InputIterator2,
+          class OutputIterator, class BinaryOperation>
+KOKKOS_FUNCTION OutputIterator
+transform_team_impl(const TeamHandleType& teamHandle, InputIterator1 first1,
+                    InputIterator1 last1, InputIterator2 first2,
+                    OutputIterator d_first, BinaryOperation binary_op) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first1, first2,
+                                                   d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first1, first2,
+                                                              d_first);
+  Impl::expect_valid_range(first1, last1);
+
+  // aliases
+  using index_type = typename InputIterator1::difference_type;
+  using func_t =
+      StdTransformBinaryFunctor<index_type, InputIterator1, InputIterator2,
+                                OutputIterator, BinaryOperation>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first1, last1);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         func_t(first1, first2, d_first, binary_op));
+  teamHandle.team_barrier();
+
+  return d_first + num_elements;
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
