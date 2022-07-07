@@ -45,6 +45,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
+
 #ifndef KOKKOS_TOOLS_INDEPENDENT_BUILD
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>

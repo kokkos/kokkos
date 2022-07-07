@@ -48,6 +48,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
+
 #include <Kokkos_Core.hpp>
 
 #include <HIP/Kokkos_HIP_Instance.hpp>

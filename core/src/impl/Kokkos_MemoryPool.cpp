@@ -45,6 +45,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
+
 #include <impl/Kokkos_Error.hpp>
 
 #include <ostream>

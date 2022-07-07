@@ -45,6 +45,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
+
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Core.hpp>
