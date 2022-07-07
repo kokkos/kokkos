@@ -212,6 +212,10 @@ TEST(TEST_CATEGORY, minmax) {
   EXPECT_EQ(r2.first, 2);
   EXPECT_EQ(r2.second, 3);
 
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC nvhpc can't deal with device side
+                               // constexpr constructors so I removed the
+                               // constexpr in pair, which makes STATIC_ASSERT
+                               // here fail
   STATIC_ASSERT((Kokkos::pair<float, float>(KE::minmax(3.f, 2.f)) ==
                  Kokkos::make_pair(2.f, 3.f)));
   STATIC_ASSERT(
@@ -242,6 +246,7 @@ TEST(TEST_CATEGORY, minmax) {
                                ::Test::PairIntCompareFirst{0, 5},
                            })
                     .second.second == 4);  // rightmost
+#endif
 }
 
 template <class ViewType>
