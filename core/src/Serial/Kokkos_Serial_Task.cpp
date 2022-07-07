@@ -43,11 +43,11 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_SERIAL) && defined(KOKKOS_ENABLE_TASKDAG)
+#if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_Core.hpp>
 
-#include <impl/Kokkos_Serial_Task.hpp>
+#include <Serial/Kokkos_Serial_Task.hpp>
 #include <impl/Kokkos_TaskQueue_impl.hpp>
 
 //----------------------------------------------------------------------------
@@ -63,5 +63,4 @@ template class TaskQueue<Kokkos::Serial, typename Kokkos::Serial::memory_space>;
 
 #else
 void KOKKOS_CORE_SRC_IMPL_SERIAL_TASK_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_SERIAL ) && defined( \
-          KOKKOS_ENABLE_TASKDAG ) */
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
