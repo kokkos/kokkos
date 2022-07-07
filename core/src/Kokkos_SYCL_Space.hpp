@@ -74,6 +74,11 @@ class SYCLDeviceUSMSpace {
   SYCLDeviceUSMSpace();
   explicit SYCLDeviceUSMSpace(sycl::queue queue);
 
+  void* allocate(const SYCL& exec_space,
+                 const std::size_t arg_alloc_size) const;
+  void* allocate(const SYCL& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const std::size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -105,6 +110,11 @@ class SYCLSharedUSMSpace {
   SYCLSharedUSMSpace();
   explicit SYCLSharedUSMSpace(sycl::queue queue);
 
+  void* allocate(const SYCL& exec_space,
+                 const std::size_t arg_alloc_size) const;
+  void* allocate(const SYCL& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const std::size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -136,6 +146,11 @@ class SYCLHostUSMSpace {
   SYCLHostUSMSpace();
   explicit SYCLHostUSMSpace(sycl::queue queue);
 
+  void* allocate(const SYCL& exec_space,
+                 const std::size_t arg_alloc_size) const;
+  void* allocate(const SYCL& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const std::size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -347,6 +362,21 @@ class SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>
  protected:
   ~SharedAllocationRecord();
 
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
+
+  SharedAllocationRecord(
+      const Kokkos::Experimental::SYCL& exec_space,
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
   SharedAllocationRecord(
       const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
@@ -378,6 +408,21 @@ class SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>
 
   SharedAllocationRecord() = default;
 
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::Experimental::SYCLSharedUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
+
+  SharedAllocationRecord(
+      const Kokkos::Experimental::SYCL& exec_space,
+      const Kokkos::Experimental::SYCLSharedUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
   SharedAllocationRecord(
       const Kokkos::Experimental::SYCLSharedUSMSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
@@ -408,6 +453,21 @@ class SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>
   ~SharedAllocationRecord();
 
   SharedAllocationRecord() = default;
+
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::Experimental::SYCLHostUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
+
+  SharedAllocationRecord(
+      const Kokkos::Experimental::SYCL& exec_space,
+      const Kokkos::Experimental::SYCLHostUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 
   SharedAllocationRecord(
       const Kokkos::Experimental::SYCLHostUSMSpace& arg_space,

@@ -556,6 +556,21 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
  protected:
   ~SharedAllocationRecord();
 
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec*/,
+      const Kokkos::Experimental::HIPSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
+
+  SharedAllocationRecord(
+      const Kokkos::Experimental::HIP& exec_space,
+      const Kokkos::Experimental::HIPSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
@@ -586,6 +601,15 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
+
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
@@ -615,6 +639,15 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPManagedSpace, void>
  protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
+
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::Experimental::HIPManagedSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
 
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPManagedSpace& arg_space,
