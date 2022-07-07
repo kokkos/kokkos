@@ -374,12 +374,21 @@ class ViewMapping<Traits, Kokkos::Array<>> {
         static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const &>(
             arg_prop)
             .value;
-    // Allocate memory from the memory space and create tracking record.
-    record_type *const record = record_type::allocate(
+    const execution_space &exec_space =
+        static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const &>(
+            arg_prop)
+            .value;
+    const memory_space &mem_space =
         static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const &>(
             arg_prop)
-            .value,
-        alloc_name, alloc_size);
+            .value;
+
+    // Allocate memory from the memory space and create tracking record.
+    record_type *const record =
+        execution_space_specified
+            ? record_type::allocate(exec_space, mem_space, alloc_name,
+                                    alloc_size)
+            : record_type::allocate(mem_space, alloc_name, alloc_size);
 
     if (alloc_size) {
       m_impl_handle =
@@ -387,18 +396,12 @@ class ViewMapping<Traits, Kokkos::Array<>> {
 
       if (alloc_prop::initialize) {
         // The functor constructs and destroys
-        if (execution_space_specified)
-          record->m_destroy = functor_type(
-              static_cast<
-                  Kokkos::Impl::ViewCtorProp<void, execution_space> const &>(
-                  arg_prop)
-                  .value,
-              (pointer_type)m_impl_handle, m_impl_offset.span() * Array_N,
-              alloc_name);
-        else
-          record->m_destroy =
-              functor_type((pointer_type)m_impl_handle,
-                           m_impl_offset.span() * Array_N, alloc_name);
+        record->m_destroy =
+            execution_space_specified
+                ? functor_type(exec_space, (pointer_type)m_impl_handle,
+                               m_impl_offset.span() * Array_N, alloc_name)
+                : functor_type((pointer_type)m_impl_handle,
+                               m_impl_offset.span() * Array_N, alloc_name);
 
         record->m_destroy.construct_shared_allocation();
       }

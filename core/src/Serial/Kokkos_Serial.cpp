@@ -43,7 +43,6 @@
 */
 
 #include <Kokkos_Core.hpp>
-#if defined(KOKKOS_ENABLE_SERIAL)
 
 #include <cstdlib>
 #include <sstream>
@@ -243,7 +242,3 @@ constexpr DeviceType DeviceTypeTraits<Serial>::id;
 #endif
 
 }  // namespace Kokkos
-
-#else
-void KOKKOS_CORE_SRC_IMPL_SERIAL_PREVENT_LINK_ERROR() {}
-#endif  // defined( KOKKOS_ENABLE_SERIAL )
