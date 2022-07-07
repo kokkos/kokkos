@@ -96,7 +96,7 @@ struct ViewCtorProp<void> {};
 /* Common value_type stored as ViewCtorProp
  */
 template <typename Specialize, typename T>
-struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T> > {
+struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
@@ -116,7 +116,7 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T> > {
  *  that avoid duplicate base class errors
  */
 template <unsigned I>
-struct ViewCtorProp<void, std::integral_constant<unsigned, I> > {
+struct ViewCtorProp<void, std::integral_constant<unsigned, I>> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
@@ -139,7 +139,7 @@ struct ViewCtorProp<
 
   ViewCtorProp(const type &) {}
 
-  static constexpr type value = type();
+  type value = type();
 };
 
 /* Map input label type to std::string */
