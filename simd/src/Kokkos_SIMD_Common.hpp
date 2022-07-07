@@ -166,7 +166,7 @@ template <class T, class U, class Abi,
     Experimental::simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] + rhs);
   return Experimental::simd<result_member, Abi>(lhs) +
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
@@ -175,12 +175,12 @@ template <class T, class U, class Abi,
     U lhs, Experimental::simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs + rhs[0]);
   return Experimental::simd<result_member, Abi>(lhs) +
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator+=(
-    simd<T, Abi>& lhs, U&& rhs) {
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator+=(simd<T, Abi>& lhs,
+                                                     U&& rhs) {
   lhs = lhs + std::forward<U>(rhs);
   return lhs;
 }
@@ -198,7 +198,7 @@ template <class T, class U, class Abi,
     Experimental::simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] - rhs);
   return Experimental::simd<result_member, Abi>(lhs) -
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
@@ -207,12 +207,12 @@ template <class T, class U, class Abi,
     U lhs, Experimental::simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs - rhs[0]);
   return Experimental::simd<result_member, Abi>(lhs) -
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator-=(
-    simd<T, Abi>& lhs, U&& rhs) {
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator-=(simd<T, Abi>& lhs,
+                                                     U&& rhs) {
   lhs = lhs - std::forward<U>(rhs);
   return lhs;
 }
@@ -230,7 +230,7 @@ template <class T, class U, class Abi,
     Experimental::simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] * rhs);
   return Experimental::simd<result_member, Abi>(lhs) *
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
@@ -239,12 +239,12 @@ template <class T, class U, class Abi,
     U lhs, Experimental::simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs * rhs[0]);
   return Experimental::simd<result_member, Abi>(lhs) *
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator*=(
-    simd<T, Abi>& lhs, U&& rhs) {
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator*=(simd<T, Abi>& lhs,
+                                                     U&& rhs) {
   lhs = lhs * std::forward<U>(rhs);
   return lhs;
 }
@@ -262,7 +262,7 @@ template <class T, class U, class Abi,
     Experimental::simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] / rhs);
   return Experimental::simd<result_member, Abi>(lhs) /
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi,
@@ -271,12 +271,12 @@ template <class T, class U, class Abi,
     U lhs, Experimental::simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs / rhs[0]);
   return Experimental::simd<result_member, Abi>(lhs) /
-      Experimental::simd<result_member, Abi>(rhs);
+         Experimental::simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, class Abi>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator/=(
-    simd<T, Abi>& lhs, U&& rhs) {
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator/=(simd<T, Abi>& lhs,
+                                                     U&& rhs) {
   lhs = lhs / std::forward<U>(rhs);
   return lhs;
 }
@@ -331,17 +331,17 @@ template <class T, class Abi>
 // These are not in the Experimental namespace because their double
 // overloads are not either
 
-#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                 \
-template <class Abi>                                                          \
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION                                     \
-Experimental::simd<double, Abi> FUNC(                                         \
-    Experimental::simd<double, Abi> const& a) {                               \
-  Experimental::simd<double, Abi> result;                                     \
-  for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size(); ++i) {      \
-    result[i] = Kokkos::FUNC(a[i]);                                           \
-  }                                                                           \
-  return result;                                                              \
-}
+#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                               \
+  template <class Abi>                                                      \
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::simd<double, Abi> \
+  FUNC(Experimental::simd<double, Abi> const& a) {                          \
+    Experimental::simd<double, Abi> result;                                 \
+    for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size();    \
+         ++i) {                                                             \
+      result[i] = Kokkos::FUNC(a[i]);                                       \
+    }                                                                       \
+    return result;                                                          \
+  }
 
 KOKKOS_IMPL_SIMD_UNARY_FUNCTION(abs)
 KOKKOS_IMPL_SIMD_UNARY_FUNCTION(exp)
@@ -368,18 +368,18 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(erfc)
 KOKKOS_IMPL_SIMD_UNARY_FUNCTION(tgamma)
 KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
 
-#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                                \
-template <class Abi>                                                          \
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION                                     \
-Experimental::simd<double, Abi> FUNC(                                         \
-    Experimental::simd<double, Abi> const& a,                                 \
-    Experimental::simd<double, Abi> const& b) {                               \
-  Experimental::simd<double, Abi> result;                                     \
-  for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size(); ++i) { \
-    result[i] = Kokkos::FUNC(a[i], b[i]);                                     \
-  }                                                                           \
-  return result;                                                              \
-}
+#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                              \
+  template <class Abi>                                                      \
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::simd<double, Abi> \
+  FUNC(Experimental::simd<double, Abi> const& a,                            \
+       Experimental::simd<double, Abi> const& b) {                          \
+    Experimental::simd<double, Abi> result;                                 \
+    for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size();    \
+         ++i) {                                                             \
+      result[i] = Kokkos::FUNC(a[i], b[i]);                                 \
+    }                                                                       \
+    return result;                                                          \
+  }
 
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(min)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(max)
@@ -388,19 +388,19 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(hypot)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(atan2)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
 
-#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                               \
-template <class Abi>                                                          \
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION                                     \
-Experimental::simd<double, Abi> FUNC(                                         \
-    Experimental::simd<double, Abi> const& a,                                 \
-    Experimental::simd<double, Abi> const& b,                                 \
-    Experimental::simd<double, Abi> const& c) {                               \
-  Experimental::simd<double, Abi> result;                                     \
-  for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size(); ++i) { \
-    result[i] = Kokkos::FUNC(a[i], b[i], c[i]);                               \
-  }                                                                           \
-  return result;                                                              \
-}
+#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                             \
+  template <class Abi>                                                      \
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::simd<double, Abi> \
+  FUNC(Experimental::simd<double, Abi> const& a,                            \
+       Experimental::simd<double, Abi> const& b,                            \
+       Experimental::simd<double, Abi> const& c) {                          \
+    Experimental::simd<double, Abi> result;                                 \
+    for (std::size_t i = 0; i < Experimental::simd<double, Abi>::size();    \
+         ++i) {                                                             \
+      result[i] = Kokkos::FUNC(a[i], b[i], c[i]);                           \
+    }                                                                       \
+    return result;                                                          \
+  }
 
 KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(fma)
 KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(hypot)

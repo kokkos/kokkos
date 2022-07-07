@@ -63,21 +63,21 @@ namespace Impl {
 #if defined(KOKKOS_ARCH_AVX512XEON)
 using host_native = avx512_fixed_size<8>;
 #else
-using host_native   = scalar;
+using host_native  = scalar;
 #endif
 
 template <class T>
 struct ForSpace;
 
 #ifdef KOKKOS_ENABLE_SERIAL
-template <> 
+template <>
 struct ForSpace<Kokkos::Serial> {
   using type = host_native;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
-template <> 
+template <>
 struct ForSpace<Kokkos::Cuda> {
   using type = scalar;
 };
@@ -125,7 +125,7 @@ struct ForSpace<Kokkos::Experimental::SYCL> {
 };
 #endif
 
-}
+}  // namespace Impl
 
 template <class Space>
 using ForSpace = typename Impl::ForSpace<typename Space::execution_space>::type;
@@ -135,9 +135,9 @@ using native = ForSpace<Kokkos::DefaultExecutionSpace>;
 
 }  // namespace simd_abi
 
-template<class T>
+template <class T>
 using native_simd = simd<T, simd_abi::native<T>>;
-template<class T>
+template <class T>
 using native_simd_mask = simd_mask<T, simd_abi::native<T>>;
 
 namespace Impl {
@@ -148,12 +148,12 @@ class abi_set {};
 #ifdef KOKKOS_ARCH_AVX512XEON
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>>;
 #else
-using host_abi_set  = abi_set<simd_abi::scalar>;
+using host_abi_set = abi_set<simd_abi::scalar>;
 #endif
 
 using device_abi_set = abi_set<simd_abi::scalar>;
 
-}
+}  // namespace Impl
 
 }  // namespace Experimental
 }  // namespace Kokkos
