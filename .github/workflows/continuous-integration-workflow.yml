@@ -76,6 +76,13 @@ jobs:
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
+# Re-enable when latest is F37+
+#      - name: maybe_use_flang
+#        if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
+#        run: echo "FC=flang" >> $GITHUB_ENV
+      - name: maybe_use_flang_new
+        if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:rawhide') }}
+        run: echo "FC=flang-new" >> $GITHUB_ENV
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
