@@ -42,17 +42,12 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
-static_assert(false,
-              "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is deprecated.")
-#endif
-#endif
 #ifndef KOKKOS_CORE_EXP_INTEROP_HPP
 #define KOKKOS_CORE_EXP_INTEROP_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_INTEROP
+#endif
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Layout.hpp>
@@ -153,4 +148,8 @@ auto as_python_type(Tp&& _v) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_INTEROP
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_INTEROP
+#endif
 #endif
