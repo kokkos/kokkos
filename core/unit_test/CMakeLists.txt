@@ -686,11 +686,14 @@ endif()
 if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestInitializationSettings.cpp
+    TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
   )
 else()
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp
@@ -875,12 +878,14 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                )
 endif()
 
-foreach(INITTESTS_NUM RANGE 1 18)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_DefaultInit_${INITTESTS_NUM}
-  SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
-)
-endforeach(INITTESTS_NUM)
+if(Kokkos_ENABLE_DEPRECATED_CODE_3)
+  foreach(INITTESTS_NUM RANGE 1 18)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_DefaultInit_${INITTESTS_NUM}
+    SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
+  )
+  endforeach(INITTESTS_NUM)
+endif()
 
 if (KOKKOS_ENABLE_HWLOC)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

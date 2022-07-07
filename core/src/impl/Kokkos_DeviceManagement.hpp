@@ -42,26 +42,16 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXEC_SPACE_INITIALIZER_HPP
-#define KOKKOS_EXEC_SPACE_INITIALIZER_HPP
-
-#include <iosfwd>
+#ifndef KOKKOS_DEVICE_MANAGEMENT_HPP
+#define KOKKOS_DEVICE_MANAGEMENT_HPP
 
 namespace Kokkos {
 class InitializationSettings;
 namespace Impl {
-
-class ExecSpaceInitializerBase {
- public:
-  virtual void initialize(const InitializationSettings &settings)        = 0;
-  virtual void finalize(const bool all_spaces)                           = 0;
-  virtual void fence(const std::string &)                                = 0;
-  virtual void print_configuration(std::ostream &msg, const bool detail) = 0;
-  ExecSpaceInitializerBase()          = default;
-  virtual ~ExecSpaceInitializerBase() = default;
-};
-
+int get_gpu(const Kokkos::InitializationSettings& settings);
+// This declaration is provided for testing purposes only
+int get_ctest_gpu(const char* local_rank_str);
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+#endif

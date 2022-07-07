@@ -194,11 +194,12 @@ namespace Impl {
 int g_serial_space_factory_initialized =
     initialize_space_factory<SerialSpaceInitializer>("100_Serial");
 
-void SerialSpaceInitializer::initialize(const InitArguments& args) {
-  // Prevent "unused variable" warning for 'args' input struct.  If
+void SerialSpaceInitializer::initialize(
+    const InitializationSettings& settings) {
+  // Prevent "unused variable" warning for 'settings' input struct.  If
   // Serial::initialize() ever needs to take arguments from the input
   // struct, you may remove this line of code.
-  (void)args;
+  (void)settings;
 
   // Always initialize Serial if it is configure time enabled
   Kokkos::Serial::impl_initialize();

@@ -99,8 +99,7 @@ bool Kokkos::Impl::check_int_arg(char const* arg, char const* expected,
   if (!okay) {
     std::ostringstream ss;
     ss << "Error: expecting an '=INT' after command line argument '" << expected
-       << "'";
-    ss << ". Raised by Kokkos::initialize(int narg, char* argc[]).";
+       << "'. Raised by Kokkos::initialize(int argc, char* argv[]).";
     throw_runtime_exception(ss.str());
   }
   return true;
@@ -117,8 +116,8 @@ bool Kokkos::Impl::check_str_arg(char const* arg, char const* expected,
   if (!okay) {
     std::ostringstream ss;
     ss << "Error: expecting an '=STRING' after command line argument '"
-       << expected << "'";
-    ss << ". Raised by Kokkos::initialize(int narg, char* argc[]).";
+       << expected
+       << "'. Raised by Kokkos::initialize(int argc, char* argv[]).";
     throw_runtime_exception(ss.str());
   }
   return true;
@@ -127,14 +126,14 @@ void Kokkos::Impl::warn_deprecated_environment_variable(
     std::string deprecated) {
   std::cerr << "Warning: environment variable '" << deprecated
             << "' is deprecated."
-            << " Raised by Kokkos::initialize(int narg, char* argc[])."
+            << " Raised by Kokkos::initialize(int argc, char* argv[])."
             << std::endl;
 }
 void Kokkos::Impl::warn_deprecated_command_line_argument(
     std::string deprecated) {
   std::cerr << "Warning: command line argument '" << deprecated
             << "' is deprecated."
-            << " Raised by Kokkos::initialize(int narg, char* argc[])."
+            << " Raised by Kokkos::initialize(int argc, char* argv[])."
             << std::endl;
 }
 void Kokkos::Impl::warn_deprecated_command_line_argument(
@@ -142,6 +141,6 @@ void Kokkos::Impl::warn_deprecated_command_line_argument(
   std::cerr << "Warning: command line argument '" << deprecated
             << "' is deprecated."
             << " Use '" << use_instead << "' instead."
-            << " Raised by Kokkos::initialize(int narg, char* argc[])."
+            << " Raised by Kokkos::initialize(int argc, char* argv[])."
             << std::endl;
 }

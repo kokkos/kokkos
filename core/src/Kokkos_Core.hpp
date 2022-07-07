@@ -71,6 +71,7 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 #include <functional>
 #include <iosfwd>
 #include <map>
@@ -80,48 +81,7 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-
-struct InitArguments {
-  int num_threads;
-  int num_numa;
-  int device_id;
-  int ndevices;
-  int skip_device;
-  bool disable_warnings;
-  bool tune_internals;
-  bool tool_help        = false;
-  std::string tool_lib  = {};
-  std::string tool_args = {};
-
-  InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
-                bool ti = false)
-      : num_threads{nt},
-        num_numa{nn},
-        device_id{dv},
-        ndevices{-1},
-        skip_device{9999},
-        disable_warnings{dw},
-        tune_internals{ti} {}
-  Tools::InitArguments impl_get_tools_init_arguments() const {
-    Tools::InitArguments init_tools;
-    init_tools.tune_internals =
-        tune_internals ? Tools::InitArguments::PossiblyUnsetOption::on
-                       : Tools::InitArguments::PossiblyUnsetOption::unset;
-    init_tools.help = tool_help
-                          ? Tools::InitArguments::PossiblyUnsetOption::on
-                          : Tools::InitArguments::PossiblyUnsetOption::unset;
-    init_tools.lib = tool_lib.empty()
-                         ? Kokkos::Tools::InitArguments::unset_string_option
-                         : tool_lib;
-    init_tools.args = tool_args.empty()
-                          ? Kokkos::Tools::InitArguments::unset_string_option
-                          : tool_args;
-    return init_tools;
-  }
-};
-
 namespace Impl {
-
 /* ExecSpaceManager - Responsible for initializing all of the registered
  * backends. Backends are registered using the register_space_initializer()
  * function which should be called from a global context so that it is called
@@ -136,7 +96,7 @@ class ExecSpaceManager {
 
   void register_space_factory(std::string name,
                               std::unique_ptr<ExecSpaceInitializerBase> ptr);
-  void initialize_spaces(const Kokkos::InitArguments& args);
+  void initialize_spaces(const InitializationSettings& settings);
   void finalize_spaces();
   void static_fence();
   void static_fence(const std::string&);
@@ -153,15 +113,16 @@ int initialize_space_factory(std::string name) {
 }
 
 }  // namespace Impl
-void initialize(int& narg, char* arg[]);
+void initialize(int& argc, char* argv[]);
 
-void initialize(InitArguments args = InitArguments());
+void initialize(
+    InitializationSettings const& settings = InitializationSettings());
 
 namespace Impl {
 
-void pre_initialize(const InitArguments& args);
+void pre_initialize(const InitializationSettings& settings);
 
-void post_initialize(const InitArguments& args);
+void post_initialize(const InitializationSettings& settings);
 
 void declare_configuration_metadata(const std::string& category,
                                     const std::string& key,
@@ -264,18 +225,19 @@ namespace Kokkos {
 
 class ScopeGuard {
  public:
-  ScopeGuard(int& narg, char* arg[]) {
+  ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
     if (!Kokkos::is_initialized()) {
-      initialize(narg, arg);
+      initialize(argc, argv);
       sg_init = true;
     }
   }
 
-  ScopeGuard(const InitArguments& args = InitArguments()) {
+  ScopeGuard(
+      const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
     if (!Kokkos::is_initialized()) {
-      initialize(args);
+      initialize(settings);
       sg_init = true;
     }
   }

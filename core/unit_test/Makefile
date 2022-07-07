@@ -409,12 +409,14 @@ TEST_TARGETS += test-stack-trace
 TEST_TARGETS += test-stack-trace-terminate
 TEST_TARGETS += test-stack-trace-generic-term
 
+ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
 NUM_INITTESTS = 16
 INITTESTS_NUMBERS := $(shell seq 1 ${NUM_INITTESTS})
 INITTESTS_TARGETS := $(addprefix KokkosCore_UnitTest_DefaultDeviceTypeInit_,${INITTESTS_NUMBERS})
 TARGETS += ${INITTESTS_TARGETS}
 INITTESTS_TEST_TARGETS := $(addprefix test-default-init-,${INITTESTS_NUMBERS})
 TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
+endif
 
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda
