@@ -161,7 +161,8 @@ int g_openacc_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<OpenACCSpaceInitializer>(
         "170_OpenACC");
 
-void OpenACCSpaceInitializer::initialize(const InitializationSettings& settings) {
+void OpenACCSpaceInitializer::initialize(
+    const InitializationSettings& settings) {
   // Prevent "unused variable" warning for 'setting' input struct.  If
   // Serial::initialize() ever needs to take arguments from the input
   // struct, you may remove this line of code.
