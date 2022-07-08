@@ -197,7 +197,14 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION ViewDimension
   KOKKOS_INLINE_FUNCTION
   constexpr ViewDimension(size_t n0, size_t n1, size_t n2, size_t n3, size_t n4,
                           size_t n5, size_t n6, size_t n7)
-      : D0(n0), D1(n1), D2(n2), D3(n3), D4(n4), D5(n5), D6(n6), D7(n7) {}
+      : D0(n0 == KOKKOS_INVALID_INDEX ? 1 : n0),
+        D1(n1 == KOKKOS_INVALID_INDEX ? 1 : n1),
+        D2(n2 == KOKKOS_INVALID_INDEX ? 1 : n2),
+        D3(n3 == KOKKOS_INVALID_INDEX ? 1 : n3),
+        D4(n4 == KOKKOS_INVALID_INDEX ? 1 : n4),
+        D5(n5 == KOKKOS_INVALID_INDEX ? 1 : n5),
+        D6(n6 == KOKKOS_INVALID_INDEX ? 1 : n6),
+        D7(n7 == KOKKOS_INVALID_INDEX ? 1 : n7) {}
 
   KOKKOS_INLINE_FUNCTION
   constexpr size_t extent(const unsigned r) const noexcept {
@@ -973,8 +980,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank_dynamic;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1256,8 +1270,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank_dynamic;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1600,8 +1621,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank_dynamic;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1882,8 +1910,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank_dynamic;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -2411,10 +2446,15 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_stride.S0, m_dim.N1, m_stride.S1, m_dim.N2,
-                        m_stride.S2, m_dim.N3, m_stride.S3, m_dim.N4,
-                        m_stride.S4, m_dim.N5, m_stride.S5, m_dim.N6,
-                        m_stride.S6, m_dim.N7, m_stride.S7);
+    constexpr auto r = dimension_type::rank_dynamic;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX), m_stride.S0,
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX), m_stride.S1,
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX), m_stride.S2,
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX), m_stride.S3,
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX), m_stride.S4,
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX), m_stride.S5,
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX), m_stride.S6,
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX), m_stride.S7);
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
