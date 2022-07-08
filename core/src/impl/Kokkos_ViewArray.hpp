@@ -158,6 +158,12 @@ class ViewMapping<Traits, Kokkos::Array<>> {
     return m_impl_offset.m_dim.extent(r);
   }
 
+  static KOKKOS_INLINE_FUNCTION constexpr size_t static_extent(
+      const unsigned r) noexcept {
+    using dim_type = typename offset_type::dimension_type;
+    return dim_type::static_extent(r);
+  }
+
   KOKKOS_INLINE_FUNCTION constexpr typename Traits::array_layout layout()
       const {
     return m_impl_offset.layout();

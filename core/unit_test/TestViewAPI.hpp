@@ -1045,7 +1045,7 @@ class TestViewAPI {
 
   static void run_test_contruction_from_layout_2() {
     using dView3_0 = Kokkos::View<T ***, device>;
-    using dView3_1 = Kokkos::View<T * * [N1], device>;
+    using dView3_1 = Kokkos::View<T * * [N2], device>;
     using dView3_2 = Kokkos::View<T * [N1][N2], device>;
     using dView3_3 = Kokkos::View<T[N0][N1][N2], device>;
 
