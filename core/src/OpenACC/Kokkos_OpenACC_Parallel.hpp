@@ -48,7 +48,7 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenACC/Kokkos_OpenACC_Exec.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
+#include <impl/Kokkos_FunctorAnalysis.hpp>
 
 #define KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 
@@ -521,15 +521,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-
-  using value_type   = typename ValueTraits::value_type;
-  using pointer_type = typename ValueTraits::pointer_type;
-
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
+  using value_type   = typename Analysis::value_type;
+  using pointer_type = typename Analysis::pointer_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -552,7 +547,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     const FunctorType a_functor(m_functor);
     value_type tmp;
-    ValueInit::init(a_functor, &tmp);
+    typename Analysis::Reducer final_reducer(&a_functor);
+    final_reducer.init(&tmp);
     static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
 
     if constexpr (!UseReducer) {
@@ -607,15 +603,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-
-  using value_type   = typename ValueTraits::value_type;
-  using pointer_type = typename ValueTraits::pointer_type;
 
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
+  using value_type   = typename Analysis::value_type;
+  using pointer_type = typename Analysis::pointer_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -628,7 +620,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       const FunctorType& functor, const Policy& policy) const {
     const FunctorType a_functor(functor);
     value_type tmp;
-    ValueInit::init(a_functor, &tmp);
+    typename Analysis::Reducer final_reducer(&a_functor);
+    final_reducer.init(&tmp);
     int begin1 = policy.m_lower[1];
     int end1   = policy.m_upper[1];
     int begin2 = policy.m_lower[0];
@@ -1068,15 +1061,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
-  using ValueTraits =
-      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-
-  using value_type   = typename ValueTraits::value_type;
-  using pointer_type = typename ValueTraits::pointer_type;
-
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
+  using value_type   = typename Analysis::value_type;
+  using pointer_type = typename Analysis::pointer_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -1188,14 +1176,11 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Member    = typename Policy::member_type;
   using idx_type  = typename Policy::index_type;
 
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
-  using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-  using ValueJoin   = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
-  using ValueOps    = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
-
-  using value_type     = typename ValueTraits::value_type;
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+  using value_type     = typename Analysis::value_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -1217,11 +1202,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   void impl_execute(
       Kokkos::View<value_type**, Kokkos::LayoutRight,
                    Kokkos::Experimental::OpenACCSpace>
-          element_values,
+      /*element_values*/,
       Kokkos::View<value_type*, Kokkos::Experimental::OpenACCSpace>
-          chunk_values,
+      /*chunk_values*/,
       Kokkos::View<unsigned long long int, Kokkos::Experimental::OpenACCSpace>
-          count) const {
+      /*count*/) const {
+#if 0
     const idx_type N          = m_policy.end() - m_policy.begin();
     const idx_type chunk_size = 128;
     const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
@@ -1233,7 +1219,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                  "supported for now; exit!"
               << std::endl;
     exit(0);
-#if 0
 #pragma acc parallel loop gang num_gangs(nteams) vector_length(team_size) \
     copyin(a_functor)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
@@ -1359,7 +1344,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
       base_t::impl_execute(element_values, chunk_values, count);
 
-      const int size = base_t::ValueTraits::value_size(base_t::m_functor);
+      const int size = base_t::Analysis::value_size(base_t::m_functor);
       DeepCopy<HostSpace, Kokkos::Experimental::OpenACCSpace>(
           &m_returnvalue, chunk_values.data() + (n_chunks - 1), size);
     } else {
