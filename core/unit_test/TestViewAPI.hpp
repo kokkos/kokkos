@@ -1148,13 +1148,8 @@ class TestViewAPI {
 
     ASSERT_EQ(unmanaged_from_ptr_dx.span(),
               unsigned(N0) * unsigned(N1) * unsigned(N2) * unsigned(N3));
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    return;
-#else
-#ifdef KOKKOS_ENABLE_OPENACC
-    return;
-#endif
-#endif
+// FIXME_OPENMPTARGET, FIXME_OPENACC
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
     hx = Kokkos::create_mirror(dx);
     hy = Kokkos::create_mirror(dy);
 
@@ -1287,6 +1282,7 @@ class TestViewAPI {
     ASSERT_EQ(dx.data(), nullptr);
     ASSERT_EQ(dy.data(), nullptr);
     ASSERT_EQ(dz.data(), nullptr);
+#endif
   }
 
   static void run_test_deep_copy_empty() {

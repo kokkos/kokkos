@@ -1033,13 +1033,14 @@ struct OpenACCReducerWrapper<BOr<Scalar, Space>, FunctorType,
   }
 };
 
-template <class Scalar, class Index, class Space, class FunctorType,
-          class TagType, class... Traits>
+template <class Scalar, class Space, class FunctorType, class TagType,
+          class... Traits>
 struct OpenACCReducerWrapper<MinLoc<Scalar, Space>, FunctorType,
                              Kokkos::RangePolicy<Traits...>, TagType> {
  private:
   using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using index_type  = typename std::remove_cv<
+      typename Kokkos::RangePolicy<Traits...>::index_type>::type;
 
  public:
   using value_type = ValLocScalar<scalar_type, index_type>;
@@ -1078,13 +1079,14 @@ struct OpenACCReducerWrapper<MinLoc<Scalar, Space>, FunctorType,
   }
 };
 
-template <class Scalar, class Index, class Space, class FunctorType,
-          class TagType, class... Traits>
+template <class Scalar, class Space, class FunctorType, class TagType,
+          class... Traits>
 struct OpenACCReducerWrapper<MaxLoc<Scalar, Space>, FunctorType,
                              Kokkos::RangePolicy<Traits...>, TagType> {
  private:
   using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using index_type  = typename std::remove_cv<
+      typename Kokkos::RangePolicy<Traits...>::index_type>::type;
 
  public:
   using value_type = ValLocScalar<scalar_type, index_type>;
@@ -1177,13 +1179,14 @@ struct OpenACCReducerWrapper<MinMax<Scalar, Space>, FunctorType,
   }
 };
 
-template <class Scalar, class Index, class Space, class FunctorType,
-          class TagType, class... Traits>
+template <class Scalar, class Space, class FunctorType, class TagType,
+          class... Traits>
 struct OpenACCReducerWrapper<MinMaxLoc<Scalar, Space>, FunctorType,
                              Kokkos::RangePolicy<Traits...>, TagType> {
  private:
   using scalar_type = typename std::remove_cv<Scalar>::type;
-  using index_type  = typename std::remove_cv<Index>::type;
+  using index_type  = typename std::remove_cv<
+      typename Kokkos::RangePolicy<Traits...>::index_type>::type;
 
  public:
   using value_type = MinMaxLocScalar<scalar_type, index_type>;

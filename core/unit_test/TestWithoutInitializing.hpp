@@ -216,17 +216,14 @@ TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
   listen_tool_events(Config::DisableAll());
 }
 
+// FIXME_OPENACC The OpenACC backend doesn't implement ZeroMemset, can't skip
+// without "statement is unreachable" warning
+#ifndef KOKKOS_ENABLE_OPENACC
 TEST(TEST_CATEGORY, deep_copy_zero_memset) {
 // FIXME_OPENMPTARGET The OpenMPTarget backend doesn't implement ZeroMemset
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same<typename TEST_EXECSPACE,
                    Kokkos::Experimental::OpenMPTarget>::value)
-    return;
-#endif
-// FIXME_OPENACC The OpenACC backend doesn't implement ZeroMemset
-#ifdef KOKKOS_ENABLE_OPENACC
-  if (std::is_same<typename TEST_EXECSPACE,
-                   Kokkos::Experimental::OpenACC>::value)
     return;
 #endif
 
@@ -245,3 +242,4 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
+#endif
