@@ -2624,10 +2624,10 @@ inline void deep_copy(
     } else {
       if (iterate == Kokkos::Iterate::Right)
         Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight, ExecSpace,
-                               ViewType::Rank, int>(dst, value, space);
+                               ViewType::Rank, int32_t>(dst, value, space);
       else
         Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutLeft, ExecSpace,
-                               ViewType::Rank, int>(dst, value, space);
+                               ViewType::Rank, int32_t>(dst, value, space);
     }
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
