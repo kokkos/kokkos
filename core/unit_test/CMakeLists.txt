@@ -69,10 +69,6 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
-# Not pretty but for now best option, since we don't want to add it to all tests (Container/algorithm)
-# and adding it to the almost 50 targets individually in this directory seems also worse
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKOKKOS_IMPL_PUBLIC_INCLUDE")
-
 SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestDetectionIdiom.cpp
