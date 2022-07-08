@@ -140,7 +140,7 @@ class OpenACCSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   OpenACCSpaceInitializer()  = default;
   ~OpenACCSpaceInitializer() = default;
-  void initialize(const InitArguments& args) final;
+  void initialize(const InitializationSettings& settings) final;
   void finalize(const bool) final;
   void fence(const std::string& name) final;
   void print_configuration(std::ostream& msg, const bool detail) final;

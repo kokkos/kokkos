@@ -259,7 +259,6 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
 #if !defined(KOKKOS_COMPILER_IBM) && !defined(KOKKOS_COMPILER_NVHPC)
   TestNumericTraits<TEST_EXECSPACE, long double, Epsilon>();
 #endif
-#endif
 }
 
 TEST(TEST_CATEGORY, numeric_traits_round_error) {
