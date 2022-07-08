@@ -123,11 +123,7 @@ TEST(TEST_CATEGORY, realloc_exec_space) {
         Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
       },
       [&](BeginFenceEvent event) {
-        // FIXME_CUDA FIXME_HIP FIXME_SYCL FIXME_OPENMPTARGET
-        if ((event.descriptor().find(
-                 "fence after copying header from HostSpace") !=
-             std::string::npos) ||
-            (event.descriptor().find("Debug Only Check for Execution Error") !=
+        if ((event.descriptor().find("Debug Only Check for Execution Error") !=
              std::string::npos) ||
             (event.descriptor().find("HostSpace fence") != std::string::npos))
           return MatchDiagnostic{false};

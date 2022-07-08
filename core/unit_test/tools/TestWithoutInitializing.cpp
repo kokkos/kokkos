@@ -142,13 +142,10 @@ TEST(kokkosp, create_mirror_view_and_copy) {
         device_view = mirror_device;
       },
       [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
       [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "fence after copying header from HostSpace") ==
-            std::string::npos};
+        return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
 }

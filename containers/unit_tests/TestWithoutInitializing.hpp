@@ -263,11 +263,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
         outer_view2 = inner_view;
       },
       [&](BeginFenceEvent event) {
-        // FIXME_CUDA FIXME_HIP FIXME_SYCL FIXME_OPENMPTARGET
-        if ((event.descriptor().find(
-                 "fence after copying header from HostSpace") !=
-             std::string::npos) ||
-            (event.descriptor().find("HostSpace fence") != std::string::npos))
+        if (event.descriptor().find("HostSpace fence") != std::string::npos)
           return MatchDiagnostic{false};
         return MatchDiagnostic{true, {"Found fence event!"}};
       });
@@ -402,11 +398,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
         Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
       },
       [&](BeginFenceEvent event) {
-        // FIXME_CUDA FIXME_HIP FIXME_SYCL FIXME_OPENMPTARGET
-        if ((event.descriptor().find(
-                 "fence after copying header from HostSpace") !=
-             std::string::npos) ||
-            (event.descriptor().find("Debug Only Check for Execution Error") !=
+        if ((event.descriptor().find("Debug Only Check for Execution Error") !=
              std::string::npos) ||
             (event.descriptor().find("HostSpace fence") != std::string::npos))
           return MatchDiagnostic{false};
@@ -497,13 +489,10 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynrankview) {
         device_view = mirror_device;
       },
       [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
       [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "fence after copying header from HostSpace") ==
-            std::string::npos};
+        return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
 }
@@ -597,13 +586,10 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
             mirror_device);
       },
       [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
       [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "fence after copying header from HostSpace") ==
-            std::string::npos};
+        return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
 }
@@ -667,13 +653,10 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
             mirror_device);
       },
       [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
       [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "fence after copying header from HostSpace") ==
-            std::string::npos};
+        return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
 }
