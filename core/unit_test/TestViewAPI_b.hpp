@@ -51,6 +51,7 @@ TEST(TEST_CATEGORY, view_api_b) {
   TestViewAPI<double, TEST_EXECSPACE>::run_test_mirror();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_scalar();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_contruction_from_layout();
+  TestViewAPI<double, TEST_EXECSPACE>::run_test_contruction_from_layout_2();
 }
 
 }  // namespace Test
