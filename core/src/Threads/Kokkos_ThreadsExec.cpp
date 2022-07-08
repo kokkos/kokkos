@@ -836,8 +836,10 @@ namespace Impl {
 int g_threads_space_factory_initialized =
     initialize_space_factory<ThreadsSpaceInitializer>("050_Threads");
 
-void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
-  Kokkos::Threads::impl_initialize(args.num_threads);
+void ThreadsSpaceInitializer::initialize(
+    const InitializationSettings &settings) {
+  Kokkos::Threads::impl_initialize(
+      settings.has_num_threads() ? settings.get_num_threads() : -1);
 }
 
 void ThreadsSpaceInitializer::finalize(const bool all_spaces) {

@@ -42,17 +42,16 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_FWD_HPP_
-#define KOKKOS_HIP_FWD_HPP_
+#ifndef KOKKOS_DEVICE_MANAGEMENT_HPP
+#define KOKKOS_DEVICE_MANAGEMENT_HPP
 
-#if defined(KOKKOS_ENABLE_HIP)
 namespace Kokkos {
-namespace Experimental {
-class HIPSpace;            ///< Memory space on HIP GPU
-class HIPHostPinnedSpace;  ///< Memory space on Host accessible to HIP GPU
-class HIPManagedSpace;     ///< Memory migratable between Host and HIP GPU
-class HIP;                 ///< Execution space for HIP GPU
-}  // namespace Experimental
+class InitializationSettings;
+namespace Impl {
+int get_gpu(const Kokkos::InitializationSettings& settings);
+// This declaration is provided for testing purposes only
+int get_ctest_gpu(const char* local_rank_str);
+}  // namespace Impl
 }  // namespace Kokkos
-#endif
+
 #endif

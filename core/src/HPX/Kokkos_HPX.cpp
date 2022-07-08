@@ -150,8 +150,9 @@ namespace Impl {
 int g_hpx_space_factory_initialized =
     initialize_space_factory<HPXSpaceInitializer>("060_HPX");
 
-void HPXSpaceInitializer::initialize(const InitArguments &args) {
-  const int num_threads = args.num_threads;
+void HPXSpaceInitializer::initialize(const InitializationSettings &settings) {
+  const int num_threads =
+      settings.has_num_threads() ? settings.get_num_threads() : -1;
 
   if (std::is_same<Kokkos::Experimental::HPX,
                    Kokkos::DefaultExecutionSpace>::value ||

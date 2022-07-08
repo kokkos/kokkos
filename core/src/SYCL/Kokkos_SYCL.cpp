@@ -49,6 +49,7 @@
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 namespace {
 template <typename C>
@@ -69,12 +70,6 @@ struct Container {
 }  // namespace
 
 namespace Kokkos {
-
-namespace Impl {
-// forward-declaration
-int get_gpu(const InitArguments& args);
-}  // namespace Impl
-
 namespace Experimental {
 SYCL::SYCL()
     : m_space_instance(&Impl::SYCLInternal::singleton(),
@@ -273,12 +268,14 @@ namespace Impl {
 int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
 
-void SYCLSpaceInitializer::initialize(const InitArguments& args) {
+void SYCLSpaceInitializer::initialize(const InitializationSettings& settings) {
   // If there are no GPUs return whatever else we can run on if no specific GPU
   // is requested.
   const auto num_gpus =
       sycl::device::get_devices(sycl::info::device_type::gpu).size();
-  int use_gpu = num_gpus == 0 ? args.device_id : Kokkos::Impl::get_gpu(args);
+  int use_gpu = num_gpus == 0
+                    ? (settings.has_device_id() ? settings.get_device_id() : -1)
+                    : Kokkos::Impl::get_gpu(settings);
 
   if (std::is_same<Kokkos::Experimental::SYCL,
                    Kokkos::DefaultExecutionSpace>::value ||

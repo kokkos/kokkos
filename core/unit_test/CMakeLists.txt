@@ -223,7 +223,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     if (Tag STREQUAL "Cuda")
       set(TagHostAccessible CudaUVM)
     elseif(Tag STREQUAL "HIP")
-      set(TagHostAccessible HIPHostPinned)
+      set(TagHostAccessible HIPManaged)
     elseif(Tag STREQUAL "SYCL")
       set(TagHostAccessible SYCLSharedUSM)
     endif()
@@ -292,7 +292,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
   endif()
 endforeach()
 
-foreach(PairDeviceSpace HIP-HostPinned;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
+foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL-HostUSM;SYCL-SharedUSM)
   string(REGEX REPLACE "([^-]*)-(.*)" "\\1" DEVICE ${PairDeviceSpace})
   string(REGEX REPLACE "([^-]*)-(.*)" "\\2" SPACE ${PairDeviceSpace})
 
@@ -521,7 +521,6 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES1}
     serial/TestSerial_Task.cpp
-    serial/TestSerial_MDTeamParallelism.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial2
@@ -591,25 +590,10 @@ if(Kokkos_ENABLE_HPX)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPX_IndependentInstances
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       hpx/TestHPX_IndependentInstances.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX_IndependentInstancesDelayedExecution
-    SOURCES
-      UnitTestMain.cpp
       hpx/TestHPX_IndependentInstancesDelayedExecution.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX_IndependentInstancesInstanceIds
-    SOURCES
-      UnitTestMain.cpp
       hpx/TestHPX_IndependentInstancesInstanceIds.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX_IndependentInstancesRefCounting
-    SOURCES
-      UnitTestMain.cpp
       hpx/TestHPX_IndependentInstancesRefCounting.cpp
   )
 endif()
@@ -694,6 +678,7 @@ if(Kokkos_ENABLE_HIP)
       ${HIP_SOURCES}
       hip/TestHIP_ScanUnit.cpp
       hip/TestHIP_Spaces.cpp
+      hip/TestHIP_Memory_Requirements.cpp
       hip/TestHIP_TeamScratchStreams.cpp
       hip/TestHIP_AsyncLauncher.cpp
       hip/TestHIP_BlocksizeDeduction.cpp
@@ -799,11 +784,14 @@ endif()
 if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestInitializationSettings.cpp
+    TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
   )
 else()
   SET(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp
@@ -988,12 +976,14 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                )
 endif()
 
-foreach(INITTESTS_NUM RANGE 1 18)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_DefaultInit_${INITTESTS_NUM}
-  SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
-)
-endforeach(INITTESTS_NUM)
+if(Kokkos_ENABLE_DEPRECATED_CODE_3)
+  foreach(INITTESTS_NUM RANGE 1 18)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_DefaultInit_${INITTESTS_NUM}
+    SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
+  )
+  endforeach(INITTESTS_NUM)
+endif()
 
 if (KOKKOS_ENABLE_HWLOC)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

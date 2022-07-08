@@ -243,7 +243,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 }  // namespace Kokkos
 
 #ifdef KOKKOS_ENABLE_SERIAL
-#include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
+#include "Serial/Kokkos_Serial_WorkGraphPolicy.hpp"
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMP

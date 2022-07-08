@@ -42,26 +42,13 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_SERIAL) && defined(KOKKOS_ENABLE_TASKDAG)
+#ifndef KOKKOS_TEST_HIPUNIFIED_HPP
+#define KOKKOS_TEST_HIPUNIFIED_HPP
 
-#include <Kokkos_Core.hpp>
+#include <gtest/gtest.h>
 
-#include <impl/Kokkos_Serial_Task.hpp>
-#include <impl/Kokkos_TaskQueue_impl.hpp>
+#define TEST_CATEGORY hip_managed
+#define TEST_CATEGORY_DEATH hip_managed_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::HIPManagedSpace
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-template class TaskQueue<Kokkos::Serial, typename Kokkos::Serial::memory_space>;
-
-}
-}  // namespace Kokkos
-
-#else
-void KOKKOS_CORE_SRC_IMPL_SERIAL_TASK_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_SERIAL ) && defined( \
-          KOKKOS_ENABLE_TASKDAG ) */
+#endif

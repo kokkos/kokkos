@@ -48,11 +48,12 @@
 #include <iosfwd>
 
 namespace Kokkos {
+class InitializationSettings;
 namespace Impl {
 
 class ExecSpaceInitializerBase {
  public:
-  virtual void initialize(const InitArguments &args)                     = 0;
+  virtual void initialize(const InitializationSettings &settings)        = 0;
   virtual void finalize(const bool all_spaces)                           = 0;
   virtual void fence(const std::string &)                                = 0;
   virtual void print_configuration(std::ostream &msg, const bool detail) = 0;

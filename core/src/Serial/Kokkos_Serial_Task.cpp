@@ -42,17 +42,25 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_FWD_HPP_
-#define KOKKOS_HIP_FWD_HPP_
+#include <Kokkos_Macros.hpp>
+#if defined(KOKKOS_ENABLE_TASKDAG)
 
-#if defined(KOKKOS_ENABLE_HIP)
+#include <Kokkos_Core.hpp>
+
+#include <Serial/Kokkos_Serial_Task.hpp>
+#include <impl/Kokkos_TaskQueue_impl.hpp>
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 namespace Kokkos {
-namespace Experimental {
-class HIPSpace;            ///< Memory space on HIP GPU
-class HIPHostPinnedSpace;  ///< Memory space on Host accessible to HIP GPU
-class HIPManagedSpace;     ///< Memory migratable between Host and HIP GPU
-class HIP;                 ///< Execution space for HIP GPU
-}  // namespace Experimental
+namespace Impl {
+
+template class TaskQueue<Kokkos::Serial, typename Kokkos::Serial::memory_space>;
+
+}
 }  // namespace Kokkos
-#endif
-#endif
+
+#else
+void KOKKOS_CORE_SRC_IMPL_SERIAL_TASK_PREVENT_LINK_ERROR() {}
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */

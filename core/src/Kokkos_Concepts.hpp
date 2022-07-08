@@ -336,7 +336,9 @@ struct is_space {
           std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value
 #elif defined(KOKKOS_ENABLE_HIP)
           || std::is_same<memory_space,
-                          Kokkos::Experimental::HIPHostPinnedSpace>::value
+                          Kokkos::Experimental::HIPHostPinnedSpace>::value ||
+          std::is_same<memory_space,
+                       Kokkos::Experimental::HIPManagedSpace>::value
 #elif defined(KOKKOS_ENABLE_SYCL)
           || std::is_same<memory_space,
                           Kokkos::Experimental::SYCLSharedUSMSpace>::value ||

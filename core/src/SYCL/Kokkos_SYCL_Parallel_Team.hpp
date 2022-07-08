@@ -868,9 +868,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      space.fence(
-          "Kokkos::Impl::ParallelReduce<TeamPolicy,SYCL>: fence because "
-          "reduction can't access result storage location");
     }
 
     return last_reduction_event;
