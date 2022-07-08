@@ -980,7 +980,7 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    constexpr auto r = dimension_type::rank_dynamic;
+    constexpr auto r = dimension_type::rank;
     return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
                         (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
                         (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
@@ -1270,7 +1270,7 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    constexpr auto r = dimension_type::rank_dynamic;
+    constexpr auto r = dimension_type::rank;
     return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
                         (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
                         (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
@@ -1621,7 +1621,7 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    constexpr auto r = dimension_type::rank_dynamic;
+    constexpr auto r = dimension_type::rank;
     return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
                         (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
                         (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
@@ -1910,7 +1910,7 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    constexpr auto r = dimension_type::rank_dynamic;
+    constexpr auto r = dimension_type::rank;
     return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
                         (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
                         (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
@@ -2446,7 +2446,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    constexpr auto r = dimension_type::rank_dynamic;
+    constexpr auto r = dimension_type::rank;
     return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX), m_stride.S0,
                         (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX), m_stride.S1,
                         (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX), m_stride.S2,
