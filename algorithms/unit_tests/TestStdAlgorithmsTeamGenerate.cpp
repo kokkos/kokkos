@@ -51,12 +51,10 @@ namespace TeamGenerate {
 
 namespace KE = Kokkos::Experimental;
 
-template<class ValueType>
+template <class ValueType>
 struct GenerateFunctor {
   KOKKOS_INLINE_FUNCTION
-  ValueType operator()() const {
-    return static_cast<ValueType>(23);
-  }
+  ValueType operator()() const { return static_cast<ValueType>(23); }
 };
 
 template <class ViewFromType, class MemberType>
@@ -75,7 +73,7 @@ struct TestFunctorA {
     using value_type = typename ViewFromType::value_type;
     if (m_api_pick == 0) {
       KE::generate(member, KE::begin(myRowView), KE::end(myRowView),
-		   GenerateFunctor<value_type>());
+                   GenerateFunctor<value_type>());
     } else if (m_api_pick == 1) {
       KE::generate(member, myRowView, GenerateFunctor<value_type>());
     }
@@ -100,7 +98,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   Kokkos::parallel_for(policy, fnc);
 
   // check
-  auto v_h  = create_host_space_copy(v);
+  auto v_h = create_host_space_copy(v);
   for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_h.extent(1); ++j) {
       EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(23));

@@ -51,12 +51,10 @@ namespace TeamGenerate_n {
 
 namespace KE = Kokkos::Experimental;
 
-template<class ValueType>
+template <class ValueType>
 struct GenerateFunctor {
   KOKKOS_INLINE_FUNCTION
-  ValueType operator()() const {
-    return static_cast<ValueType>(23);
-  }
+  ValueType operator()() const { return static_cast<ValueType>(23); }
 };
 
 template <class ViewType, class AuxView, class MemberType>
@@ -66,29 +64,30 @@ struct FunctorA {
   int m_api_pick;
   int m_numFills;
 
-  FunctorA(AuxView viewOfDistances, const ViewType view,
-                   int apiPick, int numFills)
+  FunctorA(AuxView viewOfDistances, const ViewType view, int apiPick,
+           int numFills)
       : m_viewOfDistances(viewOfDistances),
         m_view(view),
         m_api_pick(apiPick),
         m_numFills(numFills) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const
-  {
+  void operator()(const MemberType& member) const {
     using value_type = typename ViewType::value_type;
 
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
-      auto it = KE::generate_n(member, KE::begin(myRowView), m_numFills, GenerateFunctor<value_type>());
+      auto it = KE::generate_n(member, KE::begin(myRowView), m_numFills,
+                               GenerateFunctor<value_type>());
       const auto itDist                = KE::distance(KE::begin(myRowView), it);
       m_viewOfDistances(myRowIndex, 0) = itDist;
     }
 
     else if (m_api_pick == 1) {
-      auto it           = KE::generate_n(member, myRowView, m_numFills, GenerateFunctor<value_type>());
+      auto it           = KE::generate_n(member, myRowView, m_numFills,
+                               GenerateFunctor<value_type>());
       const auto itDist = KE::distance(KE::begin(myRowView), it);
       m_viewOfDistances(myRowIndex, 0) = itDist;
     }
@@ -98,7 +97,6 @@ struct FunctorA {
 template <class Tag, class ValueType>
 void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills,
             int apiId) {
-
   auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
 
   using space_t          = Kokkos::DefaultExecutionSpace;
@@ -111,8 +109,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills,
   Kokkos::View<std::size_t**> computedDistances("cd", num_teams, 1);
 
   using functor_type =
-      FunctorA<decltype(v), decltype(computedDistances),
-                       team_member_type>;
+      FunctorA<decltype(v), decltype(computedDistances), team_member_type>;
   functor_type fnc(computedDistances, v, apiId, num_fills);
   Kokkos::parallel_for(policy, fnc);
 
