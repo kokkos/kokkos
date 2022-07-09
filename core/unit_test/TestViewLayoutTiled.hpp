@@ -1782,4 +1782,3 @@ TEST(TEST_CATEGORY, view_layouttiled_subtile) {
 }  // namespace Test
 
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
-
