@@ -115,12 +115,14 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
 
 TEST(kokkosp, create_mirror_view_and_copy) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value)
+  if (std::is_same<Kokkos::DefaultExecutionSpace,
+                   Kokkos::Experimental::OpenMPTarget>::value)
     GTEST_SKIP() << "skipping since the OpenMPTarget has unexpected fences";
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>::value)
+  if (std::is_same<Kokkos::DefaultExecutionSpace::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
     GTEST_SKIP()
         << "skipping since the CudaUVMSpace requires additional fences";
 #endif
@@ -144,7 +146,7 @@ TEST(kokkosp, create_mirror_view_and_copy) {
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
-      [&](BeginFenceEvent event) {
+      [&](BeginFenceEvent) {
         return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);

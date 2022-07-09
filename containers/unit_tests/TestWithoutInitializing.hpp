@@ -493,7 +493,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynrankview) {
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
-      [&](BeginFenceEvent event) {
+      [&](BeginFenceEvent) {
         return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
@@ -590,7 +590,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
-      [&](BeginFenceEvent event) {
+      [&](BeginFenceEvent) {
         return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
@@ -657,7 +657,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
-      [&](BeginFenceEvent event) {
+      [&](BeginFenceEvent) {
         return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
