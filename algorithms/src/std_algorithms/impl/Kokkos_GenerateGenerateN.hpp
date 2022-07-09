@@ -70,6 +70,39 @@ IteratorType generate_n_impl(const std::string& label, const ExecutionSpace& ex,
   return first + count;
 }
 
+//
+// team-level impl
+//
+template <class TeamHandleType, class IteratorType, class Generator>
+KOKKOS_FUNCTION void generate_team_impl(const TeamHandleType& teamHandle,
+                                        IteratorType first, IteratorType last,
+                                        Generator g) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  // aliases
+  using func_t = StdGenerateFunctor<IteratorType, Generator>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         func_t(first, g));
+  teamHandle.team_barrier();
+}
+
+template <class TeamHandleType, class IteratorType, class Size, class Generator>
+KOKKOS_FUNCTION IteratorType
+generate_n_team_impl(const TeamHandleType& teamHandle, IteratorType first,
+                     Size count, Generator g) {
+  if (count <= 0) {
+    return first;
+  }
+
+  generate_team_impl(teamHandle, first, first + count, g);
+  return first + count;
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
