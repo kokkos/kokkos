@@ -79,13 +79,21 @@ void run_single_scenario(const InfoType& scenario_info, int apiId) {
   if (apiId == 0) {
     auto rit =
         KE::move_backward(exespace(), KE::begin(v), KE::end(v), KE::end(v2));
+    const int dist = KE::distance(KE::begin(v2), rit);
+    EXPECT_TRUE(dist == 5);
   } else if (apiId == 1) {
-    auto rit = KE::move_backward("mylabel", exespace(), KE::begin(v),
+    auto rit       = KE::move_backward("mylabel", exespace(), KE::begin(v),
                                  KE::end(v), KE::end(v2));
+    const int dist = KE::distance(KE::begin(v2), rit);
+    EXPECT_TRUE(dist == 5);
   } else if (apiId == 2) {
-    auto rit = KE::move_backward(exespace(), v, v2);
+    auto rit       = KE::move_backward(exespace(), v, v2);
+    const int dist = KE::distance(KE::begin(v2), rit);
+    EXPECT_TRUE(dist == 5);
   } else if (apiId == 2) {
-    auto rit = KE::move_backward("mylabel", exespace(), v, v2);
+    auto rit       = KE::move_backward("mylabel", exespace(), v, v2);
+    const int dist = KE::distance(KE::begin(v2), rit);
+    EXPECT_TRUE(dist == 5);
   }
 
   // check
