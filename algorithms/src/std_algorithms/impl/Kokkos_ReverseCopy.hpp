@@ -38,6 +38,7 @@ struct StdReverseCopyFunctor {
   KOKKOS_FUNCTION
   void operator()(IndexType i) const { m_dest_first[i] = m_last[-1 - i]; }
 
+  KOKKOS_FUNCTION
   StdReverseCopyFunctor(InputIterator _last, OutputIterator _dest_first)
       : m_last(std::move(_last)), m_dest_first(std::move(_dest_first)) {}
 };
