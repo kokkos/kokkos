@@ -76,6 +76,27 @@ void reverse_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
+template <class TeamHandleType, class InputIterator>
+KOKKOS_FUNCTION void reverse_team_impl(const TeamHandleType& teamHandle,
+                                       InputIterator first,
+                                       InputIterator last) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  // aliases
+  using func_t = StdReverseFunctor<InputIterator>;
+
+  // run
+  if (last >= first + 2) {
+    // only need half
+    const auto num_elements = Kokkos::Experimental::distance(first, last) / 2;
+    ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                           func_t(first, last));
+    teamHandle.team_barrier();
+  }
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
