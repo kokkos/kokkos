@@ -81,8 +81,7 @@ struct TestFunctorA {
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
-{
+void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   /* description: */
 
   // v constructed on memory space associated with default exespace
