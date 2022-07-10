@@ -74,9 +74,7 @@ struct FunctorA {
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
-{
-
+void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
 
   // v might not deep copyable so to modify it on the host
@@ -91,8 +89,8 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
 
   auto gold = create_host_space_copy(v);
   for (std::size_t i = 0; i < gold.extent(0); ++i) {
-    for (std::size_t j = 0; j < gold.extent(1)/2; ++j) {
-      std::swap( gold(i, j), gold(i, num_cols-j-1) );
+    for (std::size_t j = 0; j < gold.extent(1) / 2; ++j) {
+      std::swap(gold(i, j), gold(i, num_cols - j - 1));
     }
   }
 
@@ -108,7 +106,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId)
   auto v_h = create_host_space_copy(v);
   for (std::size_t i = 0; i < v_h.extent(0); ++i) {
     for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      EXPECT_TRUE(v_h(i, j) == gold(i,j));
+      EXPECT_TRUE(v_h(i, j) == gold(i, j));
     }
   }
 }
