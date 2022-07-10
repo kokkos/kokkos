@@ -148,6 +148,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(STDALGO_TEAM_SOURCES_A)
     foreach(Name
 	StdAlgorithmsCommon
+	StdAlgorithmsTeamMove
+	StdAlgorithmsTeamMoveBackward
 	StdAlgorithmsTeamReverse
 	StdAlgorithmsTeamReverseCopy
 	StdAlgorithmsTeamGenerate

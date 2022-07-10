@@ -17,21 +17,29 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MOVE_BACKWARD_HPP
 #define KOKKOS_STD_ALGORITHMS_MOVE_BACKWARD_HPP
 
+#include "./impl/Kokkos_IsTeamHandle.hpp"
 #include "impl/Kokkos_MoveBackward.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
+//
+// overload set accepting execution space
+//
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-IteratorType2 move_backward(const ExecutionSpace& ex, IteratorType1 first,
-                            IteratorType1 last, IteratorType2 d_last) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                  IteratorType2>
+move_backward(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
+              IteratorType2 d_last) {
   return Impl::move_backward_impl("Kokkos::move_backward_iterator_api_default",
                                   ex, first, last, d_last);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2>
+          class DataType2, class... Properties2,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto move_backward(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& source,
                    ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -43,14 +51,17 @@ auto move_backward(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-IteratorType2 move_backward(const std::string& label, const ExecutionSpace& ex,
-                            IteratorType1 first, IteratorType1 last,
-                            IteratorType2 d_last) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                  IteratorType2>
+move_backward(const std::string& label, const ExecutionSpace& ex,
+              IteratorType1 first, IteratorType1 last, IteratorType2 d_last) {
   return Impl::move_backward_impl(label, ex, first, last, d_last);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2>
+          class DataType2, class... Properties2,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto move_backward(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& source,
                    ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -59,6 +70,34 @@ auto move_backward(const std::string& label, const ExecutionSpace& ex,
 
   return Impl::move_backward_impl(label, ex, begin(source), end(source),
                                   end(dest));
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <class TeamHandleType, class IteratorType1, class IteratorType2>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType2>
+    move_backward(const TeamHandleType& teamHandle, IteratorType1 first,
+                  IteratorType1 last, IteratorType2 d_last) {
+  return Impl::move_backward_team_impl(teamHandle, first, last, d_last);
+}
+
+template <
+    class TeamHandleType, class DataType1, class... Properties1,
+    class DataType2, class... Properties2,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto move_backward(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType1, Properties1...>& source,
+    ::Kokkos::View<DataType2, Properties2...>& dest) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+
+  return Impl::move_backward_team_impl(teamHandle, begin(source), end(source),
+                                       end(dest));
 }
 
 }  // namespace Experimental
