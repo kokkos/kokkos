@@ -73,6 +73,7 @@ SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestDetectionIdiom.cpp
   TestInterOp.cpp
+  TestLegionInteroperability.cpp
   TestStringManipulation.cpp
   TestTypeList.cpp
 )
