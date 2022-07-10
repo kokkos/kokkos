@@ -53,8 +53,7 @@ namespace MoveBackward {
 namespace KE = Kokkos::Experimental;
 
 template <class Tag, class ValueType, class InfoType>
-void run_single_scenario(const InfoType& scenario_info, int apiId)
-{
+void run_single_scenario(const InfoType& scenario_info, int apiId) {
   const std::size_t view_ext = std::get<1>(scenario_info);
 
   auto v = create_view<ValueType>(Tag{}, view_ext, "v");
@@ -77,16 +76,15 @@ void run_single_scenario(const InfoType& scenario_info, int apiId)
   // because we need it to test the move_backward
   auto v2 = create_view<ValueType>(Tag{}, view_ext + 5, "v2");
 
-  if (apiId == 0){
-    auto rit = KE::move_backward(exespace(), KE::begin(v), KE::end(v), KE::end(v2));
-  }
-  else if (apiId == 1){
-    auto rit = KE::move_backward("mylabel", exespace(), KE::begin(v), KE::end(v), KE::end(v2));
-  }
-  else if (apiId == 2){
+  if (apiId == 0) {
+    auto rit =
+        KE::move_backward(exespace(), KE::begin(v), KE::end(v), KE::end(v2));
+  } else if (apiId == 1) {
+    auto rit = KE::move_backward("mylabel", exespace(), KE::begin(v),
+                                 KE::end(v), KE::end(v2));
+  } else if (apiId == 2) {
     auto rit = KE::move_backward(exespace(), v, v2);
-  }
-  else if (apiId == 2){
+  } else if (apiId == 2) {
     auto rit = KE::move_backward("mylabel", exespace(), v, v2);
   }
 
