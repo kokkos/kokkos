@@ -65,7 +65,7 @@ struct StdMoveBackwardFunctor {
 
   KOKKOS_FUNCTION
   void operator()(IndexType i) const {
-    m_dest_last[-i] = std::move(m_last[-i]);
+    m_dest_last[-i - 1] = std::move(m_last[-i - 1]);
   }
 
   StdMoveBackwardFunctor(IteratorType1 _last, IteratorType2 _dest_last)
