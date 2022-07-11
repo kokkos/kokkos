@@ -50,6 +50,7 @@ pipeline {
                               make -j8 && ctest --verbose'''
                     }
                 }
+                /*
                 stage('CUDA-11.6-NVHPC') {
                     agent {
                         dockerfile {
@@ -196,7 +197,6 @@ pipeline {
                         }
                     }
                 }
-/*
                 stage('OPENMPTARGET-ROCm-4.5') {
                     agent {
                         dockerfile {
@@ -241,7 +241,6 @@ pipeline {
                         }
                     }
                 }
-*/
                 stage('OPENMPTARGET-Clang') {
                     agent {
                         dockerfile {
@@ -486,6 +485,7 @@ pipeline {
                               make -j8 && ctest --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                 }
+                */
             }
         }
     }
