@@ -80,7 +80,7 @@ class ViewMapping {
 };
 
 template <typename IntType>
-KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
+constexpr KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
     const IntType i0, const IntType i1, const IntType i2, const IntType i3,
     const IntType i4, const IntType i5, const IntType i6, const IntType i7) {
   static_assert(std::is_integral<IntType>::value,
@@ -93,18 +93,18 @@ KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
 }
 
 KOKKOS_INLINE_FUNCTION
-void runtime_check_rank(const size_t dyn_rank, const bool is_void_spec,
-                        const size_t i0, const size_t i1, const size_t i2,
-                        const size_t i3, const size_t i4, const size_t i5,
-                        const size_t i6, const size_t i7,
-                        const std::string& label) {
+void runtime_check_rank(const size_t rank, const size_t dyn_rank,
+                        const bool is_void_spec, const size_t i0,
+                        const size_t i1, const size_t i2, const size_t i3,
+                        const size_t i4, const size_t i5, const size_t i6,
+                        const size_t i7, const std::string& label) {
   (void)(label);
 
   if (is_void_spec) {
     const size_t num_passed_args =
         count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
 
-    if (num_passed_args != dyn_rank) {
+    if (num_passed_args != dyn_rank && num_passed_args != rank) {
       KOKKOS_IF_ON_HOST(
           const std::string message =
               "Constructor for Kokkos View '" + label +
@@ -1451,7 +1451,7 @@ class View : public ViewTraits<DataType, Properties...> {
               prop_copy)
               .value;
       Impl::runtime_check_rank(
-          traits::rank_dynamic,
+          traits::rank, traits::rank_dynamic,
           std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
           i3, i4, i5, i6, i7, alloc_name);
     }

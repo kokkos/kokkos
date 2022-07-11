@@ -1014,6 +1014,91 @@ class TestViewAPI {
 #endif
   }
 
+  static void run_test_contruction_from_layout() {
+    using hView0 = typename dView0::HostMirror;
+    using hView1 = typename dView1::HostMirror;
+    using hView2 = typename dView2::HostMirror;
+    using hView3 = typename dView3::HostMirror;
+    using hView4 = typename dView4::HostMirror;
+
+    hView0 hv_0("dView0::HostMirror");
+    hView1 hv_1("dView1::HostMirror", N0);
+    hView2 hv_2("dView2::HostMirror", N0);
+    hView3 hv_3("dView3::HostMirror", N0);
+    hView4 hv_4("dView4::HostMirror", N0);
+
+    dView0 dv_0_1(nullptr, 0);
+    dView0 dv_0_2(hv_0.label(), hv_0.layout());
+
+    dView1 dv_1_1(nullptr, 0);
+    dView1 dv_1_2(hv_1.label(), hv_1.layout());
+
+    dView2 dv_2_1(nullptr, 0);
+    dView2 dv_2_2(hv_2.label(), hv_2.layout());
+
+    dView3 dv_3_1(nullptr, 0);
+    dView3 dv_3_2(hv_3.label(), hv_3.layout());
+
+    dView4 dv_4_1(nullptr, 0);
+    dView4 dv_4_2(hv_4.label(), hv_4.layout());
+  }
+
+  static void run_test_contruction_from_layout_2() {
+    using dView3_0 = Kokkos::View<T ***, device>;
+    using dView3_1 = Kokkos::View<T * * [N1], device>;
+    using dView3_2 = Kokkos::View<T * [N1][N2], device>;
+    using dView3_3 = Kokkos::View<T[N0][N1][N2], device>;
+
+    dView3_0 v_0("v_0", N0, N1, N2);
+    dView3_1 v_1("v_1", N0, N1);
+    dView3_2 v_2("v_2", N0);
+    dView3_3 v_3("v_2");
+
+    dView3_1 v_1_a("v_1", N0, N1, N2);
+    dView3_2 v_2_a("v_2", N0, N1, N2);
+    dView3_3 v_3_a("v_2", N0, N1, N2);
+
+    {
+      dView3_0 dv_1(v_0.label(), v_0.layout());
+      dView3_0 dv_2(v_1.label(), v_1.layout());
+      dView3_0 dv_3(v_2.label(), v_2.layout());
+      dView3_0 dv_4(v_3.label(), v_3.layout());
+      dView3_0 dv_5(v_1_a.label(), v_1_a.layout());
+      dView3_0 dv_6(v_2_a.label(), v_2_a.layout());
+      dView3_0 dv_7(v_3_a.label(), v_3_a.layout());
+    }
+
+    {
+      dView3_1 dv_1(v_0.label(), v_0.layout());
+      dView3_1 dv_2(v_1.label(), v_1.layout());
+      dView3_1 dv_3(v_2.label(), v_2.layout());
+      dView3_1 dv_4(v_3.label(), v_3.layout());
+      dView3_1 dv_5(v_1_a.label(), v_1_a.layout());
+      dView3_1 dv_6(v_2_a.label(), v_2_a.layout());
+      dView3_1 dv_7(v_3_a.label(), v_3_a.layout());
+    }
+
+    {
+      dView3_2 dv_1(v_0.label(), v_0.layout());
+      dView3_2 dv_2(v_1.label(), v_1.layout());
+      dView3_2 dv_3(v_2.label(), v_2.layout());
+      dView3_2 dv_4(v_3.label(), v_3.layout());
+      dView3_2 dv_5(v_1_a.label(), v_1_a.layout());
+      dView3_2 dv_6(v_2_a.label(), v_2_a.layout());
+      dView3_2 dv_7(v_3_a.label(), v_3_a.layout());
+    }
+
+    {
+      dView3_3 dv_1(v_0.label(), v_0.layout());
+      dView3_3 dv_2(v_1.label(), v_1.layout());
+      dView3_3 dv_3(v_2.label(), v_2.layout());
+      dView3_3 dv_4(v_3.label(), v_3.layout());
+      dView3_3 dv_5(v_1_a.label(), v_1_a.layout());
+      dView3_3 dv_6(v_2_a.label(), v_2_a.layout());
+      dView3_3 dv_7(v_3_a.label(), v_3_a.layout());
+    }
+  }
+
   static void run_test() {
     // mfh 14 Feb 2014: This test doesn't actually create instances of
     // these types.  In order to avoid "unused type alias"
