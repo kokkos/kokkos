@@ -301,6 +301,11 @@ TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
     GTEST_SKIP() << "skipping since the OpenMPTarget has unexpected fences";
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>::value)
+    GTEST_SKIP() << "skipping since the OpenACC has unexpected fences";
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same<TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>::value)
     GTEST_SKIP()

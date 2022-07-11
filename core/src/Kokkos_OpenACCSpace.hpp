@@ -53,6 +53,7 @@
 
 #if defined(KOKKOS_ENABLE_OPENACC)
 
+#include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>

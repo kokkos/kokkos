@@ -92,7 +92,7 @@ void OpenACCExec::verify_initialized(const char* const label) {
 void* OpenACCExec::m_scratch_ptr         = nullptr;
 int64_t OpenACCExec::m_scratch_size      = 0;
 int* OpenACCExec::m_lock_array           = nullptr;
-int64_t OpenACCExec::m_lock_size         = 0;
+uint64_t OpenACCExec::m_lock_size        = 0;
 uint32_t* OpenACCExec::m_uniquetoken_ptr = nullptr;
 
 void OpenACCExec::clear_scratch() {
@@ -133,7 +133,7 @@ void OpenACCExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
 }
 
 int* OpenACCExec::get_lock_array(int num_teams) {
-  /*
+  // FIXME_OPENACC - Need to be updated.
   Kokkos::Experimental::OpenACCSpace space;
   int max_active_league_size = MAX_ACTIVE_THREADS / 32;
   int lock_array_elem =
@@ -146,18 +146,14 @@ int* OpenACCExec::get_lock_array(int num_teams) {
     // FIXME_OPENACC - Creating a target region here to initialize the
     // lock_array with 0's fails. Hence creating an equivalent host array to
     // achieve the same. Value of host array are then copied to the lock_array.
-    int* h_lock_array = static_cast<int*>(
-        omp_target_alloc(m_lock_size, omp_get_initial_device()));
+    int* h_lock_array = static_cast<int*>(malloc(m_lock_size));
 
     for (int i = 0; i < lock_array_elem; ++i) h_lock_array[i] = 0;
 
-    omp_target_memcpy(m_lock_array, h_lock_array, m_lock_size, 0,
-                                     0, omp_get_default_device(),
-                                     omp_get_initial_device());
+    acc_memcpy_to_device(m_lock_array, h_lock_array, m_lock_size);
 
-    omp_target_free(h_lock_array, omp_get_initial_device());
+    free(h_lock_array);
   }
-  */
 
   return m_lock_array;
 }

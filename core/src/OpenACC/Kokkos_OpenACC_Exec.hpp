@@ -87,7 +87,7 @@ class OpenACCExec {
   static void* m_scratch_ptr;
   static int64_t m_scratch_size;
   static int* m_lock_array;
-  static int64_t m_lock_size;
+  static uint64_t m_lock_size;
   static uint32_t* m_uniquetoken_ptr;
 };
 
@@ -410,7 +410,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
   std::array<size_t, 2> m_thread_scratch_size;
   bool m_tune_team_size;
   bool m_tune_vector_length;
-  constexpr const static size_t default_team_size = 128;
+  constexpr static const size_t default_team_size = 128;
   int m_chunk_size;
 
   void init(const int league_size_request, const int team_size_request,
@@ -5541,11 +5541,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 #pragma acc routine worker
 #endif
 template <typename iType, class Lambda, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<!Kokkos::is_reducer_type<ValueType>::value>
-    parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                        iType, Impl::OpenACCExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::OpenACCExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ValueType& result) {
   ValueType tmp = ValueType();
 #ifdef KOKKOS_ENABLE_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 #pragma acc loop seq
@@ -5563,11 +5562,10 @@ KOKKOS_INLINE_FUNCTION
 #pragma acc routine worker
 #endif
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                        iType, Impl::OpenACCExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, ReducerType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
+                    iType, Impl::OpenACCExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType& result) {
   using ValueType = typename ReducerType::value_type;
 
   ValueType tmp = ValueType();
@@ -5730,11 +5728,10 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 #pragma acc routine vector
 #endif
 template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
-    parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
-                        iType, Impl::OpenACCExecTeamMember>& loop_boundaries,
-                    const Lambda& lambda, ReducerType const& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::OpenACCExecTeamMember>& loop_boundaries,
+                const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
   ValueType vector_reduce;

@@ -549,7 +549,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     value_type tmp;
     typename Analysis::Reducer final_reducer(&a_functor);
     final_reducer.init(&tmp);
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -573,7 +573,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_result_view,
       std::enable_if_t<Kokkos::is_view<ViewType>::value &&
-                           !Kokkos::is_reducer_type<ReducerType>::value,
+                           !Kokkos::is_reducer<ReducerType>::value,
                        void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
@@ -627,7 +627,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int begin2 = policy.m_lower[0];
     int end2   = policy.m_upper[0];
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -667,7 +667,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int begin3 = policy.m_lower[0];
     int end3   = policy.m_upper[0];
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -713,7 +713,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int begin4 = policy.m_lower[0];
     int end4   = policy.m_upper[0];
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -765,7 +765,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int begin5 = policy.m_lower[0];
     int end5   = policy.m_upper[0];
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -823,7 +823,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int begin6 = policy.m_lower[0];
     int end6   = policy.m_upper[0];
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -887,7 +887,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     value_type tmp;
     ValueInit::init(a_functor, &tmp);
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -957,7 +957,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int begin8 = policy.m_lower[0];
     int end8   = policy.m_upper[0];
 
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
       if constexpr (std::is_void<TagType>::value) {
@@ -1030,7 +1030,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_result_view,
       std::enable_if_t<Kokkos::is_view<ViewType>::value &&
-                           !Kokkos::is_reducer_type<ReducerType>::value,
+                           !Kokkos::is_reducer<ReducerType>::value,
                        void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
@@ -1088,7 +1088,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const FunctorType a_functor(m_functor);
     value_type tmp;
     ValueInit::init(a_functor, &tmp);
-    static constexpr int UseReducer = is_reducer_type<ReducerType>::value;
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
 
     if constexpr (!UseReducer) {
 #ifdef KOKKOS_ENABLE_COLLAPSE_HIERARCHICAL_CONSTRUCTS
@@ -1127,7 +1127,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_result_view,
       std::enable_if_t<Kokkos::is_view<ViewType>::value &&
-                           !Kokkos::is_reducer_type<ReducerType>::value,
+                           !Kokkos::is_reducer<ReducerType>::value,
                        void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),

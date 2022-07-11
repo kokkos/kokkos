@@ -71,7 +71,7 @@ void memory_fence() {
 #elif defined(KOKKOS_ENABLE_WINDOWS_ATOMICS)
   MemoryBarrier();
 #elif defined(KOKKOS_ENABLE_OPENACC_ATOMICS)
-#warning OpenACC does not support memory_fence()
+// FIXME_OPENACC: memory_fence() not supported and not used.
 #elif !defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
 #error "Error: memory_fence() not defined"
 #endif
