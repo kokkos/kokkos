@@ -58,8 +58,8 @@ void run_single_scenario(const InfoType& scenario_info, int apiId) {
 
   auto v = create_view<ValueType>(Tag{}, view_ext, "v");
 
-  // v might not deep copyable so to modify it on the host
-  // need to do this
+  // v might not be deep copyable so to modify it on the host
+  // need to do all this
   auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
   auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
@@ -69,7 +69,8 @@ void run_single_scenario(const InfoType& scenario_info, int apiId) {
   CopyFunctor<decltype(v_dc), decltype(v)> F1(v_dc, v);
   Kokkos::parallel_for("copy", v.extent(0), F1);
 
-  // make a gold copy of v right now because we call the algorithm
+  // make a gold copy of v before calling the algorithm
+  // since the algorithm will modify v
   auto gold = create_host_space_copy(v);
 
   // create another view that is bigger than v
@@ -90,7 +91,7 @@ void run_single_scenario(const InfoType& scenario_info, int apiId) {
     auto rit       = KE::move_backward(exespace(), v, v2);
     const int dist = KE::distance(KE::begin(v2), rit);
     EXPECT_TRUE(dist == 5);
-  } else if (apiId == 2) {
+  } else if (apiId == 3) {
     auto rit       = KE::move_backward("mylabel", exespace(), v, v2);
     const int dist = KE::distance(KE::begin(v2), rit);
     EXPECT_TRUE(dist == 5);
