@@ -50,6 +50,10 @@
 
 #ifndef KOKKOS_SCATTER_VIEW_HPP
 #define KOKKOS_SCATTER_VIEW_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
+#endif
 
 #include <Kokkos_Core.hpp>
 #include <utility>
@@ -1636,4 +1640,8 @@ std::enable_if_t<Kokkos::Impl::is_view_ctor_property<I>::value> resize(
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
+#endif
 #endif

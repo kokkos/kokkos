@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_CORE_HPP
 #define KOKKOS_CORE_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
 
 //----------------------------------------------------------------------------
 // Include the execution space header files for the enabled execution spaces.
@@ -311,4 +315,8 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
 #endif

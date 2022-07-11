@@ -48,6 +48,10 @@
 
 #ifndef KOKKOS_PAIR_HPP
 #define KOKKOS_PAIR_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <utility>
@@ -515,4 +519,8 @@ struct is_pair_like<std::pair<T, U>> : std::true_type {};
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
+#endif
 #endif  // KOKKOS_PAIR_HPP

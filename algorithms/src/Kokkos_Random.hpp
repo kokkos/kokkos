@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_RANDOM_HPP
 #define KOKKOS_RANDOM_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_RANDOM
+#endif
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Complex.hpp>
@@ -1590,4 +1594,8 @@ void fill_random(ViewType a, RandomPool g,
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_RANDOM
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_RANDOM
+#endif
 #endif
