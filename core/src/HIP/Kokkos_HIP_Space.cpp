@@ -194,7 +194,7 @@ void* HIPHostPinnedSpace::impl_allocate(
   void* ptr = nullptr;
 
   auto const error_code =
-      hipHostMalloc(&ptr, arg_alloc_size, hipMemAttachGlobal);
+      hipHostMalloc(&ptr, arg_alloc_size, hipHostMallocNonCoherent);
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
