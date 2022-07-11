@@ -116,9 +116,9 @@ void combine(Kokkos::InitializationSettings& out,
   KOKKOS_IMPL_COMBINE_SETTING(skip_device);
   KOKKOS_IMPL_COMBINE_SETTING(disable_warnings);
   KOKKOS_IMPL_COMBINE_SETTING(tune_internals);
-  KOKKOS_IMPL_COMBINE_SETTING(tool_help);
-  KOKKOS_IMPL_COMBINE_SETTING(tool_lib);
-  KOKKOS_IMPL_COMBINE_SETTING(tool_args);
+  KOKKOS_IMPL_COMBINE_SETTING(tools_help);
+  KOKKOS_IMPL_COMBINE_SETTING(tools_libs);
+  KOKKOS_IMPL_COMBINE_SETTING(tools_args);
 #undef KOKKOS_IMPL_COMBINE_SETTING
 }
 
@@ -126,28 +126,28 @@ void combine(Kokkos::InitializationSettings& out,
              Kokkos::Tools::InitArguments const& in) {
   using Kokkos::Tools::InitArguments;
   if (in.help != InitArguments::PossiblyUnsetOption::unset) {
-    out.set_tool_help(in.help == InitArguments::PossiblyUnsetOption::on);
+    out.set_tools_help(in.help == InitArguments::PossiblyUnsetOption::on);
   }
   if (in.lib != InitArguments::unset_string_option) {
-    out.set_tool_lib(in.lib);
+    out.set_tools_libs(in.lib);
   }
   if (in.args != InitArguments::unset_string_option) {
-    out.set_tool_args(in.args);
+    out.set_tools_args(in.args);
   }
 }
 
 void combine(Kokkos::Tools::InitArguments& out,
              Kokkos::InitializationSettings const& in) {
   using Kokkos::Tools::InitArguments;
-  if (in.has_tool_help()) {
-    out.help = in.get_tool_help() ? InitArguments::PossiblyUnsetOption::on
-                                  : InitArguments::PossiblyUnsetOption::off;
+  if (in.has_tools_help()) {
+    out.help = in.get_tools_help() ? InitArguments::PossiblyUnsetOption::on
+                                   : InitArguments::PossiblyUnsetOption::off;
   }
-  if (in.has_tool_lib()) {
-    out.lib = in.get_tool_lib();
+  if (in.has_tools_libs()) {
+    out.lib = in.get_tools_libs();
   }
-  if (in.has_tool_args()) {
-    out.args = in.get_tool_args();
+  if (in.has_tools_args()) {
+    out.args = in.get_tools_args();
   }
 }
 
@@ -828,7 +828,7 @@ void Kokkos::Impl::parse_command_line_arguments(
   if ((tools_init_arguments.args ==
        Kokkos::Tools::InitArguments::unset_string_option) &&
       argc > 0) {
-    settings.set_tool_args(argv[0]);
+    settings.set_tools_args(argv[0]);
   }
 }
 
