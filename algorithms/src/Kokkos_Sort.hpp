@@ -66,6 +66,11 @@
 
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
@@ -633,6 +638,19 @@ sort(const ExecutionSpace& exec,
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
+
+#if defined(KOKKOS_ENABLE_HIP)
+template <class ViewType>
+void sort(Experimental::HIP const& space, ViewType const& view) {
+  static_assert(ViewType::rank == 1, "HIP sort only supports 1D Views.");
+
+  using DevicePtr = thrust::device_ptr<typename ViewType::value_type>;
+  DevicePtr first(view.data());
+  DevicePtr last(view.data() + view.extent(0));
+  const auto exec = thrust::cuda::par.on(space.hip_stream());
+  thrust::sort(exec, first, last);
+}
+#endif
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
