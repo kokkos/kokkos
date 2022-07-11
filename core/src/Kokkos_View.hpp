@@ -114,33 +114,30 @@ KOKKOS_INLINE_FUNCTION void runtime_check_rank(
       size_t new_extents[8] = {i0, i1, i2, i3, i4, i5, i6, i7};
       for (size_t i = dyn_rank; i < rank; ++i)
         if (new_extents[i] != View::static_extent(i)) {
-          ranks_matching = false;
           KOKKOS_IF_ON_HOST(
               const std::string message =
-                  "The specified run-time dimension for Kokkos::View '" +
-                  label +
-                  "' doesn't match the compile-time dimensions at position " +
-                  std::to_string(i) + ". The given dimension is " +
+                  "The specified run-time extent for Kokkos::View '" + label +
+                  "' does not match the compile-time extent in dimension " +
+                  std::to_string(i) + ". The given extent is " +
                   std::to_string(new_extents[i]) + " but should be " +
                   std::to_string(View::static_extent(i)) + ".\n";
               Kokkos::abort(message.c_str());)
           KOKKOS_IF_ON_DEVICE(
-              Kokkos::abort(
-                  "The specified run-time dimensions for a Kokkos::View has "
-                  "don't match the compile-time dimensions.");)
+              Kokkos::abort("The specified run-time extents for a Kokkos::View "
+                            "do not match the compile-time extents.");)
         }
     }
 
     if (!n_args_is_dyn_rank && !n_args_is_rank) {
       KOKKOS_IF_ON_HOST(const std::string message =
-                            "Constructor for Kokkos View '" + label +
+                            "Constructor for Kokkos::View '" + label +
                             "' has mismatched number of arguments. The number "
-                            "of arguments (" +
+                            "of arguments = " +
                             std::to_string(num_passed_args) +
-                            ") neither matches the dynamic rank (" +
+                            " neither matches the dynamic rank = " +
                             std::to_string(dyn_rank) +
-                            ") nor the total rank (" + std::to_string(rank) +
-                            ")\n";
+                            " nor the total rank = " + std::to_string(rank) +
+                            "\n";
                         Kokkos::abort(message.c_str());)
       KOKKOS_IF_ON_DEVICE(Kokkos::abort("Constructor for Kokkos View has "
                                         "mismatched number of arguments.");)
