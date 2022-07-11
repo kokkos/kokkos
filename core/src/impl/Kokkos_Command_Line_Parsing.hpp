@@ -56,6 +56,8 @@ bool check_arg(char const* arg, char const* expected);
 bool check_int_arg(char const* arg, char const* expected, int* value);
 bool check_str_arg(char const* arg, char const* expected, std::string& value);
 void warn_deprecated_environment_variable(std::string deprecated);
+void warn_deprecated_environment_variable(std::string deprecated,
+                                          std::string use_instead);
 void warn_deprecated_command_line_argument(std::string deprecated);
 void warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string use_instead);
