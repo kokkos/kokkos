@@ -164,12 +164,36 @@ void parse_command_line_arguments(int& argc, char* argv[],
 }
 Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
     InitArguments& arguments) {
-  auto& tool_lib    = arguments.lib;
-  auto env_tool_lib = std::getenv("KOKKOS_PROFILE_LIBRARY");
-  if (env_tool_lib != nullptr) {
+  auto& libs               = arguments.lib;
+  auto& args               = arguments.args;
+  auto env_profile_library = std::getenv("KOKKOS_PROFILE_LIBRARY");
+  if (env_profile_library != nullptr) {
+    using Kokkos::Impl::warn_deprecated_environment_variable;
+    warn_deprecated_environment_variable("KOKKOS_PROFILE_LIBRARY",
+                                         "KOKKOS_TOOLS_LIBS");
     warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_PROFILE_LIBRARY",
-                                                    env_tool_lib);
-    tool_lib = env_tool_lib;
+                                                    env_profile_library);
+    libs = env_profile_library;
+  }
+  auto env_tools_libs = std::getenv("KOKKOS_TOOLS_LIBS");
+  if (env_tools_libs != nullptr) {
+    warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_TOOLS_LIBS",
+                                                    env_tools_libs);
+    if (env_profile_library != nullptr && libs != env_tools_libs) {
+      std::stringstream ss;
+      ss << "Error: environment variables 'KOKKOS_PROFILE_LIBRARY="
+         << env_profile_library << "' and 'KOKKOS_TOOLS_LIBS=" << env_tools_libs
+         << "' are both set and do not match.";
+      ss << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
+    libs = env_tools_libs;
+  }
+  auto env_tools_args = std::getenv("KOKKOS_TOOLS_ARGS");
+  if (env_tools_args != nullptr) {
+    warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_TOOLS_ARGS",
+                                                    env_tools_args);
+    args = env_tools_args;
   }
   return {
       Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
