@@ -103,34 +103,45 @@ KOKKOS_INLINE_FUNCTION void runtime_check_rank(
   if (is_void_spec) {
     const size_t num_passed_args =
         count_valid_integers(i0, i1, i2, i3, i4, i5, i6, i7);
-    bool ranks_matching = num_passed_args == dyn_rank;
-    if (!ranks_matching && num_passed_args == rank) {
-      ranks_matching        = true;
+    // We either allow to pass as many extents as the dynamic rank is, or
+    // as many extents as the total rank is. In the latter case, the given
+    // extents for the static dimensions must match the
+    // compile-time extents.
+    const bool n_args_is_dyn_rank = num_passed_args == dyn_rank;
+    const bool n_args_is_rank     = num_passed_args == rank;
+
+    if (n_args_is_rank) {
       size_t new_extents[8] = {i0, i1, i2, i3, i4, i5, i6, i7};
       for (size_t i = dyn_rank; i < rank; ++i)
         if (new_extents[i] != View::static_extent(i)) {
           ranks_matching = false;
-          KOKKOS_IF_ON_HOST(const std::string message =
-                                "Constructor for Kokkos View '" + label +
-                                "' has mismatched static extents at position " +
-                                std::to_string(i) + ". Given extent is " +
-                                std::to_string(new_extents[i]) +
-                                " but should be " +
-                                std::to_string(View::static_extent(i)) + ".\n";
-                            Kokkos::abort(message.c_str());)
-          KOKKOS_IF_ON_DEVICE(Kokkos::abort("Constructor for Kokkos View has "
-                                            "mismatched static extents.");)
+          KOKKOS_IF_ON_HOST(
+              const std::string message =
+                  "The specified run-time dimension for Kokkos::View '" +
+                  label +
+                  "' doesn't match the compile-time dimensions at position " +
+                  std::to_string(i) + ". The given dimension is " +
+                  std::to_string(new_extents[i]) + " but should be " +
+                  std::to_string(View::static_extent(i)) + ".\n";
+              Kokkos::abort(message.c_str());)
+          KOKKOS_IF_ON_DEVICE(
+              Kokkos::abort(
+                  "The specified run-time dimensions for a Kokkos::View has "
+                  "don't match the compile-time dimensions.");)
         }
     }
 
-    if (!ranks_matching) {
-      KOKKOS_IF_ON_HOST(
-          const std::string message =
-              "Constructor for Kokkos View '" + label +
-              "' has mismatched number of arguments. Number of arguments = " +
-              std::to_string(num_passed_args) +
-              " but dynamic rank = " + std::to_string(dyn_rank) + " \n";
-          Kokkos::abort(message.c_str());)
+    if (!n_args_is_dyn_rank && !n_args_is_rank) {
+      KOKKOS_IF_ON_HOST(const std::string message =
+                            "Constructor for Kokkos View '" + label +
+                            "' has mismatched number of arguments. The number "
+                            "of arguments (" +
+                            std::to_string(num_passed_args) +
+                            ") neither matches the dynamic rank (" +
+                            std::to_string(dyn_rank) +
+                            ") nor the total rank (" + std::to_string(rank) +
+                            ")\n";
+                        Kokkos::abort(message.c_str());)
       KOKKOS_IF_ON_DEVICE(Kokkos::abort("Constructor for Kokkos View has "
                                         "mismatched number of arguments.");)
     }
