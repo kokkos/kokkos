@@ -842,6 +842,19 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
     ::Kokkos::resize(arg_prop, internal_view, n0, n1, n2, n3, n4, n5, n6, n7);
   }
 
+  template <class... ViewCtorArgs>
+  void realloc(const Kokkos::Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+               const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+    ::Kokkos::realloc(arg_prop, internal_view, n0, n1, n2, n3, n4, n5, n6, n7);
+  }
+
   void realloc(const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1124,6 +1137,19 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
       const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
     ::Kokkos::resize(arg_prop, internal_view, unique_token.size(), n0, n1, n2,
                      n3, n4, n5, n6);
+  }
+
+  template <class... ViewCtorArgs>
+  void realloc(const ::Kokkos::Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+               const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+    ::Kokkos::realloc(arg_prop, internal_view, unique_token.size(), n0, n1, n2,
+                      n3, n4, n5, n6);
   }
 
   void realloc(const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1555,6 +1581,15 @@ void contribute(
 }  // namespace Kokkos
 
 namespace Kokkos {
+
+template <typename DT, typename LY, typename ES, typename OP, typename CT,
+          typename DP, typename... IS, class... ViewCtorArgs>
+void realloc(
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    Kokkos::Experimental::ScatterView<DT, LY, ES, OP, CT, DP>& scatter_view,
+    IS... is) {
+  scatter_view.realloc(arg_prop, is...);
+}
 
 template <typename DT, typename LY, typename ES, typename OP, typename CT,
           typename DP, typename... IS>

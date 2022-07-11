@@ -55,6 +55,8 @@ TEST(TEST_CATEGORY, resize_realloc_no_init) {
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
+                        6, 7, 8);
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -92,6 +94,40 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
       },
       [&](DeallocateDataEvent) {
         return MatchDiagnostic{true, {"Found dealloc event"}};
+      });
+  ASSERT_TRUE(success);
+  listen_tool_events(Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, realloc_exec_space) {
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<typename TEST_EXECSPACE::memory_space,
+                   Kokkos::CudaUVMSpace>::value)
+    GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
+#endif
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
+  view_type outer_view, outer_view2;
+
+  auto success = validate_absence(
+      [&]() {
+        view_type inner_view(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
+        // Avoid testing the destructor
+        outer_view = inner_view;
+        Kokkos::realloc(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
+            inner_view, 10);
+        outer_view2 = inner_view;
+        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
+      },
+      [&](BeginFenceEvent event) {
+        if ((event.descriptor().find("Debug Only Check for Execution Error") !=
+             std::string::npos) ||
+            (event.descriptor().find("HostSpace fence") != std::string::npos))
+          return MatchDiagnostic{false};
+        return MatchDiagnostic{true, {"Found fence event!"}};
       });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());

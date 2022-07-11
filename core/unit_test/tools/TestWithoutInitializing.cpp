@@ -114,15 +114,17 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
 }
 
 TEST(kokkosp, create_mirror_view_and_copy) {
-// FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  return;
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+  if (std::is_same<Kokkos::DefaultExecutionSpace,
+                   Kokkos::Experimental::OpenMPTarget>::value)
+    GTEST_SKIP() << "skipping since the OpenMPTarget has unexpected fences";
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename Kokkos::DefaultExecutionSpace::memory_space,
+  if (std::is_same<Kokkos::DefaultExecutionSpace::memory_space,
                    Kokkos::CudaUVMSpace>::value)
-    return;
+    GTEST_SKIP()
+        << "skipping since the CudaUVMSpace requires additional fences";
 #endif
 
   using namespace Kokkos::Test::Tools;
@@ -142,13 +144,10 @@ TEST(kokkosp, create_mirror_view_and_copy) {
         device_view = mirror_device;
       },
       [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found begin event"}};
+        return MatchDiagnostic{true, {"Found parallel_for event"}};
       },
-      [&](BeginFenceEvent event) {
-        return MatchDiagnostic{
-            event.descriptor().find(
-                "fence after copying header from HostSpace") ==
-            std::string::npos};
+      [&](BeginFenceEvent) {
+        return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
 }

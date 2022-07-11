@@ -2583,12 +2583,52 @@ inline void deep_copy(
   } else if (dst.span_is_contiguous()) {
     Impl::contiguous_fill_or_memset(space, dst, value);
   } else {
-    using ViewTypeUniform = std::conditional_t<
-        View<DT, DP...>::Rank == 0,
-        typename View<DT, DP...>::uniform_runtime_type,
-        typename View<DT, DP...>::uniform_runtime_nomemspace_type>;
-    Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
-                           ExecSpace>(dst, value, space);
+    using ViewType = View<DT, DP...>;
+    // Figure out iteration order to do the ViewFill
+    int64_t strides[ViewType::Rank + 1];
+    dst.stride(strides);
+    Kokkos::Iterate iterate;
+    if (std::is_same<typename ViewType::array_layout,
+                     Kokkos::LayoutRight>::value) {
+      iterate = Kokkos::Iterate::Right;
+    } else if (std::is_same<typename ViewType::array_layout,
+                            Kokkos::LayoutLeft>::value) {
+      iterate = Kokkos::Iterate::Left;
+    } else if (std::is_same<typename ViewType::array_layout,
+                            Kokkos::LayoutStride>::value) {
+      if (strides[0] > strides[ViewType::Rank > 0 ? ViewType::Rank - 1 : 0])
+        iterate = Kokkos::Iterate::Right;
+      else
+        iterate = Kokkos::Iterate::Left;
+    } else {
+      if (std::is_same<typename ViewType::execution_space::array_layout,
+                       Kokkos::LayoutRight>::value)
+        iterate = Kokkos::Iterate::Right;
+      else
+        iterate = Kokkos::Iterate::Left;
+    }
+
+    // Lets call the right ViewFill functor based on integer space needed and
+    // iteration type
+    using ViewTypeUniform =
+        std::conditional_t<ViewType::Rank == 0,
+                           typename ViewType::uniform_runtime_type,
+                           typename ViewType::uniform_runtime_nomemspace_type>;
+    if (dst.span() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+      if (iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight, ExecSpace,
+                               ViewType::Rank, int64_t>(dst, value, space);
+      else
+        Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutLeft, ExecSpace,
+                               ViewType::Rank, int64_t>(dst, value, space);
+    } else {
+      if (iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight, ExecSpace,
+                               ViewType::Rank, int32_t>(dst, value, space);
+      else
+        Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutLeft, ExecSpace,
+                               ViewType::Rank, int32_t>(dst, value, space);
+    }
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();
@@ -3204,7 +3244,7 @@ inline void resize(Kokkos::View<T, P...>& v,
 }
 
 /** \brief  Resize a view with discarding old data. */
-template <class... I, class T, class... P>
+template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
@@ -3212,23 +3252,70 @@ inline std::enable_if_t<
                  Kokkos::LayoutRight>::value>
 impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
              const size_t n2, const size_t n3, const size_t n4, const size_t n5,
-             const size_t n6, const size_t n7, const I&... arg_prop) {
-  using view_type = Kokkos::View<T, P...>;
+             const size_t n6, const size_t n7,
+             const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  using view_type        = Kokkos::View<T, P...>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a memory space instance!");
 
   const size_t new_extents[8] = {n0, n1, n2, n3, n4, n5, n6, n7};
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    const std::string label = v.label();
-
     v = view_type();  // Deallocate first, if the only view to allocation
-    v = view_type(view_alloc(label, arg_prop...), n0, n1, n2, n3, n4, n5, n6,
-                  n7);
-  } else if (!Kokkos::Impl::has_type<Impl::WithoutInitializing_t, I...>::value)
-    Kokkos::deep_copy(v, typename view_type::value_type{});
+    v = view_type(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
+  } else if (alloc_prop_input::initialize) {
+    if (alloc_prop_input::has_execution_space) {
+      // Add execution_space if not provided to avoid need for if constexpr
+      using alloc_prop = Impl::ViewCtorProp<
+          ViewCtorArgs...,
+          std::conditional_t<alloc_prop_input::has_execution_space,
+                             std::integral_constant<unsigned int, 2>,
+                             typename view_type::execution_space>,
+          std::string>;
+      alloc_prop arg_prop_copy(arg_prop);
+      static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
+          .value                 = v.label();
+      using execution_space_type = typename alloc_prop::execution_space;
+      const execution_space_type& exec_space =
+          static_cast<
+              Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
+              arg_prop_copy)
+              .value;
+      Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
+    } else
+      Kokkos::deep_copy(v, typename view_type::value_type{});
+  }
+}
+
+template <class T, class... P, class... ViewCtorArgs>
+inline std::enable_if_t<
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutLeft>::value ||
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutRight>::value>
+realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+        Kokkos::View<T, P...>& v,
+        const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
 }
 
 template <class T, class... P>
@@ -3246,7 +3333,7 @@ realloc(Kokkos::View<T, P...>& v,
         const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7);
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, Impl::ViewCtorProp<>{});
 }
 
 template <class I, class T, class... P>
@@ -3265,10 +3352,10 @@ realloc(const I& arg_prop, Kokkos::View<T, P...>& v,
         const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, arg_prop);
+  impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
 }
 
-template <class... I, class T, class... P>
+template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutLeft>::value ||
@@ -3279,24 +3366,53 @@ inline std::enable_if_t<
     is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value>
 impl_realloc(Kokkos::View<T, P...>& v,
              const typename Kokkos::View<T, P...>::array_layout& layout,
-             const I&... arg_prop) {
-  using view_type = Kokkos::View<T, P...>;
+             const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  using view_type        = Kokkos::View<T, P...>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a memory space instance!");
 
   if (v.layout() != layout) {
-    const std::string label = v.label();
-
     v = view_type();  // Deallocate first, if the only view to allocation
-    v = view_type(view_alloc(label, arg_prop...), layout);
+    v = view_type(arg_prop, layout);
+  } else if (alloc_prop_input::initialize) {
+    if (alloc_prop_input::has_execution_space) {
+      // Add execution_space if not provided to avoid need for if constexpr
+      using alloc_prop = Impl::ViewCtorProp<
+          ViewCtorArgs...,
+          std::conditional_t<alloc_prop_input::has_execution_space,
+                             std::integral_constant<unsigned int, 2>,
+                             typename view_type::execution_space>,
+          std::string>;
+      alloc_prop arg_prop_copy(arg_prop);
+      static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
+          .value                 = v.label();
+      using execution_space_type = typename alloc_prop::execution_space;
+      const execution_space_type& exec_space =
+          static_cast<
+              Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
+              arg_prop_copy)
+              .value;
+      Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
+    } else
+      Kokkos::deep_copy(v, typename view_type::value_type{});
   }
 }
 
 // FIXME User-provided (custom) layouts are not required to have a comparison
 // operator. Hence, there is no way to check if the requested layout is actually
 // the same as the existing one.
-template <class... I, class T, class... P>
+template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
     !(std::is_same<typename Kokkos::View<T, P...>::array_layout,
                    Kokkos::LayoutLeft>::value ||
@@ -3307,30 +3423,51 @@ inline std::enable_if_t<
       is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value)>
 impl_realloc(Kokkos::View<T, P...>& v,
              const typename Kokkos::View<T, P...>::array_layout& layout,
-             const I&... arg_prop) {
-  using view_type = Kokkos::View<T, P...>;
+             const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  using view_type        = Kokkos::View<T, P...>;
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only realloc managed views");
-
-  const std::string label = v.label();
+  static_assert(!alloc_prop_input::has_label,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::has_memory_space,
+                "The view constructor arguments passed to Kokkos::realloc must "
+                "not include a memory space instance!");
 
   v = view_type();  // Deallocate first, if the only view to allocation
-  v = view_type(view_alloc(label, arg_prop...), layout);
+
+  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
+  alloc_prop arg_prop_copy(arg_prop);
+  static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
+      .value = v.label();
+  v          = view_type(arg_prop_copy, layout);
+}
+
+template <class T, class... P, class... ViewCtorArgs>
+inline void realloc(
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    Kokkos::View<T, P...>& v,
+    const typename Kokkos::View<T, P...>::array_layout& layout) {
+  impl_realloc(v, layout, arg_prop);
 }
 
 template <class I, class T, class... P>
 inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
     const I& arg_prop, Kokkos::View<T, P...>& v,
     const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_realloc(v, layout, arg_prop);
+  impl_realloc(v, layout, Kokkos::view_alloc(arg_prop));
 }
 
 template <class T, class... P>
 inline void realloc(
     Kokkos::View<T, P...>& v,
     const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_realloc(v, layout);
+  impl_realloc(v, layout, Impl::ViewCtorProp<>{});
 }
 
 } /* namespace Kokkos */
