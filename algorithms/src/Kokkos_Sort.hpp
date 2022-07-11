@@ -583,62 +583,6 @@ struct min_max_functor {
 
 }  // namespace Impl
 
-template <class ExecutionSpace>
-class Sort {
- public:
-  template <class ViewType>
-  static void sort(const ExecutionSpace& exec, ViewType const& view) {
-    using CompType = BinOp1D<ViewType>;
-
-    Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
-    Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
-    parallel_reduce("Kokkos::Sort::FindExtent",
-                    Kokkos::RangePolicy<typename ViewType::execution_space>(
-                        exec, 0, view.extent(0)),
-                    Impl::min_max_functor<ViewType>(view), reducer);
-    if (result.min_val == result.max_val) return;
-    // For integral types the number of bins may be larger than the range
-    // in which case we can exactly have one unique value per bin
-    // and then don't need to sort bins.
-    bool sort_in_bins = true;
-    // TODO: figure out better max_bins then this ...
-    int64_t max_bins = view.extent(0) / 2;
-    if (std::is_integral<typename ViewType::non_const_value_type>::value) {
-      // Cast to double to avoid possible overflow when using integer
-      auto const max_val = static_cast<double>(result.max_val);
-      auto const min_val = static_cast<double>(result.min_val);
-      // using 10M as the cutoff for special behavior (roughly 40MB for the
-      // count array)
-      if ((max_val - min_val) < 10000000) {
-        max_bins     = max_val - min_val + 1;
-        sort_in_bins = false;
-      }
-    }
-    if (std::is_floating_point<
-            typename ViewType::non_const_value_type>::value) {
-      KOKKOS_ASSERT(std::isfinite(static_cast<double>(result.max_val) -
-                                  static_cast<double>(result.min_val)));
-    }
-
-    BinSort<ViewType, CompType> bin_sort(
-        view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
-    bin_sort.create_permute_vector(exec);
-    bin_sort.sort(exec, view);
-  }
-};
-
-#if defined(KOKKOS_ENABLE_CUDA)
-template <>
-class Sort<Kokkos::Cuda> {
- public:
-  template <class ViewType>
-  static void sort(const Kokkos::Cuda&, ViewType const& view) {
-    thrust::device_ptr<typename ViewType::value_type> data_ptr(view.data());
-    thrust::sort(data_ptr, data_ptr + view.extent(0));
-  }
-};
-#endif
-
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
                  (!SpaceAccessibility<
@@ -647,9 +591,55 @@ std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
 sort(const ExecutionSpace& exec,
      const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
+  using CompType = BinOp1D<ViewType>;
 
-  Sort<ExecutionSpace>::sort(exec, view);
+  Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
+  Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
+  parallel_reduce("Kokkos::Sort::FindExtent",
+                  Kokkos::RangePolicy<typename ViewType::execution_space>(
+                      exec, 0, view.extent(0)),
+                  Impl::min_max_functor<ViewType>(view), reducer);
+  if (result.min_val == result.max_val) return;
+  // For integral types the number of bins may be larger than the range
+  // in which case we can exactly have one unique value per bin
+  // and then don't need to sort bins.
+  bool sort_in_bins = true;
+  // TODO: figure out better max_bins then this ...
+  int64_t max_bins = view.extent(0) / 2;
+  if (std::is_integral<typename ViewType::non_const_value_type>::value) {
+    // Cast to double to avoid possible overflow when using integer
+    auto const max_val = static_cast<double>(result.max_val);
+    auto const min_val = static_cast<double>(result.min_val);
+    // using 10M as the cutoff for special behavior (roughly 40MB for the count
+    // array)
+    if ((max_val - min_val) < 10000000) {
+      max_bins     = max_val - min_val + 1;
+      sort_in_bins = false;
+    }
+  }
+  if (std::is_floating_point<typename ViewType::non_const_value_type>::value) {
+    KOKKOS_ASSERT(std::isfinite(static_cast<double>(result.max_val) -
+                                static_cast<double>(result.min_val)));
+  }
+
+  BinSort<ViewType, CompType> bin_sort(
+      view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
+  bin_sort.create_permute_vector(exec);
+  bin_sort.sort(exec, view);
 }
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class ViewType>
+void sort(Cuda const& space, ViewType const& view) {
+  static_assert(ViewType::rank == 1, "CUDA sort only supports 1D Views.");
+
+  using DevicePtr = thrust::device_ptr<typename ViewType::value_type>;
+  DevicePtr first(view.data());
+  DevicePtr last(view.data() + view.extent(0));
+  const auto exec = thrust::cuda::par.on(space.cuda_stream());
+  thrust::sort(exec, first, last);
+}
+#endif
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
