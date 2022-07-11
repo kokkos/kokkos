@@ -351,8 +351,9 @@ CudaInternal::~CudaInternal() {
 
 int CudaInternal::verify_is_initialized(const char *const label) const {
   if (m_cudaDev < 0) {
-    std::cerr << "Kokkos::Cuda::" << label << " : ERROR device not initialized"
-              << std::endl;
+    Kokkos::abort((std::string("Kokkos::Cuda::") + label +
+                   " : ERROR device not initialized\n")
+                      .c_str());
   }
   return 0 <= m_cudaDev;
 }
@@ -736,13 +737,22 @@ void CudaInternal::finalize() {
   if (was_finalized) return;
 
   was_finalized = true;
-  if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    // Only finalize this if we're the singleton
-    if (this == &singleton()) {
-      (void)Impl::cuda_global_unique_token_locks(true);
-      Impl::finalize_host_cuda_lock_arrays();
-    }
 
+  // Only finalize this if we're the singleton
+  if (this == &singleton()) {
+    (void)Impl::cuda_global_unique_token_locks(true);
+    Impl::finalize_host_cuda_lock_arrays();
+
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
+    auto &deep_copy_space =
+        Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
+    if (deep_copy_space)
+      deep_copy_space->impl_internal_space_instance()->finalize();
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(cuda_get_deep_copy_stream()));
+  }
+
+  if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
     using RecordHost =
         Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>;
@@ -752,47 +762,36 @@ void CudaInternal::finalize() {
     RecordHost::decrement(RecordHost::get_record(m_scratchUnified));
     if (m_scratchFunctorSize > 0)
       RecordCuda::decrement(RecordCuda::get_record(m_scratchFunctor));
-
-    for (int i = 0; i < m_n_team_scratch; ++i) {
-      if (m_team_scratch_current_size[i] > 0)
-        Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
-    }
-
-    if (m_manage_stream && m_stream != nullptr)
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(m_stream));
-
-    m_cudaDev             = -1;
-    m_multiProcCount      = 0;
-    m_maxWarpCount        = 0;
-    m_maxBlock            = {0, 0, 0};
-    m_maxSharedWords      = 0;
-    m_scratchSpaceCount   = 0;
-    m_scratchFlagsCount   = 0;
-    m_scratchUnifiedCount = 0;
-    m_streamCount         = 0;
-    m_scratchSpace        = nullptr;
-    m_scratchFlags        = nullptr;
-    m_scratchUnified      = nullptr;
-    m_stream              = nullptr;
-    for (int i = 0; i < m_n_team_scratch; ++i) {
-      m_team_scratch_current_size[i] = 0;
-      m_team_scratch_ptr[i]          = nullptr;
-    }
-
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratch_locks));
-    m_scratch_locks = nullptr;
   }
 
-  // only destroy these if we're finalizing the singleton
-  if (this == &singleton()) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
-    auto &deep_copy_space =
-        Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
-    if (deep_copy_space)
-      deep_copy_space->impl_internal_space_instance()->finalize();
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(cuda_get_deep_copy_stream()));
+  for (int i = 0; i < m_n_team_scratch; ++i) {
+    if (m_team_scratch_current_size[i] > 0)
+      Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
   }
+
+  if (m_manage_stream && m_stream != nullptr)
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(m_stream));
+
+  m_cudaDev             = -1;
+  m_multiProcCount      = 0;
+  m_maxWarpCount        = 0;
+  m_maxBlock            = {0, 0, 0};
+  m_maxSharedWords      = 0;
+  m_scratchSpaceCount   = 0;
+  m_scratchFlagsCount   = 0;
+  m_scratchUnifiedCount = 0;
+  m_streamCount         = 0;
+  m_scratchSpace        = nullptr;
+  m_scratchFlags        = nullptr;
+  m_scratchUnified      = nullptr;
+  m_stream              = nullptr;
+  for (int i = 0; i < m_n_team_scratch; ++i) {
+    m_team_scratch_current_size[i] = 0;
+    m_team_scratch_ptr[i]          = nullptr;
+  }
+
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratch_locks));
+  m_scratch_locks = nullptr;
 }
 
 //----------------------------------------------------------------------------
