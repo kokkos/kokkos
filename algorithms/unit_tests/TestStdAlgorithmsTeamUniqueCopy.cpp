@@ -168,8 +168,8 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   Kokkos::View<int*, Kokkos::HostSpace> gold_distances("view_it_dist",
                                                        num_teams);
   auto v2_h = create_host_space_copy(v);
-  auto v_gold_h =
-      create_view<ValueType>(Tag{}, v2_h.extent(0), v2_h.extent(1), "vgold");
+  Kokkos::View<ValueType**, Kokkos::HostSpace> v_gold_h("vgold", v2_h.extent(0),
+                                                        v2_h.extent(1));
   for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
     auto rowFrom      = Kokkos::subview(v2_h, i, Kokkos::ALL());
     auto rowDest      = Kokkos::subview(v_gold_h, i, Kokkos::ALL());
