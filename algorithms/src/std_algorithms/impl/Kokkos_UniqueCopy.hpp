@@ -121,6 +121,144 @@ OutputIterator unique_copy_impl(const std::string& label,
   return unique_copy_impl(label, ex, first, last, d_first, binary_pred_t());
 }
 
+//
+// team level
+//
+template <class IndexType, class InputIt, class OutputIt,
+          class BinaryPredicateType>
+struct StdUniqueCopyTeamSingleFunctor {
+  InputIt m_first_from;
+  OutputIt m_first_dest;
+  BinaryPredicateType m_pred;
+  IndexType m_numElements;
+
+  KOKKOS_FUNCTION
+  StdUniqueCopyTeamSingleFunctor(InputIt first_from,
+				 OutputIt first_dest,
+				 BinaryPredicateType pred,
+				 IndexType numElements)
+      : m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
+        m_pred(std::move(pred)),
+        m_numElements(numElements){}
+
+  KOKKOS_FUNCTION
+  void operator()() const
+  {
+    int count = 0;
+    for (IndexType i = 0; i < m_numElements-1; ++i)
+    {
+      const auto& val_i = m_first_from[i];
+      const auto& val_ip1 =  m_first_from[i + 1];
+      if (!m_pred(val_i, val_ip1)) {
+        m_first_dest[count++] = val_i;
+      }
+    }
+
+    m_first_dest[count++] = m_first_from[m_numElements-1];
+  }
+};
+
+template <class IndexType, class InputIt, class BinaryPredicateType>
+struct StdUniqueCopyTeamCountFunctor {
+  InputIt m_first_from;
+  BinaryPredicateType m_pred;
+
+  KOKKOS_FUNCTION
+  StdUniqueCopyTeamCountFunctor(InputIt first_from,
+				BinaryPredicateType pred)
+      : m_first_from(std::move(first_from)),
+        m_pred(std::move(pred)){}
+
+  KOKKOS_FUNCTION
+  void operator()(IndexType i, std::size_t & lsum) const
+  {
+    const auto& val_i = m_first_from[i];
+    const auto& val_ip1 =  m_first_from[i + 1];
+    if (!m_pred(val_i, val_ip1)) {
+      lsum++;
+    }
+  }
+};
+
+template <
+  class TeamHandleType, class InputIterator, class OutputIterator,
+  class PredicateType>
+KOKKOS_FUNCTION
+OutputIterator unique_copy_team_impl(const TeamHandleType& teamHandle,
+				     InputIterator first,
+				     InputIterator last,
+				     OutputIterator d_first,
+				     PredicateType pred)
+{
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
+
+  // branch for trivial vs non trivial case
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  if (num_elements == 0) {
+    return d_first;
+  }
+  else if (num_elements == 1)
+  {
+    d_first[0] = first[0];
+    return d_first + 1;
+  }
+  else
+  {
+    using index_type = typename InputIterator::difference_type;
+
+    // parallel_scan does not support TeamThreadRange, so we do this:
+
+    // first, we compute the num of unique elements, which we need to
+    // compute the return iterator
+    using count_func_type  = StdUniqueCopyTeamCountFunctor<index_type,
+							   InputIterator,
+							   PredicateType>;
+    std::size_t count;
+    ::Kokkos::parallel_reduce(TeamThreadRange (teamHandle, num_elements-1),
+			      count_func_type(first, pred), count);
+    teamHandle.team_barrier();
+
+    // second, we copy all unique elements
+    using func_type  = StdUniqueCopyTeamSingleFunctor<index_type, InputIterator,
+    						      OutputIterator, PredicateType>;
+    ::Kokkos::single(PerTeam(teamHandle),
+                     func_type(first, d_first, pred, num_elements));
+    teamHandle.team_barrier();
+
+    // return the correct iterator: we need +1 here because we need to
+    // return iterator to the element past the last element copied
+    return d_first + count+1;
+
+  }
+}
+
+template <class TeamHandleType, class InputIterator, class OutputIterator>
+KOKKOS_FUNCTION
+OutputIterator unique_copy_team_impl(const TeamHandleType& teamHandle,
+				     InputIterator first,
+				     InputIterator last,
+				     OutputIterator d_first)
+{
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
+
+  // aliases
+  using value_type1 = typename InputIterator::value_type;
+  using value_type2 = typename OutputIterator::value_type;
+
+  // default binary predicate uses ==
+  using binary_pred_t = StdAlgoEqualBinaryPredicate<value_type1, value_type2>;
+
+  // run
+  return unique_copy_team_impl(teamHandle, first, last, d_first, binary_pred_t());
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
