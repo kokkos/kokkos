@@ -61,7 +61,6 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_OpenACCSpace.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
@@ -138,19 +137,6 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenACC> {
 }  // namespace Experimental
 }  // namespace Tools
 
-namespace Impl {
-
-class OpenACCSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  OpenACCSpaceInitializer()  = default;
-  ~OpenACCSpaceInitializer() = default;
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string& name) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 #endif /* #if defined( KOKKOS_ENABLE_OPENACC ) */

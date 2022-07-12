@@ -148,44 +148,6 @@ int OpenACC::impl_is_initialized() {
 
 namespace Impl {
 int g_openacc_space_factory_initialized =
-    Kokkos::Impl::initialize_space_factory<OpenACCSpaceInitializer>(
-        "170_OpenACC");
-
-void OpenACCSpaceInitializer::initialize(
-    const InitializationSettings& settings) {
-  // Prevent "unused variable" warning for 'setting' input struct.  If
-  // Serial::initialize() ever needs to take arguments from the input
-  // struct, you may remove this line of code.
-  (void)settings;
-
-  if (std::is_same<Kokkos::Experimental::OpenACC,
-                   Kokkos::DefaultExecutionSpace>::value) {
-    Kokkos::Experimental::OpenACC().impl_initialize();
-  }
-}
-
-void OpenACCSpaceInitializer::finalize(const bool all_spaces) {
-  if (std::is_same<Kokkos::Experimental::OpenACC,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::OpenACC().impl_is_initialized())
-      Kokkos::Experimental::OpenACC().impl_finalize();
-  }
-}
-
-void OpenACCSpaceInitializer::fence(const std::string& name) {
-  Kokkos::Experimental::OpenACC::impl_static_fence(name);
-}
-
-void OpenACCSpaceInitializer::print_configuration(std::ostream& msg,
-                                                  const bool detail) {
-  msg << "OpenACC Execution Space:" << std::endl;
-  msg << "  KOKKOS_ENABLE_OPENACC: ";
-  msg << "yes" << std::endl;
-
-  msg << "\nOpenACC Runtime Configuration:" << std::endl;
-  Kokkos::Experimental::OpenACC().print_configuration(msg, detail);
-}
-
+    initialize_space_factory<Experimental::OpenACC>("170_OpenACC");
 }  // namespace Impl
 }  // Namespace Kokkos
