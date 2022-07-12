@@ -94,7 +94,10 @@ struct InitializationSettingsHelper<bool> {
   using value_type   = bool;
   using storage_type = char;
 
-  static constexpr storage_type unspecified = CHAR_MIN;
+  static constexpr storage_type unspecified = CHAR_MAX;
+  static_assert(static_cast<storage_type>(true) != unspecified &&
+                    static_cast<storage_type>(false) != unspecified,
+                "");
 };
 template <>
 struct InitializationSettingsHelper<std::string> {
