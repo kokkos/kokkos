@@ -136,7 +136,7 @@ void OpenACC::impl_static_fence(const std::string& name) {
       name, Kokkos::Experimental::Impl::openacc_fence_is_static::yes);
 }
 
-void OpenACC::impl_initialize() {
+void OpenACC::impl_initialize(InitializationSettings const&) {
   Impl::OpenACCInternal::impl_singleton()->impl_initialize();
 }
 void OpenACC::impl_finalize() {

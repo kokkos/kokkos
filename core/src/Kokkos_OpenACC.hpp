@@ -94,7 +94,8 @@ class OpenACC {
   void fence(const std::string& name =
                  "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
 
-  static void impl_static_fence(const std::string&);
+  static void impl_static_fence(const std::string& name);
+
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
 
@@ -110,7 +111,7 @@ class OpenACC {
   static int impl_is_initialized();
 
   //! Initialize, telling the OpenACC run-time library which device to use.
-  static void impl_initialize();
+  static void impl_initialize(InitializationSettings const&);
 
   inline Impl::OpenACCInternal* impl_internal_space_instance() const {
     return m_space_instance;
