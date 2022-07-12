@@ -48,7 +48,6 @@
 #if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
 #include <Kokkos_OpenACC.hpp>
 #include <Kokkos_OpenACCSpace.hpp>
-//#include <OpenACC/Kokkos_OpenACC_UniqueToken.hpp>
 #endif
 
 #endif
