@@ -146,7 +146,7 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
   if (first == last) {
     return d_first;
   } else {
-    // paralle_scan does not yet support TeamThreadRange, so we do this:
+    // parallel_scan does not yet support TeamThreadRange, so we do this:
     // first, since we return an iterator past the last element copied,
     // we need to compute how many elements satisfy the pred;
     // second, we use Kokkos::single() to copy the elements
