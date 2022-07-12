@@ -73,7 +73,7 @@ auto copy_backward(const std::string& label, const ExecutionSpace& ex,
 }
 
 //
-// overload set accepting execution space
+// overload set accepting team handle
 //
 template <class TeamHandleType, class IteratorType1, class IteratorType2>
 KOKKOS_FUNCTION

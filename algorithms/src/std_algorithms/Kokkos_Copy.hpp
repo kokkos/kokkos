@@ -75,7 +75,7 @@ auto copy(const std::string& label, const ExecutionSpace& ex,
 }
 
 //
-// overload set accepting execution space
+// overload set accepting team handle
 //
 template <class TeamHandleType, class InputIterator, class OutputIterator>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,

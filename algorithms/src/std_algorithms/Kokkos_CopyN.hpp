@@ -77,7 +77,7 @@ auto copy_n(const std::string& label, const ExecutionSpace& ex,
 }
 
 //
-// overload set accepting execution space
+// overload set accepting team handle
 //
 template <class TeamHandleType, class InputIterator, class Size,
           class OutputIterator>

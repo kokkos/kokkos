@@ -73,7 +73,7 @@ auto count_if(const std::string& label, const ExecutionSpace& ex,
 }
 
 //
-// overload set accepting execution space
+// overload set accepting team handle
 //
 template <class ExecutionSpace, class IteratorType, class Predicate>
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<ExecutionSpace>::value,
