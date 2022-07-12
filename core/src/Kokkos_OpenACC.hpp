@@ -90,7 +90,7 @@ class OpenACC {
 
   using scratch_memory_space = ScratchMemorySpace<OpenACC>;
 
-  inline static bool in_parallel() {
+  static bool in_parallel() {
     return acc_on_device(acc_device_not_host);
   }
 
