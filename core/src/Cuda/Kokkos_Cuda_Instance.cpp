@@ -857,7 +857,7 @@ int Cuda::impl_is_initialized() {
 }
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
-  int use_gpu = Impl::get_gpu(settings);
+  int const use_gpu = Impl::get_gpu(settings);
   Impl::CudaInternal::singleton().initialize(use_gpu > -1 ? use_gpu : 0,
                                              nullptr);
 }
