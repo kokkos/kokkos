@@ -114,16 +114,12 @@ void parse_command_line_arguments(int& narg, char* arg[],
   using Kokkos::Impl::check_int_arg;
   using Kokkos::Impl::check_str_arg;
 
-  auto& lib            = arguments.lib;
-  auto& args           = arguments.args;
-  auto& help           = arguments.help;
-  auto& tune_internals = arguments.tune_internals;
+  auto& lib  = arguments.lib;
+  auto& args = arguments.args;
+  auto& help = arguments.help;
   while (iarg < narg) {
     bool remove_flag = false;
-    if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
-      tune_internals = InitArguments::PossiblyUnsetOption::on;
-      remove_flag    = true;
-    } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", lib)) {
+    if (check_str_arg(arg[iarg], "--kokkos-tools-library", lib)) {
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(arg[iarg]);
       remove_flag = true;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", args)) {
@@ -162,24 +158,12 @@ void parse_command_line_arguments(int& narg, char* arg[],
 }
 Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
     InitArguments& arguments) {
-  auto& tool_lib       = arguments.lib;
-  auto& tune_internals = arguments.tune_internals;
-  auto env_tool_lib    = std::getenv("KOKKOS_PROFILE_LIBRARY");
+  auto& tool_lib    = arguments.lib;
+  auto env_tool_lib = std::getenv("KOKKOS_PROFILE_LIBRARY");
   if (env_tool_lib != nullptr) {
     warn_env_var_ignored_when_kokkos_tools_disabled("KOKKOS_PROFILE_LIBRARY",
                                                     env_tool_lib);
     tool_lib = env_tool_lib;
-  }
-  char* env_tuneinternals_str = std::getenv("KOKKOS_TUNE_INTERNALS");
-  if (env_tuneinternals_str != nullptr) {
-    std::string env_str(env_tuneinternals_str);  // deep-copies string
-    for (char& c : env_str) {
-      c = toupper(c);
-    }
-    if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
-      tune_internals = InitArguments::PossiblyUnsetOption::on;
-    else
-      tune_internals = InitArguments::PossiblyUnsetOption::off;
   }
   return {
       Kokkos::Tools::Impl::InitializationStatus::InitializationResult::success};
