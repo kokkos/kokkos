@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-// FIXME_OPENACC - macro for workaround implementation in UniqueToken
-// constructor. undef'ed at the end
-#define KOKKOS_IMPL_OPENACC_WORKAROUND
 
 #include <Kokkos_Core.hpp>
 

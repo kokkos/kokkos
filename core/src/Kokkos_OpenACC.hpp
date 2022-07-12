@@ -107,13 +107,13 @@ class OpenACC {
   static const char* name();
 
   //! Free any resources being consumed by the device.
-  void impl_finalize();
+  static void impl_finalize();
 
   //! Has been initialized
   static int impl_is_initialized();
 
   //! Initialize, telling the OpenACC run-time library which device to use.
-  void impl_initialize();
+  static void impl_initialize();
 
   inline Impl::OpenACCInternal* impl_internal_space_instance() const {
     return m_space_instance;
