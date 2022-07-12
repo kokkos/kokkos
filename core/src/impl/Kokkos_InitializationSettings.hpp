@@ -139,6 +139,7 @@ class InitializationSettings {
 
  public:
   KOKKOS_IMPL_DECLARE(int, num_threads);
+  KOKKOS_IMPL_DECLARE(std::string, map_device_id_by);
   KOKKOS_IMPL_DECLARE(int, device_id);
   KOKKOS_IMPL_DECLARE(int, num_devices);
   KOKKOS_IMPL_DECLARE(int, skip_device);

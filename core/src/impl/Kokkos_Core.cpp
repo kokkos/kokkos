@@ -111,6 +111,7 @@ void combine(Kokkos::InitializationSettings& out,
   }                                       \
   static_assert(true, "no-op to require trailing semicolon")
   KOKKOS_IMPL_COMBINE_SETTING(num_threads);
+  KOKKOS_IMPL_COMBINE_SETTING(map_device_id_by);
   KOKKOS_IMPL_COMBINE_SETTING(device_id);
   KOKKOS_IMPL_COMBINE_SETTING(num_devices);
   KOKKOS_IMPL_COMBINE_SETTING(skip_device);
@@ -627,6 +628,7 @@ Kokkos Core Options:
   --kokkos-num-threads=INT       : specify total number of threads to use for
                                    parallel regions on the host.
   --kokkos-device-id=INT         : specify device id to be used by Kokkos.
+  --kokkos-map-devide-id-by=(random|mpi_rank)
   --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
                                    devices per node to be used. Process to device
                                    mapping happens by obtaining the local MPI rank
@@ -663,6 +665,10 @@ Report bugs to https://github.com/kokkos/kokkos/issues
   std::cout << help_message << std::endl;
 }
 
+bool is_valid_map_device_id_by(std::string const& x) {
+  return x == "mpi_rank" || x == "random";
+}
+
 }  // namespace
 
 void Kokkos::Impl::parse_command_line_arguments(
@@ -672,6 +678,7 @@ void Kokkos::Impl::parse_command_line_arguments(
   int device_id;
   int num_devices;
   int skip_device;
+  std::string map_device_id_by;
 
   bool kokkos_num_threads_found = false;
   bool kokkos_device_id_found   = false;
@@ -814,6 +821,17 @@ void Kokkos::Impl::parse_command_line_arguments(
 
       if (check_arg(argv[iarg], "--kokkos-help")) {
         remove_flag = true;
+      }
+    } else if (check_str_arg(argv[iarg], "--kokkos-map-device-id-by",
+                             map_device_id_by)) {
+      if (is_valid_map_device_id_by(map_device_id_by)) {
+        settings.set_map_device_id_by(map_device_id_by);
+      } else {
+        std::cerr << "Warning: unrecognized value for command line argument "
+                     "--kokkos-map-device-id-by=\""
+                  << map_device_id_by << "\" ignored."
+                  << " Raised by Kokkos::initialize(int argc, char* argv[])."
+                  << std::endl;
       }
     }
 
@@ -972,6 +990,18 @@ void Kokkos::Impl::parse_environment_variables(
       settings.set_tune_internals(true);
     } else {
       settings.set_tune_internals(false);
+    }
+  }
+  char* env_map_device_id_by_str = std::getenv("KOKKOS_MAP_DEVICE_ID_BY");
+  if (env_map_device_id_by_str != nullptr) {
+    if (is_valid_map_device_id_by(env_map_device_id_by_str)) {
+      settings.set_map_device_id_by(env_map_device_id_by_str);
+    } else {
+      std::cerr << "Warning: unrecognized value for environment variable "
+                << "KOKKOS_MAP_DEVICE_ID_BY=" << env_map_device_id_by_str
+                << "ignored."
+                << " Raised by Kokkos::initialize(int argc, char* argv[])."
+                << std::endl;
     }
   }
 }
