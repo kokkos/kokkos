@@ -124,6 +124,13 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     LIST(REMOVE_ITEM COMMON_WARNINGS "-Wsign-compare")
   ENDIF()
 
+  # NVHPC compiler does not support -Wtype-limits.
+  IF(KOKKOS_ENABLE_OPENACC)
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+      LIST(REMOVE_ITEM COMMON_WARNINGS "-Wtype-limits")
+    ENDIF()
+  ENDIF()
+
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     LIST(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   ENDIF()
@@ -490,8 +497,8 @@ FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
       MESSAGE(FATAL_ERROR "Multiple GPU architectures given! Already have ${CUDA_ARCH_ALREADY_SPECIFIED}, but trying to add ${ARCH}. If you are re-running CMake, try clearing the cache and running again.")
     ENDIF()
     SET(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-    IF (NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_OPENMPTARGET AND NOT KOKKOS_ENABLE_SYCL)
-      MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
+    IF (NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_OPENMPTARGET AND NOT KOKKOS_ENABLE_SYCL AND NOT KOKKOS_ENABLE_OPENACC)
+      MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA, Kokkos_ENABLE_OPENACC, and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
       UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
     ELSE()
       SET(KOKKOS_CUDA_ARCH_FLAG ${FLAG} PARENT_SCOPE)
@@ -615,7 +622,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64
       XL    -qtgtarch=${KOKKOS_CUDA_ARCH_FLAG}
-      NVHPC -gpu=${NVHPC_CUDA_ARCH}
+      NVHPC -Minfo=mp -mp=gpu -gpu=${NVHPC_CUDA_ARCH}
     )
   ENDIF()
   SET(CLANG_AMDGPU_ARCH ${KOKKOS_AMDGPU_ARCH_FLAG})
@@ -653,6 +660,12 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
       IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.4.0" -D__STRICT_ANSI__
     )
   ENDIF()
+ENDIF()
+
+IF (KOKKOS_ENABLE_OPENACC)
+    COMPILER_SPECIFIC_FLAGS(
+		NVHPC -acc -Minfo=acc
+	)
 ENDIF()
 
 IF (KOKKOS_ENABLE_SYCL)
@@ -793,7 +806,7 @@ ENDIF()
 #Let's just always print things
 MESSAGE(STATUS "Built-in Execution Spaces:")
 
-FOREACH (_BACKEND Cuda OpenMPTarget HIP SYCL)
+FOREACH (_BACKEND Cuda OpenMPTarget HIP SYCL OpenACC)
   STRING(TOUPPER ${_BACKEND} UC_BACKEND)
   IF(KOKKOS_ENABLE_${UC_BACKEND})
     IF(_DEVICE_PARALLEL)
