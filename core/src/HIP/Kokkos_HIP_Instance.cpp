@@ -423,6 +423,8 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
+  if (was_finalized) return;
+
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 

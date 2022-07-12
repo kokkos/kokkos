@@ -195,6 +195,8 @@ sycl::device_ptr<void> SYCLInternal::resize_team_scratch_space(
 uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
 
 void SYCLInternal::finalize() {
+  if (was_finalized) return;
+
   SYCLInternal::fence(*m_queue,
                       "Kokkos::SYCLInternal::finalize: fence on finalization",
                       m_instance_id);
