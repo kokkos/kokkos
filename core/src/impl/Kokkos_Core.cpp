@@ -884,17 +884,17 @@ void Kokkos::Impl::parse_environment_variables(
           "integer. Raised by Kokkos::initialize(int argc, char* argv[]).");
     settings.set_device_id(env_device_id);
   }
-  auto env_rdevices_str    = std::getenv("KOKKOS_RAND_DEVICES");
-  auto env_num_devices_str = std::getenv("KOKKOS_NUM_DEVICES");
-  if (env_num_devices_str != nullptr || env_rdevices_str != nullptr) {
+  auto env_rand_devices_str = std::getenv("KOKKOS_RAND_DEVICES");
+  auto env_num_devices_str  = std::getenv("KOKKOS_NUM_DEVICES");
+  if (env_num_devices_str != nullptr || env_rand_devices_str != nullptr) {
     errno = 0;
-    if (env_num_devices_str != nullptr && env_rdevices_str != nullptr) {
+    if (env_num_devices_str != nullptr && env_rand_devices_str != nullptr) {
       Impl::throw_runtime_exception(
           "Error: cannot specify both KOKKOS_NUM_DEVICES and "
           "KOKKOS_RAND_DEVICES. "
           "Raised by Kokkos::initialize(int argc, char* argv[]).");
     }
-    int rdevices = -1;
+    int rand_devices = -1;
     if (env_num_devices_str != nullptr) {
       auto env_num_devices = std::strtol(env_num_devices_str, &endptr, 10);
       if (endptr == env_num_devices_str)
@@ -908,8 +908,8 @@ void Kokkos::Impl::parse_environment_variables(
             "argv[]).");
       settings.set_num_devices(env_num_devices);
     } else {  // you set KOKKOS_RAND_DEVICES
-      auto env_rdevices = std::strtol(env_rdevices_str, &endptr, 10);
-      if (endptr == env_rdevices_str)
+      auto env_rand_devices = std::strtol(env_rand_devices_str, &endptr, 10);
+      if (endptr == env_rand_devices_str)
         Impl::throw_runtime_exception(
             "Error: cannot convert KOKKOS_RAND_DEVICES to an integer. Raised "
             "by Kokkos::initialize(int argc, char* argv[]).");
@@ -919,7 +919,7 @@ void Kokkos::Impl::parse_environment_variables(
             "by an integer. Raised by Kokkos::initialize(int argc, char* "
             "argv[]).");
       else
-        rdevices = env_rdevices;
+        rand_devices = env_rand_devices;
     }
     // Skip device
     auto env_skip_device_str = std::getenv("KOKKOS_SKIP_DEVICE");
@@ -937,15 +937,15 @@ void Kokkos::Impl::parse_environment_variables(
             "argv[]).");
       settings.set_skip_device(env_skip_device);
     }
-    if (rdevices > 0) {
-      if (settings.has_skip_device() && rdevices == 1)
+    if (rand_devices > 0) {
+      if (settings.has_skip_device() && rand_devices == 1)
         Impl::throw_runtime_exception(
             "Error: cannot KOKKOS_SKIP_DEVICE the only KOKKOS_RAND_DEVICE. "
             "Raised by Kokkos::initialize(int argc, char* argv[]).");
 
       std::srand(get_process_id());
       while (settings.has_device_id()) {
-        int test_device_id = std::rand() % rdevices;
+        int test_device_id = std::rand() % rand_devices;
         if (!settings.has_skip_device() ||
             test_device_id != settings.get_skip_device()) {
           settings.set_device_id(test_device_id);
