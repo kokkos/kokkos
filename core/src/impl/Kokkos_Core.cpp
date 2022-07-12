@@ -637,10 +637,10 @@ Kokkos Core Options:
                                    screen output.
 
 Kokkos Tools Options:
-  --kokkos-tools-library         : Equivalent to KOKKOS_PROFILE_LIBRARY environment
-                                   variable. Must either be full path to library or
-                                   name of library if the path is present in the
-                                   runtime library search path (e.g. LD_LIBRARY_PATH)
+  --kokkos-tools-libs=STR        : Specify which of the tools to use. Must either
+                                   be full path to library or name of library if the
+                                   path is present in the runtime library search path
+                                   (e.g. LD_LIBRARY_PATH)
   --kokkos-tools-help            : Query the (loaded) kokkos-tool for its command-line
                                    option support (which should then be passed via
                                    --kokkos-tools-args="...")
