@@ -125,10 +125,6 @@ void combine(Kokkos::InitializationSettings& out,
 void combine(Kokkos::InitializationSettings& out,
              Kokkos::Tools::InitArguments const& in) {
   using Kokkos::Tools::InitArguments;
-  if (in.tune_internals != InitArguments::PossiblyUnsetOption::unset) {
-    out.set_tune_internals(in.tune_internals ==
-                           InitArguments::PossiblyUnsetOption::on);
-  }
   if (in.help != InitArguments::PossiblyUnsetOption::unset) {
     out.set_tool_help(in.help == InitArguments::PossiblyUnsetOption::on);
   }
@@ -143,11 +139,6 @@ void combine(Kokkos::InitializationSettings& out,
 void combine(Kokkos::Tools::InitArguments& out,
              Kokkos::InitializationSettings const& in) {
   using Kokkos::Tools::InitArguments;
-  if (in.has_tune_internals()) {
-    out.tune_internals = in.get_tune_internals()
-                             ? InitArguments::PossiblyUnsetOption::on
-                             : InitArguments::PossiblyUnsetOption::off;
-  }
   if (in.has_tool_help()) {
     out.help = in.get_tool_help() ? InitArguments::PossiblyUnsetOption::on
                                   : InitArguments::PossiblyUnsetOption::off;
@@ -964,6 +955,18 @@ void Kokkos::Impl::parse_environment_variables(
     bool const disable_warnings =
         std::regex_match(env_disable_warnings_str, regex);
     settings.set_disable_warnings(disable_warnings);
+  }
+  char* env_tune_internals_str = std::getenv("KOKKOS_TUNE_INTERNALS");
+  if (env_tune_internals_str != nullptr) {
+    std::string env_str(env_tune_internals_str);  // deep-copies string
+    for (char& c : env_str) {
+      c = toupper(c);
+    }
+    if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1")) {
+      settings.set_tune_internals(true);
+    } else {
+      settings.set_tune_internals(false);
+    }
   }
 }
 
