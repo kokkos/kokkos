@@ -47,6 +47,7 @@
 #include <Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <OpenACC/Kokkos_OpenACC_Exec.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 
 #include <vector>
 #include <ostream>
