@@ -1536,7 +1536,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1553,7 +1557,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 
   // Allocate with label and layout
   template <typename Label>
@@ -1582,8 +1590,8 @@ class View : public ViewTraits<DataType, Properties...> {
                                            arg_N4, arg_N5, arg_N6, arg_N7),
              check_input_args::yes) {
     static_assert(traits::array_layout::is_extent_constructible,
-                  "Layout is not extent constructible. A layout object should "
-                  "be passed too.\n");
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
   }
 
   // Construct view from ViewTracker and map
@@ -1619,9 +1627,17 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Memory span required to wrap these dimensions.
   static constexpr size_t required_allocation_size(
+      typename traits::array_layout const& layout) {
+    return map_type::memory_span(layout);
+  }
+
+  static constexpr size_t required_allocation_size(
       const size_t arg_N0 = 0, const size_t arg_N1 = 0, const size_t arg_N2 = 0,
       const size_t arg_N3 = 0, const size_t arg_N4 = 0, const size_t arg_N5 = 0,
       const size_t arg_N6 = 0, const size_t arg_N7 = 0) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
     return map_type::memory_span(typename traits::array_layout(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
@@ -1638,7 +1654,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(Impl::ViewCtorProp<pointer_type>(arg_ptr),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 
   explicit KOKKOS_INLINE_FUNCTION View(
       pointer_type arg_ptr, const typename traits::array_layout& arg_layout)
@@ -1656,11 +1676,9 @@ class View : public ViewTraits<DataType, Properties...> {
              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
              const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    if (is_layout_stride) {
-      Kokkos::abort(
-          "Kokkos::View::shmem_size(extents...) doesn't work with "
-          "LayoutStride. Pass a LayoutStride object instead");
-    }
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
     const size_t num_passed_args = Impl::count_valid_integers(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
 
@@ -1707,7 +1725,11 @@ class View : public ViewTraits<DataType, Properties...> {
                      sizeof(typename traits::value_type)))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 };
 
 /** \brief Temporary free function rank()
