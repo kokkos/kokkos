@@ -73,7 +73,7 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <vector>
 
@@ -108,7 +108,7 @@ class OpenMP {
   OpenMP();
 
   /// \brief Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&, const bool verbose = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   /// \brief is the instance running a parallel algorithm
   inline static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
@@ -155,7 +155,7 @@ class OpenMP {
   // use UniqueToken
   static int concurrency();
 
-  static void impl_initialize(int thread_count = -1);
+  static void impl_initialize(InitializationSettings const&);
 
   /// \brief is the default execution space initialized for current 'master'
   /// thread
@@ -201,20 +201,6 @@ struct DeviceTypeTraits<OpenMP> {
 };
 }  // namespace Experimental
 }  // namespace Tools
-
-namespace Impl {
-
-class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  OpenMPSpaceInitializer()  = default;
-  ~OpenMPSpaceInitializer() = default;
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
