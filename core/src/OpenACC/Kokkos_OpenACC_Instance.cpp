@@ -59,12 +59,6 @@ uint32_t OpenACCInternal::impl_get_instance_id() const noexcept {
   return m_instance_id;
 }
 
-void OpenACCInternal::fence(openacc_fence_is_static is_static) {
-  fence(
-      "Kokkos::Experimental::Impl::OpenACCInternal::fence: Unnammed Internal "
-      "Fence",
-      is_static);
-}
 void OpenACCInternal::fence(const std::string& name,
                             openacc_fence_is_static is_static) {
   if (is_static == openacc_fence_is_static::no) {
@@ -90,7 +84,7 @@ void OpenACCInternal::fence(const std::string& name,
 }
 int OpenACCInternal::concurrency() { return 128000; }  // FIXME_OPENACC
 const char* OpenACCInternal::name() { return "OpenACC"; }
-void OpenACCInternal::print_configuration(std::ostream& os, const bool) {
+void OpenACCInternal::print_configuration(std::ostream& os, bool) {
   // FIXME_OPENACC
   os << "Using OpenACC\n";
 }
@@ -120,7 +114,7 @@ OpenACC::OpenACC()
 const char* OpenACC::name() {
   return Impl::OpenACCInternal::impl_singleton()->name();
 }
-void OpenACC::print_configuration(std::ostream& stream, const bool detail) {
+void OpenACC::print_configuration(std::ostream& stream, bool detail) const {
   // m_space_instance->print_configuration(stream, detail);
   Impl::OpenACCInternal::impl_singleton()->print_configuration(stream, detail);
 }
@@ -132,25 +126,21 @@ uint32_t OpenACC::impl_instance_id() const noexcept {
 int OpenACC::concurrency() {
   return Impl::OpenACCInternal::impl_singleton()->concurrency();
 }
-void OpenACC::fence() {
-  Impl::OpenACCInternal::impl_singleton()->fence(
-      "Kokkos::OpenACC::fence: Unnamed Instance Fence");
-}
-void OpenACC::fence(const std::string& name) {
+
+void OpenACC::fence(const std::string& name) const {
   Impl::OpenACCInternal::impl_singleton()->fence(name);
-}
-void OpenACC::impl_static_fence() {
-  Impl::OpenACCInternal::impl_singleton()->fence(
-      "Kokkos::OpenACC::fence: Unnamed Instance Fence",
-      Kokkos::Experimental::Impl::openacc_fence_is_static::yes);
 }
 void OpenACC::impl_static_fence(const std::string& name) {
   Impl::OpenACCInternal::impl_singleton()->fence(
       name, Kokkos::Experimental::Impl::openacc_fence_is_static::yes);
 }
 
-void OpenACC::impl_initialize() { m_space_instance->impl_initialize(); }
-void OpenACC::impl_finalize() { m_space_instance->impl_finalize(); }
+void OpenACC::impl_initialize() {
+  Impl::OpenACCInternal::impl_singleton()->impl_initialize();
+}
+void OpenACC::impl_finalize() {
+  Impl::OpenACCInternal::impl_singleton()->impl_finalize();
+}
 int OpenACC::impl_is_initialized() {
   return Impl::OpenACCInternal::impl_singleton()->impl_is_initialized();
 }
