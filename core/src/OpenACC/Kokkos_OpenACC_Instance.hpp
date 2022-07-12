@@ -62,7 +62,6 @@ class OpenACCInternal {
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
-  void fence(openacc_fence_is_static is_static = openacc_fence_is_static::no);
   void fence(const std::string& name,
              openacc_fence_is_static is_static = openacc_fence_is_static::no);
 

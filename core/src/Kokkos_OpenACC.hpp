@@ -100,7 +100,7 @@ class OpenACC {
   static int concurrency();
 
   //! Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   static const char* name();
 
