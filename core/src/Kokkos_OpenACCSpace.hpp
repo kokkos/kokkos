@@ -59,8 +59,6 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <openacc.h>
 #include <iosfwd>
 
-#if defined(KOKKOS_ENABLE_OPENACC)
-
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
@@ -262,5 +260,4 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::OpenACCSpace, ExecutionSpace> {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif
 #endif /* #define KOKKOS_OPENACCSPACE_HPP */

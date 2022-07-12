@@ -64,7 +64,7 @@
 namespace Kokkos {
 namespace Experimental {
 /* Default allocation mechanism */
-OpenACCSpace::OpenACCSpace() {}
+OpenACCSpace::OpenACCSpace() = default;
 
 void *OpenACCSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);

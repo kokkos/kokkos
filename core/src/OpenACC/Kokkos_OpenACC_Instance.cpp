@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-
 #include <Kokkos_Core.hpp>
 
 #include <Kokkos_OpenACC.hpp>
@@ -89,7 +88,7 @@ void OpenACCInternal::fence(const std::string& name,
         });
   }
 }
-int OpenACCInternal::concurrency() { return 128000; }
+int OpenACCInternal::concurrency() { return 128000; }  // FIXME_OPENACC
 const char* OpenACCInternal::name() { return "OpenACC"; }
 void OpenACCInternal::print_configuration(std::ostream& os, const bool) {
   // FIXME_OPENACC

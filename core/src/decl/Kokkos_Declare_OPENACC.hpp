@@ -45,7 +45,7 @@
 #ifndef KOKKOS_DECLARE_OPENACC_HPP
 #define KOKKOS_DECLARE_OPENACC_HPP
 
-#if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
+#if defined(KOKKOS_ENABLE_OPENACC)
 #include <Kokkos_OpenACC.hpp>
 #include <Kokkos_OpenACCSpace.hpp>
 #endif

@@ -90,12 +90,10 @@ class OpenACC {
 
   using scratch_memory_space = ScratchMemorySpace<OpenACC>;
 
-  static bool in_parallel() {
-    return acc_on_device(acc_device_not_host);
-  }
+  static bool in_parallel() { return acc_on_device(acc_device_not_host); }
 
   void fence(const std::string& name =
-                  "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
+                 "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
 
   static void impl_static_fence(const std::string&);
   /** \brief  Return the maximum amount of concurrency.  */
