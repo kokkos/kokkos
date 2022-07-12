@@ -94,10 +94,9 @@ class OpenACC {
     return acc_on_device(acc_device_not_host);
   }
 
-  static void fence();
-  static void fence(const std::string& name);
+  void fence(const std::string& name =
+                  "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
 
-  static void impl_static_fence();
   static void impl_static_fence(const std::string&);
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
