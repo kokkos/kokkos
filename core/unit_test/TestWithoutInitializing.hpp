@@ -105,6 +105,13 @@ TEST(TEST_CATEGORY, realloc_exec_space) {
                    Kokkos::CudaUVMSpace>::value)
     GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
 #endif
+// FIXME_OPENMPTARGET The OpenMPTarget backend doesn't implement allocate taking
+// an execution space instance properly so it needs another fence
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value)
+    GTEST_SKIP() << "skipping since the OpenMPTarget backend doesn't implement "
+                    "allocate taking an execution space instance properly";
+#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
