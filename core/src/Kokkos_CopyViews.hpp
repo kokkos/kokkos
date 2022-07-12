@@ -3754,19 +3754,27 @@ create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
 }  // namespace Impl
 
 template <class T, class... P>
-std::enable_if_t<std::is_same<typename Kokkos::View<T, P...>::memory_space,
-                              typename Kokkos::View<
-                                  T, P...>::HostMirror::memory_space>::value,
-                 typename Kokkos::View<T, P...>::HostMirror>
+std::enable_if_t<
+    std::is_same<
+        typename Kokkos::View<T, P...>::memory_space,
+        typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
+        std::is_same<
+            typename Kokkos::View<T, P...>::data_type,
+            typename Kokkos::View<T, P...>::HostMirror::data_type>::value,
+    typename Kokkos::View<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::View<T, P...>& src) {
   return src;
 }
 
 template <class T, class... P>
-std::enable_if_t<!std::is_same<typename Kokkos::View<T, P...>::memory_space,
-                               typename Kokkos::View<
-                                   T, P...>::HostMirror::memory_space>::value,
-                 typename Kokkos::View<T, P...>::HostMirror>
+std::enable_if_t<
+    !(std::is_same<
+          typename Kokkos::View<T, P...>::memory_space,
+          typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
+      std::is_same<
+          typename Kokkos::View<T, P...>::data_type,
+          typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
+    typename Kokkos::View<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::View<T, P...>& src) {
   return Kokkos::create_mirror(src);
 }
