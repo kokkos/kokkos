@@ -650,6 +650,12 @@ Kokkos Tools Options:
                                    `<EXE> --kokkos-tools-args="-c input.txt"` will
                                    pass `<EXE> -c input.txt` as argc/argv to tool
 
+Except for --kokkos[-tools]-help, you can alternatively set the corresponding
+environment variable of a flag (all letters in upper-case and underscores
+instead of hyphens). For example, to disable warning messages, you can either
+specify --kokkos-disable-warnings or set the KOKKOS_DISABLE_WARNINGS
+environment variable to yes.
+
 Join us on Slack, visit https://kokkosteam.slack.com
 Report bugs to https://github.com/kokkos/kokkos/issues
 --------------------------------------------------------------------------------
