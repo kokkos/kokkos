@@ -78,12 +78,9 @@ IteratorType2 swap_ranges_impl(const std::string& label,
 }
 
 template <class TeamHandleType, class IteratorType1, class IteratorType2>
-KOKKOS_FUNCTION
-IteratorType2 swap_ranges_team_impl(const TeamHandleType& teamHandle,
-				    IteratorType1 first1,
-				    IteratorType1 last1,
-				    IteratorType2 first2)
-{
+KOKKOS_FUNCTION IteratorType2
+swap_ranges_team_impl(const TeamHandleType& teamHandle, IteratorType1 first1,
+                      IteratorType1 last1, IteratorType2 first2) {
   // checks
   Impl::static_assert_random_access_and_accessible(teamHandle, first1, first2);
   Impl::static_assert_iterators_have_matching_difference_type(first1, first2);
@@ -97,7 +94,7 @@ IteratorType2 swap_ranges_team_impl(const TeamHandleType& teamHandle,
   const auto num_elements_to_swap =
       Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements_to_swap),
-			 func_t(first1, first2));
+                         func_t(first1, first2));
   teamHandle.team_barrier();
 
   // return

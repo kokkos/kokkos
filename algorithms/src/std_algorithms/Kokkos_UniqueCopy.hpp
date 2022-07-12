@@ -26,8 +26,9 @@ namespace Experimental {
 
 // overload set1, accepting execution space
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<!::Kokkos::is_view<InputIterator>::value
-		 && ::Kokkos::is_execution_space<ExecutionSpace>::value, OutputIterator>
+std::enable_if_t<!::Kokkos::is_view<InputIterator>::value &&
+                     ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 unique_copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
             OutputIterator d_first) {
   return Impl::unique_copy_impl("Kokkos::unique_copy_iterator_api_default", ex,
@@ -35,8 +36,9 @@ unique_copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<!::Kokkos::is_view<InputIterator>::value
-		 && ::Kokkos::is_execution_space<ExecutionSpace>::value, OutputIterator>
+std::enable_if_t<!::Kokkos::is_view<InputIterator>::value &&
+                     ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 unique_copy(const std::string& label, const ExecutionSpace& ex,
             InputIterator first, InputIterator last, OutputIterator d_first) {
   return Impl::unique_copy_impl(label, ex, first, last, d_first);
@@ -44,8 +46,8 @@ unique_copy(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-	  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
-	  >
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -59,7 +61,8 @@ auto unique_copy(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-	  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -73,28 +76,28 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
 // overload set2, accepting execution space
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class BinaryPredicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, OutputIterator >
-unique_copy(const ExecutionSpace& ex, InputIterator first,
-                           InputIterator last, OutputIterator d_first,
-                           BinaryPredicate pred) {
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
+unique_copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
+            OutputIterator d_first, BinaryPredicate pred) {
   return Impl::unique_copy_impl("Kokkos::unique_copy_iterator_api_default", ex,
                                 first, last, d_first, pred);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class BinaryPredicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, OutputIterator >
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 unique_copy(const std::string& label, const ExecutionSpace& ex,
-                           InputIterator first, InputIterator last,
-                           OutputIterator d_first, BinaryPredicate pred) {
+            InputIterator first, InputIterator last, OutputIterator d_first,
+            BinaryPredicate pred) {
   return Impl::unique_copy_impl(label, ex, first, last, d_first, pred);
 }
 
-template <
-  class ExecutionSpace, class DataType1, class... Properties1,
-  class DataType2, class... Properties2, class BinaryPredicate,
-  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
-  >
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicate,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest,
@@ -107,11 +110,10 @@ auto unique_copy(const ExecutionSpace& ex,
                                 std::move(pred));
 }
 
-template <
-  class ExecutionSpace, class DataType1, class... Properties1,
-  class DataType2, class... Properties2, class BinaryPredicate,
-  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
-  >
+template <class ExecutionSpace, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicate,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  const ::Kokkos::View<DataType2, Properties2...>& dest,
@@ -123,32 +125,32 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
                                 begin(dest), std::move(pred));
 }
 
-
 // overload set1, accepting team handle, omit the overloads
 // accepting a label since they cause
 // issues on device because of the string allocation.
 template <class TeamHandleType, class InputIterator, class OutputIterator>
 KOKKOS_FUNCTION
-std::enable_if_t<!::Kokkos::is_view<InputIterator>::value
-		 && Impl::is_team_handle<TeamHandleType>::value, OutputIterator>
-unique_copy(const TeamHandleType& teamHandle, InputIterator first, InputIterator last,
-            OutputIterator d_first) {
+    std::enable_if_t<!::Kokkos::is_view<InputIterator>::value &&
+                         Impl::is_team_handle<TeamHandleType>::value,
+                     OutputIterator>
+    unique_copy(const TeamHandleType& teamHandle, InputIterator first,
+                InputIterator last, OutputIterator d_first) {
   return Impl::unique_copy_team_impl(teamHandle, first, last, d_first);
 }
 
-template <class TeamHandleType, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-	  std::enable_if_t< Impl::is_team_handle<TeamHandleType>::value, int> = 0
-	  >
-KOKKOS_FUNCTION
-auto unique_copy(const TeamHandleType& teamHandle,
-                 const ::Kokkos::View<DataType1, Properties1...>& source,
-                 const ::Kokkos::View<DataType2, Properties2...>& dest) {
+template <
+    class TeamHandleType, class DataType1, class... Properties1,
+    class DataType2, class... Properties2,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto unique_copy(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType1, Properties1...>& source,
+    const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::unique_copy_team_impl(teamHandle, cbegin(source), cend(source),
-				     begin(dest));
+                                     begin(dest));
 }
 
 // overload set2, accepting team handle, omit the overloads
@@ -156,30 +158,27 @@ auto unique_copy(const TeamHandleType& teamHandle,
 // issues on device because of the string allocation.
 template <class TeamHandleType, class InputIterator, class OutputIterator,
           class BinaryPredicate>
-KOKKOS_FUNCTION
-std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, OutputIterator >
+KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
+                                 OutputIterator>
 unique_copy(const TeamHandleType& teamHandle, InputIterator first,
-                           InputIterator last, OutputIterator d_first,
-                           BinaryPredicate pred)
-{
+            InputIterator last, OutputIterator d_first, BinaryPredicate pred) {
   return Impl::unique_copy_team_impl(teamHandle, first, last, d_first, pred);
 }
 
 template <
-  class TeamHandleType, class DataType1, class... Properties1,
-  class DataType2, class... Properties2, class BinaryPredicate,
-  std::enable_if_t< Impl::is_team_handle<TeamHandleType>::value, int> = 0
-  >
-KOKKOS_FUNCTION
-auto unique_copy(const TeamHandleType& teamHandle,
-                 const ::Kokkos::View<DataType1, Properties1...>& source,
-                 const ::Kokkos::View<DataType2, Properties2...>& dest,
-                 BinaryPredicate pred) {
+    class TeamHandleType, class DataType1, class... Properties1,
+    class DataType2, class... Properties2, class BinaryPredicate,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto unique_copy(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType1, Properties1...>& source,
+    const ::Kokkos::View<DataType2, Properties2...>& dest,
+    BinaryPredicate pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   return Impl::unique_copy_team_impl(teamHandle, cbegin(source), cend(source),
-				     begin(dest), std::move(pred));
+                                     begin(dest), std::move(pred));
 }
 
 }  // namespace Experimental

@@ -72,12 +72,11 @@ struct TestFunctorA {
 
     if (m_api_pick == 0) {
       auto it =
-	KE::swap_ranges(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
-			KE::begin(myRowViewDest));
+          KE::swap_ranges(member, KE::begin(myRowViewFrom),
+                          KE::end(myRowViewFrom), KE::begin(myRowViewDest));
       (void)it;
     } else if (m_api_pick == 1) {
-      auto it =
-	KE::swap_ranges(member, myRowViewFrom, myRowViewDest);
+      auto it = KE::swap_ranges(member, myRowViewFrom, myRowViewDest);
       (void)it;
     }
   }
@@ -101,7 +100,7 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
 
   // make copy of v before running algorithm
-  auto gold_v_h  = create_host_space_copy(v);
+  auto gold_v_h = create_host_space_copy(v);
 
   // launch kernel
   using space_t          = Kokkos::DefaultExecutionSpace;
@@ -110,18 +109,19 @@ void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   policy_type policy(num_teams, Kokkos::AUTO());
 
   // v2 is the destination view
-  auto v2     = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
-  using functor_type = TestFunctorA<decltype(v), decltype(v2), team_member_type>;
+  auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
+  using functor_type =
+      TestFunctorA<decltype(v), decltype(v2), team_member_type>;
   functor_type fnc(v, v2, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // check
   auto v_h  = create_host_space_copy(v);
   auto v2_h = create_host_space_copy(v2);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i){
-    for (std::size_t j = 0; j < v_h.extent(1); ++j){
+  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
+    for (std::size_t j = 0; j < v_h.extent(1); ++j) {
       EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
-      EXPECT_TRUE(v2_h(i, j) == gold_v_h(i,j));
+      EXPECT_TRUE(v2_h(i, j) == gold_v_h(i, j));
     }
   }
 }
