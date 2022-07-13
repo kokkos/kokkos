@@ -3878,9 +3878,13 @@ auto create_mirror_view_and_copy(
   return mirror;
 }
 
+// Previously when using auto here, the intel compiler 19.3 would
+// sometimes not create a symbol, guessing that it somehow is a combination
+// of auto and just forwarding arguments (see issue #5196)
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
-auto create_mirror_view_and_copy(
+typename Impl::MirrorViewType<Space, T, P...>::view_type
+create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     std::enable_if_t<
