@@ -51,5 +51,25 @@ namespace Test {
 TEST(TEST_CATEGORY, SortUnsigned) {
   Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
+
+TEST(TEST_CATEGORY, NestedSort) {
+  Impl::test_nested_sort<TEST_EXECSPACE, unsigned>(171, 0U, UINT_MAX);
+  Impl::test_nested_sort<TEST_EXECSPACE, float>(42, -1e6f, 1e6f);
+  Impl::test_nested_sort<TEST_EXECSPACE, char>(67, CHAR_MIN, CHAR_MAX);
+}
+
+TEST(TEST_CATEGORY, NestedSortByKey) {
+  // Second/third template arguments are key and value respectively.
+  // In sort_by_key_X functions, a key view and a value view are both permuted
+  // to make the keys sorted. This means that the value type doesn't need to be
+  // ordered, unlike key
+  Impl::test_nested_sort_by_key<TEST_EXECSPACE, unsigned, unsigned>(
+      161, 0U, UINT_MAX, 0U, UINT_MAX);
+  Impl::test_nested_sort_by_key<TEST_EXECSPACE, float, char>(
+      267, -1e6f, 1e6f, CHAR_MIN, CHAR_MAX);
+  Impl::test_nested_sort_by_key<TEST_EXECSPACE, char, double>(
+      11, CHAR_MIN, CHAR_MAX, 2.718, 3.14);
+}
+
 }  // namespace Test
 #endif

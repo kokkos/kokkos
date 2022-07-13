@@ -665,6 +665,231 @@ void sort(ViewType view, size_t const begin, size_t const end) {
   exec.fence("Kokkos::Sort: fence after sorting");
 }
 
+namespace Impl {
+template <typename Key>
+struct LessThan {
+  KOKKOS_INLINE_FUNCTION bool operator()(const Key lhs, const Key rhs) const {
+    return lhs < rhs;
+  }
+};
+
+// When just doing sort (not sort_by_key), use nullptr_t for ValueViewType.
+// TODO: when nested policies get refactored, this won't need separate team and
+// thread versions.
+template <class TeamMember, class KeyViewType, class ValueViewType,
+          class Comparator>
+KOKKOS_INLINE_FUNCTION void sort_team_impl(const TeamMember& t,
+                                           const KeyViewType& keyView,
+                                           const ValueViewType& valueView,
+                                           const Comparator& comp) {
+  using SizeType  = typename KeyViewType::size_type;
+  using KeyType   = typename KeyViewType::non_const_value_type;
+  SizeType n      = keyView.extent(0);
+  SizeType npot   = 1;
+  SizeType levels = 0;
+  while (npot < n) {
+    levels++;
+    npot <<= 1;
+  }
+  for (SizeType i = 0; i < levels; i++) {
+    for (SizeType j = 0; j <= i; j++) {
+      // n/2 pairs of items are compared in parallel
+      Kokkos::parallel_for(
+          Kokkos::TeamVectorRange(t, npot / 2), [=](const SizeType k) {
+            // How big are the brown/pink boxes?
+            // (Terminology comes from Wikipedia diagram)
+            // https://commons.wikimedia.org/wiki/File:BitonicSort.svg#/media/File:BitonicSort.svg
+            SizeType boxSize = SizeType(2) << (i - j);
+            // Which box contains this thread?
+            SizeType boxID    = k >> (i - j);          // k * 2 / boxSize;
+            SizeType boxStart = boxID << (1 + i - j);  // boxID * boxSize
+            SizeType boxOffset =
+                k - (boxStart >> 1);  // k - boxID * boxSize / 2;
+            SizeType elem1 = boxStart + boxOffset;
+            if (j == 0) {
+              // first phase (brown box): within a block, compare with the
+              // opposite value in the box
+              SizeType elem2 = boxStart + boxSize - 1 - boxOffset;
+              if (elem2 < n) {
+                KeyType key1 = keyView(elem1);
+                KeyType key2 = keyView(elem2);
+                if (comp(key2, key1)) {
+                  keyView(elem1) = key2;
+                  keyView(elem2) = key1;
+                  if constexpr (!std::is_same_v<ValueViewType,
+                                                std::nullptr_t>) {
+                    auto temp        = valueView(elem1);
+                    valueView(elem1) = valueView(elem2);
+                    valueView(elem2) = temp;
+                  }
+                }
+              }
+            } else {
+              // later phases (pink box): within a block, compare with fixed
+              // distance (boxSize / 2) apart
+              SizeType elem2 = elem1 + boxSize / 2;
+              if (elem2 < n) {
+                KeyType key1 = keyView(elem1);
+                KeyType key2 = keyView(elem2);
+                if (comp(key2, key1)) {
+                  keyView(elem1) = key2;
+                  keyView(elem2) = key1;
+                  if constexpr (!std::is_same_v<ValueViewType,
+                                                std::nullptr_t>) {
+                    auto temp        = valueView(elem1);
+                    valueView(elem1) = valueView(elem2);
+                    valueView(elem2) = temp;
+                  }
+                }
+              }
+            }
+          });
+      t.team_barrier();
+    }
+  }
+}
+
+// When just doing sort (not sort_by_key), use nullptr_t for ValueViewType.
+// TODO: when nested policies get refactored, this won't need separate team and
+// thread versions.
+template <class TeamMember, class KeyViewType, class ValueViewType,
+          class Comparator>
+KOKKOS_INLINE_FUNCTION void sort_thread_impl(const TeamMember& t,
+                                             const KeyViewType& keyView,
+                                             const ValueViewType& valueView,
+                                             const Comparator& comp) {
+  using SizeType  = typename KeyViewType::size_type;
+  using KeyType   = typename KeyViewType::non_const_value_type;
+  SizeType n      = keyView.extent(0);
+  SizeType npot   = 1;
+  SizeType levels = 0;
+  while (npot < n) {
+    levels++;
+    npot <<= 1;
+  }
+  for (SizeType i = 0; i < levels; i++) {
+    for (SizeType j = 0; j <= i; j++) {
+      // n/2 pairs of items are compared in parallel
+      Kokkos::parallel_for(
+          Kokkos::ThreadVectorRange(t, npot / 2), [=](const SizeType k) {
+            // How big are the brown/pink boxes?
+            // (Terminology comes from Wikipedia diagram)
+            // https://commons.wikimedia.org/wiki/File:BitonicSort.svg#/media/File:BitonicSort.svg
+            SizeType boxSize = SizeType(2) << (i - j);
+            // Which box contains this thread?
+            SizeType boxID    = k >> (i - j);          // k * 2 / boxSize;
+            SizeType boxStart = boxID << (1 + i - j);  // boxID * boxSize
+            SizeType boxOffset =
+                k - (boxStart >> 1);  // k - boxID * boxSize / 2;
+            SizeType elem1 = boxStart + boxOffset;
+            if (j == 0) {
+              // first phase (brown box): within a block, compare with the
+              // opposite value in the box
+              SizeType elem2 = boxStart + boxSize - 1 - boxOffset;
+              if (elem2 < n) {
+                KeyType key1 = keyView(elem1);
+                KeyType key2 = keyView(elem2);
+                if (comp(key2, key1)) {
+                  keyView(elem1) = key2;
+                  keyView(elem2) = key1;
+                  if constexpr (!std::is_same_v<ValueViewType,
+                                                std::nullptr_t>) {
+                    auto temp        = valueView(elem1);
+                    valueView(elem1) = valueView(elem2);
+                    valueView(elem2) = temp;
+                  }
+                }
+              }
+            } else {
+              // later phases (pink box): within a block, compare with fixed
+              // distance (boxSize / 2) apart
+              SizeType elem2 = elem1 + boxSize / 2;
+              if (elem2 < n) {
+                KeyType key1 = keyView(elem1);
+                KeyType key2 = keyView(elem2);
+                if (comp(key2, key1)) {
+                  keyView(elem1) = key2;
+                  keyView(elem2) = key1;
+                  if constexpr (!std::is_same_v<ValueViewType,
+                                                std::nullptr_t>) {
+                    auto temp        = valueView(elem1);
+                    valueView(elem1) = valueView(elem2);
+                    valueView(elem2) = temp;
+                  }
+                }
+              }
+            }
+          });
+    }
+  }
+}
+}  // namespace Impl
+
+template <class TeamMember, class ViewType>
+KOKKOS_INLINE_FUNCTION void sort_team(const TeamMember& t,
+                                      const ViewType& view) {
+  Impl::sort_team_impl(
+      t, view, nullptr,
+      Impl::LessThan<typename ViewType::non_const_value_type>());
+}
+
+template <class TeamMember, class ViewType, class Comparator>
+KOKKOS_INLINE_FUNCTION void sort_team(const TeamMember& t, const ViewType& view,
+                                      const Comparator& comp) {
+  Impl::sort_team_impl(t, view, nullptr, comp);
+}
+
+template <class TeamMember, class KeyViewType, class ValueViewType>
+KOKKOS_INLINE_FUNCTION void sort_by_key_team(const TeamMember& t,
+                                             const KeyViewType& keyView,
+                                             const ValueViewType& valueView) {
+  Impl::sort_team_impl(
+      t, keyView, valueView,
+      Impl::LessThan<typename KeyViewType::non_const_value_type>());
+}
+
+template <class TeamMember, class KeyViewType, class ValueViewType,
+          class Comparator>
+KOKKOS_INLINE_FUNCTION void sort_by_key_team(const TeamMember& t,
+                                             const KeyViewType& keyView,
+                                             const ValueViewType& valueView,
+                                             const Comparator& comp) {
+  Impl::sort_team_impl(t, keyView, valueView, comp);
+}
+
+template <class TeamMember, class ViewType>
+KOKKOS_INLINE_FUNCTION void sort_thread(const TeamMember& t,
+                                        const ViewType& view) {
+  Impl::sort_thread_impl(
+      t, view, nullptr,
+      Impl::LessThan<typename ViewType::non_const_value_type>());
+}
+
+template <class TeamMember, class ViewType, class Comparator>
+KOKKOS_INLINE_FUNCTION void sort_thread(const TeamMember& t,
+                                        const ViewType& view,
+                                        const Comparator& comp) {
+  Impl::sort_thread_impl(t, view, nullptr, comp);
+}
+
+template <class TeamMember, class KeyViewType, class ValueViewType>
+KOKKOS_INLINE_FUNCTION void sort_by_key_thread(const TeamMember& t,
+                                               const KeyViewType& keyView,
+                                               const ValueViewType& valueView) {
+  Impl::sort_thread_impl(
+      t, keyView, valueView,
+      Impl::LessThan<typename KeyViewType::non_const_value_type>());
+}
+
+template <class TeamMember, class KeyViewType, class ValueViewType,
+          class Comparator>
+KOKKOS_INLINE_FUNCTION void sort_by_key_thread(const TeamMember& t,
+                                               const KeyViewType& keyView,
+                                               const ValueViewType& valueView,
+                                               const Comparator& comp) {
+  Impl::sort_thread_impl(t, keyView, valueView, comp);
+}
+
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
