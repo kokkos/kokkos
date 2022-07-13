@@ -392,7 +392,6 @@ class MemoryManager {
   virtual void Start() = 0;
 
   // Implement this to stop recording and fill out the given Result structure.
-  BENCHMARK_DEPRECATED_MSG("Use Stop(Result&) instead")
   virtual void Stop(Result* result) = 0;
 
   // FIXME(vyng): Make this pure virtual once we've migrated current users.
