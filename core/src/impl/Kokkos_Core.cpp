@@ -52,6 +52,8 @@
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+
+#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <iostream>
@@ -310,28 +312,42 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
 }
 
 int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
+  std::vector<int> visible_devices;
+  char* env_visible_devices = std::getenv("KOKKOS_VISIBLE_DEVICES");
+  if (env_visible_devices) {
+    std::stringstream ss(env_visible_devices);
+    for (int i; ss >> i;) {
+      visible_devices.push_back(i);
+      if (ss.peek() == ',') ss.ignore();
+    }
+  } else {
+    int num_devices = settings.has_num_devices() ? settings.get_num_devices()
+                                                 : get_device_count();
+    for (int i = 0; i < num_devices; ++i) {
+      visible_devices.push_back(i);
+    }
+    if (settings.has_skip_device()) {
+      if (visible_devices.size() == 1 && settings.get_skip_device() == 0) {
+        Kokkos::abort(
+            "Error: skipping the only GPU available for execution.\n");
+      }
+      visible_devices.erase(
+          std::remove(visible_devices.begin(), visible_devices.end(),
+                      settings.get_skip_device()),
+          visible_devices.end());
+    }
+  }
+  if (visible_devices.empty()) {
+    Kokkos::abort("Error: no GPU available for execution.\n");
+  }
   // device_id is provided
   if (settings.has_device_id()) {
-    return settings.get_device_id();
+    return visible_devices[settings.get_device_id()];
   }
-  int num_devices = settings.has_num_devices() ? settings.get_num_devices()
-                                               : get_device_count();
-  if (num_devices == 1 && settings.has_skip_device() &&
-      settings.get_skip_device() == 0) {
-    Kokkos::abort("Error: skipping the only GPU available for execution.");
-  }
-  // helper function to honor the deprecated skip_device setting and select the
-  // next device if necessary
-  auto next_if_skip_device = [&settings, num_devices](int device_id) -> int {
-    if (settings.has_skip_device() && device_id == settings.get_skip_device()) {
-      return ++device_id % num_devices;
-    }
-    return device_id;
-  };
   // by default use the first GPU available for execution
   // (neither device_id nor map_device_id_by are provided)
   if (!settings.has_map_device_id_by()) {
-    return next_if_skip_device(0);
+    return visible_devices[0];
   }
   // map_device_id provided
   // either random or round-robin assignement based on local MPI rank
@@ -340,13 +356,14 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
               << settings.get_map_device_id_by() << "\" ignored."
               << " Raised by Kokkos::initialize(int argc, char* argv[])."
               << std::endl;
-    return next_if_skip_device(0);
+    return visible_devices[0];
   }
 
   if (settings.get_map_device_id_by() == "random") {
     std::default_random_engine gen(get_process_id());
-    std::uniform_int_distribution<int> distribution(0, num_devices - 1);
-    return next_if_skip_device(distribution(gen));
+    std::uniform_int_distribution<int> distribution(0,
+                                                    visible_devices.size() - 1);
+    return visible_devices[distribution(gen)];
   }
 
   if (settings.get_map_device_id_by() != "mpi_rank") {
@@ -363,7 +380,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     std::cerr << "Warning: unable to detect local MPI rank."
               << " Raised by Kokkos::initialize(int argc, char* argv[])."
               << std::endl;
-    return next_if_skip_device(0);
+    return visible_devices[0];
   }
 
   // use device assigned by CTest when ressource allocation is activated
@@ -372,7 +389,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     return get_ctest_gpu(local_rank_str);
   }
 
-  return next_if_skip_device(std::stoi(local_rank_str) % num_devices);
+  return visible_devices[std::stoi(local_rank_str) % visible_devices.size()];
 }
 
 namespace {
