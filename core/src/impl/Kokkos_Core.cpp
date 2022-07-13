@@ -61,6 +61,7 @@
 #include <functional>
 #include <list>
 #include <cerrno>
+#include <random>
 #include <regex>
 #ifndef _WIN32
 #include <unistd.h>
@@ -150,6 +151,32 @@ void combine(Kokkos::Tools::InitArguments& out,
   if (in.has_tools_args()) {
     out.args = in.get_tools_args();
   }
+}
+
+int get_device_count() {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return Kokkos::Cuda::detect_device_count();
+#elif defined(KOKKOS_ENABLE_HIP)
+  return Kokkos::Experimental::HIP::detect_device_count();
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return sycl::device::get_devices(sycl::info::device_type::gpu).size();
+#else
+  // This function is always compiled but should only be ever called when
+  // either CUDA, HIP, or SYCL are enabled.
+  return *reinterpret_cast<int*>(0x8BADF00D);  // implementation bug
+#endif
+}
+
+unsigned get_process_id() {
+#ifdef _WIN32
+  return unsigned(GetCurrentProcessId());
+#else
+  return unsigned(getpid());
+#endif
+}
+
+bool is_valid_map_device_id_by(std::string const& x) {
+  return x == "mpi_rank" || x == "random";
 }
 
 }  // namespace
@@ -282,57 +309,70 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
   return std::stoi(id.c_str());
 }
 
-// function to extract gpu # from args
 int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
-  int use_gpu        = settings.has_device_id() ? settings.get_device_id() : -1;
-  const int ndevices = [](int num_devices) -> int {
-    if (num_devices > 0) return num_devices;
-#if defined(KOKKOS_ENABLE_CUDA)
-    return Cuda::detect_device_count();
-#elif defined(KOKKOS_ENABLE_HIP)
-    return Experimental::HIP::detect_device_count();
-#elif defined(KOKKOS_ENABLE_SYCL)
-    return sycl::device::get_devices(sycl::info::device_type::gpu).size();
-#else
-    return num_devices;
-#endif
-  }(settings.has_num_devices() ? settings.get_num_devices() : -1);
-  const int skip_device =
-      settings.has_skip_device() ? settings.get_skip_device() : 9999;
-
-  // if the exact device is not set, but ndevices was given, assign round-robin
-  // using on-node MPI rank
-  if (use_gpu < 0) {
-    auto const* local_rank_str =
-        std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
-    if (!local_rank_str)
-      local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
-    if (!local_rank_str)
-      local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
-
-    auto const* ctest_kokkos_device_type =
-        std::getenv("CTEST_KOKKOS_DEVICE_TYPE");  // CTest
-    auto const* ctest_resource_group_count_str =
-        std::getenv("CTEST_RESOURCE_GROUP_COUNT");  // CTest
-    if (ctest_kokkos_device_type && ctest_resource_group_count_str &&
-        local_rank_str) {
-      // Use the device assigned by CTest
-      use_gpu = get_ctest_gpu(local_rank_str);
-    } else if (ndevices > 0) {
-      // Use the device assigned by the rank
-      if (local_rank_str) {
-        auto local_rank = std::stoi(local_rank_str);
-        use_gpu         = local_rank % ndevices;
-      } else {
-        // user only gave use ndevices, but the MPI environment variable wasn't
-        // set. start with GPU 0 at this point
-        use_gpu = 0;
-      }
-    }
-    // shift assignments over by one so no one is assigned to "skip_device"
-    if (use_gpu >= skip_device) ++use_gpu;
+  // device_id is provided
+  if (settings.has_device_id()) {
+    return settings.get_device_id();
   }
-  return use_gpu;
+  int num_devices = settings.has_num_devices() ? settings.get_num_devices()
+                                               : get_device_count();
+  if (num_devices == 1 && settings.has_skip_device() &&
+      settings.get_skip_device() == 0) {
+    Kokkos::abort("Error: skipping the only GPU available for execution.");
+  }
+  // helper function to honor the deprecated skip_device setting and select the
+  // next device if necessary
+  auto next_if_skip_device = [&settings, num_devices](int device_id) -> int {
+    if (settings.has_skip_device() && device_id == settings.get_skip_device()) {
+      return ++device_id % num_devices;
+    }
+    return device_id;
+  };
+  // by default use the first GPU available for execution
+  // (neither device_id nor map_device_id_by are provided)
+  if (!settings.has_map_device_id_by()) {
+    return next_if_skip_device(0);
+  }
+  // map_device_id provided
+  // either random or round-robin assignement based on local MPI rank
+  if (!is_valid_map_device_id_by(settings.get_map_device_id_by())) {
+    std::cerr << "Warning: unrecognized map_device_id_by setting \""
+              << settings.get_map_device_id_by() << "\" ignored."
+              << " Raised by Kokkos::initialize(int argc, char* argv[])."
+              << std::endl;
+    return next_if_skip_device(0);
+  }
+
+  if (settings.get_map_device_id_by() == "random") {
+    std::default_random_engine gen(get_process_id());
+    std::uniform_int_distribution<int> distribution(0, num_devices - 1);
+    return next_if_skip_device(distribution(gen));
+  }
+
+  if (settings.get_map_device_id_by() != "mpi_rank") {
+    Kokkos::abort("implementation bug");
+  }
+
+  auto const* local_rank_str =
+      std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
+  if (!local_rank_str)
+    local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
+  if (!local_rank_str) local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
+
+  if (!local_rank_str) {
+    std::cerr << "Warning: unable to detect local MPI rank."
+              << " Raised by Kokkos::initialize(int argc, char* argv[])."
+              << std::endl;
+    return next_if_skip_device(0);
+  }
+
+  // use device assigned by CTest when ressource allocation is activated
+  if (std::getenv("CTEST_KOKKOS_DEVICE_TYPE") &&
+      std::getenv("CTEST_RESOURCE_GROUP_COUNT")) {
+    return get_ctest_gpu(local_rank_str);
+  }
+
+  return next_if_skip_device(std::stoi(local_rank_str) % num_devices);
 }
 
 namespace {
@@ -603,14 +643,6 @@ void fence_internal(const std::string& name) {
   Kokkos::Impl::ExecSpaceManager::get_instance().static_fence(name);
 }
 
-unsigned get_process_id() {
-#ifdef _WIN32
-  return unsigned(GetCurrentProcessId());
-#else
-  return unsigned(getpid());
-#endif
-}
-
 void print_help_message() {
   auto const help_message = R"(
 --------------------------------------------------------------------------------
@@ -629,14 +661,6 @@ Kokkos Core Options:
                                    parallel regions on the host.
   --kokkos-device-id=INT         : specify device id to be used by Kokkos.
   --kokkos-map-devide-id-by=(random|mpi_rank)
-  --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
-                                   devices per node to be used. Process to device
-                                   mapping happens by obtaining the local MPI rank
-                                   and assigning devices round-robin. The optional
-                                   second argument allows for an existing device
-                                   to be ignored. This is most useful on workstations
-                                   with multiple GPUs of which one is used to drive
-                                   screen output.
 
 Kokkos Tools Options:
   --kokkos-tools-libs=STR        : Specify which of the tools to use. Must either
@@ -663,10 +687,6 @@ Report bugs to https://github.com/kokkos/kokkos/issues
 --------------------------------------------------------------------------------
 )";
   std::cout << help_message << std::endl;
-}
-
-bool is_valid_map_device_id_by(std::string const& x) {
-  return x == "mpi_rank" || x == "random";
 }
 
 }  // namespace
@@ -759,6 +779,8 @@ void Kokkos::Impl::parse_command_line_arguments(
         warn_deprecated_command_line_argument("--kokkos-ndevices",
                                               "--kokkos-num-devices");
       }
+      warn_deprecated_command_line_argument(
+          "--kokkos-num-devices", "--kokkos-map-device-id-by=mpi_rank");
       // Find the number of device (expecting --device=XX)
       if (!((strncmp(argv[iarg], "--kokkos-num-devices=", 21) == 0) ||
             (strncmp(argv[iarg], "--num-devices=", 14) == 0) ||
@@ -787,6 +809,7 @@ void Kokkos::Impl::parse_command_line_arguments(
           !kokkos_num_devices_found) {
         num_devices = std::stoi(num1_only);
         settings.set_num_devices(num_devices);
+        settings.set_map_device_id_by("mpi_rank");
       }
       delete[] num1_only;
 
@@ -912,8 +935,10 @@ void Kokkos::Impl::parse_environment_variables(
           "KOKKOS_RAND_DEVICES. "
           "Raised by Kokkos::initialize(int argc, char* argv[]).");
     }
-    int rand_devices = -1;
     if (env_num_devices_str != nullptr) {
+      warn_deprecated_environment_variable("KOKKOS_NUM_DEVICES",
+                                           "KOKKOS_MAP_DEVICE_ID_BY=mpi_rank");
+      settings.set_map_device_id_by("mpi_rank");
       auto env_num_devices = std::strtol(env_num_devices_str, &endptr, 10);
       if (endptr == env_num_devices_str)
         Impl::throw_runtime_exception(
@@ -926,6 +951,9 @@ void Kokkos::Impl::parse_environment_variables(
             "argv[]).");
       settings.set_num_devices(env_num_devices);
     } else {  // you set KOKKOS_RAND_DEVICES
+      warn_deprecated_environment_variable("KOKKOS_RAND_DEVICES",
+                                           "KOKKOS_MAP_DEVICE_ID_BY=random");
+      settings.set_map_device_id_by("random");
       auto env_rand_devices = std::strtol(env_rand_devices_str, &endptr, 10);
       if (endptr == env_rand_devices_str)
         Impl::throw_runtime_exception(
@@ -936,12 +964,12 @@ void Kokkos::Impl::parse_environment_variables(
             "Error: KOKKOS_RAND_DEVICES out of range of representable values "
             "by an integer. Raised by Kokkos::initialize(int argc, char* "
             "argv[]).");
-      else
-        rand_devices = env_rand_devices;
+      settings.set_num_devices(env_rand_devices);
     }
     // Skip device
     auto env_skip_device_str = std::getenv("KOKKOS_SKIP_DEVICE");
     if (env_skip_device_str != nullptr) {
+      warn_deprecated_environment_variable("KOKKOS_SKIP_DEVICE");
       errno                = 0;
       auto env_skip_device = std::strtol(env_skip_device_str, &endptr, 10);
       if (endptr == env_skip_device_str)
@@ -954,21 +982,6 @@ void Kokkos::Impl::parse_environment_variables(
             "an integer. Raised by Kokkos::initialize(int argc, char* "
             "argv[]).");
       settings.set_skip_device(env_skip_device);
-    }
-    if (rand_devices > 0) {
-      if (settings.has_skip_device() && rand_devices == 1)
-        Impl::throw_runtime_exception(
-            "Error: cannot KOKKOS_SKIP_DEVICE the only KOKKOS_RAND_DEVICE. "
-            "Raised by Kokkos::initialize(int argc, char* argv[]).");
-
-      std::srand(get_process_id());
-      while (settings.has_device_id()) {
-        int test_device_id = std::rand() % rand_devices;
-        if (!settings.has_skip_device() ||
-            test_device_id != settings.get_skip_device()) {
-          settings.set_device_id(test_device_id);
-        }
-      }
     }
   }
   char* env_disable_warnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
@@ -994,6 +1007,9 @@ void Kokkos::Impl::parse_environment_variables(
   }
   char* env_map_device_id_by_str = std::getenv("KOKKOS_MAP_DEVICE_ID_BY");
   if (env_map_device_id_by_str != nullptr) {
+    if (env_device_id_str != nullptr) {
+      std::cerr << "Warning: specified both blah\n";
+    }
     if (is_valid_map_device_id_by(env_map_device_id_by_str)) {
       settings.set_map_device_id_by(env_map_device_id_by_str);
     } else {
