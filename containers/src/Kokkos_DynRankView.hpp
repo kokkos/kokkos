@@ -2131,9 +2131,11 @@ create_mirror_view(
 // Create a mirror view in host space
 template <class T, class... P>
 inline std::enable_if_t<
-    std::is_same<
-        typename DynRankView<T, P...>::memory_space,
-        typename DynRankView<T, P...>::HostMirror::memory_space>::value,
+    (std::is_same<
+         typename DynRankView<T, P...>::memory_space,
+         typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
+     std::is_same<typename DynRankView<T, P...>::data_type,
+                  typename DynRankView<T, P...>::HostMirror::data_type>::value),
     typename DynRankView<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::DynRankView<T, P...>& src) {
   return src;
@@ -2141,9 +2143,12 @@ create_mirror_view(const Kokkos::DynRankView<T, P...>& src) {
 
 template <class T, class... P>
 inline std::enable_if_t<
-    !std::is_same<
-        typename DynRankView<T, P...>::memory_space,
-        typename DynRankView<T, P...>::HostMirror::memory_space>::value,
+    !(std::is_same<
+          typename DynRankView<T, P...>::memory_space,
+          typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
+      std::is_same<
+          typename DynRankView<T, P...>::data_type,
+          typename DynRankView<T, P...>::HostMirror::data_type>::value),
     typename DynRankView<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::DynRankView<T, P...>& src) {
   return Kokkos::create_mirror(src);
