@@ -630,13 +630,12 @@ sort(const ExecutionSpace& exec,
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class ViewType>
-void sort(Cuda const& space, ViewType const& view) {
-  static_assert(ViewType::rank == 1, "CUDA sort only supports 1D Views.");
-
-  using DevicePtr = thrust::device_ptr<typename ViewType::value_type>;
-  DevicePtr first(view.data());
-  DevicePtr last(view.data() + view.extent(0));
+std::enable_if_t<
+    Experimental::Impl::has_random_access_iterator<ViewType>::value>
+sort(Cuda const& space, ViewType const& view, bool const = false) {
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
+  auto first      = Experimental::begin(view);
+  auto last       = Experimental::end(view);
   thrust::sort(exec, first, last);
 }
 #endif

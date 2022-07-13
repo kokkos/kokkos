@@ -46,6 +46,8 @@
 #define KOKKOS_RANDOM_ACCESS_ITERATOR_IMPL_HPP
 
 #include <iterator>
+#include <type_traits>
+
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_View.hpp>
 #include "Kokkos_Constraints.hpp"
@@ -54,11 +56,26 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+template <typename ViewType, typename Enabled = void>
+struct has_random_access_iterator : std::false_type {};
+
+template <typename ViewType>
+struct has_random_access_iterator<
+    ViewType,
+    std::enable_if_t<(ViewType::rank == 1) &&
+                         (std::is_same<typename ViewType::traits::array_layout,
+                                       Kokkos::LayoutLeft>::value ||
+                          std::is_same<typename ViewType::traits::array_layout,
+                                       Kokkos::LayoutRight>::value ||
+                          std::is_same<typename ViewType::traits::array_layout,
+                                       Kokkos::LayoutStride>::value),
+                     void>> : std::true_type {};
+
 template <class T>
 class RandomAccessIterator;
 
 template <class DataType, class... Args>
-class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
+class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
  public:
   using view_type     = ::Kokkos::View<DataType, Args...>;
   using iterator_type = RandomAccessIterator<view_type>;
@@ -69,13 +86,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   using pointer           = typename view_type::pointer_type;
   using reference         = typename view_type::reference_type;
 
-  static_assert(view_type::rank == 1 &&
-                    (std::is_same<typename view_type::traits::array_layout,
-                                  Kokkos::LayoutLeft>::value ||
-                     std::is_same<typename view_type::traits::array_layout,
-                                  Kokkos::LayoutRight>::value ||
-                     std::is_same<typename view_type::traits::array_layout,
-                                  Kokkos::LayoutStride>::value),
+  static_assert(has_random_access_iterator<view_type>::value,
                 "RandomAccessIterator only supports 1D Views with LayoutLeft, "
                 "LayoutRight, LayoutStride.");
 
