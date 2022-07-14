@@ -242,6 +242,75 @@ bool check_env_int(char const* name, int& val) {
   return true;
 }
 
+bool check_arg_bool(char const* arg, char const* name, bool& val) {
+  auto const len = std::strlen(name);
+  if (std::strncmp(arg, name, len) != 0) {
+    return false;
+  }
+  auto const arg_len = strlen(arg);
+  if (arg_len == len) {
+    val = true;  // --kokkos-foo without =BOOL interpreted as fool=true
+    return true;
+  }
+  if (arg_len <= len + 1 || arg[len] != '=') {
+    std::stringstream ss;
+    ss << "Error: command line argument '" << arg
+       << "' is not recognized as a valid boolean.\n";
+    Kokkos::abort(ss.str().c_str());
+  }
+
+  std::advance(arg, len + 1);
+  if (std::regex_match(arg, regex_true)) {
+    val = true;
+    return true;
+  }
+  if (!std::regex_match(arg, regex_false)) {
+    std::cerr
+        << "Warning: unrecognized boolean value for command line argument '"
+        << name << '=' << arg << "'interpreted as 'false'."
+        << " Raised by Kokkos::initialize(int argc, char* argv[])."
+        << std::endl;
+  }
+  val = false;
+  return true;
+}
+
+bool check_arg_int(char const* arg, char const* name, int& val) {
+  auto const len = std::strlen(name);
+  if (std::strncmp(arg, name, len) != 0) {
+    return false;
+  }
+  auto const arg_len = strlen(arg);
+  if (arg_len <= len + 1 || arg[len] != '=') {
+    std::stringstream ss;
+    ss << "Error: command line argument '" << arg
+       << "' is not recognized as a valid integer.\n";
+    Kokkos::abort(ss.str().c_str());
+  }
+
+  std::advance(arg, len + 1);
+
+  errno = 0;
+  char* arg_end;
+  val = std::strtol(arg, &arg_end, 10);
+
+  if (arg == arg_end) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Error: cannot convert '") + name + '=' + arg +
+        "' to an integer. "
+        "Raised by Kokkos::initialize(int argc, char* argv[]).");
+  }
+
+  if (errno == ERANGE) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Error: '") + name + '=' + arg +
+        "' out of range of representable values by an integer."
+        " Raised by Kokkos::initialize(int argc, char* argv[]).");
+  }
+
+  return true;
+}
+
 }  // namespace
 
 Kokkos::Impl::ExecSpaceManager& Kokkos::Impl::ExecSpaceManager::get_instance() {
@@ -786,74 +855,59 @@ Report bugs to https://github.com/kokkos/kokkos/issues
 
 void Kokkos::Impl::parse_command_line_arguments(
     int& argc, char* argv[], InitializationSettings& settings) {
-  int num_threads;
-  int ignored_numa;
-  int device_id;
-  int num_devices;
-  int skip_device;
-  std::string map_device_id_by;
-
-  bool kokkos_num_threads_found = false;
-  bool kokkos_device_id_found   = false;
-  bool kokkos_num_devices_found = false;
-
   Tools::InitArguments tools_init_arguments;
   combine(tools_init_arguments, settings);
   Tools::Impl::parse_command_line_arguments(argc, argv, tools_init_arguments);
   combine(settings, tools_init_arguments);
 
+  int num_threads;
+  int device_id;
+  int num_devices;  // deprecated
+  int skip_device;  // deprecated
+  std::string map_device_id_by;
+  bool disable_warnings;
+  bool tune_internals;
+
+  auto get_flag = [](std::string s) -> std::string {
+    return s.erase(s.find('='));
+  };
+
   bool help_flag = false;
 
   int iarg = 0;
   while (iarg < argc) {
-    bool remove_flag = false;
-    if (check_int_arg(argv[iarg], "--kokkos-num-threads", &num_threads) ||
-        check_int_arg(argv[iarg], "--kokkos-threads", &num_threads)) {
-      if (check_arg(argv[iarg], "--kokkos-threads")) {
-        warn_deprecated_command_line_argument("--kokkos-threads",
+    if (check_arg(argv[iarg], "--kokkos-numa") ||
+        check_arg(argv[iarg], "--numa")) {
+      warn_deprecated_command_line_argument(get_flag(argv[iarg]));
+    } else if (check_arg_int(argv[iarg], "--kokkos-num-threads", num_threads) ||
+               check_arg_int(argv[iarg], "--num-threads", num_threads) ||
+               check_arg_int(argv[iarg], "--kokkos-threads", num_threads) ||
+               check_arg_int(argv[iarg], "--threads", num_threads)) {
+      if (get_flag(argv[iarg]) != "--kokkos-num-threads") {
+        warn_deprecated_command_line_argument(get_flag(argv[iarg]),
                                               "--kokkos-num-threads");
+      }
+      if (!is_valid_num_threads(num_threads)) {
+        std::stringstream ss;
+        ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
+           << " The number of threads must be greater equal to one."
+           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+        Kokkos::abort(ss.str().c_str());
       }
       settings.set_num_threads(num_threads);
-      remove_flag              = true;
-      kokkos_num_threads_found = true;
-    } else if (!kokkos_num_threads_found &&
-               (check_int_arg(argv[iarg], "--num-threads", &num_threads) ||
-                check_int_arg(argv[iarg], "--threads", &num_threads))) {
-      if (check_arg(argv[iarg], "--num-threads")) {
-        warn_deprecated_command_line_argument("--num-threads",
-                                              "--kokkos-num-threads");
-      }
-      if (check_arg(argv[iarg], "--threads")) {
-        warn_deprecated_command_line_argument("--threads",
-                                              "--kokkos-num-threads");
-      }
-      settings.set_num_threads(num_threads);
-    } else if (check_int_arg(argv[iarg], "--kokkos-numa", &ignored_numa) ||
-               check_int_arg(argv[iarg], "--numa", &ignored_numa)) {
-      if (check_arg(argv[iarg], "--kokkos-numa")) {
-        warn_deprecated_command_line_argument("--kokkos-numa");
-        remove_flag = true;
-      } else {
-        warn_deprecated_command_line_argument("--numa");
-      }
-    } else if (check_int_arg(argv[iarg], "--kokkos-device-id", &device_id) ||
-               check_int_arg(argv[iarg], "--kokkos-device", &device_id)) {
-      if (check_arg(argv[iarg], "--kokkos-device")) {
-        warn_deprecated_command_line_argument("--kokkos-device",
+    } else if (check_arg_int(argv[iarg], "--kokkos-device-id", device_id) ||
+               check_arg_int(argv[iarg], "--device-id", device_id) ||
+               check_arg_int(argv[iarg], "--kokkos-device", device_id) ||
+               check_arg_int(argv[iarg], "--device", device_id)) {
+      if (get_flag(argv[iarg]) != "--kokkos-device-id") {
+        warn_deprecated_command_line_argument(get_flag(argv[iarg]),
                                               "--kokkos-device-id");
       }
-      settings.set_device_id(device_id);
-      remove_flag            = true;
-      kokkos_device_id_found = true;
-    } else if (!kokkos_device_id_found &&
-               (check_int_arg(argv[iarg], "--device-id", &device_id) ||
-                check_int_arg(argv[iarg], "--device", &device_id))) {
-      if (check_arg(argv[iarg], "--device-id")) {
-        warn_deprecated_command_line_argument("--device-id",
-                                              "--kokkos-device-id");
-      }
-      if (check_arg(argv[iarg], "--device")) {
-        warn_deprecated_command_line_argument("--device", "--kokkos-device-id");
+      if (!is_valid_device_id(device_id)) {
+        std::stringstream ss;
+        ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
+           << " The device id must be greater equal to zero.\n";
+        Kokkos::abort(ss.str().c_str());
       }
       settings.set_device_id(device_id);
     } else if (check_arg(argv[iarg], "--kokkos-num-devices") ||
@@ -898,8 +952,7 @@ void Kokkos::Impl::parse_command_line_arguments(
             "Kokkos::initialize(int argc, char* argv[]).");
       }
       if (check_arg(argv[iarg], "--kokkos-num-devices") ||
-          check_arg(argv[iarg], "--kokkos-ndevices") ||
-          !kokkos_num_devices_found) {
+          check_arg(argv[iarg], "--kokkos-ndevices")) {
         num_devices = std::stoi(num1_only);
         settings.set_num_devices(num_devices);
         settings.set_map_device_id_by("mpi_rank");
@@ -914,43 +967,34 @@ void Kokkos::Impl::parse_command_line_arguments(
               "Kokkos::initialize(int argc, char* argv[]).");
 
         if (check_arg(argv[iarg], "--kokkos-num-devices") ||
-            check_arg(argv[iarg], "--kokkos-ndevices") ||
-            !kokkos_num_devices_found) {
+            check_arg(argv[iarg], "--kokkos-ndevices")) {
           skip_device = std::stoi(num2 + 1);
           settings.set_skip_device(skip_device);
         }
       }
-
-      if (check_arg(argv[iarg], "--kokkos-num-devices") ||
-          check_arg(argv[iarg], "--kokkos-ndevices")) {
-        remove_flag = true;
-      }
-    } else if (check_arg(argv[iarg], "--kokkos-disable-warnings")) {
-      remove_flag = true;
-      settings.set_disable_warnings(true);
-    } else if (check_arg(argv[iarg], "--kokkos-tune-internals")) {
-      remove_flag = true;
-      settings.set_tune_internals(true);
+    } else if (check_arg_bool(argv[iarg], "--kokkos-disable-warnings",
+                              disable_warnings)) {
+      settings.set_disable_warnings(disable_warnings);
+    } else if (check_arg_bool(argv[iarg], "--kokkos-tune-internals",
+                              tune_internals)) {
+      settings.set_tune_internals(tune_internals);
     } else if (check_arg(argv[iarg], "--kokkos-help") ||
                check_arg(argv[iarg], "--help")) {
       help_flag = true;
-
-      if (check_arg(argv[iarg], "--kokkos-help")) {
-        remove_flag = true;
-      }
     } else if (check_str_arg(argv[iarg], "--kokkos-map-device-id-by",
                              map_device_id_by)) {
-      if (is_valid_map_device_id_by(map_device_id_by)) {
-        settings.set_map_device_id_by(map_device_id_by);
-      } else {
+      if (!is_valid_map_device_id_by(map_device_id_by)) {
         std::stringstream ss;
         ss << "Warning: command line argument '--kokkos-map-device-id-by="
            << map_device_id_by << "' is not recognized."
            << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
         Kokkos::abort(ss.str().c_str());
       }
+      settings.set_map_device_id_by(map_device_id_by);
     }
 
+    // remove flag if prefixed with '--kokkos-'
+    bool remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     if (remove_flag) {
       for (int k = iarg; k < argc - 1; k++) {
         argv[k] = argv[k + 1];

@@ -166,17 +166,6 @@ TEST(defaultdevicetype, cmd_line_args_num_threads) {
   EXPECT_EQ(settings.get_num_threads(), 2);
   EXPECT_EQ(cla.argc(), 1);
   EXPECT_STREQ(*cla.argv(), "--foo=bar");
-
-  settings = {};
-  cla      = {{
-      {"--kokkos-num-threads=-1"},
-  }};
-  EXPECT_THROW(  // consider calling abort instead
-      Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(),
-                                                 settings),
-      std::runtime_error
-      // expecting an '=INT' after command line argument '--kokkos-num-threads'
-  );
 }
 
 TEST(defaultdevicetype, cmd_line_args_device_id) {
@@ -212,15 +201,13 @@ TEST(defaultdevicetype, cmd_line_args_num_devices) {
 
 TEST(defaultdevicetype, cmd_line_args_disable_warning) {
   CmdLineArgsHelper cla = {{
-      "--kokkos-disable-warnings=0",
+      "--kokkos-disable-warnings=1",
+      "--kokkos-disable-warnings=false",
   }};
   Kokkos::InitializationSettings settings;
   Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
-  // this is the current behavior, not suggesting this cannot be revisited
-  // essentially here the =BOOL is ignored
   EXPECT_TRUE(settings.has_disable_warnings());
-  EXPECT_TRUE(settings.get_disable_warnings())
-      << "behavior changed see comment";
+  EXPECT_FALSE(settings.get_disable_warnings());
 }
 
 TEST(defaultdevicetype, cmd_line_args_tune_internals) {
