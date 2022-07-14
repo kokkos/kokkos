@@ -1639,11 +1639,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     member.team_broadcast(accum, team_size - 1);
   }
 #endif
-
-  // for (iType i = 0; i < nchunk; ++i) {
-  // if(omp_get_thread_num() == 0)
-  // lambda(i, accum, true);
-  //}
 }
 
 }  // namespace Kokkos
