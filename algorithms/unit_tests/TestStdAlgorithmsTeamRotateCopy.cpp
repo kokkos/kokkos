@@ -52,33 +52,6 @@ namespace TeamRotateCopy {
 
 namespace KE = Kokkos::Experimental;
 
-// // impl is here for std because it is only avail from c++>=17
-// template <class InputIterator, class OutputIterator, class BinaryPredicate>
-// auto my_rotate(InputIterator first, InputIterator last,
-//                     OutputIterator result, BinaryPredicate pred) {
-//   if (first != last) {
-//     typename OutputIterator::value_type t(*first);
-//     *result = t;
-//     ++result;
-//     while (++first != last) {
-//       if (!pred(t, *first)) {
-//         t       = *first;
-//         *result = t;
-//         ++result;
-//       }
-//     }
-//   }
-//   return result;
-// }
-
-// template <class InputIterator, class OutputIterator>
-// auto my_rotate(InputIterator first, InputIterator last,
-//                     OutputIterator result) {
-//   using value_type = typename OutputIterator::value_type;
-//   using func_t     = IsEqualFunctor<value_type>;
-//   return my_rotate(first, last, result, func_t());
-// }
-
 template <class ViewTypeFrom, class ViewTypeDest, class ViewItDist,
           class MemberType>
 struct FunctorA {
@@ -196,10 +169,10 @@ struct UnifDist<int> {
 template <class Tag, class ValueType>
 void run_all_scenarios() {
   for (int num_teams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11153}) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1153}) {
       UnifDist<int> pivotsProducer(numCols, 3123377);
-      // 7 is an arbitrary number of pivots to test
-      for (int k = 0; k < 7; ++k) {
+      // an arbitrary number of pivots to test
+      for (int k = 0; k < 5; ++k) {
         const auto pivotIndex = pivotsProducer();
         for (int apiId : {0, 1}) {
           test_A<Tag, ValueType>(num_teams, numCols, pivotIndex, apiId);
@@ -210,12 +183,9 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_rotate_copy_team_test, test) {
-  run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedTwoRowsTag, double>();
   run_all_scenarios<StridedThreeRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, double>();
 }
 
 }  // namespace TeamRotateCopy

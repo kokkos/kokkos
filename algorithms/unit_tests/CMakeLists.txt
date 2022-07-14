@@ -148,28 +148,28 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(STDALGO_TEAM_SOURCES_A)
     foreach(Name
 	StdAlgorithmsCommon
+	StdAlgorithmsTeamRotate
 	StdAlgorithmsTeamRotateCopy
-	#StdAlgorithmsTeamRotate
-	# StdAlgorithmsTeamUniqueCopy
-	# StdAlgorithmsTeamSwapRanges
-	# StdAlgorithmsTeamMove
-	# StdAlgorithmsTeamMoveBackward
-	# StdAlgorithmsTeamReverse
-	# StdAlgorithmsTeamReverseCopy
-	# StdAlgorithmsTeamGenerate
-	# StdAlgorithmsTeamGenerate_n
-	# StdAlgorithmsTeamFill
-	# StdAlgorithmsTeamFill_n
-	# StdAlgorithmsTeamReplace
-	# StdAlgorithmsTeamReplaceIf
-	# StdAlgorithmsTeamReplaceCopy
-	# StdAlgorithmsTeamReplaceCopyIf
-	# StdAlgorithmsTeamCopy
-	# StdAlgorithmsTeamCopy_n
-	# StdAlgorithmsTeamCopyBackward
-	# StdAlgorithmsTeamCopyIf
-	# StdAlgorithmsTeamCountIf
-	# StdAlgorithmsTeamTransform
+	StdAlgorithmsTeamUniqueCopy
+	StdAlgorithmsTeamSwapRanges
+	StdAlgorithmsTeamMove
+	StdAlgorithmsTeamMoveBackward
+	StdAlgorithmsTeamReverse
+	StdAlgorithmsTeamReverseCopy
+	StdAlgorithmsTeamGenerate
+	StdAlgorithmsTeamGenerate_n
+	StdAlgorithmsTeamFill
+	StdAlgorithmsTeamFill_n
+	StdAlgorithmsTeamReplace
+	StdAlgorithmsTeamReplaceIf
+	StdAlgorithmsTeamReplaceCopy
+	StdAlgorithmsTeamReplaceCopyIf
+	StdAlgorithmsTeamCopy
+	StdAlgorithmsTeamCopy_n
+	StdAlgorithmsTeamCopyBackward
+	StdAlgorithmsTeamCopyIf
+	StdAlgorithmsTeamCountIf
+	StdAlgorithmsTeamTransform
 	)
       list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
     endforeach()

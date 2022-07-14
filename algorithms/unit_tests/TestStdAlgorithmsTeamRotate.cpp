@@ -156,10 +156,10 @@ struct UnifDist<int> {
 template <class Tag, class ValueType>
 void run_all_scenarios() {
   for (int num_teams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11153}) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1153}) {
       UnifDist<int> pivotsProducer(numCols, 3123377);
-      // 7 is an arbitrary number of pivots to test
-      for (int k = 0; k < 7; ++k) {
+      // an arbitrary number of pivots to test
+      for (int k = 0; k < 5; ++k) {
         const auto pivotIndex = pivotsProducer();
         for (int apiId : {0, 1}) {
           test_A<Tag, ValueType>(num_teams, numCols, pivotIndex, apiId);
@@ -170,12 +170,9 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_rotate_team_test, test) {
-  run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedTwoRowsTag, double>();
   run_all_scenarios<StridedThreeRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, double>();
 }
 
 }  // namespace TeamRotate
