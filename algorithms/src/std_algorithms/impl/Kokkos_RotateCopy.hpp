@@ -114,6 +114,37 @@ OutputIterator rotate_copy_impl(const std::string& label,
   return d_first + num_elements;
 }
 
+template <class TeamHandleType, class InputIterator, class OutputIterator>
+KOKKOS_FUNCTION OutputIterator rotate_copy_team_impl(
+    const TeamHandleType& teamHandle, InputIterator first,
+    InputIterator n_first, InputIterator last, OutputIterator d_first) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first, d_first);
+  Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
+  Impl::expect_valid_range(first, last);
+  Impl::expect_valid_range(first, n_first);
+  Impl::expect_valid_range(n_first, last);
+
+  if (first == last) {
+    return d_first;
+  }
+
+  // aliases
+  using index_type = typename InputIterator::difference_type;
+  using func_type =
+      StdRotateCopyFunctor<index_type, InputIterator, OutputIterator>;
+
+  // run
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         func_type(first, last, n_first, d_first));
+
+  teamHandle.team_barrier();
+
+  // return
+  return d_first + num_elements;
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
