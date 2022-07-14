@@ -487,7 +487,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     return visible_devices[0];
   }
   // map_device_id provided
-  // either random or round-robin assignement based on local MPI rank
+  // either random or round-robin assignment based on local MPI rank
   if (!is_valid_map_device_id_by(settings.get_map_device_id_by())) {
     std::stringstream ss;
     ss << "Warning: map_device_id_by setting '"
@@ -521,7 +521,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     return visible_devices[0];
   }
 
-  // use device assigned by CTest when ressource allocation is activated
+  // use device assigned by CTest when resource allocation is activated
   if (std::getenv("CTEST_KOKKOS_DEVICE_TYPE") &&
       std::getenv("CTEST_RESOURCE_GROUP_COUNT")) {
     return get_ctest_gpu(local_rank_str);
