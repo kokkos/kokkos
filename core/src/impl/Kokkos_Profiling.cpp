@@ -111,16 +111,15 @@ void parse_command_line_arguments(int& argc, char* argv[],
                                   InitArguments& arguments) {
   int iarg = 0;
   using Kokkos::Impl::check_arg;
-  using Kokkos::Impl::check_int_arg;
-  using Kokkos::Impl::check_str_arg;
+  using Kokkos::Impl::check_arg_str;
 
   auto& libs = arguments.lib;
   auto& args = arguments.args;
   auto& help = arguments.help;
   while (iarg < argc) {
     bool remove_flag = false;
-    if (check_str_arg(argv[iarg], "--kokkos-tools-libs", libs) ||
-        check_str_arg(argv[iarg], "--kokkos-tools-library", libs)) {
+    if (check_arg_str(argv[iarg], "--kokkos-tools-libs", libs) ||
+        check_arg_str(argv[iarg], "--kokkos-tools-library", libs)) {
       if (check_arg(argv[iarg], "--kokkos-tools-library")) {
         using Kokkos::Impl::warn_deprecated_command_line_argument;
         warn_deprecated_command_line_argument("--kokkos-tools-library",
@@ -128,7 +127,7 @@ void parse_command_line_arguments(int& argc, char* argv[],
       }
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
-    } else if (check_str_arg(argv[iarg], "--kokkos-tools-args", args)) {
+    } else if (check_arg_str(argv[iarg], "--kokkos-tools-args", args)) {
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
       // strip any leading and/or trailing quotes if they were retained in the

@@ -184,133 +184,6 @@ bool is_valid_map_device_id_by(std::string const& x) {
   return x == "mpi_rank" || x == "random";
 }
 
-auto const regex_true = std::regex(
-    "(yes|true|1)", std::regex_constants::icase | std::regex_constants::egrep);
-
-auto const regex_false = std::regex(
-    "(no|false|0)", std::regex_constants::icase | std::regex_constants::egrep);
-
-bool check_env_bool(char const* name, bool& val) {
-  char const* var = std::getenv(name);
-
-  if (!var) {
-    return false;
-  }
-
-  if (std::regex_match(var, regex_true)) {
-    val = true;
-    return true;
-  }
-
-  if (!std::regex_match(var, regex_false)) {
-    std::cerr
-        << "Warning: unrecognized boolean value for environment variable '"
-        << name << "=" << var << "' interpreted as 'false'."
-        << " Raised by Kokkos::initialize(int argc, char* argv[])."
-        << std::endl;
-  }
-
-  val = false;
-  return true;
-}
-
-bool check_env_int(char const* name, int& val) {
-  char const* var = std::getenv(name);
-
-  if (!var) {
-    return false;
-  }
-
-  errno = 0;
-  char* var_end;
-  val = std::strtol(var, &var_end, 10);
-
-  if (var == var_end) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("Error: cannot convert ") + name +
-        " to an integer. "
-        "Raised by Kokkos::initialize(int argc, char* argv[]).");
-  }
-
-  if (errno == ERANGE) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("Error: ") + name +
-        " out of range of representable values by an integer."
-        " Raised by Kokkos::initialize(int argc, char* argv[]).");
-  }
-
-  return true;
-}
-
-bool check_arg_bool(char const* arg, char const* name, bool& val) {
-  auto const len = std::strlen(name);
-  if (std::strncmp(arg, name, len) != 0) {
-    return false;
-  }
-  auto const arg_len = strlen(arg);
-  if (arg_len == len) {
-    val = true;  // --kokkos-foo without =BOOL interpreted as fool=true
-    return true;
-  }
-  if (arg_len <= len + 1 || arg[len] != '=') {
-    std::stringstream ss;
-    ss << "Error: command line argument '" << arg
-       << "' is not recognized as a valid boolean.\n";
-    Kokkos::abort(ss.str().c_str());
-  }
-
-  std::advance(arg, len + 1);
-  if (std::regex_match(arg, regex_true)) {
-    val = true;
-    return true;
-  }
-  if (!std::regex_match(arg, regex_false)) {
-    std::cerr
-        << "Warning: unrecognized boolean value for command line argument '"
-        << name << '=' << arg << "'interpreted as 'false'."
-        << " Raised by Kokkos::initialize(int argc, char* argv[])."
-        << std::endl;
-  }
-  val = false;
-  return true;
-}
-
-bool check_arg_int(char const* arg, char const* name, int& val) {
-  auto const len = std::strlen(name);
-  if (std::strncmp(arg, name, len) != 0) {
-    return false;
-  }
-  auto const arg_len = strlen(arg);
-  if (arg_len <= len + 1 || arg[len] != '=') {
-    std::stringstream ss;
-    ss << "Error: command line argument '" << arg
-       << "' is not recognized as a valid integer.\n";
-    Kokkos::abort(ss.str().c_str());
-  }
-
-  std::advance(arg, len + 1);
-
-  errno = 0;
-  char* arg_end;
-  val = std::strtol(arg, &arg_end, 10);
-
-  if (arg == arg_end) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("Error: cannot convert '") + name + '=' + arg +
-        "' to an integer. "
-        "Raised by Kokkos::initialize(int argc, char* argv[]).");
-  }
-
-  if (errno == ERANGE) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("Error: '") + name + '=' + arg +
-        "' out of range of representable values by an integer."
-        " Raised by Kokkos::initialize(int argc, char* argv[]).");
-  }
-
-  return true;
-}
-
 }  // namespace
 
 Kokkos::Impl::ExecSpaceManager& Kokkos::Impl::ExecSpaceManager::get_instance() {
@@ -981,7 +854,7 @@ void Kokkos::Impl::parse_command_line_arguments(
     } else if (check_arg(argv[iarg], "--kokkos-help") ||
                check_arg(argv[iarg], "--help")) {
       help_flag = true;
-    } else if (check_str_arg(argv[iarg], "--kokkos-map-device-id-by",
+    } else if (check_arg_str(argv[iarg], "--kokkos-map-device-id-by",
                              map_device_id_by)) {
       if (!is_valid_map_device_id_by(map_device_id_by)) {
         std::stringstream ss;
