@@ -358,11 +358,11 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // map_device_id provided
   // either random or round-robin assignement based on local MPI rank
   if (!is_valid_map_device_id_by(settings.get_map_device_id_by())) {
-    std::cerr << "Warning: unrecognized map_device_id_by setting \""
-              << settings.get_map_device_id_by() << "\" ignored."
-              << " Raised by Kokkos::initialize(int argc, char* argv[])."
-              << std::endl;
-    return visible_devices[0];
+    std::stringstream ss;
+    ss << "Warning: map_device_id_by setting '"
+       << settings.get_map_device_id_by() << "' is not recognized."
+       << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+    Kokkos::abort(ss.str().c_str());
   }
 
   if (settings.get_map_device_id_by() == "random") {
@@ -873,11 +873,11 @@ void Kokkos::Impl::parse_command_line_arguments(
       if (is_valid_map_device_id_by(map_device_id_by)) {
         settings.set_map_device_id_by(map_device_id_by);
       } else {
-        std::cerr << "Warning: unrecognized value for command line argument "
-                     "--kokkos-map-device-id-by=\""
-                  << map_device_id_by << "\" ignored."
-                  << " Raised by Kokkos::initialize(int argc, char* argv[])."
-                  << std::endl;
+        std::stringstream ss;
+        ss << "Warning: command line argument '--kokkos-map-device-id-by="
+           << map_device_id_by << "' is not recognized."
+           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+        Kokkos::abort(ss.str().c_str());
       }
     }
 
@@ -1036,11 +1036,11 @@ void Kokkos::Impl::parse_environment_variables(
     if (is_valid_map_device_id_by(env_map_device_id_by_str)) {
       settings.set_map_device_id_by(env_map_device_id_by_str);
     } else {
-      std::cerr << "Warning: unrecognized value for environment variable "
-                << "KOKKOS_MAP_DEVICE_ID_BY=" << env_map_device_id_by_str
-                << "ignored."
-                << " Raised by Kokkos::initialize(int argc, char* argv[])."
-                << std::endl;
+      std::stringstream ss;
+      ss << "Warning: environment variable 'KOKKOS_MAP_DEVICE_ID_BY="
+         << env_map_device_id_by_str << "' is not recognized."
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
     }
   }
 }
