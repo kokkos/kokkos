@@ -46,6 +46,7 @@
 
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 #include <cstdlib>
 #include <memory>
@@ -119,6 +120,12 @@ class EnvVarsHelper {
   }
   EnvVarsHelper(EnvVarsHelper&) = delete;
   EnvVarsHelper& operator=(EnvVarsHelper&) = delete;
+  friend std::ostream& operator<<(std::ostream& os, EnvVarsHelper const& ev) {
+    for (auto const& name : ev.vars_) {
+      os << name << '=' << std::getenv(name.c_str()) << '\n';
+    }
+    return os;
+  }
 };
 std::mutex EnvVarsHelper::mutex_;
 #define SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev)       \
@@ -374,6 +381,46 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
     EXPECT_FALSE(settings.get_tune_internals())
         << "KOKKOS_TUNE_INTERNALS=" << value_false;
   }
+}
+
+TEST(defaultdevicetype, visible_devices) {
+#define KOKKOS_TEST_VISIBLE_DEVICES(ENV, CNT, DEV)                    \
+  do {                                                                \
+    EnvVarsHelper ev{ENV};                                            \
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);                     \
+    Kokkos::InitializationSettings settings;                          \
+    Kokkos::Impl::parse_environment_variables(settings);              \
+    auto computed = Kokkos::Impl::get_visible_devices(settings, CNT); \
+    std::vector<int> expected = DEV;                                  \
+    EXPECT_EQ(expected.size(), computed.size())                       \
+        << ev << "device count: " << CNT;                             \
+    auto n = std::min<int>(expected.size(), computed.size());         \
+    for (int i = 0; i < n; ++i) {                                     \
+      EXPECT_EQ(expected[i], computed[i])                             \
+          << "devices differ at index " << i << '\n'                  \
+          << ev << "device count: " << CNT;                           \
+    }                                                                 \
+  } while (false)
+
+#define DEV(...) \
+  std::vector<int> { __VA_ARGS__ }
+#define ENV(...) std::unordered_map<std::string, std::string>{__VA_ARGS__}
+
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV(), 4, DEV(0, 1, 2, 3));
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV({"KOKKOS_NUM_DEVICES", "3"}), 6,
+                              DEV(0, 1, 2));
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_NUM_DEVICES", "4"}, {"KOKKOS_SKIP_DEVICE", "1"}, ), 6,
+      DEV(0, 2, 3));
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV({"KOKKOS_VISIBLE_DEVICES", "1,3,4"}), 6,
+                              DEV(1, 3, 4));
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_SKIP_DEVICE", "1"}, ), 6,
+      DEV(2, 1));
+
+#undef ENV
+#undef DEV
+#undef KOKKOS_TEST_VISIBLE_DEVICES
 }
 
 }  // namespace

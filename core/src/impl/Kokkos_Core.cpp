@@ -311,7 +311,8 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
   return std::stoi(id.c_str());
 }
 
-int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
+std::vector<int> Kokkos::Impl::get_visible_devices(
+    Kokkos::InitializationSettings const& settings, int device_count) {
   std::vector<int> visible_devices;
   char* env_visible_devices = std::getenv("KOKKOS_VISIBLE_DEVICES");
   if (env_visible_devices) {
@@ -321,8 +322,8 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
       if (ss.peek() == ',') ss.ignore();
     }
   } else {
-    int num_devices = settings.has_num_devices() ? settings.get_num_devices()
-                                                 : get_device_count();
+    int num_devices =
+        settings.has_num_devices() ? settings.get_num_devices() : device_count;
     for (int i = 0; i < num_devices; ++i) {
       visible_devices.push_back(i);
     }
@@ -340,6 +341,12 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   if (visible_devices.empty()) {
     Kokkos::abort("Error: no GPU available for execution.\n");
   }
+  return visible_devices;
+}
+
+int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
+  std::vector<int> visible_devices =
+      get_visible_devices(settings, get_device_count());
   // device_id is provided
   if (settings.has_device_id()) {
     return visible_devices[settings.get_device_id()];
