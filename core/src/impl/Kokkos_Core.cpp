@@ -176,8 +176,70 @@ unsigned get_process_id() {
 #endif
 }
 
+bool is_valid_num_threads(int x) { return x > 0; }
+
+bool is_valid_device_id(int x) { return x >= 0; }
+
 bool is_valid_map_device_id_by(std::string const& x) {
   return x == "mpi_rank" || x == "random";
+}
+
+auto const regex_true = std::regex(
+    "(yes|true|1)", std::regex_constants::icase | std::regex_constants::egrep);
+
+auto const regex_false = std::regex(
+    "(no|false|0)", std::regex_constants::icase | std::regex_constants::egrep);
+
+bool check_env_bool(char const* name, bool& val) {
+  char const* var = std::getenv(name);
+
+  if (!var) {
+    return false;
+  }
+
+  if (std::regex_match(var, regex_true)) {
+    val = true;
+    return true;
+  }
+
+  if (!std::regex_match(var, regex_false)) {
+    std::cerr
+        << "Warning: unrecognized boolean value for environment variable '"
+        << name << "=" << var << "' interpreted as 'false'."
+        << " Raised by Kokkos::initialize(int argc, char* argv[])."
+        << std::endl;
+  }
+
+  val = false;
+  return true;
+}
+
+bool check_env_int(char const* name, int& val) {
+  char const* var = std::getenv(name);
+
+  if (!var) {
+    return false;
+  }
+
+  errno = 0;
+  char* var_end;
+  val = std::strtol(var, &var_end, 10);
+
+  if (var == var_end) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Error: cannot convert ") + name +
+        " to an integer. "
+        "Raised by Kokkos::initialize(int argc, char* argv[]).");
+  }
+
+  if (errno == ERANGE) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Error: ") + name +
+        " out of range of representable values by an integer."
+        " Raised by Kokkos::initialize(int argc, char* argv[]).");
+  }
+
+  return true;
 }
 
 }  // namespace
@@ -912,8 +974,6 @@ void Kokkos::Impl::parse_command_line_arguments(
 
 void Kokkos::Impl::parse_environment_variables(
     InitializationSettings& settings) {
-  char* endptr;
-
   Tools::InitArguments tools_init_arguments;
   combine(tools_init_arguments, settings);
   auto init_result =
@@ -924,133 +984,82 @@ void Kokkos::Impl::parse_environment_variables(
   }
   combine(settings, tools_init_arguments);
 
-  auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
-  if (env_num_threads_str != nullptr) {
-    errno                = 0;
-    auto env_num_threads = std::strtol(env_num_threads_str, &endptr, 10);
-    if (endptr == env_num_threads_str)
-      Impl::throw_runtime_exception(
-          "Error: cannot convert KOKKOS_NUM_THREADS to an integer. Raised by "
-          "Kokkos::initialize(int argc, char* argv[]).");
-    if (errno == ERANGE)
-      Impl::throw_runtime_exception(
-          "Error: KOKKOS_NUM_THREADS out of range of representable values by "
-          "an integer. Raised by Kokkos::initialize(int argc, char* argv[]).");
-    settings.set_num_threads(env_num_threads);
-  }
-  auto env_numa_str = std::getenv("KOKKOS_NUMA");
-  if (env_numa_str != nullptr) {
+  if (std::getenv("KOKKOS_NUMA")) {
     warn_deprecated_environment_variable("KOKKOS_NUMA");
   }
-  auto env_device_id_str = std::getenv("KOKKOS_DEVICE_ID");
-  if (env_device_id_str != nullptr) {
-    errno              = 0;
-    auto env_device_id = std::strtol(env_device_id_str, &endptr, 10);
-    if (endptr == env_device_id_str)
-      Impl::throw_runtime_exception(
-          "Error: cannot convert KOKKOS_DEVICE_ID to an integer. Raised by "
-          "Kokkos::initialize(int argc, char* argv[]).");
-    if (errno == ERANGE)
-      Impl::throw_runtime_exception(
-          "Error: KOKKOS_DEVICE_ID out of range of representable values by an "
-          "integer. Raised by Kokkos::initialize(int argc, char* argv[]).");
-    settings.set_device_id(env_device_id);
-  }
-  auto env_rand_devices_str = std::getenv("KOKKOS_RAND_DEVICES");
-  auto env_num_devices_str  = std::getenv("KOKKOS_NUM_DEVICES");
-  if (env_num_devices_str != nullptr || env_rand_devices_str != nullptr) {
-    errno = 0;
-    if (env_num_devices_str != nullptr && env_rand_devices_str != nullptr) {
-      Impl::throw_runtime_exception(
-          "Error: cannot specify both KOKKOS_NUM_DEVICES and "
-          "KOKKOS_RAND_DEVICES. "
-          "Raised by Kokkos::initialize(int argc, char* argv[]).");
-    }
-    if (env_num_devices_str != nullptr) {
-      warn_deprecated_environment_variable("KOKKOS_NUM_DEVICES",
-                                           "KOKKOS_MAP_DEVICE_ID_BY=mpi_rank");
-      settings.set_map_device_id_by("mpi_rank");
-      auto env_num_devices = std::strtol(env_num_devices_str, &endptr, 10);
-      if (endptr == env_num_devices_str)
-        Impl::throw_runtime_exception(
-            "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
-            "Kokkos::initialize(int argc, char* argv[]).");
-      if (errno == ERANGE)
-        Impl::throw_runtime_exception(
-            "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
-            "an integer. Raised by Kokkos::initialize(int argc, char* "
-            "argv[]).");
-      settings.set_num_devices(env_num_devices);
-    } else {  // you set KOKKOS_RAND_DEVICES
-      warn_deprecated_environment_variable("KOKKOS_RAND_DEVICES",
-                                           "KOKKOS_MAP_DEVICE_ID_BY=random");
-      settings.set_map_device_id_by("random");
-      auto env_rand_devices = std::strtol(env_rand_devices_str, &endptr, 10);
-      if (endptr == env_rand_devices_str)
-        Impl::throw_runtime_exception(
-            "Error: cannot convert KOKKOS_RAND_DEVICES to an integer. Raised "
-            "by Kokkos::initialize(int argc, char* argv[]).");
-      if (errno == ERANGE)
-        Impl::throw_runtime_exception(
-            "Error: KOKKOS_RAND_DEVICES out of range of representable values "
-            "by an integer. Raised by Kokkos::initialize(int argc, char* "
-            "argv[]).");
-      settings.set_num_devices(env_rand_devices);
-    }
-    // Skip device
-    auto env_skip_device_str = std::getenv("KOKKOS_SKIP_DEVICE");
-    if (env_skip_device_str != nullptr) {
-      warn_deprecated_environment_variable("KOKKOS_SKIP_DEVICE");
-      errno                = 0;
-      auto env_skip_device = std::strtol(env_skip_device_str, &endptr, 10);
-      if (endptr == env_skip_device_str)
-        Impl::throw_runtime_exception(
-            "Error: cannot convert KOKKOS_SKIP_DEVICE to an integer. Raised by "
-            "Kokkos::initialize(int argc, char* argv[]).");
-      if (errno == ERANGE)
-        Impl::throw_runtime_exception(
-            "Error: KOKKOS_SKIP_DEVICE out of range of representable values by "
-            "an integer. Raised by Kokkos::initialize(int argc, char* "
-            "argv[]).");
-      settings.set_skip_device(env_skip_device);
-    }
-  }
-  char* env_disable_warnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");
-  if (env_disable_warnings_str != nullptr) {
-    auto const regex =
-        std::regex("^(true|on|yes|[1-9])$",
-                   std::regex_constants::icase | std::regex_constants::egrep);
-    bool const disable_warnings =
-        std::regex_match(env_disable_warnings_str, regex);
-    settings.set_disable_warnings(disable_warnings);
-  }
-  char* env_tune_internals_str = std::getenv("KOKKOS_TUNE_INTERNALS");
-  if (env_tune_internals_str != nullptr) {
-    std::string env_str(env_tune_internals_str);  // deep-copies string
-    for (char& c : env_str) {
-      c = toupper(c);
-    }
-    if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1")) {
-      settings.set_tune_internals(true);
-    } else {
-      settings.set_tune_internals(false);
-    }
-  }
-  char* env_map_device_id_by_str = std::getenv("KOKKOS_MAP_DEVICE_ID_BY");
-  if (env_map_device_id_by_str != nullptr) {
-    if (env_device_id_str != nullptr) {
-      std::cerr << "Warning: environment vaiable KOKKOS_MAP_DEVICE_ID_BY"
-                << "ignored since KOKKOS_DEVICE_ID is specified." << std::endl;
-    }
-    if (is_valid_map_device_id_by(env_map_device_id_by_str)) {
-      settings.set_map_device_id_by(env_map_device_id_by_str);
-    } else {
+  int num_threads;
+  if (check_env_int("KOKKOS_NUM_THREADS", num_threads)) {
+    if (!is_valid_num_threads(num_threads)) {
       std::stringstream ss;
-      ss << "Warning: environment variable 'KOKKOS_MAP_DEVICE_ID_BY="
-         << env_map_device_id_by_str << "' is not recognized."
+      ss << "Error: environment variable 'KOKKOS_NUM_THREADS=" << num_threads
+         << "' is invalid."
+         << " The number of threads must be greater equal to one."
          << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
       Kokkos::abort(ss.str().c_str());
     }
+    settings.set_num_threads(num_threads);
+  }
+  int device_id;
+  if (check_env_int("KOKKOS_DEVICE_ID", device_id)) {
+    if (!is_valid_device_id(device_id)) {
+      std::stringstream ss;
+      ss << "Error: environment variable 'KOKKOS_DEVICE_ID" << device_id
+         << "' is invalid."
+         << " The device id must be greater equal to zero.\n";
+      Kokkos::abort(ss.str().c_str());
+    }
+    settings.set_device_id(device_id);
+  }
+  int num_devices;
+  int rand_devices;
+  bool has_num_devices  = check_env_int("KOKKOS_NUM_DEVICES", num_devices);
+  bool has_rand_devices = check_env_int("KOKKOS_RAND_DEVICES", rand_devices);
+  if (has_rand_devices && has_num_devices) {
+    Impl::throw_runtime_exception(
+        "Error: cannot specify both KOKKOS_NUM_DEVICES and "
+        "KOKKOS_RAND_DEVICES."
+        " Raised by Kokkos::initialize(int argc, char* argv[]).");
+  }
+  if (has_num_devices) {
+    warn_deprecated_environment_variable("KOKKOS_NUM_DEVICES",
+                                         "KOKKOS_MAP_DEVICE_ID_BY=mpi_rank");
+    settings.set_map_device_id_by("mpi_rank");
+    settings.set_num_devices(num_devices);
+  }
+  if (has_rand_devices) {
+    warn_deprecated_environment_variable("KOKKOS_RAND_DEVICES",
+                                         "KOKKOS_MAP_DEVICE_ID_BY=random");
+    settings.set_map_device_id_by("random");
+    settings.set_num_devices(rand_devices);
+  }
+  if (has_num_devices || has_rand_devices) {
+    int skip_device;
+    if (check_env_int("KOKKOS_SKIP_DEVICE", skip_device)) {
+      settings.set_skip_device(skip_device);
+    }
+  }
+  bool disable_warnings;
+  if (check_env_bool("KOKKOS_DISABLE_WARNINGS", disable_warnings)) {
+    settings.set_disable_warnings(disable_warnings);
+  }
+  bool tune_internals;
+  if (check_env_bool("KOKKOS_TUNE_INTERNALS", tune_internals)) {
+    settings.set_tune_internals(tune_internals);
+  }
+  char const* map_device_id_by = std::getenv("KOKKOS_MAP_DEVICE_ID_BY");
+  if (map_device_id_by != nullptr) {
+    if (std::getenv("KOKKOS_DEVICE_ID")) {
+      std::cerr << "Warning: environment variable KOKKOS_MAP_DEVICE_ID_BY"
+                << "ignored since KOKKOS_DEVICE_ID is specified." << std::endl;
+    }
+    if (!is_valid_map_device_id_by(map_device_id_by)) {
+      std::stringstream ss;
+      ss << "Warning: environment variable 'KOKKOS_MAP_DEVICE_ID_BY="
+         << map_device_id_by << "' is not recognized."
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
+    settings.set_map_device_id_by(map_device_id_by);
   }
 }
 
