@@ -414,33 +414,14 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         "space");
 
     // Which chunk is being indexed.
-    const uintptr_t ic = uintptr_t(i0 >> m_chunk_shift);
+    const uintptr_t ic = uintptr_t(i0) >> m_chunk_shift;
 
-    typename traits::value_type* volatile* const ch = m_chunks + ic;
-
-    // Do bounds checking if enabled or if the chunk pointer is zero.
-    // If not bounds checking then we assume a non-zero pointer is valid.
-
-#if !defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-    if (nullptr == *ch)
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+    const uintptr_t n = *reinterpret_cast<uintptr_t*>(m_chunks + m_chunk_max);
+    if (n <= ic) Kokkos::abort("Kokkos::DynamicView array bounds error");
 #endif
-    {
-      // Verify that allocation of the requested chunk is in progress.
 
-      // The allocated chunk counter is m_chunks[ m_chunk_max ]
-      const uintptr_t n =
-          *reinterpret_cast<uintptr_t volatile*>(m_chunks + m_chunk_max);
-
-      if (n <= ic) {
-        Kokkos::abort("Kokkos::DynamicView array bounds error");
-      }
-
-      // Allocation of this chunk is in progress
-      // so wait for allocation to complete.
-      while (nullptr == *ch)
-        ;
-    }
-
+    typename traits::value_type** const ch = m_chunks + ic;
     return (*ch)[i0 & m_chunk_mask];
   }
 
