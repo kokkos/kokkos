@@ -100,3 +100,31 @@ export (
   NAMESPACE "${namespace}"
   FILE ${generated_dir}/${targets_export_name}.cmake
 )
+
+# Install target (will install the library to specified CMAKE_INSTALL_PREFIX variable)
+install(
+  TARGETS ${targets_to_export}
+  EXPORT ${targets_export_name}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(
+  DIRECTORY "${PROJECT_SOURCE_DIR}/include/benchmark"
+            "${PROJECT_BINARY_DIR}/include/benchmark"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.*h")
+
+install(
+    FILES "${project_config}" "${version_config}"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+install(
+    FILES "${pkg_config}"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+
+install(
+    EXPORT "${targets_export_name}"
+    NAMESPACE "${namespace}"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
