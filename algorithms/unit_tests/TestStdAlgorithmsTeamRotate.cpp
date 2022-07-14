@@ -59,46 +59,39 @@ struct FunctorA {
   int m_pivotShift;
   int m_api_pick;
 
-  FunctorA(const ViewType viewFrom,
-	   ViewItDist view_dist,
-	   int pivotShift,
-	   int apiPick)
+  FunctorA(const ViewType viewFrom, ViewItDist view_dist, int pivotShift,
+           int apiPick)
       : m_view(viewFrom),
-	m_view_dist(view_dist),
-	m_pivotShift(pivotShift),
+        m_view_dist(view_dist),
+        m_pivotShift(pivotShift),
         m_api_pick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const
-  {
+  void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowView = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_api_pick == 0) {
       auto pivot = KE::begin(myRowView) + m_pivotShift;
-      auto it = KE::rotate(member, KE::begin(myRowView),
-			   pivot, KE::end(myRowView));
+      auto it =
+          KE::rotate(member, KE::begin(myRowView), pivot, KE::end(myRowView));
       m_view_dist(myRowIndex) = KE::distance(KE::begin(myRowView), it);
-    }
-    else{
-      auto it = KE::rotate(member, myRowView, m_pivotShift);
+    } else {
+      auto it                 = KE::rotate(member, myRowView, m_pivotShift);
       m_view_dist(myRowIndex) = KE::distance(KE::begin(myRowView), it);
     }
   }
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams,
-	    std::size_t num_cols,
-	    std::size_t pivotShift,
-	    int apiId)
-{
+void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t pivotShift,
+            int apiId) {
   /* description: */
 
   //
   // fill v
   //
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  auto v      = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
   auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
   auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
@@ -113,11 +106,11 @@ void test_A(std::size_t num_teams,
   //
   auto v2_h = create_host_space_copy(v);
   for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
-    auto row = Kokkos::subview(v2_h, i, Kokkos::ALL());
-    auto pivot = KE::begin(row) + pivotShift;
-    auto it = std::rotate(KE::begin(row), pivot, KE::end(row));
+    auto row       = Kokkos::subview(v2_h, i, Kokkos::ALL());
+    auto pivot     = KE::begin(row) + pivotShift;
+    auto it        = std::rotate(KE::begin(row), pivot, KE::end(row));
     const int dist = KE::distance(KE::begin(row), it);
-    EXPECT_TRUE(dist == (int) (num_cols - pivotShift));
+    EXPECT_TRUE(dist == (int)(num_cols - pivotShift));
   }
 
   // launch kernel
@@ -127,14 +120,15 @@ void test_A(std::size_t num_teams,
   policy_type policy(num_teams, Kokkos::AUTO());
 
   auto distances = create_view<int>(DynamicTag{}, num_teams, "view_it_dist");
-  using functor_type = FunctorA<decltype(v), decltype(distances), team_member_type>;
+  using functor_type =
+      FunctorA<decltype(v), decltype(distances), team_member_type>;
   functor_type fnc(v, distances, pivotShift, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // check
   auto distances_h = create_host_space_copy(distances);
   for (std::size_t i = 0; i < v.extent(0); ++i) {
-    EXPECT_TRUE(distances_h(i) == (int) (num_cols - pivotShift));
+    EXPECT_TRUE(distances_h(i) == (int)(num_cols - pivotShift));
   }
 
   auto v_h = create_host_space_copy(v);
@@ -160,18 +154,16 @@ struct UnifDist<int> {
 };
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
-
+void run_all_scenarios() {
   for (int num_teams : team_sizes_to_test) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11153}) {
       UnifDist<int> pivotsProducer(numCols, 3123377);
       // 7 is an arbitrary number of pivots to test
-      for (int k=0; k<7; ++k){
-	const auto pivotIndex = pivotsProducer();
-	for (int apiId : {0,1}) {
-	  test_A<Tag, ValueType>(num_teams, numCols, pivotIndex, apiId);
-	}
+      for (int k = 0; k < 7; ++k) {
+        const auto pivotIndex = pivotsProducer();
+        for (int apiId : {0, 1}) {
+          test_A<Tag, ValueType>(num_teams, numCols, pivotIndex, apiId);
+        }
       }
     }
   }
