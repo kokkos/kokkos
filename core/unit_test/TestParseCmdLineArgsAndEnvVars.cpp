@@ -57,7 +57,7 @@
 namespace {
 
 class EnvVarsHelper {
-  // do not let GTest run unit tests that set the environment concurently
+  // do not let GTest run unit tests that set the environment concurrently
   static std::mutex mutex_;
   std::vector<std::string> vars_;
   // FIXME_CXX17 prefer optional
