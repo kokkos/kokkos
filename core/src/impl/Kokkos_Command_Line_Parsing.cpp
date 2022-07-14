@@ -134,6 +134,14 @@ void Kokkos::Impl::warn_deprecated_environment_variable(
             << " Raised by Kokkos::initialize(int argc, char* argv[])."
             << std::endl;
 }
+void Kokkos::Impl::warn_deprecated_environment_variable(
+    std::string deprecated, std::string use_instead) {
+  std::cerr << "Warning: environment variable '" << deprecated
+            << "' is deprecated."
+            << " Use '" << use_instead << "' instead."
+            << " Raised by Kokkos::initialize(int argc, char* argv[])."
+            << std::endl;
+}
 void Kokkos::Impl::warn_deprecated_command_line_argument(
     std::string deprecated) {
   std::cerr << "Warning: command line argument '" << deprecated
