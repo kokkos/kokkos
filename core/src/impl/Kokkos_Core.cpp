@@ -684,7 +684,14 @@ Kokkos Core Options:
   --kokkos-num-threads=INT       : specify total number of threads to use for
                                    parallel regions on the host.
   --kokkos-device-id=INT         : specify device id to be used by Kokkos.
-  --kokkos-map-devide-id-by=(random|mpi_rank)
+  --kokkos-map-device-id-by=(random|mpi_rank)
+                                 : strategy to select device-id automatically from
+                                   available devices.
+                                   - random:   choose a random device from available.
+                                   - mpi_rank: choose device-id based on a round robin
+                                               assignment of local MPI ranks.
+                                               Works with OpenMPI, MVAPICH, SLURM, and
+                                               derived implementations.
 
 Kokkos Tools Options:
   --kokkos-tools-libs=STR        : Specify which of the tools to use. Must either
