@@ -163,13 +163,8 @@ int get_device_count() {
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #else
-  // get_device_count() -> int is only implemented for CUDA/HIP/SYCL but the
-  // function actually gets compiled regardless. It is called from
-  // Impl::get_gpu(InitializationSettings const&) -> int which gets only used
-  // in these 3 backends.  The line below will yield a segfault if that changes
-  // (say OpenMPTarget or OpenACC attempt to call get_gpu) so that we don't
-  // silently compute garbage, and so it is obvious where the actual issue is.
-  return *reinterpret_cast<int*>(0x8BADF00D);
+  Kokkos::abort("implementation bug");
+  return -1;
 #endif
 }
 
