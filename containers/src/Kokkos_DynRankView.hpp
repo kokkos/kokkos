@@ -2134,8 +2134,28 @@ create_mirror_view(
 
 // Create a mirror view in host space
 template <class T, class... P>
-inline auto create_mirror_view(const DynRankView<T, P...>& src) {
-  return Impl::create_mirror_view(src, Impl::ViewCtorProp<>{});
+inline std::enable_if_t<
+    (std::is_same<
+         typename DynRankView<T, P...>::memory_space,
+         typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
+     std::is_same<typename DynRankView<T, P...>::data_type,
+                  typename DynRankView<T, P...>::HostMirror::data_type>::value),
+    typename DynRankView<T, P...>::HostMirror>
+create_mirror_view(const Kokkos::DynRankView<T, P...>& src) {
+  return src;
+}
+
+template <class T, class... P>
+inline std::enable_if_t<
+    !(std::is_same<
+          typename DynRankView<T, P...>::memory_space,
+          typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
+      std::is_same<
+          typename DynRankView<T, P...>::data_type,
+          typename DynRankView<T, P...>::HostMirror::data_type>::value),
+    typename DynRankView<T, P...>::HostMirror>
+create_mirror_view(const Kokkos::DynRankView<T, P...>& src) {
+  return Kokkos::create_mirror(src);
 }
 
 template <class T, class... P>
@@ -2145,10 +2165,26 @@ inline auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
 }
 
 // Create a mirror view in a new space
-template <class Space, class T, class... P>
-inline auto create_mirror_view(const Space& space,
-                               const Kokkos::DynRankView<T, P...>& src) {
-  return Impl::create_mirror_view(space, src, Impl::ViewCtorProp<>{});
+// FIXME_C++17 Improve SFINAE here.
+template <class Space, class T, class... P,
+          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+inline typename Impl::MirrorDRViewType<Space, T, P...>::view_type
+create_mirror_view(
+    const Space&, const Kokkos::DynRankView<T, P...>& src,
+    std::enable_if_t<
+        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
+  return src;
+}
+
+// FIXME_C++17 Improve SFINAE here.
+template <class Space, class T, class... P,
+          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+inline typename Impl::MirrorDRViewType<Space, T, P...>::view_type
+create_mirror_view(
+    const Space& space, const Kokkos::DynRankView<T, P...>& src,
+    std::enable_if_t<
+        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>* = nullptr) {
+  return Kokkos::create_mirror(space, src);
 }
 
 template <class Space, class T, class... P>
