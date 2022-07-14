@@ -1039,7 +1039,8 @@ void Kokkos::Impl::parse_environment_variables(
   char* env_map_device_id_by_str = std::getenv("KOKKOS_MAP_DEVICE_ID_BY");
   if (env_map_device_id_by_str != nullptr) {
     if (env_device_id_str != nullptr) {
-      std::cerr << "Warning: specified both blah\n";
+      std::cerr << "Warning: environment vaiable KOKKOS_MAP_DEVICE_ID_BY"
+                << "ignored since KOKKOS_DEVICE_ID is specified." << std::endl;
     }
     if (is_valid_map_device_id_by(env_map_device_id_by_str)) {
       settings.set_map_device_id_by(env_map_device_id_by_str);
