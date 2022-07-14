@@ -1619,8 +1619,9 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #else
   const auto nchunk = (end - start + team_size - 1) / team_size;
   value_type accum  = 0;
-  each team has to process one or
-      more chunks of the prefix scan for (iType i = 0; i < nchunk; ++i) {
+  // each team has to process one or
+  //      more chunks of the prefix scan
+  for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
     value_type local_accum = 0;
