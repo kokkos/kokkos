@@ -1,7 +1,7 @@
 IF (CMAKE_CXX_STANDARD GREATER_EQUAL 17)
-  SET(SIMD_TEST_CLASS PT)
+  SET(KOKKOS_SIMD_TEST_CLASS PT)
 ELSE()
-  SET(SIMD_TEST_CLASS EX)
+  SET(KOKKOS_SIMD_TEST_CLASS EX)
   IF (${PROJECT_NAME}_ENABLE_KokkosSimd)
     MESSAGE(WARNING "KokkosSimd is explicitly enabled but C++17 is not available")
   ELSE()
@@ -17,5 +17,5 @@ TRIBITS_PACKAGE_DEFINE_DEPENDENCIES(
     Core                  core              PS       REQUIRED
     Containers            containers        PS       OPTIONAL
     Algorithms            algorithms        PS       OPTIONAL
-    Simd                  simd              ${SIMD_TEST_CLASS}       OPTIONAL
+    Simd                  simd              ${KOKKOS_SIMD_TEST_CLASS}       OPTIONAL
   )
