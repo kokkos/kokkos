@@ -166,25 +166,17 @@ SYCL::SYCLDevice::SYCLDevice(size_t id) {
 sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
 
 void SYCL::impl_initialize(InitializationSettings const& settings) {
-  // If there are no GPUs return whatever else we can run on if no specific GPU
-  // is requested.
-  const auto num_gpus =
-      sycl::device::get_devices(sycl::info::device_type::gpu).size();
-  int use_gpu = num_gpus == 0
-                    ? (settings.has_device_id() ? settings.get_device_id() : -1)
-                    : Kokkos::Impl::get_gpu(settings);
-
-  if (std::is_same<Kokkos::Experimental::SYCL,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Impl::SYCLInternal::singleton().initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(use_gpu).get_device());
-    } else {
-      Impl::SYCLInternal::singleton().initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector())
-              .get_device());
-    }
+  // If there are no GPUs, sidestep Kokkos device selection and use whatever is
+  // available.
+  if (sycl::device::get_devices(sycl::info::device_type::gpu).empty()) {
+    Impl::SYCLInternal::singleton().initialize(
+        Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector())
+            .get_device());
+  } else {
+    Impl::SYCLInternal::singleton().initialize(
+        Kokkos::Experimental::SYCL::SYCLDevice(
+            ::Kokkos::Impl::get_gpu(settings))
+            .get_device());
   }
 }
 
