@@ -314,6 +314,12 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
 ENDIF()
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 
+# TODO (STRZ):do it gracefully
+IF (KOKKOS_ENABLE_SYCL)
+  FIND_PACKAGE(oneDPL)
+  TARGET_LINK_LIBRARIES(kokkos INTERFACE oneDPL)
+ENDIF()
+
 # nvcc_wrapper is Kokkos' wrapper for NVIDIA's NVCC CUDA compiler.
 # Kokkos needs nvcc_wrapper in order to build.  Other libraries and
 # executables also need nvcc_wrapper.  Thus, we need to install it.

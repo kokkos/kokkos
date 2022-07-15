@@ -66,6 +66,13 @@
 
 #endif
 
+#if defined(KOKKOS_ENABLE_SYCL)
+
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
@@ -633,6 +640,20 @@ sort(const ExecutionSpace& exec,
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
+
+#if defined(KOKKOS_ENABLE_SYCL)
+template <class DataType, class... Properties>
+void sort(const Experimental::SYCL& space,
+          const Kokkos::View<DataType, Properties...>& view,
+          bool const = false) {
+  auto queue  = space.impl_internal_space_instance()->m_queue.value();
+  auto policy = oneapi::dpl::execution::make_device_policy(queue);
+  auto buf    = sycl::buffer(view);
+  auto first  = oneapi::dpl::begin(buf);
+  auto last   = oneapi::dpl::end(buf);
+  oneapi::dpl::sort(policy, first, last);
+}
+#endif
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
