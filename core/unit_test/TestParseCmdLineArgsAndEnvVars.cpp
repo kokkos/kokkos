@@ -406,7 +406,15 @@ TEST(defaultdevicetype, visible_devices) {
   std::vector<int> { __VA_ARGS__ }
 #define ENV(...) std::unordered_map<std::string, std::string>{__VA_ARGS__}
 
-  KOKKOS_TEST_VISIBLE_DEVICES(ENV(), 4, DEV(0, 1, 2, 3));
+  // first test with all environment variables that are involved in determining
+  // the visible devices so user set var do not mess up the logic below.
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_NUM_DEVICES", "8"},
+          {"KOKKOS_SKIP_DEVICE", "1"}),
+      6, DEV(2, 1));
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_NUM_DEVICES", "8"}, ), 6,
+      DEV(2, 1));
   KOKKOS_TEST_VISIBLE_DEVICES(ENV({"KOKKOS_NUM_DEVICES", "3"}), 6,
                               DEV(0, 1, 2));
   KOKKOS_TEST_VISIBLE_DEVICES(
@@ -417,6 +425,7 @@ TEST(defaultdevicetype, visible_devices) {
   KOKKOS_TEST_VISIBLE_DEVICES(
       ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_SKIP_DEVICE", "1"}, ), 6,
       DEV(2, 1));
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV(), 4, DEV(0, 1, 2, 3));
 
 #undef ENV
 #undef DEV
