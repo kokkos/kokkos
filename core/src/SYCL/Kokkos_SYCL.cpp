@@ -166,9 +166,10 @@ SYCL::SYCLDevice::SYCLDevice(size_t id) {
 sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
 
 void SYCL::impl_initialize(InitializationSettings const& settings) {
-  // If there are no GPUs, sidestep Kokkos device selection and use whatever is
-  // available.
-  if (sycl::device::get_devices(sycl::info::device_type::gpu).empty()) {
+  // If the device id is not specified and there are no GPUs, sidestep Kokkos
+  // device selection and use whatever is available.
+  if (!settings.has_device_id() &&
+      sycl::device::get_devices(sycl::info::device_type::gpu).empty()) {
     Impl::SYCLInternal::singleton().initialize(
         Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector())
             .get_device());
