@@ -629,10 +629,9 @@ sort(const ExecutionSpace& exec,
 }
 
 #if defined(KOKKOS_ENABLE_CUDA)
-template <class ViewType>
-std::enable_if_t<
-    Experimental::Impl::has_random_access_iterator<ViewType>::value>
-sort(Cuda const& space, ViewType const& view, bool const = false) {
+template <class DataType, class... Properties>
+void sort(const Cuda& space, const Kokkos::View<DataType, Properties...>& view,
+          bool const = false) {
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
   auto first      = Experimental::begin(view);
   auto last       = Experimental::end(view);
