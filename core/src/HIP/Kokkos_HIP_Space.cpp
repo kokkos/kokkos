@@ -523,8 +523,7 @@ int HIP::impl_is_initialized() {
 }
 
 void HIP::impl_initialize(InitializationSettings const& settings) {
-  int const use_gpu = ::Kokkos::Impl::get_gpu(settings);
-  Impl::HIPInternal::singleton().initialize(use_gpu > -1 ? use_gpu : 0);
+  Impl::HIPInternal::singleton().initialize(::Kokkos::Impl::get_gpu(settings));
 }
 
 void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
