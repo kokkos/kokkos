@@ -195,8 +195,11 @@ namespace Kokkos {
  * Kokkos::initialize or Kokkos::finalize it is not copyable or assignable
  */
 
-class ScopeGuard {
+class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
  public:
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
     if (!Kokkos::is_initialized()) {
@@ -205,6 +208,9 @@ class ScopeGuard {
     }
   }
 
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
   ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
