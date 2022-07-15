@@ -102,11 +102,11 @@ bool Kokkos::Impl::check_env_bool(char const* name, bool& val) {
   }
 
   if (!std::regex_match(var, regex_false)) {
-    std::cerr
-        << "Warning: unrecognized boolean value for environment variable '"
-        << name << "=" << var << "' interpreted as 'false'."
-        << " Raised by Kokkos::initialize(int argc, char* argv[])."
-        << std::endl;
+    std::stringstream ss;
+    ss << "Error: cannot convert environment variable '" << name << "=" << var
+       << "' to a boolean."
+       << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+    Kokkos::abort(ss.str().c_str());
   }
 
   val = false;
@@ -167,11 +167,11 @@ bool Kokkos::Impl::check_arg_bool(char const* arg, char const* name,
     return true;
   }
   if (!std::regex_match(arg, regex_false)) {
-    std::cerr
-        << "Warning: unrecognized boolean value for command line argument '"
-        << name << '=' << arg << "'interpreted as 'false'."
-        << " Raised by Kokkos::initialize(int argc, char* argv[])."
-        << std::endl;
+    std::stringstream ss;
+    ss << "Error: cannot convert command line argument '" << name << "=" << arg
+       << "' to a boolean."
+       << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+    Kokkos::abort(ss.str().c_str());
   }
   val = false;
   return true;

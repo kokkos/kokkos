@@ -340,26 +340,6 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
     EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_false
                                   << "\ncaptured: " << captured;
   }
-  for (auto const& value_false : {"3", "yess", "Nooooo"}) {
-    ::testing::internal::CaptureStderr();
-    EnvVarsHelper ev = {{
-        {"KOKKOS_DISABLE_WARNINGS", value_false},
-    }};
-    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-    Kokkos::InitializationSettings settings;
-    Kokkos::Impl::parse_environment_variables(settings);
-    EXPECT_TRUE(settings.has_disable_warnings())
-        << "KOKKOS_DISABLE_WARNINGS=" << value_false;
-    EXPECT_FALSE(settings.get_disable_warnings())
-        << "KOKKOS_DISABLE_WARNINGS=" << value_false;
-    auto const captured = ::testing::internal::GetCapturedStderr();
-    EXPECT_TRUE(std::regex_match(
-        captured, std::regex(std::string("Warning.*KOKKOS_DISABLE_WARNINGS=") +
-                                 value_false + ".*",
-                             std::regex_constants::egrep)))
-        << "KOKKOS_DISABLE_WARNINGS=" << value_false
-        << "\ncaptured: " << captured;
-  }
 }
 
 TEST(defaultdevicetype, env_vars_tune_internals) {
@@ -394,26 +374,6 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
     auto const captured = ::testing::internal::GetCapturedStderr();
     EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_false
                                   << "\ncaptured: " << captured;
-  }
-  for (auto const& value_false : {"true1", "3", "ON"}) {
-    ::testing::internal::CaptureStderr();
-    EnvVarsHelper ev = {{
-        {"KOKKOS_TUNE_INTERNALS", value_false},
-    }};
-    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-    Kokkos::InitializationSettings settings;
-    Kokkos::Impl::parse_environment_variables(settings);
-    EXPECT_TRUE(settings.has_tune_internals())
-        << "KOKKOS_TUNE_INTERNALS=" << value_false;
-    EXPECT_FALSE(settings.get_tune_internals())
-        << "KOKKOS_TUNE_INTERNALS=" << value_false;
-    auto const captured = ::testing::internal::GetCapturedStderr();
-    EXPECT_TRUE(std::regex_match(
-        captured, std::regex(std::string("Warning.*KOKKOS_TUNE_INTERNALS=") +
-                                 value_false + ".*",
-                             std::regex_constants::egrep)))
-        << "KOKKOS_TUNE_INTERNALS=" << value_false
-        << "\ncaptured: " << captured;
   }
 }
 
