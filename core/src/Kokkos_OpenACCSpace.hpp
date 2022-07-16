@@ -129,6 +129,11 @@ class OpenACCSpace {
   OpenACCSpace();
 
   /**\brief  Allocate untracked memory in the space */
+  void* allocate(const Kokkos::Experimental::OpenACC& exec_space,
+                 const size_t arg_alloc_size) const;
+  void* allocate(const Kokkos::Experimental::OpenACC& exec_space,
+                 const char* arg_label, const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -142,6 +147,11 @@ class OpenACCSpace {
   static constexpr const char* name() { return "OpenACCSpace"; }
 
  private:
+  void* impl_allocate(const Kokkos::Experimental::OpenACC& exec_space,
+                      const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =

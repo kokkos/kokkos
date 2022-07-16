@@ -66,12 +66,56 @@ namespace Experimental {
 /* Default allocation mechanism */
 OpenACCSpace::OpenACCSpace() = default;
 
+void *OpenACCSpace::allocate(const Kokkos::Experimental::OpenACC &exec_space,
+                             const size_t arg_alloc_size) const {
+  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+}
 void *OpenACCSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
+}
+void *OpenACCSpace::allocate(const Kokkos::Experimental::OpenACC &exec_space,
+                             const char *arg_label, const size_t arg_alloc_size,
+                             const size_t arg_logical_size) const {
+  return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_logical_size);
 }
 void *OpenACCSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                              const size_t arg_logical_size) const {
   return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
+}
+void *OpenACCSpace::impl_allocate(
+    const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
+    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
+  static_assert(sizeof(void *) == sizeof(uintptr_t),
+                "Error sizeof(void*) != sizeof(uintptr_t)");
+
+  void *ptr = nullptr;
+
+  // FIXME_OPENACC multiple device instances are not yet supported, and thus
+  // exec_space is ignored for now.
+  (void)exec_space;
+  //[DEBUG] Disabled due to the synchronous behavior of the current
+  // implementation.
+  /*
+    OpenACC::impl_static_fence(
+        "Kokkos::OpenACCSpace::impl_allocate: Pre OpenACC Allocation");
+  */
+
+  ptr = acc_malloc(arg_alloc_size);
+
+  //[DEBUG] Disabled due to the synchronous behavior of the current
+  // implementation.
+  /*
+    OpenACC::impl_static_fence(
+        "Kokkos::OpenACCSpace::impl_allocate: Post OpenACC Allocation");
+  */
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+  }
+
+  return ptr;
 }
 void *OpenACCSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
@@ -186,12 +230,14 @@ SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, void>::
 }  // namespace Impl
 }  // namespace Kokkos
 
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
 #include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-//[DEBUG-SL]
 // To avoid additional compilation cost for something that's (mostly?) not
 // performance sensitive, we explicity instantiate these CRTP base classes here,
 // where we have access to the associated *_timpl.hpp header files.
@@ -201,4 +247,8 @@ template class SharedAllocationRecordCommon<Kokkos::Experimental::OpenACCSpace>;
 
 }  // end namespace Impl
 }  // end namespace Kokkos
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================
+
 #endif  // KOKKOS_ENABLE_OPENACC

@@ -118,6 +118,9 @@ class OpenACC {
   }
 
   OpenACC();
+
+  OpenACC(int async_arg);
+
   uint32_t impl_instance_id() const noexcept;
 
  private:

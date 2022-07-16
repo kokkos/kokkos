@@ -48,25 +48,6 @@
 
 #include <openacc.h>
 
-// FIXME_OPENACC currently unused
-/*
-namespace Kokkos {
-namespace Impl {
-namespace {
-
-KOKKOS_INLINE_FUNCTION
-int kokkos_acc_in_parallel();
-
-KOKKOS_INLINE_FUNCTION
-int kokkos_acc_in_parallel() { return acc_on_device(acc_device_not_host); }
-
-bool s_using_hwloc = false;
-
-}  // namespace
-}  // namespace Impl
-}  // namespace Kokkos
-*/
-
 namespace Kokkos {
 namespace Impl {
 

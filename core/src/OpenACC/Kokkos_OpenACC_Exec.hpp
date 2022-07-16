@@ -53,7 +53,7 @@ namespace Kokkos {
 namespace Impl {
 
 //----------------------------------------------------------------------------
-/** \brief  Data for OpenMP thread execution */
+/** \brief  Data for OpenACC thread execution */
 
 class OpenACCExec {
  public:
