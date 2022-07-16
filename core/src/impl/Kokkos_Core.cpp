@@ -763,7 +763,7 @@ void Kokkos::Impl::parse_command_line_arguments(
       if (!is_valid_num_threads(num_threads)) {
         std::stringstream ss;
         ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
-           << " The number of threads must be greater equal to one."
+           << " The number of threads must be greater than or equal to one."
            << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
         Kokkos::abort(ss.str().c_str());
       }
@@ -779,7 +779,7 @@ void Kokkos::Impl::parse_command_line_arguments(
       if (!is_valid_device_id(device_id)) {
         std::stringstream ss;
         ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
-           << " The device id must be greater equal to zero.\n";
+           << " The device id must be greater than or equal to zero.\n";
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_device_id(device_id);
