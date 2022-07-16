@@ -910,7 +910,7 @@ void Kokkos::Impl::parse_environment_variables(
       std::stringstream ss;
       ss << "Error: environment variable 'KOKKOS_NUM_THREADS=" << num_threads
          << "' is invalid."
-         << " The number of threads must be greater equal to one."
+         << " The number of threads must be greater than or equal to one."
          << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
       Kokkos::abort(ss.str().c_str());
     }
@@ -922,7 +922,7 @@ void Kokkos::Impl::parse_environment_variables(
       std::stringstream ss;
       ss << "Error: environment variable 'KOKKOS_DEVICE_ID" << device_id
          << "' is invalid."
-         << " The device id must be greater equal to zero.\n";
+         << " The device id must be greater than or equal to zero.\n";
       Kokkos::abort(ss.str().c_str());
     }
     settings.set_device_id(device_id);
