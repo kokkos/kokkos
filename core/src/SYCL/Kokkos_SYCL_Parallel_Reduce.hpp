@@ -460,6 +460,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             kernel
                 .get_info<sycl::info::kernel_device_specific::work_group_size>(
                     q.get_device());
+
+// FIXME_SYCL 1024 seems to be invalid when running on a Volta70.
+#ifndef KOKKOS_ARCH_INTEL_GPU
+        if (max > 512) max = 512;
+#endif
+
         const size_t wgroup_size =
             static_cast<size_t>(max / multiple) * multiple;
 
