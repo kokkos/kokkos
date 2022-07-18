@@ -326,20 +326,20 @@ template <class T, class Abi>
 }  // namespace Experimental
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> min(
-    simd<T, Abi> const& a, simd<T, Abi> const& b) {
-  simd<T, Abi> result;
-  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::simd<T, Abi> min(
+    Experimental::simd<T, Abi> const& a, Experimental::simd<T, Abi> const& b) {
+  Experimental::simd<T, Abi> result;
+  for (std::size_t i = 0; i < Experimental::simd<T, Abi>::size(); ++i) {
     result[i] = Kokkos::min(a[i], b[i]);
   }
   return result;
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> max(
-    simd<T, Abi> const& a, simd<T, Abi> const& b) {
-  simd<T, Abi> result;
-  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::simd<T, Abi> max(
+    Experimental::simd<T, Abi> const& a, Experimental::simd<T, Abi> const& b) {
+  Experimental::simd<T, Abi> result;
+  for (std::size_t i = 0; i < Experimental::simd<T, Abi>::size(); ++i) {
     result[i] = Kokkos::max(a[i], b[i]);
   }
   return result;
