@@ -135,4 +135,8 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND desul_FOUND)
   target_link_libraries(kokkoscore PUBLIC desul_atomics)
 ENDIF()
 
+IF(Kokkos_ENABLE_OPENMP)
+  target_link_libraries(kokkoscore PUBLIC OpenMP::OpenMP_CXX)
+ENDIF()
+
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBQUADMATH)
