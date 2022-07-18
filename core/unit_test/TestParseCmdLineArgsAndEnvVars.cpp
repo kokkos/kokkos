@@ -309,7 +309,6 @@ TEST(defaultdevicetype, env_vars_num_devices) {
 
 TEST(defaultdevicetype, env_vars_disable_warnings) {
   for (auto const& value_true : {"1", "true", "TRUE", "yEs"}) {
-    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_DISABLE_WARNINGS", value_true},
     }};
@@ -320,12 +319,8 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
         << "KOKKOS_DISABLE_WARNINGS=" << value_true;
     EXPECT_TRUE(settings.get_disable_warnings())
         << "KOKKOS_DISABLE_WARNINGS=" << value_true;
-    auto const captured = ::testing::internal::GetCapturedStderr();
-    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_true
-                                  << "\ncaptured: " << captured;
   }
   for (auto const& value_false : {"0", "fAlse", "No"}) {
-    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_DISABLE_WARNINGS", value_false},
     }};
@@ -336,15 +331,11 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
         << "KOKKOS_DISABLE_WARNINGS=" << value_false;
     EXPECT_FALSE(settings.get_disable_warnings())
         << "KOKKOS_DISABLE_WARNINGS=" << value_false;
-    auto const captured = ::testing::internal::GetCapturedStderr();
-    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_false
-                                  << "\ncaptured: " << captured;
   }
 }
 
 TEST(defaultdevicetype, env_vars_tune_internals) {
   for (auto const& value_true : {"1", "yES", "true", "TRUE", "tRuE"}) {
-    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_TUNE_INTERNALS", value_true},
     }};
@@ -355,12 +346,8 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
         << "KOKKOS_TUNE_INTERNALS=" << value_true;
     EXPECT_TRUE(settings.get_tune_internals())
         << "KOKKOS_TUNE_INTERNALS=" << value_true;
-    auto const captured = ::testing::internal::GetCapturedStderr();
-    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_true
-                                  << "\ncaptured: " << captured;
   }
   for (auto const& value_false : {"0", "false", "no"}) {
-    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_TUNE_INTERNALS", value_false},
     }};
@@ -371,9 +358,6 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
         << "KOKKOS_TUNE_INTERNALS=" << value_false;
     EXPECT_FALSE(settings.get_tune_internals())
         << "KOKKOS_TUNE_INTERNALS=" << value_false;
-    auto const captured = ::testing::internal::GetCapturedStderr();
-    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_false
-                                  << "\ncaptured: " << captured;
   }
 }
 
