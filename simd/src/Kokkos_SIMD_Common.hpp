@@ -324,8 +324,8 @@ template <class T, class Abi>
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>
-min(simd<T, Abi> const& a, simd<T, Abi> const& b) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> min(
+    simd<T, Abi> const& a, simd<T, Abi> const& b) {
   simd<T, Abi> result;
   for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
     result[i] = Kokkos::Experimental::min(a[i], b[i]);
@@ -334,8 +334,8 @@ min(simd<T, Abi> const& a, simd<T, Abi> const& b) {
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>
-max(simd<T, Abi> const& a, simd<T, Abi> const& b) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> max(
+    simd<T, Abi> const& a, simd<T, Abi> const& b) {
   simd<T, Abi> result;
   for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
     result[i] = Kokkos::Experimental::max(a[i], b[i]);
