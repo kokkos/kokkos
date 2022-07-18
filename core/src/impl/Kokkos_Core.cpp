@@ -622,6 +622,10 @@ void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
   combine(tools_init_arguments, settings);
   initialize_profiling(tools_init_arguments);
   g_is_initialized = true;
+  if (settings.has_print_configuration() &&
+      settings.get_print_configuration()) {
+    ::Kokkos::print_configuration(std::cout);
+  }
 }
 
 void initialize_internal(const Kokkos::InitializationSettings& settings) {
@@ -682,6 +686,7 @@ control its behavior:
 Kokkos Core Options:
   --kokkos-help                  : print this message
   --kokkos-disable-warnings      : disable kokkos warning messages
+  --kokkos-print-configuration   : print configuration
   --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
                                    tuning features through the tuning system. If
                                    left off, Kokkos uses heuristics
@@ -739,6 +744,7 @@ void Kokkos::Impl::parse_command_line_arguments(
   int skip_device;  // deprecated
   std::string map_device_id_by;
   bool disable_warnings;
+  bool print_configuration;
   bool tune_internals;
 
   auto get_flag = [](std::string s) -> std::string {
@@ -848,6 +854,9 @@ void Kokkos::Impl::parse_command_line_arguments(
     } else if (check_arg_bool(argv[iarg], "--kokkos-disable-warnings",
                               disable_warnings)) {
       settings.set_disable_warnings(disable_warnings);
+    } else if (check_arg_bool(argv[iarg], "--kokkos-print-configuration",
+                              print_configuration)) {
+      settings.set_print_configuration(print_configuration);
     } else if (check_arg_bool(argv[iarg], "--kokkos-tune-internals",
                               tune_internals)) {
       settings.set_tune_internals(tune_internals);
@@ -958,6 +967,10 @@ void Kokkos::Impl::parse_environment_variables(
   bool disable_warnings;
   if (check_env_bool("KOKKOS_DISABLE_WARNINGS", disable_warnings)) {
     settings.set_disable_warnings(disable_warnings);
+  }
+  bool print_configuration;
+  if (check_env_bool("KOKKOS_PRINT_CONFIGURATION", print_configuration)) {
+    settings.set_print_configuration(print_configuration);
   }
   bool tune_internals;
   if (check_env_bool("KOKKOS_TUNE_INTERNALS", tune_internals)) {
