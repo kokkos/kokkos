@@ -93,7 +93,9 @@ constexpr bool check_valid_execution_space() {
   STATIC_ASSERT(is_detected<print_configuration_t, ExecutionSpace>::value);
   STATIC_ASSERT(is_detected<initialize_finalize_t, ExecutionSpace>::value);
   STATIC_ASSERT(is_detected<fence_t, ExecutionSpace>::value);
+#ifndef KOKKOS_ENABLE_HPX  // FIXME_HPX
   STATIC_ASSERT(sizeof(ExecutionSpace) <= 2 * sizeof(void*));
+#endif
   return true;
 }
 
