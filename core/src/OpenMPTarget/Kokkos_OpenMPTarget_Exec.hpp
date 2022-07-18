@@ -1591,13 +1591,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_bounds,
     const FunctorType& lambda) {
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+  using Analysis   = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          TeamPolicy<Experimental::OpenMPTarget>,
                                          FunctorType>;
-  // Extract value_type from lambda
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
-      FunctorType>::value_type;
+  using value_type = typename Analysis::value_type;
 
   const auto start = loop_bounds.start;
   const auto end   = loop_bounds.end;
