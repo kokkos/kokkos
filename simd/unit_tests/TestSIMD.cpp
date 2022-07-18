@@ -187,7 +187,7 @@ void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
   std::size_t constexpr width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
-    std::size_t const nlanes     = Kokkos::Experimental::min(nremaining, width);
+    std::size_t const nlanes     = Kokkos::min(nremaining, width);
     simd_type first_arg;
     bool const loaded_first_arg =
         loader.host_load(first_args + i, nlanes, first_arg);
@@ -214,7 +214,7 @@ KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
   std::size_t constexpr width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
-    std::size_t const nlanes     = Kokkos::Experimental::min(nremaining, width);
+    std::size_t const nlanes     = Kokkos::min(nremaining, width);
     simd_type first_arg;
     bool const loaded_first_arg =
         loader.device_load(first_args + i, nlanes, first_arg);

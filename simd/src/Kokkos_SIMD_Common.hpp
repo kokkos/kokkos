@@ -323,12 +323,14 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(false);
 }
 
+}  // namespace Experimental
+
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> min(
     simd<T, Abi> const& a, simd<T, Abi> const& b) {
   simd<T, Abi> result;
   for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
-    result[i] = Kokkos::Experimental::min(a[i], b[i]);
+    result[i] = Kokkos::min(a[i], b[i]);
   }
   return result;
 }
@@ -338,12 +340,10 @@ template <class T, class Abi>
     simd<T, Abi> const& a, simd<T, Abi> const& b) {
   simd<T, Abi> result;
   for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
-    result[i] = Kokkos::Experimental::max(a[i], b[i]);
+    result[i] = Kokkos::max(a[i], b[i]);
   }
   return result;
 }
-
-}  // namespace Experimental
 
 // fallback implementations of <cmath> functions.
 // individual Abi types may provide overloads with more efficient
