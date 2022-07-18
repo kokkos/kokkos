@@ -318,6 +318,10 @@ KOKKOS_INLINE_FUNCTION double exp2(double val) {
   constexpr double ln2 = 0.69314718055994530941723212145818;
   return exp(ln2 * val);
 }
+inline long double exp2(long double val) {
+  constexpr long double ln2 = 0.69314718055994530941723212145818;
+  return exp(ln2 * val);
+}
 template <class T>
 KOKKOS_INLINE_FUNCTION double exp2(T val) {
   constexpr double ln2 = 0.69314718055994530941723212145818;
