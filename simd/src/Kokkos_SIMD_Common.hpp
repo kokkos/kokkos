@@ -323,6 +323,26 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(false);
 }
 
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>
+min(simd<T, Abi> const& a, simd<T, Abi> const& b) {
+  simd<T, Abi> result;
+  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
+    result[i] = Kokkos::Experimental::min(a[i], b[i]);
+  }
+  return result;
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>
+max(simd<T, Abi> const& a, simd<T, Abi> const& b) {
+  simd<T, Abi> result;
+  for (std::size_t i = 0; i < simd<T, Abi>::size(); ++i) {
+    result[i] = Kokkos::Experimental::max(a[i], b[i]);
+  }
+  return result;
+}
+
 }  // namespace Experimental
 
 // fallback implementations of <cmath> functions.
@@ -381,8 +401,6 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
     return result;                                                          \
   }
 
-KOKKOS_IMPL_SIMD_BINARY_FUNCTION(min)
-KOKKOS_IMPL_SIMD_BINARY_FUNCTION(max)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(pow)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(hypot)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(atan2)
