@@ -311,16 +311,20 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp2)
 #else
 KOKKOS_INLINE_FUNCTION float exp2(float val) {
-  constexpr float ln2 = 0.69314718055994530941723212145818;
+  constexpr float ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * val);
 }
 KOKKOS_INLINE_FUNCTION double exp2(double val) {
-  constexpr double ln2 = 0.69314718055994530941723212145818;
+  constexpr double ln2 = 0.693147180559945309417232121458176568L;
+  return exp(ln2 * val);
+}
+inline long double exp2(long double val) {
+  constexpr long double ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * val);
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION double exp2(T val) {
-  constexpr double ln2 = 0.69314718055994530941723212145818;
+  constexpr double ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * static_cast<double>(val));
 }
 #endif
