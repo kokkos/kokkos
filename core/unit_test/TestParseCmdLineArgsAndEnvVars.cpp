@@ -51,6 +51,7 @@
 #include <cstdlib>
 #include <memory>
 #include <mutex>
+#include <regex>
 #include <string>
 #include <unordered_map>
 
@@ -165,17 +166,6 @@ TEST(defaultdevicetype, cmd_line_args_num_threads) {
   EXPECT_EQ(settings.get_num_threads(), 2);
   EXPECT_EQ(cla.argc(), 1);
   EXPECT_STREQ(*cla.argv(), "--foo=bar");
-
-  settings = {};
-  cla      = {{
-      {"--kokkos-num-threads=-1"},
-  }};
-  EXPECT_THROW(  // consider calling abort instead
-      Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(),
-                                                 settings),
-      std::runtime_error
-      // expecting an '=INT' after command line argument '--kokkos-num-threads'
-  );
 }
 
 TEST(defaultdevicetype, cmd_line_args_device_id) {
@@ -211,15 +201,13 @@ TEST(defaultdevicetype, cmd_line_args_num_devices) {
 
 TEST(defaultdevicetype, cmd_line_args_disable_warning) {
   CmdLineArgsHelper cla = {{
-      "--kokkos-disable-warnings=0",
+      "--kokkos-disable-warnings=1",
+      "--kokkos-disable-warnings=false",
   }};
   Kokkos::InitializationSettings settings;
   Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
-  // this is the current behavior, not suggesting this cannot be revisited
-  // essentially here the =BOOL is ignored
   EXPECT_TRUE(settings.has_disable_warnings());
-  EXPECT_TRUE(settings.get_disable_warnings())
-      << "behavior changed see comment";
+  EXPECT_FALSE(settings.get_disable_warnings());
 }
 
 TEST(defaultdevicetype, cmd_line_args_tune_internals) {
@@ -292,15 +280,6 @@ TEST(defaultdevicetype, env_vars_num_threads) {
   Kokkos::Impl::parse_environment_variables(settings);
   EXPECT_TRUE(settings.has_num_threads());
   EXPECT_EQ(settings.get_num_threads(), 1);
-
-  ev = {{
-      {"KOKKOS_NUM_THREADS", "-1"},
-  }};
-  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  settings = {};
-  Kokkos::Impl::parse_environment_variables(settings);
-  EXPECT_TRUE(settings.has_num_threads());
-  EXPECT_EQ(settings.get_num_threads(), -1);
 }
 
 TEST(defaultdevicetype, env_vars_device_id) {
@@ -329,7 +308,8 @@ TEST(defaultdevicetype, env_vars_num_devices) {
 }
 
 TEST(defaultdevicetype, env_vars_disable_warnings) {
-  for (auto const& value_true : {"1", "true", "TRUE", "3", "yEs", "ON"}) {
+  for (auto const& value_true : {"1", "true", "TRUE", "yEs"}) {
+    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_DISABLE_WARNINGS", value_true},
     }};
@@ -340,8 +320,12 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
         << "KOKKOS_DISABLE_WARNINGS=" << value_true;
     EXPECT_TRUE(settings.get_disable_warnings())
         << "KOKKOS_DISABLE_WARNINGS=" << value_true;
+    auto const captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_true
+                                  << "\ncaptured: " << captured;
   }
-  for (auto const& value_false : {"0", "false", "whatever", "123"}) {
+  for (auto const& value_false : {"0", "fAlse", "No"}) {
+    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_DISABLE_WARNINGS", value_false},
     }};
@@ -352,11 +336,15 @@ TEST(defaultdevicetype, env_vars_disable_warnings) {
         << "KOKKOS_DISABLE_WARNINGS=" << value_false;
     EXPECT_FALSE(settings.get_disable_warnings())
         << "KOKKOS_DISABLE_WARNINGS=" << value_false;
+    auto const captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_false
+                                  << "\ncaptured: " << captured;
   }
 }
 
 TEST(defaultdevicetype, env_vars_tune_internals) {
-  for (auto const& value_true : {"1", "true", "TRUE", "on", "tRuE"}) {
+  for (auto const& value_true : {"1", "yES", "true", "TRUE", "tRuE"}) {
+    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_TUNE_INTERNALS", value_true},
     }};
@@ -367,9 +355,12 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
         << "KOKKOS_TUNE_INTERNALS=" << value_true;
     EXPECT_TRUE(settings.get_tune_internals())
         << "KOKKOS_TUNE_INTERNALS=" << value_true;
+    auto const captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_true
+                                  << "\ncaptured: " << captured;
   }
-  for (auto const& value_false :
-       {"0", "false", "whatever", "123", "3", "YES"}) {
+  for (auto const& value_false : {"0", "false", "no"}) {
+    ::testing::internal::CaptureStderr();
     EnvVarsHelper ev = {{
         {"KOKKOS_TUNE_INTERNALS", value_false},
     }};
@@ -380,6 +371,9 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
         << "KOKKOS_TUNE_INTERNALS=" << value_false;
     EXPECT_FALSE(settings.get_tune_internals())
         << "KOKKOS_TUNE_INTERNALS=" << value_false;
+    auto const captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.empty()) << "KOKKOS_DISABLE_WARNINGS=" << value_false
+                                  << "\ncaptured: " << captured;
   }
 }
 
