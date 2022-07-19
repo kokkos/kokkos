@@ -876,6 +876,10 @@ struct NoReductionTag {
 
 inline constexpr NoReductionTag no_reduction_tag{};
 
+// Tag class to choose the nested loop specialization
+//   - LastRank means call the actual closure
+//   - ParThread means use TeamThreadRange
+//   - ParVector means use ThreadVectorRange
 template <MDTeamRangeLastRank LR, MDTeamRangeParThread PT,
           MDTeamRangeParVector PV>
 struct MDTeamRangeStatus {
@@ -884,6 +888,14 @@ struct MDTeamRangeStatus {
   static constexpr MDTeamRangeParVector par_vector = PV;
 };
 
+// Tag class to keep track of the loop nest level and where to deploy thread and
+// vector parallelism
+//   - CurrentRank is the current nest level
+//   - TotalRank is the total number of loop nests
+//   - ParThreadRank is the nesting level on which to deploy thread parallelism
+//   - ParVectorRank is the nesting level on which to deploy vector parallelism
+//   - Iter is whether to go forward or backward through ranks (i.e. the
+//   iteration order for MDRangePolicy)
 template <int CurrentRank, int TotalRank, int ParThreadRank, int ParVectorRank,
           Iterate Iter>
 struct MDTeamRangeNextStatus {
@@ -909,15 +921,24 @@ using MDTeamRangeStatus_t =
     typename MDTeamRangeNextStatus<CurrentRank, TotalRank, ParThreadRank,
                                    ParVectorRank, Iter>::type;
 
+// ParallelRank determines on which rank parallelization happens.
+//   - To be partially specializaed for Left/Right and ExecSpace
+//   - t_and_v determines whether both vector and thread parallelism is in use
 template <int totalRank, Iterate Iter, typename ExecSpace,
           MDTeamRangeThreadAndVector t_and_v>
 struct ParallelRank;
 
-// FOR SERIAL ONLY
+// Tag class to keep track of the loop nest level and where to deploy thread and
+// vector parallelism
+//   - TotalRank is the total number of loop nests
+//   - t_and_v is the tag that determines TeamVectorRange usage
+//   - par_rt is the nesting level on which to deploy thread parallelism
+//   - par_rv is the nesting level on which to deploy vector parallelism
 template <int TotalRank, MDTeamRangeThreadAndVector t_and_v>
 struct ParallelRank<TotalRank, Iterate::Left, DefaultHostExecutionSpace,
                     t_and_v> {
-  // For threads deploy thread parallelism on Right most (i.e. slowed index)
+  // For backends using heavy weight threads, deploy thread parallelism on right
+  // most (i.e. slowed index)
   static constexpr int par_rt  = TotalRank - 1;
   static constexpr int par_rv  = 0;
   static constexpr int invalid = -2;
@@ -925,14 +946,12 @@ struct ParallelRank<TotalRank, Iterate::Left, DefaultHostExecutionSpace,
 template <int TotalRank, MDTeamRangeThreadAndVector t_and_v>
 struct ParallelRank<TotalRank, Iterate::Right, DefaultHostExecutionSpace,
                     t_and_v> {
-  // For threads deploy thread parallelism on left most (i.e. slowed index)
+  // For backends using heavy weight threads, deploy thread parallelism on left
+  // most (i.e. slowed index)
   static constexpr int par_rt  = 0;
   static constexpr int par_rv  = TotalRank - 1;
   static constexpr int invalid = -2;
 };
-
-// template <typename iType, class Closure, class Member>
-// void parallel_for(Kokkos::TeamThreadRange const&, Closure const&);
 
 template <typename TeamHandle>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
