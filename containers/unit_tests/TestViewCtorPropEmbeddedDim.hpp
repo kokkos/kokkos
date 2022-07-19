@@ -52,7 +52,6 @@
 #include <type_traits>
 #include <typeinfo>
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Test {
 
 namespace {
@@ -212,4 +211,3 @@ TEST(TEST_CATEGORY, viewctorprop_embedded_dim) {
   TestViewCtorProp_EmbeddedDim<TEST_EXECSPACE>::test_vcpt(2, 3);
 }
 }  // namespace Test
-#endif

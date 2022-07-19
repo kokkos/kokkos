@@ -1876,7 +1876,6 @@ inline void shared_allocation_tracking_enable() {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 namespace Impl {
 
@@ -1964,13 +1963,14 @@ using DeducedCommonPropsType =
 
 // User function
 template <class... Views>
-KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...>
-common_view_alloc_prop(Views const&... views) {
+KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
+    Views const&... views) {
   return DeducedCommonPropsType<Views...>(views...);
 }
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 namespace Impl {
 
