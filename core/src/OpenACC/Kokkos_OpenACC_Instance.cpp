@@ -115,9 +115,8 @@ OpenACC::OpenACC()
 const char* OpenACC::name() {
   return Impl::OpenACCInternal::impl_singleton()->name();
 }
-void OpenACC::print_configuration(std::ostream& stream, bool detail) const {
-  // m_space_instance->print_configuration(stream, detail);
-  Impl::OpenACCInternal::impl_singleton()->print_configuration(stream, detail);
+void OpenACC::print_configuration(std::ostream& os, bool verbose) const {
+  m_space_instance->print_configuration(os, verbose);
 }
 
 uint32_t OpenACC::impl_instance_id() const noexcept {

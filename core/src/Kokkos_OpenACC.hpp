@@ -113,7 +113,7 @@ class OpenACC {
   //! Initialize, telling the OpenACC run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);
 
-  inline Impl::OpenACCInternal* impl_internal_space_instance() const {
+  Impl::OpenACCInternal* impl_internal_space_instance() const {
     return m_space_instance;
   }
 
