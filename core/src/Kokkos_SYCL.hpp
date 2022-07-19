@@ -100,6 +100,10 @@ class SYCL {
     return m_space_instance->m_queue->get_context();
   };
 
+  sycl::queue& sycl_queue() const noexcept {
+    return *m_space_instance->m_queue;
+  };
+
   //@}
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
