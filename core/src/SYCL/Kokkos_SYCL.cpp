@@ -146,38 +146,16 @@ int SYCL::sycl_device() const {
   return impl_internal_space_instance()->m_syclDev;
 }
 
-SYCL::SYCLDevice::SYCLDevice(sycl::device d) : m_device(std::move(d)) {}
-
-SYCL::SYCLDevice::SYCLDevice(const sycl::device_selector& selector)
-    : m_device(selector.select_device()) {}
-
-SYCL::SYCLDevice::SYCLDevice(size_t id) {
+void SYCL::impl_initialize(InitializationSettings const& settings) {
   std::vector<sycl::device> gpu_devices =
       sycl::device::get_devices(sycl::info::device_type::gpu);
-  if (id >= gpu_devices.size()) {
-    std::stringstream error_message;
-    error_message << "Requested GPU with id " << id << " but only "
-                  << gpu_devices.size() << " GPU(s) available!\n";
-    Kokkos::Impl::throw_runtime_exception(error_message.str());
-  }
-  m_device = gpu_devices[id];
-}
-
-sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
-
-void SYCL::impl_initialize(InitializationSettings const& settings) {
   // If the device id is not specified and there are no GPUs, sidestep Kokkos
   // device selection and use whatever is available.
-  if (!settings.has_device_id() &&
-      sycl::device::get_devices(sycl::info::device_type::gpu).empty()) {
-    Impl::SYCLInternal::singleton().initialize(
-        Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector())
-            .get_device());
+  if (!settings.has_device_id() && gpu_devices.empty()) {
+    Impl::SYCLInternal::singleton().initialize(sycl::device());
   } else {
     Impl::SYCLInternal::singleton().initialize(
-        Kokkos::Experimental::SYCL::SYCLDevice(
-            ::Kokkos::Impl::get_gpu(settings))
-            .get_device());
+        gpu_devices[::Kokkos::Impl::get_gpu(settings)]);
   }
 }
 

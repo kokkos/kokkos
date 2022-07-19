@@ -132,26 +132,6 @@ class SYCL {
   /// \brief Free any resources being consumed by the device.
   static void impl_finalize();
 
-  /** \brief  Initialize the device.
-   *
-   */
-
-  struct SYCLDevice {
-    SYCLDevice() : SYCLDevice(sycl::default_selector()) {}
-    explicit SYCLDevice(sycl::device d);
-    explicit SYCLDevice(const sycl::device_selector& selector);
-    explicit SYCLDevice(size_t id);
-
-    sycl::device get_device() const;
-
-    friend std::ostream& operator<<(std::ostream& os, const SYCLDevice& that) {
-      return SYCL::impl_sycl_info(os, that.m_device);
-    }
-
-   private:
-    sycl::device m_device;
-  };
-
   static void impl_initialize(InitializationSettings const&);
 
   int sycl_device() const;
