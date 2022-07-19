@@ -1961,7 +1961,17 @@ template <class... Views>
 using DeducedCommonPropsType =
     typename Impl::DeduceCommonViewAllocProp<Views...>::prop_type;
 
-// User function
+// This function is required in certain scenarios where users customize
+// Kokkos View internals. One example are dynamic length embedded ensemble
+// types. The function is used to propagate necessary information
+// (like the ensemble size) when creating new views.
+// However, most of the time it is called with a single view.
+// Furthermore, the propagated information is not just for view allocations.
+// From what I can tell, the type of functionality provided by
+// common_view_alloc_prop is the equivalent of propagating accessors in mdspan,
+// a mechanism we will eventually use to replace this clunky approach here, when
+// we are finally mdspan based.
+// TODO: get rid of this when we have mdspan
 template <class... Views>
 KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
     Views const&... views) {
