@@ -220,8 +220,10 @@ struct PolicyTraits
   using base_t =
       ExecPolicyTraitsWithDefaults<AnalyzeExecPolicy<void, Traits...>>;
   using base_t::base_t;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_IMPL_STATIC_WARNING(!std::is_empty<typename base_t::work_tag>::value &&
                              !std::is_void<typename base_t::work_tag>::value);
+#endif
 };
 
 #undef KOKKOS_IMPL_STATIC_WARNING
