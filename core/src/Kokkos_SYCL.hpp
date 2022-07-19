@@ -96,13 +96,9 @@ class SYCL {
     return m_space_instance->impl_get_instance_id();
   }
 
-  sycl::context sycl_context() const noexcept {
-    return m_space_instance->m_queue->get_context();
-  };
-
   sycl::queue& sycl_queue() const noexcept {
     return *m_space_instance->m_queue;
-  };
+  }
 
   //@}
   //------------------------------------
@@ -200,7 +196,7 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
       "Kokkos Error: partitioning arguments must be integers or floats");
 #endif
 
-  sycl::context context = sycl_space.sycl_context();
+  sycl::context context = sycl_space.sycl_queue().get_context();
   sycl::device device =
       sycl_space.impl_internal_space_instance()->m_queue->get_device();
   std::vector<SYCL> instances;
@@ -217,7 +213,7 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
-  sycl::context context = sycl_space.sycl_context();
+  sycl::context context = sycl_space.sycl_queue().get_context();
   sycl::device device =
       sycl_space.impl_internal_space_instance()->m_queue->get_device();
   std::vector<SYCL> instances;
