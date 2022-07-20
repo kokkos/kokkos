@@ -102,7 +102,8 @@ void declare_configuration_metadata(const std::string& category,
 
 }  // namespace Impl
 
-bool is_initialized() noexcept;
+KOKKOS_ATTRIBUTE_NODISCARD bool is_initialized() noexcept;
+KOKKOS_ATTRIBUTE_NODISCARD bool is_finalized() noexcept;
 
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
@@ -202,7 +203,12 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 #endif
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
-    if (!Kokkos::is_initialized()) {
+    if (!is_initialized()) {
+      if (is_finalized()) {
+        Kokkos::abort(
+            "Attempt to create a Kokkos::ScopeGuard after Kokkos::finalize was "
+            "called.");
+      }
       initialize(argc, argv);
       sg_init = true;
     }
@@ -214,14 +220,19 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
-    if (!Kokkos::is_initialized()) {
+    if (!is_initialized()) {
+      if (is_finalized()) {
+        Kokkos::abort(
+            "Attempt to create a Kokkos::ScopeGuard after Kokkos::finalize was "
+            "called.");
+      }
       initialize(settings);
       sg_init = true;
     }
   }
 
   ~ScopeGuard() {
-    if (Kokkos::is_initialized() && sg_init) {
+    if (!is_finalized() && sg_init) {
       finalize();
     }
   }
