@@ -62,6 +62,29 @@ class OpenACCInternal {
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
+  // FIXME_OPENACC - Currently the maximum number of
+  // teams possible is calculated based on NVIDIA's Volta GPU. In
+  // future this value should be based on the chosen architecture for the
+  // OpenACC backend.
+  constexpr static int MAX_ACTIVE_THREADS = 2080 * 80; 
+  constexpr static int MAX_ACTIVE_TEAMS   = MAX_ACTIVE_THREADS / 32; 
+
+  static void verify_is_process(const char* const);
+  static void verify_initialized(const char* const);
+  static int* get_lock_array(int num_teams);
+  static void* get_scratch_ptr();
+  static void clear_scratch();
+  static void clear_lock_array();
+  // static void resize_scratch(int64_t team_reduce_bytes,
+  // int64_t team_shared_bytes,
+  // int64_t thread_local_bytes);
+
+  static void* m_scratch_ptr;
+  static int64_t m_scratch_size;
+  static int* m_lock_array;
+  static uint64_t m_lock_size;
+  static uint32_t* m_uniquetoken_ptr;
+
   void fence(const std::string& name,
              openacc_fence_is_static is_static = openacc_fence_is_static::no);
 

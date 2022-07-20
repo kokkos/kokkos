@@ -54,7 +54,6 @@
 /*--------------------------------------------------------------------------*/
 
 #include <Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACC_Exec.hpp>
 #include <Kokkos_OpenACCSpace.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 

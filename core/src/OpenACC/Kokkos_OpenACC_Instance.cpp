@@ -46,7 +46,6 @@
 
 #include <Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
-#include <OpenACC/Kokkos_OpenACC_Exec.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
 #include <vector>
@@ -90,14 +89,19 @@ void OpenACCInternal::print_configuration(std::ostream& os, bool) {
   os << "Using OpenACC\n";
 }
 
+void* OpenACCInternal::m_scratch_ptr         = nullptr;
+int64_t OpenACCInternal::m_scratch_size      = 0;
+int* OpenACCInternal::m_lock_array           = nullptr;
+uint64_t OpenACCInternal::m_lock_size        = 0;
+uint32_t* OpenACCInternal::m_uniquetoken_ptr = nullptr;
+
 void OpenACCInternal::impl_finalize() {
   m_is_initialized = false;
-  Kokkos::Impl::OpenACCExec space;
-  if (space.m_lock_array != nullptr) space.clear_lock_array();
+  if (m_lock_array != nullptr) clear_lock_array();
 
-  if (space.m_uniquetoken_ptr != nullptr)
+  if (m_uniquetoken_ptr != nullptr)
     Kokkos::kokkos_free<Kokkos::Experimental::OpenACCSpace>(
-        space.m_uniquetoken_ptr);
+        m_uniquetoken_ptr);
 }
 void OpenACCInternal::impl_initialize() { m_is_initialized = true; }
 int OpenACCInternal::impl_is_initialized() { return m_is_initialized ? 1 : 0; }
@@ -106,6 +110,66 @@ OpenACCInternal* OpenACCInternal::impl_singleton() {
   static OpenACCInternal self;
   return &self;
 }
+
+void OpenACCInternal::verify_is_process(const char* const label) {
+  if (acc_on_device(acc_device_not_host)) {
+    std::string msg(label);
+    msg.append(" ERROR: in parallel");
+    Kokkos::Impl::throw_runtime_exception(msg);
+  }
+}
+
+void OpenACCInternal::verify_initialized(const char* const label) {
+  if (0 == Kokkos::Experimental::OpenACC().impl_is_initialized()) {
+    std::string msg(label);
+    msg.append(" ERROR: not initialized");
+    Kokkos::Impl::throw_runtime_exception(msg);
+  }
+}
+
+
+void OpenACCInternal::clear_scratch() {
+  Kokkos::Experimental::OpenACCSpace space;
+  space.deallocate(m_scratch_ptr, m_scratch_size);
+  m_scratch_ptr  = nullptr;
+  m_scratch_size = 0;
+}
+
+void OpenACCInternal::clear_lock_array() {
+  if (m_lock_array != nullptr) {
+    Kokkos::Experimental::OpenACCSpace space;
+    space.deallocate(m_lock_array, m_lock_size);
+    m_lock_array = nullptr;
+    m_lock_size  = 0;
+  }
+}
+
+void* OpenACCInternal::get_scratch_ptr() { return m_scratch_ptr; }
+
+int* OpenACCInternal::get_lock_array(int num_teams) {
+  // FIXME_OPENACC - Need to be updated.
+  Kokkos::Experimental::OpenACCSpace space;
+  int max_active_league_size = MAX_ACTIVE_THREADS / 32;
+  int lock_array_elem =
+      (num_teams > max_active_league_size) ? num_teams : max_active_league_size;
+  if (m_lock_size < (lock_array_elem * sizeof(int))) {
+    space.deallocate(m_lock_array, m_lock_size);
+    m_lock_size  = lock_array_elem * sizeof(int);
+    m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
+
+    int* h_lock_array = static_cast<int*>(malloc(m_lock_size));
+
+    for (int i = 0; i < lock_array_elem; ++i) h_lock_array[i] = 0;
+
+    acc_memcpy_to_device(m_lock_array, h_lock_array, m_lock_size);
+
+    free(h_lock_array);
+  }
+
+  return m_lock_array;
+}
+
+
 
 }  // Namespace Impl
 
