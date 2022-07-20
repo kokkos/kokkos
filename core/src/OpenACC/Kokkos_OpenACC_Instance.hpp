@@ -66,8 +66,8 @@ class OpenACCInternal {
   // teams possible is calculated based on NVIDIA's Volta GPU. In
   // future this value should be based on the chosen architecture for the
   // OpenACC backend.
-  constexpr static int MAX_ACTIVE_THREADS = 2080 * 80; 
-  constexpr static int MAX_ACTIVE_TEAMS   = MAX_ACTIVE_THREADS / 32; 
+  constexpr static int MAX_ACTIVE_THREADS = 2080 * 80;
+  constexpr static int MAX_ACTIVE_TEAMS   = MAX_ACTIVE_THREADS / 32;
 
   static void verify_is_process(const char* const);
   static void verify_initialized(const char* const);

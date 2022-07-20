@@ -77,9 +77,7 @@ void OpenACCInternal::fence(const std::string& name,
         name,
         Kokkos::Tools::Experimental::SpecialSynchronizationCases::
             GlobalDeviceSynchronization,
-        [&]() {  
-          acc_wait_all();
-        });
+        [&]() { acc_wait_all(); });
   }
 }
 int OpenACCInternal::concurrency() { return 128000; }  // FIXME_OPENACC
@@ -100,8 +98,7 @@ void OpenACCInternal::impl_finalize() {
   if (m_lock_array != nullptr) clear_lock_array();
 
   if (m_uniquetoken_ptr != nullptr)
-    Kokkos::kokkos_free<Kokkos::Experimental::OpenACCSpace>(
-        m_uniquetoken_ptr);
+    Kokkos::kokkos_free<Kokkos::Experimental::OpenACCSpace>(m_uniquetoken_ptr);
 }
 void OpenACCInternal::impl_initialize() { m_is_initialized = true; }
 int OpenACCInternal::impl_is_initialized() { return m_is_initialized ? 1 : 0; }
@@ -126,7 +123,6 @@ void OpenACCInternal::verify_initialized(const char* const label) {
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 }
-
 
 void OpenACCInternal::clear_scratch() {
   Kokkos::Experimental::OpenACCSpace space;
@@ -168,8 +164,6 @@ int* OpenACCInternal::get_lock_array(int num_teams) {
 
   return m_lock_array;
 }
-
-
 
 }  // Namespace Impl
 
