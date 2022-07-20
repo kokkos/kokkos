@@ -77,7 +77,7 @@ void OpenACCInternal::fence(const std::string& name,
         name,
         Kokkos::Tools::Experimental::SpecialSynchronizationCases::
             GlobalDeviceSynchronization,
-        [&]() {  //[TODO]: correct device ID
+        [&]() {  
           acc_wait_all();
         });
   }

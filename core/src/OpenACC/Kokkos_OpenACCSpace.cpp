@@ -93,21 +93,9 @@ void *OpenACCSpace::impl_allocate(
   // FIXME_OPENACC multiple device instances are not yet supported, and thus
   // exec_space is ignored for now.
   (void)exec_space;
-  //[DEBUG] Disabled due to the synchronous behavior of the current
-  // implementation.
-  /*
-    OpenACC::impl_static_fence(
-        "Kokkos::OpenACCSpace::impl_allocate: Pre OpenACC Allocation");
-  */
 
   ptr = acc_malloc(arg_alloc_size);
 
-  //[DEBUG] Disabled due to the synchronous behavior of the current
-  // implementation.
-  /*
-    OpenACC::impl_static_fence(
-        "Kokkos::OpenACCSpace::impl_allocate: Post OpenACC Allocation");
-  */
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;

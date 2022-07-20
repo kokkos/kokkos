@@ -119,8 +119,6 @@ class OpenACC {
 
   OpenACC();
 
-  OpenACC(int async_arg);
-
   uint32_t impl_instance_id() const noexcept;
 
  private:
@@ -134,6 +132,10 @@ template <>
 struct DeviceTypeTraits<::Kokkos::Experimental::OpenACC> {
   static constexpr DeviceType id =
       ::Kokkos::Profiling::Experimental::DeviceType::OpenACC;
+  // FIXME_OPENACC: Need to return the device id from the execution space
+  // instance. For now, acc_get_device_num() OpenACC API is used since the
+  // current OpenACC backend implementation does not support multiple execuion
+  // space instances.
   static int device_id(const Kokkos::Experimental::OpenACC&) {
     return acc_get_device_num(acc_device_default);
   }

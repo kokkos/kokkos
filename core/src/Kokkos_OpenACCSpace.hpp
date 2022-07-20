@@ -235,11 +235,21 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, void>
 namespace Kokkos {
 namespace Impl {
 
-// FIXME_OPENACC: implement all possible deep_copies
+// FIXME_OPENACC: Need to update the DeepCopy implementations below to support
+// multiple execution space instances.
+// The current OpenACC backend implementation assumes that there is only one
+// device execution space instance, and all the device operations (e.g., memory
+// transfers, kernel launches, etc.) are implemented to be synchronous, which
+// does not violate the Kokkos execution semantics with the single execution
+// space instance.
 template <class ExecutionSpace>
 struct DeepCopy<Kokkos::Experimental::OpenACCSpace,
                 Kokkos::Experimental::OpenACCSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
+    // The behavior of acc_memcpy_device when bytes argument is zero is
+    // clarified only in the latest OpenACC specification (V3.2), and thus the
+    // value checking is added as a safeguard. (The current NVHPC (V22.5)
+    // supports OpenACC V2.7.)
     if (n > 0) acc_memcpy_device(dst, const_cast<void*>(src), n);
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
