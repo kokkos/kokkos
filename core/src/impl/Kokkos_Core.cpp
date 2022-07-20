@@ -73,7 +73,8 @@
 
 //----------------------------------------------------------------------------
 namespace {
-bool g_is_initialized = false;
+bool g_initialized    = false;
+bool g_finalized      = false;
 bool g_show_warnings  = true;
 bool g_tune_internals = false;
 // When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
@@ -422,7 +423,7 @@ void initialize_profiling(const Kokkos::Tools::InitArguments& args) {
   if (initialization_status.result ==
       Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
           help_request) {
-    g_is_initialized = true;
+    g_initialized = true;
     ::Kokkos::finalize();
     std::exit(EXIT_SUCCESS);
   } else if (initialization_status.result ==
@@ -436,7 +437,7 @@ void initialize_profiling(const Kokkos::Tools::InitArguments& args) {
     }
   } else {
     std::cerr << "Error initializing Kokkos Tools subsystem" << std::endl;
-    g_is_initialized = true;
+    g_initialized = true;
     ::Kokkos::finalize();
     std::exit(EXIT_FAILURE);
   }
@@ -621,7 +622,7 @@ void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
   Kokkos::Tools::InitArguments tools_init_arguments;
   combine(tools_init_arguments, settings);
   initialize_profiling(tools_init_arguments);
-  g_is_initialized = true;
+  g_initialized = true;
   if (settings.has_print_configuration() &&
       settings.get_print_configuration()) {
     ::Kokkos::print_configuration(std::cout);
@@ -666,7 +667,7 @@ void finalize_internal() {
 
   Kokkos::Impl::ExecSpaceManager::get_instance().finalize_spaces();
 
-  g_is_initialized = false;
+  g_finalized      = true;
   g_show_warnings  = true;
   g_tune_internals = false;
 }
@@ -1062,7 +1063,13 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
   Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
-bool Kokkos::is_initialized() noexcept { return g_is_initialized; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+bool Kokkos::is_initialized() noexcept { return initialized() && !finalized(); }
+#endif
+
+bool Kokkos::initialized() noexcept { return g_initialized; }
+
+bool Kokkos::finalized() noexcept { return g_finalized; }
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 

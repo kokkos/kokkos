@@ -102,7 +102,13 @@ void declare_configuration_metadata(const std::string& category,
 
 }  // namespace Impl
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use (Kokkos::initialized() && !Kokkos::finalized()) instead")
 bool is_initialized() noexcept;
+#endif
+bool initialized() noexcept;
+bool finalized() noexcept;
 
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
@@ -202,7 +208,7 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 #endif
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
-    if (!Kokkos::is_initialized()) {
+    if (!initialized() && !finalized()) {
       initialize(argc, argv);
       sg_init = true;
     }
@@ -214,14 +220,14 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
-    if (!Kokkos::is_initialized()) {
+    if (!initialized() && !finalized()) {
       initialize(settings);
       sg_init = true;
     }
   }
 
   ~ScopeGuard() {
-    if (Kokkos::is_initialized() && sg_init) {
+    if (!finalized() && sg_init) {
       finalize();
     }
   }

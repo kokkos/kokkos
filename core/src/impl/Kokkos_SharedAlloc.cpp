@@ -241,7 +241,7 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
   const int old_count = Kokkos::atomic_fetch_sub(&arg_record->m_count, 1);
 
   if (old_count == 1) {
-    if (!Kokkos::is_initialized()) {
+    if (finalized()) {
       std::stringstream ss;
       ss << "Kokkos allocation \"";
       ss << arg_record->get_label();
