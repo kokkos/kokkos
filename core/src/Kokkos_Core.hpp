@@ -204,11 +204,6 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
     if (!is_initialized()) {
-      if (is_finalized()) {
-        Kokkos::abort(
-            "Attempt to create a Kokkos::ScopeGuard after Kokkos::finalize was "
-            "called.");
-      }
       initialize(argc, argv);
       sg_init = true;
     }
@@ -221,18 +216,13 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
     if (!is_initialized()) {
-      if (is_finalized()) {
-        Kokkos::abort(
-            "Attempt to create a Kokkos::ScopeGuard after Kokkos::finalize was "
-            "called.");
-      }
       initialize(settings);
       sg_init = true;
     }
   }
 
   ~ScopeGuard() {
-    if (!is_finalized() && sg_init) {
+    if (is_initialized() && sg_init) {
       finalize();
     }
   }
