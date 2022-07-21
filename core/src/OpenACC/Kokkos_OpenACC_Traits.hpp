@@ -54,15 +54,15 @@ namespace Kokkos::Experimental::Impl {
 struct OpenACC_Traits {
   static constexpr acc_device_t dev_type =
 #if defined(KOKKOS_ARCH_VOLTA) || defined(KOKKOS_ARCH_AMPERE)
-   acc_device_nvidia;
+      acc_device_nvidia;
 #elif defined(KOKKOS_ARCH_VEGA)
-  acc_device_radeon;
+      acc_device_radeon;
 #else
-  acc_device_host;
+      acc_device_host;
 #error currently not supported
 #endif
 };
 
-}
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

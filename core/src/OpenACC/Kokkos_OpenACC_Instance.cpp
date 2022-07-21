@@ -46,7 +46,11 @@
 
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <OpenACC/Kokkos_OpenACC.hpp>
+#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
 #include <impl/Kokkos_Profiling.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
+
+#include <openacc.h>
 
 #include <ostream>
 
@@ -56,7 +60,12 @@ Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
   return &self;
 }
 
-void Kokkos::Experimental::Impl::OpenACCInternal::initialize() {
+void Kokkos::Experimental::Impl::OpenACCInternal::initialize(
+    InitializationSettings const& settings) {
+  using Kokkos::Impl::get_gpu;
+  int dev_num           = get_gpu(settings);
+  acc_device_t dev_type = OpenACC_Traits::dev_type;
+  acc_set_device_num(dev_num, dev_type);
   m_is_initialized = true;
 }
 

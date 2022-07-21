@@ -55,8 +55,8 @@ Kokkos::Experimental::OpenACC::OpenACC()
     : m_space_instance(Impl::OpenACCInternal::singleton()) {}
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
-    InitializationSettings const& /*settings*/) {
-  Impl::OpenACCInternal::singleton()->initialize();
+    InitializationSettings const& settings) {
+  Impl::OpenACCInternal::singleton()->initialize(settings);
 }
 
 void Kokkos::Experimental::OpenACC::impl_finalize() {
