@@ -195,7 +195,46 @@ namespace Kokkos {
  *     if Kokkos::is_initialized() in the constructor, don't call
  * Kokkos::initialize or Kokkos::finalize it is not copyable or assignable
  */
+namespace Impl {
 
+inline std::string scopeguard_correct_usage() {
+  return std::string(
+      "Do instead:\n"
+      "  std::unique_ptr<Kokkos::ScopeGuard> guard =\n"
+      "    !Kokkos::is_initialized() && !Kokkos::is_finalized()?\n"
+      "    new ScopeGuard(argc,argv) : nullptr;\n");
+}
+inline std::string scopeguard_create_after_init_warning() {
+  return std::string(
+             "Kokkos Error: Creating a ScopeGuard after Kokkos was initialized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_destruct_without_init_warning() {
+  return std::string(
+             "Kokkos Error: Destroying a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_create_after_finalize_warning() {
+  return std::string(
+             "Kokkos Error: Creating a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_destruct_after_finalize_warning() {
+  return std::string(
+             "Kokkos Error: Destroying a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+}  // namespace Impl
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
  public:
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
@@ -203,6 +242,15 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 #endif
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (is_initialized()) {
+      std::cerr << Impl::scopeguard_create_after_init_warning() << std::endl;
+    }
+    if (is_finalized()) {
+      std::cerr << Impl::scopeguard_create_after_finalize_warning()
+                << std::endl;
+    }
+#endif
     if (!is_initialized()) {
       initialize(argc, argv);
       sg_init = true;
@@ -215,6 +263,15 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (is_initialized()) {
+      std::cerr << Impl::scopeguard_create_after_init_warning() << std::endl;
+    }
+    if (is_finalized()) {
+      std::cerr << Impl::scopeguard_create_after_finalize_warning()
+                << std::endl;
+    }
+#endif
     if (!is_initialized()) {
       initialize(settings);
       sg_init = true;
@@ -222,6 +279,16 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   }
 
   ~ScopeGuard() {
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (!is_initialized() && !is_finalized()) {
+      std::cerr << Impl::scopeguard_destruct_without_init_warning()
+                << std::endl;
+    }
+    if (is_finalized()) {
+      std::cerr << Impl::scopeguard_destruct_after_finalize_warning()
+                << std::endl;
+    }
+#endif
     if (is_initialized() && sg_init) {
       finalize();
     }
@@ -233,6 +300,54 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard& operator=(const ScopeGuard&) = delete;
   ScopeGuard(const ScopeGuard&)            = delete;
 };
+
+#else  // ifndef KOKKOS_ENABLE_DEPRECATED_CODE3
+
+class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
+ public:
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
+
+  ScopeGuard(int& argc, char* argv[]) {
+    if (is_initialized()) {
+      Kokkos::abort(Impl::scopeguard_create_after_init_warning().c_str());
+    }
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
+    }
+    initialize(argc, argv);
+  }
+
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
+  ScopeGuard(
+      const InitializationSettings& settings = InitializationSettings()) {
+    if (is_initialized()) {
+      Kokkos::abort(Impl::scopeguard_create_after_init_warning().c_str());
+    }
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
+    }
+    initialize(settings);
+  }
+
+  ~ScopeGuard() {
+    if (!is_initialized() && !is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_destruct_without_init_warning().c_str());
+    }
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_destruct_after_finalize_warning().c_str());
+    }
+    finalize();
+  }
+
+  // private:
+  ScopeGuard& operator=(const ScopeGuard&) = delete;
+  ScopeGuard(const ScopeGuard&)            = delete;
+};
+#endif
 
 }  // namespace Kokkos
 
@@ -287,6 +402,7 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 
 // Specializations requires after core definitions
 #include <KokkosCore_Config_PostInclude.hpp>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
