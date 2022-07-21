@@ -647,7 +647,7 @@ void sort(Experimental::HIP const& space, ViewType const& view) {
   using DevicePtr = thrust::device_ptr<typename ViewType::value_type>;
   DevicePtr first(view.data());
   DevicePtr last(view.data() + view.extent(0));
-  const auto exec = thrust::cuda::par.on(space.hip_stream());
+  const auto exec = thrust::hip::par.on(space.hip_stream());
   thrust::sort(exec, first, last);
 }
 #endif
