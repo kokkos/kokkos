@@ -314,6 +314,11 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
 ENDIF()
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 
+IF (Kokkos_ENABLE_HIP)
+  FIND_PACKAGE(rocthrust)
+  TARGET_LINK_LIBRARIES(kokkos INTERFACE roc::rocthrust)
+ENDIF()
+
 # nvcc_wrapper is Kokkos' wrapper for NVIDIA's NVCC CUDA compiler.
 # Kokkos needs nvcc_wrapper in order to build.  Other libraries and
 # executables also need nvcc_wrapper.  Thus, we need to install it.
