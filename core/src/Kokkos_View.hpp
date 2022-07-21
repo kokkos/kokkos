@@ -1754,8 +1754,8 @@ struct RankDataType<ValueType, 0> {
 };
 
 template <unsigned N, typename... Args>
-std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view_of_rank_n(
-    View<Args...> v) {
+KOKKOS_FUNCTION std::enable_if_t<N == View<Args...>::Rank, View<Args...>>
+as_view_of_rank_n(View<Args...> v) {
   return v;
 }
 

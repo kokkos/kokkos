@@ -1151,9 +1151,6 @@ class TestDynViewAPI {
 #endif  // MDRangePolict Rank < 7
 
 #endif  // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-
-    // Error checking test
-    EXPECT_ANY_THROW({ auto v_copy = Kokkos::Impl::as_view_of_rank_n<2>(d); });
   }
 
   static void run_test_scalar() {

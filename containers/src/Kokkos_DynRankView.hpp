@@ -1701,11 +1701,15 @@ namespace Impl {
    underlying memory, to facilitate implementation of deep_copy() and
    other routines that are defined on View */
 template <unsigned N, typename T, typename... Args>
-auto as_view_of_rank_n(DynRankView<T, Args...> v) {
+KOKKOS_FUNCTION auto as_view_of_rank_n(DynRankView<T, Args...> v) {
   if (v.rank() != N) {
-    Kokkos::Impl::throw_runtime_exception(
-        "Converting DynRankView of rank " + std::to_string(v.rank()) +
-        " to a View of mis-matched rank " + std::to_string(N));
+    KOKKOS_IF_ON_HOST(
+        const std::string message =
+            "Converting DynRankView of rank " + std::to_string(v.rank()) +
+            " to a View of mis-matched rank " + std::to_string(N) + "!";
+        Kokkos::abort(message.c_str());)
+    KOKKOS_IF_ON_DEVICE(
+        Kokkos::abort("Converting DynRankView to a View of mis-matched rank!");)
   }
 
   return View<typename RankDataType<T, N>::type, Args...>(
