@@ -74,6 +74,7 @@
 //----------------------------------------------------------------------------
 namespace {
 bool g_is_initialized = false;
+bool g_is_finalized   = false;
 bool g_show_warnings  = true;
 bool g_tune_internals = false;
 // When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
@@ -667,6 +668,7 @@ void finalize_internal() {
   Kokkos::Impl::ExecSpaceManager::get_instance().finalize_spaces();
 
   g_is_initialized = false;
+  g_is_finalized   = true;
   g_show_warnings  = true;
   g_tune_internals = false;
 }
@@ -1062,7 +1064,13 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
   Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
-bool Kokkos::is_initialized() noexcept { return g_is_initialized; }
+KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_initialized() noexcept {
+  return g_is_initialized;
+}
+
+KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_finalized() noexcept {
+  return g_is_finalized;
+}
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 
