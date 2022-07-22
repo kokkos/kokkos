@@ -12,10 +12,6 @@ file(GLOB
     *.cc
     ${PROJECT_SOURCE_DIR}/include/benchmark/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
-file(GLOB BENCHMARK_MAIN "benchmark_main.cc")
-foreach(item ${BENCHMARK_MAIN})
-  list(REMOVE_ITEM SOURCE_FILES "${item}")
-endforeach()
 
 add_library(benchmark ${SOURCE_FILES})
 add_library(benchmark::benchmark ALIAS benchmark)
@@ -58,24 +54,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
   target_link_libraries(benchmark PRIVATE kstat)
 endif()
 
-# Benchmark main library
-add_library(benchmark_main "benchmark_main.cc")
-add_library(benchmark::benchmark_main ALIAS benchmark_main)
-set_target_properties(benchmark_main PROPERTIES
-  OUTPUT_NAME "benchmark_main"
-  VERSION ${GENERIC_LIB_VERSION}
-  SOVERSION 2
-  DEFINE_SYMBOL benchmark_EXPORTS
-)
-target_link_libraries(benchmark_main PUBLIC benchmark::benchmark)
-
-
 set(generated_dir "${PROJECT_BINARY_DIR}")
 
 set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
 set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
 set(pkg_config "${generated_dir}/${PROJECT_NAME}.pc")
-set(targets_to_export benchmark benchmark_main)
+set(targets_to_export benchmark)
 set(targets_export_name "${PROJECT_NAME}Targets")
 
 set(namespace "${PROJECT_NAME}::")
