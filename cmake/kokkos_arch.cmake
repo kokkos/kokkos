@@ -668,13 +668,10 @@ IF (KOKKOS_ENABLE_OPENACC)
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc -gpu=${NVHPC_CUDA_ARCH}
     )
-  ELSEIF(KOKKOS_AMDGPU_ARCH_FLAG)
-    # FIXME_OPENACC
+  ELSE()
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc
     )
-  ELSE()
-    MESSAGE(SEND_ERROR "Must specify a GPU architecture with OpenACC")
   ENDIF()
 ENDIF()
 
