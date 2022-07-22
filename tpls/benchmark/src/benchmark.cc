@@ -178,22 +178,17 @@ State::State(IterationCount max_iters, const std::vector<int64_t>& ranges,
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
-#if defined(__CUDACC__)
-#pragma nv_diagnostic push
-#pragma nv_diag_suppress 1427
-#endif
+#if !defined(__CUDACC__)
   // Offset tests to ensure commonly accessed data is on the first cache line.
   const int cache_line_size = 64;
   static_assert(offsetof(State, error_occurred_) <=
                     (cache_line_size - sizeof(error_occurred_)),
                 "");
+#endif
 #if defined(__INTEL_COMPILER)
 #pragma warning pop
 #elif defined(__GNUC__)
 #pragma GCC diagnostic pop
-#endif
-#if defined(__CUDACC__)
-#pragma nv_diagnostic pop
 #endif
 }
 
