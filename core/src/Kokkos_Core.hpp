@@ -204,16 +204,10 @@ inline std::string scopeguard_correct_usage() {
       "    !Kokkos::is_initialized() && !Kokkos::is_finalized()?\n"
       "    new ScopeGuard(argc,argv) : nullptr;\n");
 }
-inline std::string scopeguard_create_after_init_warning() {
-  return std::string(
-             "Kokkos Error: Creating a ScopeGuard after Kokkos was initialized "
-             "is illegal.\n")
-      .append(scopeguard_correct_usage());
-}
 
-inline std::string scopeguard_destruct_without_init_warning() {
+inline std::string scopeguard_create_while_initialized_warning() {
   return std::string(
-             "Kokkos Error: Destroying a ScopeGuard after Kokkos was finalized "
+             "Kokkos Error: Creating a ScopeGuard while Kokkos is initialized "
              "is illegal.\n")
       .append(scopeguard_correct_usage());
 }
@@ -244,7 +238,8 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
     sg_init = false;
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
     if (is_initialized()) {
-      std::cerr << Impl::scopeguard_create_after_init_warning() << std::endl;
+      std::cerr << Impl::scopeguard_create_while_initialized_warning()
+                << std::endl;
     }
     if (is_finalized()) {
       std::cerr << Impl::scopeguard_create_after_finalize_warning()
@@ -265,7 +260,8 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
     sg_init = false;
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
     if (is_initialized()) {
-      std::cerr << Impl::scopeguard_create_after_init_warning() << std::endl;
+      std::cerr << Impl::scopeguard_create_while_initialized_warning()
+                << std::endl;
     }
     if (is_finalized()) {
       std::cerr << Impl::scopeguard_create_after_finalize_warning()
@@ -280,10 +276,6 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 
   ~ScopeGuard() {
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    if (!is_initialized() && !is_finalized()) {
-      std::cerr << Impl::scopeguard_destruct_without_init_warning()
-                << std::endl;
-    }
     if (is_finalized()) {
       std::cerr << Impl::scopeguard_destruct_after_finalize_warning()
                 << std::endl;
@@ -311,7 +303,8 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 
   ScopeGuard(int& argc, char* argv[]) {
     if (is_initialized()) {
-      Kokkos::abort(Impl::scopeguard_create_after_init_warning().c_str());
+      Kokkos::abort(
+          Impl::scopeguard_create_while_initialized_warning().c_str());
     }
     if (is_finalized()) {
       Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
@@ -325,7 +318,8 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     if (is_initialized()) {
-      Kokkos::abort(Impl::scopeguard_create_after_init_warning().c_str());
+      Kokkos::abort(
+          Impl::scopeguard_create_while_initialized_warning().c_str());
     }
     if (is_finalized()) {
       Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
@@ -334,9 +328,6 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   }
 
   ~ScopeGuard() {
-    if (!is_initialized() && !is_finalized()) {
-      Kokkos::abort(Impl::scopeguard_destruct_without_init_warning().c_str());
-    }
     if (is_finalized()) {
       Kokkos::abort(Impl::scopeguard_destruct_after_finalize_warning().c_str());
     }
