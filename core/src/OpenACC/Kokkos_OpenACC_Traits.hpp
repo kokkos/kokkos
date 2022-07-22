@@ -55,7 +55,7 @@ struct OpenACC_Traits {
     defined(KOKKOS_ARCH_AMPERE)
       acc_device_nvidia;
 #else
-      acc_device_default;
+      acc_device_not_host;
 #endif
 };
 
