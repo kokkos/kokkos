@@ -67,6 +67,8 @@
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
+#include "std_algorithms/Kokkos_BeginEnd.hpp"
+
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 #endif
@@ -640,14 +642,12 @@ sort(const ExecutionSpace& exec,
 }
 
 #if defined(KOKKOS_ENABLE_HIP)
-template <class ViewType>
-void sort(Experimental::HIP const& space, ViewType const& view) {
-  static_assert(ViewType::rank == 1, "HIP sort only supports 1D Views.");
-
-  using DevicePtr = thrust::device_ptr<typename ViewType::value_type>;
-  DevicePtr first(view.data());
-  DevicePtr last(view.data() + view.extent(0));
+template <class DataType, class... Properties>
+void sort(const Experimental::HIP& space,
+          const Kokkos::View<DataType, Properties...>& view) {
   const auto exec = thrust::hip::par.on(space.hip_stream());
+  auto first      = Experimental::begin(view);
+  auto last       = Experimental::end(view);
   thrust::sort(exec, first, last);
 }
 #endif
