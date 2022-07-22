@@ -50,7 +50,13 @@
 namespace Kokkos::Experimental::Impl {
 
 struct OpenACC_Traits {
-  static constexpr acc_device_t dev_type = acc_device_default;
+  static constexpr acc_device_t dev_type =
+#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) || \
+    defined(KOKKOS_ARCH_AMPERE)
+      acc_device_nvidia;
+#else
+      acc_device_default;
+#endif
 };
 
 }  // namespace Kokkos::Experimental::Impl
