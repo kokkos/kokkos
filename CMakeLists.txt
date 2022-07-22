@@ -166,8 +166,8 @@ IF(NOT MSVC)
 ENDIF()
 
 IF(Kokkos_ENABLE_TESTS)
-  add_subdirectory(tpls/benchmark)
-  SET(KOKKOS_BENCHMARK_LIB benchmark::benchmark)
+  # add_subdirectory(tpls/benchmark)
+  SET(KOKKOS_BENCHMARK_LIB kokkos_benchmark)
 
   IF(NOT KOKKOS_HAS_TRILINOS)
     find_package(GTest)
