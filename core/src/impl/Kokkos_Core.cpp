@@ -355,6 +355,13 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // device_id is provided
   if (settings.has_device_id()) {
     int const id = settings.get_device_id();
+    if (id < 0) {
+      std::stringstream ss;
+      ss << "Error: Requested GPU with invalid id '" << id << "'."
+         << " Device id cannot be negative!"
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
     if (id >= num_devices) {
       std::stringstream ss;
       ss << "Error: Requested GPU with id '" << id << "' but only "
