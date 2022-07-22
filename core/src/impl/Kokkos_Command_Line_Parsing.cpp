@@ -275,6 +275,11 @@ std::vector<std::regex> do_not_warn_regular_expressions{
 };
 }
 
+void Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
+    std::regex ignore) {
+  do_not_warn_regular_expressions.push_back(std::move(ignore));
+}
+
 void Kokkos::Impl::warn_not_recognized_command_line_argument(
     std::string not_recognized) {
   for (auto const& ignore : do_not_warn_regular_expressions) {
