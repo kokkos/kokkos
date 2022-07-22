@@ -373,8 +373,8 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // either random or round-robin assignment based on local MPI rank
   if (!is_valid_map_device_id_by(settings.get_map_device_id_by())) {
     std::stringstream ss;
-    ss << "Warning: map_device_id_by setting '"
-       << settings.get_map_device_id_by() << "' is not recognized."
+    ss << "Error: map_device_id_by setting '" << settings.get_map_device_id_by()
+       << "' is not recognized."
        << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
     Kokkos::abort(ss.str().c_str());
   }
