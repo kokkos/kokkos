@@ -57,8 +57,8 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
-// Workaround for `Instruction 'shfl' without '.sync' is not supported on .target
-// sm_70 and higher from PTX ISA version 6.4`.
+// Workaround for `Instruction 'shfl' without '.sync' is not supported on
+// .target sm_70 and higher from PTX ISA version 6.4`.
 // Also see https://github.com/NVIDIA/cub/pull/170.
 #if ((__CUDACC_VER_MAJOR__ >= 9) || defined(__NVCOMPILER_CUDA__) || \
      CUDA_VERSION >= 9000) &&                                       \
