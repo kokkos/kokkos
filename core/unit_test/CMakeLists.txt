@@ -31,7 +31,7 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
 ENDIF()
 
 IF(TRUE)
-  include(GenerateExportHeader)
+  # include(GenerateExportHeader)
 
   SET(BENCHMARK_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/benchmark)
 
@@ -44,16 +44,14 @@ IF(TRUE)
     ${BENCHMARK_SOURCE_DIR}/src/*.h
     ${BENCHMARK_SOURCE_DIR}/include/benchmark/*.h)
 
-  message("${SOURCE_FILES}\n\n")
-
   KOKKOS_ADD_TEST_LIBRARY(
     kokkos_benchmark
     # HEADERS ${BENCHMARK_SOURCE_DIR}/gtest/gtest.h
     SOURCES ${SOURCE_FILES}
   )
 
-  generate_export_header(kokkos_benchmark
-  EXPORT_FILE_NAME ${CMAKE_INSTALL_INCLUDEDIR}/export.h)
+  # generate_export_header(kokkos_benchmark
+  # EXPORT_FILE_NAME ${CMAKE_INSTALL_INCLUDEDIR}/export.h)
 
   TARGET_INCLUDE_DIRECTORIES(kokkos_benchmark PUBLIC ${BENCHMARK_SOURCE_DIR}/include)
 
