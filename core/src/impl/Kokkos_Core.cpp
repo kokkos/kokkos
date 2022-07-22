@@ -351,8 +351,17 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
 int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   std::vector<int> visible_devices =
       get_visible_devices(settings, get_device_count());
+  int const num_devices = visible_devices.size();
   // device_id is provided
   if (settings.has_device_id()) {
+    int const id = settings.get_device_id();
+    if (id >= num_devices) {
+      std::stringstream ss;
+      ss << "Error: Requested GPU with id '" << id << "' but only "
+         << num_devices << "GPU(s) available!"
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
     return visible_devices[settings.get_device_id()];
   }
   // by default use the first GPU available for execution
@@ -372,8 +381,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
 
   if (settings.get_map_device_id_by() == "random") {
     std::default_random_engine gen(get_process_id());
-    std::uniform_int_distribution<int> distribution(0,
-                                                    visible_devices.size() - 1);
+    std::uniform_int_distribution<int> distribution(0, num_devices - 1);
     return visible_devices[distribution(gen)];
   }
 
