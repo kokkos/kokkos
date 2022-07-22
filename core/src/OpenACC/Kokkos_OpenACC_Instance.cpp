@@ -75,6 +75,9 @@ void Kokkos::Experimental::Impl::OpenACCInternal::initialize(
                 << std::endl;
     }
     acc_set_device_type(acc_device_host);
+    // FIXME_OPENACC if multiple execution space instances are supported,
+    // device id variable should be explicitly set to the value returned by
+    // acc_get_device_num(acc_device_host).
   } else {
     using Kokkos::Impl::get_gpu;
     int const dev_num = get_gpu(settings);
