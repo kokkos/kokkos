@@ -45,22 +45,12 @@
 #ifndef KOKKOS_OPENACC_TRAITS_HPP
 #define KOKKOS_OPENACC_TRAITS_HPP
 
-#include <Kokkos_Macros.hpp>
-
 #include <openacc.h>
 
 namespace Kokkos::Experimental::Impl {
 
 struct OpenACC_Traits {
-  static constexpr acc_device_t dev_type =
-#if defined(KOKKOS_ARCH_VOLTA) || defined(KOKKOS_ARCH_AMPERE)
-      acc_device_nvidia;
-#elif defined(KOKKOS_ARCH_VEGA)
-      acc_device_radeon;
-#else
-      acc_device_host;
-#error currently not supported
-#endif
+  static constexpr acc_device_t dev_type = acc_device_default;
 };
 
 }  // namespace Kokkos::Experimental::Impl
