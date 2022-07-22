@@ -874,6 +874,9 @@ void Kokkos::Impl::parse_command_line_arguments(
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_map_device_id_by(map_device_id_by);
+    } else if (std::regex_match(argv[iarg],
+                                std::regex("-?-kokkos.*", std::regex::egrep))) {
+      warn_not_recognized_command_line_argument(argv[iarg]);
     }
 
     // remove flag if prefixed with '--kokkos-'

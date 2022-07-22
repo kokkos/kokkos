@@ -62,6 +62,7 @@ void warn_deprecated_environment_variable(std::string deprecated,
 void warn_deprecated_command_line_argument(std::string deprecated);
 void warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string use_instead);
+void warn_not_recognized_command_line_argument(std::string not_recognized);
 }  // namespace Impl
 }  // namespace Kokkos
 
