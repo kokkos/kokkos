@@ -9,15 +9,15 @@
 #  ifndef BENCHMARK_EXPORT
 #    ifdef benchmark_EXPORTS
         /* We are building this library */
-#      define BENCHMARK_EXPORT 
+#      define BENCHMARK_EXPORT
 #    else
         /* We are using this library */
-#      define BENCHMARK_EXPORT 
+#      define BENCHMARK_EXPORT
 #    endif
 #  endif
 
 #  ifndef BENCHMARK_NO_EXPORT
-#    define BENCHMARK_NO_EXPORT 
+#    define BENCHMARK_NO_EXPORT
 #  endif
 #endif
 
