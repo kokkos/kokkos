@@ -50,6 +50,18 @@
 #include <type_traits>
 
 namespace Test {
+struct SomeExecutionSpace {
+  using size_type = uint64_t;
+  static constexpr int64_t concurrency() { return 0; }
+};
+}  // namespace Test
+
+namespace Kokkos {
+template <>
+struct is_execution_space<Test::SomeExecutionSpace> : std::true_type {};
+}  // namespace Kokkos
+
+namespace Test {
 struct SomeTag {};
 
 template <class ExecutionSpace>
@@ -57,6 +69,7 @@ class TestRangePolicyConstruction {
  public:
   TestRangePolicyConstruction() {
     test_compile_time_parameters();
+    test_compile_time_deduction_guides();
     test_runtime_parameters();
   }
 
@@ -286,6 +299,76 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
   }
+
+  void test_compile_time_deduction_guides() {
+    {
+      // Deduce to RangePolicy<>
+
+      Kokkos::RangePolicy rp0;
+      ASSERT_TRUE((std::is_same<decltype(rp0), Kokkos::RangePolicy<>>::value));
+
+      int64_t i64{};
+      Kokkos::RangePolicy rp1(i64, i64);
+      ASSERT_TRUE((std::is_same<decltype(rp1), Kokkos::RangePolicy<>>::value));
+
+      Kokkos::ChunkSize cs{0};
+      Kokkos::RangePolicy rp2(i64, i64, cs);
+      ASSERT_TRUE((std::is_same<decltype(rp2), Kokkos::RangePolicy<>>::value));
+
+      ExecutionSpace es{};
+      Kokkos::RangePolicy rp3(es, i64, i64);
+      ASSERT_TRUE((std::is_same<decltype(rp3), Kokkos::RangePolicy<>>::value));
+
+      Kokkos::RangePolicy rp4(es, i64, i64, cs);
+      ASSERT_TRUE((std::is_same<decltype(rp4), Kokkos::RangePolicy<>>::value));
+
+      // Deduce to RangePolicy<IndexType<int32_t>>
+
+      using IT32 = Kokkos::IndexType<int32_t>;
+      IT32::type i32{};
+      Kokkos::RangePolicy rp5(i32, i32);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp5), Kokkos::RangePolicy<IT32>>::value));
+
+      Kokkos::RangePolicy rp6(i32, i32, cs);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp6), Kokkos::RangePolicy<IT32>>::value));
+
+      Kokkos::RangePolicy rp7(es, i32, i32);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp7), Kokkos::RangePolicy<IT32>>::value));
+
+      Kokkos::RangePolicy rp8(es, i32, i32, cs);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp8), Kokkos::RangePolicy<IT32>>::value));
+
+      // Deduce to RangePolicy<SomeExecutionSpace>
+
+      SomeExecutionSpace ses;
+      Kokkos::RangePolicy rp9(ses, i64, i64);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp9),
+                        Kokkos::RangePolicy<SomeExecutionSpace>>::value));
+
+      Kokkos::RangePolicy rp10(ses, i64, i64, cs);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp10),
+                        Kokkos::RangePolicy<SomeExecutionSpace>>::value));
+
+      // Deduce to RangePolicy<SomeExecutionSpace, IndexType<32>>
+
+      Kokkos::RangePolicy rp11(ses, i32, i32);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp11),
+                        Kokkos::RangePolicy<SomeExecutionSpace, IT32>>::value));
+
+      Kokkos::RangePolicy rp12(ses, i32, i32, cs);
+      ASSERT_TRUE(
+          (std::is_same<decltype(rp12),
+                        Kokkos::RangePolicy<SomeExecutionSpace, IT32>>::value));
+    }
+  }
+
   void test_runtime_parameters() {
     using policy_t     = Kokkos::RangePolicy<>;
     using index_t      = policy_t::index_type;
@@ -566,8 +649,8 @@ class TestTeamPolicyConstruction {
   void test_run_time_parameters_type() {
     int league_size = 131;
     int team_size   = 4 < policy_t::execution_space::concurrency()
-                        ? 4
-                        : policy_t::execution_space::concurrency();
+                          ? 4
+                          : policy_t::execution_space::concurrency();
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
 #endif

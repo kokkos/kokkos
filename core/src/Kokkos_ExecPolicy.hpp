@@ -280,6 +280,30 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   };
 };
 
+RangePolicy()->RangePolicy<>;
+
+template <typename... Args>
+RangePolicy(int64_t, int64_t, Args...) -> RangePolicy<>;
+
+template <typename... Args>
+RangePolicy(const DefaultExecutionSpace&, int64_t, int64_t, Args...)
+    -> RangePolicy<>;
+
+template <typename ES, typename... Args,
+          typename = std::enable_if_t<is_execution_space<ES>::value>>
+RangePolicy(const ES&, int64_t, int64_t, Args...) -> RangePolicy<ES>;
+
+template <typename IT, typename... Args>
+RangePolicy(IT, IT, Args...) -> RangePolicy<IndexType<IT>>;
+
+template <typename IT, typename... Args>
+RangePolicy(const DefaultExecutionSpace&, IT, IT, Args...)
+    -> RangePolicy<IndexType<IT>>;
+
+template <typename ES, typename IT, typename... Args,
+          typename = std::enable_if_t<is_execution_space<ES>::value>>
+RangePolicy(const ES&, IT, IT, Args...) -> RangePolicy<ES, IndexType<IT>>;
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
