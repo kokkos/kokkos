@@ -1990,5 +1990,6 @@ TEST(TEST_CATEGORY, MDTeamVectorRangeParallelReduce) {
   TestMDTeamVectorRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_8D_MDTeamVectorRange<Right>(smallDims);
 }
+
 }  // namespace MDTeamRange
 }  // namespace Test
