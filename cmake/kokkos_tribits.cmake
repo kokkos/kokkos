@@ -10,6 +10,14 @@ IF(GTest_FOUND)
   SET(KOKKOS_GTEST_LIB GTest::gtest)
 ELSE()  # fallback to internal gtest
   SET(KOKKOS_GTEST_LIB kokkos_gtest)
+  MESSAGE(STATUS "Using internal gtest copy for testing")
+ENDIF()
+
+IF(benchmark_FOUND)
+  SET(KOKKOS_BENCHMARK_LIB benchmark::benchmark)
+ELSE()
+  SET(KOKKOS_BENCHMARK_LIB kokkos_benchmark)
+  MESSAGE(STATUS "Using internal benchmark copy for performance testing")
 ENDIF()
 
 FUNCTION(VERIFY_EMPTY CONTEXT)

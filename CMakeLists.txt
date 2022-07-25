@@ -170,7 +170,8 @@ IF(Kokkos_ENABLE_TESTS)
   SET(KOKKOS_BENCHMARK_LIB kokkos_benchmark)
 
   IF(NOT KOKKOS_HAS_TRILINOS)
-    find_package(GTest)
+    find_package(GTest QUIET)
+    find_package(benchmark QUIET)
   ENDIF()
 ENDIF()
 
