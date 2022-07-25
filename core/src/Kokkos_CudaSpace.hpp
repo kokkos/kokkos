@@ -599,14 +599,14 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
       : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
-              &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
+            &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
 #endif
-              Impl::checked_allocation_with_header(arg_exec_space, arg_space,
-                                                   arg_label, arg_alloc_size),
-              sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
-              arg_label),
-          m_tex_obj(0),
-          m_space(arg_space) {
+            Impl::checked_allocation_with_header(arg_exec_space, arg_space,
+                                                 arg_label, arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_tex_obj(0),
+        m_space(arg_space) {
 
     SharedAllocationHeader header;
 

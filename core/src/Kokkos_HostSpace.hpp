@@ -260,7 +260,7 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
 #endif
       ;
   SharedAllocationRecord() = default;
-  
+
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /* exec_space*/, const Kokkos::HostSpace& arg_space,
@@ -283,7 +283,7 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
       const Kokkos::HostSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &deallocate);
-  
+
  public:
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const Kokkos::HostSpace& arg_space, const std::string& arg_label,
