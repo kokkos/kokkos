@@ -285,12 +285,14 @@ RangePolicy()->RangePolicy<>;
 template <typename B, typename E, typename... Args,
           typename = std::enable_if_t<
               !is_execution_space<B>::value &&
+              !std::is_convertible_v<B, DefaultExecutionSpace> &&
               std::is_same_v<std::common_type_t<B, E>, int64_t>>>
 RangePolicy(B, E, Args...) -> RangePolicy<>;
 
 template <typename B, typename E, typename... Args,
           typename = std::enable_if_t<
               !is_execution_space<B>::value &&
+              !std::is_convertible_v<B, DefaultExecutionSpace> &&
               !std::is_same_v<std::common_type_t<B, E>, int64_t>>>
 RangePolicy(B, E, Args...) -> RangePolicy<IndexType<std::common_type_t<B, E>>>;
 
