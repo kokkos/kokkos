@@ -255,7 +255,7 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
   KOKKOS_ATTRIBUTE_NODISCARD
 #endif
-  ScopeGuard(
+  explicit ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
@@ -286,11 +286,13 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
     }
   }
 
-  // private:
+ private:
   bool sg_init;
 
   ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard(const ScopeGuard&)            = delete;
+  ScopeGuard& operator=(ScopeGuard&&) = delete;
+  ScopeGuard(const ScopeGuard&)       = delete;
+  ScopeGuard(ScopeGuard&&)            = delete;
 };
 
 #else  // ifndef KOKKOS_ENABLE_DEPRECATED_CODE3
@@ -300,7 +302,6 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
   KOKKOS_ATTRIBUTE_NODISCARD
 #endif
-
   ScopeGuard(int& argc, char* argv[]) {
     if (is_initialized()) {
       Kokkos::abort(
@@ -334,9 +335,11 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
     finalize();
   }
 
-  // private:
+ private:
   ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard(const ScopeGuard&)            = delete;
+  ScopeGuard& operator=(ScopeGuard&&) = delete;
+  ScopeGuard(const ScopeGuard&)       = delete;
+  ScopeGuard(ScopeGuard&&)            = delete;
 };
 #endif
 
@@ -391,7 +394,7 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 // implementation of the RAII wrapper is using Kokkos::single.
 #include <Kokkos_AcquireUniqueTokenImpl.hpp>
 
-// Specializations requires after core definitions
+// Specializations required after core definitions
 #include <KokkosCore_Config_PostInclude.hpp>
 
 //----------------------------------------------------------------------------
