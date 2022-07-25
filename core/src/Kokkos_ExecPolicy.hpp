@@ -56,7 +56,6 @@ static_assert(false,
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <typeinfo>
-#include <utility>
 
 //----------------------------------------------------------------------------
 
