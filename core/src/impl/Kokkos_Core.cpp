@@ -345,6 +345,14 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
   } else {
     int num_devices =
         settings.has_num_devices() ? settings.get_num_devices() : device_count;
+    if (num_devices > device_count) {
+      std::stringstream ss;
+      ss << "Error: Specified number of devices '" << num_devices
+         << "' exceeds the actual number of GPUs available for execution '"
+         << device_count << "'."
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
     for (int i = 0; i < num_devices; ++i) {
       visible_devices.push_back(i);
     }
