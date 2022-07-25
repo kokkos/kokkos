@@ -325,6 +325,23 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
       visible_devices.push_back(i);
       if (ss.peek() == ',') ss.ignore();
     }
+    for (auto id : visible_devices) {
+      if (id < 0) {
+        ss << "Error: Invalid device id '" << id
+           << "' in environment variable 'KOKKOS_VISIBLE_DEVICES="
+           << env_visible_devices << "'."
+           << " Device id cannot be negative!"
+           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      }
+      if (id >= device_count) {
+        ss << "Error: Invalid device id '" << id
+           << "' in environment variable 'KOKKOS_VISIBLE_DEVICES="
+           << env_visible_devices << "'."
+           << " Device id must be smaller than the number of GPUs available"
+           << " for execution '" << device_count << "'!"
+           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      }
+    }
   } else {
     int num_devices =
         settings.has_num_devices() ? settings.get_num_devices() : device_count;
