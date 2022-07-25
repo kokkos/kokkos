@@ -296,8 +296,7 @@ RangePolicy(B, E, Args...) -> RangePolicy<IndexType<std::common_type_t<B, E>>>;
 
 template <typename ES, typename B, typename E, typename... Args,
           typename = std::enable_if_t<
-              is_execution_space<ES>::value &&
-              std::is_same_v<ES, DefaultExecutionSpace> &&
+              std::is_convertible_v<ES, DefaultExecutionSpace> &&
               std::is_same_v<std::common_type_t<B, E>, int64_t>>>
 RangePolicy(const ES&, B, E, Args...) -> RangePolicy<>;
 
@@ -310,8 +309,7 @@ RangePolicy(const ES&, B, E, Args...) -> RangePolicy<ES>;
 
 template <typename ES, typename B, typename E, typename... Args,
           typename = std::enable_if_t<
-              is_execution_space<ES>::value &&
-              std::is_same_v<ES, DefaultExecutionSpace> &&
+              std::is_convertible_v<ES, DefaultExecutionSpace> &&
               !std::is_same_v<std::common_type_t<B, E>, int64_t>>>
 RangePolicy(const ES&, B, E, Args...)
     -> RangePolicy<IndexType<std::common_type_t<B, E>>>;
