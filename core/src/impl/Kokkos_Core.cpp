@@ -388,6 +388,12 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
 
   // use first GPU available for execution if unable to detect local MPI rank
   if (!local_rank_str) {
+    if (settings.has_map_device_id_by()) {
+      std::cerr << "Warning: unable to detect local MPI rank."
+                << " Falling back to the first GPU available for execution."
+                << " Raised by Kokkos::initialize(int argc, char* argv[])."
+                << std::endl;
+    }
     return visible_devices[0];
   }
 
