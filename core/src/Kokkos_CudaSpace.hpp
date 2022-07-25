@@ -597,8 +597,26 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
       const ExecutionSpace& /*exec_space*/, const Kokkos::CudaSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+              &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
+#endif
+              Impl::checked_allocation_with_header(arg_exec_space, arg_space,
+                                                   arg_label, arg_alloc_size),
+              sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+              arg_label),
+          m_tex_obj(0),
+          m_space(arg_space) {
+
+    SharedAllocationHeader header;
+
+    this->base_t::_fill_host_accessible_header_info(header, arg_label);
+
+    // Copy to device memory
+    Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
+        arg_exec_space, RecordBase::m_alloc_ptr, &header,
+        sizeof(SharedAllocationHeader));
+  }
 
   SharedAllocationRecord(
       const Kokkos::Cuda& exec_space, const Kokkos::CudaSpace& arg_space,
@@ -662,8 +680,19 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_tex_obj(0),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                    arg_label);
+  }
 
   SharedAllocationRecord(
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
@@ -722,8 +751,19 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
       const Kokkos::CudaHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
+                                    void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                    arg_label);
+  }
 
   SharedAllocationRecord(
       const Kokkos::CudaHostPinnedSpace& arg_space,
