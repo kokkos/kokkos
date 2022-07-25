@@ -375,7 +375,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   }
 
   // either map_device_id_by is not specified or it is mpi_rank
-  if (!settings.has_map_device_id_by() ||
+  if (settings.has_map_device_id_by() &&
       settings.get_map_device_id_by() != "mpi_rank") {
     Kokkos::abort("implementation bug");
   }
