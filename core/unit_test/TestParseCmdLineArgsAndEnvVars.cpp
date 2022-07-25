@@ -208,6 +208,7 @@ TEST(defaultdevicetype, cmd_line_args_disable_warning) {
   Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
   EXPECT_TRUE(settings.has_disable_warnings());
   EXPECT_FALSE(settings.get_disable_warnings());
+  EXPECT_EQ(cla.argc(), 0);
 }
 
 TEST(defaultdevicetype, cmd_line_args_tune_internals) {
@@ -221,6 +222,7 @@ TEST(defaultdevicetype, cmd_line_args_tune_internals) {
   EXPECT_TRUE(settings.get_tune_internals());
   EXPECT_TRUE(settings.has_num_threads());
   EXPECT_EQ(settings.get_num_threads(), 3);
+  EXPECT_EQ(cla.argc(), 0);
 }
 
 TEST(defaultdevicetype, cmd_line_args_help) {
@@ -271,6 +273,8 @@ TEST(defaultdevicetype, cmd_line_args_unrecognized_flag) {
               captured.find("--kokkos_num_threads=4") != std::string::npos &&
               !settings.has_num_threads())
       << captured;
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(cla.argv()[0], "--kokkos_num_threads=4");
 
   cla = {{
       "-kokkos-num-threads=4",  // missing a one leading dash
@@ -282,6 +286,8 @@ TEST(defaultdevicetype, cmd_line_args_unrecognized_flag) {
               captured.find("-kokkos-num-threads=4") != std::string::npos &&
               !settings.has_num_threads())
       << captured;
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(cla.argv()[0], "-kokkos-num-threads=4");
 
   cla = {{
       "--kokko-num-threads=4",  // no warning when prefix misspelled
@@ -290,6 +296,8 @@ TEST(defaultdevicetype, cmd_line_args_unrecognized_flag) {
   Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
   captured = ::testing::internal::GetCapturedStderr();
   EXPECT_TRUE(captured.empty() && !settings.has_num_threads()) << captured;
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(cla.argv()[0], "--kokko-num-threads=4");
 }
 
 TEST(defaultdevicetype, env_vars_num_threads) {
