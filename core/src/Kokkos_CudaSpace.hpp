@@ -601,8 +601,8 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
 #ifdef KOKKOS_ENABLE_DEBUG
             &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
 #endif
-            Impl::checked_allocation_with_header(arg_exec_space, arg_space,
-                                                 arg_label, arg_alloc_size),
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
             sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
             arg_label),
         m_tex_obj(0),
@@ -613,9 +613,13 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
     this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
     // Copy to device memory
+    Kokkos::Cuda exec;
     Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
-        arg_exec_space, RecordBase::m_alloc_ptr, &header,
-        sizeof(SharedAllocationHeader));
+        exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+    exec.fence(
+        "SharedAllocationRecord<Kokkos::CudaSpace, "
+        "void>::SharedAllocationRecord(): fence after copying header from "
+        "HostSpace");
   }
 
   SharedAllocationRecord(
