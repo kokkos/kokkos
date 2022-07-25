@@ -47,6 +47,7 @@
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_Command_Line_Parsing.hpp>
 
 #include <cstdlib>
 #include <memory>
@@ -298,6 +299,19 @@ TEST(defaultdevicetype, cmd_line_args_unrecognized_flag) {
   EXPECT_TRUE(captured.empty() && !settings.has_num_threads()) << captured;
   EXPECT_EQ(cla.argc(), 1);
   EXPECT_STREQ(cla.argv()[0], "--kokko-num-threads=4");
+
+  Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
+      std::regex{"^--kokkos-extension.*"});
+  cla = {{
+      "--kokkos-extension-option=value",  // user explicitly asked not to warn
+                                          // about that prefix
+  }};
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.empty()) << captured;
+  EXPECT_EQ(cla.argc(), 1);
+  EXPECT_STREQ(cla.argv()[0], "--kokkos-extension-option=value");
 }
 
 TEST(defaultdevicetype, env_vars_num_threads) {
