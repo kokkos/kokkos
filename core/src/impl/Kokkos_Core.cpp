@@ -163,6 +163,9 @@ int get_device_count() {
   return Kokkos::Experimental::HIP::detect_device_count();
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  return acc_get_num_devices(
+      Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
 #else
   Kokkos::abort("implementation bug");
   return -1;
