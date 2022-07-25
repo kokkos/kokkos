@@ -592,6 +592,8 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/, const Kokkos::CudaSpace& arg_space,
@@ -613,13 +615,9 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
     this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
     // Copy to device memory
-    Kokkos::Cuda exec;
-    Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
-        exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-    exec.fence(
-        "SharedAllocationRecord<Kokkos::CudaSpace, "
-        "void>::SharedAllocationRecord(): fence after copying header from "
-        "HostSpace");
+    // workaround for issue with NVCC and MSVC
+    // https://github.com/kokkos/kokkos/issues/5258
+    deep_copy_header_no_exec(RecordBase::m_alloc_ptr, &header);
   }
 
   SharedAllocationRecord(
@@ -631,6 +629,10 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
       const Kokkos::CudaSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
+  // helper function to work around MSVC+NVCC issue
+  // https://github.com/kokkos/kokkos/issues/5258
+  void deep_copy_header_no_exec(void*, void*);
 
  public:
   template <typename AliasType>
@@ -678,6 +680,8 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/,
@@ -749,6 +753,8 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/,

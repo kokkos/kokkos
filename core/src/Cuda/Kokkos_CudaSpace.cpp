@@ -529,6 +529,17 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
+void SharedAllocationRecord<Kokkos::CudaSpace, void>::deep_copy_header_no_exec(
+    void *ptr, void *header) {
+  Kokkos::Cuda exec;
+  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec, ptr, header,
+                                               sizeof(SharedAllocationHeader));
+  exec.fence(
+      "SharedAllocationRecord<Kokkos::CudaSpace, "
+      "void>::SharedAllocationRecord(): fence after copying header from "
+      "HostSpace");
+}
+
 SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::~SharedAllocationRecord() {
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
