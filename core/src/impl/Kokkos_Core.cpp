@@ -355,14 +355,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   if (settings.has_device_id()) {
     return visible_devices[settings.get_device_id()];
   }
-  // by default use the first GPU available for execution
-  // (neither device_id nor map_device_id_by are provided)
-  if (!settings.has_map_device_id_by()) {
-    return visible_devices[0];
-  }
-  // map_device_id provided
+
   // either random or round-robin assignment based on local MPI rank
-  if (!is_valid_map_device_id_by(settings.get_map_device_id_by())) {
+  if (settings.has_map_device_id_by() &&
+      !is_valid_map_device_id_by(settings.get_map_device_id_by())) {
     std::stringstream ss;
     ss << "Warning: map_device_id_by setting '"
        << settings.get_map_device_id_by() << "' is not recognized."
@@ -370,14 +366,17 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     Kokkos::abort(ss.str().c_str());
   }
 
-  if (settings.get_map_device_id_by() == "random") {
+  if (settings.has_map_device_id_by() &&
+      settings.get_map_device_id_by() == "random") {
     std::default_random_engine gen(get_process_id());
     std::uniform_int_distribution<int> distribution(0,
                                                     visible_devices.size() - 1);
     return visible_devices[distribution(gen)];
   }
 
-  if (settings.get_map_device_id_by() != "mpi_rank") {
+  // either map_device_id_by is not specified or it is mpi_rank
+  if (!settings.has_map_device_id_by() ||
+      settings.get_map_device_id_by() != "mpi_rank") {
     Kokkos::abort("implementation bug");
   }
 
@@ -387,11 +386,8 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
   if (!local_rank_str) local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
 
+  // use first GPU available for execution if unable to detect local MPI rank
   if (!local_rank_str) {
-    std::cerr << "Warning: unable to detect local MPI rank."
-              << " Falling back to the first GPU available for execution."
-              << " Raised by Kokkos::initialize(int argc, char* argv[])."
-              << std::endl;
     return visible_devices[0];
   }
 
