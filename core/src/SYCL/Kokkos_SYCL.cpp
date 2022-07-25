@@ -150,10 +150,17 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
   std::vector<sycl::device> gpu_devices =
       sycl::device::get_devices(sycl::info::device_type::gpu);
   // If the device id is not specified and there are no GPUs, sidestep Kokkos
-  // device selection and use whatever is available.
+  // device selection and use whatever is available (if no GPU architecture is
+  // specified).
+#if !defined(KOKKOS_ARCH_INTEL_GPU) && !defined(KOKKOS_ARCH_KEPLER) && \
+    !defined(KOKKOS_ARCH_MAXWELL) && !defined(KOKKOS_ARCH_PASCAL) &&   \
+    !defined(KOKKOS_ARCH_VOLTA) && !defined(KOKKOS_ARCH_TURING75) &&   \
+    !defined(KOKKOS_ARCH_AMPERE)
   if (!settings.has_device_id() && gpu_devices.empty()) {
     Impl::SYCLInternal::singleton().initialize(sycl::device());
-  } else {
+  } else
+#endif
+  {
     size_t id = ::Kokkos::Impl::get_gpu(settings);
     if (id >= gpu_devices.size()) {
       std::stringstream error_message;
