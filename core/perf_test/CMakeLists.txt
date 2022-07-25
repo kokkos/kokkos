@@ -34,7 +34,7 @@ IF(NOT benchmark_FOUND)
     SET_TARGET_PROPERTIES(kokkos_benchmark PROPERTIES CXX_CLANG_TIDY "")
   ENDIF()
 
-  FIND_PACKAGE(Threads QUIET)
+  FIND_PACKAGE(Threads QUIET REQUIRED)
   IF(TARGET Threads::Threads)
     SET_TARGET_PROPERTIES(kokkos_benchmark PROPERTIES
                           INTERFACE_LINK_LIBRARIES Threads::Threads)
