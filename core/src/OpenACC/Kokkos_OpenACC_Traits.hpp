@@ -42,13 +42,24 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_DECLARE_OPENACC_HPP
-#define KOKKOS_DECLARE_OPENACC_HPP
+#ifndef KOKKOS_OPENACC_TRAITS_HPP
+#define KOKKOS_OPENACC_TRAITS_HPP
 
-#if defined(KOKKOS_ENABLE_OPENACC)
-#include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
+#include <openacc.h>
+
+namespace Kokkos::Experimental::Impl {
+
+struct OpenACC_Traits {
+#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) || \
+    defined(KOKKOS_ARCH_AMPERE)
+  static constexpr acc_device_t dev_type     = acc_device_nvidia;
+  static constexpr bool may_fallback_to_host = false;
+#else
+  static constexpr acc_device_t dev_type     = acc_device_not_host;
+  static constexpr bool may_fallback_to_host = true;
 #endif
+};
+
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

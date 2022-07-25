@@ -45,6 +45,8 @@
 #ifndef KOKKOS_OPENACC_INSTANCE_HPP
 #define KOKKOS_OPENACC_INSTANCE_HPP
 
+#include <impl/Kokkos_InitializationSettings.hpp>
+
 #include <cstdint>
 #include <iosfwd>
 #include <string>
@@ -61,7 +63,7 @@ class OpenACCInternal {
  public:
   static OpenACCInternal* singleton();
 
-  void initialize();
+  void initialize(InitializationSettings const& settings);
   void finalize();
   bool is_initialized() const;
 

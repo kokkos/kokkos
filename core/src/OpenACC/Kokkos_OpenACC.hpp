@@ -61,6 +61,7 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <Kokkos_ScratchSpace.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
 
 #include <openacc.h>
 
@@ -112,11 +113,13 @@ struct Kokkos::Tools::Experimental::DeviceTypeTraits<
   static constexpr DeviceType id =
       ::Kokkos::Profiling::Experimental::DeviceType::OpenACC;
   // FIXME_OPENACC: Need to return the device id from the execution space
-  // instance. For now, acc_get_device_num() OpenACC API is used since the
-  // current OpenACC backend implementation does not support multiple execution
-  // space instances.
+  // instance. In fact, acc_get_device_num() will return the same value as the
+  // device id from the execution space instance except for the host fallback
+  // case, where the device id may need to be updated with the value of
+  // acc_get_device_num().
   static int device_id(const Kokkos::Experimental::OpenACC&) {
-    return acc_get_device_num(acc_device_default);
+    using Kokkos::Experimental::Impl::OpenACC_Traits;
+    return acc_get_device_num(OpenACC_Traits::dev_type);
   }
 };
 
