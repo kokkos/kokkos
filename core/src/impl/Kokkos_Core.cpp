@@ -359,7 +359,8 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
     if (settings.has_skip_device()) {
       if (visible_devices.size() == 1 && settings.get_skip_device() == 0) {
         Kokkos::abort(
-            "Error: skipping the only GPU available for execution.\n");
+            "Error: skipping the only GPU available for execution.\n"
+            " Raised by Kokkos::initialize(int argc, char* argv[]).\n");
       }
       visible_devices.erase(
           std::remove(visible_devices.begin(), visible_devices.end(),
@@ -368,7 +369,9 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
     }
   }
   if (visible_devices.empty()) {
-    Kokkos::abort("Error: no GPU available for execution.\n");
+    Kokkos::abort(
+        "Error: no GPU available for execution.\n"
+        " Raised by Kokkos::initialize(int argc, char* argv[]).\n");
   }
   return visible_devices;
 }
