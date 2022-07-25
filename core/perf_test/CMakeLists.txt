@@ -9,6 +9,38 @@
 # that in TriBITS KokkosAlgorithms can be disabled...
 #INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
 
+
+IF(NOT benchmark_FOUND)
+  SET(BENCHMARK_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/benchmark)
+
+  file(
+    GLOB SOURCE_FILES
+    ${BENCHMARK_SOURCE_DIR}/src/*.cc
+    ${BENCHMARK_SOURCE_DIR}/src/*.h
+    ${BENCHMARK_SOURCE_DIR}/include/benchmark/*.h
+  )
+
+  #need here for tribits
+  KOKKOS_INCLUDE_DIRECTORIES(${BENCHMARK_SOURCE_DIR}/include)
+  KOKKOS_ADD_TEST_LIBRARY(
+    kokkos_benchmark
+    SOURCES ${SOURCE_FILES}
+  )
+
+  TARGET_INCLUDE_DIRECTORIES(kokkos_benchmark PUBLIC ${BENCHMARK_SOURCE_DIR}/include)
+
+  # Suppress clang-tidy diagnostics on code that we do not have control over
+  IF(CMAKE_CXX_CLANG_TIDY)
+    SET_TARGET_PROPERTIES(kokkos_benchmark PROPERTIES CXX_CLANG_TIDY "")
+  ENDIF()
+
+  FIND_PACKAGE(Threads QUIET)
+  IF(TARGET Threads::Threads)
+    SET_TARGET_PROPERTIES(kokkos_benchmark PROPERTIES
+                          INTERFACE_LINK_LIBRARIES Threads::Threads)
+  ENDIF()
+ENDIF()
+
 # FIXME_OPENMPTARGET - the NVIDIA HPC compiler nvc++ in the OpenMPTarget backend does not pass the perf_tests.
 # FIXME_OPENACC - temporarily disabled due to unimplemented features
 IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)

@@ -30,44 +30,6 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
   ENDIF()
 ENDIF()
 
-IF(TRUE)
-  # include(GenerateExportHeader)
-
-  SET(BENCHMARK_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/benchmark)
-
-  #need here for tribits
-  KOKKOS_INCLUDE_DIRECTORIES(${BENCHMARK_SOURCE_DIR}/include)
-
-  file(GLOB
-  SOURCE_FILES
-    ${BENCHMARK_SOURCE_DIR}/src/*.cc
-    ${BENCHMARK_SOURCE_DIR}/src/*.h
-    ${BENCHMARK_SOURCE_DIR}/include/benchmark/*.h)
-
-  KOKKOS_ADD_TEST_LIBRARY(
-    kokkos_benchmark
-    # HEADERS ${BENCHMARK_SOURCE_DIR}/gtest/gtest.h
-    SOURCES ${SOURCE_FILES}
-  )
-
-  # generate_export_header(kokkos_benchmark
-  # EXPORT_FILE_NAME ${CMAKE_INSTALL_INCLUDEDIR}/export.h)
-
-  TARGET_INCLUDE_DIRECTORIES(kokkos_benchmark PUBLIC ${BENCHMARK_SOURCE_DIR}/include)
-
-  # Suppress clang-tidy diagnostics on code that we do not have control over
-  IF(CMAKE_CXX_CLANG_TIDY)
-    SET_TARGET_PROPERTIES(kokkos_benchmark PROPERTIES CXX_CLANG_TIDY "")
-  ENDIF()
-
-  FIND_PACKAGE(Threads QUIET)
-  IF(TARGET Threads::Threads)
-    SET_TARGET_PROPERTIES(kokkos_benchmark PROPERTIES
-                          INTERFACE_LINK_LIBRARIES Threads::Threads)
-  ENDIF()
-
-ENDIF()
-
 #
 # Define Incremental Testing Feature Levels
 # Define Device name mappings (i.e. what comes after Kokkos:: for the ExecSpace)
