@@ -208,6 +208,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using member_type       = typename range_policy::member_type;
 
   static constexpr int rank = iteration_pattern::rank;
+  static_assert(rank < 7, "Kokkos MDRangePolicy Error: Unsupported rank...");
 
   using index_type       = typename traits::index_type;
   using array_index_type = std::int64_t;
