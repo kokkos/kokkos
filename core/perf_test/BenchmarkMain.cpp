@@ -46,7 +46,6 @@
 
 #include <Benchmark_Context.hpp>
 #include <Kokkos_Core.hpp>
-#include <PerfTest_ViewCopy.hpp>  //REMOVE_ME: comparison with original
 
 int main(int argc, char** argv) {
   Kokkos::initialize(argc, argv);
@@ -55,8 +54,6 @@ int main(int argc, char** argv) {
   KokkosBenchmark::add_benchmark_context(true);
 
   benchmark::RunSpecifiedBenchmarks();
-  // REMOVE_ME: Run the vanilla test for comparison
-  Test::run_deepcopyview_tests8<Kokkos::LayoutRight, Kokkos::LayoutLeft>(10, 1);
 
   benchmark::Shutdown();
   Kokkos::finalize();
