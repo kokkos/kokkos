@@ -158,18 +158,11 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
     !defined(KOKKOS_ARCH_AMPERE)
   if (!settings.has_device_id() && gpu_devices.empty()) {
     Impl::SYCLInternal::singleton().initialize(sycl::device());
-  } else
-#endif
-  {
-    size_t id = ::Kokkos::Impl::get_gpu(settings);
-    if (id >= gpu_devices.size()) {
-      std::stringstream error_message;
-      error_message << "Requested GPU with id " << id << " but only "
-                    << gpu_devices.size() << " GPU(s) available!\n";
-      Kokkos::Impl::throw_runtime_exception(error_message.str());
-    }
-    Impl::SYCLInternal::singleton().initialize(gpu_devices[id]);
+    return;
   }
+#endif
+  using Kokkos::Impl::get_gpu;
+  Impl::SYCLInternal::singleton().initialize(gpu_devices[get_gpu(settings)]);
 }
 
 std::ostream& SYCL::impl_sycl_info(std::ostream& os,

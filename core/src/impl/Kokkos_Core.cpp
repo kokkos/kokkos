@@ -328,16 +328,42 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
       visible_devices.push_back(i);
       if (ss.peek() == ',') ss.ignore();
     }
+    for (auto id : visible_devices) {
+      if (id < 0) {
+        ss << "Error: Invalid device id '" << id
+           << "' in environment variable 'KOKKOS_VISIBLE_DEVICES="
+           << env_visible_devices << "'."
+           << " Device id cannot be negative!"
+           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      }
+      if (id >= device_count) {
+        ss << "Error: Invalid device id '" << id
+           << "' in environment variable 'KOKKOS_VISIBLE_DEVICES="
+           << env_visible_devices << "'."
+           << " Device id must be smaller than the number of GPUs available"
+           << " for execution '" << device_count << "'!"
+           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      }
+    }
   } else {
     int num_devices =
         settings.has_num_devices() ? settings.get_num_devices() : device_count;
+    if (num_devices > device_count) {
+      std::stringstream ss;
+      ss << "Error: Specified number of devices '" << num_devices
+         << "' exceeds the actual number of GPUs available for execution '"
+         << device_count << "'."
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
     for (int i = 0; i < num_devices; ++i) {
       visible_devices.push_back(i);
     }
     if (settings.has_skip_device()) {
       if (visible_devices.size() == 1 && settings.get_skip_device() == 0) {
         Kokkos::abort(
-            "Error: skipping the only GPU available for execution.\n");
+            "Error: skipping the only GPU available for execution.\n"
+            " Raised by Kokkos::initialize(int argc, char* argv[]).\n");
       }
       visible_devices.erase(
           std::remove(visible_devices.begin(), visible_devices.end(),
@@ -346,7 +372,9 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
     }
   }
   if (visible_devices.empty()) {
-    Kokkos::abort("Error: no GPU available for execution.\n");
+    Kokkos::abort(
+        "Error: no GPU available for execution.\n"
+        " Raised by Kokkos::initialize(int argc, char* argv[]).\n");
   }
   return visible_devices;
 }
@@ -354,8 +382,24 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
 int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   std::vector<int> visible_devices =
       get_visible_devices(settings, get_device_count());
+  int const num_devices = visible_devices.size();
   // device_id is provided
   if (settings.has_device_id()) {
+    int const id = settings.get_device_id();
+    if (id < 0) {
+      std::stringstream ss;
+      ss << "Error: Requested GPU with invalid id '" << id << "'."
+         << " Device id cannot be negative!"
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
+    if (id >= num_devices) {
+      std::stringstream ss;
+      ss << "Error: Requested GPU with id '" << id << "' but only "
+         << num_devices << "GPU(s) available!"
+         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+      Kokkos::abort(ss.str().c_str());
+    }
     return visible_devices[settings.get_device_id()];
   }
 
@@ -363,8 +407,8 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   if (settings.has_map_device_id_by() &&
       !is_valid_map_device_id_by(settings.get_map_device_id_by())) {
     std::stringstream ss;
-    ss << "Warning: map_device_id_by setting '"
-       << settings.get_map_device_id_by() << "' is not recognized."
+    ss << "Error: map_device_id_by setting '" << settings.get_map_device_id_by()
+       << "' is not recognized."
        << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
     Kokkos::abort(ss.str().c_str());
   }
@@ -372,8 +416,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   if (settings.has_map_device_id_by() &&
       settings.get_map_device_id_by() == "random") {
     std::default_random_engine gen(get_process_id());
-    std::uniform_int_distribution<int> distribution(0,
-                                                    visible_devices.size() - 1);
+    std::uniform_int_distribution<int> distribution(0, num_devices - 1);
     return visible_devices[distribution(gen)];
   }
 
