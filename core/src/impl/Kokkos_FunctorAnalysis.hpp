@@ -890,7 +890,9 @@ struct FunctorAnalysis {
   };
 
   template <class F>
-  struct DeduceTeamShmem<F, std::enable_if_t<0 < sizeof(&F::shmem_size)>> {
+  struct DeduceTeamShmem<F,
+                         std::enable_if_t<(0 < sizeof(&F::shmem_size)) &&
+                                          !(0 < sizeof(&F::team_shmem_size))>> {
     enum : bool { value = true };
 
     static size_t team_shmem_size(F const* const f, int team_size) {
