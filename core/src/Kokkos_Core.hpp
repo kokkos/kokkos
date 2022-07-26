@@ -289,6 +289,7 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
  private:
   bool sg_init;
 
+ public:
   ScopeGuard& operator=(const ScopeGuard&) = delete;
   ScopeGuard& operator=(ScopeGuard&&) = delete;
   ScopeGuard(const ScopeGuard&)       = delete;
@@ -335,7 +336,6 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
     finalize();
   }
 
- private:
   ScopeGuard& operator=(const ScopeGuard&) = delete;
   ScopeGuard& operator=(ScopeGuard&&) = delete;
   ScopeGuard(const ScopeGuard&)       = delete;
