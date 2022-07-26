@@ -270,6 +270,32 @@ TEST(defaultdevicetype, cmd_line_args_help) {
   EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--help"});
 }
 
+TEST(defaultdevicetype, cmd_line_args_tools_arguments) {
+  CmdLineArgsHelper cla = {{
+      "--kokkos-tool-libs=ich_tue_nur.so",
+  }};
+  Kokkos::InitializationSettings settings;
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  auto captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.find("not recognized") != std::string::npos &&
+              captured.find("--kokkos-tool-libs=ich_tue_nur.so") !=
+                  std::string::npos &&
+              !settings.has_tools_libs())
+      << captured;
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(
+      cla, {"--kokkos-tool-libs=ich_tue_nur.so"});
+
+  cla      = {{
+      "--kokkos-tools-libs=ich_tue_nur.so",
+  }};
+  settings = {};
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_tools_libs());
+  EXPECT_EQ(settings.get_tools_libs(), "ich_tue_nur.so");
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {});
+}
+
 TEST(defaultdevicetype, cmd_line_args_unrecognized_flag) {
   CmdLineArgsHelper cla = {{
       "--kokkos_num_threads=4",  // underscores instead of dashes
