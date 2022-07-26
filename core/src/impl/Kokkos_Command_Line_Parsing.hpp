@@ -46,6 +46,7 @@
 #define KOKKOS_COMMAND_LINE_PARSING_HPP
 
 #include <string>
+#include <regex>
 
 namespace Kokkos {
 namespace Impl {
@@ -62,6 +63,8 @@ void warn_deprecated_environment_variable(std::string deprecated,
 void warn_deprecated_command_line_argument(std::string deprecated);
 void warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string use_instead);
+void warn_not_recognized_command_line_argument(std::string not_recognized);
+void do_not_warn_not_recognized_command_line_argument(std::regex ignore);
 }  // namespace Impl
 }  // namespace Kokkos
 

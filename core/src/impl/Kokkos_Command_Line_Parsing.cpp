@@ -268,3 +268,27 @@ void Kokkos::Impl::warn_deprecated_command_line_argument(
             << " Raised by Kokkos::initialize(int argc, char* argv[])."
             << std::endl;
 }
+
+namespace {
+std::vector<std::regex> do_not_warn_regular_expressions{
+    std::regex{"--kokkos-tool.*", std::regex::egrep},
+};
+}
+
+void Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
+    std::regex ignore) {
+  do_not_warn_regular_expressions.push_back(std::move(ignore));
+}
+
+void Kokkos::Impl::warn_not_recognized_command_line_argument(
+    std::string not_recognized) {
+  for (auto const& ignore : do_not_warn_regular_expressions) {
+    if (std::regex_match(not_recognized, ignore)) {
+      return;
+    }
+  }
+  std::cerr << "Warning: command line argument '" << not_recognized
+            << "' is not recognized."
+            << " Raised by Kokkos::initialize(int argc, char* argv[])."
+            << std::endl;
+}

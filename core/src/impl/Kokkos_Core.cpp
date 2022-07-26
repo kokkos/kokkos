@@ -805,9 +805,13 @@ void Kokkos::Impl::parse_command_line_arguments(
 
   int iarg = 0;
   while (iarg < argc) {
+    bool remove_flag = false;
+
     if (check_arg(argv[iarg], "--kokkos-numa") ||
         check_arg(argv[iarg], "--numa")) {
       warn_deprecated_command_line_argument(get_flag(argv[iarg]));
+      // remove flag if prefixed with '--kokkos-'
+      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     } else if (check_arg_int(argv[iarg], "--kokkos-num-threads", num_threads) ||
                check_arg_int(argv[iarg], "--num-threads", num_threads) ||
                check_arg_int(argv[iarg], "--kokkos-threads", num_threads) ||
@@ -824,6 +828,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_num_threads(num_threads);
+      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     } else if (check_arg_int(argv[iarg], "--kokkos-device-id", device_id) ||
                check_arg_int(argv[iarg], "--device-id", device_id) ||
                check_arg_int(argv[iarg], "--kokkos-device", device_id) ||
@@ -839,6 +844,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_device_id(device_id);
+      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     } else if (check_arg(argv[iarg], "--kokkos-num-devices") ||
                check_arg(argv[iarg], "--num-devices") ||
                check_arg(argv[iarg], "--kokkos-ndevices") ||
@@ -901,18 +907,23 @@ void Kokkos::Impl::parse_command_line_arguments(
           settings.set_skip_device(skip_device);
         }
       }
+      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     } else if (check_arg_bool(argv[iarg], "--kokkos-disable-warnings",
                               disable_warnings)) {
       settings.set_disable_warnings(disable_warnings);
+      remove_flag = true;
     } else if (check_arg_bool(argv[iarg], "--kokkos-print-configuration",
                               print_configuration)) {
       settings.set_print_configuration(print_configuration);
+      remove_flag = true;
     } else if (check_arg_bool(argv[iarg], "--kokkos-tune-internals",
                               tune_internals)) {
       settings.set_tune_internals(tune_internals);
+      remove_flag = true;
     } else if (check_arg(argv[iarg], "--kokkos-help") ||
                check_arg(argv[iarg], "--help")) {
-      help_flag = true;
+      help_flag   = true;
+      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     } else if (check_arg_str(argv[iarg], "--kokkos-map-device-id-by",
                              map_device_id_by)) {
       if (!is_valid_map_device_id_by(map_device_id_by)) {
@@ -923,10 +934,12 @@ void Kokkos::Impl::parse_command_line_arguments(
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_map_device_id_by(map_device_id_by);
+      remove_flag = true;
+    } else if (std::regex_match(argv[iarg],
+                                std::regex("-?-kokkos.*", std::regex::egrep))) {
+      warn_not_recognized_command_line_argument(argv[iarg]);
     }
 
-    // remove flag if prefixed with '--kokkos-'
-    bool remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
     if (remove_flag) {
       for (int k = iarg; k < argc - 1; k++) {
         argv[k] = argv[k + 1];
