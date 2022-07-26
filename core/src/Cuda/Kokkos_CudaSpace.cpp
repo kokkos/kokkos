@@ -530,7 +530,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
 }
 
 void SharedAllocationRecord<Kokkos::CudaSpace, void>::deep_copy_header_no_exec(
-    void *ptr, void *header) {
+    void *ptr, const void *header) {
   Kokkos::Cuda exec;
   Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec, ptr, header,
                                                sizeof(SharedAllocationHeader));

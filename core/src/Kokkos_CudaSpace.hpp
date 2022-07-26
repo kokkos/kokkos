@@ -594,6 +594,8 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
 
   // This constructor does not forward to the one without exec_space arg
   // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/, const Kokkos::CudaSpace& arg_space,
@@ -632,7 +634,7 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
 
   // helper function to work around MSVC+NVCC issue
   // https://github.com/kokkos/kokkos/issues/5258
-  void deep_copy_header_no_exec(void*, void*);
+  static void deep_copy_header_no_exec(void*, const void*);
 
  public:
   template <typename AliasType>
@@ -682,6 +684,8 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
 
   // This constructor does not forward to the one without exec_space arg
   // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/,
@@ -755,6 +759,8 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
 
   // This constructor does not forward to the one without exec_space arg
   // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/,

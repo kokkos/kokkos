@@ -263,6 +263,8 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
 
   // This constructor does not forward to the one without exec_space arg
   // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /* exec_space*/, const Kokkos::HostSpace& arg_space,
