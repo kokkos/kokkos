@@ -1749,9 +1749,13 @@ KOKKOS_INLINE_FUNCTION constexpr auto DynRankView<D, P...>::layout() const ->
     case 6: return Impl::as_view_of_rank_n<6>(*this).layout();
     case 7: return Impl::as_view_of_rank_n<7>(*this).layout();
     default:
-      Kokkos::Impl::throw_runtime_exception(
-          "Calling DynRankView::layout on DRV of unexpected rank " +
-          std::to_string(rank()));
+      KOKKOS_IF_ON_HOST(
+          Kokkos::Impl::throw_runtime_exception(
+              "Calling DynRankView::layout on DRV of unexpected rank " +
+              std::to_string(rank()));)
+      KOKKOS_IF_ON_DEVICE(
+          Kokkos::abort(
+              "Calling DYnRankView::layout on DRV of unexpected rank");)
   }
 }
 
