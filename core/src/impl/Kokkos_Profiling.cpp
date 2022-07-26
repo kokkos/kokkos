@@ -77,7 +77,8 @@ void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
 #ifndef KOKKOS_TOOLS_ENABLE_LIBDL
   if (Kokkos::show_warnings()) {
     std::cerr << "Warning: command line argument '" << arg
-              << "' ignored because kokkos-tools is disabled." << std::endl;
+              << "' ignored because kokkos-tools is disabled."
+              << " Raised by Kokkos::initialize()." << std::endl;
   }
 #else
   (void)arg;
@@ -88,7 +89,8 @@ void warn_env_var_ignored_when_kokkos_tools_disabled(char const* env_var,
 #ifndef KOKKOS_TOOLS_ENABLE_LIBDL
   if (Kokkos::show_warnings()) {
     std::cerr << "Warning: environment variable '" << env_var << "=" << val
-              << "' ignored because kokkos-tools is disabled." << std::endl;
+              << "' ignored because kokkos-tools is disabled."
+              << " Raised by Kokkos::initialize()." << std::endl;
   }
 #else
   (void)env_var;
@@ -182,8 +184,8 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
       std::stringstream ss;
       ss << "Error: environment variables 'KOKKOS_PROFILE_LIBRARY="
          << env_profile_library << "' and 'KOKKOS_TOOLS_LIBS=" << env_tools_libs
-         << "' are both set and do not match.";
-      ss << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << "' are both set and do not match."
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     libs = env_tools_libs;
