@@ -118,7 +118,6 @@ TEST(TEST_CATEGORY, view_is_assignable) {
 
   // reference type and const-qualified types
   using SomeViewType = View<int*, left, d_exec>;
-#if defined(KOKKOS_ENABLE_CXX17)
   static_assert(is_always_assignable_v<SomeViewType, SomeViewType>);
   static_assert(is_always_assignable_v<SomeViewType, SomeViewType&>);
   static_assert(is_always_assignable_v<SomeViewType, SomeViewType const>);
@@ -127,19 +126,5 @@ TEST(TEST_CATEGORY, view_is_assignable) {
   static_assert(is_always_assignable_v<SomeViewType&, SomeViewType&>);
   static_assert(is_always_assignable_v<SomeViewType&, SomeViewType const>);
   static_assert(is_always_assignable_v<SomeViewType&, SomeViewType const&>);
-#else
-  static_assert(is_always_assignable<SomeViewType, SomeViewType>::value, "");
-  static_assert(is_always_assignable<SomeViewType, SomeViewType&>::value, "");
-  static_assert(is_always_assignable<SomeViewType, SomeViewType const>::value,
-                "");
-  static_assert(is_always_assignable<SomeViewType, SomeViewType const&>::value,
-                "");
-  static_assert(is_always_assignable<SomeViewType&, SomeViewType>::value, "");
-  static_assert(is_always_assignable<SomeViewType&, SomeViewType&>::value, "");
-  static_assert(is_always_assignable<SomeViewType&, SomeViewType const>::value,
-                "");
-  static_assert(is_always_assignable<SomeViewType&, SomeViewType const&>::value,
-                "");
-#endif
 }
 }  // namespace Test
