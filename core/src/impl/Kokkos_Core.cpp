@@ -334,7 +334,7 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
            << "' in environment variable 'KOKKOS_VISIBLE_DEVICES="
            << env_visible_devices << "'."
            << " Device id cannot be negative!"
-           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+           << " Raised by Kokkos::initialize().\n";
       }
       if (id >= device_count) {
         ss << "Error: Invalid device id '" << id
@@ -342,7 +342,7 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
            << env_visible_devices << "'."
            << " Device id must be smaller than the number of GPUs available"
            << " for execution '" << device_count << "'!"
-           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+           << " Raised by Kokkos::initialize().\n";
       }
     }
   } else {
@@ -353,7 +353,7 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
       ss << "Error: Specified number of devices '" << num_devices
          << "' exceeds the actual number of GPUs available for execution '"
          << device_count << "'."
-         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     for (int i = 0; i < num_devices; ++i) {
@@ -363,7 +363,7 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
       if (visible_devices.size() == 1 && settings.get_skip_device() == 0) {
         Kokkos::abort(
             "Error: skipping the only GPU available for execution.\n"
-            " Raised by Kokkos::initialize(int argc, char* argv[]).\n");
+            " Raised by Kokkos::initialize().\n");
       }
       visible_devices.erase(
           std::remove(visible_devices.begin(), visible_devices.end(),
@@ -374,7 +374,7 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
   if (visible_devices.empty()) {
     Kokkos::abort(
         "Error: no GPU available for execution.\n"
-        " Raised by Kokkos::initialize(int argc, char* argv[]).\n");
+        " Raised by Kokkos::initialize().\n");
   }
   return visible_devices;
 }
@@ -390,14 +390,14 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
       std::stringstream ss;
       ss << "Error: Requested GPU with invalid id '" << id << "'."
          << " Device id cannot be negative!"
-         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     if (id >= num_devices) {
       std::stringstream ss;
       ss << "Error: Requested GPU with id '" << id << "' but only "
          << num_devices << "GPU(s) available!"
-         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     return visible_devices[settings.get_device_id()];
@@ -409,7 +409,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     std::stringstream ss;
     ss << "Error: map_device_id_by setting '" << settings.get_map_device_id_by()
        << "' is not recognized."
-       << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+       << " Raised by Kokkos::initialize().\n";
     Kokkos::abort(ss.str().c_str());
   }
 
@@ -437,8 +437,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     if (settings.has_map_device_id_by()) {
       std::cerr << "Warning: unable to detect local MPI rank."
                 << " Falling back to the first GPU available for execution."
-                << " Raised by Kokkos::initialize(int argc, char* argv[])."
-                << std::endl;
+                << " Raised by Kokkos::initialize()." << std::endl;
     }
     return visible_devices[0];
   }
@@ -824,7 +823,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         std::stringstream ss;
         ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
            << " The number of threads must be greater than or equal to one."
-           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+           << " Raised by Kokkos::initialize().\n";
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_num_threads(num_threads);
@@ -840,7 +839,8 @@ void Kokkos::Impl::parse_command_line_arguments(
       if (!is_valid_device_id(device_id)) {
         std::stringstream ss;
         ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
-           << " The device id must be greater than or equal to zero.\n";
+           << " The device id must be greater than or equal to zero."
+           << " Raised by Kokkos::initialize().\n";
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_device_id(device_id);
@@ -870,8 +870,8 @@ void Kokkos::Impl::parse_command_line_arguments(
             (strncmp(argv[iarg], "--ndevices=", 11) == 0)))
         throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
-            "'--kokkos-num-devices'. Raised by "
-            "Kokkos::initialize(int argc, char* argv[]).");
+            "'--kokkos-num-devices'."
+            " Raised by Kokkos::initialize().");
 
       char* num1      = strchr(argv[iarg], '=') + 1;
       char* num2      = strpbrk(num1, ",");
@@ -883,8 +883,8 @@ void Kokkos::Impl::parse_command_line_arguments(
       if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
         throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
-            "'--kokkos-num-devices'. Raised by "
-            "Kokkos::initialize(int argc, char* argv[]).");
+            "'--kokkos-num-devices'."
+            " Raised by Kokkos::initialize().");
       }
       if (check_arg(argv[iarg], "--kokkos-num-devices") ||
           check_arg(argv[iarg], "--kokkos-ndevices")) {
@@ -898,8 +898,8 @@ void Kokkos::Impl::parse_command_line_arguments(
         if ((!is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
           throw_runtime_exception(
               "Error: expecting an integer number after command line argument "
-              "'--kokkos-num-devices=XX,'. Raised by "
-              "Kokkos::initialize(int argc, char* argv[]).");
+              "'--kokkos-num-devices=XX,'."
+              " Raised by Kokkos::initialize().");
 
         if (check_arg(argv[iarg], "--kokkos-num-devices") ||
             check_arg(argv[iarg], "--kokkos-ndevices")) {
@@ -930,7 +930,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         std::stringstream ss;
         ss << "Warning: command line argument '--kokkos-map-device-id-by="
            << map_device_id_by << "' is not recognized."
-           << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+           << " Raised by Kokkos::initialize().\n";
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_map_device_id_by(map_device_id_by);
@@ -941,7 +941,10 @@ void Kokkos::Impl::parse_command_line_arguments(
     }
 
     if (remove_flag) {
-      for (int k = iarg; k < argc - 1; k++) {
+      // Shift the remainder of the argv list by one.  Note that argv has
+      // (argc + 1) arguments, the last one always being nullptr.  The following
+      // loop moves the trailing nullptr element as well
+      for (int k = iarg; k < argc; ++k) {
         argv[k] = argv[k + 1];
       }
       argc--;
@@ -983,7 +986,7 @@ void Kokkos::Impl::parse_environment_variables(
       ss << "Error: environment variable 'KOKKOS_NUM_THREADS=" << num_threads
          << "' is invalid."
          << " The number of threads must be greater than or equal to one."
-         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     settings.set_num_threads(num_threads);
@@ -994,7 +997,8 @@ void Kokkos::Impl::parse_environment_variables(
       std::stringstream ss;
       ss << "Error: environment variable 'KOKKOS_DEVICE_ID" << device_id
          << "' is invalid."
-         << " The device id must be greater than or equal to zero.\n";
+         << " The device id must be greater than or equal to zero."
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     settings.set_device_id(device_id);
@@ -1007,7 +1011,7 @@ void Kokkos::Impl::parse_environment_variables(
     Impl::throw_runtime_exception(
         "Error: cannot specify both KOKKOS_NUM_DEVICES and "
         "KOKKOS_RAND_DEVICES."
-        " Raised by Kokkos::initialize(int argc, char* argv[]).");
+        " Raised by Kokkos::initialize().");
   }
   if (has_num_devices) {
     warn_deprecated_environment_variable("KOKKOS_NUM_DEVICES",
@@ -1043,13 +1047,14 @@ void Kokkos::Impl::parse_environment_variables(
   if (map_device_id_by != nullptr) {
     if (std::getenv("KOKKOS_DEVICE_ID")) {
       std::cerr << "Warning: environment variable KOKKOS_MAP_DEVICE_ID_BY"
-                << "ignored since KOKKOS_DEVICE_ID is specified." << std::endl;
+                << "ignored since KOKKOS_DEVICE_ID is specified."
+                << " Raised by Kokkos::initialize()." << std::endl;
     }
     if (!is_valid_map_device_id_by(map_device_id_by)) {
       std::stringstream ss;
       ss << "Warning: environment variable 'KOKKOS_MAP_DEVICE_ID_BY="
          << map_device_id_by << "' is not recognized."
-         << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     settings.set_map_device_id_by(map_device_id_by);
