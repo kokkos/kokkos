@@ -130,7 +130,7 @@ template <> struct norm_min_helper<long double> { static constexpr long double v
 template <class> struct denorm_min_helper {};
 //                               Workaround for GCC <9.2, Clang <9, Intel
 //                               vvvvvvvvvvvvvvvvvvvvvvvvv
-#if defined(KOKKOS_ENABLE_CXX17) && defined (FLT_TRUE_MIN) || defined(_MSC_VER)
+#if defined (FLT_TRUE_MIN) || defined(_MSC_VER)
 template <> struct denorm_min_helper<float> { static constexpr float value = FLT_TRUE_MIN; };
 template <> struct denorm_min_helper<double> { static constexpr double value = DBL_TRUE_MIN; };
 template <> struct denorm_min_helper<long double> { static constexpr long double value = LDBL_TRUE_MIN; };
