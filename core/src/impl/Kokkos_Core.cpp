@@ -941,7 +941,10 @@ void Kokkos::Impl::parse_command_line_arguments(
     }
 
     if (remove_flag) {
-      for (int k = iarg; k < argc - 1; k++) {
+      // Shift the remainder of the argv list by one.  Note that argv has
+      // (argc + 1) arguments, the last one always being nullptr.  The following
+      // loop moves the trailing nullptr element as well
+      for (int k = iarg; k < argc; ++k) {
         argv[k] = argv[k + 1];
       }
       argc--;

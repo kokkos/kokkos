@@ -150,14 +150,22 @@ void parse_command_line_arguments(int& argc, char* argv[],
       help = InitArguments::PossiblyUnsetOption::on;
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
-    } else {
-      iarg++;
+    } else if (std::regex_match(argv[iarg], std::regex("-?-kokkos-tool.*",
+                                                       std::regex::egrep))) {
+      std::cerr << "Warning: command line argument '" << argv[iarg]
+                << "' is not recognized."
+                << " Raised by Kokkos::initialize()." << std::endl;
     }
     if (remove_flag) {
-      for (int k = iarg; k < argc - 1; k++) {
+      // Shift the remainder of the argv list by one.  Note that argv has
+      // (argc + 1) arguments, the last one always being nullptr.  The following
+      // loop moves the trailing nullptr element as well
+      for (int k = iarg; k < argc; ++k) {
         argv[k] = argv[k + 1];
       }
       argc--;
+    } else {
+      iarg++;
     }
     if ((args == Kokkos::Tools::InitArguments::unset_string_option) && argc > 0)
       args = argv[0];
