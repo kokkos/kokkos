@@ -124,7 +124,7 @@
 #define KOKKOS_LAMBDA [=]
 #endif
 
-#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)) && \
+#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)) || defined(KOKKOS_ENABLE_CXX23) && \
     !defined(KOKKOS_CLASS_LAMBDA)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
@@ -644,7 +644,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20) || defined(KOKKOS_ENABLE_CXX23)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 #else
 #define KOKKOS_ATTRIBUTE_NODISCARD

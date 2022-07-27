@@ -54,7 +54,7 @@
 #include <hip/hip_runtime_api.h>
 
 #define KOKKOS_LAMBDA [=] __host__ __device__
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20) || defined(KOKKOS_ENABLE_CXX23)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
 
