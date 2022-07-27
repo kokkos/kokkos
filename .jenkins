@@ -40,7 +40,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -112,7 +112,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=23 \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
@@ -163,7 +163,7 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-4.5-C++17') {
+                stage('HIP-ROCm-4.5-C++20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
@@ -180,7 +180,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
@@ -222,7 +222,7 @@ pipeline {
                                 -Bbuild \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=amdclang++ \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
@@ -266,7 +266,7 @@ pipeline {
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=20 \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
