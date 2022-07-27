@@ -459,10 +459,10 @@ __device__ inline int64_t hip_get_scratch_index(
   int64_t threadid = 0;
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
-    int64_t const wraparound_len = Kokkos::Experimental::min(
-        int64_t(league_size),
-        (int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n)) /
-            (blockDim.x * blockDim.y));
+    int64_t const wraparound_len =
+        Kokkos::min(int64_t(league_size),
+                    (int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n)) /
+                        (blockDim.x * blockDim.y));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;

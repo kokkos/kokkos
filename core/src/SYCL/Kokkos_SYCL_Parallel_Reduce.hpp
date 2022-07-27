@@ -66,7 +66,7 @@ namespace SYCLReduction {
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     sycl::nd_item<dim>& item, sycl::local_ptr<ValueType> local_mem,
-    sycl::global_ptr<ValueType> results_ptr,
+    sycl::device_ptr<ValueType> results_ptr,
     sycl::global_ptr<ValueType> device_accessible_result_ptr,
     const unsigned int value_count, const ReducerType& final_reducer,
     bool final, unsigned int max_size) {
@@ -138,7 +138,7 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     sycl::nd_item<dim>& item, sycl::local_ptr<ValueType> local_mem,
-    ValueType local_value, sycl::global_ptr<ValueType> results_ptr,
+    ValueType local_value, sycl::device_ptr<ValueType> results_ptr,
     sycl::global_ptr<ValueType> device_accessible_result_ptr,
     const ReducerType& final_reducer, bool final, unsigned int max_size) {
   const auto local_id = item.get_local_linear_id();
@@ -266,7 +266,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = space.sycl_queue();
 
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size       = 128;
@@ -279,11 +279,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const unsigned int value_count =
         Analysis::value_count(ReducerConditional::select(m_functor, m_reducer));
     const auto results_ptr =
-        static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
+        static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
             sizeof(value_type) * std::max(value_count, 1u) * init_size));
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
-    auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
+    auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
         instance.scratch_flags(sizeof(unsigned int)));
 
     sycl::event last_reduction_event;
@@ -456,9 +456,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      space.fence(
-          "Kokkos::Impl::ParallelReduce::sycl_direct_launch: fence due to "
-          "inaccessible reducer result location");
     }
 
     return last_reduction_event;
@@ -580,7 +577,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = m_space.sycl_queue();
 
     const typename Policy::index_type nwork = m_policy.m_num_tiles;
     const typename Policy::index_type block_size =
@@ -598,11 +595,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const unsigned int value_count =
         Analysis::value_count(ReducerConditional::select(m_functor, m_reducer));
     const auto results_ptr =
-        static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
+        static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
             sizeof(value_type) * std::max(value_count, 1u) * init_size));
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
-    auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
+    auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
         instance.scratch_flags(sizeof(unsigned int)));
 
     sycl::event last_reduction_event;
@@ -783,9 +780,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           m_space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
-      m_space.fence(
-          "Kokkos::Impl::ParallelReduce::sycl_direct_launch: fence after deep "
-          "copying results back");
     }
 
     return last_reduction_event;

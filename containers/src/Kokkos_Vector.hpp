@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_VECTOR_HPP
 #define KOKKOS_VECTOR_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
+#endif
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DualView.hpp>
@@ -332,4 +336,8 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
 };
 
 }  // namespace Kokkos
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
+#endif
 #endif

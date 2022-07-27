@@ -42,6 +42,15 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#else
+KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
+#endif
+#endif
 #ifndef KOKKOS_OPENMPTARGETSPACE_HPP
 #define KOKKOS_OPENMPTARGETSPACE_HPP
 
@@ -215,6 +224,15 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
  protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
+
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::Experimental::OpenMPTargetSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &deallocate)
+      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
+                               arg_dealloc) {}
 
   SharedAllocationRecord(
       const Kokkos::Experimental::OpenMPTargetSpace& arg_space,

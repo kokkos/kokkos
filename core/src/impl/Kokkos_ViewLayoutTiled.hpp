@@ -493,8 +493,14 @@ struct ViewOffset<
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N2, m_dim.N3,
-                        m_dim.N4, m_dim.N5, m_dim.N6, m_dim.N7);
+    return array_layout((VORank > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (VORank > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (VORank > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (VORank > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (VORank > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (VORank > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (VORank > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (VORank > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {

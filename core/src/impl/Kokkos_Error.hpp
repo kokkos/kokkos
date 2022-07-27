@@ -150,6 +150,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     CudaHostAlloc,
     HIPMalloc,
     HIPHostMalloc,
+    HIPMallocManaged,
     SYCLMallocDevice,
     SYCLMallocShared,
     SYCLMallocHost

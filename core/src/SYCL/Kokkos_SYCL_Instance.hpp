@@ -66,9 +66,9 @@ class SYCLInternal {
   SYCLInternal& operator=(SYCLInternal&&) = delete;
   SYCLInternal(SYCLInternal&&)            = delete;
 
-  sycl::global_ptr<void> scratch_space(const std::size_t size);
-  sycl::global_ptr<void> scratch_flags(const std::size_t size);
-  sycl::global_ptr<void> resize_team_scratch_space(std::int64_t bytes,
+  sycl::device_ptr<void> scratch_space(const std::size_t size);
+  sycl::device_ptr<void> scratch_flags(const std::size_t size);
+  sycl::device_ptr<void> resize_team_scratch_space(std::int64_t bytes,
                                                    bool force_shrink = false);
 
   uint32_t impl_get_instance_id() const;
@@ -79,14 +79,14 @@ class SYCLInternal {
   uint64_t m_maxShmemPerBlock = 0;
 
   std::size_t m_scratchSpaceCount            = 0;
-  sycl::global_ptr<size_type> m_scratchSpace = nullptr;
+  sycl::device_ptr<size_type> m_scratchSpace = nullptr;
   std::size_t m_scratchFlagsCount            = 0;
-  sycl::global_ptr<size_type> m_scratchFlags = nullptr;
+  sycl::device_ptr<size_type> m_scratchFlags = nullptr;
   // mutex to access shared memory
   mutable std::mutex m_mutexScratchSpace;
 
   int64_t m_team_scratch_current_size       = 0;
-  sycl::global_ptr<void> m_team_scratch_ptr = nullptr;
+  sycl::device_ptr<void> m_team_scratch_ptr = nullptr;
   mutable std::mutex m_team_scratch_mutex;
 
   uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<

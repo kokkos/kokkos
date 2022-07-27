@@ -248,11 +248,11 @@ void test_view_mapping() {
     ASSERT_EQ(layout.dimension[0], 2u);
     ASSERT_EQ(layout.dimension[1], 3u);
     ASSERT_EQ(layout.dimension[2], 4u);
-    ASSERT_EQ(layout.dimension[3], 1u);
-    ASSERT_EQ(layout.dimension[4], 1u);
-    ASSERT_EQ(layout.dimension[5], 1u);
-    ASSERT_EQ(layout.dimension[6], 1u);
-    ASSERT_EQ(layout.dimension[7], 1u);
+    ASSERT_EQ(layout.dimension[3], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[4], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[5], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[6], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[7], KOKKOS_INVALID_INDEX);
 
     ASSERT_EQ(stride3.m_dim.rank, 3u);
     ASSERT_EQ(stride3.m_dim.N0, 2u);

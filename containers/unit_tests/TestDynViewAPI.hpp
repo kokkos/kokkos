@@ -716,6 +716,7 @@ class TestDynViewAPI {
     run_test_subview_strided();
     run_test_vector();
     run_test_as_view_of_rank_n();
+    run_test_layout();
   }
 
   static void run_operator_test_rank12345() {
@@ -1150,9 +1151,6 @@ class TestDynViewAPI {
 #endif  // MDRangePolict Rank < 7
 
 #endif  // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-
-    // Error checking test
-    EXPECT_ANY_THROW({ auto v_copy = Kokkos::Impl::as_view_of_rank_n<2>(d); });
   }
 
   static void run_test_scalar() {
@@ -1889,6 +1887,28 @@ class TestDynViewAPI {
     const_smultivector_type cmv(mv);
     typename smultivector_type::const_type cmvX(cmv);
     typename const_smultivector_type::const_type ccmvX(cmv);
+  }
+
+  static void run_test_layout() {
+    Kokkos::DynRankView<double> d("source", 1, 2, 3, 4);
+    Kokkos::DynRankView<double> e("dest");
+
+    auto props = Kokkos::view_alloc(Kokkos::WithoutInitializing, d.label());
+    e          = Kokkos::DynRankView<double>(props, d.layout());
+
+    ASSERT_EQ(d.rank(), 4u);
+    ASSERT_EQ(e.rank(), 4u);
+    ASSERT_EQ(e.label(), "source");
+
+    auto ulayout = e.layout();
+    ASSERT_EQ(ulayout.dimension[0], 1u);
+    ASSERT_EQ(ulayout.dimension[1], 2u);
+    ASSERT_EQ(ulayout.dimension[2], 3u);
+    ASSERT_EQ(ulayout.dimension[3], 4u);
+    ASSERT_EQ(ulayout.dimension[4], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(ulayout.dimension[5], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(ulayout.dimension[6], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(ulayout.dimension[7], KOKKOS_INVALID_INDEX);
   }
 };
 
