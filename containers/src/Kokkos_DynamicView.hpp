@@ -646,8 +646,12 @@ inline auto create_mirror(
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
 
-  return typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
+  auto ret = typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
       prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
+
+  ret.resize_serial(src.extent(0));
+
+  return ret;
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -677,9 +681,13 @@ inline auto create_mirror(
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
 
-  return typename Kokkos::Impl::MirrorDynamicViewType<
+  auto ret = typename Kokkos::Impl::MirrorDynamicViewType<
       MemorySpace, T, P...>::view_type(prop_copy, src.chunk_size(),
                                        src.chunk_max() * src.chunk_size());
+
+  ret.resize_serial(src.extent(0));
+
+  return ret;
 }
 }  // namespace Impl
 
@@ -1064,6 +1072,7 @@ auto create_mirror_view_and_copy(
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type(
       arg_prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
+  mirror.resize_serial(src.extent(0));
   if (alloc_prop_input::has_execution_space) {
     using ExecutionSpace = typename alloc_prop::execution_space;
     deep_copy(
