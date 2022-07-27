@@ -420,12 +420,16 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview) {
       [&]() {
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
+        ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(Kokkos::WithoutInitializing,
                                                  TEST_EXECSPACE{}, host_view);
+        ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, device_view);
+        ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, TEST_EXECSPACE{}, host_view);
+        ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -447,16 +451,20 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview_viewctor) {
       [&]() {
         auto mirror_device = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
+        ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
+        ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -487,6 +495,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynrankview) {
             Kokkos::view_alloc(TEST_EXECSPACE{},
                                typename TEST_EXECSPACE::memory_space{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_device.size());
         // Avoid fences for deallocation when mirror_device goes out of scope.
         device_view = mirror_device;
       },
@@ -511,12 +520,16 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
       [&]() {
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
+        ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(Kokkos::WithoutInitializing,
                                                  TEST_EXECSPACE{}, host_view);
+        ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, device_view);
+        ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, TEST_EXECSPACE{}, host_view);
+        ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -539,16 +552,20 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
       [&]() {
         auto mirror_device = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
+        ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
+        ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -580,12 +597,14 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
             Kokkos::view_alloc(TEST_EXECSPACE{},
                                typename TEST_EXECSPACE::memory_space{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_device.size());
         // Avoid fences for deallocation when mirror_device goes out of scope.
         device_view               = mirror_device;
         auto mirror_device_mirror = Kokkos::create_mirror_view_and_copy(
             Kokkos::view_alloc(TEST_EXECSPACE{},
                                typename TEST_EXECSPACE::memory_space{}),
             mirror_device);
+        ASSERT_EQ(mirror_device_mirror.size(), mirror_device.size());
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found parallel_for event"}};
@@ -603,19 +622,25 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview) {
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::DynamicView<int*, TEST_EXECSPACE> device_view(
       "device view", 2, 10);
+  device_view.resize_serial(10);
   Kokkos::Experimental::DynamicView<int*, Kokkos::HostSpace> host_view(
       "host view", 2, 10);
+  host_view.resize_serial(10);
 
   auto success = validate_absence(
       [&]() {
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
+        ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(Kokkos::WithoutInitializing,
                                                  TEST_EXECSPACE{}, host_view);
+        ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, device_view);
+        ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, TEST_EXECSPACE{}, host_view);
+        ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -638,6 +663,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
 
   Kokkos::Experimental::DynamicView<int*, Kokkos::HostSpace> host_view(
       "host view", 2, 10);
+  host_view.resize_serial(10);
   decltype(Kokkos::create_mirror_view_and_copy(TEST_EXECSPACE{},
                                                host_view)) device_view;
 
@@ -647,12 +673,14 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
             Kokkos::view_alloc(TEST_EXECSPACE{},
                                typename TEST_EXECSPACE::memory_space{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_device.size());
         // Avoid fences for deallocation when mirror_device goes out of scope.
         device_view               = mirror_device;
         auto mirror_device_mirror = Kokkos::create_mirror_view_and_copy(
             Kokkos::view_alloc(TEST_EXECSPACE{},
                                typename TEST_EXECSPACE::memory_space{}),
             mirror_device);
+        ASSERT_EQ(mirror_device_mirror.size(), mirror_device.size());
       },
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("DynamicView::resize_serial: Fence after "
@@ -676,23 +704,29 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview_view_ctor) {
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::DynamicView<int*, Kokkos::DefaultExecutionSpace>
       device_view("device view", 2, 10);
+  device_view.resize_serial(10);
   Kokkos::Experimental::DynamicView<int*, Kokkos::HostSpace> host_view(
       "host view", 2, 10);
+  host_view.resize_serial(10);
 
   auto success = validate_absence(
       [&]() {
         auto mirror_device = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
+        ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
+        ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
+        ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("DynamicView::resize_serial: Fence after "
