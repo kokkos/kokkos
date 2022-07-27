@@ -1133,13 +1133,11 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
   Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_initialized() noexcept {
+[[nodiscard]] bool Kokkos::is_initialized() noexcept {
   return g_is_initialized;
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_finalized() noexcept {
-  return g_is_finalized;
-}
+[[nodiscard]] bool Kokkos::is_finalized() noexcept { return g_is_finalized; }
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 

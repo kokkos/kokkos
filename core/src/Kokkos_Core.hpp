@@ -102,8 +102,8 @@ void declare_configuration_metadata(const std::string& category,
 
 }  // namespace Impl
 
-KOKKOS_ATTRIBUTE_NODISCARD bool is_initialized() noexcept;
-KOKKOS_ATTRIBUTE_NODISCARD bool is_finalized() noexcept;
+[[nodiscard]] bool is_initialized() noexcept;
+[[nodiscard]] bool is_finalized() noexcept;
 
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
@@ -227,10 +227,10 @@ inline std::string scopeguard_destruct_after_finalize_warning() {
 }  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
+class [[nodiscard]] ScopeGuard {
  public:
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
-  KOKKOS_ATTRIBUTE_NODISCARD
+  [[nodiscard]]
 #endif
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
@@ -251,10 +251,10 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   }
 
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
-  KOKKOS_ATTRIBUTE_NODISCARD
+  [[nodiscard]]
 #endif
-  explicit ScopeGuard(
-      const InitializationSettings& settings = InitializationSettings()) {
+  explicit ScopeGuard(const InitializationSettings& settings =
+                          InitializationSettings()) {
     sg_init = false;
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
     if (is_initialized()) {
@@ -291,18 +291,18 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard& operator=(const ScopeGuard&) = delete;
   ScopeGuard& operator=(ScopeGuard&&) = delete;
   ScopeGuard(const ScopeGuard&)       = delete;
-  ScopeGuard(ScopeGuard&&)            = delete;
+  ScopeGuard(ScopeGuard &&)           = delete;
 };
 
 #else  // ifndef KOKKOS_ENABLE_DEPRECATED_CODE3
 
-class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
+class [[nodiscard]] ScopeGuard {
  public:
   template <class... Args>
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
-  KOKKOS_ATTRIBUTE_NODISCARD
+  [[nodiscard]]
 #endif
-  ScopeGuard(Args&&... args) {
+  ScopeGuard(Args && ... args) {
     if (is_initialized()) {
       Kokkos::abort(
           Impl::scopeguard_create_while_initialized_warning().c_str());
@@ -323,7 +323,7 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   ScopeGuard& operator=(const ScopeGuard&) = delete;
   ScopeGuard& operator=(ScopeGuard&&) = delete;
   ScopeGuard(const ScopeGuard&)       = delete;
-  ScopeGuard(ScopeGuard&&)            = delete;
+  ScopeGuard(ScopeGuard &&)           = delete;
 };
 #endif
 

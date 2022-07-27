@@ -205,16 +205,6 @@
 //  of the supported OpenMP API version.
 #endif  // #if defined( _OPENMP )
 
-#if defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
-#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
-#define KOKKOS_IMPL_FALLTHROUGH [[gnu::fallthrough]];
-#elif defined(KOKKOS_COMPILER_CLANG)
-#define KOKKOS_IMPL_FALLTHROUGH [[clang::fallthrough]];
-#else
-#define KOKKOS_IMPL_FALLTHROUGH
-#endif
-
 //----------------------------------------------------------------------------
 // Intel compiler macros
 
@@ -643,13 +633,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // View
 #if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
-#endif
-
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20) || \
-    defined(KOKKOS_ENABLE_CXX23)
-#define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
-#else
-#define KOKKOS_ATTRIBUTE_NODISCARD
 #endif
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
