@@ -41,7 +41,6 @@ SET(SOURCES
   PerfTest_ViewCopy_a8.cpp
   PerfTest_ViewCopy_b8.cpp
   PerfTest_ViewCopy_c8.cpp
-  PerfTest_ViewCopy_d8.cpp
   PerfTest_ViewAllocate.cpp
   PerfTest_ViewFill_123.cpp
   PerfTest_ViewFill_45.cpp
@@ -202,7 +201,7 @@ ENDFUNCTION()
 SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
-  Benchmark_ViewCopy.cpp
+  PerfTest_ViewCopy_d8.cpp
 )
 
 KOKKOS_ADD_BENCHMARK(
