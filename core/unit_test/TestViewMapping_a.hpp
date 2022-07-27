@@ -446,8 +446,8 @@ void test_view_mapping() {
     Kokkos::Impl::ViewDimension<N0, N1, N2, N3> dim;
 
     SubviewExtents tmp(dim, N0 / 2, Kokkos::ALL,
-                       std::pair<int, int>(N2 / 4, 10 + N2 / 4),
-                       Kokkos::pair<int, int>(N3 / 4, 20 + N3 / 4));
+                       std::pair<size_t, size_t>(N2 / 4, 10 + N2 / 4),
+                       Kokkos::pair<size_t, size_t>(N3 / 4, 20 + N3 / 4));
 
     ASSERT_EQ(tmp.domain_offset(0), N0 / 2);
     ASSERT_EQ(tmp.domain_offset(1), 0u);
