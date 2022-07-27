@@ -124,8 +124,9 @@
 #define KOKKOS_LAMBDA [=]
 #endif
 
-#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)) || \
-    defined(KOKKOS_ENABLE_CXX23) && !defined(KOKKOS_CLASS_LAMBDA)
+#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20) || \
+     defined(KOKKOS_ENABLE_CXX23)) &&                                \
+    !defined(KOKKOS_CLASS_LAMBDA)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
 
