@@ -52,8 +52,6 @@
 #include <winsock2.h>
 #include <windows.h>
 
-#undef VOID
-
 namespace Kokkos {
 namespace Impl {
 #ifdef _MSC_VER
