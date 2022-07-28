@@ -57,6 +57,20 @@ struct SomeExecutionSpace {
 };
 static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
 
+}  // namespace Test
+
+namespace Kokkos::Impl {
+
+template <typename... Properties>
+struct TeamPolicyInternal<Test::SomeExecutionSpace, Properties...> {
+  template <typename... Args>
+  TeamPolicyInternal(Args&&...) {}
+};
+
+}  // namespace Kokkos::Impl
+
+namespace Test {
+
 struct ImplicitlyConvertibleToDefaultExecutionSpace {
   operator Kokkos::DefaultExecutionSpace() const {
     return Kokkos::DefaultExecutionSpace();
@@ -304,97 +318,95 @@ class TestRangePolicyConstruction {
   }
 
   void test_compile_time_deduction_guides() {
-    {
-      Kokkos::DefaultExecutionSpace des{};
-      ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
-      SomeExecutionSpace ses{};
-      ExecutionSpace es{};
+    Kokkos::DefaultExecutionSpace des{};
+    ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
+    SomeExecutionSpace ses{};
+    ExecutionSpace es{};
 
-      using RPES = std::conditional_t<
-          std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace>,
-          Kokkos::RangePolicy<>, Kokkos::RangePolicy<ExecutionSpace>>;
+    using RPES = std::conditional_t<
+        std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace>,
+        Kokkos::RangePolicy<>, Kokkos::RangePolicy<ExecutionSpace>>;
 
-      int64_t i64{};
-      int32_t i32{};
-      Kokkos::ChunkSize cs{0};
+    int64_t i64{};
+    int32_t i32{};
+    Kokkos::ChunkSize cs{0};
 
-      // RangePolicy()
+    // RangePolicy()
 
-      Kokkos::RangePolicy rp0;
-      ASSERT_TRUE((std::is_same_v<decltype(rp0), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rp0;
+    ASSERT_TRUE((std::is_same_v<decltype(rp0), Kokkos::RangePolicy<>>));
 
-      // RangePolicy(execution_space, index_type, index_type)
+    // RangePolicy(execution_space, index_type, index_type)
 
-      Kokkos::RangePolicy rpa1(des, i64, i64);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa1), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpa1(des, i64, i64);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa1), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpa2(notEs, i64, i64);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa2), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpa2(notEs, i64, i64);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa2), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpa3(ses, i64, i64);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa3),
-                                  Kokkos::RangePolicy<SomeExecutionSpace>>));
+    Kokkos::RangePolicy rpa3(ses, i64, i64);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa3),
+                                Kokkos::RangePolicy<SomeExecutionSpace>>));
 
-      Kokkos::RangePolicy rpa4(es, i64, i64);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa4), RPES>));
+    Kokkos::RangePolicy rpa4(es, i64, i64);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa4), RPES>));
 
-      Kokkos::RangePolicy rpa5(des, i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa5), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpa5(des, i32, i32);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa5), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpa6(notEs, i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa6), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpa6(notEs, i32, i32);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa6), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpa7(ses, i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa7),
-                                  Kokkos::RangePolicy<SomeExecutionSpace>>));
+    Kokkos::RangePolicy rpa7(ses, i32, i32);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa7),
+                                Kokkos::RangePolicy<SomeExecutionSpace>>));
 
-      Kokkos::RangePolicy rpa8(es, i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rpa8), RPES>));
+    Kokkos::RangePolicy rpa8(es, i32, i32);
+    ASSERT_TRUE((std::is_same_v<decltype(rpa8), RPES>));
 
-      // RangePolicy(index_type, index_type)
+    // RangePolicy(index_type, index_type)
 
-      Kokkos::RangePolicy rpb1(i64, i64);
-      ASSERT_TRUE((std::is_same_v<decltype(rpb1), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpb1(i64, i64);
+    ASSERT_TRUE((std::is_same_v<decltype(rpb1), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpb2(i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rpb2), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpb2(i32, i32);
+    ASSERT_TRUE((std::is_same_v<decltype(rpb2), Kokkos::RangePolicy<>>));
 
-      // RangePolicy(execution_space, index_type, index_type, Args...)
+    // RangePolicy(execution_space, index_type, index_type, Args...)
 
-      Kokkos::RangePolicy rpc1(des, i64, i64, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc1), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpc1(des, i64, i64, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc1), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpc2(notEs, i64, i64, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc2), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpc2(notEs, i64, i64, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc2), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpc3(ses, i64, i64, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc3),
-                                  Kokkos::RangePolicy<SomeExecutionSpace>>));
+    Kokkos::RangePolicy rpc3(ses, i64, i64, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc3),
+                                Kokkos::RangePolicy<SomeExecutionSpace>>));
 
-      Kokkos::RangePolicy rpc4(es, i64, i64, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc4), RPES>));
+    Kokkos::RangePolicy rpc4(es, i64, i64, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc4), RPES>));
 
-      Kokkos::RangePolicy rpc5(des, i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc5), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpc5(des, i32, i32, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc5), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpc6(notEs, i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc6), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpc6(notEs, i32, i32, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc6), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpc7(ses, i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc7),
-                                  Kokkos::RangePolicy<SomeExecutionSpace>>));
+    Kokkos::RangePolicy rpc7(ses, i32, i32, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc7),
+                                Kokkos::RangePolicy<SomeExecutionSpace>>));
 
-      Kokkos::RangePolicy rpc8(es, i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpc8), RPES>));
+    Kokkos::RangePolicy rpc8(es, i32, i32, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpc8), RPES>));
 
-      // RangePolicy(index_type, index_type, Args...)
+    // RangePolicy(index_type, index_type, Args...)
 
-      Kokkos::RangePolicy rpd1(i64, i64, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpd1), Kokkos::RangePolicy<>>));
+    Kokkos::RangePolicy rpd1(i64, i64, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpd1), Kokkos::RangePolicy<>>));
 
-      Kokkos::RangePolicy rpd2(i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rpd2), Kokkos::RangePolicy<>>));
-    }
+    Kokkos::RangePolicy rpd2(i32, i32, cs);
+    ASSERT_TRUE((std::is_same_v<decltype(rpd2), Kokkos::RangePolicy<>>));
   }
 
   void test_runtime_parameters() {
@@ -443,6 +455,7 @@ class TestTeamPolicyConstruction {
  public:
   TestTeamPolicyConstruction() {
     test_compile_time_parameters();
+    test_compile_time_deduction_guides();
     test_run_time_parameters();
   }
 
@@ -671,6 +684,125 @@ class TestTeamPolicyConstruction {
                                 Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
+  }
+
+  void test_compile_time_deduction_guides() {
+    Kokkos::DefaultExecutionSpace des{};
+    ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
+    SomeExecutionSpace ses{};
+    ExecutionSpace es{};
+
+    using TPES = std::conditional_t<
+        std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace>,
+        Kokkos::TeamPolicy<>, Kokkos::TeamPolicy<ExecutionSpace>>;
+
+    int i{};
+
+    // Execution space not provided deduces to TeamPolicy<>
+
+    Kokkos::TeamPolicy tp;
+    ASSERT_TRUE((std::is_same_v<decltype(tp), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpii(i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpii), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpiii(i, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpiii), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpia(i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpia), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpiai(i, Kokkos::AUTO, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpiai), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpiaa(i, Kokkos::AUTO, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpiaa), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpiia(i, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpiia), Kokkos::TeamPolicy<>>));
+
+    // DefaultExecutionSpace deduces to TeamPolicy<>
+
+    Kokkos::TeamPolicy tpdii(des, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpdii), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpdiii(des, i, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpdiii), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpdia(des, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpdia), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpdiai(des, i, Kokkos::AUTO, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpdiai), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpdiaa(des, i, Kokkos::AUTO, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpdiaa), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpdiia(des, i, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpdiia), Kokkos::TeamPolicy<>>));
+
+    // Convertible to DefaultExecutionSpace deduces to TeamPolicy<>
+
+    Kokkos::TeamPolicy tpnii(notEs, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpnii), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpniii(notEs, i, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpniii), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpnia(notEs, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpnia), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpniai(notEs, i, Kokkos::AUTO, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpniai), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpniaa(notEs, i, Kokkos::AUTO, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpniaa), Kokkos::TeamPolicy<>>));
+
+    Kokkos::TeamPolicy tpniia(notEs, i, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpniia), Kokkos::TeamPolicy<>>));
+
+    // ES != DefaultExecutionSpacea deduces to TeamPolicy<ES>
+
+    Kokkos::TeamPolicy tpsii(ses, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpsii),
+                                Kokkos::TeamPolicy<SomeExecutionSpace>>));
+
+    Kokkos::TeamPolicy tpsiii(ses, i, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiii),
+                                Kokkos::TeamPolicy<SomeExecutionSpace>>));
+
+    Kokkos::TeamPolicy tpsia(ses, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpsia),
+                                Kokkos::TeamPolicy<SomeExecutionSpace>>));
+
+    Kokkos::TeamPolicy tpsiai(ses, i, Kokkos::AUTO, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiai), Kokkos::TeamPolicy<SomeExecutionSpace>>));
+
+    Kokkos::TeamPolicy tpsiaa(ses, i, Kokkos::AUTO, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiaa), Kokkos::TeamPolicy<SomeExecutionSpace>>));
+
+    Kokkos::TeamPolicy tpsiia(ses, i, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiia), Kokkos::TeamPolicy<SomeExecutionSpace>>));
+
+    // Confirm it works for the ExecutionSpace template parameter passed in
+
+    Kokkos::TeamPolicy tpeii(es, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpeii), TPES>));
+
+    Kokkos::TeamPolicy tpeiii(es, i, i, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpeiii), TPES>));
+
+    Kokkos::TeamPolicy tpeia(es, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpeia), TPES>));
+
+    Kokkos::TeamPolicy tpeiai(es, i, Kokkos::AUTO, i);
+    ASSERT_TRUE((std::is_same_v<decltype(tpeiai), TPES>));
+
+    Kokkos::TeamPolicy tpeiaa(es, i, Kokkos::AUTO, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpeiaa), TPES>));
+
+    Kokkos::TeamPolicy tpeiia(es, i, i, Kokkos::AUTO);
+    ASSERT_TRUE((std::is_same_v<decltype(tpeiia), TPES>));
   }
 
   template <class policy_t>
