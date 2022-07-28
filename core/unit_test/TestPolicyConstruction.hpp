@@ -334,21 +334,20 @@ class TestRangePolicyConstruction {
       Kokkos::RangePolicy rp4(es, i64, i64, cs);
       ASSERT_TRUE((std::is_same_v<decltype(rp4), Kokkos::RangePolicy<>>));
 
-      // Deduce to RangePolicy<IndexType<int32_t>>
+      // Take a type convertible to int64_t; Deduce to RangePolicy<>
 
-      using IT32 = Kokkos::IndexType<int32_t>;
-      IT32::type i32{};
+      int32_t i32{};
       Kokkos::RangePolicy rp5(i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rp5), Kokkos::RangePolicy<IT32>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp5), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp6(i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rp6), Kokkos::RangePolicy<IT32>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp6), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp7(es, i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rp7), Kokkos::RangePolicy<IT32>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp7), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp8(es, i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rp8), Kokkos::RangePolicy<IT32>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp8), Kokkos::RangePolicy<>>));
 
       // Deduce to RangePolicy<SomeExecutionSpace>
 
@@ -366,12 +365,12 @@ class TestRangePolicyConstruction {
       Kokkos::RangePolicy rp11(ses, i32, i32);
       ASSERT_TRUE(
           (std::is_same_v<decltype(rp11),
-                          Kokkos::RangePolicy<SomeExecutionSpace, IT32>>));
+                          Kokkos::RangePolicy<SomeExecutionSpace>>));
 
       Kokkos::RangePolicy rp12(ses, i32, i32, cs);
       ASSERT_TRUE(
           (std::is_same_v<decltype(rp12),
-                          Kokkos::RangePolicy<SomeExecutionSpace, IT32>>));
+                          Kokkos::RangePolicy<SomeExecutionSpace>>));
 
       // Test convertible to DefaultExecutionSpace
 
@@ -386,28 +385,26 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same_v<decltype(rp14), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp15(notES, i32, i32);
-      ASSERT_TRUE((std::is_same_v<decltype(rp15), Kokkos::RangePolicy<IT32>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp15), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp16(notES, i32, i32, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rp16), Kokkos::RangePolicy<IT32>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp16), Kokkos::RangePolicy<>>));
 
       // Test mixed index types
       signed char sc{};
       unsigned short us{};
-      using ITUI = Kokkos::IndexType<int>;  // commmon_type<signed char,
-                                            // unsigned short> == int
 
       Kokkos::RangePolicy rp17(us, sc);
-      ASSERT_TRUE((std::is_same_v<decltype(rp17), Kokkos::RangePolicy<ITUI>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp17), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp18(sc, us, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rp18), Kokkos::RangePolicy<ITUI>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp18), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp19(es, sc, us);
-      ASSERT_TRUE((std::is_same_v<decltype(rp19), Kokkos::RangePolicy<ITUI>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp19), Kokkos::RangePolicy<>>));
 
       Kokkos::RangePolicy rp20(es, sc, us, cs);
-      ASSERT_TRUE((std::is_same_v<decltype(rp20), Kokkos::RangePolicy<ITUI>>));
+      ASSERT_TRUE((std::is_same_v<decltype(rp20), Kokkos::RangePolicy<>>));
     }
   }
 

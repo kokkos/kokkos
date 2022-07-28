@@ -282,47 +282,16 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
 RangePolicy()->RangePolicy<>;
 
-template <typename B, typename E, typename... Args,
-          typename = std::enable_if_t<
-              !is_execution_space<B>::value &&
-              !std::is_convertible_v<B, DefaultExecutionSpace> &&
-              std::is_same_v<std::common_type_t<B, E>, int64_t>>>
-RangePolicy(B, E, Args...) -> RangePolicy<>;
+template <typename... Args>
+RangePolicy(int64_t, int64_t, Args...) -> RangePolicy<>;
 
-template <typename B, typename E, typename... Args,
-          typename = std::enable_if_t<
-              !is_execution_space<B>::value &&
-              !std::is_convertible_v<B, DefaultExecutionSpace> &&
-              !std::is_same_v<std::common_type_t<B, E>, int64_t>>>
-RangePolicy(B, E, Args...) -> RangePolicy<IndexType<std::common_type_t<B, E>>>;
+template <typename... Args>
+RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t, Args...)
+    -> RangePolicy<>;
 
-template <typename ES, typename B, typename E, typename... Args,
-          typename = std::enable_if_t<
-              std::is_convertible_v<ES, DefaultExecutionSpace> &&
-              std::is_same_v<std::common_type_t<B, E>, int64_t>>>
-RangePolicy(const ES&, B, E, Args...) -> RangePolicy<>;
-
-template <typename ES, typename B, typename E, typename... Args,
-          typename = std::enable_if_t<
-              is_execution_space<ES>::value &&
-              !std::is_same_v<ES, DefaultExecutionSpace> &&
-              std::is_same_v<std::common_type_t<B, E>, int64_t>>>
-RangePolicy(const ES&, B, E, Args...) -> RangePolicy<ES>;
-
-template <typename ES, typename B, typename E, typename... Args,
-          typename = std::enable_if_t<
-              std::is_convertible_v<ES, DefaultExecutionSpace> &&
-              !std::is_same_v<std::common_type_t<B, E>, int64_t>>>
-RangePolicy(const ES&, B, E, Args...)
-    -> RangePolicy<IndexType<std::common_type_t<B, E>>>;
-
-template <typename ES, typename B, typename E, typename... Args,
-          typename = std::enable_if_t<
-              is_execution_space<ES>::value &&
-              !std::is_same_v<ES, DefaultExecutionSpace> &&
-              !std::is_same_v<std::common_type_t<B, E>, int64_t>>>
-RangePolicy(const ES&, B, E, Args...)
-    -> RangePolicy<ES, IndexType<std::common_type_t<B, E>>>;
+template <typename ES, typename... Args,
+          typename = std::enable_if_t<is_execution_space_v<ES>>>
+RangePolicy(ES const&, int64_t, int64_t, Args...) -> RangePolicy<ES>;
 
 }  // namespace Kokkos
 
