@@ -8,6 +8,7 @@ CHECK_CXX_SOURCE_COMPILES("
   #include <quadmath.h>
   int main(void){
       __float128 foo = ::sqrtq(123.456);
+      return foo;
   }"
   KOKKOS_QUADMATH_COMPILER_SUPPORT)
 IF (KOKKOS_QUADMATH_COMPILER_SUPPORT)
