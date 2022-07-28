@@ -165,14 +165,9 @@ IF(NOT MSVC)
     GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 ENDIF()
 
-IF(Kokkos_ENABLE_TESTS)
-  # add_subdirectory(tpls/benchmark)
-  SET(KOKKOS_BENCHMARK_LIB kokkos_benchmark)
-
-  IF(NOT KOKKOS_HAS_TRILINOS)
+IF(Kokkos_ENABLE_TESTS AND NOT KOKKOS_HAS_TRILINOS)
     find_package(GTest QUIET)
     find_package(benchmark QUIET)
-  ENDIF()
 ENDIF()
 
 # Include a set of Kokkos-specific wrapper functions that
