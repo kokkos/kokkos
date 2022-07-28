@@ -305,14 +305,15 @@ class TestRangePolicyConstruction {
 
   void test_compile_time_deduction_guides() {
     {
+      Kokkos::DefaultExecutionSpace des{};
+      ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
+      SomeExecutionSpace ses{};
       ExecutionSpace es{};
+
       using RPES = std::conditional_t<
           std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace>,
           Kokkos::RangePolicy<>, Kokkos::RangePolicy<ExecutionSpace>>;
 
-      Kokkos::DefaultExecutionSpace des{};
-      ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
-      SomeExecutionSpace ses{};
       int64_t i64{};
       int32_t i32{};
       Kokkos::ChunkSize cs{0};
