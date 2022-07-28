@@ -30,6 +30,11 @@ IF(NOT benchmark_FOUND)
 
   # FIXME: cannot find the headers without this
   include_directories(${benchmark_SOURCE_DIR}/include)
+
+  # Suppress clang-tidy diagnostics on code that we do not have control over
+  IF(CMAKE_CXX_CLANG_TIDY)
+    SET_TARGET_PROPERTIES(benchmark PROPERTIES CXX_CLANG_TIDY "")
+  ENDIF()
 ENDIF()
 
 SET(SOURCES
