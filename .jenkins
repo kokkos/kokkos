@@ -112,7 +112,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
-                                -DCMAKE_CXX_STANDARD=20 \
+                                -DCMAKE_CXX_STANDARD=17 \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
@@ -122,7 +122,7 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-4.5-C++14') {
+                stage('HIP-ROCm-4.5-C++20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
@@ -146,7 +146,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG" \
-                                -DCMAKE_CXX_STANDARD=14 \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
