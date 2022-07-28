@@ -35,6 +35,9 @@ IF(NOT benchmark_FOUND)
   IF(CMAKE_CXX_CLANG_TIDY)
     SET_TARGET_PROPERTIES(benchmark PROPERTIES CXX_CLANG_TIDY "")
   ENDIF()
+
+  target_compile_options(benchmark PRIVATE -w)
+  target_compile_options(benchmark_main PRIVATE -w)
 ENDIF()
 
 SET(SOURCES
