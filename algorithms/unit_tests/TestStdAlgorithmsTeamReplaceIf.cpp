@@ -62,8 +62,7 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewType, class MemberType, class ValueType,
-          class ReplaceIfUnaryOpType>
+template <class ViewType, class MemberType, class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   ValueType m_threshold;
@@ -82,7 +81,7 @@ struct TestFunctorA {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    ReplaceIfUnaryOpType op(m_threshold);
+    GreaterThanValueFunctor<ValueType> op(m_threshold);
     if (m_api_pick == 0) {
       KE::replace_if(member, KE::begin(myRowView), KE::end(myRowView), op,
                      m_newVal);
@@ -136,9 +135,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   using team_member_type = typename policy_type::member_type;
   policy_type policy(numTeams, Kokkos::AUTO());
 
-  using bop_t = GreaterThanValueFunctor<ValueType>;
   using functor_type =
-      TestFunctorA<decltype(dataView), team_member_type, ValueType, bop_t>;
+      TestFunctorA<decltype(dataView), team_member_type, ValueType>;
   functor_type fnc(dataView, threshold, newVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
