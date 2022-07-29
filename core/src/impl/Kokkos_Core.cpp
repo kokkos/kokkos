@@ -624,11 +624,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_ASM", "no");
 #endif
-#ifdef KOKKOS_ENABLE_CXX14
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX14", "yes");
-#else
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX14", "no");
-#endif
 #ifdef KOKKOS_ENABLE_CXX17
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX17", "yes");
 #else
