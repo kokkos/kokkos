@@ -20,6 +20,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
+#include "Kokkos_IsTeamHandle.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
@@ -49,12 +50,15 @@ struct StdReplaceFunctor {
         m_new_value(std::move(new_value)) {}
 };
 
-template <class ExecutionSpace, class IteratorType, class ValueType>
-void replace_impl(const std::string& label, const ExecutionSpace& ex,
-                  IteratorType first, IteratorType last,
-                  const ValueType& old_value, const ValueType& new_value) {
+template <class ExeSpaceOrTeamHandle, class IteratorType, class ValueType,
+          class... Args>
+KOKKOS_FUNCTION void replace_impl(const ExeSpaceOrTeamHandle& ExOrTh,
+                                  IteratorType first, IteratorType last,
+                                  const ValueType& old_value,
+                                  const ValueType& new_value,
+                                  Args&&... labelOrEmpty) {
   // checks
-  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::static_assert_random_access_and_accessible(ExOrTh, first);
   Impl::expect_valid_range(first, last);
 
   // aliases
@@ -62,32 +66,18 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         func_t(first, old_value, new_value));
-  ex.fence("Kokkos::replace: fence after operation");
-}
-
-//
-// team-level impl
-//
-template <class TeamHandleType, class IteratorType, class ValueType>
-KOKKOS_FUNCTION void replace_team_impl(const TeamHandleType& teamHandle,
-                                       IteratorType first, IteratorType last,
-                                       const ValueType& old_value,
-                                       const ValueType& new_value) {
-  // checks
-  Impl::static_assert_random_access_and_accessible(teamHandle, first);
-  Impl::expect_valid_range(first, last);
-
-  // aliases
-  using func_t = StdReplaceFunctor<IteratorType, ValueType>;
-
-  // run
-  const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         func_t(first, old_value, new_value));
-  teamHandle.team_barrier();
+  if constexpr (is_team_handle<ExeSpaceOrTeamHandle>::value) {
+    static_assert(sizeof...(Args) == 0);
+    ::Kokkos::parallel_for(TeamThreadRange(ExOrTh, 0, num_elements),
+                           func_t(first, old_value, new_value));
+    ExOrTh.team_barrier();
+  } else {
+    ::Kokkos::parallel_for(
+        std::forward<Args>(labelOrEmpty)...,
+        RangePolicy<ExeSpaceOrTeamHandle>(ExOrTh, 0, num_elements),
+        func_t(first, old_value, new_value));
+    ExOrTh.fence("Kokkos::replace: fence after operation");
+  }
 }
 
 }  // namespace Impl
