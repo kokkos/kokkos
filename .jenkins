@@ -32,7 +32,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
-                            label 'nvidia-docker && volta'
+                            label 'nvidia-docker && volta && large_images'
                             args '--env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
