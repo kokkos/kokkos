@@ -356,6 +356,8 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
   m_q.reset();
 }
 
+int SYCLInternal::m_syclDev;
+
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::host>;
