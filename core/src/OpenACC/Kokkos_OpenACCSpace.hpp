@@ -198,17 +198,12 @@ class Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-// FIXME_OPENACC: Need to update the DeepCopy implementations below to support
-// multiple execution space instances.
-// The current OpenACC backend implementation assumes that there is only one
-// device execution space instance, and all the device operations (e.g., memory
-// transfers, kernel launches, etc.) are implemented to be synchronous, which
-// does not violate the Kokkos execution semantics with the single execution
-// space instance.
 template <class ExecutionSpace>
-struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
-                              Kokkos::Experimental::OpenACCSpace,
-                              ExecutionSpace> {
+struct Kokkos::Impl::DeepCopy<
+    Kokkos::Experimental::OpenACCSpace, Kokkos::Experimental::OpenACCSpace,
+    ExecutionSpace,
+    std::enable_if_t<
+        std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) {
     // The behavior of acc_memcpy_device when bytes argument is zero is
     // clarified only in the latest OpenACC specification (V3.2), and thus the
@@ -217,32 +212,114 @@ struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
     if (n > 0) acc_memcpy_device(dst, const_cast<void*>(src), n);
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    if (n > 0) acc_memcpy_device(dst, const_cast<void*>(src), n);
+    if (n > 0)
+      acc_memcpy_device_async(dst, const_cast<void*>(src), n,
+                              exec.get_async_id());
   }
 };
-
 template <class ExecutionSpace>
-struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
-                              Kokkos::HostSpace, ExecutionSpace> {
+struct Kokkos::Impl::DeepCopy<
+    Kokkos::Experimental::OpenACCSpace, Kokkos::Experimental::OpenACCSpace,
+    ExecutionSpace,
+    std::enable_if_t<
+        !std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) {
-    if (n > 0) acc_memcpy_to_device(dst, const_cast<void*>(src), n);
+    if (n > 0) acc_memcpy_device(dst, const_cast<void*>(src), n);
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    if (n > 0) acc_memcpy_to_device(dst, const_cast<void*>(src), n);
+    exec.fence(fence_string());
+    if (n > 0)
+      acc_memcpy_device_async(dst, const_cast<void*>(src), n,
+                              exec.get_async_id());
+  }
+
+ private:
+  static const std::string& fence_string() {
+    static const std::string string =
+        std::string("Kokkos::Impl::DeepCopy<") +
+        "Experimental::OpenACCSpace, " +
+        "Experimental::OpenACCSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy";
+    return string;
   }
 };
 
 template <class ExecutionSpace>
 struct Kokkos::Impl::DeepCopy<
-    Kokkos::HostSpace, Kokkos::Experimental::OpenACCSpace, ExecutionSpace> {
+    Kokkos::Experimental::OpenACCSpace, Kokkos::HostSpace, ExecutionSpace,
+    std::enable_if_t<
+        std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value>> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    if (n > 0) acc_memcpy_to_device(dst, const_cast<void*>(src), n);
+  }
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    if (n > 0)
+      acc_memcpy_to_device_async(dst, const_cast<void*>(src), n,
+                                 exec.get_async_id());
+  }
+};
+template <class ExecutionSpace>
+struct Kokkos::Impl::DeepCopy<
+    Kokkos::Experimental::OpenACCSpace, Kokkos::HostSpace, ExecutionSpace,
+    std::enable_if_t<
+        !std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value>> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    if (n > 0) acc_memcpy_to_device(dst, const_cast<void*>(src), n);
+  }
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence(fence_string());
+    if (n > 0)
+      acc_memcpy_to_device_async(dst, const_cast<void*>(src), n,
+                                 exec.get_async_id());
+  }
+
+ private:
+  static const std::string& fence_string() {
+    static const std::string string =
+        std::string("Kokkos::Impl::DeepCopy<") +
+        "Experimental::OpenACCSpace, " +
+        "HostSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy";
+    return string;
+  }
+};
+
+template <class ExecutionSpace>
+struct Kokkos::Impl::DeepCopy<
+    Kokkos::HostSpace, Kokkos::Experimental::OpenACCSpace, ExecutionSpace,
+    std::enable_if_t<
+        std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value>> {
   DeepCopy(void* dst, const void* src, size_t n) {
     if (n > 0) acc_memcpy_from_device(dst, const_cast<void*>(src), n);
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
+    if (n > 0)
+      acc_memcpy_from_device_async(dst, const_cast<void*>(src), n,
+                                   exec.get_async_id());
+  }
+};
+template <class ExecutionSpace>
+struct Kokkos::Impl::DeepCopy<
+    Kokkos::HostSpace, Kokkos::Experimental::OpenACCSpace, ExecutionSpace,
+    std::enable_if_t<
+        !std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value>> {
+  DeepCopy(void* dst, const void* src, size_t n) {
     if (n > 0) acc_memcpy_from_device(dst, const_cast<void*>(src), n);
+  }
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence(fence_string());
+    if (n > 0)
+      acc_memcpy_from_device_async(dst, const_cast<void*>(src), n,
+                                   exec.get_async_id());
+  }
+
+ private:
+  static const std::string& fence_string() {
+    static const std::string string =
+        std::string("Kokkos::Impl::DeepCopy<") + "HostSpace, " +
+        "Experimental::OpenACCSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy";
+    return string;
   }
 };
 

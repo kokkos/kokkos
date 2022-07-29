@@ -62,6 +62,7 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <OpenACC/Kokkos_OpenACC_Traits.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <openacc.h>
 
@@ -75,7 +76,8 @@ class OpenACCInternal;
 namespace Kokkos::Experimental {
 
 class OpenACC {
-  Impl::OpenACCInternal* m_space_instance = nullptr;
+ private:
+  Kokkos::Impl::HostSharedPtr<Impl::OpenACCInternal> m_space_instance;
 
  public:
   using execution_space = OpenACC;
@@ -88,6 +90,8 @@ class OpenACC {
   using scratch_memory_space = ScratchMemorySpace<OpenACC>;
 
   OpenACC();
+
+  OpenACC(int async_arg);
 
   static void impl_initialize(InitializationSettings const& settings);
   static void impl_finalize();
@@ -103,6 +107,13 @@ class OpenACC {
   static int concurrency() { return 256000; }  // FIXME_OPENACC
   static bool in_parallel() { return acc_on_device(acc_device_not_host); }
   uint32_t impl_instance_id() const noexcept;
+  inline Impl::OpenACCInternal* impl_internal_space_instance() const {
+    return m_space_instance.get();
+  }
+
+  int get_async_id() const;
+  int get_device_id() const;
+  static size_type detect_device_count();
 };
 
 }  // namespace Kokkos::Experimental

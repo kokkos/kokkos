@@ -46,24 +46,31 @@
 #define KOKKOS_OPENACC_INSTANCE_HPP
 
 #include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_Tools.hpp>
 
 #include <cstdint>
 #include <iosfwd>
 #include <string>
+#include <openacc.h>
 
 namespace Kokkos::Experimental::Impl {
 
 class OpenACCInternal {
   bool m_is_initialized = false;
 
-  OpenACCInternal()                       = default;
   OpenACCInternal(const OpenACCInternal&) = default;
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
-  static OpenACCInternal* singleton();
+  int m_accDev;
+  int m_async_id;
+  uint32_t m_instance_id;
 
-  void initialize(InitializationSettings const& settings);
+  static OpenACCInternal& singleton();
+
+  int verify_is_initialized(const char* const label) const;
+
+  void initialize(int device_id, int async_arg = acc_async_sync);
   void finalize();
   bool is_initialized() const;
 
@@ -72,6 +79,22 @@ class OpenACCInternal {
   void fence(std::string const& name) const;
 
   uint32_t instance_id() const noexcept;
+
+  OpenACCInternal()
+      : m_async_id(acc_async_sync),
+        m_accDev(-1),
+        m_instance_id(Kokkos::Tools::Experimental::Impl::idForInstance<
+                      Kokkos::Experimental::OpenACC>(
+            reinterpret_cast<uintptr_t>(this))) {}
+};
+
+class OpenACCInternalDevices {
+ public:
+  int m_accDevCount;
+
+  OpenACCInternalDevices();
+
+  static const OpenACCInternalDevices& singleton();
 };
 
 }  // namespace Kokkos::Experimental::Impl

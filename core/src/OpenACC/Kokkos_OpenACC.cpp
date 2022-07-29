@@ -46,25 +46,47 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
+#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 #include <ostream>
 
 Kokkos::Experimental::OpenACC::OpenACC()
-    : m_space_instance(Impl::OpenACCInternal::singleton()) {}
+    : m_space_instance(
+          &Kokkos::Experimental::Impl::OpenACCInternal::singleton(),
+          [](Impl::OpenACCInternal*) {}) {
+  Impl::OpenACCInternal::singleton().verify_is_initialized(
+      "OpenACC instance constructor");
+}
+
+Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
+    : m_space_instance(new Kokkos::Experimental::Impl::OpenACCInternal,
+                       [](Impl::OpenACCInternal* ptr) {
+                         ptr->finalize();
+                         delete ptr;
+                       }) {
+  Impl::OpenACCInternal::singleton().verify_is_initialized(
+      "OpenACC instance constructor");
+  m_space_instance->initialize(Impl::OpenACCInternal::singleton().m_accDev,
+                               async_arg);
+}
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {
-  Impl::OpenACCInternal::singleton()->initialize(settings);
+  acc_init(Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
+  Impl::OpenACCInternal::singleton().initialize(
+      Kokkos::Impl::get_gpu(settings));
 }
 
 void Kokkos::Experimental::OpenACC::impl_finalize() {
-  Impl::OpenACCInternal::singleton()->finalize();
+  Impl::OpenACCInternal::singleton().finalize();
+  acc_shutdown(Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
 }
 
 bool Kokkos::Experimental::OpenACC::impl_is_initialized() {
-  return Impl::OpenACCInternal::singleton()->is_initialized();
+  return Impl::OpenACCInternal::singleton().is_initialized();
 }
 
 void Kokkos::Experimental::OpenACC::print_configuration(std::ostream& os,
@@ -74,7 +96,7 @@ void Kokkos::Experimental::OpenACC::print_configuration(std::ostream& os,
 }
 
 void Kokkos::Experimental::OpenACC::fence(std::string const& name) const {
-  Impl::OpenACCInternal::singleton()->fence(name);
+  m_space_instance->fence(name);
 }
 
 void Kokkos::Experimental::OpenACC::impl_static_fence(std::string const& name) {
@@ -88,6 +110,19 @@ void Kokkos::Experimental::OpenACC::impl_static_fence(std::string const& name) {
 
 uint32_t Kokkos::Experimental::OpenACC::impl_instance_id() const noexcept {
   return m_space_instance->instance_id();
+}
+
+int Kokkos::Experimental::OpenACC::get_async_id() const {
+  return m_space_instance->m_async_id;
+}
+
+int Kokkos::Experimental::OpenACC::get_device_id() const {
+  return m_space_instance->m_accDev;
+}
+
+Kokkos::Experimental::OpenACC::size_type
+Kokkos::Experimental::OpenACC::detect_device_count() {
+  return Impl::OpenACCInternalDevices::singleton().m_accDevCount;
 }
 
 namespace Kokkos {
