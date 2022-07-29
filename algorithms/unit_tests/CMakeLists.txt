@@ -149,6 +149,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     foreach(Name
 	StdAlgorithmsCommon
 	StdAlgorithmsTeamReplace
+	StdAlgorithmsTeamReplaceIf
 	# StdAlgorithmsTeamRotate
 	# StdAlgorithmsTeamRotateCopy
 	# StdAlgorithmsTeamUniqueCopy
@@ -161,7 +162,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	# StdAlgorithmsTeamGenerate_n
 	# StdAlgorithmsTeamFill
 	# StdAlgorithmsTeamFill_n
-	# StdAlgorithmsTeamReplaceIf
 	# StdAlgorithmsTeamReplaceCopy
 	# StdAlgorithmsTeamReplaceCopyIf
 	# StdAlgorithmsTeamCopy
