@@ -28,26 +28,30 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class Iterator, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
-    const ExecutionSpace& ex, Iterator first, Iterator last,
-    const ValueType& old_value, const ValueType& new_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+    replace(const ExecutionSpace& ex, Iterator first, Iterator last,
+            const ValueType& old_value, const ValueType& new_value) {
   return Impl::replace_impl(ex, first, last, old_value, new_value,
                             "Kokkos::replace_iterator_api");
 }
 
 template <class ExecutionSpace, class Iterator, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
-    const std::string& label, const ExecutionSpace& ex, Iterator first,
-    Iterator last, const ValueType& old_value, const ValueType& new_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+    replace(const std::string& label, const ExecutionSpace& ex, Iterator first,
+            Iterator last, const ValueType& old_value,
+            const ValueType& new_value) {
   return Impl::replace_impl(ex, first, last, old_value, new_value, label);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
-    const ExecutionSpace& ex,
-    const ::Kokkos::View<DataType1, Properties1...>& view,
-    const ValueType& old_value, const ValueType& new_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+    replace(const ExecutionSpace& ex,
+            const ::Kokkos::View<DataType1, Properties1...>& view,
+            const ValueType& old_value, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_impl(ex, KE::begin(view), KE::end(view), old_value,
@@ -56,10 +60,11 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
-    const std::string& label, const ExecutionSpace& ex,
-    const ::Kokkos::View<DataType1, Properties1...>& view,
-    const ValueType& old_value, const ValueType& new_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+    replace(const std::string& label, const ExecutionSpace& ex,
+            const ::Kokkos::View<DataType1, Properties1...>& view,
+            const ValueType& old_value, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_impl(ex, KE::begin(view), KE::end(view), old_value,
