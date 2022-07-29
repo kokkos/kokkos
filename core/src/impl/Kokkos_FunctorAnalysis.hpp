@@ -108,12 +108,12 @@ struct FunctorAnalysis {
 
   //----------------------------------------
 
-  struct VOID {};
+  struct void_tag {};
 
   template <typename P = Policy, typename = std::false_type>
   struct has_work_tag {
     using type = void;
-    using wtag = VOID;
+    using wtag = void_tag;
   };
 
   template <typename P>
@@ -337,7 +337,7 @@ struct FunctorAnalysis {
 
  private:
   // Stub to avoid defining a type 'void &'
-  using ValueType = std::conditional_t<candidate_is_void, VOID, value_type>;
+  using ValueType = std::conditional_t<candidate_is_void, void_tag, value_type>;
 
  public:
   using pointer_type = std::conditional_t<candidate_is_void, void, ValueType*>;

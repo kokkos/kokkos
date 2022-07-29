@@ -300,10 +300,11 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 
 class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
  public:
+  template <class... Args>
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
   KOKKOS_ATTRIBUTE_NODISCARD
 #endif
-  ScopeGuard(int& argc, char* argv[]) {
+  ScopeGuard(Args&&... args) {
     if (is_initialized()) {
       Kokkos::abort(
           Impl::scopeguard_create_while_initialized_warning().c_str());
@@ -311,22 +312,7 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
     if (is_finalized()) {
       Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
     }
-    initialize(argc, argv);
-  }
-
-#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
-  KOKKOS_ATTRIBUTE_NODISCARD
-#endif
-  ScopeGuard(
-      const InitializationSettings& settings = InitializationSettings()) {
-    if (is_initialized()) {
-      Kokkos::abort(
-          Impl::scopeguard_create_while_initialized_warning().c_str());
-    }
-    if (is_finalized()) {
-      Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
-    }
-    initialize(settings);
+    initialize(static_cast<Args&&>(args)...);
   }
 
   ~ScopeGuard() {

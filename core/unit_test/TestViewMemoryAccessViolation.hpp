@@ -120,7 +120,7 @@ void test_view_memory_access_violations_from_host() {
   test_view_memory_access_violation(make_view<V6>(lbl), host_exec_space, prefix + ".*" + lbl);
   test_view_memory_access_violation(make_view<V7>(lbl), host_exec_space, prefix + ".*" + lbl);
   test_view_memory_access_violation(make_view<V8>(lbl), host_exec_space, prefix + ".*" + lbl);
-  auto* const ptr = reinterpret_cast<int*>(0xABADBABE);
+  int* const ptr = nullptr;
   test_view_memory_access_violation(make_view<V0>(ptr), host_exec_space, prefix + ".*UNMANAGED");
   test_view_memory_access_violation(make_view<V1>(ptr), host_exec_space, prefix + ".*UNMANAGED");
   test_view_memory_access_violation(make_view<V2>(ptr), host_exec_space, prefix + ".*UNMANAGED");
@@ -157,7 +157,7 @@ void test_view_memory_access_violations_from_device() {
   test_view_memory_access_violation(make_view<V6>(lbl), exec_space, prefix + ".*UNAVAILABLE");
   test_view_memory_access_violation(make_view<V7>(lbl), exec_space, prefix + ".*UNAVAILABLE");
   test_view_memory_access_violation(make_view<V8>(lbl), exec_space, prefix + ".*UNAVAILABLE");
-  auto* const ptr = reinterpret_cast<int*>(0xABADBABE);
+  int* const ptr = nullptr;
   test_view_memory_access_violation(make_view<V0>(ptr), exec_space, prefix + ".*UNAVAILABLE");
   test_view_memory_access_violation(make_view<V1>(ptr), exec_space, prefix + ".*UNAVAILABLE");
   test_view_memory_access_violation(make_view<V2>(ptr), exec_space, prefix + ".*UNAVAILABLE");
