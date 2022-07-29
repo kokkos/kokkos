@@ -646,12 +646,16 @@ template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
           const Kokkos::View<DataType, Properties...>& view,
           bool const = false) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      ViewType::rank == 1 &&
+          !std::is_same<typename ViewType::array_layout, LayoutStride>::value,
+      "SYCL sort only supports contiguous 1D Views.");
+
   auto queue  = space.impl_internal_space_instance()->m_queue.value();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
-  auto buf    = sycl::buffer(view);
-  auto first  = oneapi::dpl::begin(buf);
-  auto last   = oneapi::dpl::end(buf);
-  oneapi::dpl::sort(policy, first, last);
+  const int n = view.extent(0);
+  oneapi::dpl::sort(policy, view.data(), view.data() + n);
 }
 #endif
 
