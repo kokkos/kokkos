@@ -87,10 +87,9 @@ struct TestFunctorA {
 template <class Tag, class ValueType>
 void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
   /* description:
-     randomly fill a rank-2 view with values between 0 and 523
-     and then we run a team-level replace_if where we replace
-     the values that are greater than 151 with 1
-     (note that these are purely arbitrary numbers)
+     use a rank-2 view randomly filled with values between 0 and 523
+     and then we run a team-level replace_if where the values that
+     are greater than 151 are replaced with 1.
    */
 
   // v constructed on memory space associated with default exespace

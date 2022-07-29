@@ -69,91 +69,122 @@ template <class ViewType, class MemberType, class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   ValueType m_targetValue;
-  int m_api_pick;
+  ValueType m_newValue;
+  int m_apiPick;
 
-  TestFunctorA(const ViewType view, ValueType val, int apiPick)
-      : m_view(view), m_targetValue(val), m_api_pick(apiPick) {}
+  TestFunctorA(const ViewType view, ValueType oldVal, ValueType newVal,
+               int apiPick)
+      : m_view(view),
+        m_targetValue(oldVal),
+        m_newValue(newVal),
+        m_apiPick(apiPick) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
-    const auto newValue   = static_cast<ValueType>(123);
 
-    if (m_api_pick == 0) {
+    if (m_apiPick == 0) {
       KE::replace(member, KE::begin(myRowView), KE::end(myRowView),
-                  m_targetValue, newValue);
-    } else if (m_api_pick == 1) {
-      KE::replace(member, myRowView, m_targetValue, newValue);
+                  m_targetValue, m_newValue);
+    } else if (m_apiPick == 1) {
+      KE::replace(member, myRowView, m_targetValue, m_newValue);
     }
   }
 };
 
 template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     start from a matrix where a random subset of elements in
-     each row is filled with a "target" value that we want to replace.
-     The replace is done via a team policy with one row per team,
-     the team calls replace on that row
-     such that the "target" value is replaced with a new one.
+     use a rank-2 view where, for each row, a random subset
+     of elements is filled with a target value that we want to replace
+     with a new value. The operation is done via a team
+     policy with one row per team to test the team level KE::replace().
    */
 
   const auto targetVal = static_cast<ValueType>(531);
+  const auto newVal    = static_cast<ValueType>(123);
 
-  // v constructed on memory space associated with default exespace
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // construct in memory space associated with default exespace
+  auto dataView = create_view<ValueType>(Tag{}, numTeams, numCols, "dataView");
 
-  // v might not deep copyable so to modify it on the host
-  auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
-  auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
+  // dataView might not deep copyable (e.g. strided layout) so to modify it
+  // on the host we make a new one that is for sure deep copyable
+  auto dataView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(dataView);
+  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  std::vector<std::size_t> rowIndOfTargetElements;
-  std::vector<std::size_t> colIndOfTargetElements;
-  // I need one rand num obj to generate how many cols to change
-  // and one object to produce the random indices to change
-  const std::size_t maxColInd = v_dc_h.extent(1) > 0 ? v_dc_h.extent(1) - 1 : 0;
-  UnifDist<int> howManyColsToChangeProducer(maxColInd, 3123377);
+  // for each row, randomly select a subsect of columns, fill these elements
+  // and for testing purposes keep track of the entries we are changing.
+  // To do this, I need one rand num obj to generate how many elements
+  // and one object to generate the actual indices to pick.
+
+  std::vector<std::size_t> targetElementsLinearizedIds;
+  const std::size_t maxColInd = numCols > 0 ? numCols - 1 : 0;
+  UnifDist<int> colCountProducer(maxColInd, 3123377);
   UnifDist<int> colIndicesProducer(maxColInd, 455225);
-  for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
-    const std::size_t numToChange = howManyColsToChangeProducer();
-    for (std::size_t j = 0; j < numToChange; ++j) {
-      const int colInd  = colIndicesProducer();
-      v_dc_h(i, colInd) = targetVal;
-      rowIndOfTargetElements.push_back(i);
-      colIndOfTargetElements.push_back(colInd);
+  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
+    const std::size_t currCount = colCountProducer();
+    for (std::size_t j = 0; j < currCount; ++j) {
+      const auto colInd        = colIndicesProducer();
+      dataView_dc_h(i, colInd) = targetVal;
+      targetElementsLinearizedIds.push_back(i * numCols + colInd);
     }
   }
 
-  // copy to v_dc and then to v
-  Kokkos::deep_copy(v_dc, v_dc_h);
-  CopyFunctorRank2<decltype(v_dc), decltype(v)> F1(v_dc, v);
-  Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
+  // copy to dataView_dc and then to dataView
+  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
+  CopyFunctorRank2<decltype(dataView_dc), decltype(dataView)> F1(dataView_dc,
+                                                                 dataView);
+  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
   // launch kernel
   using space_t          = Kokkos::DefaultExecutionSpace;
   using policy_type      = Kokkos::TeamPolicy<space_t>;
   using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  policy_type policy(numTeams, Kokkos::AUTO());
 
-  using functor_type = TestFunctorA<decltype(v), team_member_type, ValueType>;
-  functor_type fnc(v, targetVal, apiId);
+  using functor_type =
+      TestFunctorA<decltype(dataView), team_member_type, ValueType>;
+  functor_type fnc(dataView, targetVal, newVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  // check
-  auto v2_h = create_host_space_copy(v);
-  for (std::size_t k = 0; k < rowIndOfTargetElements.size(); ++k) {
-    EXPECT_TRUE(v2_h(rowIndOfTargetElements[k], colIndOfTargetElements[k]) ==
-                static_cast<ValueType>(123));
+  // make a copy on host (generic to handle case view is not deep-copyable)
+  // and check that the right elements now have the new value and the rest is
+  // unchanged.
+  auto dataView2_h = create_host_space_copy(dataView);
+  for (auto k : targetElementsLinearizedIds) {
+    const std::size_t i = k / numCols;
+    const std::size_t j = k % numCols;
+    EXPECT_TRUE(dataView2_h(i, j) == newVal);
   }
+
+  // figure out which are the unchanged elements
+  std::vector<std::size_t> allIndices(numTeams * numCols);
+  std::iota(allIndices.begin(), allIndices.end(), 0);
+  std::vector<std::size_t> unchanged(allIndices.size());
+  // sort because set_difference requires that
+  std::sort(targetElementsLinearizedIds.begin(),
+            targetElementsLinearizedIds.end());
+  auto bound = std::set_difference(allIndices.cbegin(), allIndices.cend(),
+                                   targetElementsLinearizedIds.cbegin(),
+                                   targetElementsLinearizedIds.cend(),
+                                   unchanged.begin());
+
+  auto verify = [numCols, dataView2_h](const std::size_t& k) {
+    const std::size_t i = k / numCols;
+    const std::size_t j = k % numCols;
+    EXPECT_TRUE(dataView2_h(i, j) == static_cast<ValueType>(0));
+  };
+  std::for_each(unchanged.begin(), bound, verify);
 }
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
+  for (int numTeams : team_sizes_to_test) {
+    for (const auto& numCols : {0, 1, 2, 13, 101}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<Tag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }

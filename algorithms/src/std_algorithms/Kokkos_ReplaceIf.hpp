@@ -29,48 +29,46 @@ namespace Experimental {
 //
 template <class ExecutionSpace, class InputIterator, class Predicate,
           class ValueType>
-KOKKOS_FUNCTION
-    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
-    replace_if(const ExecutionSpace& ex, InputIterator first,
-               InputIterator last, Predicate pred, const ValueType& new_value) {
-  return Impl::replace_if_impl(ex, first, last, pred, new_value,
-                               "Kokkos::replace_if_iterator_api");
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+replace_if(const ExecutionSpace& ex, InputIterator first, InputIterator last,
+           Predicate pred, const ValueType& new_value) {
+  return Impl::replace_if_exespace_impl("Kokkos::replace_if_iterator_api", ex,
+                                        first, last, pred, new_value);
 }
 
 template <class ExecutionSpace, class InputIterator, class Predicate,
           class ValueType>
-KOKKOS_FUNCTION
-    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
-    replace_if(const std::string& label, const ExecutionSpace& ex,
-               InputIterator first, InputIterator last, Predicate pred,
-               const ValueType& new_value) {
-  return Impl::replace_if_impl(ex, first, last, pred, new_value, label);
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+replace_if(const std::string& label, const ExecutionSpace& ex,
+           InputIterator first, InputIterator last, Predicate pred,
+           const ValueType& new_value) {
+  return Impl::replace_if_exespace_impl(label, ex, first, last, pred,
+                                        new_value);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class Predicate, class ValueType>
-KOKKOS_FUNCTION
-    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
-    replace_if(const ExecutionSpace& ex,
-               const ::Kokkos::View<DataType1, Properties1...>& view,
-               Predicate pred, const ValueType& new_value) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+replace_if(const ExecutionSpace& ex,
+           const ::Kokkos::View<DataType1, Properties1...>& view,
+           Predicate pred, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::replace_if_impl(ex, KE::begin(view), KE::end(view), pred,
-                               new_value, "Kokkos::replace_if_view_api");
+  return Impl::replace_if_exespace_impl("Kokkos::replace_if_view_api", ex,
+                                        KE::begin(view), KE::end(view), pred,
+                                        new_value);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class Predicate, class ValueType>
-KOKKOS_FUNCTION
-    std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
-    replace_if(const std::string& label, const ExecutionSpace& ex,
-               const ::Kokkos::View<DataType1, Properties1...>& view,
-               Predicate pred, const ValueType& new_value) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value>
+replace_if(const std::string& label, const ExecutionSpace& ex,
+           const ::Kokkos::View<DataType1, Properties1...>& view,
+           Predicate pred, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::replace_if_impl(ex, KE::begin(view), KE::end(view), pred,
-                               new_value, label);
+  return Impl::replace_if_exespace_impl(label, ex, KE::begin(view),
+                                        KE::end(view), pred, new_value);
 }
 
 //
@@ -83,7 +81,7 @@ template <class TeamHandleType, class InputIterator, class Predicate,
 KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
 replace_if(const TeamHandleType& teamHandle, InputIterator first,
            InputIterator last, Predicate pred, const ValueType& new_value) {
-  return Impl::replace_if_impl(teamHandle, first, last, pred, new_value);
+  return Impl::replace_if_team_impl(teamHandle, first, last, pred, new_value);
 }
 
 template <class TeamHandleType, class DataType1, class... Properties1,
@@ -94,8 +92,8 @@ replace_if(const TeamHandleType& teamHandle,
            Predicate pred, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::replace_if_impl(teamHandle, KE::begin(view), KE::end(view), pred,
-                               new_value);
+  return Impl::replace_if_team_impl(teamHandle, KE::begin(view), KE::end(view),
+                                    pred, new_value);
 }
 
 }  // namespace Experimental
