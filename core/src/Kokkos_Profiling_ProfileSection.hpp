@@ -63,11 +63,7 @@ class ProfilingSection {
   ProfilingSection(ProfilingSection const&) = delete;
   ProfilingSection& operator=(ProfilingSection const&) = delete;
 
-  ProfilingSection(const std::string& sectionName)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-      : secName(sectionName)
-#endif
-  {
+  ProfilingSection(const std::string& sectionName) {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::createProfileSection(sectionName, &secID);
     }
@@ -91,16 +87,7 @@ class ProfilingSection {
     }
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED std::string getName() { return secName; }
-
-  KOKKOS_DEPRECATED uint32_t getSectionID() { return secID; }
-#endif
-
  protected:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  const std::string secName;
-#endif
   uint32_t secID;
 };
 

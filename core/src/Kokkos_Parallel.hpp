@@ -181,18 +181,6 @@ inline void parallel_for(
   Kokkos::parallel_for("", policy, functor);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class ExecPolicy, class FunctorType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload taking the label as first argument instead!")
-inline void parallel_for(
-    const ExecPolicy& policy, const FunctorType& functor,
-    const std::string& str,
-    std::enable_if_t<is_execution_policy<ExecPolicy>::value>* = nullptr) {
-  Kokkos::parallel_for(str, policy, functor);
-}
-#endif
-
 template <class FunctorType>
 inline void parallel_for(const std::string& str, const size_t work_count,
                          const FunctorType& functor) {
@@ -209,16 +197,6 @@ template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor) {
   ::Kokkos::parallel_for("", work_count, functor);
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class FunctorType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload taking the label as first argument instead!")
-inline void parallel_for(const size_t work_count, const FunctorType& functor,
-                         const std::string& str) {
-  ::Kokkos::parallel_for(str, work_count, functor);
-}
-#endif
 
 }  // namespace Kokkos
 
@@ -419,18 +397,6 @@ inline void parallel_scan(
   ::Kokkos::parallel_scan("", policy, functor);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class ExecutionPolicy, class FunctorType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload taking the label as first argument instead!")
-inline void parallel_scan(
-    const ExecutionPolicy& policy, const FunctorType& functor,
-    const std::string& str,
-    std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>* = nullptr) {
-  ::Kokkos::parallel_scan(str, policy, functor);
-}
-#endif
-
 template <class FunctorType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor) {
@@ -448,16 +414,6 @@ template <class FunctorType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor) {
   ::Kokkos::parallel_scan("", work_count, functor);
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class FunctorType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload taking the label as first argument instead!")
-inline void parallel_scan(const size_t work_count, const FunctorType& functor,
-                          const std::string& str) {
-  ::Kokkos::parallel_scan(str, work_count, functor);
-}
-#endif
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType,
           class Enable =
@@ -490,18 +446,6 @@ inline void parallel_scan(
   ::Kokkos::parallel_scan("", policy, functor, return_value);
 }
 
-#ifdef KOKKOS_ENABLE_DISABLE_DEPRECATED_CODE_3
-template <class ExecutionPolicy, class FunctorType, class ReturnType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload taking the label as first argument instead!")
-inline void parallel_scan(
-    const ExecutionPolicy& policy, const FunctorType& functor,
-    ReturnType& return_value, const std::string& str,
-    std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>* = nullptr) {
-  ::Kokkos::parallel_scan(str, policy, functor, return_value);
-}
-#endif
-
 template <class FunctorType, class ReturnType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor,
@@ -521,16 +465,6 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
                           ReturnType& return_value) {
   ::Kokkos::parallel_scan("", work_count, functor, return_value);
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class FunctorType, class ReturnType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload taking the label as first argument instead!")
-inline void parallel_scan(const size_t work_count, const FunctorType& functor,
-                          ReturnType& return_value, const std::string& str) {
-  ::Kokkos::parallel_scan(str, work_count, functor, return_value);
-}
-#endif
 
 }  // namespace Kokkos
 

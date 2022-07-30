@@ -3923,35 +3923,6 @@ create_mirror_view_and_copy(
       Kokkos::view_alloc(typename Space::memory_space{}, name), src);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-// Create a mirror view in a new space without initializing (specialization for
-// same space)
-template <class Space, class T, class... P>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the version taking WithoutInitializing as first argument")
-typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
-    const Space&, const Kokkos::View<T, P...>& src,
-    Kokkos::Impl::WithoutInitializing_t,
-    std::enable_if_t<Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
-        nullptr) {
-  return src;
-}
-
-// Create a mirror view in a new space without initializing (specialization for
-// different space)
-template <class Space, class T, class... P>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the version taking WithoutInitializing as first argument")
-typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
-    const Space&, const Kokkos::View<T, P...>& src,
-    Kokkos::Impl::WithoutInitializing_t,
-    std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
-        nullptr) {
-  using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
-  return Mirror(view_alloc(WithoutInitializing, src.label()), src.layout());
-}
-#endif
-
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------

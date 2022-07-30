@@ -1091,10 +1091,6 @@ void Kokkos::push_finalize_hook(std::function<void()> f) {
 
 void Kokkos::finalize() { finalize_internal(); }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-KOKKOS_DEPRECATED void Kokkos::finalize_all() { finalize_internal(); }
-#endif
-
 #ifdef KOKKOS_COMPILER_INTEL
 void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
 #endif

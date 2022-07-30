@@ -59,12 +59,6 @@ static_assert(false,
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class T>
-using is_reducer_type KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use Kokkos::is_reducer instead!") = Kokkos::is_reducer<T>;
-#endif
-
 template <class Scalar, class Space>
 struct Sum {
  public:
@@ -1396,19 +1390,6 @@ struct ParallelReduceAdaptor {
           const FunctorType& functor, ReturnType& return_value) {
     execute_impl(label, policy, functor, return_value);
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  template <typename Dummy = ReturnType>
-  KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Array reductions with a raw pointer return type are deprecated. Use a "
-      "Kokkos::View as return argument!")
-  static inline std::
-      enable_if_t<is_array_reduction && std::is_pointer<Dummy>::value> execute(
-          const std::string& label, const PolicyType& policy,
-          const FunctorType& functor, ReturnType& return_value) {
-    execute_impl(label, policy, functor, return_value);
-  }
-#endif
 };
 }  // namespace Impl
 

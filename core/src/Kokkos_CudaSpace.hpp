@@ -139,13 +139,6 @@ class CudaSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
-  KOKKOS_DEPRECATED static void access_error();
-  KOKKOS_DEPRECATED static void access_error(const void* const);
-#endif
-
  private:
   int m_device;  ///< Which Cuda device
 
@@ -176,12 +169,6 @@ class CudaUVMSpace {
 
   /** \brief  If UVM capability is available */
   static bool available();
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  CudaUVMSpace specific routine */
-  KOKKOS_DEPRECATED static int number_of_allocations();
-#endif
 
   /*--------------------------------*/
 

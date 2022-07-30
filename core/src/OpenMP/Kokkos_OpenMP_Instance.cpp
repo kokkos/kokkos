@@ -456,12 +456,6 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   m_space_instance->print_configuration(os);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-std::vector<OpenMP> OpenMP::partition(...) { return std::vector<OpenMP>(1); }
-
-OpenMP OpenMP::create_instance(...) { return OpenMP(); }
-#endif
-
 int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
 
 void OpenMP::fence(const std::string &name) const {
