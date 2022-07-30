@@ -52,7 +52,7 @@ static_assert(false,
 
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 
 namespace Kokkos {
 namespace Experimental {

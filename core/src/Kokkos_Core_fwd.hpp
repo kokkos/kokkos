@@ -57,7 +57,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_MasterLock.hpp>
 #endif
 
