@@ -181,6 +181,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   //
   // run cpp-std kernel and check
   //
+  auto distancesView_h = create_host_space_copy(distancesView);
   Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
                                                            numTeams, numCols);
   for (std::size_t i = 0; i < sourceView_dc_h.extent(0); ++i) {
@@ -189,7 +190,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     auto it      = std::replace_copy(KE::cbegin(rowFrom), KE::cend(rowFrom),
                                 KE::begin(rowDest), targetVal, newVal);
     const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
-    EXPECT_EQ(stdDistance, distancesView(i));
+    EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);
