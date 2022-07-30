@@ -58,13 +58,13 @@ struct StdReplaceCopyFunctor {
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-OutputIteratorType replace_copy_impl(const std::string& label,
-                                     const ExecutionSpace& ex,
-                                     InputIteratorType first_from,
-                                     InputIteratorType last_from,
-                                     OutputIteratorType first_dest,
-                                     const ValueType& old_value,
-                                     const ValueType& new_value) {
+OutputIteratorType replace_copy_exespace_impl(const std::string& label,
+                                              const ExecutionSpace& ex,
+                                              InputIteratorType first_from,
+                                              InputIteratorType last_from,
+                                              OutputIteratorType first_dest,
+                                              const ValueType& old_value,
+                                              const ValueType& new_value) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
@@ -87,9 +87,6 @@ OutputIteratorType replace_copy_impl(const std::string& label,
   return first_dest + num_elements;
 }
 
-//
-// team-level impl
-//
 template <class TeamHandleType, class InputIteratorType,
           class OutputIteratorType, class ValueType>
 KOKKOS_FUNCTION OutputIteratorType replace_copy_team_impl(

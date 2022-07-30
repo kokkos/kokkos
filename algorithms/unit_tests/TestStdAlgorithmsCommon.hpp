@@ -263,6 +263,22 @@ compare_views(ViewType1 expected, const ViewType2 actual) {
   }
 }
 
+template <class ViewType1, class ViewType2>
+std::enable_if_t<
+    ViewType1::rank == 2 && ViewType2::rank == 2 &&
+    std::is_same<typename ViewType1::memory_space, Kokkos::HostSpace>::value &&
+    std::is_same<typename ViewType2::memory_space, Kokkos::HostSpace>::value>
+expect_equal_host_views(ViewType1 A, const ViewType2 B) {
+  EXPECT_EQ(A.extent(0), B.extent(0));
+  EXPECT_EQ(A.extent(1), B.extent(1));
+
+  for (std::size_t i = 0; i < A.extent(0); i++) {
+    for (std::size_t j = 0; j < A.extent(1); j++) {
+      EXPECT_EQ(A(i, j), B(i, j));
+    }
+  }
+}
+
 template <class ViewType>
 void fill_zero(ViewType a) {
   const auto functor = FillZeroFunctor<ViewType>(a);

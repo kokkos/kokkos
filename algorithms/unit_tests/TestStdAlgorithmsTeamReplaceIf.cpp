@@ -62,31 +62,31 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewType, class MemberType, class ValueType>
+template <class ViewType, class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   ValueType m_threshold;
   ValueType m_newVal;
-  int m_api_pick;
+  int m_apiPick;
 
   TestFunctorA(const ViewType view, ValueType threshold, ValueType newVal,
                int apiPick)
       : m_view(view),
         m_threshold(threshold),
         m_newVal(newVal),
-        m_api_pick(apiPick) {}
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    GreaterThanValueFunctor<ValueType> op(m_threshold);
-    if (m_api_pick == 0) {
-      KE::replace_if(member, KE::begin(myRowView), KE::end(myRowView), op,
-                     m_newVal);
-    } else if (m_api_pick == 1) {
-      KE::replace_if(member, myRowView, op, m_newVal);
+    GreaterThanValueFunctor predicate(m_threshold);
+    if (m_apiPick == 0) {
+      KE::replace_if(member, KE::begin(myRowView), KE::end(myRowView),
+                     predicate, m_newVal);
+    } else if (m_apiPick == 1) {
+      KE::replace_if(member, myRowView, predicate, m_newVal);
     }
   }
 };
@@ -101,11 +101,15 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   const auto threshold = static_cast<ValueType>(151);
   const auto newVal    = static_cast<ValueType>(1);
 
+  //
+  // prepare data
+  //
   // construct in memory space associated with default exespace
   auto dataView = create_view<ValueType>(Tag{}, numTeams, numCols, "dataView");
 
-  // dataView might not deep copyable (e.g. strided layout) so to modify it
-  // on the host we make a new one that is for sure deep copyable
+  // dataView might not deep copyable (e.g. strided layout) so to fill it
+  // we make a new view that is for sure deep copyable, modify it on the host
+  // deep copy to device and then launch copy kernel to dataView
   auto dataView_dc =
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
@@ -113,61 +117,36 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // randomly fill the view with values between 0 and 523
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
   Kokkos::fill_random(dataView_dc_h, pool, 0, 523);
-  // figure out which elements are strictly greater than the threshold
-  std::vector<std::size_t> targetElementsLinearizedIds;
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < dataView_dc_h.extent(1); ++j) {
-      if (dataView_dc_h(i, j) > threshold) {
-        targetElementsLinearizedIds.push_back(i * numCols + j);
-      }
-    }
-  }
 
   // copy to dataView_dc and then to dataView
   Kokkos::deep_copy(dataView_dc, dataView_dc_h);
-  CopyFunctorRank2<decltype(dataView_dc), decltype(dataView)> F1(dataView_dc,
-                                                                 dataView);
+  // use CTAD
+  CopyFunctorRank2 F1(dataView_dc, dataView);
   Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(numTeams, Kokkos::AUTO());
-
-  using functor_type =
-      TestFunctorA<decltype(dataView), team_member_type, ValueType>;
-  functor_type fnc(dataView, threshold, newVal, apiId);
+  //
+  // launch kokkos kernel
+  //
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+  // use CTAD for functor
+  TestFunctorA fnc(dataView, threshold, newVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  // make a copy on host (generic to handle case view is not deep-copyable)
-  // and check that the right elements now have the new value and the rest is
-  // unchanged.
-  auto dataView2_h = create_host_space_copy(dataView);
-  for (auto k : targetElementsLinearizedIds) {
-    const std::size_t i = k / numCols;
-    const std::size_t j = k % numCols;
-    EXPECT_TRUE(dataView2_h(i, j) == newVal);
+  //
+  // run cpp-std kernel
+  //
+  GreaterThanValueFunctor predicate(threshold);
+  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
+    auto thisRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
+    std::replace_if(KE::begin(thisRow), KE::end(thisRow), predicate, newVal);
   }
 
-  // figure out which are the unchanged elements
-  std::vector<std::size_t> allIndices(numTeams * numCols);
-  std::iota(allIndices.begin(), allIndices.end(), 0);
-  std::vector<std::size_t> unchanged(allIndices.size());
-  // sort because set_difference requires that
-  std::sort(targetElementsLinearizedIds.begin(),
-            targetElementsLinearizedIds.end());
-  auto bound = std::set_difference(allIndices.cbegin(), allIndices.cend(),
-                                   targetElementsLinearizedIds.cbegin(),
-                                   targetElementsLinearizedIds.cend(),
-                                   unchanged.begin());
-
-  auto verify = [numCols, dataView2_h, dataView_dc_h](const std::size_t& k) {
-    const std::size_t i = k / numCols;
-    const std::size_t j = k % numCols;
-    EXPECT_TRUE(dataView2_h(i, j) == dataView_dc_h(i, j));
-  };
-  std::for_each(unchanged.begin(), bound, verify);
+  //
+  // check
+  //
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  expect_equal_host_views(dataView_dc_h, dataViewAfterOp_h);
 }
 
 template <class Tag, class ValueType>

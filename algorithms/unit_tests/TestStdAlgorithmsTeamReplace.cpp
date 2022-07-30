@@ -65,7 +65,7 @@ struct UnifDist<int> {
   int operator()() { return m_dist(m_gen); }
 };
 
-template <class ViewType, class MemberType, class ValueType>
+template <class ViewType, class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   ValueType m_targetValue;
@@ -79,8 +79,8 @@ struct TestFunctorA {
         m_newValue(newVal),
         m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
@@ -105,16 +105,20 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   const auto targetVal = static_cast<ValueType>(531);
   const auto newVal    = static_cast<ValueType>(123);
 
+  //
+  // prepare data
+  //
   // construct in memory space associated with default exespace
   auto dataView = create_view<ValueType>(Tag{}, numTeams, numCols, "dataView");
 
-  // dataView might not deep copyable (e.g. strided layout) so to modify it
-  // on the host we make a new one that is for sure deep copyable
+  // dataView might not deep copyable (e.g. strided layout) so to fill it
+  // we make a new view that is for sure deep copyable, modify it on the host
+  // deep copy to device and then launch copy kernel to dataView
   auto dataView_dc =
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  // for each row, randomly select a subsect of columns, fill these elements
+  // for each row, randomly select columns, fill with targetVal
   // and for testing purposes keep track of the entries we are changing.
   // To do this, I need one rand num obj to generate how many elements
   // and one object to generate the actual indices to pick.
@@ -134,24 +138,26 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
   // copy to dataView_dc and then to dataView
   Kokkos::deep_copy(dataView_dc, dataView_dc_h);
-  CopyFunctorRank2<decltype(dataView_dc), decltype(dataView)> F1(dataView_dc,
-                                                                 dataView);
+  CopyFunctorRank2 F1(dataView_dc, dataView);
   Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(numTeams, Kokkos::AUTO());
-
-  using functor_type =
-      TestFunctorA<decltype(dataView), team_member_type, ValueType>;
-  functor_type fnc(dataView, targetVal, newVal, apiId);
+  //
+  // launch kokkos kernel
+  //
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+  // use CTAD for functor
+  TestFunctorA fnc(dataView, targetVal, newVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  // make a copy on host (generic to handle case view is not deep-copyable)
-  // and check that the right elements now have the new value and the rest is
-  // unchanged.
+  //
+  // conditions for test passing:
+  // - the target elements are replaced with the new value
+  // - all other elements are unchanged
+  //
+
+  // make a copy on host (generic to handle a non deep-copyable view)
+  // check that the correct elements have the new value
   auto dataView2_h = create_host_space_copy(dataView);
   for (auto k : targetElementsLinearizedIds) {
     const std::size_t i = k / numCols;
@@ -159,11 +165,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     EXPECT_TRUE(dataView2_h(i, j) == newVal);
   }
 
-  // figure out which are the unchanged elements
+  // figure out which elements should be unchanged
   std::vector<std::size_t> allIndices(numTeams * numCols);
   std::iota(allIndices.begin(), allIndices.end(), 0);
   std::vector<std::size_t> unchanged(allIndices.size());
-  // sort because set_difference requires that
+  // set_difference requires sorted ranges, allIndices is already sorted
   std::sort(targetElementsLinearizedIds.begin(),
             targetElementsLinearizedIds.end());
   auto bound = std::set_difference(allIndices.cbegin(), allIndices.cend(),
@@ -171,7 +177,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                                    targetElementsLinearizedIds.cend(),
                                    unchanged.begin());
 
-  auto verify = [numCols, dataView2_h](const std::size_t& k) {
+  auto verify = [numCols, dataView2_h](std::size_t k) {
     const std::size_t i = k / numCols;
     const std::size_t j = k % numCols;
     EXPECT_TRUE(dataView2_h(i, j) == static_cast<ValueType>(0));
@@ -182,7 +188,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 template <class Tag, class ValueType>
 void run_all_scenarios() {
   for (int numTeams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101}) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
       for (int apiId : {0, 1}) {
         test_A<Tag, ValueType>(numTeams, numCols, apiId);
       }
