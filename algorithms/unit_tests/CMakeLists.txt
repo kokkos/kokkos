@@ -148,8 +148,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(STDALGO_TEAM_SOURCES_A)
     foreach(Name
 	StdAlgorithmsCommon
-	#StdAlgorithmsTeamReplace
-	#StdAlgorithmsTeamReplaceIf
+	StdAlgorithmsTeamReplace
+	StdAlgorithmsTeamReplaceIf
 	StdAlgorithmsTeamReplaceCopy
 	# StdAlgorithmsTeamRotate
 	# StdAlgorithmsTeamRotateCopy
