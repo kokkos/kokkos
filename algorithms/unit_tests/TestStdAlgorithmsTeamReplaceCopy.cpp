@@ -181,7 +181,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   //
   // run cpp-std kernel and check
   //
-  Kokkos::View<ValueType**> stdDestView("stdDestView", numTeams, numCols);
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
+                                                           numTeams, numCols);
   for (std::size_t i = 0; i < sourceView_dc_h.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(sourceView_dc_h, i, Kokkos::ALL());
     auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
