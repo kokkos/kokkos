@@ -749,8 +749,8 @@ class OpenMPTargetExec {
   // teams possible is calculated based on NVIDIA's Volta GPU. In
   // future this value should be based on the chosen architecture for the
   // OpenMPTarget backend.
-  enum { MAX_ACTIVE_THREADS = 2080 * 80 };
-  enum { MAX_ACTIVE_TEAMS = MAX_ACTIVE_THREADS / 32 };
+  static constexpr int MAX_ACTIVE_THREADS = 2080 * 80;
+  static constexpr int MAX_ACTIVE_TEAMS   = MAX_ACTIVE_THREADS / 32;
 
  private:
   static void* scratch_ptr;
@@ -785,10 +785,7 @@ namespace Impl {
 
 class OpenMPTargetExecTeamMember {
  public:
-  enum { TEAM_REDUCE_SIZE = 512 };
-
-  /** \brief  Thread states for team synchronization */
-  enum { Active = 0, Rendezvous = 1 };
+  static constexpr int TEAM_REDUCE_SIZE = 512;
 
   using execution_space      = Kokkos::Experimental::OpenMPTarget;
   using scratch_memory_space = execution_space::scratch_memory_space;

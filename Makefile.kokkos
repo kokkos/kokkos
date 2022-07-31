@@ -21,7 +21,7 @@ KOKKOS_ARCH ?= ""
 KOKKOS_DEBUG ?= "no"
 # Options: hwloc,librt,experimental_memkind
 KOKKOS_USE_TPLS ?= ""
-# Options: c++14,c++1y,c++17,c++1z,c++2a
+# Options: c++14,c++1y,c++17,c++1z,c++20,c++2a,c++23,c++2b
 KOKKOS_CXX_STANDARD ?= "c++14"
 # Options: aggressive_vectorization,disable_profiling,enable_large_mem_tests,disable_complex_align,disable_deprecated_code,enable_deprecation_warnings,disable_desul_atomics
 KOKKOS_OPTIONS ?= ""
@@ -61,8 +61,10 @@ KOKKOS_INTERNAL_ENABLE_CXX14 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),
 KOKKOS_INTERNAL_ENABLE_CXX1Y := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1y)
 KOKKOS_INTERNAL_ENABLE_CXX17 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++17)
 KOKKOS_INTERNAL_ENABLE_CXX1Z := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1z)
-KOKKOS_INTERNAL_ENABLE_CXX2A := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2a)
 KOKKOS_INTERNAL_ENABLE_CXX20 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++20)
+KOKKOS_INTERNAL_ENABLE_CXX2A := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2a)
+KOKKOS_INTERNAL_ENABLE_CXX23 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++23)
+KOKKOS_INTERNAL_ENABLE_CXX2B := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2b)
 
 # Check for external libraries.
 KOKKOS_INTERNAL_USE_HWLOC := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),hwloc)
@@ -138,7 +140,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 endif
 KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER := $(shell expr $(KOKKOS_INTERNAL_ENABLE_CXX17) \
                                                   + $(KOKKOS_INTERNAL_ENABLE_CXX20) \
-                                                  + $(KOKKOS_INTERNAL_ENABLE_CXX2A))
+                                                  + $(KOKKOS_INTERNAL_ENABLE_CXX2A) \
+                                                  + $(KOKKOS_INTERNAL_ENABLE_CXX23) \
+                                                  + $(KOKKOS_INTERNAL_ENABLE_CXX2B))
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
   KOKKOS_DEVICELIST += SYCL
   ifneq ($(KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER), 1)
@@ -328,26 +332,37 @@ endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_CXX14_FLAG := --c++14
   KOKKOS_INTERNAL_CXX17_FLAG := --c++17
+  KOKKOS_INTERNAL_CXX20_FLAG := --c++20
+  KOKKOS_INTERNAL_CXX23_FLAG := --c++23
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
      KOKKOS_INTERNAL_CXX14_FLAG := -std=c++14
      KOKKOS_INTERNAL_CXX1Y_FLAG := -std=c++1y
-     #KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
-     #KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1Z
-     #KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+     KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
+     KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
+     KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
+     KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+     KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
+     KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
       KOKKOS_INTERNAL_CXX14_FLAG := -hstd=c++14
-      #KOKKOS_INTERNAL_CXX1Y_FLAG := -hstd=c++1y
-      #KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
-      #KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
-      #KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
+      KOKKOS_INTERNAL_CXX1Y_FLAG := -hstd=c++1y
+      KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
+      KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
+      KOKKOS_INTERNAL_CXX20_FLAG := -hstd=c++20
+      KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
+      KOKKOS_INTERNAL_CXX23_FLAG := -hstd=c++23
+      KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2b
     else
       KOKKOS_INTERNAL_CXX14_FLAG := -std=c++14
       KOKKOS_INTERNAL_CXX1Y_FLAG := -std=c++1y
       KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
       KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
+      KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
       KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+      KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
+      KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
     endif
   endif
 endif
@@ -592,15 +607,25 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX1Z), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX1Z_FLAG)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX17")
 endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX20), 1)
+  #I cannot make CMake add this in a good way - so add it here
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX20_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
+endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX2A), 1)
   #I cannot make CMake add this in a good way - so add it here
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX2A_FLAG)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
 endif
-ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX20), 1)
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX23), 1)
   #I cannot make CMake add this in a good way - so add it here
-  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX20_FLAG)
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX23_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX23")
+endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX2B), 1)
+  #I cannot make CMake add this in a good way - so add it here
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX2B_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX23")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
