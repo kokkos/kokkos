@@ -463,6 +463,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_NESTED = 'true'
                         OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PROC_BIND = 'true'
                     }
@@ -474,7 +475,8 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
