@@ -1100,6 +1100,9 @@ void Kokkos::finalize() { finalize_internal(); }
 KOKKOS_DEPRECATED void Kokkos::finalize_all() { finalize_internal(); }
 #endif
 
+#ifdef KOKKOS_COMPILER_INTEL
+void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
+#endif
 void Kokkos::fence(const std::string& name) { fence_internal(name); }
 
 namespace {
