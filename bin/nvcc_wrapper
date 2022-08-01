@@ -314,7 +314,7 @@ do
     ;;
   # End of Werror handling
   #Handle unsupported standard flags
-  --std=gnu++1y|-std=gnu++1y|--std=c++1z|-std=c++1z|--std=gnu++1z|-std=gnu++1z|--std=c++2a|-std=c++2a)
+  --std=c++1z|-std=c++1z|--std=gnu++1z|-std=gnu++1z|--std=c++2a|-std=c++2a)
     fallback_std_flag="-std=c++17"
     # this is hopefully just occurring in a downstream project during CMake feature tests
     # we really have no choice here but to accept the flag and change  to an accepted C++ standard
