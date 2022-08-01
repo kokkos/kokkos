@@ -47,6 +47,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang AND KOKKOS_ENABLE_OPENMP)
 ENDIF()
 
 
+# FIXME_CXX17
 IF (KOKKOS_CXX_STANDARD STREQUAL 17)
   IF (KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 7)
     MESSAGE(FATAL_ERROR "You have requested C++17 support for GCC ${KOKKOS_CXX_COMPILER_VERSION}. Although CMake has allowed this and GCC accepts -std=c++1z/c++17, GCC < 7 does not properly support *this capture. Please upgrade the compiler if you do need C++17 support.")
