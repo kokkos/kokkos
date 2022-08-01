@@ -902,28 +902,93 @@ struct MDTeamRangeRanks {
 //       iteration order for MDRangePolicy)
 //   - t_and_v determines whether both vector and thread parallelism is in use
 template <typename Rank, typename ExecSpace, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank {
+struct ParallelRank;
+
+#ifdef KOKKOS_ENABLE_SERIAL
+template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
+struct ParallelRank<Rank, DefaultHostExecutionSpace, t_and_v> {
   static constexpr bool isDirectionLeft =
       (Rank::outer_direction == Iterate::Left);
   static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
   static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
+#endif
 
-// Placeholders for other backends
 #ifdef KOKKOS_ENABLE_CUDA
+template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
+struct ParallelRank<Rank, Cuda, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  // If vector parallelism is in use deploy thread parallelism on
+  // the second to the last rank, otherwise, thread parallelism on the last rank
+  static constexpr int par_rt =
+      isDirectionLeft ? ((t_and_v) ? 1 : 0)
+                      : ((t_and_v) ? Rank::rank - 2 : Rank::rank - 1);
+  // Vector parallelism will always be on the last index
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
 #endif
+
 #ifdef KOKKOS_ENABLE_HIP
+template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
+struct ParallelRank<Rank, Experimental::HIP, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  // If vector parallelism is in use deploy thread parallelism on
+  // the second to the last rank, otherwise, thread parallelism on the last rank
+  static constexpr int par_rt =
+      isDirectionLeft ? ((t_and_v) ? 1 : 0)
+                      : ((t_and_v) ? Rank::rank - 2 : Rank::rank - 1);
+  // Vector parallelism will always be on the last index
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
 #endif
+
+// TODO check par_rt and par_rv validity
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
+template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
+struct ParallelRank<Rank, Experimental::OpenMPTarget, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
 #endif
+
 #ifdef KOKKOS_ENABLE_THREADS
+template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
+struct ParallelRank<Rank, Threads, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
 #endif
+
+// TODO check par_rt and par_rv validity
 #ifdef KOKKOS_ENABLE_SYCL
+struct ParallelRank<Rank, SYCL, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
 #endif
-#ifdef KOKKOS_ENABLE_THREADS
-#endif
+
 #ifdef KOKKOS_ENABLE_HPX
+struct ParallelRank<Rank, HPX, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
 #endif
 
 template <typename TeamHandle>
@@ -956,8 +1021,7 @@ KOKKOS_INLINE_FUNCTION auto nested_policy(
   return TeamVectorRange(team, count);
 }
 
-// MDTeamRangeRanks is only needed to deduce template parameters for some
-// overloads of this function
+// MDTeamRangeRanks is only needed to deduce template parameters
 template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank,
           typename Policy, typename Lambda, typename... Args>
 KOKKOS_INLINE_FUNCTION void nested_loop(
@@ -1026,9 +1090,6 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
   using MDTeamNextRanks =
       MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, nextRank>;
   using MDTeamNextMode = typename MDTeamNextRanks::RangeMode;
-
-  // FIXME Check if recursively calling this is efficient enough compared to an
-  // iterative case
 
   // This recursively processes ranks from [0..TotalRank-1]
   // args... is passed by value because it should always be ints
