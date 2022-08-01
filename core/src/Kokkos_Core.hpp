@@ -138,8 +138,6 @@ void push_finalize_hook(std::function<void()> f);
 KOKKOS_DEPRECATED void finalize_all();
 #endif
 
-void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
-
 /** \brief Print "Bill of Materials" */
 void print_configuration(std::ostream& os, bool verbose = false);
 
