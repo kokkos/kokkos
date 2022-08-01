@@ -502,27 +502,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
       (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
       (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
     }
-    //----------------------------------
-    // Concurrent bitset for obtaining unique tokens from within
-    // an executing kernel.
-    {
-      m_maxConcurrency = m_maxThreadsPerSM * cudaProp.multiProcessorCount;
-
-      const int32_t buffer_bound =
-          Kokkos::Impl::concurrent_bitset::buffer_bound(m_maxConcurrency);
-
-      // Allocate and initialize uint32_t[ buffer_bound ]
-
-      using Record =
-          Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
-
-      Record *const r =
-          Record::allocate(Kokkos::CudaSpace(), "Kokkos::InternalScratchBitset",
-                           sizeof(uint32_t) * buffer_bound);
-
-      Record::increment(r);
-    }
-    //----------------------------------
+    m_maxConcurrency = m_maxThreadsPerSM * cudaProp.multiProcessorCount;
 
   } else {
     std::ostringstream msg;
