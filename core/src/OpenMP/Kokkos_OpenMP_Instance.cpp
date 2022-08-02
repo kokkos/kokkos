@@ -422,11 +422,16 @@ bool OpenMPInternal::verify_is_initialized(const char *const label) const {
 //----------------------------------------------------------------------------
 
 OpenMP::OpenMP()
+#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
+    : m_space_instance(&Impl::OpenMPInternal::singleton()) {
+}
+#else
     : m_space_instance(&Impl::OpenMPInternal::singleton(),
                        [](Impl::OpenMPInternal *) {}) {
   Impl::OpenMPInternal::singleton().verify_is_initialized(
       "OpenMP instance constructor");
 }
+#endif
 
 int OpenMP::impl_get_current_max_threads() noexcept {
   return Impl::OpenMPInternal::get_current_max_threads();
