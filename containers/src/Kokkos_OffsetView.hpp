@@ -1159,6 +1159,30 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 #endif
 
   template <class... P>
+  explicit inline OffsetView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      const std::pair<int64_t, int64_t> range0 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range1 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range2 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range3 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range4 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range5 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range6 = KOKKOS_INVALID_INDEX_RANGE,
+      const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE)
+      : OffsetView(
+            arg_prop,
+            typename traits::array_layout(range0.second - range0.first + 1,
+                                          range1.second - range1.first + 1,
+                                          range2.second - range2.first + 1,
+                                          range3.second - range3.first + 1,
+                                          range4.second - range4.first + 1,
+                                          range5.second - range5.first + 1,
+                                          range6.second - range6.first + 1,
+                                          range7.second - range7.first + 1),
+            {range0.first, range1.first, range2.first, range3.first,
+             range4.first, range5.first, range6.first, range7.first}) {}
+
+  template <class... P>
   explicit KOKKOS_INLINE_FUNCTION OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,

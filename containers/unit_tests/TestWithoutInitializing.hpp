@@ -509,6 +509,10 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
 
   auto success = validate_absence(
       [&]() {
+        device_view = Kokkos::Experimental::OffsetView<int*, TEST_EXECSPACE>(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, "device view"),
+            {0, 10});
+
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
         auto mirror_host = Kokkos::create_mirror(Kokkos::WithoutInitializing,
