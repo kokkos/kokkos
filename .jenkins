@@ -44,6 +44,7 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_OPENACC=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
@@ -79,6 +80,7 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
@@ -110,6 +112,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
@@ -151,6 +154,7 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
@@ -186,6 +190,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
                               make -j8 && ctest --verbose'''
@@ -227,6 +232,7 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
@@ -263,6 +269,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
@@ -300,6 +307,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
@@ -439,6 +447,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
@@ -479,6 +488,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                                 -DKokkos_ENABLE_LIBQUADMATH=ON \

@@ -93,6 +93,7 @@ jobs:
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_PERF_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
