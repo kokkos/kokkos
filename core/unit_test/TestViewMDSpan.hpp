@@ -8,6 +8,7 @@
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 
 namespace Test {
+// Conversion from DataType to extents
 // 0-rank view
 static_assert(std::is_same_v<typename Kokkos::Experimental::Impl::ExtentsFromDataType<double>::type,
                              std::experimental::extents<std::size_t>>);
@@ -31,6 +32,45 @@ static_assert(std::is_same_v<typename Kokkos::Experimental::Impl::ExtentsFromDat
                                                         std::size_t{3},
                                                         std::size_t{2},
                                                         std::size_t{8}>>);
+
+// Conversion from extents to DataType
+// 0-rank extents
+static_assert(std::is_same_v<double,
+                             typename Kokkos::Experimental::Impl::DataTypeFromExtents<double,
+                               std::experimental::extents<std::size_t>>::type
+                               >);
+
+// only dynamic
+static_assert(std::is_same_v<double****,
+                             typename Kokkos::Experimental::Impl::DataTypeFromExtents<double,
+                               std::experimental::extents<std::size_t,
+                                std::experimental::dynamic_extent,
+                                std::experimental::dynamic_extent,
+                                std::experimental::dynamic_extent,
+                                std::experimental::dynamic_extent
+                               >
+                             >::type
+                             >);
+
+// only static
+static_assert(std::is_same_v<double[7][5][3],
+                             typename Kokkos::Experimental::Impl::DataTypeFromExtents<double,
+                               std::experimental::extents<std::size_t, 7, 5, 3>
+                             >::type
+                             >);
+
+// both dynamic and static
+static_assert(std::is_same_v<double***[20][45],
+                             typename Kokkos::Experimental::Impl::DataTypeFromExtents<double,
+                               std::experimental::extents<std::size_t,
+                                std::experimental::dynamic_extent,
+                                std::experimental::dynamic_extent,
+                                std::experimental::dynamic_extent,
+                                20,
+                                45
+                               >
+                             >::type
+                             >);
 }  // namespace Test
 
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN

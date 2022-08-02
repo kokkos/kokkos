@@ -65,8 +65,12 @@ namespace Kokkos {
 namespace Impl {
 template <class DataType>
 struct ViewArrayAnalysis;
+
 template <std::size_t... Vals>
 struct ViewDimension;
+
+template <class T, class Dim>
+struct ViewDataType;
 }
 
 namespace Experimental::Impl {
@@ -91,6 +95,16 @@ struct ExtentFromDimension<std::size_t{0}> {
   static constexpr inline std::size_t value = std::experimental::dynamic_extent;
 };
 
+template<std::size_t N>
+struct DimensionFromExtent {
+  static constexpr inline std::size_t value = N;
+};
+
+template<>
+struct DimensionFromExtent<std::experimental::dynamic_extent> {
+  static constexpr inline std::size_t value = std::size_t{0};
+};
+
 template<class SizeType, class Dimension, class Indices>
 struct ExtentsFromDimension;
 
@@ -98,20 +112,33 @@ template<class SizeType, class Dimension, std::size_t... Indices>
 struct ExtentsFromDimension<SizeType, Dimension, std::index_sequence<Indices...>> {
   using dimension_type = Dimension;
   using type = std::experimental::extents<SizeType, ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
+};
 
-  static constexpr type construct( const dimension_type &_dim ) noexcept {
-    return type{ _dim.extent( _dim.extent( Indices )... ) };
-  };
+template<class Extents, class Indices>
+struct DimensionsFromExtent;
+
+template<class Extents, std::size_t... Indices>
+struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
+  using extents_type = Extents;
+  using type = ::Kokkos::Impl::ViewDimension<DimensionFromExtent<extents_type::static_extent(Indices)>::value...>;
 };
 
 template<class DataType>
-struct ExtentsFromDataType
-{
+struct ExtentsFromDataType {
   using array_analysis = ::Kokkos::Impl::ViewArrayAnalysis<DataType>;
   using size_type = std::size_t; // Mirrors Kokkos::View's size type
   using dimension_type = typename array_analysis::dimension;
 
   using type = typename ExtentsFromDimension<size_type, dimension_type, std::make_index_sequence<dimension_type::rank>>::type;
+};
+
+template<class T, class Extents>
+struct DataTypeFromExtents {
+  using extents_type = Extents;
+  using dimension_type = typename DimensionsFromExtent<Extents, std::make_index_sequence<extents_type::rank()>>::type;
+
+  // Will cause a compile error if it is malformed (i.e. dynamic after static)
+  using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
 };
 }
 }
