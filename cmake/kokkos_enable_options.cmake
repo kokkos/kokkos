@@ -40,6 +40,7 @@ KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnin
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
 KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispatch")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
+KOKKOS_ENABLE_OPTION(PERF_TESTS    OFF  "Whether to build the perf tests")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" UPPERCASE_CMAKE_BUILD_TYPE)
 IF(UPPERCASE_CMAKE_BUILD_TYPE STREQUAL "DEBUG")

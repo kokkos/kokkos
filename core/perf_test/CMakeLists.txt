@@ -15,6 +15,7 @@ IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
   RETURN()
 ENDIF()
 
+find_package(benchmark QUIET)
 IF(NOT benchmark_FOUND)
   message(STATUS "No installed benchmark found, fetching from GitHub")
   include(FetchContent)
@@ -28,7 +29,6 @@ IF(NOT benchmark_FOUND)
   FetchContent_MakeAvailable(
         googlebenchmark)
 
-  # FIXME: cannot find the headers without this
   include_directories(${benchmark_SOURCE_DIR}/include)
 
   # Suppress clang-tidy diagnostics on code that we do not have control over
