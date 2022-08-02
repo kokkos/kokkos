@@ -959,6 +959,17 @@ struct ParallelRank<Rank, Experimental::OpenMPTarget, t_and_v> {
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENMP
+template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
+struct ParallelRank<Rank, OpenMP, t_and_v> {
+  static constexpr bool isDirectionLeft =
+      (Rank::outer_direction == Iterate::Left);
+  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int invalid = -2;
+};
+#endif
+
 #ifdef KOKKOS_ENABLE_THREADS
 template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
 struct ParallelRank<Rank, Threads, t_and_v> {
