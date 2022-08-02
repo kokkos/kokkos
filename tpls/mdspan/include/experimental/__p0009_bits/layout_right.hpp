@@ -47,20 +47,23 @@
 #include "trait_backports.hpp"
 #include "extents.hpp"
 #include <stdexcept>
+#include "layout_stride.hpp"
 
 namespace std {
 namespace experimental {
 
 //==============================================================================
-struct layout_left;
-struct layout_stride;
-
-struct layout_right {
-  template <class Extents>
-  class mapping {
+template <class Extents>
+class layout_right::mapping {
+  public:
+    using extents_type = Extents;
+    using index_type = typename extents_type::index_type;
+    using size_type = typename extents_type::size_type;
+    using rank_type = typename extents_type::rank_type;
+    using layout_type = layout_right;
   private:
 
-    static_assert(detail::__is_extents_v<Extents>, "std::experimental::layout_right::mapping must be instantiated with a specialization of std::experimental::extents.");
+    static_assert(detail::__is_extents_v<extents_type>, "std::experimental::layout_right::mapping must be instantiated with a specialization of std::experimental::extents.");
 
     template <class>
     friend class mapping;
@@ -70,22 +73,22 @@ struct layout_right {
     struct __rank_count {};
 
     template <size_t r, size_t Rank, class I, class... Indices>
-    constexpr size_t __compute_offset(
-      size_t offset, __rank_count<r,Rank>, const I& i, Indices... idx) const {
+    constexpr index_type __compute_offset(
+      index_type offset, __rank_count<r,Rank>, const I& i, Indices... idx) const {
       return __compute_offset(offset * __extents.template __extent<r>() + i,__rank_count<r+1,Rank>(),  idx...);
     }
 
     template<class I, class ... Indices>
-    constexpr size_t __compute_offset(
-      __rank_count<0,Extents::rank()>, const I& i, Indices... idx) const {
-      return __compute_offset(static_cast<size_t>(i),__rank_count<1,Extents::rank()>(),idx...);
+    constexpr index_type __compute_offset(
+      __rank_count<0,extents_type::rank()>, const I& i, Indices... idx) const {
+      return __compute_offset(i,__rank_count<1,extents_type::rank()>(),idx...);
     }
 
-    constexpr size_t __compute_offset(size_t offset, __rank_count<Extents::rank(), Extents::rank()>) const {
-      return offset;
+    constexpr index_type __compute_offset(size_t offset, __rank_count<extents_type::rank(), extents_type::rank()>) const {
+      return static_cast<index_type>(offset);
     }
 
-    constexpr size_t __compute_offset(__rank_count<0,0>) const { return 0; }
+    constexpr index_type __compute_offset(__rank_count<0,0>) const { return 0; }
 
   public:
 
@@ -93,62 +96,64 @@ struct layout_right {
 
     MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping() noexcept = default;
     MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping(mapping const&) noexcept = default;
-    MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping(mapping&&) noexcept = default;
-    MDSPAN_INLINE_FUNCTION_DEFAULTED _MDSPAN_CONSTEXPR_14_DEFAULTED mapping& operator=(mapping const&) noexcept = default;
-    MDSPAN_INLINE_FUNCTION_DEFAULTED _MDSPAN_CONSTEXPR_14_DEFAULTED mapping& operator=(mapping&&) noexcept = default;
-    MDSPAN_INLINE_FUNCTION_DEFAULTED ~mapping() noexcept = default;
 
-
-    using layout_type = layout_right;
-    using extents_type = Extents;
-    using size_type = typename Extents::size_type;
-
-    constexpr mapping(Extents const& __exts) noexcept
+    constexpr mapping(extents_type const& __exts) noexcept
       :__extents(__exts)
     { }
 
     MDSPAN_TEMPLATE_REQUIRES(
       class OtherExtents,
       /* requires */ (
-        _MDSPAN_TRAIT(is_constructible, Extents, OtherExtents)
+        _MDSPAN_TRAIT(is_constructible, extents_type, OtherExtents)
       )
     )
-    MDSPAN_CONDITIONAL_EXPLICIT((!is_convertible<OtherExtents, Extents>::value)) // needs two () due to comma
+    MDSPAN_CONDITIONAL_EXPLICIT((!is_convertible<OtherExtents, extents_type>::value)) // needs two () due to comma
     MDSPAN_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14
     mapping(mapping<OtherExtents> const& other) noexcept // NOLINT(google-explicit-constructor)
       :__extents(other.extents())
-    { }
+    {
+       /*
+        * TODO: check precondition
+        * other.required_span_size() is a representable value of type index_type
+        */
+    }
 
     MDSPAN_TEMPLATE_REQUIRES(
-      class OtherMapping,
+      class OtherExtents,
       /* requires */ (
-        _MDSPAN_TRAIT(is_constructible, Extents, typename OtherMapping::extents_type) &&
-        _MDSPAN_TRAIT(is_same, typename OtherMapping::layout_type, layout_left) &&
-        _MDSPAN_TRAIT(is_same, typename OtherMapping::layout_type::template mapping<typename OtherMapping::extents_type>, OtherMapping) &&
-        (Extents::rank() <= 1)
+        _MDSPAN_TRAIT(is_constructible, extents_type, OtherExtents) &&
+        (extents_type::rank() <= 1)
       )
     )
-    MDSPAN_CONDITIONAL_EXPLICIT((!is_convertible<typename OtherMapping::extents_type, Extents>::value)) // needs two () due to comma
+    MDSPAN_CONDITIONAL_EXPLICIT((!is_convertible<OtherExtents, extents_type>::value)) // needs two () due to comma
     MDSPAN_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14
-    mapping(OtherMapping const& other) noexcept // NOLINT(google-explicit-constructor)
-      :__extents(other.extents())
-    { }
-    MDSPAN_TEMPLATE_REQUIRES(
-      class OtherMapping,
-      /* requires */ (
-        _MDSPAN_TRAIT(is_constructible, Extents, typename OtherMapping::extents_type) &&
-        _MDSPAN_TRAIT(is_same, typename OtherMapping::layout_type, layout_stride) &&
-        _MDSPAN_TRAIT(is_same, typename OtherMapping::layout_type::template mapping<typename OtherMapping::extents_type>, OtherMapping)
-      )
-    )
-    MDSPAN_CONDITIONAL_EXPLICIT((Extents::rank()!=0))
-    MDSPAN_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14
-    mapping(OtherMapping const& other) // NOLINT(google-explicit-constructor)
+    mapping(layout_left::mapping<OtherExtents> const& other) noexcept // NOLINT(google-explicit-constructor)
       :__extents(other.extents())
     {
+       /*
+        * TODO: check precondition
+        * other.required_span_size() is a representable value of type index_type
+        */
+    }
+
+    MDSPAN_TEMPLATE_REQUIRES(
+      class OtherExtents,
+      /* requires */ (
+        _MDSPAN_TRAIT(is_constructible, extents_type, OtherExtents)
+      )
+    )
+    MDSPAN_CONDITIONAL_EXPLICIT((extents_type::rank() > 0))
+    MDSPAN_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14
+    mapping(layout_stride::mapping<OtherExtents> const& other) // NOLINT(google-explicit-constructor)
+      :__extents(other.extents())
+    {
+       /*
+        * TODO: check precondition
+        * other.required_span_size() is a representable value of type index_type
+        */
        #ifndef __CUDA_ARCH__
        size_t stride = 1;
-       for(size_type r=__extents.rank(); r>0; r--) {
+       for(rank_type r=__extents.rank(); r>0; r--) {
          if(stride != other.stride(r-1))
            throw std::runtime_error("Assigning layout_stride to layout_right with invalid strides.");
          stride *= __extents.extent(r-1);
@@ -156,35 +161,49 @@ struct layout_right {
        #endif
     }
 
-    //--------------------------------------------------------------------------------
+    MDSPAN_INLINE_FUNCTION_DEFAULTED _MDSPAN_CONSTEXPR_14_DEFAULTED mapping& operator=(mapping const&) noexcept = default;
 
-    template <class... Indices>
-    constexpr size_type operator()(Indices... idxs) const noexcept {
-      return __compute_offset(__rank_count<0, Extents::rank()>(), idxs...);
-    }
-
-    constexpr Extents extents() const noexcept {
+    MDSPAN_INLINE_FUNCTION
+    constexpr const extents_type& extents() const noexcept {
       return __extents;
     }
 
-    constexpr size_type stride(size_t i) const noexcept {
-      size_type value = 1;
-      for(size_type r=Extents::rank()-1; r>i; r--) value*=__extents.extent(r);
+    MDSPAN_INLINE_FUNCTION
+    constexpr index_type required_span_size() const noexcept {
+      index_type value = 1;
+      for(rank_type r=0; r != extents_type::rank(); ++r) value*=__extents.extent(r);
       return value;
     }
 
-    constexpr size_type required_span_size() const noexcept {
-      size_type value = 1;
-      for(size_type r=0; r<Extents::rank(); r++) value*=__extents.extent(r);
-      return value;
+    //--------------------------------------------------------------------------------
+
+    MDSPAN_TEMPLATE_REQUIRES(
+      class... Indices,
+      /* requires */ (
+        (sizeof...(Indices) == extents_type::rank()) &&
+        _MDSPAN_FOLD_AND(
+           (_MDSPAN_TRAIT(is_convertible, Indices, index_type) &&
+            _MDSPAN_TRAIT(is_nothrow_constructible, index_type, Indices))
+        )
+      )
+    )
+    constexpr index_type operator()(Indices... idxs) const noexcept {
+      return __compute_offset(__rank_count<0, extents_type::rank()>(), idxs...);
     }
 
     MDSPAN_INLINE_FUNCTION static constexpr bool is_always_unique() noexcept { return true; }
-    MDSPAN_INLINE_FUNCTION static constexpr bool is_always_contiguous() noexcept { return true; }
+    MDSPAN_INLINE_FUNCTION static constexpr bool is_always_exhaustive() noexcept { return true; }
     MDSPAN_INLINE_FUNCTION static constexpr bool is_always_strided() noexcept { return true; }
     MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const noexcept { return true; }
-    MDSPAN_INLINE_FUNCTION constexpr bool is_contiguous() const noexcept { return true; }
+    MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const noexcept { return true; }
     MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const noexcept { return true; }
+
+    MDSPAN_INLINE_FUNCTION
+    constexpr index_type stride(rank_type i) const noexcept {
+      index_type value = 1;
+      for(rank_type r=extents_type::rank()-1; r>i; r--) value*=__extents.extent(r);
+      return value;
+    }
 
     template<class OtherExtents>
     MDSPAN_INLINE_FUNCTION
@@ -202,20 +221,20 @@ struct layout_right {
 #endif
 
     // Not really public, but currently needed to implement fully constexpr useable submdspan:
-    template<size_t N, size_t ... E, size_t ... Idx>
-    constexpr size_type __get_stride(std::experimental::extents<E...>,integer_sequence<size_t, Idx...>) const {
+    template<size_t N, class SizeType, size_t ... E, size_t ... Idx>
+    constexpr index_type __get_stride(std::experimental::extents<SizeType, E...>,integer_sequence<size_t, Idx...>) const {
       return _MDSPAN_FOLD_TIMES_RIGHT((Idx>N? __extents.template __extent<Idx>():1),1);
     }
     template<size_t N>
-    constexpr size_type __stride() const noexcept {
+    constexpr index_type __stride() const noexcept {
       return __get_stride<N>(__extents, make_index_sequence<extents_type::rank()>());
     }
 
 private:
-   _MDSPAN_NO_UNIQUE_ADDRESS Extents __extents{};
+   _MDSPAN_NO_UNIQUE_ADDRESS extents_type __extents{};
 
-  };
 };
 
 } // end namespace experimental
 } // end namespace std
+

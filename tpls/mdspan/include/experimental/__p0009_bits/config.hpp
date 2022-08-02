@@ -121,10 +121,8 @@ static_assert(_MDSPAN_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14 or 
 #  define _MDSPAN_PRESERVE_STANDARD_LAYOUT 1
 #endif
 
-// no unique address starts working in NVCC 11.6
-#if !defined(_MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS) && \
-   (!defined(__NVCC__) || ((__CUDACC_VER_MAJOR__ > 11) && (__CUDACC_VER_MINOR__ > 5)))
-#  if (__has_cpp_attribute(no_unique_address) >= 201803L) && !defined(_MDSPAN_COMPILER_MSVC)
+#if !defined(_MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS)
+#  if (MDSPAN_HAS_CXX_20) && (__has_cpp_attribute(no_unique_address) >= 201803L)
 #    define _MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS 1
 #    define _MDSPAN_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #  else
@@ -279,7 +277,7 @@ static_assert(_MDSPAN_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14 or 
 // Corentins demo compiler for subscript chokes on empty [] call,
 // though I believe the proposal supports it?
 #ifdef MDSPAN_NO_EMPTY_BRACKET_OPERATOR
-#  define __MDSPAN_OP0(mds) mds.accessor().access(mds.data(),0)
+#  define __MDSPAN_OP0(mds) mds.accessor().access(mds.data_handle(),0)
 #else
 #  define __MDSPAN_OP0(mds) mds[]
 #endif
