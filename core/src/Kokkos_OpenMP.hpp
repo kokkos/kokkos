@@ -182,14 +182,22 @@ class OpenMP {
   static int impl_get_current_max_threads() noexcept;
 
   Impl::OpenMPInternal* impl_internal_space_instance() const {
+#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
+    return m_space_instance;
+#else
     return m_space_instance.get();
+#endif
   }
 
   static constexpr const char* name() noexcept { return "OpenMP"; }
   uint32_t impl_instance_id() const noexcept { return 1; }
 
  private:
+#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
+  Impl::OpenMPInternal* m_space_instance;
+#else
   Kokkos::Impl::HostSharedPtr<Impl::OpenMPInternal> m_space_instance;
+#endif
 };
 
 namespace Tools {
