@@ -62,15 +62,15 @@ class OpenACCInternal {
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
-  int m_accDev;
+  static int m_accDev;
   int m_async_id;
   uint32_t m_instance_id;
 
   static OpenACCInternal& singleton();
 
-  int verify_is_initialized(const char* const label) const;
+  bool verify_is_initialized(const char* const label) const;
 
-  void initialize(int device_id, int async_arg = acc_async_sync);
+  void initialize(int async_arg = acc_async_sync);
   void finalize();
   bool is_initialized() const;
 
@@ -82,7 +82,6 @@ class OpenACCInternal {
 
   OpenACCInternal()
       : m_async_id(acc_async_sync),
-        m_accDev(-1),
         m_instance_id(Kokkos::Tools::Experimental::Impl::idForInstance<
                       Kokkos::Experimental::OpenACC>(
             reinterpret_cast<uintptr_t>(this))) {}

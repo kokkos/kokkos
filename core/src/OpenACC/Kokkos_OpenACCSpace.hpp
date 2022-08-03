@@ -214,7 +214,7 @@ struct Kokkos::Impl::DeepCopy<
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     if (n > 0)
       acc_memcpy_device_async(dst, const_cast<void*>(src), n,
-                              exec.get_async_id());
+                              exec.acc_async_queue());
   }
 };
 template <class ExecutionSpace>
@@ -230,7 +230,7 @@ struct Kokkos::Impl::DeepCopy<
     exec.fence(fence_string());
     if (n > 0)
       acc_memcpy_device_async(dst, const_cast<void*>(src), n,
-                              exec.get_async_id());
+                              exec.acc_async_queue());
   }
 
  private:
@@ -255,7 +255,7 @@ struct Kokkos::Impl::DeepCopy<
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     if (n > 0)
       acc_memcpy_to_device_async(dst, const_cast<void*>(src), n,
-                                 exec.get_async_id());
+                                 exec.acc_async_queue());
   }
 };
 template <class ExecutionSpace>
@@ -270,7 +270,7 @@ struct Kokkos::Impl::DeepCopy<
     exec.fence(fence_string());
     if (n > 0)
       acc_memcpy_to_device_async(dst, const_cast<void*>(src), n,
-                                 exec.get_async_id());
+                                 exec.acc_async_queue());
   }
 
  private:
@@ -295,7 +295,7 @@ struct Kokkos::Impl::DeepCopy<
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     if (n > 0)
       acc_memcpy_from_device_async(dst, const_cast<void*>(src), n,
-                                   exec.get_async_id());
+                                   exec.acc_async_queue());
   }
 };
 template <class ExecutionSpace>
@@ -310,7 +310,7 @@ struct Kokkos::Impl::DeepCopy<
     exec.fence(fence_string());
     if (n > 0)
       acc_memcpy_from_device_async(dst, const_cast<void*>(src), n,
-                                   exec.get_async_id());
+                                   exec.acc_async_queue());
   }
 
  private:

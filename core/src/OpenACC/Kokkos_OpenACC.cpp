@@ -69,20 +69,23 @@ Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
                        }) {
   Impl::OpenACCInternal::singleton().verify_is_initialized(
       "OpenACC instance constructor");
-  m_space_instance->initialize(Impl::OpenACCInternal::singleton().m_accDev,
-                               async_arg);
+  m_space_instance->initialize(async_arg);
 }
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {
-  acc_init(Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
-  Impl::OpenACCInternal::singleton().initialize(
-      Kokkos::Impl::get_gpu(settings));
+  int device_id = Kokkos::Impl::get_gpu(settings);
+  if (device_id < 0) {
+    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::initialize()") +
+                   " : ERROR device_id should be a non-negative integer\n")
+                      .c_str());
+  }
+  Impl::OpenACCInternal::m_accDev = device_id;
+  Impl::OpenACCInternal::singleton().initialize();
 }
 
 void Kokkos::Experimental::OpenACC::impl_finalize() {
   Impl::OpenACCInternal::singleton().finalize();
-  acc_shutdown(Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
 }
 
 bool Kokkos::Experimental::OpenACC::impl_is_initialized() {
@@ -112,12 +115,12 @@ uint32_t Kokkos::Experimental::OpenACC::impl_instance_id() const noexcept {
   return m_space_instance->instance_id();
 }
 
-int Kokkos::Experimental::OpenACC::get_async_id() const {
+int Kokkos::Experimental::OpenACC::acc_async_queue() const {
   return m_space_instance->m_async_id;
 }
 
-int Kokkos::Experimental::OpenACC::get_device_id() const {
-  return m_space_instance->m_accDev;
+int Kokkos::Experimental::OpenACC::acc_device_number() const {
+  return Impl::OpenACCInternal::m_accDev;
 }
 
 Kokkos::Experimental::OpenACC::size_type

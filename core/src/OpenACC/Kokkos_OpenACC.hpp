@@ -111,8 +111,8 @@ class OpenACC {
     return m_space_instance.get();
   }
 
-  int get_async_id() const;
-  int get_device_id() const;
+  int acc_async_queue() const;
+  int acc_device_number() const;
   static size_type detect_device_count();
 };
 
@@ -123,14 +123,8 @@ struct Kokkos::Tools::Experimental::DeviceTypeTraits<
     ::Kokkos::Experimental::OpenACC> {
   static constexpr DeviceType id =
       ::Kokkos::Profiling::Experimental::DeviceType::OpenACC;
-  // FIXME_OPENACC: Need to return the device id from the execution space
-  // instance. In fact, acc_get_device_num() will return the same value as the
-  // device id from the execution space instance except for the host fallback
-  // case, where the device id may need to be updated with the value of
-  // acc_get_device_num().
-  static int device_id(const Kokkos::Experimental::OpenACC&) {
-    using Kokkos::Experimental::Impl::OpenACC_Traits;
-    return acc_get_device_num(OpenACC_Traits::dev_type);
+  static int device_id(const Kokkos::Experimental::OpenACC& accInstance) {
+    return accInstance.acc_device_number();
   }
 };
 

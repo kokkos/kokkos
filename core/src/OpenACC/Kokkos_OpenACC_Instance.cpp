@@ -58,29 +58,25 @@ namespace Kokkos {
 bool show_warnings() noexcept;
 }
 
+int Kokkos::Experimental::Impl::OpenACCInternal::m_accDev = -1;
+
 Kokkos::Experimental::Impl::OpenACCInternal&
 Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
   static OpenACCInternal self;
   return self;
 }
 
-int Kokkos::Experimental::Impl::OpenACCInternal::verify_is_initialized(
+bool Kokkos::Experimental::Impl::OpenACCInternal::verify_is_initialized(
     const char* const label) const {
-  if (m_accDev < 0) {
+  if (!m_is_initialized) {
     Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::") + label +
                    " : ERROR device not initialized\n")
                       .c_str());
   }
-  return 0 <= m_accDev;
+  return m_is_initialized;
 }
 
-void Kokkos::Experimental::Impl::OpenACCInternal::initialize(int device_id,
-                                                             int async_arg) {
-  if (device_id < 0) {
-    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::initialize()") +
-                   " : ERROR device_id should be a non-negative integer\n")
-                      .c_str());
-  }
+void Kokkos::Experimental::Impl::OpenACCInternal::initialize(int async_arg) {
   if ((async_arg < 0) && (async_arg != acc_async_sync) &&
       (async_arg != acc_async_noval)) {
     Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::initialize()") +
@@ -88,7 +84,6 @@ void Kokkos::Experimental::Impl::OpenACCInternal::initialize(int device_id,
                    " unless being a special value defined in OpenACC\n")
                       .c_str());
   }
-  m_accDev         = device_id;
   m_async_id       = async_arg;
   m_is_initialized = true;
 }
