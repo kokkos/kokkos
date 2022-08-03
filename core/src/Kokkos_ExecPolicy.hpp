@@ -993,7 +993,7 @@ struct ParallelRank<Rank, SYCL, t_and_v> {
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
-struct ParallelRank<Rank, HPX, t_and_v> {
+struct ParallelRank<Rank, Experimental::HPX, t_and_v> {
   static constexpr bool isDirectionLeft =
       (Rank::outer_direction == Iterate::Left);
   static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
@@ -1006,8 +1006,7 @@ template <typename TeamHandle>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::ParThread,
-                    MDTeamRangeParVector::NotParVector>
-        mode,
+                    MDTeamRangeParVector::NotParVector>,
     TeamHandle const& team, int count) {
   return TeamThreadRange<int, TeamHandle>(team, count);
 }
@@ -1016,8 +1015,7 @@ template <typename TeamHandle>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::NotParThread,
-                    MDTeamRangeParVector::ParVector>
-        mode,
+                    MDTeamRangeParVector::ParVector>,
     TeamHandle const& team, int count) {
   return ThreadVectorRange(team, count);
 }
@@ -1026,8 +1024,7 @@ template <typename TeamHandle>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::ParThread,
-                    MDTeamRangeParVector::ParVector>
-        mode,
+                    MDTeamRangeParVector::ParVector>,
     TeamHandle const& team, int count) {
   return TeamVectorRange(team, count);
 }
@@ -1038,7 +1035,7 @@ template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank,
 KOKKOS_INLINE_FUNCTION void nested_loop(
     MDTeamRangeMode<MDTeamRangeEndRank::EndRank,
                     MDTeamRangeParThread::NotParThread,
-                    MDTeamRangeParVector::NotParVector> const& mode,
+                    MDTeamRangeParVector::NotParVector> const&,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
     Policy const& policy, Lambda const& lambda, Impl::NoReductionTag,
     Args... args) {
@@ -1053,8 +1050,7 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                     MDTeamRangeParThread::NotParThread,
                     MDTeamRangeParVector::NotParVector> const&,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
-    Policy const& policy, Lambda const& lambda, ReducerValueType& val,
-    Args... args) {
+    Policy const&, Lambda const& lambda, ReducerValueType& val, Args... args) {
   lambda(args..., val);
 }
 
@@ -1065,7 +1061,7 @@ template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank,
 KOKKOS_INLINE_FUNCTION void nested_loop(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::NotParThread,
-                    MDTeamRangeParVector::NotParVector> const& mode,
+                    MDTeamRangeParVector::NotParVector> const&,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
     Policy const& policy, Lambda const& lambda, ReducerValueType& val,
     Args... args) {
