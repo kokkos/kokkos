@@ -1765,7 +1765,8 @@ KOKKOS_INLINE_FUNCTION constexpr auto DynRankView<D, P...>::layout() const ->
           Kokkos::abort(
               "Calling DynRankView::layout on DRV of unexpected rank");)
   }
-  return typename traits::array_layout{};
+  // control flow should never reach here
+  return m_map.layout();
 }
 
 /** \brief  Deep copy a value from Host memory into a view.  */
