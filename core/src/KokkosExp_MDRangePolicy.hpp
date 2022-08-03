@@ -177,6 +177,20 @@ TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
 }  // namespace Impl
 
 // multi-dimensional iteration pattern
+//
+// Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
+// guides) are generated -> MDRangePolicy<>, which is incorrect.  If we make it
+// a template specialization instead, no implicit CTAD is generated.  This works
+// because there has to be at least one property specified which is Rank<N>;
+// otherwise, we'd get the static assert "Kokkos::Error: MD iteration pattern
+// not defined".  The template specialization uses <P, Properties...>
+// for correctness.
+
+template <typename... Properties>
+struct MDRangePolicy;
+
+#ifdef KOKKOS_IMPL_MDRANGEPOLICY_PRIMARY_TEMPLATE
+
 template <typename... Properties>
 struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using traits       = Kokkos::Impl::PolicyTraits<Properties...>;
@@ -191,6 +205,25 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using execution_policy =
       MDRangePolicy<Properties...>;  // needed for is_execution_space
                                      // interrogation
+#else
+
+template <typename P, typename... Properties>
+struct MDRangePolicy<P, Properties...>
+    : public Kokkos::Impl::PolicyTraits<P, Properties...> {
+  using traits       = Kokkos::Impl::PolicyTraits<P, Properties...>;
+  using range_policy = RangePolicy<P, Properties...>;
+
+  typename traits::execution_space m_space;
+
+  using impl_range_policy =
+      RangePolicy<typename traits::execution_space,
+                  typename traits::schedule_type, typename traits::index_type>;
+
+  using execution_policy =
+      MDRangePolicy<P, Properties...>;  // needed for is_execution_space
+                                        // interrogation
+
+#endif
 
   template <class... OtherProperties>
   friend struct MDRangePolicy;
@@ -407,8 +440,7 @@ MDRangePolicy(ES const&, const LT (&)[N], const UT (&)[N])
     -> MDRangePolicy<ES, Rank<N>>;
 
 template <typename ES, typename LT, size_t N, typename UT, typename TT,
-          size_t TN,
-          typename = std::enable_if_t<is_execution_space_v<ES>>>
+          size_t TN, typename = std::enable_if_t<is_execution_space_v<ES>>>
 MDRangePolicy(ES const&, const LT (&)[N], const UT (&)[N], const TT (&)[TN])
     -> MDRangePolicy<ES, Rank<N>>;
 

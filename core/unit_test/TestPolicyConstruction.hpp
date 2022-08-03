@@ -336,6 +336,15 @@ class TestRangePolicyConstruction {
     Kokkos::RangePolicy rp0;
     ASSERT_TRUE((std::is_same_v<decltype(rp0), Kokkos::RangePolicy<>>));
 
+    // Copy/move
+    Kokkos::RangePolicy<SomeExecutionSpace> rptc;
+    Kokkos::RangePolicy rpdc(rptc);
+    ASSERT_TRUE((std::is_same_v<decltype(rptc), decltype(rpdc)>));
+
+    Kokkos::RangePolicy<SomeExecutionSpace> rptm;
+    Kokkos::RangePolicy rpdm(std::move(rptm));
+    ASSERT_TRUE((std::is_same_v<decltype(rptm), decltype(rpdm)>));
+
     // RangePolicy(execution_space, index_type, index_type)
 
     Kokkos::RangePolicy rpa1(des, i64, i64);
@@ -698,6 +707,16 @@ class TestTeamPolicyConstruction {
 
     int i{};
 
+    // Copy/Move
+
+    Kokkos::TeamPolicy<SomeExecutionSpace> tptc;
+    Kokkos::TeamPolicy tpdc(tptc);
+    ASSERT_TRUE((std::is_same_v<decltype(tptc), decltype(tpdc)>));
+
+    Kokkos::TeamPolicy<SomeExecutionSpace> tptm;
+    Kokkos::TeamPolicy tpdm(std::move(tptm));
+    ASSERT_TRUE((std::is_same_v<decltype(tptm), decltype(tpdm)>));
+
     // Execution space not provided deduces to TeamPolicy<>
 
     Kokkos::TeamPolicy tp;
@@ -776,13 +795,16 @@ class TestTeamPolicyConstruction {
                                 Kokkos::TeamPolicy<SomeExecutionSpace>>));
 
     Kokkos::TeamPolicy tpsiai(ses, i, Kokkos::AUTO, i);
-    ASSERT_TRUE((std::is_same_v<decltype(tpsiai), Kokkos::TeamPolicy<SomeExecutionSpace>>));
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiai),
+                                Kokkos::TeamPolicy<SomeExecutionSpace>>));
 
     Kokkos::TeamPolicy tpsiaa(ses, i, Kokkos::AUTO, Kokkos::AUTO);
-    ASSERT_TRUE((std::is_same_v<decltype(tpsiaa), Kokkos::TeamPolicy<SomeExecutionSpace>>));
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiaa),
+                                Kokkos::TeamPolicy<SomeExecutionSpace>>));
 
     Kokkos::TeamPolicy tpsiia(ses, i, i, Kokkos::AUTO);
-    ASSERT_TRUE((std::is_same_v<decltype(tpsiia), Kokkos::TeamPolicy<SomeExecutionSpace>>));
+    ASSERT_TRUE((std::is_same_v<decltype(tpsiia),
+                                Kokkos::TeamPolicy<SomeExecutionSpace>>));
 
     // Confirm it works for the ExecutionSpace template parameter passed in
 
@@ -1087,6 +1109,103 @@ void more_md_range_policy_construction_test() {
 
   (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{T(0), T(0)},
                                                                {T(2), T(2)}};
+}
+
+TEST(TEST_CATEGORY, md_range_policy_compile_time_deduction_guides) {
+  Kokkos::DefaultExecutionSpace des{};
+  ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
+  SomeExecutionSpace ses{};
+  TEST_EXECSPACE es{};
+
+  constexpr int t[5]       = {};
+  constexpr int64_t tt[5]  = {};
+  Kokkos::Array<int, 3> a  = {};
+  Kokkos::Array<int, 2> aa = {};
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<2>> ptc;
+  Kokkos::MDRangePolicy pdc(ptc);
+  ASSERT_TRUE((std::is_same_v<decltype(pdc), decltype(ptc)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<2>> ptm;
+  Kokkos::MDRangePolicy pdm(std::move(ptm));
+  ASSERT_TRUE((std::is_same_v<decltype(pdm), decltype(ptm)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(t)>> pt1(t, t);
+  Kokkos::MDRangePolicy pd1(t, t);
+  ASSERT_TRUE((std::is_same_v<decltype(pd1), decltype(pt1)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(t)>> pt2(t, t, tt);
+  Kokkos::MDRangePolicy pd2(t, t, tt);
+  ASSERT_TRUE((std::is_same_v<decltype(pd2), decltype(pt2)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(t)>> pt3(des, t, t);
+  Kokkos::MDRangePolicy pd3(des, t, t);
+  ASSERT_TRUE((std::is_same_v<decltype(pd3), decltype(pt3)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(t)>> pt4(notEs, t, t);
+  Kokkos::MDRangePolicy pd4(notEs, t, t);
+  ASSERT_TRUE((std::is_same_v<decltype(pd4), decltype(pt4)>));
+
+  Kokkos::MDRangePolicy<SomeExecutionSpace, Kokkos::Rank<std::size(t)>> pt5(
+      ses, t, t);
+  Kokkos::MDRangePolicy pd5(ses, t, t);
+  ASSERT_TRUE((std::is_same_v<decltype(pd5), decltype(pt5)>));
+
+  using TestExecSpaceMDRangePolicyT = std::conditional_t<
+      std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
+      Kokkos::MDRangePolicy<Kokkos::Rank<std::size(t)>>,
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<std::size(t)>>>;
+
+  TestExecSpaceMDRangePolicyT pt6(es, t, t);
+  Kokkos::MDRangePolicy pd6(es, t, t);
+  ASSERT_TRUE((std::is_same_v<decltype(pd6), decltype(pt6)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>> pt7(a, a);
+  Kokkos::MDRangePolicy pd7(a, a);
+  ASSERT_TRUE((std::is_same_v<decltype(pd7), decltype(pt7)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>> pt8(a, a, aa);
+  Kokkos::MDRangePolicy pd8(a, a, aa);
+  ASSERT_TRUE((std::is_same_v<decltype(pd8), decltype(pt8)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>> pt9(des, a, a);
+  Kokkos::MDRangePolicy pd9(des, a, a);
+  ASSERT_TRUE((std::is_same_v<decltype(pd9), decltype(pt9)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>> pt10(notEs, a, a);
+  Kokkos::MDRangePolicy pd10(notEs, a, a);
+  ASSERT_TRUE((std::is_same_v<decltype(pd10), decltype(pt10)>));
+
+  Kokkos::MDRangePolicy<SomeExecutionSpace, Kokkos::Rank<std::size(a)>> pt11(
+      ses, a, a);
+  Kokkos::MDRangePolicy pd11(ses, a, a);
+  ASSERT_TRUE((std::is_same_v<decltype(pd9), decltype(pt9)>));
+
+  using TestExecSpaceMDRangePolicyA = std::conditional_t<
+      std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
+      Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>>,
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<std::size(t)>>>;
+
+  TestExecSpaceMDRangePolicyA pt12(es, a, a);
+  Kokkos::MDRangePolicy pd12(es, a, a);
+  ASSERT_TRUE((std::is_same_v<decltype(pd12), decltype(pt12)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>> pt13(des, a, a, aa);
+  Kokkos::MDRangePolicy pd13(des, a, a, aa);
+  ASSERT_TRUE((std::is_same_v<decltype(pd13), decltype(pt13)>));
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<std::size(a)>> pt14(notEs, a, a, aa);
+  Kokkos::MDRangePolicy pd14(notEs, a, a, aa);
+  ASSERT_TRUE((std::is_same_v<decltype(pd14), decltype(pt14)>));
+
+  Kokkos::MDRangePolicy<SomeExecutionSpace, Kokkos::Rank<std::size(a)>> pt15(
+      ses, a, a, aa);
+  Kokkos::MDRangePolicy pd15(ses, a, a, aa);
+  ASSERT_TRUE((std::is_same_v<decltype(pd15), decltype(pt15)>));
+
+  TestExecSpaceMDRangePolicyA pt16(es, a, a, aa);
+  Kokkos::MDRangePolicy pd16(es, a, a, aa);
+  ASSERT_TRUE((std::is_same_v<decltype(pd16), decltype(pt16)>));
 }
 
 TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
