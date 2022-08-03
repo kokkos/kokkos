@@ -390,11 +390,10 @@ class ViewMapping<Traits, Kokkos::Array<>> {
                                     alloc_size)
             : record_type::allocate(mem_space, alloc_name, alloc_size);
 
-    if (alloc_size) {
-      m_impl_handle =
-          handle_type(reinterpret_cast<pointer_type>(record->data()));
+    m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
-      if (alloc_prop::initialize) {
+    if constexpr (alloc_prop::initialize) {
+      if (alloc_size) {
         // The functor constructs and destroys
         record->m_destroy =
             execution_space_specified
@@ -403,6 +402,12 @@ class ViewMapping<Traits, Kokkos::Array<>> {
                 : functor_type((pointer_type)m_impl_handle,
                                m_impl_offset.span() * Array_N, alloc_name);
 
+        // Construct values
+        if (false) {
+          // Make sure the destroy functor gets instantiated.
+          // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
+          record->m_destroy.destroy_shared_allocation();
+        }
         record->m_destroy.construct_shared_allocation();
       }
     }
