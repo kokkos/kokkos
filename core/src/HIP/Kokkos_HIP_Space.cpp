@@ -598,14 +598,6 @@ int g_hip_space_factory_initialized =
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Kokkos::Experimental::HIP>::id;
-}
-}  // namespace Tools
-#endif
-
 }  // namespace Kokkos
 
 //==============================================================================

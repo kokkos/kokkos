@@ -294,7 +294,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS=-Werror \
-                                -DCMAKE_CXX_STANDARD=14 \
+                                -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
@@ -313,12 +313,12 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-9.2-NVCC') {
+                stage('CUDA-11.7-NVCC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.7.0-devel-ubuntu20.04'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -329,7 +329,7 @@ pipeline {
                               ../gnu_generate_makefile.bash \
                                 --with-options=compiler_warnings \
                                 --cxxflags="-Werror" \
-                                --cxxstandard=c++14 \
+                                --cxxstandard=c++17 \
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
                                 --arch=Volta70 \
@@ -431,7 +431,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
-                                -DCMAKE_CXX_STANDARD=14 \
+                                -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
@@ -445,7 +445,7 @@ pipeline {
                               make -j8 && ctest --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --verbose'''
+                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -453,7 +453,7 @@ pipeline {
                         }
                     }
                 }
-                stage('GCC-5.3.1') {
+                stage('GCC-8.4.0') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.gcc'
@@ -463,6 +463,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_NESTED = 'true'
                         OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PROC_BIND = 'true'
                     }
@@ -470,7 +471,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
-                                -DCMAKE_CXX_STANDARD=14 \
+                                -DCMAKE_CXX_STANDARD=17 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \

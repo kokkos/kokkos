@@ -891,12 +891,4 @@ int g_threads_space_factory_initialized =
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Threads>::id;
-}
-}  // namespace Tools
-#endif
-
 } /* namespace Kokkos */
