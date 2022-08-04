@@ -3465,6 +3465,19 @@ class ViewMapping<
 
     m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
+    functor_type functor =
+        execution_space_specified
+            ? functor_type(exec_space, (value_type*)m_impl_handle,
+                           m_impl_offset.span(), alloc_name)
+            : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
+                           alloc_name);
+
+    if (false) {
+      // Make sure the destroy functor gets instantiated.
+      // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
+      functor.destroy_shared_allocation();
+    }
+
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.
     if constexpr (alloc_prop::initialize)
@@ -3472,19 +3485,9 @@ class ViewMapping<
         // Assume destruction is only required when construction is requested.
         // The ViewValueFunctor has both value construction and destruction
         // operators.
-        record->m_destroy =
-            execution_space_specified
-                ? functor_type(exec_space, (value_type*)m_impl_handle,
-                               m_impl_offset.span(), alloc_name)
-                : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
-                               alloc_name);
+        record->m_destroy = std::move(functor);
 
         // Construct values
-        if (false) {
-          // Make sure the destroy functor gets instantiated.
-          // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
-          record->m_destroy.destroy_shared_allocation();
-        }
         record->m_destroy.construct_shared_allocation();
       }
 

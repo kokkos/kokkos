@@ -392,25 +392,31 @@ class ViewMapping<Traits, Kokkos::Array<>> {
 
     m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
-    if constexpr (alloc_prop::initialize) {
+    functor_type functor =
+        execution_space_specified
+            ? functor_type(exec_space, (pointer_type)m_impl_handle,
+                           m_impl_offset.span() * Array_N, alloc_name)
+            : functor_type((pointer_type)m_impl_handle,
+                           m_impl_offset.span() * Array_N, alloc_name);
+
+    if (false) {
+      // Make sure the destroy functor gets instantiated.
+      // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
+      functor.destroy_shared_allocation();
+    }
+
+    //  Only initialize if the allocation is non-zero.
+    //  May be zero if one of the dimensions is zero.
+    if constexpr (alloc_prop::initialize)
       if (alloc_size) {
-        // The functor constructs and destroys
-        record->m_destroy =
-            execution_space_specified
-                ? functor_type(exec_space, (pointer_type)m_impl_handle,
-                               m_impl_offset.span() * Array_N, alloc_name)
-                : functor_type((pointer_type)m_impl_handle,
-                               m_impl_offset.span() * Array_N, alloc_name);
+        // Assume destruction is only required when construction is requested.
+        // The ViewValueFunctor has both value construction and destruction
+        // operators.
+        record->m_destroy = std::move(functor);
 
         // Construct values
-        if (false) {
-          // Make sure the destroy functor gets instantiated.
-          // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
-          record->m_destroy.destroy_shared_allocation();
-        }
         record->m_destroy.construct_shared_allocation();
       }
-    }
 
     return record;
   }
