@@ -1,3 +1,5 @@
-Checks: '-*,kokkos-*,modernize-use-using,modernize-use-nullptr,cppcoreguidelines-pro-type-cstyle-cast'
+Checks: '-*,kokkos-*,modernize-use-using,modernize-use-nullptr,cppcoreguidelines-pro-type-cstyle-cast, readability-implicit-bool-conversion'
+CheckOptions: [ {key: readability-implicit-bool-conversion.AllowIntegerConditions, value: 0},
+                {key: readability-implicit-bool-conversion.AllowPointerConditions, value: 1}]
 FormatStyle: file
 HeaderFilterRegex: '.*/*.hpp'
