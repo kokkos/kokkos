@@ -43,7 +43,6 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <iostream>
 
 namespace Test {
 

@@ -189,6 +189,8 @@ TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
 template <typename... Properties>
 struct MDRangePolicy;
 
+// TODO remove the MDRangePolicy primary template and leave only the
+// MDRangePolicy<P, Properties...> specialization
 #ifdef KOKKOS_IMPL_MDRANGEPOLICY_PRIMARY_TEMPLATE
 
 template <typename... Properties>
