@@ -99,6 +99,11 @@ struct Sum {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+Sum(View<ValueType, Space> const&) -> Sum<ValueType, Space>;
+
 template <class Scalar, class Space>
 struct Prod {
  public:
@@ -138,6 +143,11 @@ struct Prod {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+Prod(View<ValueType, Space> const&) -> Prod<ValueType, Space>;
 
 template <class Scalar, class Space>
 struct Min {
@@ -180,6 +190,11 @@ struct Min {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+Min(View<ValueType, Space> const&) -> Min<ValueType, Space>;
 
 template <class Scalar, class Space>
 struct Max {
@@ -224,6 +239,11 @@ struct Max {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+Max(View<ValueType, Space> const&) -> Max<ValueType, Space>;
+
 template <class Scalar, class Space>
 struct LAnd {
  public:
@@ -264,6 +284,11 @@ struct LAnd {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+LAnd(View<ValueType, Space> const&) -> LAnd<ValueType, Space>;
 
 template <class Scalar, class Space>
 struct LOr {
@@ -307,6 +332,11 @@ struct LOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+LOr(View<ValueType, Space> const&) -> LOr<ValueType, Space>;
+
 template <class Scalar, class Space>
 struct BAnd {
  public:
@@ -349,6 +379,11 @@ struct BAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+BAnd(View<ValueType, Space> const&) -> BAnd<ValueType, Space>;
+
 template <class Scalar, class Space>
 struct BOr {
  public:
@@ -390,6 +425,11 @@ struct BOr {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename ValueType, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
+BOr(View<ValueType, Space> const&) -> BOr<ValueType, Space>;
 
 template <class Scalar, class Index>
 struct ValLocScalar {
@@ -449,6 +489,13 @@ struct MinLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MinLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
+    -> MinLoc<Scalar, Index, Space>;
 
 template <class Scalar, class Index, class Space>
 struct MaxLoc {

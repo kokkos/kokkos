@@ -164,6 +164,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reducers_d
         Reducers_e
         Reductions_DeviceView
+        ReducerCTADs
         Scan
         SharedAlloc
         ViewMapping_a
