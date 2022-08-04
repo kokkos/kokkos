@@ -633,6 +633,8 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+#define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
+
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
     !defined(_WIN32)
