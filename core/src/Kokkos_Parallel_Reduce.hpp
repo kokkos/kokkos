@@ -99,9 +99,7 @@ struct Sum {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 Sum(View<Scalar, Space> const&) -> Sum<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -144,9 +142,7 @@ struct Prod {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 Prod(View<Scalar, Space> const&) -> Prod<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -191,9 +187,7 @@ struct Min {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 Min(View<Scalar, Space> const&) -> Min<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -239,9 +233,7 @@ struct Max {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 Max(View<Scalar, Space> const&) -> Max<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -285,9 +277,7 @@ struct LAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 LAnd(View<Scalar, Space> const&) -> LAnd<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -332,9 +322,7 @@ struct LOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 LOr(View<Scalar, Space> const&) -> LOr<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -379,9 +367,7 @@ struct BAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 BAnd(View<Scalar, Space> const&) -> BAnd<Scalar, Space>;
 
 template <class Scalar, class Space>
@@ -426,9 +412,7 @@ struct BOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 BOr(View<Scalar, Space> const&) -> BOr<Scalar, Space>;
 
 template <class Scalar, class Index>
@@ -490,10 +474,7 @@ struct MinLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Index, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename Space>
 MinLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
     -> MinLoc<Scalar, Index, Space>;
 
@@ -544,10 +525,7 @@ struct MaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Index, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename Space>
 MaxLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
     -> MaxLoc<Scalar, Index, Space>;
 
@@ -613,9 +591,7 @@ struct MinMax {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+template <typename Scalar, typename Space>
 MinMax(View<MinMaxScalar<Scalar>, Space> const&) -> MinMax<Scalar, Space>;
 
 template <class Scalar, class Index>
@@ -688,10 +664,7 @@ struct MinMaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Index, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename Space>
 MinMaxLoc(View<MinMaxLocScalar<Scalar, Index>, Space> const&)
     -> MinMaxLoc<Scalar, Index, Space>;
 
@@ -753,10 +726,7 @@ struct MaxFirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Index, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename Space>
 MaxFirstLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
     -> MaxFirstLoc<Scalar, Index, Space>;
 
@@ -819,11 +789,8 @@ struct MaxFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Scalar, typename Index, typename ComparatorType, typename Space,
-    typename =
-        std::enable_if_t<std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-                         std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename Space>
 MaxFirstLocCustomComparator(View<ValLocScalar<Scalar, Index>, Space> const&,
                             ComparatorType)
     -> MaxFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
@@ -882,10 +849,7 @@ struct MinFirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Index, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename Space>
 MinFirstLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
     -> MinFirstLoc<Scalar, Index, Space>;
 
@@ -948,11 +912,8 @@ struct MinFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Scalar, typename Index, typename ComparatorType, typename Space,
-    typename =
-        std::enable_if_t<std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-                         std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename Space>
 MinFirstLocCustomComparator(View<ValLocScalar<Scalar, Index>, Space> const&,
                             ComparatorType)
     -> MinFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
@@ -1022,10 +983,7 @@ struct MinMaxFirstLastLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename Scalar, typename Index, typename Space,
-          typename = std::enable_if_t<
-              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename Space>
 MinMaxFirstLastLoc(View<MinMaxLocScalar<Scalar, Index>, Space> const&)
     -> MinMaxFirstLastLoc<Scalar, Index, Space>;
 
@@ -1098,11 +1056,8 @@ struct MinMaxFirstLastLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Scalar, typename Index, typename ComparatorType, typename Space,
-    typename =
-        std::enable_if_t<std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
-                         std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename Space>
 MinMaxFirstLastLocCustomComparator(
     View<MinMaxLocScalar<Scalar, Index>, Space> const&, ComparatorType)
     -> MinMaxFirstLastLocCustomComparator<Scalar, Index, ComparatorType, Space>;
@@ -1165,9 +1120,7 @@ struct FirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Index, typename Space,
-    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Index, typename Space>
 FirstLoc(View<FirstLocScalar<Index>, Space> const&) -> FirstLoc<Index, Space>;
 
 //
@@ -1228,9 +1181,7 @@ struct LastLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Index, typename Space,
-    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Index, typename Space>
 LastLoc(View<LastLocScalar<Index>, Space> const&) -> LastLoc<Index, Space>;
 
 template <class Index>
@@ -1300,9 +1251,7 @@ struct StdIsPartitioned {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Index, typename Space,
-    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Index, typename Space>
 StdIsPartitioned(View<StdIsPartScalar<Index>, Space> const&)
     -> StdIsPartitioned<Index, Space>;
 
@@ -1367,9 +1316,7 @@ struct StdPartitionPoint {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <
-    typename Index, typename Space,
-    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+template <typename Index, typename Space>
 StdPartitionPoint(View<StdPartPointScalar<Index>, Space> const&)
     -> StdPartitionPoint<Index, Space>;
 
