@@ -338,7 +338,7 @@ CudaInternal::~CudaInternal() {
   m_scratchSpaceCount       = 0;
   m_scratchFlagsCount       = 0;
   m_scratchUnifiedCount     = 0;
-  m_scratchUnifiedSupported = 0;
+  m_scratchUnifiedSupported = false;
   m_streamCount             = 0;
   m_scratchSpace            = nullptr;
   m_scratchFlags            = nullptr;
@@ -480,7 +480,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
 
     //----------------------------------
 
-    m_scratchUnifiedSupported = cudaProp.unifiedAddressing;
+    m_scratchUnifiedSupported = cudaProp.unifiedAddressing == 1;
 
     if (Kokkos::show_warnings() && !m_scratchUnifiedSupported) {
       std::cerr << "Kokkos::Cuda device " << cudaProp.name << " capability "

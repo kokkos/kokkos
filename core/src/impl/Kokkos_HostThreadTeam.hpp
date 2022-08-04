@@ -259,8 +259,9 @@ class HostThreadTeamData {
   }
 
   constexpr size_t pool_reduce_bytes() const {
-    return m_scratch_size ? sizeof(int64_t) * (m_team_reduce - m_pool_reduce)
-                          : 0;
+    return m_scratch_size != 0
+               ? sizeof(int64_t) * (m_team_reduce - m_pool_reduce)
+               : 0;
   }
 
   constexpr size_t team_reduce_bytes() const {

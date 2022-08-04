@@ -83,27 +83,27 @@ unsigned thread_mapping(const char* const label, const bool allow_async,
   //------------------------------------------------------------------------
   // Defaults for unspecified inputs:
 
-  if (!use_numa_count) {
+  if (use_numa_count == 0) {
     // Default to use all NUMA regions
-    use_numa_count = !thread_count
+    use_numa_count = thread_count == 0
                          ? avail_numa_count
                          : (thread_count < avail_numa_count ? thread_count
                                                             : avail_numa_count);
   }
 
-  if (!use_cores_per_numa) {
+  if (use_cores_per_numa == 0) {
     // Default to use all but one core if asynchronous, all cores if
     // synchronous.
     const unsigned threads_per_numa = thread_count / use_numa_count;
 
     use_cores_per_numa =
-        !threads_per_numa
-            ? avail_cores_per_numa - (allow_async ? 1 : 0)
+        threads_per_numa == 0
+            ? avail_cores_per_numa - static_cast<int>(allow_async)
             : (threads_per_numa < avail_cores_per_numa ? threads_per_numa
                                                        : avail_cores_per_numa);
   }
 
-  if (!thread_count) {
+  if (thread_count == 0) {
     thread_count = use_numa_count * use_cores_per_numa * avail_threads_per_core;
   }
 
@@ -112,13 +112,14 @@ unsigned thread_mapping(const char* const label, const bool allow_async,
 
   const bool valid_numa = use_numa_count <= avail_numa_count;
   const bool valid_cores =
-      use_cores_per_numa && use_cores_per_numa <= avail_cores_per_numa;
+      (use_cores_per_numa > 0) && (use_cores_per_numa <= avail_cores_per_numa);
   const bool valid_threads =
-      thread_count && thread_count <= use_numa_count * use_cores_per_numa *
-                                          avail_threads_per_core;
-  const bool balanced_numa = !(thread_count % use_numa_count);
+      (thread_count > 0) &&
+      (thread_count <=
+       use_numa_count * use_cores_per_numa * avail_threads_per_core);
+  const bool balanced_numa = (thread_count % use_numa_count) == 0;
   const bool balanced_cores =
-      !(thread_count % (use_numa_count * use_cores_per_numa));
+      (thread_count % (use_numa_count * use_cores_per_numa)) == 0;
 
   const bool valid_input = valid_numa && valid_cores && valid_threads &&
                            balanced_numa && balanced_cores;
@@ -153,12 +154,10 @@ unsigned thread_mapping(const char* const label, const bool allow_async,
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
-  const unsigned thread_spawn_synchronous =
-      (allow_async && 1 < thread_count &&
-       (use_numa_count < avail_numa_count ||
-        use_cores_per_numa < avail_cores_per_numa))
-          ? 0 /* asyncronous */
-          : 1 /* synchronous, threads_coord[0] is process core */;
+  const bool thread_spawn_synchronous =
+      !(allow_async && 1 < thread_count &&
+        (use_numa_count < avail_numa_count ||
+         use_cores_per_numa < avail_cores_per_numa));
 
   // Determine binding coordinates for to-be-spawned threads so that
   // threads may be bound to cores as they are spawned.
@@ -225,7 +224,7 @@ unsigned thread_mapping(const char* const label, const bool allow_async,
     }
   }
 
-  return thread_spawn_synchronous;
+  return static_cast<int>(thread_spawn_synchronous);
 }
 
 } /* namespace hwloc */

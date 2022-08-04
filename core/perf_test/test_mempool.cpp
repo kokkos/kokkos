@@ -102,7 +102,7 @@ struct TestFunctor {
 
       ptrs(j) = reinterpret_cast<uintptr_t>(pool.allocate(size_alloc));
 
-      if (ptrs(j)) ++update;
+      if (ptrs(j) != 0) ++update;
     }
   }
 
@@ -192,32 +192,32 @@ int main(int argc, char* argv[]) {
   int repeat_outer        = 1;
   int repeat_inner        = 1;
 
-  int ask_help = 0;
+  bool ask_help = false;
 
   for (int i = 1; i < argc; i++) {
     const char* const a = argv[i];
 
-    if (!strncmp(a, help_flag, strlen(help_flag))) ask_help = 1;
+    if (strncmp(a, help_flag, strlen(help_flag)) == 0) ask_help = true;
 
-    if (!strncmp(a, alloc_size_flag, strlen(alloc_size_flag)))
+    if (strncmp(a, alloc_size_flag, strlen(alloc_size_flag)) == 0)
       total_alloc_size = atol(a + strlen(alloc_size_flag));
 
-    if (!strncmp(a, super_size_flag, strlen(super_size_flag)))
+    if (strncmp(a, super_size_flag, strlen(super_size_flag)) == 0)
       min_superblock_size = std::stoi(a + strlen(super_size_flag));
 
-    if (!strncmp(a, fill_stride_flag, strlen(fill_stride_flag)))
+    if (strncmp(a, fill_stride_flag, strlen(fill_stride_flag)) == 0)
       fill_stride = std::stoi(a + strlen(fill_stride_flag));
 
-    if (!strncmp(a, fill_level_flag, strlen(fill_level_flag)))
+    if (strncmp(a, fill_level_flag, strlen(fill_level_flag)) == 0)
       fill_level = std::stoi(a + strlen(fill_level_flag));
 
-    if (!strncmp(a, chunk_span_flag, strlen(chunk_span_flag)))
+    if (strncmp(a, chunk_span_flag, strlen(chunk_span_flag)) == 0)
       chunk_span = std::stoi(a + strlen(chunk_span_flag));
 
-    if (!strncmp(a, repeat_outer_flag, strlen(repeat_outer_flag)))
+    if (strncmp(a, repeat_outer_flag, strlen(repeat_outer_flag)) == 0)
       repeat_outer = std::stoi(a + strlen(repeat_outer_flag));
 
-    if (!strncmp(a, repeat_inner_flag, strlen(repeat_inner_flag)))
+    if (strncmp(a, repeat_inner_flag, strlen(repeat_inner_flag)) == 0)
       repeat_inner = std::stoi(a + strlen(repeat_inner_flag));
   }
 

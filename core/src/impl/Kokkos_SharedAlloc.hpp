@@ -519,7 +519,7 @@ union SharedAllocationTracker {
 
   // report if record is tracking or not
   KOKKOS_FORCEINLINE_FUNCTION
-  bool tracking_enabled() { return (!(m_record_bits & DO_NOT_DEREF_FLAG)); }
+  bool tracking_enabled() { return (m_record_bits & DO_NOT_DEREF_FLAG) == 0; }
 
   /** \brief  Copy assignment may disable tracking */
   KOKKOS_FORCEINLINE_FUNCTION

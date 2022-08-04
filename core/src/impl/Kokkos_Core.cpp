@@ -307,7 +307,7 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
   }
 
   auto const* comma = std::strchr(resource_str, ',');
-  if (!comma || strncmp(resource_str, "id:", 3)) {
+  if (!comma || (strncmp(resource_str, "id:", 3) != 0)) {
     std::ostringstream ss;
     ss << "Error: invalid value of " << ctest_resource_group_id_name << ": '"
        << resource_str << "'. Raised by Kokkos::Impl::get_ctest_gpu().";

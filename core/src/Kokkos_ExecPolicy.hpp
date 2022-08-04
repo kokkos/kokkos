@@ -261,7 +261,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     WorkRange(const RangePolicy& range, const int part_rank,
               const int part_size)
         : m_begin(0), m_end(0) {
-      if (part_size) {
+      if (part_size != 0) {
         // Split evenly among partitions, then round up to the granularity.
         const member_type work_part =
             ((((range.end() - range.begin()) + (part_size - 1)) / part_size) +

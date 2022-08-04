@@ -217,9 +217,10 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
 
       m_pool[rank] = new (ptr) HostThreadTeamData();
 
-      m_pool[rank]->scratch_assign(((char *)ptr) + member_bytes, alloc_bytes,
-                                   pool_reduce_bytes, team_reduce_bytes,
-                                   team_shared_bytes, thread_local_bytes);
+      m_pool[rank]->scratch_assign(static_cast<char *>(ptr) + member_bytes,
+                                   alloc_bytes, pool_reduce_bytes,
+                                   team_reduce_bytes, team_shared_bytes,
+                                   thread_local_bytes);
 
       memory_fence();
     }
@@ -263,7 +264,7 @@ void OpenMPInternal::initialize(int thread_count) {
         "Calling OpenMP::initialize after OpenMP::finalize is illegal\n");
   }
 
-  if (omp_in_parallel()) {
+  if (omp_in_parallel() != 0) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
@@ -362,10 +363,10 @@ void OpenMPInternal::initialize(int thread_count) {
 }
 
 void OpenMPInternal::finalize() {
-  if (omp_in_parallel()) {
+  if (omp_in_parallel() != 0) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
     if (this != &singleton()) msg.append(": not initialized");
-    if (omp_in_parallel()) msg.append(": in parallel");
+    if (omp_in_parallel() != 0) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 

@@ -121,7 +121,7 @@ void _print_memory_pool_state(std::ostream& s, uint32_t const* sb_state_ptr,
     << " superblock_size(" << (1LU << sb_size_lg2) << ")" << std::endl;
 
   for (int32_t i = 0; i < sb_count; ++i, sb_state_ptr += sb_state_size) {
-    if (*sb_state_ptr) {
+    if (*sb_state_ptr != 0) {
       const uint32_t block_count_lg2 = (*sb_state_ptr) >> state_shift;
       const uint32_t block_size_lg2  = sb_size_lg2 - block_count_lg2;
       const uint32_t block_count     = 1u << block_count_lg2;

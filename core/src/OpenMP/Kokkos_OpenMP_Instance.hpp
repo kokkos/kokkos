@@ -142,9 +142,10 @@ inline bool OpenMP::impl_is_initialized() noexcept {
 inline bool OpenMP::in_parallel(OpenMP const&) noexcept {
   // FIXME_OPENMP We are forced to use t_openmp_instance because the function is
   // static and does not use the OpenMP object
-  return ((Impl::OpenMPInternal::singleton().m_level < omp_get_level()) &&
-          (!Impl::t_openmp_instance ||
-           Impl::t_openmp_instance->m_level < omp_get_level()));
+  return (
+      (Impl::OpenMPInternal::singleton().m_level < omp_get_level()) &&
+      (!Impl::t_openmp_instance  // NOLINT(readability-implicit-bool-conversion)
+       || Impl::t_openmp_instance->m_level < omp_get_level()));
 }
 
 inline int OpenMP::impl_thread_pool_size() noexcept {

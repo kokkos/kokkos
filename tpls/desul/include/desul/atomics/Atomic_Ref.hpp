@@ -42,7 +42,7 @@ struct basic_atomic_ref<T, MemoryOrder, MemoryScope, false, false> {
   T* _ptr;
 
   // 1/2/4/8/16-byte types must be aligned to at least their size
-  static constexpr int _min_alignment = (sizeof(T) & (sizeof(T) - 1)) || sizeof(T) > 16
+  static constexpr int _min_alignment = (sizeof(T) & (sizeof(T) - 1)) !=0 || sizeof(T) > 16
                                             ? 0
                                             : sizeof(T);
 

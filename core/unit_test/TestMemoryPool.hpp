@@ -381,7 +381,7 @@ struct TestMemoryPoolCorners {
     unsigned alloc_size = size << (i % stride);
     if (0 == ptrs(i)) {
       ptrs(i) = (uintptr_t)pool.allocate(alloc_size);
-      if (ptrs(i) && !alloc_size) {
+      if (ptrs(i) && alloc_size > 0) {
         ++err;
       }
     }

@@ -145,7 +145,7 @@ void *HostSpace::impl_allocate(
 
   void *ptr = nullptr;
 
-  if (arg_alloc_size) {
+  if (arg_alloc_size > 0) {
     if (m_alloc_mech == STD_MALLOC) {
       // Over-allocate to and round up to guarantee proper alignment.
       size_t size_padded = arg_alloc_size + sizeof(void *) + alignment;
@@ -158,7 +158,7 @@ void *HostSpace::impl_allocate(
         // offset enough to record the alloc_ptr
         address += sizeof(void *);
         uintptr_t rem    = address % alignment;
-        uintptr_t offset = rem ? (alignment - rem) : 0u;
+        uintptr_t offset = rem > 0 ? (alignment - rem) : 0u;
         address += offset;
         ptr = reinterpret_cast<void *>(address);
         // record the alloc'd pointer
@@ -174,7 +174,7 @@ void *HostSpace::impl_allocate(
   }
 
   if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
-      (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
+      (reinterpret_cast<uintptr_t>(ptr) & alignment_mask) != 0) {
     Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
         Experimental::RawMemoryAllocationFailure::FailureMode::
             AllocationNotAligned;
@@ -329,7 +329,7 @@ static int HOST_SPACE_ATOMIC_LOCKS[HOST_SPACE_ATOMIC_MASK + 1];
 
 namespace Impl {
 void init_lock_array_host_space() {
-  static int is_initialized = 0;
+  static bool is_initialized = false;
   if (!is_initialized)
     for (int i = 0; i < static_cast<int>(HOST_SPACE_ATOMIC_MASK + 1); i++)
       HOST_SPACE_ATOMIC_LOCKS[i] = 0;

@@ -142,7 +142,7 @@ class Bitset {
   void set() {
     Kokkos::deep_copy(m_blocks, ~0u);
 
-    if (m_last_block_mask) {
+    if (m_last_block_mask != 0) {
       // clear the unused bits in the last block
       Kokkos::Impl::DeepCopy<typename Device::memory_space, Kokkos::HostSpace>(
           m_blocks.data() + (m_blocks.extent(0) - 1u), &m_last_block_mask,
@@ -169,7 +169,7 @@ class Bitset {
       unsigned* block_ptr = &m_blocks[i >> block_shift];
       const unsigned mask = 1u << static_cast<int>(i & block_mask);
 
-      return !(atomic_fetch_or(block_ptr, mask) & mask);
+      return (atomic_fetch_or(block_ptr, mask) & mask) == 0;
     }
     return false;
   }
@@ -182,7 +182,7 @@ class Bitset {
       unsigned* block_ptr = &m_blocks[i >> block_shift];
       const unsigned mask = 1u << static_cast<int>(i & block_mask);
 
-      return atomic_fetch_and(block_ptr, ~mask) & mask;
+      return (atomic_fetch_and(block_ptr, ~mask) & mask) != 0;
     }
     return false;
   }
@@ -198,7 +198,7 @@ class Bitset {
       const unsigned block = volatile_load(&m_blocks[i >> block_shift]);
 #endif
       const unsigned mask = 1u << static_cast<int>(i & block_mask);
-      return block & mask;
+      return (block & mask) != 0;
     }
     return false;
   }
@@ -225,7 +225,7 @@ class Bitset {
 #else
     unsigned block = volatile_load(&m_blocks[block_idx]);
 #endif
-    block = !m_last_block_mask || (block_idx < (m_blocks.extent(0) - 1))
+    block = m_last_block_mask == 0 || (block_idx < (m_blocks.extent(0) - 1))
                 ? block
                 : block & m_last_block_mask;
 
@@ -247,7 +247,7 @@ class Bitset {
 #else
     unsigned block = volatile_load(&m_blocks[block_idx]);
 #endif
-    block = !m_last_block_mask || (block_idx < (m_blocks.extent(0) - 1))
+    block = m_last_block_mask == 0 || (block_idx < (m_blocks.extent(0) - 1))
                 ? ~block
                 : ~block & m_last_block_mask;
 
@@ -277,11 +277,11 @@ class Bitset {
   KOKKOS_FORCEINLINE_FUNCTION
   unsigned scan_block(unsigned block_start, int offset, unsigned block,
                       unsigned scan_direction) const {
-    offset = !(scan_direction & BIT_SCAN_REVERSE)
+    offset = (scan_direction & BIT_SCAN_REVERSE) == 0
                  ? offset
                  : (offset + block_mask) & block_mask;
     block = Impl::rotate_right(block, offset);
-    return (((!(scan_direction & BIT_SCAN_REVERSE)
+    return ((((scan_direction & BIT_SCAN_REVERSE) == 0
                   ? Impl::bit_scan_forward(block)
                   : Impl::int_log2(block)) +
              offset) &
@@ -292,7 +292,7 @@ class Bitset {
   KOKKOS_FORCEINLINE_FUNCTION
   unsigned update_hint(long long block_idx, unsigned offset,
                        unsigned scan_direction) const {
-    block_idx += scan_direction & MOVE_HINT_BACKWARD ? -1 : 1;
+    block_idx += (scan_direction & MOVE_HINT_BACKWARD) != 0 ? -1 : 1;
     block_idx = block_idx >= 0 ? block_idx : m_blocks.extent(0) - 1;
     block_idx =
         block_idx < static_cast<long long>(m_blocks.extent(0)) ? block_idx : 0;
@@ -377,7 +377,7 @@ class ConstBitset {
     if (i < m_size) {
       const unsigned block = m_blocks[i >> block_shift];
       const unsigned mask  = 1u << static_cast<int>(i & block_mask);
-      return block & mask;
+      return (block & mask) != 0;
     }
     return false;
   }

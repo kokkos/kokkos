@@ -442,7 +442,7 @@ __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
                                     (blockDim.x * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
-    int done = 0;
+    bool done = false;
     while (!done) {
       done = (0 == atomicCAS(&scratch_locks[threadid], 0, 1));
       if (!done) {

@@ -211,15 +211,15 @@ class RuntimeReduceMinMax {
   KOKKOS_INLINE_FUNCTION
   void init(ScalarType dst[]) const {
     for (unsigned i = 0; i < value_count; ++i) {
-      dst[i] = i % 2 ? amax : amin;
+      dst[i] = i % 2 == 1 ? amax : amin;
     }
   }
 
   KOKKOS_INLINE_FUNCTION
   void join(ScalarType dst[], const ScalarType src[]) const {
     for (unsigned i = 0; i < value_count; ++i) {
-      dst[i] = i % 2 ? (dst[i] < src[i] ? dst[i] : src[i])   // min
-                     : (dst[i] > src[i] ? dst[i] : src[i]);  // max
+      dst[i] = i % 2 == 1 ? (dst[i] < src[i] ? dst[i] : src[i])   // min
+                          : (dst[i] > src[i] ? dst[i] : src[i]);  // max
     }
   }
 
@@ -229,8 +229,8 @@ class RuntimeReduceMinMax {
                                ScalarType(nwork - iwork)};
 
     for (size_type i = 0; i < static_cast<size_type>(value_count); ++i) {
-      dst[i] = i % 2 ? (dst[i] < tmp[i % 2] ? dst[i] : tmp[i % 2])
-                     : (dst[i] > tmp[i % 2] ? dst[i] : tmp[i % 2]);
+      dst[i] = i % 2 == 1 ? (dst[i] < tmp[i % 2] ? dst[i] : tmp[i % 2])
+                          : (dst[i] > tmp[i % 2] ? dst[i] : tmp[i % 2]);
     }
   }
 };
@@ -311,8 +311,9 @@ class TestReduce {
 
     value_type result[Repeat];
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       Kokkos::parallel_reduce(nwork, functor_type(nwork), result[i]);
@@ -335,8 +336,9 @@ class TestReduce {
 
     value_type result[Repeat];
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       if (i % 2 == 0) {
@@ -364,8 +366,9 @@ class TestReduce {
 
     value_type result[Repeat];
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       if (i % 2 == 0) {
@@ -410,8 +413,9 @@ class TestReduceDynamic {
 
     ScalarType result[Repeat][Count];
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       if (i % 2 == 0) {
@@ -452,10 +456,10 @@ class TestReduceDynamic {
         if (nwork == 0) {
           ScalarType amin(std::numeric_limits<ScalarType>::min());
           ScalarType amax(std::numeric_limits<ScalarType>::max());
-          const ScalarType correct = (j % 2) ? amax : amin;
+          const ScalarType correct = (j % 2 == 1) ? amax : amin;
           ASSERT_EQ((ScalarType)correct, result[i][j]);
         } else {
-          const uint64_t correct = j % 2 ? 1 : nwork;
+          const uint64_t correct = j % 2 == 1 ? 1 : nwork;
           ASSERT_EQ((ScalarType)correct, result[i][j]);
         }
       }
@@ -470,8 +474,9 @@ class TestReduceDynamic {
 
     typename functor_type::scalar_type result[Repeat][Count];
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     for (unsigned i = 0; i < Repeat; ++i) {
       if (i % 2 == 0) {
@@ -508,8 +513,9 @@ class TestReduceDynamicView {
 
     const unsigned CountLimit = 23;
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     for (unsigned count = 0; count < CountLimit; ++count) {
       result_type result("result", count);

@@ -222,7 +222,7 @@ class MemoryPool {
     for (int32_t i = 0; i < m_sb_count; ++i, sb_state_ptr += m_sb_state_size) {
       const uint32_t block_count_lg2 = (*sb_state_ptr) >> state_shift;
 
-      if (block_count_lg2) {
+      if (block_count_lg2 > 0) {
         const uint32_t block_count    = 1u << block_count_lg2;
         const uint32_t block_size_lg2 = m_sb_size_lg2 - block_count_lg2;
         const uint32_t block_size     = 1u << block_size_lg2;
@@ -562,7 +562,7 @@ class MemoryPool {
 
     volatile uint32_t *sb_state_array = nullptr;
 
-    while (attempt_limit) {
+    while (attempt_limit != 0) {
       int32_t hint_sb_id = -1;
 
       if (sb_id < 0) {
@@ -749,11 +749,11 @@ class MemoryPool {
         reinterpret_cast<char *>(m_sb_state_array + m_data_offset);
 
     // Verify contained within the memory pool's superblocks:
-    const int ok_contains =
+    const bool ok_contains =
         (0 <= d) && (size_t(d) < (size_t(m_sb_count) << m_sb_size_lg2));
 
-    int ok_block_aligned = 0;
-    int ok_dealloc_once  = 0;
+    bool ok_block_aligned = false;
+    bool ok_dealloc_once  = false;
 
     if (ok_contains) {
       const int sb_id = d >> m_sb_size_lg2;

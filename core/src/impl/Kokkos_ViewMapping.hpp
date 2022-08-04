@@ -1388,13 +1388,13 @@ struct ViewOffset<
       div = TrivialScalarSize == 0
                 ? 0
                 : Kokkos::Impl::MEMORY_ALIGNMENT /
-                      (TrivialScalarSize ? TrivialScalarSize : 1)
+                      (TrivialScalarSize > 0 ? TrivialScalarSize : 1)
     };
     enum {
       mod = TrivialScalarSize == 0
                 ? 0
                 : Kokkos::Impl::MEMORY_ALIGNMENT %
-                      (TrivialScalarSize ? TrivialScalarSize : 1)
+                      (TrivialScalarSize > 0 ? TrivialScalarSize : 1)
     };
 
     // If memory alignment is a multiple of the trivial scalar size then attempt
@@ -2034,13 +2034,13 @@ struct ViewOffset<
       div = TrivialScalarSize == 0
                 ? 0
                 : Kokkos::Impl::MEMORY_ALIGNMENT /
-                      (TrivialScalarSize ? TrivialScalarSize : 1)
+                      (TrivialScalarSize > 0 ? TrivialScalarSize : 1)
     };
     enum {
       mod = TrivialScalarSize == 0
                 ? 0
                 : Kokkos::Impl::MEMORY_ALIGNMENT %
-                      (TrivialScalarSize ? TrivialScalarSize : 1)
+                      (TrivialScalarSize > 0 ? TrivialScalarSize : 1)
     };
 
     // If memory alignment is a multiple of the trivial scalar size then attempt
@@ -2787,7 +2787,8 @@ struct ViewDataHandle<
   KOKKOS_INLINE_FUNCTION
   static handle_type assign(value_type* arg_data_ptr,
                             track_type const& /*arg_tracker*/) {
-    if (reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT) {
+    if ((reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT) >
+        0) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
           "attribute");
@@ -2797,8 +2798,8 @@ struct ViewDataHandle<
 
   KOKKOS_INLINE_FUNCTION
   static handle_type assign(handle_type const arg_data_ptr, size_t offset) {
-    if (reinterpret_cast<uintptr_t>(arg_data_ptr + offset) %
-        Impl::MEMORY_ALIGNMENT) {
+    if ((reinterpret_cast<uintptr_t>(arg_data_ptr + offset) %
+         Impl::MEMORY_ALIGNMENT) > 0) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
           "attribute");
@@ -2832,7 +2833,8 @@ struct ViewDataHandle<
   KOKKOS_INLINE_FUNCTION
   static value_type* assign(value_type* arg_data_ptr,
                             track_type const& /*arg_tracker*/) {
-    if (reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT) {
+    if ((reinterpret_cast<uintptr_t>(arg_data_ptr) % Impl::MEMORY_ALIGNMENT) >
+        0) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
           "attribute");
@@ -2842,8 +2844,8 @@ struct ViewDataHandle<
 
   KOKKOS_INLINE_FUNCTION
   static value_type* assign(handle_type const arg_data_ptr, size_t offset) {
-    if (reinterpret_cast<uintptr_t>(arg_data_ptr + offset) %
-        Impl::MEMORY_ALIGNMENT) {
+    if ((reinterpret_cast<uintptr_t>(arg_data_ptr + offset) %
+         Impl::MEMORY_ALIGNMENT) > 0) {
       Kokkos::abort(
           "Assigning NonAligned View or Pointer to Kokkos::View with Aligned "
           "attribute");

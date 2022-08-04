@@ -240,7 +240,7 @@ class TaskQueueSpecializationConstrained<
 
         scheduler.m_queue->complete(task);
 
-      } while (1);
+      } while (true);
     }
   }
 

@@ -93,7 +93,7 @@ struct concurrent_bitset {
       uint32_t const bit_bound) noexcept {
     return bit_bound <= max_bit_count
                ? 1 + (bit_bound >> bits_per_int_lg2) +
-                     (bit_bound & bits_per_int_mask ? 1 : 0)
+                     static_cast<int>(bit_bound & bits_per_int_mask)
                : 0;
   }
 
@@ -129,7 +129,7 @@ struct concurrent_bitset {
     const uint32_t word_count = bit_bound >> bits_per_int_lg2;
 
     if ((max_bit_count_lg2 < bit_bound_lg2) ||
-        (state_header & ~state_header_mask) || (bit_bound < bit)) {
+        (state_header & ~state_header_mask) != 0 || (bit_bound < bit)) {
       return type(-3, -3);
     }
 
@@ -141,7 +141,7 @@ struct concurrent_bitset {
     const uint32_t state = (uint32_t)Kokkos::atomic_fetch_add(
         reinterpret_cast<volatile int *>(buffer), 1);
 
-    const uint32_t state_error = state_header != (state & state_header_mask);
+    const bool state_error = state_header != (state & state_header_mask);
 
     const uint32_t state_bit_used = state & state_used_mask;
 
@@ -157,12 +157,12 @@ struct concurrent_bitset {
     // There is a zero bit available somewhere,
     // now find the (first) available bit and set it.
 
-    while (1) {
+    while (true) {
       const uint32_t word = bit >> bits_per_int_lg2;
       const uint32_t mask = 1u << (bit & bits_per_int_mask);
       const uint32_t prev = Kokkos::atomic_fetch_or(buffer + word + 1, mask);
 
-      if (!(prev & mask)) {
+      if ((prev & mask) == 0) {
         // Successfully claimed 'result.first' by
         // atomically setting that bit.
         return type(bit, state_bit_used + 1);
@@ -210,8 +210,8 @@ struct concurrent_bitset {
       ) noexcept {
     using type = Kokkos::pair<int, int>;
 
-    if ((max_bit_count < bit_bound) || (state_header & ~state_header_mask) ||
-        (bit_bound <= bit)) {
+    if ((max_bit_count < bit_bound) ||
+        (state_header & ~state_header_mask) != 0 || (bit_bound <= bit)) {
       return type(-3, -3);
     }
 
@@ -225,7 +225,7 @@ struct concurrent_bitset {
     const uint32_t state = (uint32_t)Kokkos::atomic_fetch_add(
         reinterpret_cast<volatile int *>(buffer), 1);
 
-    const uint32_t state_error = state_header != (state & state_header_mask);
+    const bool state_error = state_header != (state & state_header_mask);
 
     const uint32_t state_bit_used = state & state_used_mask;
 
@@ -241,12 +241,12 @@ struct concurrent_bitset {
     // There is a zero bit available somewhere,
     // now find the (first) available bit and set it.
 
-    while (1) {
+    while (true) {
       const uint32_t word = bit >> bits_per_int_lg2;
       const uint32_t mask = 1u << (bit & bits_per_int_mask);
       const uint32_t prev = Kokkos::atomic_fetch_or(buffer + word + 1, mask);
 
-      if (!(prev & mask)) {
+      if ((prev & mask) == 0) {
         // Successfully claimed 'result.first' by
         // atomically setting that bit.
         // Flush the set operation. Technically this only needs to be acquire/
@@ -293,7 +293,7 @@ struct concurrent_bitset {
     const uint32_t prev =
         Kokkos::atomic_fetch_and(buffer + (bit >> bits_per_int_lg2) + 1, ~mask);
 
-    if (!(prev & mask)) {
+    if ((prev & mask) == 0) {
       return -1;
     }
 
@@ -330,7 +330,7 @@ struct concurrent_bitset {
     const uint32_t prev =
         Kokkos::atomic_fetch_or(buffer + (bit >> bits_per_int_lg2) + 1, mask);
 
-    if (!(prev & mask)) {
+    if ((prev & mask) == 0) {
       return -1;
     }
 

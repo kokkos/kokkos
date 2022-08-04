@@ -135,9 +135,9 @@ int HostThreadTeamData::organize_team(const int team_size) {
       m_league_rank == m_pool_rank && m_league_size == m_pool_size;
 
   if (ok_pool && ok_team) {
-    if (team_size <= 0) return 0;  // No teams to organize
+    if (team_size <= 0) return false;  // No teams to organize
 
-    if (team_size == 1) return 1;  // Already organized in teams of one
+    if (team_size == 1) return true;  // Already organized in teams of one
 
     HostThreadTeamData *const *const pool =
         reinterpret_cast<HostThreadTeamData **>(m_pool_scratch +
@@ -217,7 +217,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
   // behavior in the team and pool rendezvous algorithms
   if (1 == m_team_size || team_rendezvous()) {
     // Attempt first from beginning of my work range
-    for (int attempt = m_work_range.first < m_work_range.second; attempt;) {
+    for (bool attempt = m_work_range.first < m_work_range.second; attempt;) {
       // Query and attempt to update m_work_range
       //   from: [ w.first     , w.second )
       //   to:   [ w.first + 1 , w.second ) = w_new
@@ -238,7 +238,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
         w.first  = -1;
         w.second = -1;
 
-        attempt = 0;
+        attempt = false;
       }
     }
 
@@ -251,7 +251,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
 
       pair_int_t volatile *steal_range = &(pool[m_steal_rank]->m_work_range);
 
-      for (int attempt = true; attempt;) {
+      for (bool attempt = true; attempt;) {
         // Query and attempt to update steal_work_range
         //   from: [ w.first , w.second )
         //   to:   [ w.first , w.second - 1 ) = w_new

@@ -70,7 +70,7 @@ template <class MemorySpace>
 void* SharedAllocationRecordCommon<MemorySpace>::allocate_tracked(
     const MemorySpace& arg_space, const std::string& arg_alloc_label,
     size_t arg_alloc_size) {
-  if (!arg_alloc_size) return nullptr;
+  if (arg_alloc_size == 0) return nullptr;
 
   SharedAllocationRecord* const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);

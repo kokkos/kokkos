@@ -1284,11 +1284,14 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                                   const size_t arg_N5 = KOKKOS_INVALID_INDEX,
                                   const size_t arg_N6 = KOKKOS_INVALID_INDEX,
                                   const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    const size_t num_passed_args =
-        (arg_N0 != KOKKOS_INVALID_INDEX) + (arg_N1 != KOKKOS_INVALID_INDEX) +
-        (arg_N2 != KOKKOS_INVALID_INDEX) + (arg_N3 != KOKKOS_INVALID_INDEX) +
-        (arg_N4 != KOKKOS_INVALID_INDEX) + (arg_N5 != KOKKOS_INVALID_INDEX) +
-        (arg_N6 != KOKKOS_INVALID_INDEX) + (arg_N7 != KOKKOS_INVALID_INDEX);
+    const size_t num_passed_args = int(arg_N0 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N1 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N2 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N3 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N4 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N5 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N6 != KOKKOS_INVALID_INDEX) +
+                                   int(arg_N7 != KOKKOS_INVALID_INDEX);
 
     if (std::is_void<typename traits::specialize>::value &&
         num_passed_args != traits::rank_dynamic) {

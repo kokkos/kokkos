@@ -344,8 +344,9 @@ class TestReduceTeam {
 
     value_type result[Repeat];
 
-    const uint64_t nw   = nwork;
-    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw = nwork;
+    const uint64_t nsum =
+        nw % 2 == 1 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     policy_type team_exec(nw, 1);
 
@@ -394,7 +395,7 @@ class ScanTeamFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type &error, value_type const &input) const {
-    if (input) error = 1;
+    if (input != 0) error = 1;
   }
 
   struct JoinMax {

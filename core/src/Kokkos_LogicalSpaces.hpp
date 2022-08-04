@@ -311,7 +311,7 @@ class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
   static void* allocate_tracked(const SpaceType& arg_space,
                                 const std::string& arg_label,
                                 const size_t arg_alloc_size) {
-    if (!arg_alloc_size) return (void*)nullptr;
+    if (arg_alloc_size == 0) return (void*)nullptr;
 
     SharedAllocationRecord* const r =
         allocate(arg_space, arg_label, arg_alloc_size);

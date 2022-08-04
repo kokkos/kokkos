@@ -205,7 +205,7 @@ namespace {
 
 namespace Impl {
 void init_lock_array_host_space() {
-  static int is_initialized = 0;
+  static bool is_initialized = false;
   if(! is_initialized)
     for(int i = 0; i < static_cast<int> (HOST_SPACE_ATOMIC_MASK+1); i++)
       HOST_SPACE_ATOMIC_LOCKS[i] = 0;

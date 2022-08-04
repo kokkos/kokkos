@@ -97,11 +97,11 @@ class UnorderedMapInsertResult {
  public:
   /// Did the map successful insert the key/value pair
   KOKKOS_FORCEINLINE_FUNCTION
-  bool success() const { return (m_status & SUCCESS); }
+  bool success() const { return (m_status & SUCCESS) != 0; }
 
   /// Was the key already present in the map
   KOKKOS_FORCEINLINE_FUNCTION
-  bool existing() const { return (m_status & EXISTING); }
+  bool existing() const { return (m_status & EXISTING) != 0; }
 
   /// Did the map fail to insert the key due to insufficient capacity
   KOKKOS_FORCEINLINE_FUNCTION
@@ -110,7 +110,7 @@ class UnorderedMapInsertResult {
   /// Did the map lose a race condition to insert a dupulicate key/value pair
   /// where an index was claimed that needed to be released
   KOKKOS_FORCEINLINE_FUNCTION
-  bool freed_existing() const { return (m_status & FREED_EXISTING); }
+  bool freed_existing() const { return (m_status & FREED_EXISTING) != 0; }
 
   /// How many iterations through the insert loop did it take before the
   /// map returned
@@ -391,7 +391,7 @@ class UnorderedMap {
 
     insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
 
-    if (curr_size) {
+    if (curr_size != 0) {
       tmp.m_bounded_insert = false;
       Impl::UnorderedMapRehash<insertable_map_type> f(tmp, *this);
       f.apply();
@@ -592,7 +592,7 @@ class UnorderedMap {
 
           // found and index and this thread set it
           if (!found && ++find_attempts >= max_attempts) {
-            failed_insert_ref = true;
+            failed_insert_ref = static_cast<int>(true);
             not_done          = false;
           } else if (m_available_indexes.set(index_hint)) {
             new_index = index_hint;
@@ -619,7 +619,7 @@ class UnorderedMap {
             memory_fence();
 #endif
           }
-        } else if (failed_insert_ref) {
+        } else if (failed_insert_ref != 0) {
           not_done = false;
         }
 
@@ -839,7 +839,7 @@ class UnorderedMap {
     using raw_deep_copy =
         Kokkos::Impl::DeepCopy<typename device_type::memory_space,
                                Kokkos::HostSpace>;
-    const int true_ = true;
+    const int true_ = static_cast<int>(true);
     raw_deep_copy(m_scalars.data() + flag, &true_, sizeof(int));
     Kokkos::fence(
         "Kokkos::UnorderedMap::set_flag: fence after copying flag from "
@@ -850,7 +850,7 @@ class UnorderedMap {
     using raw_deep_copy =
         Kokkos::Impl::DeepCopy<typename device_type::memory_space,
                                Kokkos::HostSpace>;
-    const int false_ = false;
+    const int false_ = static_cast<int>(false);
     raw_deep_copy(m_scalars.data() + flag, &false_, sizeof(int));
     Kokkos::fence(
         "Kokkos::UnorderedMap::reset_flag: fence after copying flag from "
@@ -861,17 +861,17 @@ class UnorderedMap {
     using raw_deep_copy =
         Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
                                typename device_type::memory_space>;
-    int result = false;
+    int result = static_cast<int>(false);
     raw_deep_copy(&result, m_scalars.data() + flag, sizeof(int));
     Kokkos::fence(
         "Kokkos::UnorderedMap::get_flag: fence after copy to return value in "
         "HostSpace");
-    return result;
+    return static_cast<bool>(result);
   }
 
   static uint32_t calculate_capacity(uint32_t capacity_hint) {
     // increase by 16% and round to nears multiple of 128
-    return capacity_hint
+    return capacity_hint > 0
                ? ((static_cast<uint32_t>(7ull * capacity_hint / 6u) + 127u) /
                   128u) *
                      128u

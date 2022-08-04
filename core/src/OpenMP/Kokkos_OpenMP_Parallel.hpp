@@ -740,7 +740,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           pointer_type ptr =
               (pointer_type)data.pool_member(i)->pool_reduce_local();
 
-          if (i) {
+          if (i != 0) {
             for (int j = 0; j < value_count; ++j) {
               ptr[j + value_count] = ptr_prev[j + value_count];
             }
@@ -852,7 +852,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           pointer_type ptr =
               (pointer_type)data.pool_member(i)->pool_reduce_local();
 
-          if (i) {
+          if (i != 0) {
             for (int j = 0; j < value_count; ++j) {
               ptr[j + value_count] = ptr_prev[j + value_count];
             }
@@ -979,7 +979,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      const int active = data.organize_team(m_policy.team_size());
+      const bool active = data.organize_team(m_policy.team_size());
 
       if (active) {
         data.set_work_partition(
@@ -1132,7 +1132,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      const int active = data.organize_team(m_policy.team_size());
+      const bool active = data.organize_team(m_policy.team_size());
 
       if (active) {
         data.set_work_partition(

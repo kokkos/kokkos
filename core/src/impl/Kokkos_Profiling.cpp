@@ -216,7 +216,7 @@ InitializationStatus initialize_tools_subsystem(
           ? args.args
           : "";
 
-  if (args.help) {
+  if (args.help == Kokkos::Tools::InitArguments::PossiblyUnsetOption::on) {
     if (!Kokkos::Tools::printHelp(final_args)) {
       std::cerr << "Tool has not provided a help message" << std::endl;
     }
@@ -618,9 +618,9 @@ void lookup_function(void* dlopen_handle, const std::string& basename,
 
 void initialize(const std::string& profileLibrary) {
   // Make sure initialize calls happens only once
-  static int is_initialized = 0;
+  static bool is_initialized = false;
   if (is_initialized) return;
-  is_initialized = 1;
+  is_initialized = true;
 
   auto invoke_init_callbacks = []() {
     Experimental::invoke_kokkosp_callback(
@@ -829,9 +829,9 @@ void initialize(const std::string& profileLibrary) {
 
 void finalize() {
   // Make sure finalize calls happens only once
-  static int is_finalized = 0;
+  static bool is_finalized = false;
   if (is_finalized) return;
-  is_finalized = 1;
+  is_finalized = true;
 
   if (Experimental::current_callbacks.finalize != nullptr) {
     Experimental::invoke_kokkosp_callback(

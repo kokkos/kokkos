@@ -126,7 +126,7 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
   if (allocate) {
     Kokkos::HostSpace space;
 
-    if (old_alloc_bytes) {
+    if (old_alloc_bytes > 0) {
       m_thread_team_data.disband_team();
       m_thread_team_data.disband_pool();
 

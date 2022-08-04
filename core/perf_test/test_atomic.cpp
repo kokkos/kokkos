@@ -212,13 +212,13 @@ struct CASNonAtomicFunctor {
   void operator()(int) const {
     volatile T assumed;
     volatile T newval;
-    bool fail = 1;
+    bool fail = true;
     do {
       assumed = data();
       newval  = assumed + (T)1;
       if (data() == assumed) {
         data() = newval;
-        fail   = 0;
+        fail   = false;
       }
     } while (fail);
   }

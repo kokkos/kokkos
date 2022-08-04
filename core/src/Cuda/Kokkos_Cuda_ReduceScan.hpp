@@ -304,7 +304,7 @@ struct CudaReductionsFunctor<FunctorType, false, true> {
           1;
     }
     bool is_last_block = false;
-    if (__syncthreads_or(num_teams_done == gridDim.x)) {
+    if (__syncthreads_or(static_cast<int>(num_teams_done == gridDim.x)) != 0) {
       is_last_block = true;
       *global_flags = 0;
       functor.init(&value);

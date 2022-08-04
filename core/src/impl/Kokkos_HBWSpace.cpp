@@ -357,7 +357,7 @@ static int HBW_SPACE_ATOMIC_LOCKS[HBW_SPACE_ATOMIC_MASK + 1];
 
 namespace Impl {
 void init_lock_array_hbw_space() {
-  static int is_initialized = 0;
+  static bool is_initialized = false;
   if (!is_initialized)
     for (int i = 0; i < static_cast<int>(HBW_SPACE_ATOMIC_MASK + 1); i++)
       HBW_SPACE_ATOMIC_LOCKS[i] = 0;

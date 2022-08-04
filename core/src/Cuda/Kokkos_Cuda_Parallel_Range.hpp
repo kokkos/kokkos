@@ -506,7 +506,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   const Policy m_policy;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
-  size_type m_final;
+  bool m_final;
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
   bool m_run_serial;
 #endif
@@ -581,7 +581,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         shared_data + word_count.value * (blockDim.y + 1);
 
     // Starting value for this thread block is the previous block's total.
-    if (blockIdx.x) {
+    if (blockIdx.x > 0) {
       size_type* const block_total =
           m_scratch_space + word_count.value * (blockIdx.x - 1);
       for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
@@ -795,7 +795,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
-  size_type m_final;
+  bool m_final;
   ReturnType& m_returnvalue;
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
   bool m_run_serial;
@@ -871,7 +871,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         shared_data + word_count.value * (blockDim.y + 1);
 
     // Starting value for this thread block is the previous block's total.
-    if (blockIdx.x) {
+    if (blockIdx.x > 0) {
       size_type* const block_total =
           m_scratch_space + word_count.value * (blockIdx.x - 1);
       for (unsigned i = threadIdx.y; i < word_count.value; ++i) {

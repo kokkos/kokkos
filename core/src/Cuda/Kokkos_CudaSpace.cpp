@@ -674,12 +674,12 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
   // first place for the pull down. If we want to change that provde
   // cudaCpuDeviceId as the device if to_device is false
 #if CUDA_VERSION < 10000
-  bool is_managed = attr.isManaged;
+  bool is_managed = attr.isManaged == 1;
 #else
   bool is_managed = attr.type == cudaMemoryTypeManaged;
 #endif
   if (to_device && is_managed &&
-      space.cuda_device_prop().concurrentManagedAccess) {
+      space.cuda_device_prop().concurrentManagedAccess == 1) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemPrefetchAsync(
         ptr, bytes, space.cuda_device(), space.cuda_stream()));
   }

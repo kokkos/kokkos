@@ -68,7 +68,7 @@ auto const regex_false = std::regex(
 bool Kokkos::Impl::is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
   for (size_t i = 0; i < len; ++i) {
-    if (!isdigit(str[i])) {
+    if (isdigit(str[i]) == 0) {
       return false;
     }
   }
@@ -82,7 +82,7 @@ bool Kokkos::Impl::check_arg(char const* arg, char const* expected) {
   if (std::strncmp(arg, expected, exp_len) != 0) return false;
   if (arg_len == exp_len) return true;
 
-  if (std::isalnum(arg[exp_len]) || arg[exp_len] == '-' ||
+  if (std::isalnum(arg[exp_len]) != 0 || arg[exp_len] == '-' ||
       arg[exp_len] == '_') {
     return false;
   }

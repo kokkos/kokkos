@@ -60,7 +60,7 @@ namespace Impl {
 KOKKOS_FORCEINLINE_FUNCTION
 unsigned rotate_right(unsigned i, int r) {
   constexpr int size = static_cast<int>(sizeof(unsigned) * CHAR_BIT);
-  return r ? ((i >> r) | (i << (size - r))) : i;
+  return r != 0 ? ((i >> r) | (i << (size - r))) : i;
 }
 
 template <typename Bitset>

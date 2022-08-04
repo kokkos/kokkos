@@ -84,7 +84,7 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
       case 5:
       case 6: return 32;
       case 7: {
-        int isTuring = properties.minor == 5;
+        bool isTuring = properties.minor == 5;
         return (isTuring) ? 16 : 32;
       }
       default:

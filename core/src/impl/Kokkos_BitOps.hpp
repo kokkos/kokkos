@@ -61,7 +61,7 @@ int int_log2_fallback(unsigned i) {
   constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
 
   int offset = 0;
-  if (i) {
+  if (i != 0) {
     for (offset = shift; (i & (1 << offset)) == 0; --offset)
       ;
   }
@@ -121,7 +121,7 @@ int bit_first_zero_fallback(unsigned i) noexcept {
 
   int offset = -1;
   if (full != i) {
-    for (offset = 0; i & (1 << offset); ++offset)
+    for (offset = 0; (i & (1 << offset)) != 0; ++offset)
       ;
   }
   return offset;
@@ -171,7 +171,7 @@ int bit_first_zero(unsigned i) noexcept {
 KOKKOS_FORCEINLINE_FUNCTION
 int bit_scan_forward_fallback(unsigned i) {
   int offset = -1;
-  if (i) {
+  if (i != 0) {
     for (offset = 0; (i & (1 << offset)) == 0; ++offset)
       ;
   }

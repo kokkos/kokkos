@@ -141,23 +141,23 @@ int main(int argc, char* argv[]) {
   int test_repeat_outer   = 1;
   int fib_input           = 4;
 
-  int ask_help = 0;
+  bool ask_help = false;
 
   for (int i = 1; i < argc; i++) {
     const char* const a = argv[i];
 
-    if (!strncmp(a, help, strlen(help))) ask_help = 1;
+    if (strncmp(a, help, strlen(help)) == 0) ask_help = true;
 
-    if (!strncmp(a, alloc_size, strlen(alloc_size)))
+    if (strncmp(a, alloc_size, strlen(alloc_size)) == 0)
       total_alloc_size = atol(a + strlen(alloc_size));
 
-    if (!strncmp(a, super_size, strlen(super_size)))
+    if (strncmp(a, super_size, strlen(super_size)) == 0)
       min_superblock_size = std::stoi(a + strlen(super_size));
 
-    if (!strncmp(a, repeat_outer, strlen(repeat_outer)))
+    if (strncmp(a, repeat_outer, strlen(repeat_outer)) == 0)
       test_repeat_outer = std::stoi(a + strlen(repeat_outer));
 
-    if (!strncmp(a, input_value, strlen(input_value)))
+    if (strncmp(a, input_value, strlen(input_value)) == 0)
       fib_input = std::stoi(a + strlen(input_value));
   }
 
