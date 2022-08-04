@@ -885,13 +885,19 @@ struct Functor_TestHalfOperators {
     }
 
     // TODO: figure out why operator{!,&&,||} are returning __nv_bool
-    actual_lhs(NEG)   = static_cast<double>(!h_lhs);
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
+    actual_lhs(NEG) = static_cast<double>(!h_lhs);
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
     expected_lhs(NEG) = !d_lhs;
 
-    actual_lhs(AND)   = static_cast<double>(half_type(0) && h_lhs);
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
+    actual_lhs(AND) = static_cast<double>(half_type(0) && h_lhs);
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
     expected_lhs(AND) = double(0) && d_lhs;
 
-    actual_lhs(OR)   = static_cast<double>(h_lhs || half_type(1));
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
+    actual_lhs(OR) = static_cast<double>(h_lhs || half_type(1));
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
     expected_lhs(OR) = d_lhs || double(1);
 
     actual_lhs(EQ)   = h_lhs == h_rhs;
