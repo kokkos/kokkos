@@ -105,10 +105,10 @@ const void *volatile s_current_function_arg = nullptr;
 
 struct Sentinel {
   ~Sentinel() {
-    if (s_thread_pool_size[0] || s_thread_pool_size[1] ||
-        s_thread_pool_size[2] || s_current_reduce_size ||
-        s_current_shared_size || s_current_function || s_current_function_arg ||
-        s_threads_exec[0]) {
+    if (s_thread_pool_size[0] != 0 || s_thread_pool_size[1] != 0 ||
+        s_thread_pool_size[2] != 0 || s_current_reduce_size != 0 ||
+        s_current_shared_size != 0 || s_current_function ||
+        s_current_function_arg || s_threads_exec[0]) {
       std::cerr << "ERROR : Process exiting while Kokkos::Threads is still "
                    "initialized"
                 << std::endl;
@@ -119,7 +119,7 @@ struct Sentinel {
 inline unsigned fan_size(const unsigned rank, const unsigned size) {
   const unsigned rank_rev = size - (rank + 1);
   unsigned count          = 0;
-  for (unsigned n = 1; (rank_rev + n < size) && !(rank_rev & n); n <<= 1) {
+  for (unsigned n = 1; rank_rev + n < size && (rank_rev & n) == 0; n <<= 1) {
     ++count;
   }
   return count;
@@ -339,8 +339,9 @@ bool ThreadsExec::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
-  return s_current_function && (&s_threads_process != s_current_function_arg) &&
-         (s_threads_process.m_pool_base || !is_process());
+  return s_current_function != nullptr &&
+         (&s_threads_process != s_current_function_arg) &&
+         (s_threads_process.m_pool_base != nullptr || !is_process());
 }
 void ThreadsExec::fence() { internal_fence(Impl::fence_is_static::yes); }
 void ThreadsExec::fence(const std::string &name) {
@@ -358,7 +359,7 @@ void ThreadsExec::internal_fence(Impl::fence_is_static is_static) {
 void ThreadsExec::internal_fence(const std::string &name,
                                  Impl::fence_is_static is_static) {
   const auto &fence_lam = [&]() {
-    if (s_thread_pool_size[0]) {
+    if (s_thread_pool_size[0] != 0) {
       // Wait for the root thread to complete:
       Impl::spinwait_while_equal<int>(s_threads_exec[0]->m_pool_state,
                                       ThreadsExec::Active);
@@ -405,7 +406,7 @@ void ThreadsExec::start(void (*func)(ThreadsExec &, const void *),
     s_threads_exec[i]->m_pool_state = ThreadsExec::Active;
   }
 
-  if (s_threads_process.m_pool_size) {
+  if (s_threads_process.m_pool_size != 0) {
     // Master process is the root thread, run it:
     (*func)(s_threads_process, arg);
     s_threads_process.m_pool_state = ThreadsExec::Inactive;
@@ -509,7 +510,7 @@ void ThreadsExec::first_touch_allocate_thread_private_scratch(ThreadsExec &exec,
   exec.m_scratch_reduce_end = s_threads_process.m_scratch_reduce_end;
   exec.m_scratch_thread_end = s_threads_process.m_scratch_thread_end;
 
-  if (s_threads_process.m_scratch_thread_end) {
+  if (s_threads_process.m_scratch_thread_end != 0) {
     // Allocate tracked memory:
     {
       using Record =
@@ -590,7 +591,7 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
     << threads_per_core << "]";
 #endif
 
-  if (s_thread_pool_size[0]) {
+  if (s_thread_pool_size[0] != 0) {
     s << " threads[" << s_thread_pool_size[0] << "]"
       << " threads_per_numa[" << s_thread_pool_size[1] << "]"
       << " threads_per_core[" << s_thread_pool_size[2] << "]";
@@ -674,7 +675,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
 
     const std::pair<unsigned, unsigned> proc_coord = s_threads_coord[0];
 
-    if (thread_spawn_begin) {
+    if (thread_spawn_begin != 0) {
       // Synchronous with s_threads_coord[0] as the process core
       // Claim entry #0 for binding the process core.
       s_threads_coord[0] = std::pair<unsigned, unsigned>(~0u, ~0u);
@@ -726,14 +727,14 @@ void ThreadsExec::initialize(int thread_count_arg) {
 
     memory_fence();
 
-    if (!thread_spawn_failed) {
+    if (thread_spawn_failed == 0) {
       // Bind process to the core on which it was located before spawning
       // occurred
       if (hwloc_can_bind) {
         Kokkos::hwloc::bind_this_thread(proc_coord);
       }
 
-      if (thread_spawn_begin) {  // Include process in pool.
+      if (thread_spawn_begin != 0) {  // Include process in pool.
         const std::pair<unsigned, unsigned> coord =
             Kokkos::hwloc::get_this_thread_coordinate();
 
@@ -764,7 +765,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
     }
   }
 
-  if (is_initialized || thread_spawn_failed) {
+  if (is_initialized || thread_spawn_failed != 0) {
     std::ostringstream msg;
 
     msg << "Kokkos::Threads::initialize ERROR";
@@ -772,7 +773,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
     if (is_initialized) {
       msg << " : already initialized";
     }
-    if (thread_spawn_failed) {
+    if (thread_spawn_failed != 0) {
       msg << " : failed to spawn " << thread_spawn_failed << " threads";
     }
 

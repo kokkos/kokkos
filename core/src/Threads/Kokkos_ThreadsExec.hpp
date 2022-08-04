@@ -195,7 +195,7 @@ class ThreadsExec {
           m_pool_base[rev_rank + (1 << i)]->m_pool_state, ThreadsExec::Active);
     }
 
-    if (rev_rank) {
+    if (rev_rank != 0) {
       m_pool_state = ThreadsExec::Rendezvous;
       // Wait: Rendezvous -> Active
       Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::Rendezvous);
@@ -236,7 +236,7 @@ class ThreadsExec {
           m_pool_base[rev_rank + (1 << i)]->m_pool_state, ThreadsExec::Active);
     }
 
-    if (rev_rank) {
+    if (rev_rank != 0) {
       m_pool_state = ThreadsExec::Rendezvous;
       // Wait: Rendezvous -> Active
       Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::Rendezvous);

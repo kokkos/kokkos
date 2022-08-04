@@ -108,26 +108,26 @@ class ThreadsExecTeamMember {
     int n, j;
 
     // Wait for fan-in threads
-    for (n = 1;
-         (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
+    for (n = 1; (m_team_rank_rev & n) == 0 &&
+                ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
       Impl::spinwait_while_equal<int>(m_team_base[j]->state(),
                                       ThreadsExec::Active);
     }
 
     // If not root then wait for release
-    if (m_team_rank_rev) {
+    if (m_team_rank_rev != 0) {
       m_exec->state() = ThreadsExec::Rendezvous;
       Impl::spinwait_while_equal<int>(m_exec->state(), ThreadsExec::Rendezvous);
     }
 
-    return !m_team_rank_rev;
+    return m_team_rank_rev == 0;
   }
 
   KOKKOS_INLINE_FUNCTION void team_fan_out() const {
     int n, j;
-    for (n = 1;
-         (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
+    for (n = 1; (m_team_rank_rev & n) == 0 &&
+                ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
       m_team_base[j]->state() = ThreadsExec::Active;
     }
@@ -486,7 +486,7 @@ class ThreadsExecTeamMember {
   }
 
   bool valid_dynamic() {
-    if (m_invalid_thread) return false;
+    if (m_invalid_thread != 0) return false;
     if ((m_league_rank < m_league_chunk_end) &&
         (m_league_rank < m_league_size)) {
       return true;
@@ -510,7 +510,7 @@ class ThreadsExecTeamMember {
   }
 
   void next_dynamic() {
-    if (m_invalid_thread) return;
+    if (m_invalid_thread != 0) return;
 
     if (m_league_rank < m_league_chunk_end) {
       // Make sure all stores are complete before entering the barrier
