@@ -43,20 +43,22 @@
 */
 
 #include <Kokkos_Core.hpp>
+#include <iostream>
 
 namespace Test {
 
 template <typename ExecSpace = TEST_EXECSPACE>
 struct TestReducerCTADs {
-  using scalar     = double;
-  using memspace   = typename ExecSpace::memory_space;
-  using view_type  = Kokkos::View<scalar, memspace>;
-  using index_type = int;
+  using execspace = ExecSpace;
+
+  using scalar_type = double;
+  using index_type  = int;
+  using memspace    = typename execspace::memory_space;
 
   static void test_sum() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::Sum<scalar, memspace> rt(view);
+    Kokkos::Sum<scalar_type, memspace> rt(view);
     Kokkos::Sum rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -68,9 +70,9 @@ struct TestReducerCTADs {
   }
 
   static void test_prod() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::Prod<scalar, memspace> rt(view);
+    Kokkos::Prod<scalar_type, memspace> rt(view);
     Kokkos::Prod rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -82,9 +84,9 @@ struct TestReducerCTADs {
   }
 
   static void test_min() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::Min<scalar, memspace> rt(view);
+    Kokkos::Min<scalar_type, memspace> rt(view);
     Kokkos::Min rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -96,9 +98,9 @@ struct TestReducerCTADs {
   }
 
   static void test_max() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::Max<scalar, memspace> rt(view);
+    Kokkos::Max<scalar_type, memspace> rt(view);
     Kokkos::Max rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -110,9 +112,9 @@ struct TestReducerCTADs {
   }
 
   static void test_land() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::LAnd<scalar, memspace> rt(view);
+    Kokkos::LAnd<scalar_type, memspace> rt(view);
     Kokkos::LAnd rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -124,9 +126,9 @@ struct TestReducerCTADs {
   }
 
   static void test_lor() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::LOr<scalar, memspace> rt(view);
+    Kokkos::LOr<scalar_type, memspace> rt(view);
     Kokkos::LOr rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -138,9 +140,9 @@ struct TestReducerCTADs {
   }
 
   static void test_band() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::BAnd<scalar, memspace> rt(view);
+    Kokkos::BAnd<scalar_type, memspace> rt(view);
     Kokkos::BAnd rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -152,9 +154,9 @@ struct TestReducerCTADs {
   }
 
   static void test_bor() {
-    view_type view;
+    Kokkos::View<scalar_type, memspace> view;
 
-    Kokkos::BOr<scalar, memspace> rt(view);
+    Kokkos::BOr<scalar_type, memspace> rt(view);
     Kokkos::BOr rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -166,9 +168,9 @@ struct TestReducerCTADs {
   }
 
   static void test_minloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
 
-    Kokkos::MinLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinLoc rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -180,9 +182,9 @@ struct TestReducerCTADs {
   }
 
   static void test_maxloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
 
-    Kokkos::MaxLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MaxLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MaxLoc rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -194,9 +196,9 @@ struct TestReducerCTADs {
   }
 
   static void test_minmax() {
-    Kokkos::View<Kokkos::MinMaxScalar<scalar>, memspace> view;
+    Kokkos::View<Kokkos::MinMaxScalar<scalar_type>, memspace> view;
 
-    Kokkos::MinMax<scalar, memspace> rt(view);
+    Kokkos::MinMax<scalar_type, memspace> rt(view);
     Kokkos::MinMax rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -208,9 +210,10 @@ struct TestReducerCTADs {
   }
 
   static void test_minmaxloc() {
-    Kokkos::View<Kokkos::MinMaxLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace>
+        view;
 
-    Kokkos::MinMaxLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinMaxLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinMaxLoc rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -222,9 +225,9 @@ struct TestReducerCTADs {
   }
 
   static void test_maxfirstloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
 
-    Kokkos::MaxFirstLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MaxFirstLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MaxFirstLoc rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -236,13 +239,13 @@ struct TestReducerCTADs {
   }
 
   static void test_maxfirstloccustomcomparator() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
 
-    auto comparator       = [](scalar, scalar) { return true; };
+    auto comparator       = [](scalar_type, scalar_type) { return true; };
     using comparator_type = decltype(comparator);
 
-    Kokkos::MaxFirstLocCustomComparator<scalar, index_type, comparator_type,
-                                        memspace>
+    Kokkos::MaxFirstLocCustomComparator<scalar_type, index_type,
+                                        comparator_type, memspace>
         rt(view, comparator);
     Kokkos::MaxFirstLocCustomComparator rd(view, comparator);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
@@ -255,9 +258,9 @@ struct TestReducerCTADs {
   }
 
   static void test_minfirstloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
 
-    Kokkos::MinFirstLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinFirstLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinFirstLoc rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -269,13 +272,13 @@ struct TestReducerCTADs {
   }
 
   static void test_minfirstloccustomcomparator() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
 
-    auto comparator       = [](scalar, scalar) { return true; };
+    auto comparator       = [](scalar_type, scalar_type) { return true; };
     using comparator_type = decltype(comparator);
 
-    Kokkos::MinFirstLocCustomComparator<scalar, index_type, comparator_type,
-                                        memspace>
+    Kokkos::MinFirstLocCustomComparator<scalar_type, index_type,
+                                        comparator_type, memspace>
         rt(view, comparator);
     Kokkos::MinFirstLocCustomComparator rd(view, comparator);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
@@ -288,9 +291,10 @@ struct TestReducerCTADs {
   }
 
   static void test_minmaxfirstlastloc() {
-    Kokkos::View<Kokkos::MinMaxLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace>
+        view;
 
-    Kokkos::MinMaxFirstLastLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinMaxFirstLastLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinMaxFirstLastLoc rd(view);
     ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
 
@@ -302,12 +306,13 @@ struct TestReducerCTADs {
   }
 
   static void test_minmaxfirstlastloccustomcomparator() {
-    Kokkos::View<Kokkos::MinMaxLocScalar<scalar, index_type>, memspace> view;
+    Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace>
+        view;
 
-    auto comparator       = [](scalar, scalar) { return true; };
+    auto comparator       = [](scalar_type, scalar_type) { return true; };
     using comparator_type = decltype(comparator);
 
-    Kokkos::MinMaxFirstLastLocCustomComparator<scalar, index_type,
+    Kokkos::MinMaxFirstLastLocCustomComparator<scalar_type, index_type,
                                                comparator_type, memspace>
         rt(view, comparator);
     Kokkos::MinMaxFirstLastLocCustomComparator rd(view, comparator);
