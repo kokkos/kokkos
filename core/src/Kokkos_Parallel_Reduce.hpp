@@ -99,10 +99,10 @@ struct Sum {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-Sum(View<ValueType, Space> const&) -> Sum<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+Sum(View<Scalar, Space> const&) -> Sum<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct Prod {
@@ -144,10 +144,10 @@ struct Prod {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-Prod(View<ValueType, Space> const&) -> Prod<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+Prod(View<Scalar, Space> const&) -> Prod<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct Min {
@@ -191,10 +191,10 @@ struct Min {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-Min(View<ValueType, Space> const&) -> Min<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+Min(View<Scalar, Space> const&) -> Min<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct Max {
@@ -239,10 +239,10 @@ struct Max {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-Max(View<ValueType, Space> const&) -> Max<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+Max(View<Scalar, Space> const&) -> Max<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct LAnd {
@@ -285,10 +285,10 @@ struct LAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-LAnd(View<ValueType, Space> const&) -> LAnd<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+LAnd(View<Scalar, Space> const&) -> LAnd<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct LOr {
@@ -332,10 +332,10 @@ struct LOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-LOr(View<ValueType, Space> const&) -> LOr<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+LOr(View<Scalar, Space> const&) -> LOr<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct BAnd {
@@ -379,10 +379,10 @@ struct BAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-BAnd(View<ValueType, Space> const&) -> BAnd<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+BAnd(View<Scalar, Space> const&) -> BAnd<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct BOr {
@@ -426,10 +426,10 @@ struct BOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
-template <typename ValueType, typename Space,
+template <typename Scalar, typename Space,
           typename = std::enable_if_t<
-              std::is_same_v<ValueType, std::remove_cv_t<ValueType>>>>
-BOr(View<ValueType, Space> const&) -> BOr<ValueType, Space>;
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+BOr(View<Scalar, Space> const&) -> BOr<Scalar, Space>;
 
 template <class Scalar, class Index>
 struct ValLocScalar {
@@ -544,6 +544,13 @@ struct MaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MaxLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
+    -> MaxLoc<Scalar, Index, Space>;
+
 template <class Scalar>
 struct MinMaxScalar {
   Scalar min_val, max_val;
@@ -605,6 +612,11 @@ struct MinMax {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>>>>
+MinMax(View<MinMaxScalar<Scalar>, Space> const&) -> MinMax<Scalar, Space>;
 
 template <class Scalar, class Index>
 struct MinMaxLocScalar {
@@ -676,6 +688,13 @@ struct MinMaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MinMaxLoc(View<MinMaxLocScalar<Scalar, Index>, Space> const&)
+    -> MinMaxLoc<Scalar, Index, Space>;
+
 // --------------------------------------------------
 // reducers added to support std algorithms
 // --------------------------------------------------
@@ -733,6 +752,13 @@ struct MaxFirstLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MaxFirstLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
+    -> MaxFirstLoc<Scalar, Index, Space>;
 
 //
 // MaxFirstLocCustomComparator
@@ -793,6 +819,15 @@ struct MaxFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <
+    typename Scalar, typename Index, typename ComparatorType, typename Space,
+    typename =
+        std::enable_if_t<std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+                         std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MaxFirstLocCustomComparator(View<ValLocScalar<Scalar, Index>, Space> const&,
+                            ComparatorType)
+    -> MaxFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
+
 //
 // MinFirstLoc
 //
@@ -846,6 +881,13 @@ struct MinFirstLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MinFirstLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
+    -> MinFirstLoc<Scalar, Index, Space>;
 
 //
 // MinFirstLocCustomComparator
@@ -905,6 +947,15 @@ struct MinFirstLocCustomComparator {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <
+    typename Scalar, typename Index, typename ComparatorType, typename Space,
+    typename =
+        std::enable_if_t<std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+                         std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MinFirstLocCustomComparator(View<ValLocScalar<Scalar, Index>, Space> const&,
+                            ComparatorType)
+    -> MinFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
 
 //
 // MinMaxFirstLastLoc
@@ -970,6 +1021,13 @@ struct MinMaxFirstLastLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename Space,
+          typename = std::enable_if_t<
+              std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+              std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MinMaxFirstLastLoc(View<MinMaxLocScalar<Scalar, Index>, Space> const&)
+    -> MinMaxFirstLastLoc<Scalar, Index, Space>;
 
 //
 // MinMaxFirstLastLocCustomComparator
@@ -1040,6 +1098,15 @@ struct MinMaxFirstLastLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <
+    typename Scalar, typename Index, typename ComparatorType, typename Space,
+    typename =
+        std::enable_if_t<std::is_same_v<Scalar, std::remove_cv_t<Scalar>> &&
+                         std::is_same_v<Index, std::remove_cv_t<Index>>>>
+MinMaxFirstLastLocCustomComparator(
+    View<MinMaxLocScalar<Scalar, Index>, Space> const&, ComparatorType)
+    -> MinMaxFirstLastLocCustomComparator<Scalar, Index, ComparatorType, Space>;
+
 //
 // FirstLoc
 //
@@ -1098,6 +1165,11 @@ struct FirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <
+    typename Index, typename Space,
+    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+FirstLoc(View<FirstLocScalar<Index>, Space> const&) -> FirstLoc<Index, Space>;
+
 //
 // LastLoc
 //
@@ -1155,6 +1227,11 @@ struct LastLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <
+    typename Index, typename Space,
+    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+LastLoc(View<LastLocScalar<Index>, Space> const&) -> LastLoc<Index, Space>;
 
 template <class Index>
 struct StdIsPartScalar {
@@ -1223,6 +1300,12 @@ struct StdIsPartitioned {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <
+    typename Index, typename Space,
+    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+StdIsPartitioned(View<StdIsPartScalar<Index>, Space> const&)
+    -> StdIsPartitioned<Index, Space>;
+
 template <class Index>
 struct StdPartPointScalar {
   Index min_loc_false;
@@ -1283,6 +1366,12 @@ struct StdPartitionPoint {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <
+    typename Index, typename Space,
+    typename = std::enable_if_t<std::is_same_v<Index, std::remove_cv_t<Index>>>>
+StdPartitionPoint(View<StdPartPointScalar<Index>, Space> const&)
+    -> StdPartitionPoint<Index, Space>;
 
 }  // namespace Kokkos
 namespace Kokkos {

@@ -48,9 +48,10 @@ namespace Test {
 
 template <typename ExecSpace = TEST_EXECSPACE>
 struct TestReducerCTADs {
-  using scalar        = double*;
-  using memspace      = typename ExecSpace::memory_space;
-  using view_type     = Kokkos::View<scalar, memspace>;
+  using scalar     = double;
+  using memspace   = typename ExecSpace::memory_space;
+  using view_type  = Kokkos::View<scalar, memspace>;
+  using index_type = int;
 
   static void test_sum() {
     view_type view;
@@ -79,6 +80,7 @@ struct TestReducerCTADs {
     Kokkos::Prod rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
+
   static void test_min() {
     view_type view;
 
@@ -92,6 +94,7 @@ struct TestReducerCTADs {
     Kokkos::Min rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
+
   static void test_max() {
     view_type view;
 
@@ -105,6 +108,7 @@ struct TestReducerCTADs {
     Kokkos::Max rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
+
   static void test_land() {
     view_type view;
 
@@ -118,6 +122,7 @@ struct TestReducerCTADs {
     Kokkos::LAnd rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
+
   static void test_lor() {
     view_type view;
 
@@ -131,6 +136,7 @@ struct TestReducerCTADs {
     Kokkos::LOr rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
+
   static void test_band() {
     view_type view;
 
@@ -144,6 +150,7 @@ struct TestReducerCTADs {
     Kokkos::BAnd rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
+
   static void test_bor() {
     view_type view;
 
@@ -157,8 +164,216 @@ struct TestReducerCTADs {
     Kokkos::BOr rdm(std::move(rt));
     ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
-  //TODO
+
   static void test_minloc() {
+    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+
+    Kokkos::MinLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_maxloc() {
+    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+
+    Kokkos::MaxLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MaxLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MaxLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MaxLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_minmax() {
+    Kokkos::View<Kokkos::MinMaxScalar<scalar>, memspace> view;
+
+    Kokkos::MinMax<scalar, memspace> rt(view);
+    Kokkos::MinMax rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinMax rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinMax rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_minmaxloc() {
+    Kokkos::View<Kokkos::MinMaxLocScalar<scalar, index_type>, memspace> view;
+
+    Kokkos::MinMaxLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinMaxLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinMaxLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinMaxLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_maxfirstloc() {
+    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+
+    Kokkos::MaxFirstLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MaxFirstLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MaxFirstLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MaxFirstLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_maxfirstloccustomcomparator() {
+    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+
+    auto comparator       = [](scalar, scalar) { return true; };
+    using comparator_type = decltype(comparator);
+
+    Kokkos::MaxFirstLocCustomComparator<scalar, index_type, comparator_type,
+                                        memspace>
+        rt(view, comparator);
+    Kokkos::MaxFirstLocCustomComparator rd(view, comparator);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MaxFirstLocCustomComparator rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MaxFirstLocCustomComparator rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_minfirstloc() {
+    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+
+    Kokkos::MinFirstLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinFirstLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinFirstLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinFirstLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_minfirstloccustomcomparator() {
+    Kokkos::View<Kokkos::ValLocScalar<scalar, index_type>, memspace> view;
+
+    auto comparator       = [](scalar, scalar) { return true; };
+    using comparator_type = decltype(comparator);
+
+    Kokkos::MinFirstLocCustomComparator<scalar, index_type, comparator_type,
+                                        memspace>
+        rt(view, comparator);
+    Kokkos::MinFirstLocCustomComparator rd(view, comparator);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinFirstLocCustomComparator rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinFirstLocCustomComparator rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_minmaxfirstlastloc() {
+    Kokkos::View<Kokkos::MinMaxLocScalar<scalar, index_type>, memspace> view;
+
+    Kokkos::MinMaxFirstLastLoc<scalar, index_type, memspace> rt(view);
+    Kokkos::MinMaxFirstLastLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinMaxFirstLastLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinMaxFirstLastLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_minmaxfirstlastloccustomcomparator() {
+    Kokkos::View<Kokkos::MinMaxLocScalar<scalar, index_type>, memspace> view;
+
+    auto comparator       = [](scalar, scalar) { return true; };
+    using comparator_type = decltype(comparator);
+
+    Kokkos::MinMaxFirstLastLocCustomComparator<scalar, index_type,
+                                               comparator_type, memspace>
+        rt(view, comparator);
+    Kokkos::MinMaxFirstLastLocCustomComparator rd(view, comparator);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::MinMaxFirstLastLocCustomComparator rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::MinMaxFirstLastLocCustomComparator rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_firstloc() {
+    Kokkos::View<Kokkos::FirstLocScalar<index_type>, memspace> view;
+
+    Kokkos::FirstLoc<index_type, memspace> rt(view);
+    Kokkos::FirstLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::FirstLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::FirstLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_lastloc() {
+    Kokkos::View<Kokkos::LastLocScalar<index_type>, memspace> view;
+
+    Kokkos::LastLoc<index_type, memspace> rt(view);
+    Kokkos::LastLoc rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::LastLoc rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::LastLoc rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_stdispartitioned() {
+    Kokkos::View<Kokkos::StdIsPartScalar<index_type>, memspace> view;
+
+    Kokkos::StdIsPartitioned<index_type, memspace> rt(view);
+    Kokkos::StdIsPartitioned rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::StdIsPartitioned rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::StdIsPartitioned rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+  }
+
+  static void test_stdpartitionpoint() {
+    Kokkos::View<Kokkos::StdPartPointScalar<index_type>, memspace> view;
+
+    Kokkos::StdPartitionPoint<index_type, memspace> rt(view);
+    Kokkos::StdPartitionPoint rd(view);
+    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+
+    Kokkos::StdPartitionPoint rdc(rt);
+    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+
+    Kokkos::StdPartitionPoint rdm(std::move(rt));
+    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
   }
 };
 
@@ -172,6 +387,19 @@ TEST(TEST_CATEGORY, reducer_ctads) {
   TestReducerCTADs<TEST_EXECSPACE>::test_band();
   TestReducerCTADs<TEST_EXECSPACE>::test_bor();
   TestReducerCTADs<TEST_EXECSPACE>::test_minloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_maxloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_minmax();
+  TestReducerCTADs<TEST_EXECSPACE>::test_minmaxloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_maxfirstloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_maxfirstloccustomcomparator();
+  TestReducerCTADs<TEST_EXECSPACE>::test_minfirstloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_minfirstloccustomcomparator();
+  TestReducerCTADs<TEST_EXECSPACE>::test_minmaxfirstlastloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_minmaxfirstlastloccustomcomparator();
+  TestReducerCTADs<TEST_EXECSPACE>::test_firstloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_lastloc();
+  TestReducerCTADs<TEST_EXECSPACE>::test_stdispartitioned();
+  TestReducerCTADs<TEST_EXECSPACE>::test_stdpartitionpoint();
 }
 
 }  // namespace Test
