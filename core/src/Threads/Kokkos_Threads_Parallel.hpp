@@ -998,7 +998,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
                                         Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial parallel_scan result must be host-accessible!");
+        "Kokkos::Threads parallel_scan result must be host-accessible!");
   }
 
   ParallelScanWithTotal(const FunctorType &arg_functor,

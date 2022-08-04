@@ -895,7 +895,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
                                         Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial parallel_scan result must be host-accessible!");
+        "Kokkos::OpenMP parallel_scan result must be host-accessible!");
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {

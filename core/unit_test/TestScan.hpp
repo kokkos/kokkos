@@ -135,7 +135,7 @@ struct TestScan {
           *this, total_view);
       value_type total;
       Kokkos::deep_copy(exec, total, total_view);
-      Kokkos::fence();
+      exec.fence();
 
       // We can't return a value in a constructor so use a lambda as wrapper to
       // ignore it.
