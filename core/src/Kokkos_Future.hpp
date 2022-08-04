@@ -429,7 +429,7 @@ class BasicFuture {
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  int is_ready() const noexcept {
+  bool is_ready() const noexcept {
     return (nullptr == m_task) ||
            (reinterpret_cast<task_base*>(task_base::LockTag) == m_task->m_wait);
   }
