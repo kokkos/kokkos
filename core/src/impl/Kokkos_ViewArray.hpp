@@ -436,19 +436,15 @@ class ViewMapping<
  public:
   // Can only convert to View::array_type
 
-  enum {
-    is_assignable_data_type =
-        std::is_same<typename DstTraits::data_type,
-                     typename SrcTraits::scalar_array_type>::value &&
-        (DstTraits::rank == SrcTraits::rank + 1)
-  };
-  enum {
-    is_assignable =
-        std::is_same<typename DstTraits::data_type,
-                     typename SrcTraits::scalar_array_type>::value &&
-        std::is_same<typename DstTraits::array_layout,
-                     typename SrcTraits::array_layout>::value
-  };
+  static constexpr bool is_assignable_data_type =
+      std::is_same<typename DstTraits::data_type,
+                   typename SrcTraits::scalar_array_type>::value &&
+      (DstTraits::rank == SrcTraits::rank + 1);
+  static constexpr bool is_assignable =
+      std::is_same<typename DstTraits::data_type,
+                   typename SrcTraits::scalar_array_type>::value &&
+      std::is_same<typename DstTraits::array_layout,
+                   typename SrcTraits::array_layout>::value;
 
   using TrackType = Kokkos::Impl::SharedAllocationTracker;
   using DstType   = ViewMapping<DstTraits, void>;

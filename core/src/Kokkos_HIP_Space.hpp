@@ -303,18 +303,18 @@ static_assert(
 
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::HIPSpace> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = false };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = false;
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace,
                          Kokkos::Experimental::HIPHostPinnedSpace> {
   // HostSpace::execution_space == HIPHostPinnedSpace::execution_space
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = true;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
@@ -330,18 +330,18 @@ struct MemorySpaceAccess<Kokkos::HostSpace,
 
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace, Kokkos::HostSpace> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = false };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = false;
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                          Kokkos::Experimental::HIPHostPinnedSpace> {
   // HIPSpace::execution_space != HIPHostPinnedSpace::execution_space
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };  // HIPSpace::execution_space
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = true;  // HIPSpace::execution_space
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
@@ -360,17 +360,18 @@ struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HIPHostPinnedSpace,
                          Kokkos::HostSpace> {
-  enum : bool { assignable = false };  // Cannot access from HIP
-  enum : bool { accessible = true };   // HIPHostPinnedSpace::execution_space
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;  // Cannot access from HIP
+  static constexpr bool accessible =
+      true;  // HIPHostPinnedSpace::execution_space
+  static constexpr bool deepcopy = true;
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HIPHostPinnedSpace,
                          Kokkos::Experimental::HIPSpace> {
-  enum : bool { assignable = false };  // Cannot access from Host
-  enum : bool { accessible = false };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;  // Cannot access from Host
+  static constexpr bool accessible = false;
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
@@ -794,9 +795,9 @@ namespace Impl {
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                          Kokkos::Experimental::HIP::scratch_memory_space> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = false;
 };
 
 }  // namespace Impl

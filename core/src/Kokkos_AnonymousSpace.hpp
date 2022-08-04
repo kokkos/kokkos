@@ -94,23 +94,23 @@ namespace Impl {
 
 template <typename OtherSpace>
 struct MemorySpaceAccess<Kokkos::AnonymousSpace, OtherSpace> {
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = true;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 template <typename OtherSpace>
 struct MemorySpaceAccess<OtherSpace, Kokkos::AnonymousSpace> {
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = true;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::AnonymousSpace, Kokkos::AnonymousSpace> {
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = true;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 }  // namespace Impl

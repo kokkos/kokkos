@@ -106,9 +106,9 @@ namespace Impl {
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace,
                          Kokkos::Experimental::OpenMPTargetSpace> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = false };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = false;
+  static constexpr bool deepcopy   = true;
 };
 
 //----------------------------------------
@@ -116,12 +116,11 @@ struct MemorySpaceAccess<Kokkos::HostSpace,
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                          Kokkos::HostSpace> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = false };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = false;
+  static constexpr bool deepcopy   = true;
 };
 
-//----------------------------------------
 }  // namespace Impl
 }  // namespace Kokkos
 

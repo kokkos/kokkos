@@ -295,9 +295,9 @@ namespace Impl {
 template <>
 struct MemorySpaceAccess<Kokkos::CudaSpace,
                          Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = false;
 };
 
 #if defined(KOKKOS_ENABLE_CUDA_UVM)
@@ -311,9 +311,9 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
 template <>
 struct MemorySpaceAccess<Kokkos::CudaUVMSpace,
                          Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = false;
 };
 
 #endif

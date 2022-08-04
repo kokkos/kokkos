@@ -186,9 +186,9 @@ namespace Impl {
 template <>
 struct MemorySpaceAccess<Kokkos::Threads::memory_space,
                          Kokkos::Threads::scratch_memory_space> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = false;
 };
 
 }  // namespace Impl

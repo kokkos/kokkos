@@ -142,11 +142,10 @@ KOKKOS_DEPRECATED void CudaSpace::access_error(const void *const) {
 
 bool CudaUVMSpace::available() {
 #if defined(CUDA_VERSION) && !defined(__APPLE__)
-  enum : bool { UVM_available = true };
+  return true;
 #else
-  enum : bool { UVM_available = false };
+  return false;
 #endif
-  return UVM_available;
 }
 
 /*--------------------------------------------------------------------------*/

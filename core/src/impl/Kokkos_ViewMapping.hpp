@@ -458,7 +458,7 @@ struct SubviewExtents {
   // Cannot declare zero-length arrays
   // '+' is used to silence GCC 7.2.0 -Wduplicated-branches warning when
   // RangeRank=1
-  enum { InternalRangeRank = RangeRank ? RangeRank : +1u };
+  static constexpr unsigned InternalRangeRank = RangeRank > 0 ? RangeRank : +1u;
 
   size_t m_begin[DomainRank];
   size_t m_length[InternalRangeRank];
@@ -3513,46 +3513,35 @@ class ViewMapping<
               std::is_same<typename SrcTraits::array_layout,
                            Kokkos::LayoutStride>::value))))>> {
  private:
-  enum {
-    is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
-        typename DstTraits::memory_space,
-        typename SrcTraits::memory_space>::assignable
-  };
+  static constexpr bool is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
+      typename DstTraits::memory_space,
+      typename SrcTraits::memory_space>::assignable;
 
-  enum {
-    is_assignable_value_type =
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::value_type>::value ||
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::const_value_type>::value
-  };
+  static constexpr bool is_assignable_value_type =
+      std::is_same<typename DstTraits::value_type,
+                   typename SrcTraits::value_type>::value ||
+      std::is_same<typename DstTraits::value_type,
+                   typename SrcTraits::const_value_type>::value;
 
-  enum {
-    is_assignable_dimension =
-        ViewDimensionAssignable<typename DstTraits::dimension,
-                                typename SrcTraits::dimension>::value
-  };
+  static constexpr bool is_assignable_dimension =
+      ViewDimensionAssignable<typename DstTraits::dimension,
+                              typename SrcTraits::dimension>::value;
 
-  enum {
-    is_assignable_layout =
-        std::is_same<typename DstTraits::array_layout,
-                     typename SrcTraits::array_layout>::value ||
-        std::is_same<typename DstTraits::array_layout,
-                     Kokkos::LayoutStride>::value ||
-        (DstTraits::dimension::rank == 0) ||
-        (DstTraits::dimension::rank == 1 &&
-         DstTraits::dimension::rank_dynamic == 1)
-  };
+  static constexpr bool is_assignable_layout =
+      std::is_same<typename DstTraits::array_layout,
+                   typename SrcTraits::array_layout>::value ||
+      std::is_same<typename DstTraits::array_layout,
+                   Kokkos::LayoutStride>::value ||
+      (DstTraits::dimension::rank == 0) ||
+      (DstTraits::dimension::rank == 1 &&
+       DstTraits::dimension::rank_dynamic == 1);
 
  public:
-  enum {
-    is_assignable_data_type =
-        is_assignable_value_type && is_assignable_dimension
-  };
-  enum {
-    is_assignable = is_assignable_space && is_assignable_value_type &&
-                    is_assignable_dimension && is_assignable_layout
-  };
+  static constexpr bool is_assignable_data_type =
+      is_assignable_value_type && is_assignable_dimension;
+  static constexpr bool is_assignable =
+      is_assignable_space && is_assignable_value_type &&
+      is_assignable_dimension && is_assignable_layout;
 
   using TrackType = Kokkos::Impl::SharedAllocationTracker;
   using DstType   = ViewMapping<DstTraits, void>;
@@ -3646,35 +3635,26 @@ class ViewMapping<
              std::is_same<typename DstTraits::array_layout,
                           Kokkos::LayoutStride>::value)))>> {
  private:
-  enum {
-    is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
-        typename DstTraits::memory_space,
-        typename SrcTraits::memory_space>::assignable
-  };
+  static constexpr bool is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
+      typename DstTraits::memory_space,
+      typename SrcTraits::memory_space>::assignable;
 
-  enum {
-    is_assignable_value_type =
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::value_type>::value ||
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::const_value_type>::value
-  };
+  static constexpr bool is_assignable_value_type =
+      std::is_same<typename DstTraits::value_type,
+                   typename SrcTraits::value_type>::value ||
+      std::is_same<typename DstTraits::value_type,
+                   typename SrcTraits::const_value_type>::value;
 
-  enum {
-    is_assignable_dimension =
-        ViewDimensionAssignable<typename DstTraits::dimension,
-                                typename SrcTraits::dimension>::value
-  };
+  static constexpr bool is_assignable_dimension =
+      ViewDimensionAssignable<typename DstTraits::dimension,
+                              typename SrcTraits::dimension>::value;
 
  public:
-  enum {
-    is_assignable_data_type =
-        is_assignable_value_type && is_assignable_dimension
-  };
-  enum {
-    is_assignable = is_assignable_space && is_assignable_value_type &&
-                    is_assignable_dimension
-  };
+  static constexpr bool is_assignable_data_type =
+      is_assignable_value_type && is_assignable_dimension;
+  static constexpr bool is_assignable = is_assignable_space &&
+                                        is_assignable_value_type &&
+                                        is_assignable_dimension;
 
   using TrackType = Kokkos::Impl::SharedAllocationTracker;
   using DstType   = ViewMapping<DstTraits, void>;

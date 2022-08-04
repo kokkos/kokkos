@@ -267,16 +267,16 @@ static_assert(
 
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::HBWSpace> {
-  enum : bool { assignable = true };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = true;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HBWSpace, Kokkos::HostSpace> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = true };
+  static constexpr bool assignable = false;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 }  // namespace Impl

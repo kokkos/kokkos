@@ -332,24 +332,21 @@ class ViewMapping<
                                       Kokkos::LayoutStride>::value)))),
                      Kokkos::Impl::ViewToDynRankViewTag>> {
  private:
-  enum {
-    is_assignable_value_type =
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::value_type>::value ||
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::const_value_type>::value
-  };
+  static constexpr bool is_assignable_value_type =
+      std::is_same<typename DstTraits::value_type,
+                   typename SrcTraits::value_type>::value ||
+      std::is_same<typename DstTraits::value_type,
+                   typename SrcTraits::const_value_type>::value;
 
-  enum {
-    is_assignable_layout =
-        std::is_same<typename DstTraits::array_layout,
-                     typename SrcTraits::array_layout>::value ||
-        std::is_same<typename DstTraits::array_layout,
-                     Kokkos::LayoutStride>::value
-  };
+  static constexpr bool is_assignable_layout =
+      std::is_same<typename DstTraits::array_layout,
+                   typename SrcTraits::array_layout>::value ||
+      std::is_same<typename DstTraits::array_layout,
+                   Kokkos::LayoutStride>::value;
 
  public:
-  enum { is_assignable = is_assignable_value_type && is_assignable_layout };
+  static constexpr bool is_assignable =
+      is_assignable_value_type && is_assignable_layout;
 
   using DstType = ViewMapping<DstTraits, typename DstTraits::specialize>;
   using SrcType = ViewMapping<SrcTraits, typename SrcTraits::specialize>;

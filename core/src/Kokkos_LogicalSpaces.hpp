@@ -179,9 +179,12 @@ struct MemorySpaceAccess<
         BaseSpace, DefaultBaseExecutionSpace, Namer,
         Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>,
     OtherSpace> {
-  enum { assignable = MemorySpaceAccess<BaseSpace, OtherSpace>::assignable };
-  enum { accessible = MemorySpaceAccess<BaseSpace, OtherSpace>::accessible };
-  enum { deepcopy = MemorySpaceAccess<BaseSpace, OtherSpace>::deepcopy };
+  static constexpr bool assignable =
+      MemorySpaceAccess<BaseSpace, OtherSpace>::assignable;
+  static constexpr bool accessible =
+      MemorySpaceAccess<BaseSpace, OtherSpace>::accessible;
+  static constexpr bool deepcopy =
+      MemorySpaceAccess<BaseSpace, OtherSpace>::deepcopy;
 };
 
 template <typename BaseSpace, typename DefaultBaseExecutionSpace, class Namer,
@@ -191,9 +194,12 @@ struct MemorySpaceAccess<
     Kokkos::Experimental::LogicalMemorySpace<
         BaseSpace, DefaultBaseExecutionSpace, Namer,
         Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>> {
-  enum { assignable = MemorySpaceAccess<OtherSpace, BaseSpace>::assignable };
-  enum { accessible = MemorySpaceAccess<OtherSpace, BaseSpace>::accessible };
-  enum { deepcopy = MemorySpaceAccess<OtherSpace, BaseSpace>::deepcopy };
+  static constexpr bool assignable =
+      MemorySpaceAccess<OtherSpace, BaseSpace>::assignable;
+  static constexpr bool accessible =
+      MemorySpaceAccess<OtherSpace, BaseSpace>::accessible;
+  static constexpr bool deepcopy =
+      MemorySpaceAccess<OtherSpace, BaseSpace>::deepcopy;
 };
 
 template <typename BaseSpace, typename DefaultBaseExecutionSpace, class Namer>
@@ -204,9 +210,9 @@ struct MemorySpaceAccess<
     Kokkos::Experimental::LogicalMemorySpace<
         BaseSpace, DefaultBaseExecutionSpace, Namer,
         Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+  static constexpr bool assignable = true;
+  static constexpr bool accessible = true;
+  static constexpr bool deepcopy   = true;
 };
 
 }  // namespace Impl

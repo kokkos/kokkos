@@ -421,17 +421,18 @@ struct MemorySpaceAccess {
    *  2. All execution spaces that can access DstMemorySpace can also access
    *     SrcMemorySpace.
    */
-  enum { assignable = std::is_same<DstMemorySpace, SrcMemorySpace>::value };
+  static constexpr bool assignable =
+      std::is_same<DstMemorySpace, SrcMemorySpace>::value;
 
   /**\brief  For all DstExecSpace::memory_space == DstMemorySpace
    *         DstExecSpace can access SrcMemorySpace.
    */
-  enum { accessible = assignable };
+  static constexpr bool accessible = assignable;
 
   /**\brief  Does a DeepCopy capability exist
    *         to DstMemorySpace from SrcMemorySpace
    */
-  enum { deepcopy = assignable };
+  static constexpr bool deepcopy = assignable;
 };
 
 }  // namespace Impl
@@ -446,10 +447,10 @@ namespace Kokkos {
  *     Kokkos::is_memory_space< MemorySpace >::value
  *
  *   Can AccessSpace::execution_space access MemorySpace ?
- *     enum : bool { accessible };
+ *     static constexpr bool accessible ;
  *
  *   Is View<AccessSpace::memory_space> assignable from View<MemorySpace> ?
- *     enum : bool { assignable };
+ *     static constexpr bool assignable ;
  *
  *   If ! accessible then through which intercessory memory space
  *   should a be used to deep copy memory for
@@ -487,7 +488,7 @@ struct SpaceAccessibility {
    *  Default based upon memory space accessibility.
    *  Specialization required for other relationships.
    */
-  enum { accessible = exe_access::accessible };
+  static constexpr bool accessible = exe_access::accessible;
 
   /**\brief  Can assign to AccessSpace from MemorySpace ?
    *
@@ -499,7 +500,7 @@ struct SpaceAccessibility {
   };
 
   /**\brief  Can deep copy to AccessSpace::memory_Space from MemorySpace ?  */
-  enum { deepcopy = mem_access::deepcopy };
+  static constexpr bool deepcopy = mem_access::deepcopy;
 
   // What intercessory space for AccessSpace::execution_space
   // to be able to access MemorySpace?
