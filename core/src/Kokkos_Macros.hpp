@@ -228,8 +228,8 @@
 #define KOKKOS_ENABLE_PRAGMA_SIMD 1
 #endif
 
-// FIXME Workaround for ICE with intel 17,18,19 in Trilinos
-#if (KOKKOS_COMPILER_INTEL <= 1900)
+// FIXME Workaround for ICE with intel 17,18,19,20,21 in Trilinos
+#if (KOKKOS_COMPILER_INTEL <= 2100)
 #define KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
 #endif
 
