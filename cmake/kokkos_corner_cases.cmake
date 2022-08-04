@@ -52,9 +52,9 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_
 ENDIF()
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11)
-  MESSAGE(FATAL_ERROR "You have requested C++17 support for NVCC ${KOKKOS_CXX_COMPILER_VERSION}. NVCC only supports C++17 from version 11 on. Please upgrade the compiler if you need C++17 support.")
+  MESSAGE(FATAL_ERROR "Kokkos requires C++17 which NVCC only supports from version 11 on but the NVCC version used is ${KOKKOS_CXX_COMPILER_VERSION}.")
 ENDIF()
-IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_ENABLE_CUDA_CONSTEXPR)
-  MESSAGE(WARNING "You have requested -DKokkos_ENABLE_CUDA_CONSTEXPR=ON with C++17 support for NVCC ${KOKKOS_CXX_COMPILER_VERSION} which is known to trigger compiler bugs. See https://github.com/kokkos/kokkos/issues/3496")
+IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_ENABLE_CUDA_CONSTEXPR AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.2)
+  MESSAGE(WARNING "You have requested -DKokkos_ENABLE_CUDA_CONSTEXPR=ON for NVCC ${KOKKOS_CXX_COMPILER_VERSION} which is known to trigger compiler bugs before NVCC version 11.2. See https://github.com/kokkos/kokkos/issues/3496")
 ENDIF()
 
