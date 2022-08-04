@@ -350,7 +350,7 @@ CudaInternal::~CudaInternal() {
   }
 }
 
-int CudaInternal::verify_is_initialized(const char *const label) const {
+bool CudaInternal::verify_is_initialized(const char *const label) const {
   if (m_cudaDev < 0) {
     Kokkos::abort((std::string("Kokkos::Cuda::") + label +
                    " : ERROR device not initialized\n")
@@ -835,7 +835,7 @@ int Cuda::concurrency() {
   return Impl::CudaInternal::singleton().m_maxConcurrency;
 }
 
-int Cuda::impl_is_initialized() {
+bool Cuda::impl_is_initialized() {
   return Impl::CudaInternal::singleton().is_initialized();
 }
 

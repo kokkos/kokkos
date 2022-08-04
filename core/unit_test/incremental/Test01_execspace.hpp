@@ -90,7 +90,7 @@ struct TestIncrExecSpace {
     auto concurrency = ExecSpace().concurrency();
     ASSERT_GT(concurrency, 0);
 
-    int in_parallel = ExecSpace::in_parallel();
+    bool in_parallel = ExecSpace::in_parallel();
     ASSERT_FALSE(in_parallel);
 
     const char* name = ExecSpace::name();

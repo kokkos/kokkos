@@ -335,7 +335,7 @@ void ThreadsExec::verify_is_process(const std::string &name,
   }
 }
 
-int ThreadsExec::in_parallel() {
+bool ThreadsExec::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
@@ -633,7 +633,7 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
 //----------------------------------------------------------------------------
 
-int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
+bool ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
 
 void ThreadsExec::initialize(int thread_count_arg) {
   // legacy arguments

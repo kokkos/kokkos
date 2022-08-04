@@ -121,7 +121,7 @@ void OpenMPTargetInternal::impl_initialize() {
 #endif
 #endif
 }
-int OpenMPTargetInternal::impl_is_initialized() {
+bool OpenMPTargetInternal::impl_is_initialized() {
   return m_is_initialized ? 1 : 0;
 }
 
@@ -170,7 +170,7 @@ void OpenMPTarget::impl_initialize(InitializationSettings const&) {
 void OpenMPTarget::impl_finalize() {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
 }
-int OpenMPTarget::impl_is_initialized() {
+bool OpenMPTarget::impl_is_initialized() {
   return Impl::OpenMPTargetInternal::impl_singleton()->impl_is_initialized();
 }
 }  // Namespace Experimental

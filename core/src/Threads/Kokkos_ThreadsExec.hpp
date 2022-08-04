@@ -162,7 +162,7 @@ class ThreadsExec {
 
   static void verify_is_process(const std::string &, const bool initialized);
 
-  static int is_initialized();
+  static bool is_initialized();
 
   static void initialize(int thread_count);
 
@@ -460,7 +460,7 @@ class ThreadsExec {
    */
   static void start(void (*)(ThreadsExec &, const void *), const void *);
 
-  static int in_parallel();
+  static bool in_parallel();
   static void fence();
   static void fence(const std::string &);
   static void internal_fence(
@@ -608,9 +608,9 @@ class ThreadsExec {
 
 namespace Kokkos {
 
-inline int Threads::in_parallel() { return Impl::ThreadsExec::in_parallel(); }
+inline bool Threads::in_parallel() { return Impl::ThreadsExec::in_parallel(); }
 
-inline int Threads::impl_is_initialized() {
+inline bool Threads::impl_is_initialized() {
   return Impl::ThreadsExec::is_initialized();
 }
 

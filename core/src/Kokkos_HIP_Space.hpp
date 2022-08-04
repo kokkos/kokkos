@@ -701,7 +701,7 @@ class HIP {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-  KOKKOS_INLINE_FUNCTION static int in_parallel() {
+  KOKKOS_INLINE_FUNCTION static bool in_parallel() {
 #if defined(__HIP_DEVICE_COMPILE__)
     return true;
 #else
@@ -736,7 +736,7 @@ class HIP {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static int impl_is_initialized();
+  static bool impl_is_initialized();
 
   //  static size_type device_arch();
 

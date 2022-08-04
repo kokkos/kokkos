@@ -146,9 +146,9 @@ class HIPInternal {
 
   static HIPInternal &singleton();
 
-  int verify_is_initialized(const char *const label) const;
+  bool verify_is_initialized(const char *const label) const;
 
-  int is_initialized() const { return m_hipDev >= 0; }
+  bool is_initialized() const { return m_hipDev >= 0; }
 
   void initialize(int hip_device_id, hipStream_t stream = nullptr,
                   bool manage_stream = false);

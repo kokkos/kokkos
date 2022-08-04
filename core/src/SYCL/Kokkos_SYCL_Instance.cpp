@@ -75,7 +75,7 @@ SYCLInternal::~SYCLInternal() {
   }
 }
 
-int SYCLInternal::verify_is_initialized(const char* const label) const {
+bool SYCLInternal::verify_is_initialized(const char* const label) const {
   if (!is_initialized()) {
     Kokkos::abort((std::string("Kokkos::Experimental::SYCL::") + label +
                    " : ERROR device not initialized\n")

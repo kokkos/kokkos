@@ -76,7 +76,7 @@ class OpenMPTargetInternal {
   void impl_finalize();
 
   //! Has been initialized
-  int impl_is_initialized();
+  bool impl_is_initialized();
   uint32_t impl_get_instance_id() const noexcept;
   //! Initialize, telling the CUDA run-time library which device to use.
   void impl_initialize();

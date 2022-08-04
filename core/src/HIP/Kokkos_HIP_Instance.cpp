@@ -177,7 +177,7 @@ HIPInternal::~HIPInternal() {
   m_stream            = nullptr;
 }
 
-int HIPInternal::verify_is_initialized(const char *const label) const {
+bool HIPInternal::verify_is_initialized(const char *const label) const {
   if (m_hipDev < 0) {
     Kokkos::abort((std::string("Kokkos::Experimental::HIP::") + label +
                    " : ERROR device not initialized\n")

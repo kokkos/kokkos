@@ -146,7 +146,7 @@ class Serial {
   /// For the Serial device, this method <i>always</i> returns false,
   /// because parallel_for or parallel_reduce with the Serial device
   /// always execute sequentially.
-  inline static int in_parallel() { return false; }
+  inline static bool in_parallel() { return false; }
 
   /// \brief Wait until all dispatched functors complete.
   ///

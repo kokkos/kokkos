@@ -105,7 +105,7 @@ class Threads {
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
-  static int in_parallel();
+  static bool in_parallel();
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
@@ -137,7 +137,7 @@ class Threads {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static int impl_is_initialized();
+  static bool impl_is_initialized();
 
   static Threads& impl_instance(int = 0);
 

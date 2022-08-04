@@ -158,7 +158,7 @@ class Cuda {
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
-  KOKKOS_INLINE_FUNCTION static int in_parallel() {
+  KOKKOS_INLINE_FUNCTION static bool in_parallel() {
 #if defined(__CUDA_ARCH__)
     return true;
 #else
@@ -216,7 +216,7 @@ class Cuda {
   static void impl_finalize();
 
   //! Has been initialized
-  static int impl_is_initialized();
+  static bool impl_is_initialized();
 
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);

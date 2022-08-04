@@ -163,7 +163,7 @@ class HostThreadTeamData {
         m_team_rendezvous_step);
   }
 
-  inline int pool_rendezvous() const noexcept {
+  inline bool pool_rendezvous() const noexcept {
     int* ptr = reinterpret_cast<int*>(m_pool_scratch + m_pool_rendezvous);
     HostBarrier::split_arrive(ptr, m_pool_size, m_pool_rendezvous_step);
     if (m_pool_rank != 0) {
@@ -232,7 +232,7 @@ class HostThreadTeamData {
   //
   // Return true  if a valid member of a team.
   // Return false if not a member and thread should be idled.
-  int organize_team(const int team_size);
+  bool organize_team(const int team_size);
 
   // Each thread within a pool disbands itself from current team.
   // Each thread becomes its own team with team_size == 1.

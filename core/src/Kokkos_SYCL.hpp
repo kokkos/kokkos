@@ -105,7 +105,7 @@ class SYCL {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-  KOKKOS_INLINE_FUNCTION static int in_parallel() {
+  KOKKOS_INLINE_FUNCTION static bool in_parallel() {
 #if defined(__SYCL_DEVICE_ONLY__)
     return true;
 #else

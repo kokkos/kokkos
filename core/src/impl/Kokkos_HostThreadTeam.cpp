@@ -124,7 +124,7 @@ void HostThreadTeamData::disband_pool() {
   m_team_rendezvous_step = 0;
 }
 
-int HostThreadTeamData::organize_team(const int team_size) {
+bool HostThreadTeamData::organize_team(const int team_size) {
   // Pool is initialized
   const bool ok_pool = nullptr != m_pool_scratch;
 

@@ -65,10 +65,10 @@ namespace Impl {
 namespace {
 
 KOKKOS_INLINE_FUNCTION
-int kokkos_omp_in_parallel();
+bool kokkos_omp_in_parallel();
 
 KOKKOS_INLINE_FUNCTION
-int kokkos_omp_in_parallel() { return omp_in_parallel(); }
+bool kokkos_omp_in_parallel() { return omp_in_parallel(); }
 
 bool s_using_hwloc = false;
 

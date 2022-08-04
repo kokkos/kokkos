@@ -110,7 +110,7 @@ public:
 
   static void finalize();
 
-  static int is_initialized();
+  static bool is_initialized();
 
   static int concurrency();
 
