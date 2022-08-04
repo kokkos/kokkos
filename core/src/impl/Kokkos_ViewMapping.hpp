@@ -2989,16 +2989,15 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       using PolicyType =
           Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
       PolicyType policy(space, 0, n);
-      std::string functor_name;
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        functor_name =
+        const std::string functor_name =
             (std::is_same_v<Tag, DestroyTag>
-                 ? "Kokkos::View::destruction [" + functor_name + "]"
-                 : "Kokkos::View::initialization [" + functor_name + "]");
+                 ? "Kokkos::View::destruction [" + name + "]"
+                 : "Kokkos::View::initialization [" + name + "]");
         Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + functor_name + "]",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
+            functor_name, Kokkos::Profiling::Experimental::device_id(space),
+            &kpID);
       }
 
 #ifdef KOKKOS_ENABLE_CUDA
@@ -3112,8 +3111,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   void parallel_for_implementation() {
     if (!space.in_parallel()) {
       PolicyType policy(0, n);
-      std::string functor_name = "Kokkos::View::initialization [" + name + "]";
-      uint64_t kpID            = 0;
+      uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor(
             "Kokkos::View::initialization [" + name + "]",
