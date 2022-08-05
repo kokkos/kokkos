@@ -110,19 +110,6 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
   type value;
 };
 
-/*  std::integral_constant<unsigned,I> are dummy arguments
- *  that avoid duplicate base class errors
- */
-template <unsigned I>
-struct ViewCtorProp<void, std::integral_constant<unsigned, I>> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
-
-  template <typename P>
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(const P &) {}
-};
-
 /* Property flags have constexpr value */
 template <typename P>
 struct ViewCtorProp<
@@ -272,6 +259,30 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
     (void)arg;
   }
 };
+
+template <typename... P>
+auto add_properties(const ViewCtorProp<P...> &view_ctor_prop) {
+  return view_ctor_prop;
+}
+
+template <typename... P, typename Property, typename... Properties>
+auto add_properties(const ViewCtorProp<P...> &view_ctor_prop,
+                    const Property &property,
+                    const Properties &... properties) {
+  if constexpr ((is_execution_space<Property>::value &&
+                 !ViewCtorProp<P...>::has_execution_space) ||
+                (is_memory_space<Property>::value &&
+                 !ViewCtorProp<P...>::has_memory_space) ||
+                (is_view_label<Property>::value &&
+                 !ViewCtorProp<P...>::has_label)) {
+    using NewViewCtorProp = ViewCtorProp<P..., Property>;
+    NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
+    static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
+        property;
+    return add_properties(new_view_ctor_prop, properties...);
+  } else
+    return add_properties(view_ctor_prop, properties...);
+}
 
 } /* namespace Impl */
 } /* namespace Kokkos */

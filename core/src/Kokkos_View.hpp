@@ -1416,19 +1416,9 @@ class View : public ViewTraits<DataType, Properties...> {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
 
-    // use 'std::integral_constant<unsigned,I>' for non-types
-    // to avoid duplicate class error.
-    using alloc_prop = Impl::ViewCtorProp<
-        P...,
-        std::conditional_t<alloc_prop_input::has_label,
-                           std::integral_constant<unsigned int, 0>,
-                           std::string>,
-        std::conditional_t<alloc_prop_input::has_memory_space,
-                           std::integral_constant<unsigned int, 1>,
-                           typename traits::device_type::memory_space>,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned int, 2>,
-                           typename traits::device_type::execution_space>>;
+    using alloc_prop = decltype(Impl::add_properties(
+        arg_prop, std::string{}, typename traits::device_type::memory_space{},
+        typename traits::device_type::execution_space{}));
 
     static_assert(traits::is_managed,
                   "View allocation constructor requires managed memory");

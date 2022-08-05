@@ -3032,15 +3032,9 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    // Add execution space here to avoid the need for if constexpr below
-    using alloc_prop = Impl::ViewCtorProp<
-        ViewCtorArgs..., std::string,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned int, 10>,
-                           typename view_type::execution_space>>;
-    alloc_prop prop_copy(arg_prop);
-    static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-        v.label();
+    auto prop_copy = Impl::add_properties(
+        arg_prop, typename view_type::execution_space{}, v.label());
+    using alloc_prop = decltype(prop_copy);
 
     view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
 
@@ -3142,13 +3136,10 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "not include a memory space instance!");
 
   if (v.layout() != layout) {
-    // Add execution space here to avoid the need for if constexpr below
-    using alloc_prop = Impl::ViewCtorProp<
-        ViewCtorArgs..., std::string,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned int, 10>,
-                           typename view_type::execution_space>>;
-    alloc_prop prop_copy(arg_prop);
+    auto prop_copy = Impl::add_properties(
+        arg_prop, std::string{}, typename view_type::execution_space{});
+    using alloc_prop = decltype(prop_copy);
+
     static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
         v.label();
 
@@ -3199,15 +3190,9 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "The view constructor arguments passed to Kokkos::resize must "
                 "not include a memory space instance!");
 
-  // Add execution space here to avoid the need for if constexpr below
-  using alloc_prop = Impl::ViewCtorProp<
-      ViewCtorArgs..., std::string,
-      std::conditional_t<alloc_prop_input::has_execution_space,
-                         std::integral_constant<unsigned int, 10>,
-                         typename view_type::execution_space>>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      v.label();
+  auto prop_copy   = Impl::add_properties(arg_prop, v.label(),
+                                        typename view_type::execution_space{});
+  using alloc_prop = decltype(prop_copy);
 
   view_type v_resized(prop_copy, layout);
 
@@ -3285,22 +3270,12 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
     v = view_type();  // Deallocate first, if the only view to allocation
     v = view_type(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
   } else if (alloc_prop_input::initialize) {
-    if (alloc_prop_input::has_execution_space) {
-      // Add execution_space if not provided to avoid need for if constexpr
-      using alloc_prop = Impl::ViewCtorProp<
-          ViewCtorArgs...,
-          std::conditional_t<alloc_prop_input::has_execution_space,
-                             std::integral_constant<unsigned int, 2>,
-                             typename view_type::execution_space>,
-          std::string>;
-      alloc_prop arg_prop_copy(arg_prop);
-      static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
-          .value                 = v.label();
-      using execution_space_type = typename alloc_prop::execution_space;
+    if constexpr (alloc_prop_input::has_execution_space) {
+      using execution_space_type = typename alloc_prop_input::execution_space;
       const execution_space_type& exec_space =
           static_cast<
               Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-              arg_prop_copy)
+              arg_prop)
               .value;
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
     } else
@@ -3395,22 +3370,12 @@ impl_realloc(Kokkos::View<T, P...>& v,
     v = view_type();  // Deallocate first, if the only view to allocation
     v = view_type(arg_prop, layout);
   } else if (alloc_prop_input::initialize) {
-    if (alloc_prop_input::has_execution_space) {
-      // Add execution_space if not provided to avoid need for if constexpr
-      using alloc_prop = Impl::ViewCtorProp<
-          ViewCtorArgs...,
-          std::conditional_t<alloc_prop_input::has_execution_space,
-                             std::integral_constant<unsigned int, 2>,
-                             typename view_type::execution_space>,
-          std::string>;
-      alloc_prop arg_prop_copy(arg_prop);
-      static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
-          .value                 = v.label();
-      using execution_space_type = typename alloc_prop::execution_space;
+    if constexpr (alloc_prop_input::has_execution_space) {
+      using execution_space_type = typename alloc_prop_input::execution_space;
       const execution_space_type& exec_space =
           static_cast<
               Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-              arg_prop_copy)
+              arg_prop)
               .value;
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
     } else
@@ -3883,18 +3848,10 @@ auto create_mirror_view_and_copy(
   using Space  = typename alloc_prop_input::memory_space;
   using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
 
-  // Add some properties if not provided to avoid need for if constexpr
-  using alloc_prop = Impl::ViewCtorProp<
-      ViewCtorArgs...,
-      std::conditional_t<alloc_prop_input::has_label,
-                         std::integral_constant<unsigned int, 12>, std::string>,
-      std::conditional_t<!alloc_prop_input::initialize,
-                         std::integral_constant<unsigned int, 13>,
-                         Impl::WithoutInitializing_t>,
-      std::conditional_t<alloc_prop_input::has_execution_space,
-                         std::integral_constant<unsigned int, 14>,
-                         typename Space::execution_space>>;
-  alloc_prop arg_prop_copy(arg_prop);
+  auto arg_prop_copy =
+      Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
+                           typename Space::execution_space{});
+  using alloc_prop = decltype(arg_prop_copy);
 
   std::string& label =
       static_cast<Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy).value;

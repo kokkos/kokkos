@@ -1102,18 +1102,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     // Append layout and spaces if not input
     using alloc_prop_input = Kokkos::Impl::ViewCtorProp<P...>;
 
-    // use 'std::integral_constant<unsigned,I>' for non-types
-    // to avoid duplicate class error.
-    using alloc_prop = Kokkos::Impl::ViewCtorProp<
-        P...,
-        std::conditional_t<alloc_prop_input::has_label,
-                           std::integral_constant<unsigned, 0>, std::string>,
-        std::conditional_t<alloc_prop_input::has_memory_space,
-                           std::integral_constant<unsigned, 1>,
-                           typename traits::device_type::memory_space>,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned, 2>,
-                           typename traits::device_type::execution_space>>;
+    using alloc_prop = decltype(Impl::add_properties(
+        arg_prop, std::string{}, typename traits::device_type::memory_space{},
+        typename traits::device_type::execution_space{}));
 
     static_assert(traits::is_managed,
                   "View allocation constructor requires managed memory");
@@ -2291,18 +2282,10 @@ auto create_mirror_view_and_copy(
   using Space  = typename alloc_prop_input::memory_space;
   using Mirror = typename Impl::MirrorDRViewType<Space, T, P...>::view_type;
 
-  // Add some properties if not provided to avoid need for if constexpr
-  using alloc_prop = Impl::ViewCtorProp<
-      ViewCtorArgs...,
-      std::conditional_t<alloc_prop_input::has_label,
-                         std::integral_constant<unsigned int, 12>, std::string>,
-      std::conditional_t<!alloc_prop_input::initialize,
-                         std::integral_constant<unsigned int, 13>,
-                         Impl::WithoutInitializing_t>,
-      std::conditional_t<alloc_prop_input::has_execution_space,
-                         std::integral_constant<unsigned int, 14>,
-                         typename Space::execution_space>>;
-  alloc_prop arg_prop_copy(arg_prop);
+  auto arg_prop_copy =
+      Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
+                           typename Space::execution_space{});
+  using alloc_prop = decltype(arg_prop_copy);
 
   std::string& label =
       static_cast<Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy).value;
@@ -2357,15 +2340,9 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "The view constructor arguments passed to Kokkos::resize must "
                 "not include a memory space instance!");
 
-  // Add execution space here to avoid the need for if constexpr below
-  using alloc_prop = Impl::ViewCtorProp<
-      ViewCtorArgs..., std::string,
-      std::conditional_t<alloc_prop_input::has_execution_space,
-                         std::integral_constant<unsigned int, 10>,
-                         typename drview_type::execution_space>>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      v.label();
+  auto prop_copy = Impl::add_properties(
+      arg_prop, v.label(), typename drview_type::execution_space{});
+  using alloc_prop = decltype(prop_copy);
 
   drview_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
 

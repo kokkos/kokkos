@@ -552,13 +552,11 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
           label, m_chunks.get_ptr());
       m_chunks_host.initialize();
 
-      // Add some properties if not provided to avoid need for if constexpr
       using alloc_prop_input = Kokkos::Impl::ViewCtorProp<Prop...>;
-      using alloc_prop       = Kokkos::Impl::ViewCtorProp<
-          Prop..., std::conditional_t<alloc_prop_input::has_execution_space,
-                                      std::integral_constant<unsigned int, 15>,
-                                      typename device_space::execution_space>>;
-      alloc_prop arg_prop_copy(arg_prop);
+
+      auto arg_prop_copy = ::Kokkos::Impl::add_properties(
+          arg_prop, typename device_space::execution_space{});
+      using alloc_prop = decltype(arg_prop_copy);
 
       const auto& exec = static_cast<const Kokkos::Impl::ViewCtorProp<
           void, typename alloc_prop::execution_space>&>(arg_prop_copy)
@@ -1054,18 +1052,10 @@ auto create_mirror_view_and_copy(
   using Mirror =
       typename Impl::MirrorDynamicViewType<Space, T, P...>::view_type;
 
-  // Add some properties if not provided to avoid need for if constexpr
-  using alloc_prop = Impl::ViewCtorProp<
-      ViewCtorArgs...,
-      std::conditional_t<alloc_prop_input::has_label,
-                         std::integral_constant<unsigned int, 12>, std::string>,
-      std::conditional_t<!alloc_prop_input::initialize,
-                         std::integral_constant<unsigned int, 13>,
-                         Impl::WithoutInitializing_t>,
-      std::conditional_t<alloc_prop_input::has_execution_space,
-                         std::integral_constant<unsigned int, 14>,
-                         typename Space::execution_space>>;
-  alloc_prop arg_prop_copy(arg_prop);
+  auto arg_prop_copy =
+      Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
+                           typename Space::execution_space{});
+  using alloc_prop = decltype(arg_prop_copy);
 
   std::string& label =
       static_cast<Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy).value;
