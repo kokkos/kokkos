@@ -363,19 +363,11 @@ TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
 }
 
 struct NotDefaultConstructible {
-  NotDefaultConstructible()                               = delete;
-  NotDefaultConstructible(NotDefaultConstructible const&) = default;
-  NotDefaultConstructible(NotDefaultConstructible&&)      = default;
+  NotDefaultConstructible() = delete;
 };
 
-template <class Space>
-void view_not_default_constructible() {
-  auto my_view = Kokkos::View<NotDefaultConstructible*, Space>(
-      Kokkos::view_alloc("not_default_constructible",
-                         Kokkos::WithoutInitializing),
-      42);
-}
-
 TEST(TEST_CATEGORY, view_not_default_constructible) {
-  view_not_default_constructible<TEST_EXECSPACE>();
+  using Space = TEST_EXECSPACE;
+  Kokkos::View<NotDefaultConstructible, Space> my_view(Kokkos::view_alloc(
+      "not_default_constructible", Kokkos::WithoutInitializing));
 }
