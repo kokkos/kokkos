@@ -42,6 +42,15 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#else
+KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
+#endif
+#endif
 #ifndef KOKKOS_CORE_CONCEPTS_HPP
 #define KOKKOS_CORE_CONCEPTS_HPP
 
@@ -336,7 +345,9 @@ struct is_space {
           std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value
 #elif defined(KOKKOS_ENABLE_HIP)
           || std::is_same<memory_space,
-                          Kokkos::Experimental::HIPHostPinnedSpace>::value
+                          Kokkos::Experimental::HIPHostPinnedSpace>::value ||
+          std::is_same<memory_space,
+                       Kokkos::Experimental::HIPManagedSpace>::value
 #elif defined(KOKKOS_ENABLE_SYCL)
           || std::is_same<memory_space,
                           Kokkos::Experimental::SYCLSharedUSMSpace>::value ||

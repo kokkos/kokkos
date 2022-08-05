@@ -272,6 +272,8 @@ enum OP_TESTS {
   N_OP_TESTS
 };
 
+// volatile-qualified parameter type 'volatile half_type' is deprecated
+#if !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
 template <class view_type, class half_type>
 struct Functor_TestHalfVolatileOperators {
   volatile half_type h_lhs, h_rhs;
@@ -358,6 +360,7 @@ struct Functor_TestHalfVolatileOperators {
     expected_lhs(CDIV_H_H) /= d_rhs;
   }
 };
+#endif
 
 template <class view_type, class half_type>
 struct Functor_TestHalfOperators {
@@ -961,6 +964,8 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
                 epsilon);
   }
 
+// volatile-qualified parameter type 'volatile half_type' is deprecated
+#if !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
   // Test partial volatile support
   volatile half_type _h_lhs = h_lhs;
   volatile half_type _h_rhs = h_rhs;
@@ -984,6 +989,7 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
                   epsilon);
     }
   }
+#endif
 
   // is_trivially_copyable is false with the addition of explicit
   // copy constructors that are required for supporting reductions

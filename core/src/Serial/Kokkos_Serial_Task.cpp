@@ -42,83 +42,29 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
+
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_THREADS)
+#if defined(KOKKOS_ENABLE_TASKDAG)
 
-#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Core.hpp>
 
-/* Standard C++ libraries */
+#include <Serial/Kokkos_Serial_Task.hpp>
+#include <impl/Kokkos_TaskQueue_impl.hpp>
 
-#include <cstdlib>
-#include <string>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-#include <mutex>
-
-#include <Kokkos_Threads.hpp>
-
+//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
-namespace {
 
-std::mutex host_internal_cppthread_mutex;
+template class TaskQueue<Kokkos::Serial, typename Kokkos::Serial::memory_space>;
 
-// std::thread compatible driver.
-// Recovery from an exception would require constant intra-thread health
-// verification; which would negatively impact runtime.  As such simply
-// abort the process.
-
-void internal_cppthread_driver() {
-  try {
-    ThreadsExec::driver();
-  } catch (const std::exception& x) {
-    std::cerr << "Exception thrown from worker thread: " << x.what()
-              << std::endl;
-    std::cerr.flush();
-    std::abort();
-  } catch (...) {
-    std::cerr << "Exception thrown from worker thread" << std::endl;
-    std::cerr.flush();
-    std::abort();
-  }
 }
-
-}  // namespace
-
-//----------------------------------------------------------------------------
-// Spawn a thread
-
-void ThreadsExec::spawn() {
-  std::thread t(internal_cppthread_driver);
-  t.detach();
-}
-
-//----------------------------------------------------------------------------
-
-bool ThreadsExec::is_process() {
-  static const std::thread::id master_pid = std::this_thread::get_id();
-
-  return master_pid == std::this_thread::get_id();
-}
-
-void ThreadsExec::global_lock() { host_internal_cppthread_mutex.lock(); }
-
-void ThreadsExec::global_unlock() { host_internal_cppthread_mutex.unlock(); }
-
-//----------------------------------------------------------------------------
-
-void ThreadsExec::wait_yield(volatile int& flag, const int value) {
-  while (value == flag) {
-    std::this_thread::yield();
-  }
-}
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 #else
-void KOKKOS_CORE_SRC_THREADS_EXEC_BASE_PREVENT_LINK_ERROR() {}
-#endif /* end #if defined( KOKKOS_ENABLE_THREADS ) */
+void KOKKOS_CORE_SRC_IMPL_SERIAL_TASK_PREVENT_LINK_ERROR() {}
+#endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */

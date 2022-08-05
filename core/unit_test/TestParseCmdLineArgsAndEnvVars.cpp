@@ -44,28 +44,22 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
-
-#include <TestDefaultDeviceType_Category.hpp>
+#include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_Command_Line_Parsing.hpp>
 
 #include <cstdlib>
 #include <memory>
 #include <mutex>
+#include <regex>
 #include <string>
 #include <unordered_map>
-
-namespace Kokkos {
-namespace Impl {
-void parse_command_line_arguments(int& narg, char* arg[],
-                                  InitArguments& arguments);
-void parse_environment_variables(InitArguments& arguments);
-}  // namespace Impl
-}  // namespace Kokkos
 
 namespace {
 
 class EnvVarsHelper {
-  // do not let GTest run unit tests that set the environment concurently
+  // do not let GTest run unit tests that set the environment concurrently
   static std::mutex mutex_;
   std::vector<std::string> vars_;
   // FIXME_CXX17 prefer optional
@@ -128,6 +122,12 @@ class EnvVarsHelper {
   }
   EnvVarsHelper(EnvVarsHelper&) = delete;
   EnvVarsHelper& operator=(EnvVarsHelper&) = delete;
+  friend std::ostream& operator<<(std::ostream& os, EnvVarsHelper const& ev) {
+    for (auto const& name : ev.vars_) {
+      os << name << '=' << std::getenv(name.c_str()) << '\n';
+    }
+    return os;
+  }
 };
 std::mutex EnvVarsHelper::mutex_;
 #define SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev)       \
@@ -150,10 +150,23 @@ class CmdLineArgsHelper {
       strcpy(ptr, x.c_str());
       argv_.push_back(ptr);
     }
+    argv_.push_back(nullptr);
   }
   int& argc() { return argc_; }
   char** argv() { return argv_.data(); }
 };
+#define EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, ...) \
+  do {                                                    \
+    std::vector<std::string> expected_argv = __VA_ARGS__; \
+                                                          \
+    int expected_argc = expected_argv.size();             \
+    EXPECT_EQ(cla.argc(), expected_argc);                 \
+    for (int i = 0; i < expected_argc; ++i) {             \
+      EXPECT_EQ(cla.argv()[i], expected_argv[i])          \
+          << "arguments differ at index " << i;           \
+    }                                                     \
+    EXPECT_EQ(cla.argv()[cla.argc()], nullptr);           \
+  } while (false)
 
 TEST(defaultdevicetype, cmd_line_args_num_threads) {
   CmdLineArgsHelper cla = {{
@@ -161,21 +174,11 @@ TEST(defaultdevicetype, cmd_line_args_num_threads) {
       "--kokkos-num-threads=1",
       "--kokkos-num-threads=2",
   }};
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
-  EXPECT_EQ(ia.num_threads, 2);
-  EXPECT_EQ(cla.argc(), 1);
-  EXPECT_STREQ(*cla.argv(), "--foo=bar");
-
-  ia  = {};
-  cla = {{
-      {"--kokkos-num-threads=-1"},
-  }};
-  EXPECT_THROW(  // consider calling abort instead
-      Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia),
-      std::runtime_error
-      // expecting an '=INT' after command line argument '--kokkos-num-threads'
-  );
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_num_threads());
+  EXPECT_EQ(settings.get_num_threads(), 2);
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--foo=bar"});
 }
 
 TEST(defaultdevicetype, cmd_line_args_device_id) {
@@ -184,11 +187,11 @@ TEST(defaultdevicetype, cmd_line_args_device_id) {
       "--dummy",
       "--kokkos-device-id=4",
   }};
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
-  EXPECT_EQ(ia.device_id, 4);
-  EXPECT_EQ(cla.argc(), 1);
-  EXPECT_STREQ(*cla.argv(), "--dummy");
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_device_id());
+  EXPECT_EQ(settings.get_device_id(), 4);
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--dummy"});
 }
 
 TEST(defaultdevicetype, cmd_line_args_num_devices) {
@@ -197,24 +200,26 @@ TEST(defaultdevicetype, cmd_line_args_num_devices) {
       "--kokkos-num-devices=7",
       "-v",
   }};
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
-  EXPECT_EQ(ia.ndevices, 7);
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_num_devices());
+  EXPECT_EQ(settings.get_num_devices(), 7);
   // this is the current behavior, not suggesting this cannot be revisited
-  EXPECT_EQ(ia.skip_device, 6) << "behavior changed see comment";
-  EXPECT_EQ(cla.argc(), 1);
-  EXPECT_STREQ(*cla.argv(), "-v");
+  EXPECT_TRUE(settings.has_skip_device()) << "behavior changed see comment";
+  EXPECT_EQ(settings.get_skip_device(), 6) << "behavior changed see comment";
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"-v"});
 }
 
 TEST(defaultdevicetype, cmd_line_args_disable_warning) {
   CmdLineArgsHelper cla = {{
-      "--kokkos-disable-warnings=0",
+      "--kokkos-disable-warnings=1",
+      "--kokkos-disable-warnings=false",
   }};
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
-  // this is the current behavior, not suggesting this cannot be revisited
-  // essentially here the =BOOL is ignored
-  EXPECT_TRUE(ia.disable_warnings) << "behavior changed see comment";
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_disable_warnings());
+  EXPECT_FALSE(settings.get_disable_warnings());
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {});
 }
 
 TEST(defaultdevicetype, cmd_line_args_tune_internals) {
@@ -222,34 +227,36 @@ TEST(defaultdevicetype, cmd_line_args_tune_internals) {
       "--kokkos-tune-internals",
       "--kokkos-num-threads=3",
   }};
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
-  EXPECT_TRUE(ia.tune_internals);
-  EXPECT_EQ(ia.num_threads, 3);
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_tune_internals());
+  EXPECT_TRUE(settings.get_tune_internals());
+  EXPECT_TRUE(settings.has_num_threads());
+  EXPECT_EQ(settings.get_num_threads(), 3);
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {});
 }
 
 TEST(defaultdevicetype, cmd_line_args_help) {
   CmdLineArgsHelper cla = {{
       "--help",
   }};
-  Kokkos::InitArguments ia;
+  Kokkos::InitializationSettings settings;
   ::testing::internal::CaptureStdout();
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
   auto captured = ::testing::internal::GetCapturedStdout();
   // check that error message was only printed once
   EXPECT_EQ(captured.find("--kokkos-help"), captured.rfind("--kokkos-help"));
-  EXPECT_EQ(cla.argc(), 1);
-  EXPECT_STREQ(*cla.argv(), "--help");
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--help"});
   auto const help_message_length = captured.length();
 
   cla = {{
       {"--kokkos-help"},
   }};
   ::testing::internal::CaptureStdout();
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
   captured = ::testing::internal::GetCapturedStdout();
   EXPECT_EQ(captured.length(), help_message_length);
-  EXPECT_EQ(cla.argc(), 0);
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {});
 
   cla = {{
       {"--kokkos-help"},
@@ -257,11 +264,85 @@ TEST(defaultdevicetype, cmd_line_args_help) {
       {"--kokkos-help"},
   }};
   ::testing::internal::CaptureStdout();
-  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), ia);
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
   captured = ::testing::internal::GetCapturedStdout();
   EXPECT_EQ(captured.length(), help_message_length);
-  EXPECT_EQ(cla.argc(), 1);
-  EXPECT_STREQ(*cla.argv(), "--help");
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--help"});
+}
+
+TEST(defaultdevicetype, cmd_line_args_tools_arguments) {
+  CmdLineArgsHelper cla = {{
+      "--kokkos-tool-libs=ich_tue_nur.so",
+  }};
+  Kokkos::InitializationSettings settings;
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  auto captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.find("not recognized") != std::string::npos &&
+              captured.find("--kokkos-tool-libs=ich_tue_nur.so") !=
+                  std::string::npos &&
+              !settings.has_tools_libs())
+      << captured;
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(
+      cla, {"--kokkos-tool-libs=ich_tue_nur.so"});
+
+  cla      = {{
+      "--kokkos-tools-libs=ich_tue_nur.so",
+  }};
+  settings = {};
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  EXPECT_TRUE(settings.has_tools_libs());
+  EXPECT_EQ(settings.get_tools_libs(), "ich_tue_nur.so");
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {});
+}
+
+TEST(defaultdevicetype, cmd_line_args_unrecognized_flag) {
+  CmdLineArgsHelper cla = {{
+      "--kokkos_num_threads=4",  // underscores instead of dashes
+  }};
+  Kokkos::InitializationSettings settings;
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  auto captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.find("not recognized") != std::string::npos &&
+              captured.find("--kokkos_num_threads=4") != std::string::npos &&
+              !settings.has_num_threads())
+      << captured;
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--kokkos_num_threads=4"});
+
+  cla = {{
+      "-kokkos-num-threads=4",  // missing one leading dash
+  }};
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.find("not recognized") != std::string::npos &&
+              captured.find("-kokkos-num-threads=4") != std::string::npos &&
+              !settings.has_num_threads())
+      << captured;
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"-kokkos-num-threads=4"});
+
+  cla = {{
+      "--kokko-num-threads=4",  // no warning when prefix misspelled
+  }};
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.empty() && !settings.has_num_threads()) << captured;
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla, {"--kokko-num-threads=4"});
+
+  Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
+      std::regex{"^--kokkos-extension.*"});
+  cla = {{
+      "--kokkos-extension-option=value",  // user explicitly asked not to warn
+                                          // about that prefix
+  }};
+  ::testing::internal::CaptureStderr();
+  Kokkos::Impl::parse_command_line_arguments(cla.argc(), cla.argv(), settings);
+  captured = ::testing::internal::GetCapturedStderr();
+  EXPECT_TRUE(captured.empty()) << captured;
+  EXPECT_REMAINING_COMMAND_LINE_ARGUMENTS(cla,
+                                          {"--kokkos-extension-option=value"});
 }
 
 TEST(defaultdevicetype, env_vars_num_threads) {
@@ -270,26 +351,21 @@ TEST(defaultdevicetype, env_vars_num_threads) {
       {"KOKKOS_DISABLE_WARNINGS", "1"},
   }};
   SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_EQ(ia.num_threads, 24);
-  EXPECT_TRUE(ia.disable_warnings);
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_environment_variables(settings);
+  EXPECT_TRUE(settings.has_num_threads());
+  EXPECT_EQ(settings.get_num_threads(), 24);
+  EXPECT_TRUE(settings.has_disable_warnings());
+  EXPECT_TRUE(settings.get_disable_warnings());
 
   ev = {{
       {"KOKKOS_NUM_THREADS", "1ABC"},
   }};
   SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  ia = {};
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_EQ(ia.num_threads, 1);
-
-  ev = {{
-      {"KOKKOS_NUM_THREADS", "-1"},
-  }};
-  SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  ia = {};
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_EQ(ia.num_threads, -1);
+  settings = {};
+  Kokkos::Impl::parse_environment_variables(settings);
+  EXPECT_TRUE(settings.has_num_threads());
+  EXPECT_EQ(settings.get_num_threads(), 1);
 }
 
 TEST(defaultdevicetype, env_vars_device_id) {
@@ -297,9 +373,10 @@ TEST(defaultdevicetype, env_vars_device_id) {
       {"KOKKOS_DEVICE_ID", "33"},
   }};
   SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_EQ(ia.device_id, 33);
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_environment_variables(settings);
+  EXPECT_TRUE(settings.has_device_id());
+  EXPECT_EQ(settings.get_device_id(), 33);
 }
 
 TEST(defaultdevicetype, env_vars_num_devices) {
@@ -308,55 +385,115 @@ TEST(defaultdevicetype, env_vars_num_devices) {
       {"KOKKOS_SKIP_DEVICE", "1"},
   }};
   SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-  Kokkos::InitArguments ia;
-  Kokkos::Impl::parse_environment_variables(ia);
-  EXPECT_EQ(ia.ndevices, 4);
-  EXPECT_EQ(ia.skip_device, 1);
+  Kokkos::InitializationSettings settings;
+  Kokkos::Impl::parse_environment_variables(settings);
+  EXPECT_TRUE(settings.has_num_devices());
+  EXPECT_EQ(settings.get_num_devices(), 4);
+  EXPECT_TRUE(settings.has_skip_device());
+  EXPECT_EQ(settings.get_skip_device(), 1);
 }
 
 TEST(defaultdevicetype, env_vars_disable_warnings) {
-  for (auto const& value_true : {"1", "true", "TRUE", "3", "yEs", "ON"}) {
+  for (auto const& value_true : {"1", "true", "TRUE", "yEs"}) {
     EnvVarsHelper ev = {{
         {"KOKKOS_DISABLE_WARNINGS", value_true},
     }};
     SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-    Kokkos::InitArguments ia;
-    Kokkos::Impl::parse_environment_variables(ia);
-    EXPECT_TRUE(ia.disable_warnings)
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    EXPECT_TRUE(settings.has_disable_warnings())
+        << "KOKKOS_DISABLE_WARNINGS=" << value_true;
+    EXPECT_TRUE(settings.get_disable_warnings())
         << "KOKKOS_DISABLE_WARNINGS=" << value_true;
   }
-  for (auto const& value_false : {"0", "false", "whatever", "123"}) {
+  for (auto const& value_false : {"0", "fAlse", "No"}) {
     EnvVarsHelper ev = {{
         {"KOKKOS_DISABLE_WARNINGS", value_false},
     }};
     SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-    Kokkos::InitArguments ia;
-    Kokkos::Impl::parse_environment_variables(ia);
-    EXPECT_FALSE(ia.disable_warnings)
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    EXPECT_TRUE(settings.has_disable_warnings())
+        << "KOKKOS_DISABLE_WARNINGS=" << value_false;
+    EXPECT_FALSE(settings.get_disable_warnings())
         << "KOKKOS_DISABLE_WARNINGS=" << value_false;
   }
 }
 
 TEST(defaultdevicetype, env_vars_tune_internals) {
-  for (auto const& value_true : {"1", "true", "TRUE", "on", "tRuE"}) {
+  for (auto const& value_true : {"1", "yES", "true", "TRUE", "tRuE"}) {
     EnvVarsHelper ev = {{
         {"KOKKOS_TUNE_INTERNALS", value_true},
     }};
     SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-    Kokkos::InitArguments ia;
-    Kokkos::Impl::parse_environment_variables(ia);
-    EXPECT_TRUE(ia.tune_internals) << "KOKKOS_TUNE_INTERNALS=" << value_true;
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    EXPECT_TRUE(settings.has_tune_internals())
+        << "KOKKOS_TUNE_INTERNALS=" << value_true;
+    EXPECT_TRUE(settings.get_tune_internals())
+        << "KOKKOS_TUNE_INTERNALS=" << value_true;
   }
-  for (auto const& value_false :
-       {"0", "false", "whatever", "123", "3", "YES"}) {
+  for (auto const& value_false : {"0", "false", "no"}) {
     EnvVarsHelper ev = {{
         {"KOKKOS_TUNE_INTERNALS", value_false},
     }};
     SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
-    Kokkos::InitArguments ia;
-    Kokkos::Impl::parse_environment_variables(ia);
-    EXPECT_FALSE(ia.tune_internals) << "KOKKOS_TUNE_INTERNALS=" << value_false;
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    EXPECT_TRUE(settings.has_tune_internals())
+        << "KOKKOS_TUNE_INTERNALS=" << value_false;
+    EXPECT_FALSE(settings.get_tune_internals())
+        << "KOKKOS_TUNE_INTERNALS=" << value_false;
   }
+}
+
+TEST(defaultdevicetype, visible_devices) {
+#define KOKKOS_TEST_VISIBLE_DEVICES(ENV, CNT, DEV)                    \
+  do {                                                                \
+    EnvVarsHelper ev{ENV};                                            \
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);                     \
+    Kokkos::InitializationSettings settings;                          \
+    Kokkos::Impl::parse_environment_variables(settings);              \
+    auto computed = Kokkos::Impl::get_visible_devices(settings, CNT); \
+    std::vector<int> expected = DEV;                                  \
+    EXPECT_EQ(expected.size(), computed.size())                       \
+        << ev << "device count: " << CNT;                             \
+    auto n = std::min<int>(expected.size(), computed.size());         \
+    for (int i = 0; i < n; ++i) {                                     \
+      EXPECT_EQ(expected[i], computed[i])                             \
+          << "devices differ at index " << i << '\n'                  \
+          << ev << "device count: " << CNT;                           \
+    }                                                                 \
+  } while (false)
+
+#define DEV(...) \
+  std::vector<int> { __VA_ARGS__ }
+#define ENV(...) std::unordered_map<std::string, std::string>{__VA_ARGS__}
+
+  // first test with all environment variables that are involved in determining
+  // the visible devices so user set var do not mess up the logic below.
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_NUM_DEVICES", "8"},
+          {"KOKKOS_SKIP_DEVICE", "1"}),
+      6, DEV(2, 1));
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_NUM_DEVICES", "8"}, ), 6,
+      DEV(2, 1));
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV({"KOKKOS_NUM_DEVICES", "3"}), 6,
+                              DEV(0, 1, 2));
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_NUM_DEVICES", "4"}, {"KOKKOS_SKIP_DEVICE", "1"}, ), 6,
+      DEV(0, 2, 3));
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV({"KOKKOS_VISIBLE_DEVICES", "1,3,4"}), 6,
+                              DEV(1, 3, 4));
+  KOKKOS_TEST_VISIBLE_DEVICES(
+      ENV({"KOKKOS_VISIBLE_DEVICES", "2,1"}, {"KOKKOS_SKIP_DEVICE", "1"}, ), 6,
+      DEV(2, 1));
+  KOKKOS_TEST_VISIBLE_DEVICES(ENV(), 4, DEV(0, 1, 2, 3));
+
+#undef ENV
+#undef DEV
+#undef KOKKOS_TEST_VISIBLE_DEVICES
 }
 
 }  // namespace

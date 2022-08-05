@@ -214,7 +214,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   {
     // test View parameters for View dim = 1, dynamic = 0
     LIVE({ Kokkos::View<DType_1> v_0("v_0" PARAM_0); }, 0, 0);
-    DIE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 0);
+    LIVE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 0);
     DIE({ Kokkos::View<DType_1> v_2("v_2", PARAM_2); }, 2, 0);
     DIE({ Kokkos::View<DType_1> v_3("v_3", PARAM_3); }, 3, 0);
     DIE({ Kokkos::View<DType_1> v_4("v_4", PARAM_4); }, 4, 0);
@@ -227,7 +227,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
     // test View parameters for View dim = 2, dynamic = 0
     LIVE({ Kokkos::View<DType_2> v_0("v_0" PARAM_0); }, 0, 0);
     DIE({ Kokkos::View<DType_2> v_1("v_1", PARAM_1); }, 1, 0);
-    DIE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 0);
+    LIVE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 0);
     DIE({ Kokkos::View<DType_2> v_3("v_3", PARAM_3); }, 3, 0);
     DIE({ Kokkos::View<DType_2> v_4("v_4", PARAM_4); }, 4, 0);
     DIE({ Kokkos::View<DType_2> v_5("v_5", PARAM_5); }, 5, 0);
@@ -240,7 +240,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
     LIVE({ Kokkos::View<DType_3> v_0("v_0" PARAM_0); }, 0, 0);
     DIE({ Kokkos::View<DType_3> v_1("v_1", PARAM_1); }, 1, 0);
     DIE({ Kokkos::View<DType_3> v_2("v_2", PARAM_2); }, 2, 0);
-    DIE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 0);
+    LIVE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 0);
     DIE({ Kokkos::View<DType_3> v_4("v_4", PARAM_4); }, 4, 0);
     DIE({ Kokkos::View<DType_3> v_5("v_5", PARAM_5); }, 5, 0);
     DIE({ Kokkos::View<DType_3> v_6("v_6", PARAM_6); }, 6, 0);
@@ -253,7 +253,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
     DIE({ Kokkos::View<DType_4> v_1("v_1", PARAM_1); }, 1, 0);
     DIE({ Kokkos::View<DType_4> v_2("v_2", PARAM_2); }, 2, 0);
     DIE({ Kokkos::View<DType_4> v_3("v_3", PARAM_3); }, 3, 0);
-    DIE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 0);
+    LIVE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 0);
     DIE({ Kokkos::View<DType_4> v_5("v_5", PARAM_5); }, 5, 0);
     DIE({ Kokkos::View<DType_4> v_6("v_6", PARAM_6); }, 6, 0);
     DIE({ Kokkos::View<DType_4> v_7("v_7", PARAM_7); }, 7, 0);
@@ -266,7 +266,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
     DIE({ Kokkos::View<DType_5> v_2("v_2", PARAM_2); }, 2, 0);
     DIE({ Kokkos::View<DType_5> v_3("v_3", PARAM_3); }, 3, 0);
     DIE({ Kokkos::View<DType_5> v_4("v_4", PARAM_4); }, 4, 0);
-    DIE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 0);
+    LIVE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 0);
     DIE({ Kokkos::View<DType_5> v_6("v_6", PARAM_6); }, 6, 0);
     DIE({ Kokkos::View<DType_5> v_7("v_7", PARAM_7); }, 7, 0);
   }
@@ -279,7 +279,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
     DIE({ Kokkos::View<DType_6> v_3("v_3", PARAM_3); }, 3, 0);
     DIE({ Kokkos::View<DType_6> v_4("v_4", PARAM_4); }, 4, 0);
     DIE({ Kokkos::View<DType_6> v_5("v_5", PARAM_5); }, 5, 0);
-    DIE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 0);
+    LIVE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 0);
     DIE({ Kokkos::View<DType_6> v_7("v_7", PARAM_7); }, 7, 0);
   }
 
@@ -292,7 +292,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
     DIE({ Kokkos::View<DType_7> v_4("v_4", PARAM_4); }, 4, 0);
     DIE({ Kokkos::View<DType_7> v_5("v_5", PARAM_5); }, 5, 0);
     DIE({ Kokkos::View<DType_7> v_6("v_6", PARAM_6); }, 6, 0);
-    DIE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 0);
+    LIVE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 0);
   }
 }
 
@@ -322,7 +322,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   {
     // test View parameters for View dim = 1, dynamic = 0
     LIVE({ Kokkos::View<DType_1> v_0("v_0" PARAM_0); }, 0, 0);
-    DIE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 0);
+    LIVE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 0);
     DIE({ Kokkos::View<DType_1> v_2("v_2", PARAM_2); }, 2, 0);
     DIE({ Kokkos::View<DType_1> v_3("v_3", PARAM_3); }, 3, 0);
     DIE({ Kokkos::View<DType_1> v_4("v_4", PARAM_4); }, 4, 0);
@@ -335,7 +335,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     // test View parameters for View dim = 2, dynamic = 1
     DIE({ Kokkos::View<DType_2> v_0("v_0" PARAM_0); }, 0, 1);
     LIVE({ Kokkos::View<DType_2> v_1("v_1", PARAM_1); }, 1, 1);
-    DIE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 1);
+    LIVE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 1);
     DIE({ Kokkos::View<DType_2> v_3("v_3", PARAM_3); }, 3, 1);
     DIE({ Kokkos::View<DType_2> v_4("v_4", PARAM_4); }, 4, 1);
     DIE({ Kokkos::View<DType_2> v_5("v_5", PARAM_5); }, 5, 1);
@@ -348,7 +348,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_3> v_0("v_0" PARAM_0); }, 0, 2);
     DIE({ Kokkos::View<DType_3> v_1("v_1", PARAM_1); }, 1, 2);
     LIVE({ Kokkos::View<DType_3> v_2("v_2", PARAM_2); }, 2, 2);
-    DIE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 2);
+    LIVE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 2);
     DIE({ Kokkos::View<DType_3> v_4("v_4", PARAM_4); }, 4, 2);
     DIE({ Kokkos::View<DType_3> v_5("v_5", PARAM_5); }, 5, 2);
     DIE({ Kokkos::View<DType_3> v_6("v_6", PARAM_6); }, 6, 2);
@@ -361,7 +361,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_4> v_1("v_1", PARAM_1); }, 1, 3);
     DIE({ Kokkos::View<DType_4> v_2("v_2", PARAM_2); }, 2, 3);
     LIVE({ Kokkos::View<DType_4> v_3("v_3", PARAM_3); }, 3, 3);
-    DIE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 3);
+    LIVE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 3);
     DIE({ Kokkos::View<DType_4> v_5("v_5", PARAM_5); }, 5, 3);
     DIE({ Kokkos::View<DType_4> v_6("v_6", PARAM_6); }, 6, 3);
     DIE({ Kokkos::View<DType_4> v_7("v_7", PARAM_7); }, 7, 3);
@@ -374,7 +374,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_5> v_2("v_2", PARAM_2); }, 2, 4);
     DIE({ Kokkos::View<DType_5> v_3("v_3", PARAM_3); }, 3, 4);
     LIVE({ Kokkos::View<DType_5> v_4("v_4", PARAM_4); }, 4, 4);
-    DIE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 4);
+    LIVE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 4);
     DIE({ Kokkos::View<DType_5> v_6("v_6", PARAM_6); }, 6, 4);
     DIE({ Kokkos::View<DType_5> v_7("v_7", PARAM_7); }, 7, 4);
   }
@@ -387,7 +387,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_6> v_3("v_3", PARAM_3); }, 3, 5);
     DIE({ Kokkos::View<DType_6> v_4("v_4", PARAM_4); }, 4, 5);
     LIVE({ Kokkos::View<DType_6> v_5("v_5", PARAM_5); }, 5, 5);
-    DIE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 5);
+    LIVE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 5);
     DIE({ Kokkos::View<DType_6> v_7("v_7", PARAM_7); }, 7, 5);
   }
 
@@ -400,7 +400,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
     DIE({ Kokkos::View<DType_7> v_4("v_4", PARAM_4); }, 4, 6);
     DIE({ Kokkos::View<DType_7> v_5("v_5", PARAM_5); }, 5, 6);
     LIVE({ Kokkos::View<DType_7> v_6("v_6", PARAM_6); }, 6, 6);
-    DIE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 6);
+    LIVE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 6);
   }
 }
 #endif  // KOKKOS_ENABLE_OPENMPTARGET

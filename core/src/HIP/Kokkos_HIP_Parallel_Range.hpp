@@ -381,17 +381,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
 
-      if (!m_result_ptr_device_accessible) {
-        m_policy.space().impl_internal_space_instance()->fence(
-            "Kokkos::Impl::ParallelReduce<RangePolicy,HIP>: fence because "
-            "reduction can't access result storage location");
-
-        if (m_result_ptr) {
-          const int size = Analysis::value_size(
-              ReducerConditional::select(m_functor, m_reducer));
-          DeepCopy<HostSpace, ::Kokkos::Experimental::HIPSpace>(
-              m_result_ptr, m_scratch_space, size);
-        }
+      if (!m_result_ptr_device_accessible && m_result_ptr) {
+        const int size = Analysis::value_size(
+            ReducerConditional::select(m_functor, m_reducer));
+        DeepCopy<HostSpace, ::Kokkos::Experimental::HIPSpace,
+                 ::Kokkos::Experimental::HIP>(m_policy.space(), m_result_ptr,
+                                              m_scratch_space, size);
       }
     } else {
       if (m_result_ptr) {
@@ -744,8 +739,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const auto nwork = Base::m_policy.end() - Base::m_policy.begin();
     if (nwork && !Base::m_result_ptr_device_accessible) {
       const int size = Base::Analysis::value_size(Base::m_functor);
-      DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace>(
-          Base::m_result_ptr,
+      DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace,
+               Kokkos::Experimental::HIP>(
+          Base::m_policy.space(), Base::m_result_ptr,
           Base::m_scratch_space + (Base::m_grid_x - 1) * size / sizeof(int),
           size);
     }

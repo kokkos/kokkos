@@ -223,9 +223,7 @@ class ParallelScanSYCLBase {
                                  sycl::event memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q                          = space.sycl_queue();
 
     const std::size_t len = m_policy.end() - m_policy.begin();
 
@@ -306,7 +304,7 @@ class ParallelScanSYCLBase {
 
     // FIXME_SYCL consider only storing one value per block and recreate initial
     // results in the end before doing the final pass
-    m_scratch_space = static_cast<sycl::global_ptr<value_type>>(
+    m_scratch_space = static_cast<sycl::device_ptr<value_type>>(
         instance.scratch_space(total_memory));
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&

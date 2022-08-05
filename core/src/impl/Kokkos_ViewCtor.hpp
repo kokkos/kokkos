@@ -83,15 +83,19 @@ struct is_view_label<const char[N]> : public std::true_type {};
 template <typename... P>
 struct ViewCtorProp;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // Forward declare
 template <typename Specialize, typename T>
 struct CommonViewAllocProp;
 
+/* Dummy to allow for empty ViewCtorProp object
+ */
+template <>
+struct ViewCtorProp<void> {};
+
 /* Common value_type stored as ViewCtorProp
  */
 template <typename Specialize, typename T>
-struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T> > {
+struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
@@ -105,13 +109,12 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T> > {
 
   type value;
 };
-#endif
 
 /*  std::integral_constant<unsigned,I> are dummy arguments
  *  that avoid duplicate base class errors
  */
 template <unsigned I>
-struct ViewCtorProp<void, std::integral_constant<unsigned, I> > {
+struct ViewCtorProp<void, std::integral_constant<unsigned, I>> {
   ViewCtorProp()                     = default;
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
@@ -134,7 +137,7 @@ struct ViewCtorProp<
 
   ViewCtorProp(const type &) {}
 
-  static constexpr type value = type();
+  type value = type();
 };
 
 /* Map input label type to std::string */

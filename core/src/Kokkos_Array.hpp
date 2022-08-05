@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_ARRAY_HPP
 #define KOKKOS_ARRAY_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -392,4 +396,8 @@ KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
 }  // namespace Kokkos
 //</editor-fold>
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
+#endif
 #endif /* #ifndef KOKKOS_ARRAY_HPP */

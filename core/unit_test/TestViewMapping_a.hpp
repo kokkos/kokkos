@@ -248,11 +248,11 @@ void test_view_mapping() {
     ASSERT_EQ(layout.dimension[0], 2u);
     ASSERT_EQ(layout.dimension[1], 3u);
     ASSERT_EQ(layout.dimension[2], 4u);
-    ASSERT_EQ(layout.dimension[3], 1u);
-    ASSERT_EQ(layout.dimension[4], 1u);
-    ASSERT_EQ(layout.dimension[5], 1u);
-    ASSERT_EQ(layout.dimension[6], 1u);
-    ASSERT_EQ(layout.dimension[7], 1u);
+    ASSERT_EQ(layout.dimension[3], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[4], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[5], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[6], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(layout.dimension[7], KOKKOS_INVALID_INDEX);
 
     ASSERT_EQ(stride3.m_dim.rank, 3u);
     ASSERT_EQ(stride3.m_dim.N0, 2u);
@@ -446,8 +446,8 @@ void test_view_mapping() {
     Kokkos::Impl::ViewDimension<N0, N1, N2, N3> dim;
 
     SubviewExtents tmp(dim, N0 / 2, Kokkos::ALL,
-                       std::pair<int, int>(N2 / 4, 10 + N2 / 4),
-                       Kokkos::pair<int, int>(N3 / 4, 20 + N3 / 4));
+                       std::pair<size_t, size_t>(N2 / 4, 10 + N2 / 4),
+                       Kokkos::pair<size_t, size_t>(N3 / 4, 20 + N3 / 4));
 
     ASSERT_EQ(tmp.domain_offset(0), N0 / 2);
     ASSERT_EQ(tmp.domain_offset(1), 0u);
