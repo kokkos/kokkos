@@ -399,11 +399,14 @@ class ViewMapping<Traits, Kokkos::Array<>> {
             : functor_type((pointer_type)m_impl_handle,
                            m_impl_offset.span() * Array_N, alloc_name);
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
     if (false) {
       // Make sure the destroy functor gets instantiated.
       // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
       functor.destroy_shared_allocation();
     }
+#endif
 
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.
