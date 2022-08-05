@@ -333,7 +333,7 @@ Sentinel::Sentinel() {
 
   hwloc_get_cpubind(s_hwloc_topology, s_process_binding, HWLOC_CPUBIND_PROCESS);
 
-  if (hwloc_bitmap_iszero(s_process_binding)) {
+  if ((bool)hwloc_bitmap_iszero(s_process_binding)) {
     if (Kokkos::show_warnings()) {
       std::cerr << "WARNING: Cannot detect process binding -- ASSUMING ALL "
                    "processing units"
@@ -359,7 +359,7 @@ Sentinel::Sentinel() {
     const hwloc_obj_t core =
         hwloc_get_obj_by_type(s_hwloc_topology, HWLOC_OBJ_CORE, 0);
 
-    if (hwloc_bitmap_intersects(s_process_binding, core->cpuset)) {
+    if ((bool)hwloc_bitmap_intersects(s_process_binding, core->cpuset)) {
       hwloc_bitmap_t s_process_no_core_zero = hwloc_bitmap_alloc();
 
       hwloc_bitmap_andnot(s_process_no_core_zero, s_process_binding,
@@ -438,13 +438,13 @@ Sentinel::Sentinel() {
     const hwloc_obj_t root =
         hwloc_get_obj_by_type(s_hwloc_topology, root_type, i);
 
-    if (hwloc_bitmap_intersects(s_process_binding, root->cpuset)) {
+    if ((bool)hwloc_bitmap_intersects(s_process_binding, root->cpuset)) {
       ++root_count;
 
       // Remember which root (NUMA) object the master thread is running on.
       // This will be logical NUMA rank #0 for this process.
 
-      if (hwloc_bitmap_intersects(proc_cpuset_location, root->cpuset)) {
+      if ((bool)hwloc_bitmap_intersects(proc_cpuset_location, root->cpuset)) {
         root_base = i;
       }
 
@@ -469,7 +469,7 @@ Sentinel::Sentinel() {
         // This assumes that it would be performance-detrimental
         // to spawn more than one MPI process per core and use nested threading.
 
-        if (hwloc_bitmap_intersects(s_process_binding, core->cpuset)) {
+        if ((bool)hwloc_bitmap_intersects(s_process_binding, core->cpuset)) {
           ++core_count;
 
           const unsigned pu_count = hwloc_get_nbobjs_inside_cpuset_by_type(
@@ -508,7 +508,7 @@ Sentinel::Sentinel() {
     const hwloc_obj_t root =
         hwloc_get_obj_by_type(s_hwloc_topology, root_type, root_rank);
 
-    if (hwloc_bitmap_intersects(s_process_binding, root->cpuset)) {
+    if ((bool)hwloc_bitmap_intersects(s_process_binding, root->cpuset)) {
       const unsigned max_core = hwloc_get_nbobjs_inside_cpuset_by_type(
           s_hwloc_topology, root->cpuset, HWLOC_OBJ_CORE);
 
@@ -518,7 +518,7 @@ Sentinel::Sentinel() {
         const hwloc_obj_t core = hwloc_get_obj_inside_cpuset_by_type(
             s_hwloc_topology, root->cpuset, HWLOC_OBJ_CORE, j);
 
-        if (hwloc_bitmap_intersects(s_process_binding, core->cpuset)) {
+        if ((bool)hwloc_bitmap_intersects(s_process_binding, core->cpuset)) {
           s_core[core_count + core_per_root * i] = core->cpuset;
 
           ++core_count;
@@ -661,7 +661,7 @@ bool unbind_this_thread() {
 #endif
 
   const bool result =
-      s_hwloc_topology &&
+      s_hwloc_topology != nullptr &&
       0 == hwloc_set_cpubind(s_hwloc_topology, s_process_binding,
                              HWLOC_CPUBIND_THREAD | HWLOC_CPUBIND_STRICT);
 
@@ -698,7 +698,8 @@ std::pair<unsigned, unsigned> get_this_thread_coordinate() {
 
   unsigned i = 0;
 
-  while (i < n && !hwloc_bitmap_intersects(s_hwloc_location, s_core[i])) ++i;
+  while (i < n && !(bool)hwloc_bitmap_intersects(s_hwloc_location, s_core[i]))
+    ++i;
 
   if (i < n) {
     coord.first  = i / s_core_topology.second;
