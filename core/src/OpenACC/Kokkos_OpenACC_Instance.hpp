@@ -82,15 +82,6 @@ class OpenACCInternal {
   OpenACCInternal() : m_async_id(acc_async_sync) {}
 };
 
-class OpenACCInternalDevices {
- public:
-  int m_accDevCount;
-
-  OpenACCInternalDevices();
-
-  static const OpenACCInternalDevices& singleton();
-};
-
 }  // namespace Kokkos::Experimental::Impl
 
 #endif
