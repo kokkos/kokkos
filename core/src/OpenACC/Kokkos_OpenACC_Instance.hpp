@@ -46,12 +46,12 @@
 #define KOKKOS_OPENACC_INSTANCE_HPP
 
 #include <impl/Kokkos_InitializationSettings.hpp>
-#include <impl/Kokkos_Tools.hpp>
+
+#include <openacc.h>
 
 #include <cstdint>
 #include <iosfwd>
 #include <string>
-#include <openacc.h>
 
 namespace Kokkos::Experimental::Impl {
 
@@ -64,7 +64,6 @@ class OpenACCInternal {
  public:
   static int m_accDev;
   int m_async_id;
-  uint32_t m_instance_id;
 
   static OpenACCInternal& singleton();
 
@@ -80,11 +79,7 @@ class OpenACCInternal {
 
   uint32_t instance_id() const noexcept;
 
-  OpenACCInternal()
-      : m_async_id(acc_async_sync),
-        m_instance_id(Kokkos::Tools::Experimental::Impl::idForInstance<
-                      Kokkos::Experimental::OpenACC>(
-            reinterpret_cast<uintptr_t>(this))) {}
+  OpenACCInternal() : m_async_id(acc_async_sync) {}
 };
 
 class OpenACCInternalDevices {

@@ -112,7 +112,8 @@ void Kokkos::Experimental::Impl::OpenACCInternal::fence(
 
 uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id() const
     noexcept {
-  return m_instance_id;
+  return Kokkos::Tools::Experimental::Impl::idForInstance<OpenACC>(
+      reinterpret_cast<uintptr_t>(this));
 }
 
 Kokkos::Experimental::Impl::OpenACCInternalDevices::OpenACCInternalDevices() {
