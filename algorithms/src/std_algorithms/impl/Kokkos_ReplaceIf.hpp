@@ -63,9 +63,7 @@ void replace_if_exespace_impl(const std::string& label,
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(
-      label,
-      // use CTAD
-      RangePolicy(ex, 0, num_elements),
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       // use CTAD
       StdReplaceIfFunctor(first, std::move(pred), new_value));
   ex.fence("Kokkos::replace_if: fence after operation");

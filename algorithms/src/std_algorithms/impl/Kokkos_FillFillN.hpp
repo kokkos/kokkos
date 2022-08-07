@@ -54,8 +54,7 @@ void fill_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
-                         // use CTAD
-                         RangePolicy(ex, 0, num_elements),
+                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                          // use CTAD
                          StdFillFunctor(first, value));
   ex.fence("Kokkos::fill: fence after operation");
