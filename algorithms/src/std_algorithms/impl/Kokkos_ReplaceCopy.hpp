@@ -71,16 +71,15 @@ OutputIteratorType replace_copy_exespace_impl(const std::string& label,
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // aliases
-  using func_t =
-      StdReplaceCopyFunctor<InputIteratorType, OutputIteratorType, ValueType>;
-
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         func_t(first_from, first_dest, old_value, new_value));
+  ::Kokkos::parallel_for(
+      label,
+      // use CTAD
+      RangePolicy(ex, 0, num_elements),
+      // use CTAD
+      StdReplaceCopyFunctor(first_from, first_dest, old_value, new_value));
   ex.fence("Kokkos::replace_copy: fence after operation");
 
   // return
@@ -100,15 +99,13 @@ KOKKOS_FUNCTION OutputIteratorType replace_copy_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // aliases
-  using func_t =
-      StdReplaceCopyFunctor<InputIteratorType, OutputIteratorType, ValueType>;
-
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         func_t(first_from, first_dest, old_value, new_value));
+  ::Kokkos::parallel_for(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      // use CTAD
+      StdReplaceCopyFunctor(first_from, first_dest, old_value, new_value));
   teamHandle.team_barrier();
 
   // return

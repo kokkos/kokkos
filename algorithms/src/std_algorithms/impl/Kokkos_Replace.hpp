@@ -58,14 +58,11 @@ void replace_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
-  // aliases
-  using func_t = StdReplaceFunctor<IteratorType, ValueType>;
-
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         func_t(first, old_value, new_value));
+  ::Kokkos::parallel_for(label, RangePolicy(ex, 0, num_elements),
+                         // use CTAD here
+                         StdReplaceFunctor(first, old_value, new_value));
   ex.fence("Kokkos::replace: fence after operation");
 }
 
@@ -78,13 +75,11 @@ KOKKOS_FUNCTION void replace_team_impl(const TeamHandleType& teamHandle,
   Impl::static_assert_random_access_and_accessible(teamHandle, first);
   Impl::expect_valid_range(first, last);
 
-  // aliases
-  using func_t = StdReplaceFunctor<IteratorType, ValueType>;
-
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         func_t(first, old_value, new_value));
+                         // use CTAD
+                         StdReplaceFunctor(first, old_value, new_value));
   teamHandle.team_barrier();
 }
 

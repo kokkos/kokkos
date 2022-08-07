@@ -27,16 +27,18 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class IndexType, class InputIterator, class OutputIterator,
-          class PredicateType, class ValueType>
+template <class InputIterator, class OutputIterator, class PredicateType,
+          class ValueType>
 struct StdReplaceIfCopyFunctor {
+  using index_type = typename InputIterator::difference_type;
+
   InputIterator m_first_from;
   OutputIterator m_first_dest;
   PredicateType m_pred;
   ValueType m_new_value;
 
   KOKKOS_FUNCTION
-  void operator()(IndexType i) const {
+  void operator()(index_type i) const {
     const auto& myvalue_from = m_first_from[i];
 
     if (m_pred(myvalue_from)) {
@@ -70,18 +72,13 @@ OutputIteratorType replace_copy_if_exespace_impl(const std::string& label,
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // aliases
-  using index_type = typename InputIteratorType::difference_type;
-  using func_t =
-      StdReplaceIfCopyFunctor<index_type, InputIteratorType, OutputIteratorType,
-                              PredicateType, ValueType>;
-
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      func_t(first_from, first_dest, std::move(pred), new_value));
+  ::Kokkos::parallel_for(label, RangePolicy(ex, 0, num_elements),
+                         // use CTAD
+                         StdReplaceIfCopyFunctor(first_from, first_dest,
+                                                 std::move(pred), new_value));
   ex.fence("Kokkos::replace_copy_if: fence after operation");
 
   // return
@@ -104,18 +101,13 @@ KOKKOS_FUNCTION OutputIteratorType replace_copy_if_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // aliases
-  using index_type = typename InputIteratorType::difference_type;
-  using func_t =
-      StdReplaceIfCopyFunctor<index_type, InputIteratorType, OutputIteratorType,
-                              PredicateType, ValueType>;
-
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_for(
-      TeamThreadRange(teamHandle, 0, num_elements),
-      func_t(first_from, first_dest, std::move(pred), new_value));
+  ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
+                         // use CTAD
+                         StdReplaceIfCopyFunctor(first_from, first_dest,
+                                                 std::move(pred), new_value));
   teamHandle.team_barrier();
 
   // return
