@@ -42,7 +42,7 @@ struct StridedThreeTag {};
 struct StridedTwoRowsTag {};
 struct StridedThreeRowsTag {};
 
-const std::vector<int> team_sizes_to_test = {1, 2, 23, 77, 123};
+const std::vector<int> teamSizesToTest = {1, 2, 23, 77, 123};
 
 // map of scenarios where the key is a description
 // and the value is the extent
