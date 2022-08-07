@@ -96,7 +96,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
      use a rank-2 view randomly filled with values between 5 and 523
      and run a team-level replace_if where the values strictly greater
-     than a threshold are replaced with a new value.
+     than a threshold (151) are replaced with a new value.
    */
   const auto threshold = static_cast<ValueType>(151);
   const auto newVal    = static_cast<ValueType>(1);
@@ -118,7 +118,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // randomly fill the view with values
   // 5 is chosen because we want all values to be different than newVal==1
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(dataView_dc_h, pool, 0, 523);
+  Kokkos::fill_random(dataView_dc_h, pool, 5, 523);
 
   // copy to dataView_dc and then to dataView
   Kokkos::deep_copy(dataView_dc, dataView_dc_h);

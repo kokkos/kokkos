@@ -116,7 +116,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
      use a rank-2 view randomly filled with values between 5 and 523
      and run a team-level replace_copy_if where the values strictly
-     greater than a threshold are replaced/copied into a new view
+     greater than a threshold (151) are replaced/copied into a new view
      with a new value, while those <= threshold are copied but unchanged
    */
 
