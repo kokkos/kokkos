@@ -34,9 +34,9 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
 replace_copy_if(const ExecutionSpace& ex, InputIterator first_from,
                 InputIterator last_from, OutputIterator first_dest,
                 PredicateType pred, const ValueType& new_value) {
-  return Impl::replace_copy_if_impl("Kokkos::replace_copy_if_iterator_api", ex,
-                                    first_from, last_from, first_dest, pred,
-                                    new_value);
+  return Impl::replace_copy_if_exespace_impl(
+      "Kokkos::replace_copy_if_iterator_api", ex, first_from, last_from,
+      first_dest, pred, new_value);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
@@ -47,8 +47,8 @@ replace_copy_if(const std::string& label, const ExecutionSpace& ex,
                 InputIterator first_from, InputIterator last_from,
                 OutputIterator first_dest, PredicateType pred,
                 const ValueType& new_value) {
-  return Impl::replace_copy_if_impl(label, ex, first_from, last_from,
-                                    first_dest, pred, new_value);
+  return Impl::replace_copy_if_exespace_impl(label, ex, first_from, last_from,
+                                             first_dest, pred, new_value);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -63,9 +63,9 @@ auto replace_copy_if(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::replace_copy_if_impl("Kokkos::replace_copy_if_view_api", ex,
-                                    KE::cbegin(view_from), KE::cend(view_from),
-                                    KE::begin(view_dest), pred, new_value);
+  return Impl::replace_copy_if_exespace_impl(
+      "Kokkos::replace_copy_if_view_api", ex, KE::cbegin(view_from),
+      KE::cend(view_from), KE::begin(view_dest), pred, new_value);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -80,9 +80,9 @@ auto replace_copy_if(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::replace_copy_if_impl(label, ex, KE::cbegin(view_from),
-                                    KE::cend(view_from), KE::begin(view_dest),
-                                    pred, new_value);
+  return Impl::replace_copy_if_exespace_impl(
+      label, ex, KE::cbegin(view_from), KE::cend(view_from),
+      KE::begin(view_dest), pred, new_value);
 }
 
 //

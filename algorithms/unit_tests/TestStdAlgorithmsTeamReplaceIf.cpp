@@ -91,21 +91,22 @@ struct TestFunctorA {
   }
 };
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     use a rank-2 view randomly filled with values between 0 and 523
+     use a rank-2 view randomly filled with values between 5 and 523
      and run a team-level replace_if where the values strictly greater
      than a threshold are replaced with a new value.
    */
   const auto threshold = static_cast<ValueType>(151);
   const auto newVal    = static_cast<ValueType>(1);
 
-  //
+  // -----------------------------------------------
   // prepare data
-  //
+  // -----------------------------------------------
   // construct in memory space associated with default exespace
-  auto dataView = create_view<ValueType>(Tag{}, numTeams, numCols, "dataView");
+  auto dataView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
 
   // dataView might not deep copyable (e.g. strided layout) so to fill it
   // we make a new view that is for sure deep copyable, modify it on the host
@@ -114,7 +115,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  // randomly fill the view with values between 0 and 523
+  // randomly fill the view with values
+  // 5 is chosen because we want all values to be different than newVal==1
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
   Kokkos::fill_random(dataView_dc_h, pool, 0, 523);
 
@@ -124,37 +126,34 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   CopyFunctorRank2 F1(dataView_dc, dataView);
   Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
-  //
+  // -----------------------------------------------
   // launch kokkos kernel
-  //
+  // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
   // use CTAD for functor
   TestFunctorA fnc(dataView, threshold, newVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  //
-  // run cpp-std kernel
-  //
+  // -----------------------------------------------
+  // run cpp-std kernel and check
+  // -----------------------------------------------
   GreaterThanValueFunctor predicate(threshold);
   for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
     auto thisRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
     std::replace_if(KE::begin(thisRow), KE::end(thisRow), predicate, newVal);
   }
 
-  //
-  // check
-  //
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
   expect_equal_host_views(dataView_dc_h, dataViewAfterOp_h);
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int numTeams : team_sizes_to_test) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(numTeams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }

@@ -112,27 +112,24 @@ struct TestFunctorA {
   }
 };
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
      use a "source" and "destination" rank-2 views such that in the source,
      for each row, a random subset of elements is filled with a target value
      that we want to replace_copy with a new value into the destination view.
-     The operation is done via a team policy with one row per team
-     to test the team level KE::replace_copy().
-     Basically the same as KE::replace expect that we don't modify the source
-     view.
+     The operation is done via a team parfor with one row per team.
    */
 
   const auto targetVal = static_cast<ValueType>(531);
   const auto newVal    = static_cast<ValueType>(123);
 
-  //
+  // -----------------------------------------------
   // prepare data
-  //
+  // -----------------------------------------------
   // construct in memory space associated with default exespace
   auto sourceView =
-      create_view<ValueType>(Tag{}, numTeams, numCols, "sourceView");
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView");
 
   // sourceView might not deep copyable (e.g. strided layout) so to fill it
   // we make a new view that is for sure deep copyable, modify it on the host
@@ -159,9 +156,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   CopyFunctorRank2 F1(sourceView_dc, sourceView);
   Kokkos::parallel_for("copy", sourceView.extent(0) * sourceView.extent(1), F1);
 
-  //
+  // -----------------------------------------------
   // launch kokkos kernel
-  //
+  // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
   // create the destination view where we to store the replace_copy
@@ -178,9 +175,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                    apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  //
+  // -----------------------------------------------
   // run cpp-std kernel and check
-  //
+  // -----------------------------------------------
   auto distancesView_h = create_host_space_copy(distancesView);
   Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
                                                            numTeams, numCols);
@@ -197,12 +194,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   expect_equal_host_views(stdDestView, dataViewAfterOp_h);
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int numTeams : team_sizes_to_test) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(numTeams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }

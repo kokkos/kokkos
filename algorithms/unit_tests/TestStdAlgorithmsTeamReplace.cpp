@@ -93,23 +93,23 @@ struct TestFunctorA {
   }
 };
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     use a rank-2 view where, for each row, a random subset
-     of elements is filled with a target value that we want to replace
-     with a new value. The operation is done via a team
-     policy with one row per team to test the team level KE::replace().
+     set a random subset of each row of a rank-2 view
+     to a target value that we want to replace with a new value.
+     Do the operation via a team parfor with one row per team.
    */
 
   const auto targetVal = static_cast<ValueType>(531);
   const auto newVal    = static_cast<ValueType>(123);
 
-  //
+  // -----------------------------------------------
   // prepare data
-  //
+  // -----------------------------------------------
   // construct in memory space associated with default exespace
-  auto dataView = create_view<ValueType>(Tag{}, numTeams, numCols, "dataView");
+  auto dataView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
 
   // dataView might not deep copyable (e.g. strided layout) so to fill it
   // we make a new view that is for sure deep copyable, modify it on the host
@@ -141,20 +141,20 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   CopyFunctorRank2 F1(dataView_dc, dataView);
   Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
-  //
+  // -----------------------------------------------
   // launch kokkos kernel
-  //
+  // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
   // use CTAD for functor
   TestFunctorA fnc(dataView, targetVal, newVal, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  //
+  // -----------------------------------------------
   // conditions for test passing:
   // - the target elements are replaced with the new value
   // - all other elements are unchanged
-  //
+  // -----------------------------------------------
 
   // make a copy on host (generic to handle a non deep-copyable view)
   // check that the correct elements have the new value
@@ -185,12 +185,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   std::for_each(unchanged.begin(), bound, verify);
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int numTeams : team_sizes_to_test) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(numTeams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }

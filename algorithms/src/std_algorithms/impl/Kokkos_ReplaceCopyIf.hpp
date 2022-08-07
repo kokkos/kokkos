@@ -57,13 +57,13 @@ struct StdReplaceIfCopyFunctor {
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class PredicateType, class ValueType>
-OutputIteratorType replace_copy_if_impl(const std::string& label,
-                                        const ExecutionSpace& ex,
-                                        InputIteratorType first_from,
-                                        InputIteratorType last_from,
-                                        OutputIteratorType first_dest,
-                                        PredicateType pred,
-                                        const ValueType& new_value) {
+OutputIteratorType replace_copy_if_exespace_impl(const std::string& label,
+                                                 const ExecutionSpace& ex,
+                                                 InputIteratorType first_from,
+                                                 InputIteratorType last_from,
+                                                 OutputIteratorType first_dest,
+                                                 PredicateType pred,
+                                                 const ValueType& new_value) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
