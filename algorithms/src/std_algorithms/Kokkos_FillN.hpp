@@ -29,8 +29,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 fill_n(const ExecutionSpace& ex, IteratorType first, SizeType n,
        const T& value) {
-  return Impl::fill_n_impl("Kokkos::fill_n_iterator_api_default", ex, first, n,
-                           value);
+  return Impl::fill_n_exespace_impl("Kokkos::fill_n_iterator_api_default", ex,
+                                    first, n, value);
 }
 
 template <class ExecutionSpace, class IteratorType, class SizeType, class T>
@@ -38,7 +38,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 fill_n(const std::string& label, const ExecutionSpace& ex, IteratorType first,
        SizeType n, const T& value) {
-  return Impl::fill_n_impl(label, ex, first, n, value);
+  return Impl::fill_n_exespace_impl(label, ex, first, n, value);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -50,8 +50,8 @@ auto fill_n(const ExecutionSpace& ex,
             const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  return Impl::fill_n_impl("Kokkos::fill_n_view_api_default", ex, begin(view),
-                           n, value);
+  return Impl::fill_n_exespace_impl("Kokkos::fill_n_view_api_default", ex,
+                                    begin(view), n, value);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -63,7 +63,7 @@ auto fill_n(const std::string& label, const ExecutionSpace& ex,
             const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  return Impl::fill_n_impl(label, ex, begin(view), n, value);
+  return Impl::fill_n_exespace_impl(label, ex, begin(view), n, value);
 }
 
 //

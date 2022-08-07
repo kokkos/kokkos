@@ -42,11 +42,11 @@ struct StdFillFunctor {
 };
 
 //
-// regular impl
+// exespace impl
 //
 template <class ExecutionSpace, class IteratorType, class T>
-void fill_impl(const std::string& label, const ExecutionSpace& ex,
-               IteratorType first, IteratorType last, const T& value) {
+void fill_exespace_impl(const std::string& label, const ExecutionSpace& ex,
+                        IteratorType first, IteratorType last, const T& value) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
@@ -60,8 +60,9 @@ void fill_impl(const std::string& label, const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class IteratorType, class SizeType, class T>
-IteratorType fill_n_impl(const std::string& label, const ExecutionSpace& ex,
-                         IteratorType first, SizeType n, const T& value) {
+IteratorType fill_n_exespace_impl(const std::string& label,
+                                  const ExecutionSpace& ex, IteratorType first,
+                                  SizeType n, const T& value) {
   auto last = first + n;
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
@@ -70,7 +71,7 @@ IteratorType fill_n_impl(const std::string& label, const ExecutionSpace& ex,
     return first;
   }
 
-  fill_impl(label, ex, first, last, value);
+  fill_exespace_impl(label, ex, first, last, value);
   return last;
 }
 

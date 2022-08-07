@@ -44,6 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <algorithm>
+#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -51,100 +52,132 @@ namespace TeamFill_n {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewTypeToFill, class AuxView, class MemberType>
-struct FillTeamFunctorA {
-  AuxView m_viewOfDistances;
-  ViewTypeToFill m_view;
-  int m_api_pick;
-  int m_numFills;
+template <class ViewType, class DistancesViewType>
+struct TestFunctorA {
+  ViewType m_view;
+  DistancesViewType m_distancesView;
+  std::size_t m_fillCount;
+  int m_apiPick;
 
-  FillTeamFunctorA(AuxView viewOfDistances, const ViewTypeToFill view,
-                   int apiPick, int numFills)
-      : m_viewOfDistances(viewOfDistances),
-        m_view(view),
-        m_api_pick(apiPick),
-        m_numFills(numFills) {}
+  TestFunctorA(const ViewType view, const DistancesViewType distancesView,
+               std::size_t fillCount, int apiPick)
+      : m_view(view),
+        m_distancesView(distancesView),
+        m_fillCount(fillCount),
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto leagueRank = member.league_rank();
-    const auto fillValue =
-        static_cast<typename ViewTypeToFill::value_type>(leagueRank);
-    const auto myRowIndex = member.league_rank();
+    const auto myRowIndex = leagueRank;
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0) {
-      auto it = KE::fill_n(member, KE::begin(myRowView), m_numFills, fillValue);
-      const auto itDist                = KE::distance(KE::begin(myRowView), it);
-      m_viewOfDistances(myRowIndex, 0) = itDist;
-    }
+    if (m_apiPick == 0) {
+      auto it =
+          KE::fill_n(member, KE::begin(myRowView), m_fillCount, leagueRank);
 
-    else if (m_api_pick == 1) {
-      auto it           = KE::fill_n(member, myRowView, m_numFills, fillValue);
-      const auto itDist = KE::distance(KE::begin(myRowView), it);
-      m_viewOfDistances(myRowIndex, 0) = itDist;
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+      });
+    } else if (m_apiPick == 1) {
+      auto it = KE::fill_n(member, myRowView, m_fillCount, leagueRank);
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+      });
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills,
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
             int apiId) {
   /* description:
-     use a rank-2 matrix, team policy with one row per team,
-     n elements of each row are filled up with the league_rank of the team
-     in charge of it, while the other elements in the row
-     are filled with zeros
+     use a rank-2 matrix, team parfor with one row per team,
+     n elements of each row are filled up with the league_rank value
+     of the team in charge of it, while the other elements in the row
+     are left unchanged
    */
 
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // construct in memory space associated with default exespace
+  auto dataView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
 
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // dataView might not deep copyable (e.g. strided layout) so to fill it
+  // we make a new view that is for sure deep copyable, modify it on the host
+  // deep copy to device and then launch copy kernel to dataView
+  auto dataView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(dataView);
+  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  // make view that will contain the computed distances
-  // from begin(v) of the iterators returned by the fill_n
-  Kokkos::View<std::size_t**> computedDistances("cd", num_teams, 1);
+  // randomly fill the view with values
+  // 5 is chosen because we want all values to be different than newVal==1
+  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
+  Kokkos::fill_random(dataView_dc_h, pool, 5, 523);
 
-  /* each team fills a row with its leauge_rank value */
-  using functor_type =
-      FillTeamFunctorA<decltype(v), decltype(computedDistances),
-                       team_member_type>;
-  functor_type fnc(computedDistances, v, apiId, num_fills);
+  // copy to dataView_dc and then to dataView
+  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
+  // use CTAD
+  CopyFunctorRank2 F1(dataView_dc, dataView);
+  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
+
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+
+  // replace_copy returns an iterator so to verify that it is correct
+  // each team stores the distance of the returned iterator from the
+  // beginning of the interval that team operates on and then we check
+  // that these distances match the std result
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+
+  // use CTAD for functor
+  TestFunctorA fnc(dataView, distancesView, fillCount, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  auto cd_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(),
-                                                  computedDistances);
-  for (std::size_t i = 0; i < cd_h.extent(0); ++i) {
-    EXPECT_TRUE(cd_h(i, 0) == num_fills);
-  }
+  // -----------------------------------------------
+  // check
+  // -----------------------------------------------
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  auto distancesView_h   = create_host_space_copy(distancesView);
+  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
+    // check that values match what we expect
+    for (std::size_t j = 0; j < fillCount; ++j) {
+      EXPECT_EQ(dataViewAfterOp_h(i, j), ValueType(i));
+    }
+    for (std::size_t j = fillCount; j < numCols; ++j) {
+      EXPECT_EQ(dataViewAfterOp_h(i, j), dataView_dc_h(i, j));
+    }
 
-  // check results
-  auto v_h = create_host_space_copy(v);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      if (j < num_fills) {
-        EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(i));
-      } else {
-        EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
-      }
+    // check that returned iterators are correct
+    if (fillCount > 0) {
+      EXPECT_EQ(distancesView_h(i), std::size_t(fillCount));
+    } else {
+      EXPECT_EQ(distancesView_h(i), std::size_t(0));
     }
   }
 }
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
+  // prepare a map where, for a given set of num cols
+  // we provide a list of counts of elements to fill
   // key = num of columns,
   // value = list of num of elemenents to fill
-  using v_t                          = std::vector<int>;
-  const std::map<int, v_t> scenarios = {{0, v_t{0}},
-                                        {2, v_t{0, 1, 2}},
-                                        {6, v_t{0, 1, 2, 5}},
-                                        {13, v_t{0, 1, 2, 8, 11}}};
+  const std::map<int, std::vector<int>> scenarios = {
+      {0, {0}},
+      {2, {0, 1, 2}},
+      {6, {0, 1, 2, 5}},
+      {13, {0, 1, 2, 8, 11}},
+      {56, {0, 1, 2, 8, 11, 33, 56}},
+      {123, {0, 1, 11, 33, 56, 89, 112}}};
 
-  for (int num_teams : team_sizes_to_test) {
+  for (int num_teams : teamSizesToTest) {
     for (const auto& scenario : scenarios) {
       const std::size_t numCols = scenario.first;
       for (int numFills : scenario.second) {

@@ -43,7 +43,7 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <algorithm>
+#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -51,65 +51,88 @@ namespace TeamFill {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewTypeToFill, class MemberType>
-struct FillTeamFunctorA {
-  ViewTypeToFill m_view;
-  int m_api_pick;
+template <class ViewType>
+struct TestFunctorA {
+  ViewType m_view;
+  int m_apiPick;
 
-  FillTeamFunctorA(const ViewTypeToFill view, int apiPick)
-      : m_view(view), m_api_pick(apiPick) {}
+  TestFunctorA(const ViewType view, int apiPick)
+      : m_view(view), m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto leagueRank = member.league_rank();
-    const auto fillValue =
-        static_cast<typename ViewTypeToFill::value_type>(leagueRank);
-    const auto myRowIndex = member.league_rank();
+    const auto myRowIndex = leagueRank;
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0) {
-      KE::fill(member, KE::begin(myRowView), KE::end(myRowView), fillValue);
-    } else if (m_api_pick == 1) {
-      KE::fill(member, myRowView, fillValue);
+    if (m_apiPick == 0) {
+      KE::fill(member, KE::begin(myRowView), KE::end(myRowView), leagueRank);
+    } else if (m_apiPick == 1) {
+      KE::fill(member, myRowView, leagueRank);
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     use a rank-2 matrix, team policy with one row per team,
-     each row is filled with the league_rank of the team
-     in charge of it.
+     fill a rank-2 view randomly with non trivial numbers
+     and do a team-level parfor where each team fills the row
+     it is responsible for with its league_rank value
    */
 
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // construct in memory space associated with default exespace
+  auto dataView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
 
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // dataView might not deep copyable (e.g. strided layout) so to fill it
+  // we make a new view that is for sure deep copyable, modify it on the host
+  // deep copy to device and then launch copy kernel to dataView
+  auto dataView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(dataView);
+  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  using functor_type = FillTeamFunctorA<decltype(v), team_member_type>;
-  functor_type fnc(v, apiId);
+  // randomly fill the view
+  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
+  Kokkos::fill_random(dataView_dc_h, pool, 11, 523);
+
+  // copy to dataView_dc and then to dataView
+  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
+  // use CTAD
+  CopyFunctorRank2 F1(dataView_dc, dataView);
+  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
+
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+  // use CTAD for functor
+  TestFunctorA fnc(dataView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
+  // -----------------------------------------------
+  // check
+  // -----------------------------------------------
   // each row should be filled with the row index
   // since the league_rank of a team here coincides with row index
-  auto v_h = create_host_space_copy(v);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(i));
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
+    for (std::size_t j = 0; j < dataViewAfterOp_h.extent(1); ++j) {
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) == static_cast<ValueType>(i));
     }
   }
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
-    for (const auto& scenario : default_scenarios) {
+  for (int numTeams : teamSizesToTest) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, scenario.second, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }
