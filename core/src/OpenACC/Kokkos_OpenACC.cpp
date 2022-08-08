@@ -46,10 +46,8 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
-#include <impl/Kokkos_DeviceManagement.hpp>
 
 #include <ostream>
 
@@ -121,11 +119,6 @@ int Kokkos::Experimental::OpenACC::acc_async_queue() const {
 
 int Kokkos::Experimental::OpenACC::acc_device_number() const {
   return Impl::OpenACCInternal::m_accDev;
-}
-
-Kokkos::Experimental::OpenACC::size_type
-Kokkos::Experimental::OpenACC::detect_device_count() {
-  return Impl::OpenACCInternalDevices::singleton().m_accDevCount;
 }
 
 namespace Kokkos {

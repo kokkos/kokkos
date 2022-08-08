@@ -113,7 +113,6 @@ class OpenACC {
 
   int acc_async_queue() const;
   int acc_device_number() const;
-  static size_type detect_device_count();
 };
 
 }  // namespace Kokkos::Experimental

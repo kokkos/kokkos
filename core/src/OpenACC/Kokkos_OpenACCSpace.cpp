@@ -46,6 +46,7 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
+#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 

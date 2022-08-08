@@ -112,24 +112,6 @@ void Kokkos::Experimental::Impl::OpenACCInternal::fence(
 
 uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id() const
     noexcept {
-  return m_instance_id;
-}
-
-Kokkos::Experimental::Impl::OpenACCInternalDevices::OpenACCInternalDevices() {
-  m_accDevCount = acc_get_num_devices(OpenACC_Traits::dev_type);
-  if ((m_accDevCount == 0) && OpenACC_Traits::may_fallback_to_host) {
-    if (show_warnings()) {
-      std::cerr << "Warning: No GPU available for execution, falling back to"
-                   " using the host!"
-                << std::endl;
-    }
-    acc_set_device_type(acc_device_host);
-    m_accDevCount = acc_get_num_devices(acc_device_host);
-  }
-}
-
-const Kokkos::Experimental::Impl::OpenACCInternalDevices&
-Kokkos::Experimental::Impl::OpenACCInternalDevices::singleton() {
-  static OpenACCInternalDevices self;
-  return self;
+  return Kokkos::Tools::Experimental::Impl::idForInstance<OpenACC>(
+      reinterpret_cast<uintptr_t>(this));
 }
