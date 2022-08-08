@@ -274,7 +274,9 @@ auto add_properties(const ViewCtorProp<P...> &view_ctor_prop,
                 (is_memory_space<Property>::value &&
                  !ViewCtorProp<P...>::has_memory_space) ||
                 (is_view_label<Property>::value &&
-                 !ViewCtorProp<P...>::has_label)) {
+                 !ViewCtorProp<P...>::has_label) ||
+                (std::is_same_v<Property, WithoutInitializing_t> &&
+                 ViewCtorProp<P...>::initialize)) {
     using NewViewCtorProp = ViewCtorProp<P..., Property>;
     NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
     static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
