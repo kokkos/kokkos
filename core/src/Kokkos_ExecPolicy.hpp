@@ -1158,14 +1158,17 @@ ThreadVectorRange(const TeamMemberType&, const iType1& arg_begin,
                   const iType2& arg_end) = delete;
 
 template <typename Rank, typename TeamHandle>
-struct MDTeamThreadRange {
+struct MDTeamThreadRange;
+
+template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
+struct MDTeamThreadRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using rank_type        = int;
   using boundary_type    = int;
   using team_handle_type = TeamHandle;
   using execution_space  = typename team_handle_type::execution_space;
   using array_layout     = typename execution_space::array_layout;
-  static constexpr rank_type total_rank = Rank::rank;
-  static constexpr Iterate iter         = Rank::outer_direction;
+  static constexpr rank_type total_rank = Rank<N, OuterDir, InnerDir>::rank;
+  static constexpr Iterate iter         = OuterDir;
 
   static constexpr Iterate direction =
       iter == Iterate::Default
@@ -1188,14 +1191,17 @@ MDTeamThreadRange(TeamHandle const&, Args&&...)
     ->MDTeamThreadRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
-struct MDThreadVectorRange {
+struct MDThreadVectorRange;
+
+template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
+struct MDThreadVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using rank_type        = int;
   using boundary_type    = int;
   using team_handle_type = TeamHandle;
   using execution_space  = typename team_handle_type::execution_space;
   using array_layout     = typename execution_space::array_layout;
-  static constexpr rank_type total_rank = Rank::rank;
-  static constexpr Iterate iter         = Rank::outer_direction;
+  static constexpr rank_type total_rank = Rank<N, OuterDir, InnerDir>::rank;
+  static constexpr Iterate iter         = OuterDir;
 
   static constexpr Iterate direction =
       iter == Iterate::Default
@@ -1218,14 +1224,17 @@ MDThreadVectorRange(TeamHandle const&, Args&&...)
     ->MDThreadVectorRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
-struct MDTeamVectorRange {
+struct MDTeamVectorRange;
+
+template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
+struct MDTeamVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using rank_type        = int;
   using boundary_type    = int;
   using team_handle_type = TeamHandle;
   using execution_space  = typename team_handle_type::execution_space;
   using array_layout     = typename execution_space::array_layout;
-  static constexpr rank_type total_rank = Rank::rank;
-  static constexpr Iterate iter         = Rank::outer_direction;
+  static constexpr rank_type total_rank = Rank<N, OuterDir, InnerDir>::rank;
+  static constexpr Iterate iter         = OuterDir;
 
   static constexpr Iterate direction =
       iter == Iterate::Default
