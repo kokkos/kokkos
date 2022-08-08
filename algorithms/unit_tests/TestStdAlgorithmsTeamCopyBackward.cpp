@@ -51,96 +51,138 @@ namespace TeamCopybackward {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewFromType, class ViewDestType, class MemberType>
+template <class SourceViewType, class DestViewType, class DistancesViewType>
 struct TestFunctorA {
-  ViewFromType m_from_view;
-  ViewDestType m_dest_view;
-  int m_api_pick;
+  SourceViewType m_sourceView;
+  DestViewType m_destView;
+  DistancesViewType m_distancesView;
+  int m_apiPick;
 
-  TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
-               int apiPick)
-      : m_from_view(viewFrom), m_dest_view(viewDest), m_api_pick(apiPick) {}
+  TestFunctorA(const SourceViewType fromView, const DestViewType destView,
+               const DistancesViewType distancesView, int apiPick)
+      : m_sourceView(fromView),
+        m_destView(destView),
+        m_distancesView(distancesView),
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowViewFrom =
-        Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
-    auto myRowViewDest =
-        Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
+        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0) {
+    if (m_apiPick == 0) {
       auto it =
-          KE::copy_backward(member, KE::begin(myRowViewFrom),
-                            KE::end(myRowViewFrom), KE::end(myRowViewDest));
-      (void)it;
-    } else if (m_api_pick == 1) {
+          KE::copy_backward(member, KE::cbegin(myRowViewFrom),
+                            KE::cend(myRowViewFrom), KE::end(myRowViewDest));
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
+      });
+    } else if (m_apiPick == 1) {
       auto it = KE::copy_backward(member, myRowViewFrom, myRowViewDest);
-      (void)it;
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
+      });
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
+     randomly fill a source view and copy_backward into a destination view.
+     The operation is done via a team parfor with one row per team.
    */
 
-  // v constructed on memory space associated with default exespace
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // construct in memory space associated with default exespace
+  auto sourceView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView");
 
-  // v might not deep copyable so to modify it on the host
-  auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
-  auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
+  // sourceView might not deep copyable (e.g. strided layout) so to fill it
+  // we make a new view that is for sure deep copyable, modify it on the host
+  // deep copy to device and then launch copy kernel to sourceView
+  auto sourceView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(sourceView);
+  auto sourceView_dc_h = create_mirror_view(Kokkos::HostSpace(), sourceView_dc);
 
+  // randomly fill the view
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(v_dc_h, pool, 0, 523);
-  // copy to v_dc and then to v
-  Kokkos::deep_copy(v_dc, v_dc_h);
-  CopyFunctorRank2<decltype(v_dc), decltype(v)> F1(v_dc, v);
-  Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
+  Kokkos::fill_random(sourceView_dc_h, pool, 11, 523);
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // copy to sourceView_dc and then to sourceView
+  Kokkos::deep_copy(sourceView_dc, sourceView_dc_h);
+  // use CTAD
+  CopyFunctorRank2 F1(sourceView_dc, sourceView);
+  Kokkos::parallel_for("copy", sourceView.extent(0) * sourceView.extent(1), F1);
 
-  auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols + 5, "v2");
-  using functor_type =
-      TestFunctorA<decltype(v), decltype(v2), team_member_type>;
-  functor_type fnc(v, v2, apiId);
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+  // create the destination view: note that to have a meaningful test,
+  // the destination view must have more columns that than the source
+  // view so that we can check that the elements are copied into the right
+  // place.
+  Kokkos::View<ValueType**> destView("destView", numTeams, numCols + 10);
+  // make a host copy of the destination view that should be unchanged after the
+  // op
+  auto destViewBeforeOp_h = create_host_space_copy(destView);
+
+  // copy_backward returns an iterator so to verify that it is correct
+  // each team stores the distance of the returned iterator from the
+  // beginning of the interval that team operates on and then we check
+  // that these distances match the expectation
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+
+  // use CTAD for functor
+  TestFunctorA fnc(sourceView, destView, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
+  // -----------------------------------------------
   // check
-  auto v_h  = create_host_space_copy(v);
-  auto v2_h = create_host_space_copy(v2);
-  for (std::size_t i = 0; i < v2_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v2_h.extent(1); ++j) {
-      if (j < 5) {
-        EXPECT_TRUE(v2_h(i, 0) == static_cast<ValueType>(0));
-      } else {
-        EXPECT_TRUE(v_h(i, j - 5) == v2_h(i, j));
-      }
+  // -----------------------------------------------
+  auto distancesView_h   = create_host_space_copy(distancesView);
+  auto destViewAfterOp_h = create_host_space_copy(destView);
+  for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
+    // first 10 columns should be unchanged
+    for (std::size_t j = 0; j < 10; ++j) {
+      EXPECT_TRUE(destViewAfterOp_h(i, j) == destViewBeforeOp_h(i, j));
     }
+
+    // all values after 10th column (inclusive) should match the source view
+    for (std::size_t j = 10; j < destViewBeforeOp_h.extent(1); ++j) {
+      EXPECT_TRUE(sourceView_dc_h(i, j - 10) == destViewAfterOp_h(i, j));
+    }
+
+    // each team should have returned an interator whose distance
+    // from the beginning of the row should satisfy this
+    EXPECT_TRUE(distancesView_h(i) == 10);
   }
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
+  for (int numTeams : teamSizesToTest) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }
 }
 
 TEST(std_algorithms_copy_backward_team_test, test) {
-  run_all_scenarios<DynamicTag, double>();
+  // run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, unsigned>();
+  // run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
 }  // namespace TeamCopybackward

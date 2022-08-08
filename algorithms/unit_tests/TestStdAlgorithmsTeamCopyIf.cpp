@@ -52,128 +52,142 @@ namespace TeamCopyIf {
 namespace KE = Kokkos::Experimental;
 
 template <class ValueType>
-struct IsGreaterThanValueFunctor {
+struct GreaterThanValueFunctor {
   ValueType m_val;
 
   KOKKOS_INLINE_FUNCTION
-  IsGreaterThanValueFunctor(ValueType val) : m_val(val) {}
+  GreaterThanValueFunctor(ValueType val) : m_val(val) {}
 
   KOKKOS_INLINE_FUNCTION
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewFromType, class ViewDestType, class MemberType,
-          class UnaryOpType>
+template <class SourceViewType, class DestViewType, class DistancesViewType,
+          class ValueType>
 struct TestFunctorA {
-  ViewFromType m_from_view;
-  ViewDestType m_dest_view;
-  int m_api_pick;
+  SourceViewType m_sourceView;
+  DestViewType m_destView;
+  DistancesViewType m_distancesView;
+  ValueType m_threshold;
+  int m_apiPick;
 
-  TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
+  TestFunctorA(const SourceViewType fromView, const DestViewType destView,
+               const DistancesViewType distancesView, ValueType threshold,
                int apiPick)
-      : m_from_view(viewFrom), m_dest_view(viewDest), m_api_pick(apiPick) {}
+      : m_sourceView(fromView),
+        m_destView(destView),
+        m_distancesView(distancesView),
+        m_threshold(threshold),
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-
     auto myRowViewFrom =
-        Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
-    auto myRowViewDest =
-        Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
+        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0) {
+    GreaterThanValueFunctor predicate(m_threshold);
+
+    if (m_apiPick == 0) {
       auto it =
           KE::copy_if(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
-                      KE::begin(myRowViewDest), UnaryOpType(151));
-      (void)it;
-    } else if (m_api_pick == 1) {
-      auto it =
-          KE::copy_if(member, myRowViewFrom, myRowViewDest, UnaryOpType(151));
-      (void)it;
+                      KE::begin(myRowViewDest), predicate);
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
+      });
+    } else if (m_apiPick == 1) {
+      auto it = KE::copy_if(member, myRowViewFrom, myRowViewDest, predicate);
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
+      });
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
+     use a rank-2 view randomly filled with values between 5 and 523
+     and run a team-level copy_if where only the values strictly
+     greater than a threshold (151) are copied into a new view
    */
 
-  // v constructed on memory space associated with default exespace
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  const auto threshold = static_cast<ValueType>(151);
 
-  // v might not deep copyable so to modify it on the host
-  auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
-  auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // construct in memory space associated with default exespace
+  auto sourceView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView");
 
+  // sourceView might not deep copyable (e.g. strided layout) so to fill it
+  // we make a new view that is for sure deep copyable, modify it on the host
+  // deep copy to device and then launch copy kernel to sourceView
+  auto sourceView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(sourceView);
+  auto sourceView_dc_h = create_mirror_view(Kokkos::HostSpace(), sourceView_dc);
+
+  // randomly fill the view with values
+  // 5 is chosen because we want all values to be different than newVal==1
   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(v_dc_h, pool, 0, 523);
-  std::vector<std::size_t> rowIndOfTargetElements;
-  std::vector<std::size_t> colIndOfTargetElements;
-  std::vector<std::size_t> newColIndOfTargetElements;
-  std::vector<std::size_t> rowIndOfNonTargetElements;
-  std::vector<std::size_t> colIndOfNonTargetElements;
-  std::vector<std::size_t> countPerRow(v_dc_h.extent(0), 0);
-  for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
-    std::size_t newColInd = 0;
-    for (std::size_t j = 0; j < v_dc_h.extent(1); ++j) {
-      if (v_dc_h(i, j) > static_cast<ValueType>(151)) {
-        rowIndOfTargetElements.push_back(i);
-        colIndOfTargetElements.push_back(j);
-        newColIndOfTargetElements.push_back(newColInd++);
-      } else {
-        rowIndOfNonTargetElements.push_back(i);
-        colIndOfNonTargetElements.push_back(j);
-      }
-    }
-    countPerRow[i] = newColInd;
-  }
+  Kokkos::fill_random(sourceView_dc_h, pool, 5, 523);
 
-  // copy to v_dc and then to v
-  Kokkos::deep_copy(v_dc, v_dc_h);
-  CopyFunctorRank2<decltype(v_dc), decltype(v)> F1(v_dc, v);
-  Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
+  // copy to sourceView_dc and then to sourceView
+  Kokkos::deep_copy(sourceView_dc, sourceView_dc_h);
+  // use CTAD
+  CopyFunctorRank2 F1(sourceView_dc, sourceView);
+  Kokkos::parallel_for("copy", sourceView.extent(0) * sourceView.extent(1), F1);
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+  // create the destination view
+  Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
 
-  // v2 is the destination view where we copy values to
-  auto v2     = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
-  using bop_t = IsGreaterThanValueFunctor<ValueType>;
-  using functor_type =
-      TestFunctorA<decltype(v), decltype(v2), team_member_type, bop_t>;
-  functor_type fnc(v, v2, apiId);
+  // replace_copy_if returns an iterator so to verify that it is correct
+  // each team stores the distance of the returned iterator from the
+  // beginning of the interval that team operates on and then we check
+  // that these distances match the std result
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+
+  // use CTAD for functor
+  TestFunctorA fnc(sourceView, destView, distancesView, threshold, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  // check
-  auto v_h  = create_host_space_copy(v);
-  auto v2_h = create_host_space_copy(v2);
-  for (std::size_t k = 0; k < rowIndOfTargetElements.size(); ++k) {
-    const auto rowInd    = rowIndOfTargetElements[k];
-    const auto colInd    = colIndOfTargetElements[k];
-    const auto newColInd = newColIndOfTargetElements[k];
-    EXPECT_TRUE(v2_h(rowInd, newColInd) == v_h(rowInd, colInd));
-    EXPECT_TRUE(v2_h(rowInd, newColInd) > static_cast<ValueType>(151));
+  // -----------------------------------------------
+  // run cpp-std kernel and check
+  // -----------------------------------------------
+  auto distancesView_h = create_host_space_copy(distancesView);
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
+                                                           numTeams, numCols);
+  GreaterThanValueFunctor predicate(threshold);
+  for (std::size_t i = 0; i < sourceView_dc_h.extent(0); ++i) {
+    auto rowFrom = Kokkos::subview(sourceView_dc_h, i, Kokkos::ALL());
+    auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
+    auto it      = std::copy_if(KE::cbegin(rowFrom), KE::cend(rowFrom),
+                           KE::begin(rowDest), predicate);
+    const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
+    EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 
-  for (std::size_t i = 0; i < v2_h.extent(0); ++i) {
-    const auto thiscount = countPerRow[i];
-    for (std::size_t j = thiscount; j < v2_h.extent(1); ++j) {
-      EXPECT_TRUE(v2_h(i, j) == static_cast<ValueType>(0));
-    }
-  }
+  auto dataViewAfterOp_h = create_host_space_copy(destView);
+  expect_equal_host_views(stdDestView, dataViewAfterOp_h);
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
+  for (int numTeams : teamSizesToTest) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }

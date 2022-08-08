@@ -153,7 +153,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
-  // create the destination view where we to store the replace_copy
+  // create the destination view
   Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
 
   // replace_copy_if returns an iterator so to verify that it is correct

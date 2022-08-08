@@ -27,8 +27,10 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class IndexType, class FirstFrom, class FirstDest, class PredType>
+template <class FirstFrom, class FirstDest, class PredType>
 struct StdCopyIfFunctor {
+  using index_type = typename FirstFrom::difference_type;
+
   FirstFrom m_first_from;
   FirstDest m_first_dest;
   PredType m_pred;
@@ -40,7 +42,7 @@ struct StdCopyIfFunctor {
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
-  void operator()(const IndexType i, IndexType& update,
+  void operator()(const index_type i, index_type& update,
                   const bool final_pass) const {
     const auto& myval = m_first_from[i];
     if (final_pass) {
@@ -83,9 +85,11 @@ struct StdCopyIfTeamSingleFunctor {
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class PredicateType>
-OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
-                            InputIterator first, InputIterator last,
-                            OutputIterator d_first, PredicateType pred) {
+OutputIterator copy_if_exespace_impl(const std::string& label,
+                                     const ExecutionSpace& ex,
+                                     InputIterator first, InputIterator last,
+                                     OutputIterator d_first,
+                                     PredicateType pred) {
   /*
     To explain the impl, suppose that our data is:
 
@@ -116,17 +120,14 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
   if (first == last) {
     return d_first;
   } else {
-    // aliases
-    using index_type = typename InputIterator::difference_type;
-    using func_type  = StdCopyIfFunctor<index_type, InputIterator,
-                                       OutputIterator, PredicateType>;
-
     // run
     const auto num_elements = Kokkos::Experimental::distance(first, last);
-    index_type count        = 0;
+
+    typename InputIterator::difference_type count = 0;
     ::Kokkos::parallel_scan(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            func_type(first, d_first, pred), count);
+                            // use CTAD
+                            StdCopyIfFunctor(first, d_first, pred), count);
 
     // fence not needed because of the scan accumulating into count
     return d_first + count;
@@ -147,22 +148,20 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
     return d_first;
   } else {
     // parallel_scan does not yet support TeamThreadRange, so we do this:
-    // first, since we return an iterator past the last element copied,
-    // we need to compute how many elements satisfy the pred;
-    // second, we use Kokkos::single() to copy the elements
+    // first, since we need to return an iterator past the last element copied,
+    // we need to compute how many elements satisfy the predicate;
+    // second, to actually copy the elements, we use Kokkos::single()
 
     // count elements satisfying the condition
     const auto numElemCounted =
         ::Kokkos::Experimental::count_if(teamHandle, first, last, pred);
     // count_if already calls the team barrier
 
-    // copy elements
-    using index_type = typename InputIterator::difference_type;
-    using func_type  = StdCopyIfTeamSingleFunctor<index_type, InputIterator,
-                                                 OutputIterator, PredicateType>;
     const auto num_elements = Kokkos::Experimental::distance(first, last);
-    ::Kokkos::single(PerTeam(teamHandle),
-                     func_type(first, d_first, pred, num_elements));
+    ::Kokkos::single(
+        PerTeam(teamHandle),
+        // use CTAD
+        StdCopyIfTeamSingleFunctor(first, d_first, pred, num_elements));
     teamHandle.team_barrier();
 
     return d_first + numElemCounted;

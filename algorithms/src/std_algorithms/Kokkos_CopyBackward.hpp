@@ -32,8 +32,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType2>
 copy_backward(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
               IteratorType2 d_last) {
-  return Impl::copy_backward_impl("Kokkos::copy_backward_iterator_api_default",
-                                  ex, first, last, d_last);
+  return Impl::copy_backward_exespace_impl(
+      "Kokkos::copy_backward_iterator_api_default", ex, first, last, d_last);
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
@@ -41,7 +41,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType2>
 copy_backward(const std::string& label, const ExecutionSpace& ex,
               IteratorType1 first, IteratorType1 last, IteratorType2 d_last) {
-  return Impl::copy_backward_impl(label, ex, first, last, d_last);
+  return Impl::copy_backward_exespace_impl(label, ex, first, last, d_last);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -54,8 +54,9 @@ auto copy_backward(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::copy_backward_impl("Kokkos::copy_backward_view_api_default", ex,
-                                  cbegin(source), cend(source), end(dest));
+  return Impl::copy_backward_exespace_impl(
+      "Kokkos::copy_backward_view_api_default", ex, cbegin(source),
+      cend(source), end(dest));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -68,8 +69,8 @@ auto copy_backward(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::copy_backward_impl(label, ex, cbegin(source), cend(source),
-                                  end(dest));
+  return Impl::copy_backward_exespace_impl(label, ex, cbegin(source),
+                                           cend(source), end(dest));
 }
 
 //

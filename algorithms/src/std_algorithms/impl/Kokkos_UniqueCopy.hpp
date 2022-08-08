@@ -78,8 +78,8 @@ OutputIterator unique_copy_impl(const std::string& label,
   if (num_elements == 0) {
     return d_first;
   } else if (num_elements == 1) {
-    return Impl::copy_impl("Kokkos::copy_from_unique_copy", ex, first, last,
-                           d_first);
+    return Impl::copy_exespace_impl("Kokkos::copy_from_unique_copy", ex, first,
+                                    last, d_first);
   } else {
     // aliases
     using index_type = typename InputIterator::difference_type;
@@ -96,8 +96,8 @@ OutputIterator unique_copy_impl(const std::string& label,
                             RangePolicy<ExecutionSpace>(ex, 0, scan_size),
                             func_type(first, last, d_first, pred), count);
 
-    return Impl::copy_impl("Kokkos::copy_from_unique_copy", ex,
-                           first + scan_size, last, d_first + count);
+    return Impl::copy_exespace_impl("Kokkos::copy_from_unique_copy", ex,
+                                    first + scan_size, last, d_first + count);
   }
 }
 
