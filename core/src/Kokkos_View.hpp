@@ -1414,8 +1414,6 @@ class View : public ViewTraits<DataType, Properties...> {
       check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
     // Append layout and spaces if not input
-    using alloc_prop_input = Impl::ViewCtorProp<P...>;
-
     using alloc_prop = decltype(Impl::add_properties(
         arg_prop, std::string{}, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{}));

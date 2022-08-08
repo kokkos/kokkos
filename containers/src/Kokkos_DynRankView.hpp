@@ -1100,8 +1100,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                    template computeRank<typename traits::array_layout, P...>(
                        arg_prop, arg_layout)) {
     // Append layout and spaces if not input
-    using alloc_prop_input = Kokkos::Impl::ViewCtorProp<P...>;
-
     using alloc_prop = decltype(Impl::add_properties(
         arg_prop, std::string{}, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{}));

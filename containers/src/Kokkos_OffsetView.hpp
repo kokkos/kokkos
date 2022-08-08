@@ -1231,9 +1231,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   {
     for (size_t i = 0; i < Rank; ++i) m_begins[i] = minIndices.begin()[i];
 
-    // Append layout and spaces if not input
-    using alloc_prop_input = Kokkos::Impl::ViewCtorProp<P...>;
-
     using alloc_prop = decltype(::Kokkos::Impl::add_properties(
         arg_prop, std::string{}, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{}));
