@@ -1708,6 +1708,35 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 };
 
+template <typename T>
+View(T*) -> View<T>;
+
+template <typename T>
+View(T*, size_t) -> View<T*>;
+
+template <typename T>
+View(T*, size_t, size_t) -> View<T**>;
+
+template <typename T>
+View(T*, size_t, size_t, size_t) -> View<T***>;
+
+template <typename T>
+View(T*, size_t, size_t, size_t, size_t) -> View<T****>;
+
+template <typename T>
+View(T*, size_t, size_t, size_t, size_t, size_t) -> View<T*****>;
+
+template <typename T>
+View(T*, size_t, size_t, size_t, size_t, size_t, size_t) -> View<T******>;
+
+template <typename T>
+View(T*, size_t, size_t, size_t, size_t, size_t, size_t, size_t)
+    -> View<T*******>;
+
+template <typename T>
+View(T*, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t)
+    -> View<T********>;
+
 /** \brief Temporary free function rank()
  *         until rank() is implemented
  *         in the View
