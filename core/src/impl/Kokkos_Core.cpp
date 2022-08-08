@@ -164,8 +164,19 @@ int get_device_count() {
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
-  return acc_get_num_devices(
-      Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
+  int num_devices =
+      acc_get_num_devices(Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
+  if ((num_devices == 0) &&
+      Kokkos::Experimental::Impl::OpenACC_Traits::may_fallback_to_host) {
+    if (g_show_warnings) {
+      std::cerr << "Warning: No GPU available for execution, falling back to"
+                   " using the host!"
+                << std::endl;
+    }
+    acc_set_device_type(acc_device_host);
+    num_devices = acc_get_num_devices(acc_device_host);
+  }
+  return num_devices;
 #else
   Kokkos::abort("implementation bug");
   return -1;

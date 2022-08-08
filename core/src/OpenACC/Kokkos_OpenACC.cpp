@@ -48,6 +48,7 @@
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 #include <ostream>
 

@@ -52,6 +52,7 @@
 
 #include <openacc.h>
 
+template <>
 struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
                               Kokkos::Experimental::OpenACCSpace,
                               Kokkos::Experimental::OpenACC> {
@@ -93,6 +94,7 @@ struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
   }
 };
 
+template <>
 struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
                               Kokkos::HostSpace,
                               Kokkos::Experimental::OpenACC> {
@@ -126,6 +128,7 @@ struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
   }
 };
 
+template <>
 struct Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
                               Kokkos::Experimental::OpenACCSpace,
                               Kokkos::Experimental::OpenACC> {
