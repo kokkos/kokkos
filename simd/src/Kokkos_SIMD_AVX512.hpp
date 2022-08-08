@@ -677,27 +677,27 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator<(simd const& other) const {
-    return mask_type(_mm512_cmplt_pd_mask(m_value, other.m_value));
+    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_LT_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator>(simd const& other) const {
-    return mask_type(_mm512_cmplt_pd_mask(other.m_value, m_value));
+    return mask_type(_mm512_cmp_pd_mask(other.m_value, m_value, _CMP_LT_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator<=(simd const& other) const {
-    return mask_type(_mm512_cmple_pd_mask(m_value, other.m_value));
+    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_LE_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator>=(simd const& other) const {
-    return mask_type(_mm512_cmple_pd_mask(other.m_value, m_value));
+    return mask_type(_mm512_cmp_pd_mask(other.m_value, m_value, _CMP_LE_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator==(simd const& other) const {
-    return mask_type(_mm512_cmpeq_pd_mask(m_value, other.m_value));
+    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_EQ_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator!=(simd const& other) const {
-    return mask_type(_mm512_cmpneq_pd_mask(m_value, other.m_value));
+    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_NEQ_OS));
   }
 };
 
