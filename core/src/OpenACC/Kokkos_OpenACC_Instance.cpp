@@ -53,10 +53,6 @@
 
 #include <iostream>
 
-namespace Kokkos {
-bool show_warnings() noexcept;
-}
-
 // Arbitrary value to denote that we don't know yet what device to use.
 int Kokkos::Experimental::Impl::OpenACCInternal::m_acc_device_num = -1;
 
