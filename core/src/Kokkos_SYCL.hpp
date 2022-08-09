@@ -96,9 +96,9 @@ class SYCL {
     return m_space_instance->impl_get_instance_id();
   }
 
-  sycl::context sycl_context() const noexcept {
-    return m_space_instance->m_queue->get_context();
-  };
+  sycl::queue& sycl_queue() const noexcept {
+    return *m_space_instance->m_queue;
+  }
 
   //@}
   //------------------------------------
@@ -132,29 +132,7 @@ class SYCL {
   /// \brief Free any resources being consumed by the device.
   static void impl_finalize();
 
-  /** \brief  Initialize the device.
-   *
-   */
-
-  struct SYCLDevice {
-    SYCLDevice() : SYCLDevice(sycl::default_selector()) {}
-    explicit SYCLDevice(sycl::device d);
-    explicit SYCLDevice(const sycl::device_selector& selector);
-    explicit SYCLDevice(size_t id);
-
-    sycl::device get_device() const;
-
-    friend std::ostream& operator<<(std::ostream& os, const SYCLDevice& that) {
-      return SYCL::impl_sycl_info(os, that.m_device);
-    }
-
-   private:
-    sycl::device m_device;
-  };
-
   static void impl_initialize(InitializationSettings const&);
-
-  int sycl_device() const;
 
   static bool impl_is_initialized();
 
@@ -181,7 +159,7 @@ struct DeviceTypeTraits<Kokkos::Experimental::SYCL> {
   /// \brief An ID to differentiate (for example) Serial from OpenMP in Tooling
   static constexpr DeviceType id = DeviceType::SYCL;
   static int device_id(const Kokkos::Experimental::SYCL& exec) {
-    return exec.sycl_device();
+    return exec.impl_internal_space_instance()->m_syclDev;
   }
 };
 }  // namespace Experimental
@@ -196,7 +174,7 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
       "Kokkos Error: partitioning arguments must be integers or floats");
 #endif
 
-  sycl::context context = sycl_space.sycl_context();
+  sycl::context context = sycl_space.sycl_queue().get_context();
   sycl::device device =
       sycl_space.impl_internal_space_instance()->m_queue->get_device();
   std::vector<SYCL> instances;
@@ -213,7 +191,7 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
-  sycl::context context = sycl_space.sycl_context();
+  sycl::context context = sycl_space.sycl_queue().get_context();
   sycl::device device =
       sycl_space.impl_internal_space_instance()->m_queue->get_device();
   std::vector<SYCL> instances;

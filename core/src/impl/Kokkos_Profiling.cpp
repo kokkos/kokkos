@@ -77,7 +77,8 @@ void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
 #ifndef KOKKOS_TOOLS_ENABLE_LIBDL
   if (Kokkos::show_warnings()) {
     std::cerr << "Warning: command line argument '" << arg
-              << "' ignored because kokkos-tools is disabled." << std::endl;
+              << "' ignored because kokkos-tools is disabled."
+              << " Raised by Kokkos::initialize()." << std::endl;
   }
 #else
   (void)arg;
@@ -88,7 +89,8 @@ void warn_env_var_ignored_when_kokkos_tools_disabled(char const* env_var,
 #ifndef KOKKOS_TOOLS_ENABLE_LIBDL
   if (Kokkos::show_warnings()) {
     std::cerr << "Warning: environment variable '" << env_var << "=" << val
-              << "' ignored because kokkos-tools is disabled." << std::endl;
+              << "' ignored because kokkos-tools is disabled."
+              << " Raised by Kokkos::initialize()." << std::endl;
   }
 #else
   (void)env_var;
@@ -111,16 +113,15 @@ void parse_command_line_arguments(int& argc, char* argv[],
                                   InitArguments& arguments) {
   int iarg = 0;
   using Kokkos::Impl::check_arg;
-  using Kokkos::Impl::check_int_arg;
-  using Kokkos::Impl::check_str_arg;
+  using Kokkos::Impl::check_arg_str;
 
   auto& libs = arguments.lib;
   auto& args = arguments.args;
   auto& help = arguments.help;
   while (iarg < argc) {
     bool remove_flag = false;
-    if (check_str_arg(argv[iarg], "--kokkos-tools-libs", libs) ||
-        check_str_arg(argv[iarg], "--kokkos-tools-library", libs)) {
+    if (check_arg_str(argv[iarg], "--kokkos-tools-libs", libs) ||
+        check_arg_str(argv[iarg], "--kokkos-tools-library", libs)) {
       if (check_arg(argv[iarg], "--kokkos-tools-library")) {
         using Kokkos::Impl::warn_deprecated_command_line_argument;
         warn_deprecated_command_line_argument("--kokkos-tools-library",
@@ -128,7 +129,7 @@ void parse_command_line_arguments(int& argc, char* argv[],
       }
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
-    } else if (check_str_arg(argv[iarg], "--kokkos-tools-args", args)) {
+    } else if (check_arg_str(argv[iarg], "--kokkos-tools-args", args)) {
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
       // strip any leading and/or trailing quotes if they were retained in the
@@ -149,14 +150,22 @@ void parse_command_line_arguments(int& argc, char* argv[],
       help = InitArguments::PossiblyUnsetOption::on;
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
-    } else {
-      iarg++;
+    } else if (std::regex_match(argv[iarg], std::regex("-?-kokkos-tool.*",
+                                                       std::regex::egrep))) {
+      std::cerr << "Warning: command line argument '" << argv[iarg]
+                << "' is not recognized."
+                << " Raised by Kokkos::initialize()." << std::endl;
     }
     if (remove_flag) {
-      for (int k = iarg; k < argc - 1; k++) {
+      // Shift the remainder of the argv list by one.  Note that argv has
+      // (argc + 1) arguments, the last one always being nullptr.  The following
+      // loop moves the trailing nullptr element as well
+      for (int k = iarg; k < argc; ++k) {
         argv[k] = argv[k + 1];
       }
       argc--;
+    } else {
+      iarg++;
     }
     if ((args == Kokkos::Tools::InitArguments::unset_string_option) && argc > 0)
       args = argv[0];
@@ -183,8 +192,8 @@ Kokkos::Tools::Impl::InitializationStatus parse_environment_variables(
       std::stringstream ss;
       ss << "Error: environment variables 'KOKKOS_PROFILE_LIBRARY="
          << env_profile_library << "' and 'KOKKOS_TOOLS_LIBS=" << env_tools_libs
-         << "' are both set and do not match.";
-      ss << " Raised by Kokkos::initialize(int argc, char* argv[]).\n";
+         << "' are both set and do not match."
+         << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
     libs = env_tools_libs;

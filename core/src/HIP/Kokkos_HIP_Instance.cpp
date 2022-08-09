@@ -293,27 +293,6 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
       (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
       (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
     }
-    //----------------------------------
-    // Concurrent bitset for obtaining unique tokens from within
-    // an executing kernel.
-    {
-      const int32_t buffer_bound =
-          Kokkos::Impl::concurrent_bitset::buffer_bound(HIP::concurrency());
-
-      // Allocate and initialize uint32_t[ buffer_bound ]
-
-      using Record =
-          Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                               void>;
-
-      Record *const r = Record::allocate(Kokkos::Experimental::HIPSpace(),
-                                         "Kokkos::InternalScratchBitset",
-                                         sizeof(uint32_t) * buffer_bound);
-
-      Record::increment(r);
-    }
-    //----------------------------------
-
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::HIP::initialize(" << hip_device_id

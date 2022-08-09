@@ -422,9 +422,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                  const sycl::event& memcpy_events) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q                          = space.sycl_queue();
 
     auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
@@ -601,7 +599,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = space.sycl_queue();
 
     const unsigned int value_count =
         Analysis::value_count(ReducerConditional::select(m_functor, m_reducer));

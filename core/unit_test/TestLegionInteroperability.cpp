@@ -44,6 +44,24 @@
 
 #include <Kokkos_Core.hpp>
 
+#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 1800)
+
+namespace {
+
+// error: expression must have a constant value
+//   std::enable_if_t<!has_deprecated_cuda_impl_initialize_v<T>>
+constexpr bool
+test_compiler_upgrade_needed_for_detection_idiom_and_variable_template() {
+  return true;
+}
+static_assert(
+    test_compiler_upgrade_needed_for_detection_idiom_and_variable_template(),
+    "Intel C++ compiler is awesome");
+
+}  // namespace
+
+#else
+
 // The purpose of this compile-only test is twofold:
 // 1. mimic Legion's use of Kokkos implementation details for initializing the
 //    exectution environment
@@ -62,7 +80,7 @@ constexpr bool has_deprecated_cuda_impl_initialize_v =
     Kokkos::is_detected<deprecated_cuda_impl_initialize_t, T>::value;
 
 template <class T>
-std::enable_if_t<has_deprecated_cuda_impl_initialize_v<T>>
+std::enable_if_t<has_deprecated_cuda_impl_initialize_v<T> >
 legion_initialize_kokkos_cuda() {
   int cuda_device_id = 0;
   int num_instances  = 1;
@@ -70,7 +88,7 @@ legion_initialize_kokkos_cuda() {
 }
 
 template <class T>
-std::enable_if_t<!has_deprecated_cuda_impl_initialize_v<T>>
+std::enable_if_t<!has_deprecated_cuda_impl_initialize_v<T> >
 legion_initialize_kokkos_cuda() {
   int cuda_device_id = 0;
   auto const settings =
@@ -91,14 +109,14 @@ constexpr bool has_deprecated_openmp_impl_initialize_v =
     Kokkos::is_detected<deprecated_openmp_impl_initialize_t, T>::value;
 
 template <class T>
-std::enable_if_t<has_deprecated_openmp_impl_initialize_v<T>>
+std::enable_if_t<has_deprecated_openmp_impl_initialize_v<T> >
 legion_initialize_kokkos_openmp() {
   int thread_count = -1;
   T::impl_initialize(thread_count);
 }
 
 template <class T>
-std::enable_if_t<!has_deprecated_openmp_impl_initialize_v<T>>
+std::enable_if_t<!has_deprecated_openmp_impl_initialize_v<T> >
 legion_initialize_kokkos_openmp() {
   int thread_count = -1;
   auto const settings =
@@ -120,13 +138,13 @@ constexpr bool has_deprecated_serial_impl_initialize_v =
     Kokkos::is_detected<deprecated_serial_impl_initialize_t, T>::value;
 
 template <class T>
-std::enable_if_t<has_deprecated_serial_impl_initialize_v<T>>
+std::enable_if_t<has_deprecated_serial_impl_initialize_v<T> >
 legion_initialize_kokkos_serial() {
   T::impl_initialize();
 }
 
 template <class T>
-std::enable_if_t<!has_deprecated_serial_impl_initialize_v<T>>
+std::enable_if_t<!has_deprecated_serial_impl_initialize_v<T> >
 legion_initialize_kokkos_serial() {
   Kokkos::InitializationSettings settings;
   T::impl_initialize(settings);
@@ -137,3 +155,5 @@ STATIC_ASSERT(std::is_void<decltype(
 #endif
 
 }  // namespace
+
+#endif

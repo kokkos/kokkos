@@ -42,87 +42,120 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#ifndef KOKKOS_SIMD_HPP
+#define KOKKOS_SIMD_HPP
+
+#include <Kokkos_SIMD_Common.hpp>
+
+#include <Kokkos_SIMD_Scalar.hpp>
+
+#ifdef KOKKOS_ARCH_AVX512XEON
+#include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
-#include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_THREADS)
-
-#include <Kokkos_Core_fwd.hpp>
-
-/* Standard C++ libraries */
-
-#include <cstdlib>
-#include <string>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-#include <mutex>
-
-#include <Kokkos_Threads.hpp>
-
-//----------------------------------------------------------------------------
-
 namespace Kokkos {
+namespace Experimental {
+
+namespace simd_abi {
+
 namespace Impl {
-namespace {
 
-std::mutex host_internal_cppthread_mutex;
+#if defined(KOKKOS_ARCH_AVX512XEON)
+using host_native = avx512_fixed_size<8>;
+#else
+using host_native  = scalar;
+#endif
 
-// std::thread compatible driver.
-// Recovery from an exception would require constant intra-thread health
-// verification; which would negatively impact runtime.  As such simply
-// abort the process.
+template <class T>
+struct ForSpace;
 
-void internal_cppthread_driver() {
-  try {
-    ThreadsExec::driver();
-  } catch (const std::exception& x) {
-    std::cerr << "Exception thrown from worker thread: " << x.what()
-              << std::endl;
-    std::cerr.flush();
-    std::abort();
-  } catch (...) {
-    std::cerr << "Exception thrown from worker thread" << std::endl;
-    std::cerr.flush();
-    std::abort();
-  }
-}
+#ifdef KOKKOS_ENABLE_SERIAL
+template <>
+struct ForSpace<Kokkos::Serial> {
+  using type = host_native;
+};
+#endif
 
-}  // namespace
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct ForSpace<Kokkos::Cuda> {
+  using type = scalar;
+};
+#endif
 
-//----------------------------------------------------------------------------
-// Spawn a thread
+#ifdef KOKKOS_ENABLE_THREADS
+template <>
+struct ForSpace<Kokkos::Threads> {
+  using type = host_native;
+};
+#endif
 
-void ThreadsExec::spawn() {
-  std::thread t(internal_cppthread_driver);
-  t.detach();
-}
+#ifdef KOKKOS_ENABLE_HPX
+template <>
+struct ForSpace<Kokkos::Experimental::HPX> {
+  using type = scalar;
+};
+#endif
 
-//----------------------------------------------------------------------------
+#ifdef KOKKOS_ENABLE_OPENMP
+template <>
+struct ForSpace<Kokkos::OpenMP> {
+  using type = host_native;
+};
+#endif
 
-bool ThreadsExec::is_process() {
-  static const std::thread::id master_pid = std::this_thread::get_id();
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+template <>
+struct ForSpace<Kokkos::Experimental::OpenMPTarget> {
+  using type = scalar;
+};
+#endif
 
-  return master_pid == std::this_thread::get_id();
-}
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct ForSpace<Kokkos::Experimental::HIP> {
+  using type = scalar;
+};
+#endif
 
-void ThreadsExec::global_lock() { host_internal_cppthread_mutex.lock(); }
-
-void ThreadsExec::global_unlock() { host_internal_cppthread_mutex.unlock(); }
-
-//----------------------------------------------------------------------------
-
-void ThreadsExec::wait_yield(volatile int& flag, const int value) {
-  while (value == flag) {
-    std::this_thread::yield();
-  }
-}
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct ForSpace<Kokkos::Experimental::SYCL> {
+  using type = scalar;
+};
+#endif
 
 }  // namespace Impl
+
+template <class Space>
+using ForSpace = typename Impl::ForSpace<typename Space::execution_space>::type;
+
+template <class T>
+using native = ForSpace<Kokkos::DefaultExecutionSpace>;
+
+}  // namespace simd_abi
+
+template <class T>
+using native_simd = simd<T, simd_abi::native<T>>;
+template <class T>
+using native_simd_mask = simd_mask<T, simd_abi::native<T>>;
+
+namespace Impl {
+
+template <class... Abis>
+class abi_set {};
+
+#ifdef KOKKOS_ARCH_AVX512XEON
+using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>>;
+#else
+using host_abi_set = abi_set<simd_abi::scalar>;
+#endif
+
+using device_abi_set = abi_set<simd_abi::scalar>;
+
+}  // namespace Impl
+
+}  // namespace Experimental
 }  // namespace Kokkos
 
-#else
-void KOKKOS_CORE_SRC_THREADS_EXEC_BASE_PREVENT_LINK_ERROR() {}
-#endif /* end #if defined( KOKKOS_ENABLE_THREADS ) */
+#endif

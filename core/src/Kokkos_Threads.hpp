@@ -200,7 +200,10 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 #include <Kokkos_Parallel.hpp>
 #include <Threads/Kokkos_ThreadsExec.hpp>
 #include <Threads/Kokkos_ThreadsTeam.hpp>
-#include <Threads/Kokkos_Threads_Parallel.hpp>
+#include <Threads/Kokkos_Threads_Parallel_Range.hpp>
+#include <Threads/Kokkos_Threads_Parallel_MDRange.hpp>
+#include <Threads/Kokkos_Threads_Parallel_Team.hpp>
+#include <Threads/Kokkos_Threads_UniqueToken.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 

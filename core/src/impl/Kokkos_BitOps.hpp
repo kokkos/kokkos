@@ -82,13 +82,16 @@ inline int int_log2_device(unsigned i) {
 
 KOKKOS_IMPL_HOST_FUNCTION
 inline int int_log2_host(unsigned i) {
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
+// duplicating shift to avoid unused warning in else branch
 #if defined(KOKKOS_COMPILER_INTEL)
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
   (void)shift;
   return _bit_scan_reverse(i);
 #elif defined(KOKKOS_COMPILER_CRAYC)
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
   return i ? shift - _leadz32(i) : 0;
 #elif defined(__GNUC__) || defined(__GNUG__)
+  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
   return shift - __builtin_clz(i);
 #else
   return int_log2_fallback(i);

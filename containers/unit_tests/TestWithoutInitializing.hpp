@@ -509,6 +509,10 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
 
   auto success = validate_absence(
       [&]() {
+        device_view = Kokkos::Experimental::OffsetView<int*, TEST_EXECSPACE>(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, "device view"),
+            {0, 10});
+
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
         auto mirror_host = Kokkos::create_mirror(Kokkos::WithoutInitializing,
@@ -654,11 +658,16 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
                                typename TEST_EXECSPACE::memory_space{}),
             mirror_device);
       },
+      [&](BeginFenceEvent event) {
+        if (event.descriptor().find("DynamicView::resize_serial: Fence after "
+                                    "copying chunks to the device") !=
+            std::string::npos)
+          return MatchDiagnostic{false};
+        return MatchDiagnostic{true, {"Found fence event"}};
+      },
+      [&](EndFenceEvent) { return MatchDiagnostic{false}; },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found parallel_for event"}};
-      },
-      [&](BeginFenceEvent) {
-        return MatchDiagnostic{true, {"Found fence event"}};
       });
   ASSERT_TRUE(success);
 }
@@ -689,6 +698,14 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview_view_ctor) {
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
       },
+      [&](BeginFenceEvent event) {
+        if (event.descriptor().find("DynamicView::resize_serial: Fence after "
+                                    "copying chunks to the device") !=
+            std::string::npos)
+          return MatchDiagnostic{false};
+        return MatchDiagnostic{true, {"Found fence event"}};
+      },
+      [&](EndFenceEvent) { return MatchDiagnostic{false}; },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
       },

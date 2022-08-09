@@ -144,6 +144,7 @@ class InitializationSettings {
   KOKKOS_IMPL_DECLARE(int, num_devices);  // deprecated
   KOKKOS_IMPL_DECLARE(int, skip_device);  // deprecated
   KOKKOS_IMPL_DECLARE(bool, disable_warnings);
+  KOKKOS_IMPL_DECLARE(bool, print_configuration);
   KOKKOS_IMPL_DECLARE(bool, tune_internals);
   KOKKOS_IMPL_DECLARE(bool, tools_help);
   KOKKOS_IMPL_DECLARE(std::string, tools_libs);

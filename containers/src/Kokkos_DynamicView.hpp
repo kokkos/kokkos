@@ -219,11 +219,14 @@ struct ChunkedArrayManager {
 
   pointer_type* get_ptr() const { return m_chunks; }
 
-  template <typename Space>
-  void deep_copy_to(ChunkedArrayManager<Space, ValueType> const& other) const {
+  template <typename OtherMemorySpace, typename ExecutionSpace>
+  void deep_copy_to(
+      const ExecutionSpace& exec_space,
+      ChunkedArrayManager<OtherMemorySpace, ValueType> const& other) const {
     if (other.m_chunks != m_chunks) {
-      Kokkos::Impl::DeepCopy<Space, MemorySpace>(
-          other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
+      Kokkos::Impl::DeepCopy<OtherMemorySpace, MemorySpace, ExecutionSpace>(
+          exec_space, other.m_chunks, m_chunks,
+          sizeof(pointer_type) * (m_chunk_max + 2));
     }
   }
 
@@ -411,33 +414,14 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         "space");
 
     // Which chunk is being indexed.
-    const uintptr_t ic = uintptr_t(i0 >> m_chunk_shift);
+    const uintptr_t ic = uintptr_t(i0) >> m_chunk_shift;
 
-    typename traits::value_type* volatile* const ch = m_chunks + ic;
-
-    // Do bounds checking if enabled or if the chunk pointer is zero.
-    // If not bounds checking then we assume a non-zero pointer is valid.
-
-#if !defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-    if (nullptr == *ch)
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+    const uintptr_t n = *reinterpret_cast<uintptr_t*>(m_chunks + m_chunk_max);
+    if (n <= ic) Kokkos::abort("Kokkos::DynamicView array bounds error");
 #endif
-    {
-      // Verify that allocation of the requested chunk is in progress.
 
-      // The allocated chunk counter is m_chunks[ m_chunk_max ]
-      const uintptr_t n =
-          *reinterpret_cast<uintptr_t volatile*>(m_chunks + m_chunk_max);
-
-      if (n <= ic) {
-        Kokkos::abort("Kokkos::DynamicView array bounds error");
-      }
-
-      // Allocation of this chunk is in progress
-      // so wait for allocation to complete.
-      while (nullptr == *ch)
-        ;
-    }
-
+    typename traits::value_type** const ch = m_chunks + ic;
     return (*ch)[i0 & m_chunk_mask];
   }
 
@@ -481,7 +465,10 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
     // *m_chunks_host[m_chunk_max+1] stores the 'extent' requested by resize
     *(pc + 1) = n;
 
-    m_chunks_host.deep_copy_to(m_chunks);
+    typename device_space::execution_space exec{};
+    m_chunks_host.deep_copy_to(exec, m_chunks);
+    exec.fence(
+        "DynamicView::resize_serial: Fence after copying chunks to the device");
   }
 
   KOKKOS_INLINE_FUNCTION bool is_allocated() const {
@@ -564,7 +551,23 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
       m_chunks_host.template allocate_with_destroy<device_space>(
           label, m_chunks.get_ptr());
       m_chunks_host.initialize();
-      m_chunks_host.deep_copy_to(m_chunks);
+
+      // Add some properties if not provided to avoid need for if constexpr
+      using alloc_prop_input = Kokkos::Impl::ViewCtorProp<Prop...>;
+      using alloc_prop       = Kokkos::Impl::ViewCtorProp<
+          Prop..., std::conditional_t<alloc_prop_input::has_execution_space,
+                                      std::integral_constant<unsigned int, 15>,
+                                      typename device_space::execution_space>>;
+      alloc_prop arg_prop_copy(arg_prop);
+
+      const auto& exec = static_cast<const Kokkos::Impl::ViewCtorProp<
+          void, typename alloc_prop::execution_space>&>(arg_prop_copy)
+                             .value;
+      m_chunks_host.deep_copy_to(exec, m_chunks);
+      if (!alloc_prop_input::has_execution_space)
+        exec.fence(
+            "DynamicView::DynamicView(): Fence after copying chunks to the "
+            "device");
     }
   }
 
@@ -643,8 +646,12 @@ inline auto create_mirror(
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
 
-  return typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
+  auto ret = typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
       prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
+
+  ret.resize_serial(src.extent(0));
+
+  return ret;
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -674,9 +681,13 @@ inline auto create_mirror(
   static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
       std::string(src.label()).append("_mirror");
 
-  return typename Kokkos::Impl::MirrorDynamicViewType<
+  auto ret = typename Kokkos::Impl::MirrorDynamicViewType<
       MemorySpace, T, P...>::view_type(prop_copy, src.chunk_size(),
                                        src.chunk_max() * src.chunk_size());
+
+  ret.resize_serial(src.extent(0));
+
+  return ret;
 }
 }  // namespace Impl
 
@@ -821,12 +832,13 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
   else if (SrcExecCanAccessDst)
     Kokkos::Impl::ViewRemap<dst_type, src_type, src_execution_space>(dst, src);
   else
-    src.impl_get_chunks().deep_copy_to(dst.impl_get_chunks());
+    src.impl_get_chunks().deep_copy_to(dst_execution_space{},
+                                       dst.impl_get_chunks());
   Kokkos::fence("Kokkos::deep_copy(DynamicView)");
 }
 
 template <class ExecutionSpace, class T, class... DP, class... SP>
-inline void deep_copy(const ExecutionSpace&,
+inline void deep_copy(const ExecutionSpace& exec,
                       const Kokkos::Experimental::DynamicView<T, DP...>& dst,
                       const Kokkos::Experimental::DynamicView<T, SP...>& src) {
   using dst_type = Kokkos::Experimental::DynamicView<T, DP...>;
@@ -850,7 +862,7 @@ inline void deep_copy(const ExecutionSpace&,
   else if (SrcExecCanAccessDst)
     Kokkos::Impl::ViewRemap<dst_type, src_type, src_execution_space>(dst, src);
   else
-    src.impl_get_chunks().deep_copy_to(dst.impl_get_chunks());
+    src.impl_get_chunks().deep_copy_to(exec, dst.impl_get_chunks());
 }
 
 template <class T, class... DP, class... SP>
@@ -1060,6 +1072,7 @@ auto create_mirror_view_and_copy(
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type(
       arg_prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
+  mirror.resize_serial(src.extent(0));
   if (alloc_prop_input::has_execution_space) {
     using ExecutionSpace = typename alloc_prop::execution_space;
     deep_copy(

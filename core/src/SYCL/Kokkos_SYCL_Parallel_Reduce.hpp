@@ -265,7 +265,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = space.sycl_queue();
 
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size       = 128;
@@ -575,7 +575,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = m_space.sycl_queue();
 
     const typename Policy::index_type nwork = m_policy.m_num_tiles;
     const typename Policy::index_type block_size =

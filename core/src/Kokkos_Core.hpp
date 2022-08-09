@@ -102,7 +102,8 @@ void declare_configuration_metadata(const std::string& category,
 
 }  // namespace Impl
 
-bool is_initialized() noexcept;
+KOKKOS_ATTRIBUTE_NODISCARD bool is_initialized() noexcept;
+KOKKOS_ATTRIBUTE_NODISCARD bool is_finalized() noexcept;
 
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
@@ -136,8 +137,6 @@ void push_finalize_hook(std::function<void()> f);
 /** \brief  Finalize all known execution spaces */
 KOKKOS_DEPRECATED void finalize_all();
 #endif
-
-void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
 
 /** \brief Print "Bill of Materials" */
 void print_configuration(std::ostream& os, bool verbose = false);
@@ -194,38 +193,139 @@ namespace Kokkos {
  *     if Kokkos::is_initialized() in the constructor, don't call
  * Kokkos::initialize or Kokkos::finalize it is not copyable or assignable
  */
+namespace Impl {
 
-class ScopeGuard {
+inline std::string scopeguard_correct_usage() {
+  return std::string(
+      "Do instead:\n"
+      "  std::unique_ptr<Kokkos::ScopeGuard> guard =\n"
+      "    !Kokkos::is_initialized() && !Kokkos::is_finalized()?\n"
+      "    new ScopeGuard(argc,argv) : nullptr;\n");
+}
+
+inline std::string scopeguard_create_while_initialized_warning() {
+  return std::string(
+             "Kokkos Error: Creating a ScopeGuard while Kokkos is initialized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_create_after_finalize_warning() {
+  return std::string(
+             "Kokkos Error: Creating a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_destruct_after_finalize_warning() {
+  return std::string(
+             "Kokkos Error: Destroying a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+}  // namespace Impl
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
  public:
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
   ScopeGuard(int& argc, char* argv[]) {
     sg_init = false;
-    if (!Kokkos::is_initialized()) {
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (is_initialized()) {
+      std::cerr << Impl::scopeguard_create_while_initialized_warning()
+                << std::endl;
+    }
+    if (is_finalized()) {
+      std::cerr << Impl::scopeguard_create_after_finalize_warning()
+                << std::endl;
+    }
+#endif
+    if (!is_initialized()) {
       initialize(argc, argv);
       sg_init = true;
     }
   }
 
-  ScopeGuard(
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
+  explicit ScopeGuard(
       const InitializationSettings& settings = InitializationSettings()) {
     sg_init = false;
-    if (!Kokkos::is_initialized()) {
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (is_initialized()) {
+      std::cerr << Impl::scopeguard_create_while_initialized_warning()
+                << std::endl;
+    }
+    if (is_finalized()) {
+      std::cerr << Impl::scopeguard_create_after_finalize_warning()
+                << std::endl;
+    }
+#endif
+    if (!is_initialized()) {
       initialize(settings);
       sg_init = true;
     }
   }
 
   ~ScopeGuard() {
-    if (Kokkos::is_initialized() && sg_init) {
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (is_finalized()) {
+      std::cerr << Impl::scopeguard_destruct_after_finalize_warning()
+                << std::endl;
+    }
+#endif
+    if (is_initialized() && sg_init) {
       finalize();
     }
   }
 
-  // private:
+ private:
   bool sg_init;
 
+ public:
   ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard(const ScopeGuard&)            = delete;
+  ScopeGuard& operator=(ScopeGuard&&) = delete;
+  ScopeGuard(const ScopeGuard&)       = delete;
+  ScopeGuard(ScopeGuard&&)            = delete;
 };
+
+#else  // ifndef KOKKOS_ENABLE_DEPRECATED_CODE3
+
+class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
+ public:
+  template <class... Args>
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  KOKKOS_ATTRIBUTE_NODISCARD
+#endif
+  ScopeGuard(Args&&... args) {
+    if (is_initialized()) {
+      Kokkos::abort(
+          Impl::scopeguard_create_while_initialized_warning().c_str());
+    }
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
+    }
+    initialize(static_cast<Args&&>(args)...);
+  }
+
+  ~ScopeGuard() {
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_destruct_after_finalize_warning().c_str());
+    }
+    finalize();
+  }
+
+  ScopeGuard& operator=(const ScopeGuard&) = delete;
+  ScopeGuard& operator=(ScopeGuard&&) = delete;
+  ScopeGuard(const ScopeGuard&)       = delete;
+  ScopeGuard(ScopeGuard&&)            = delete;
+};
+#endif
 
 }  // namespace Kokkos
 
@@ -278,8 +378,9 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 // implementation of the RAII wrapper is using Kokkos::single.
 #include <Kokkos_AcquireUniqueTokenImpl.hpp>
 
-// Specializations requires after core definitions
+// Specializations required after core definitions
 #include <KokkosCore_Config_PostInclude.hpp>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

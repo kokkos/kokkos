@@ -476,12 +476,4 @@ int g_openmp_space_factory_initialized =
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<OpenMP>::id;
-}
-}  // namespace Tools
-#endif
-
 }  // namespace Kokkos

@@ -47,7 +47,6 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_THREADS)
 
 #include <cstdint>
 #include <limits>
@@ -55,6 +54,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <mutex>
 
 #include <Kokkos_Core.hpp>
 
@@ -69,6 +69,26 @@
 namespace Kokkos {
 namespace Impl {
 namespace {
+std::mutex host_internal_cppthread_mutex;
+
+// std::thread compatible driver.
+// Recovery from an exception would require constant intra-thread health
+// verification; which would negatively impact runtime.  As such simply
+// abort the process.
+void internal_cppthread_driver() {
+  try {
+    ThreadsExec::driver();
+  } catch (const std::exception &x) {
+    std::cerr << "Exception thrown from worker thread: " << x.what()
+              << std::endl;
+    std::cerr.flush();
+    std::abort();
+  } catch (...) {
+    std::cerr << "Exception thrown from worker thread" << std::endl;
+    std::cerr.flush();
+    std::abort();
+  }
+}
 
 ThreadsExec s_threads_process;
 ThreadsExec *s_threads_exec[ThreadsExec::MAX_THREAD_COUNT] = {nullptr};
@@ -114,6 +134,34 @@ inline unsigned fan_size(const unsigned rank, const unsigned size) {
 
 namespace Kokkos {
 namespace Impl {
+
+//----------------------------------------------------------------------------
+// Spawn a thread
+
+void ThreadsExec::spawn() {
+  std::thread t(internal_cppthread_driver);
+  t.detach();
+}
+
+//----------------------------------------------------------------------------
+
+bool ThreadsExec::is_process() {
+  static const std::thread::id master_pid = std::this_thread::get_id();
+
+  return master_pid == std::this_thread::get_id();
+}
+
+void ThreadsExec::global_lock() { host_internal_cppthread_mutex.lock(); }
+
+void ThreadsExec::global_unlock() { host_internal_cppthread_mutex.unlock(); }
+
+//----------------------------------------------------------------------------
+
+void ThreadsExec::wait_yield(volatile int &flag, const int value) {
+  while (value == flag) {
+    std::this_thread::yield();
+  }
+}
 
 void execute_function_noop(ThreadsExec &, const void *) {}
 
@@ -843,17 +891,4 @@ int g_threads_space_factory_initialized =
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Threads>::id;
-}
-}  // namespace Tools
-#endif
-
 } /* namespace Kokkos */
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-#else
-void KOKKOS_CORE_SRC_THREADS_EXEC_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
