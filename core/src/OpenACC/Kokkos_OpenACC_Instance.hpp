@@ -47,6 +47,8 @@
 
 #include <impl/Kokkos_InitializationSettings.hpp>
 
+#include <openacc.h>
+
 #include <cstdint>
 #include <iosfwd>
 #include <string>
@@ -56,14 +58,20 @@ namespace Kokkos::Experimental::Impl {
 class OpenACCInternal {
   bool m_is_initialized = false;
 
-  OpenACCInternal()                       = default;
   OpenACCInternal(const OpenACCInternal&) = default;
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
-  static OpenACCInternal* singleton();
+  static int m_acc_device_num;
+  int m_async_arg = acc_async_sync;
 
-  void initialize(InitializationSettings const& settings);
+  OpenACCInternal() = default;
+
+  static OpenACCInternal& singleton();
+
+  bool verify_is_initialized(const char* const label) const;
+
+  void initialize(int async_arg = acc_async_sync);
   void finalize();
   bool is_initialized() const;
 
