@@ -48,7 +48,7 @@ ENDIF()
 
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 7)
-  MESSAGE(FATAL_ERROR "You have requested C++17 support for GCC ${KOKKOS_CXX_COMPILER_VERSION}. Although CMake has allowed this and GCC accepts -std=c++1z/c++17, GCC < 7 does not properly support *this capture. Please upgrade the compiler if you do need C++17 support.")
+  MESSAGE(FATAL_ERROR "The GCC version used is ${KOKKOS_CXX_COMPILER_VERSION} but GCC < 7 does not properly support *this capture. Please upgrade the compiler.")
 ENDIF()
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11)
