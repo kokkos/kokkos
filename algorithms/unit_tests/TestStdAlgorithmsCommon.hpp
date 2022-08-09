@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <Kokkos_StdAlgorithms.hpp>
+#include <Kokkos_Random.hpp>
 #include <TestStdAlgorithmsHelperFunctors.hpp>
 #include <utility>
 #include <numeric>
@@ -174,6 +175,35 @@ auto create_deep_copyable_compatible_clone(ViewType view) {
 //
 // others
 //
+
+template <class LayoutTagType, class ValueType>
+auto create_view_and_fill_randomly(LayoutTagType LayoutTag, std::size_t numRows,
+                                   std::size_t numCols, ValueType lower,
+                                   ValueType upper, const std::string& label) {
+  // construct in memory space associated with default exespace
+  auto dataView = create_view<ValueType>(LayoutTag, numRows, numCols, label);
+
+  // dataView might not deep copyable (e.g. strided layout) so to
+  // randomize it, we make a new view that is for sure deep copyable,
+  // modify it on the host, deep copy to device and then launch
+  // a kernel to copy to dataView
+  auto dataView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(dataView);
+  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
+
+  // randomly fill the view
+  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
+  Kokkos::fill_random(dataView_dc_h, pool, lower, upper);
+
+  // copy to dataView_dc and then to dataView
+  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
+  // use CTAD
+  CopyFunctorRank2 F1(dataView_dc, dataView);
+  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
+
+  return std::make_tuple(dataView, dataView_dc_h);
+}
+
 template <class ViewType>
 auto create_host_space_copy(ViewType view) {
   auto view_dc = create_deep_copyable_compatible_clone(view);
