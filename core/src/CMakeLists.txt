@@ -120,13 +120,13 @@ IF (KOKKOS_ENABLE_IMPL_MDSPAN)
   else()
     KOKKOS_LIB_INCLUDE_DIRECTORIES(
       kokkoscore
-      ${PROJECT_SOURCE_DIR}/tpls/mdspan/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include
     )
 
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${PROJECT_SOURCE_DIR}/tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${PROJECT_SOURCE_DIR}/tpls/mdspan/include/experimental/__p1684_bits/*.hpp)
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${PROJECT_SOURCE_DIR}/tpls/mdspan/include/experimental/mdarray)
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${PROJECT_SOURCE_DIR}/tpls/mdspan/include/experimental/mdspan)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p1684_bits/*.hpp)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdarray)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdspan)
 
     INSTALL (DIRECTORY
       "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/"
@@ -136,7 +136,7 @@ IF (KOKKOS_ENABLE_IMPL_MDSPAN)
       PATTERN "mdspan"
       PATTERN "*.hpp"
     )
-    MESSAGE(STATUS "Using internal mdspan directory ${PROJECT_SOURCE_DIR}/tpls/mdspan/include")
+    MESSAGE(STATUS "Using internal mdspan directory ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include")
   endif()
 ENDIF()
 
