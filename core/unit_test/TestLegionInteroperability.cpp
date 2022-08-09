@@ -68,8 +68,6 @@ static_assert(
 // 2. demonstrate how to leverage SFINAE to support Kokkos version through the
 //    ExecutionSpace::impl_initialize breaking change before release 3.7
 namespace {
-#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
-
 #ifdef KOKKOS_ENABLE_CUDA
 template <class T>
 using deprecated_cuda_impl_initialize_t =
@@ -96,7 +94,7 @@ legion_initialize_kokkos_cuda() {
   T::impl_initialize(settings);
 }
 
-STATIC_ASSERT(std::is_void<
+static_assert(std::is_void<
               decltype(legion_initialize_kokkos_cuda<Kokkos::Cuda>())>::value);
 #endif
 
@@ -124,7 +122,7 @@ legion_initialize_kokkos_openmp() {
   T::impl_initialize(settings);
 }
 
-STATIC_ASSERT(std::is_void<decltype(
+static_assert(std::is_void<decltype(
                   legion_initialize_kokkos_openmp<Kokkos::OpenMP>())>::value);
 
 #endif
@@ -150,7 +148,7 @@ legion_initialize_kokkos_serial() {
   T::impl_initialize(settings);
 }
 
-STATIC_ASSERT(std::is_void<decltype(
+static_assert(std::is_void<decltype(
                   legion_initialize_kokkos_serial<Kokkos::Serial>())>::value);
 #endif
 

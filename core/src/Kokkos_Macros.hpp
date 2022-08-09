@@ -124,9 +124,7 @@
 #define KOKKOS_LAMBDA [=]
 #endif
 
-#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20) || \
-     defined(KOKKOS_ENABLE_CXX23)) &&                                \
-    !defined(KOKKOS_CLASS_LAMBDA)
+#if !defined(KOKKOS_CLASS_LAMBDA)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
 
@@ -204,16 +202,6 @@
 //  where YYYY and MM are the year and month designation
 //  of the supported OpenMP API version.
 #endif  // #if defined( _OPENMP )
-
-#if defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
-#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
-#define KOKKOS_IMPL_FALLTHROUGH [[gnu::fallthrough]];
-#elif defined(KOKKOS_COMPILER_CLANG)
-#define KOKKOS_IMPL_FALLTHROUGH [[clang::fallthrough]];
-#else
-#define KOKKOS_IMPL_FALLTHROUGH
-#endif
 
 //----------------------------------------------------------------------------
 // Intel compiler macros
@@ -645,12 +633,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20) || \
-    defined(KOKKOS_ENABLE_CXX23)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
-#else
-#define KOKKOS_ATTRIBUTE_NODISCARD
-#endif
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \

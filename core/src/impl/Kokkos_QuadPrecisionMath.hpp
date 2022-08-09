@@ -62,7 +62,6 @@
 //<editor-fold desc="numeric traits __float128 specializations">
 namespace Kokkos {
 namespace Experimental {
-#if defined(KOKKOS_ENABLE_CXX17)
 #define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
   template <>                                                                \
   struct TRAIT<TYPE> {                                                       \
@@ -70,13 +69,6 @@ namespace Experimental {
   };                                                                         \
   template <>                                                                \
   inline constexpr auto TRAIT##_v<TYPE> = TRAIT<TYPE>::value;
-#else
-#define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
-  template <>                                                                \
-  struct TRAIT<TYPE> {                                                       \
-    static constexpr VALUE_TYPE value = VALUE;                               \
-  };
-#endif
 
 // clang-format off
 // Numeric distinguished value traits

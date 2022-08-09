@@ -44,20 +44,14 @@
 
 #include <Kokkos_DetectionIdiom.hpp>
 
-#define STATIC_ASSERT(cond) static_assert(cond, "");
-
 void test_nonesuch() {
   using Kokkos::nonesuch;
-  STATIC_ASSERT(!std::is_constructible<nonesuch>::value);
-  STATIC_ASSERT(!std::is_destructible<nonesuch>::value);
-  STATIC_ASSERT(!std::is_copy_constructible<nonesuch>::value);
-  STATIC_ASSERT(!std::is_move_constructible<nonesuch>::value);
-#ifdef KOKKOS_ENABLE_CXX17
-  STATIC_ASSERT(!std::is_aggregate<nonesuch>::value);
-#endif
+  static_assert(!std::is_constructible<nonesuch>::value);
+  static_assert(!std::is_destructible<nonesuch>::value);
+  static_assert(!std::is_copy_constructible<nonesuch>::value);
+  static_assert(!std::is_move_constructible<nonesuch>::value);
+  static_assert(!std::is_aggregate<nonesuch>::value);
 }
-
-#undef STATIC_ASSERT
 
 namespace Example {
 // Example from https://en.cppreference.com/w/cpp/experimental/is_detected
