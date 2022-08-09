@@ -62,8 +62,10 @@ class OpenACCInternal {
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
-  static int m_accDev;
-  int m_async_id;
+  static int m_acc_device_num;
+  int m_async_arg = acc_async_sync;
+
+  OpenACCInternal() = default;
 
   static OpenACCInternal& singleton();
 
@@ -78,8 +80,6 @@ class OpenACCInternal {
   void fence(std::string const& name) const;
 
   uint32_t instance_id() const noexcept;
-
-  OpenACCInternal() : m_async_id(acc_async_sync) {}
 };
 
 }  // namespace Kokkos::Experimental::Impl

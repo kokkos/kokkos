@@ -46,11 +46,12 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
+#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 
-#include <ostream>
+#include <iostream>
 
 Kokkos::Experimental::OpenACC::OpenACC()
     : m_space_instance(
@@ -73,8 +74,23 @@ Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {
-  int device_id                   = Kokkos::Impl::get_gpu(settings);
-  Impl::OpenACCInternal::m_accDev = device_id;
+  if (Impl::OpenACC_Traits::may_fallback_to_host &&
+      acc_get_num_devices(Impl::OpenACC_Traits::dev_type) == 0 &&
+      !settings.has_device_id()) {
+    if (show_warnings()) {
+      std::cerr << "Warning: No GPU available for execution, falling back to"
+                   " using the host!"
+                << std::endl;
+    }
+    acc_set_device_type(acc_device_host);
+    Impl::OpenACCInternal::m_acc_device_num =
+        acc_get_device_num(acc_device_host);
+  } else {
+    using Kokkos::Impl::get_gpu;
+    int const dev_num = get_gpu(settings);
+    acc_set_device_num(dev_num, Impl::OpenACC_Traits::dev_type);
+    Impl::OpenACCInternal::m_acc_device_num = dev_num;
+  }
   Impl::OpenACCInternal::singleton().initialize();
 }
 
@@ -110,11 +126,11 @@ uint32_t Kokkos::Experimental::OpenACC::impl_instance_id() const noexcept {
 }
 
 int Kokkos::Experimental::OpenACC::acc_async_queue() const {
-  return m_space_instance->m_async_id;
+  return m_space_instance->m_async_arg;
 }
 
 int Kokkos::Experimental::OpenACC::acc_device_number() const {
-  return Impl::OpenACCInternal::m_accDev;
+  return Impl::OpenACCInternal::m_acc_device_num;
 }
 
 namespace Kokkos {

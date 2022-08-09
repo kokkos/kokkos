@@ -46,7 +46,6 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 
@@ -57,10 +56,9 @@
 namespace Kokkos {
 bool show_warnings() noexcept;
 }
-// m_accDev stores an OpenACC device number, which should be non-negative.
-// Therefore, an error will be triggered if the OpenACC backend initialization
-// fails.
-int Kokkos::Experimental::Impl::OpenACCInternal::m_accDev = -1;
+
+// Arbitrary value to denote that we don't know yet what device to use.
+int Kokkos::Experimental::Impl::OpenACCInternal::m_acc_device_num = -1;
 
 Kokkos::Experimental::Impl::OpenACCInternal&
 Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
@@ -86,7 +84,7 @@ void Kokkos::Experimental::Impl::OpenACCInternal::initialize(int async_arg) {
                    " unless being a special value defined in OpenACC\n")
                       .c_str());
   }
-  m_async_id       = async_arg;
+  m_async_arg      = async_arg;
   m_is_initialized = true;
 }
 
@@ -109,7 +107,7 @@ void Kokkos::Experimental::Impl::OpenACCInternal::fence(
       Kokkos::Experimental::OpenACC>(
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id()},
-      [&]() { acc_wait(m_async_id); });
+      [&]() { acc_wait(m_async_arg); });
 }
 
 uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id() const

@@ -76,7 +76,6 @@ class OpenACCInternal;
 namespace Kokkos::Experimental {
 
 class OpenACC {
- private:
   Kokkos::Impl::HostSharedPtr<Impl::OpenACCInternal> m_space_instance;
 
  public:
@@ -107,7 +106,7 @@ class OpenACC {
   static int concurrency() { return 256000; }  // FIXME_OPENACC
   static bool in_parallel() { return acc_on_device(acc_device_not_host); }
   uint32_t impl_instance_id() const noexcept;
-  inline Impl::OpenACCInternal* impl_internal_space_instance() const {
+  Impl::OpenACCInternal* impl_internal_space_instance() const {
     return m_space_instance.get();
   }
 
