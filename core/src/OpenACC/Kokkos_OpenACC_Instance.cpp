@@ -57,7 +57,9 @@
 namespace Kokkos {
 bool show_warnings() noexcept;
 }
-
+// m_accDev stores an OpenACC device number, which should be non-negative.
+// Therefore, an error will be triggered if the OpenACC backend initialization
+// fails.
 int Kokkos::Experimental::Impl::OpenACCInternal::m_accDev = -1;
 
 Kokkos::Experimental::Impl::OpenACCInternal&

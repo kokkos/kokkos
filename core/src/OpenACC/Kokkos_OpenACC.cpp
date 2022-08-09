@@ -73,12 +73,7 @@ Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {
-  int device_id = Kokkos::Impl::get_gpu(settings);
-  if (device_id < 0) {
-    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::initialize()") +
-                   " : ERROR device_id should be a non-negative integer\n")
-                      .c_str());
-  }
+  int device_id                   = Kokkos::Impl::get_gpu(settings);
   Impl::OpenACCInternal::m_accDev = device_id;
   Impl::OpenACCInternal::singleton().initialize();
 }
