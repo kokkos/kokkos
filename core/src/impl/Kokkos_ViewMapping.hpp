@@ -2912,8 +2912,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   KOKKOS_INLINE_FUNCTION void operator()(DestroyTag const&,
                                          const size_t i) const {
-    // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line causes ptax error
-    // __cxa_begin_catch in nested_view unit-test
     (ptr + i)->~ValueType();
   }
 
