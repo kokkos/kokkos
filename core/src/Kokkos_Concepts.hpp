@@ -171,7 +171,9 @@ namespace Kokkos {
         std::is_base_of<detected_t<have_t, T>, T>::value ||    \
         std::is_base_of<detected_t<have_type_t, T>, T>::value; \
     constexpr operator bool() const noexcept { return value; } \
-  };
+  };                                                           \
+  template <typename T>                                        \
+  inline constexpr bool is_##CONCEPT##_v = is_##CONCEPT<T>::value;
 
 // Public concept:
 
