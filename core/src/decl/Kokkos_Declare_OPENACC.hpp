@@ -50,6 +50,7 @@
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
 #include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <OpenACC/Kokkos_OpenACC_Traits.hpp>
+#include <OpenACC/Kokkos_OpenACC_Parallel_Range.hpp>
 #endif
 
 #endif
