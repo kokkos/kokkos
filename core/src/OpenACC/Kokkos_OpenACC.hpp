@@ -90,7 +90,7 @@ class OpenACC {
 
   OpenACC();
 
-  OpenACC(int async_arg);
+  explicit OpenACC(int async_arg);
 
   static void impl_initialize(InitializationSettings const& settings);
   static void impl_finalize();
