@@ -59,12 +59,8 @@ struct AddValuesBinaryOp {
   }
 };
 
-template <
-  class SourceView1Type,
-  class SourceView2Type,
-  class DestViewType,
-  class DistancesViewType
-  >
+template <class SourceView1Type, class SourceView2Type, class DestViewType,
+          class DistancesViewType>
 struct TestFunctorA {
   SourceView1Type m_sourceView1;
   SourceView2Type m_sourceView2;
@@ -72,41 +68,38 @@ struct TestFunctorA {
   DistancesViewType m_distancesView;
   int m_apiPick;
 
-  TestFunctorA(const SourceView1Type fromView1,
-	       const SourceView2Type fromView2,
-	       const DestViewType destView,
-               const DistancesViewType distancesView,
-	       int apiPick)
+  TestFunctorA(const SourceView1Type fromView1, const SourceView2Type fromView2,
+               const DestViewType destView,
+               const DistancesViewType distancesView, int apiPick)
       : m_sourceView1(fromView1),
-	m_sourceView2(fromView2),
+        m_sourceView2(fromView2),
         m_destView(destView),
         m_distancesView(distancesView),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowView1From = Kokkos::subview(m_sourceView1, myRowIndex, Kokkos::ALL());
-    auto myRowView2From = Kokkos::subview(m_sourceView2, myRowIndex, Kokkos::ALL());
+    auto myRowView1From =
+        Kokkos::subview(m_sourceView1, myRowIndex, Kokkos::ALL());
+    auto myRowView2From =
+        Kokkos::subview(m_sourceView2, myRowIndex, Kokkos::ALL());
     auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
     using value_type = typename SourceView1Type::value_type;
     if (m_apiPick == 0) {
-      auto it = KE::transform(member, KE::cbegin(myRowView1From),
-			      KE::cend(myRowView1From),
-			      KE::cbegin(myRowView2From),
-			      KE::begin(myRowViewDest),
-			      AddValuesBinaryOp<value_type>());
+      auto it = KE::transform(
+          member, KE::cbegin(myRowView1From), KE::cend(myRowView1From),
+          KE::cbegin(myRowView2From), KE::begin(myRowViewDest),
+          AddValuesBinaryOp<value_type>());
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });
     } else if (m_apiPick == 1) {
-      auto it = KE::transform(member, myRowView1From,
-			      myRowView2From, myRowViewDest,
-			      AddValuesBinaryOp<value_type>());
+      auto it = KE::transform(member, myRowView1From, myRowView2From,
+                              myRowViewDest, AddValuesBinaryOp<value_type>());
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) =
@@ -117,13 +110,11 @@ struct TestFunctorA {
 };
 
 template <class ViewType>
-auto fill_view_randomly(ViewType view)
-{
+auto fill_view_randomly(ViewType view) {
   // view might not deep copyable (e.g. strided layout) so to fill it
   // we make a new view that is for sure deep copyable, modify it on the host
   // deep copy to device and then launch copy kernel to view
-  auto view_dc =
-      create_deep_copyable_compatible_view_with_same_extent(view);
+  auto view_dc   = create_deep_copyable_compatible_view_with_same_extent(view);
   auto view_dc_h = create_mirror_view(Kokkos::HostSpace(), view_dc);
 
   // randomly fill the view
@@ -186,7 +177,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewBeforeOp_h.extent(1); ++j) {
       // elements in dest view should be the sum of source elements
-      EXPECT_EQ(destViewAfterOp_h(i, j), sourceView1_dc_h(i,j) + sourceView2_dc_h(i,j));
+      EXPECT_EQ(destViewAfterOp_h(i, j),
+                sourceView1_dc_h(i, j) + sourceView2_dc_h(i, j));
     }
 
     // each team should return an iterator whose distance from the

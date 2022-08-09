@@ -83,9 +83,8 @@ struct TestFunctorA {
     using value_type = typename SourceViewType::value_type;
     if (m_apiPick == 0) {
       auto it = KE::transform(member, KE::cbegin(myRowViewFrom),
-			      KE::cend(myRowViewFrom),
-			      KE::begin(myRowViewDest),
-			      PlusTwoUnaryOp<value_type>());
+                              KE::cend(myRowViewFrom), KE::begin(myRowViewDest),
+                              PlusTwoUnaryOp<value_type>());
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) =
@@ -93,7 +92,7 @@ struct TestFunctorA {
       });
     } else if (m_apiPick == 1) {
       auto it = KE::transform(member, myRowViewFrom, myRowViewDest,
-			      PlusTwoUnaryOp<value_type>());
+                              PlusTwoUnaryOp<value_type>());
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) =
@@ -159,16 +158,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto distancesView_h   = create_host_space_copy(distancesView);
+  auto distancesView_h     = create_host_space_copy(distancesView);
   auto sourceViewAfterOp_h = create_host_space_copy(sourceView);
-  auto destViewAfterOp_h = create_host_space_copy(destView);
+  auto destViewAfterOp_h   = create_host_space_copy(destView);
   for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewBeforeOp_h.extent(1); ++j) {
       // source view should not change
-      EXPECT_EQ(sourceViewAfterOp_h(i, j), sourceView_dc_h(i,j));
+      EXPECT_EQ(sourceViewAfterOp_h(i, j), sourceView_dc_h(i, j));
 
       // elements in dest view should be the source elements times two
-      EXPECT_EQ(destViewAfterOp_h(i, j), sourceView_dc_h(i,j)+2);
+      EXPECT_EQ(destViewAfterOp_h(i, j), sourceView_dc_h(i, j) + 2);
       EXPECT_EQ(destViewBeforeOp_h(i, j), ValueType(0));
     }
 
