@@ -206,11 +206,6 @@ struct ExecPolicyTraitsWithDefaults : AnalysisResults {
 
 //------------------------------------------------------------------------------
 
-constexpr bool warn_if_deprecated(std::false_type) { return true; }
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Invalid WorkTag template argument in execution policy!!")
-constexpr bool warn_if_deprecated(std::true_type) { return true; }
-
 template <typename... Traits>
 struct PolicyTraits
     : ExecPolicyTraitsWithDefaults<AnalyzeExecPolicy<void, Traits...>> {
