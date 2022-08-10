@@ -52,7 +52,7 @@
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 struct InitArguments {
   int num_threads;
   int num_numa;
@@ -154,7 +154,7 @@ class InitializationSettings {
 #undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER
 #undef KOKKOS_IMPL_DECLARE
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
  public:
   InitializationSettings() = default;
 

@@ -227,7 +227,7 @@ KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
   return result;
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Experimental {
 using ::Kokkos::clamp;
 using ::Kokkos::max;

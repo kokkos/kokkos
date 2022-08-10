@@ -553,6 +553,7 @@ endif
 #only add the c++ standard flags if this is not CMake
 tmp := $(call kokkos_append_header,"/* General Settings */")
 ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATED_CODE_3")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATED_CODE_4")
 endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS), 1)

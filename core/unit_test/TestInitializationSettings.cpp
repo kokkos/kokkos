@@ -48,7 +48,7 @@
 
 namespace {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 void take_initialization_settings(Kokkos::InitializationSettings const&) {}
 
 TEST(defaultdevicetype,

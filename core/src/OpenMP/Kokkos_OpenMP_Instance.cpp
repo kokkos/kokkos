@@ -69,7 +69,7 @@ thread_local int t_openmp_hardware_id = 0;
 // FIXME_OPENMP we can remove this after we remove partition_master
 thread_local OpenMPInternal *t_openmp_instance = nullptr;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 void OpenMPInternal::validate_partition_impl(const int nthreads,
                                              int &num_partitions,
                                              int &partition_size) {

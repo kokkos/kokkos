@@ -106,7 +106,7 @@ class OpenMPInternal {
 
   void clear_thread_data();
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   static void validate_partition_impl(const int nthreads, int& num_partitions,
                                       int& partition_size);
 #endif
@@ -174,7 +174,7 @@ inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <typename F>
 KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
                                                 int partition_size) {
@@ -219,7 +219,7 @@ KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
 
 namespace Experimental {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <>
 class MasterLock<OpenMP> {
  public:

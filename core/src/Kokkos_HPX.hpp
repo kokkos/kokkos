@@ -366,7 +366,7 @@ class HPX {
 #endif
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   template <typename F>
   KOKKOS_DEPRECATED static void partition_master(
       F const &, int requested_num_partitions = 0, int = 0) {
