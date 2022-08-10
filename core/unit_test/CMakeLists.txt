@@ -878,13 +878,6 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                )
 endif()
 
-if (KOKKOS_ENABLE_HWLOC)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_HWLOC
-  SOURCES UnitTestMain.cpp  TestHWLOC.cpp
-)
-endif()
-
 if(Kokkos_ENABLE_DEPRECATED_CODE_4)
   foreach(INITTESTS_NUM RANGE 1 18)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -892,6 +885,13 @@ if(Kokkos_ENABLE_DEPRECATED_CODE_4)
     SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
   )
   endforeach(INITTESTS_NUM)
+endif()
+
+if (KOKKOS_ENABLE_HWLOC)
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_HWLOC
+  SOURCES UnitTestMain.cpp  TestHWLOC.cpp
+)
 endif()
 
 FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
