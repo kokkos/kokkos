@@ -157,7 +157,6 @@ KOKKOS_INTERNAL_OS_DARWIN      := $(call kokkos_has_string,$(KOKKOS_OS),Darwin)
 # Check compiler.
 KOKKOS_CXX_VERSION                   := $(strip $(shell $(CXX) --version       2>&1))
 KOKKOS_INTERNAL_COMPILER_INTEL       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Intel Corporation)
-KOKKOS_INTERNAL_COMPILER_PGI         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),PGI)
 KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep -c XL))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "CC-"))
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell echo "$(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version 2>&1 | grep -c nvcc)>0" | bc))
@@ -176,7 +175,6 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC_WRAPPER), 1)
 
     KOKKOS_CXX_HOST_VERSION             := $(strip $(shell $(CXX) $(CXXFLAGS) --host-version       2>&1))
-    KOKKOS_INTERNAL_COMPILER_PGI    := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),PGI)
     KOKKOS_INTERNAL_COMPILER_INTEL  := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),Intel Corporation)
     KOKKOS_INTERNAL_COMPILER_CLANG  := $(call kokkos_has_string,$(KOKKOS_CXX_HOST_VERSION),clang)
   endif
@@ -227,26 +225,21 @@ endif
 
 # Set compiler warnings flags.
 ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-    # TODO check if PGI accepts GNU style warnings
-    KOKKOS_INTERNAL_COMPILER_WARNINGS =
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
       KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
         KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
       else
-        ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-          KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+        ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+          # TODO check if cray accepts GNU style warnings
+          KOKKOS_INTERNAL_COMPILER_WARNINGS =
         else
-          ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-            # TODO check if cray accepts GNU style warnings
-            KOKKOS_INTERNAL_COMPILER_WARNINGS =
-          else
-            #gcc
-            KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
-          endif
+          #gcc
+          KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
         endif
       endif
     endif
@@ -256,10 +249,7 @@ else
 endif
 
 # Set OpenMP flags.
-ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-  KOKKOS_INTERNAL_OPENMP_FLAG := -mp
-else
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
     else

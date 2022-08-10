@@ -77,7 +77,7 @@
  *  KOKKOS_COMPILER_CRAYC
  *  KOKKOS_COMPILER_APPLECC
  *  KOKKOS_COMPILER_CLANG
- *  KOKKOS_COMPILER_PGI
+ *  KOKKOS_COMPILER_NVHPC
  *  KOKKOS_COMPILER_MSVC
  *
  *  Macros for which compiler extension to use for atomics on intrinsic types
@@ -174,15 +174,6 @@
 
 #if (530 > KOKKOS_COMPILER_GNU)
 #error "Compiling with GCC version earlier than 5.3.0 is not supported."
-#endif
-#endif
-
-#if defined(__PGIC__)
-#define KOKKOS_COMPILER_PGI \
-  __PGIC__ * 100 + __PGIC_MINOR__ * 10 + __PGIC_PATCHLEVEL__
-
-#if (1740 > KOKKOS_COMPILER_PGI)
-#error "Compiling with PGI version earlier than 17.4 is not supported."
 #endif
 #endif
 
