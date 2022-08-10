@@ -104,9 +104,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range (11, 523)
-  auto [dataView, dataView_copy_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols, std::pair{ValueType(5), ValueType(523)},
-      "dataView");
+  auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -136,7 +136,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
     }
     // all other elements should be unchanged from before op
     for (std::size_t j = fillCount; j < numCols; ++j) {
-      EXPECT_EQ(dataViewAfterOp_h(i, j), dataView_copy_h(i, j));
+      EXPECT_EQ(dataViewAfterOp_h(i, j), dataViewBeforeOp_h(i, j));
     }
 
     // check that returned iterators are correct

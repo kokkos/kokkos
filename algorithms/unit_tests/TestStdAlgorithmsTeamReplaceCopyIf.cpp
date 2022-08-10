@@ -128,9 +128,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range (5, 523)
-  auto [sourceView, sourceView_copy_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols, std::pair{ValueType(5), ValueType(523)},
-      "sourceView");
+  auto [sourceView, sourceViewBeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(5), ValueType(523)}, "sourceView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -159,7 +159,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                                                            numTeams, numCols);
   GreaterThanValueFunctor predicate(threshold);
   for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(sourceView_copy_h, i, Kokkos::ALL());
+    auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
     auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
     auto it      = std::replace_copy_if(KE::cbegin(rowFrom), KE::cend(rowFrom),
                                    KE::begin(rowDest), predicate, newVal);

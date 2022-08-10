@@ -107,9 +107,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range (5, 523)
-  auto [dataView, dataView_copy_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols, std::pair{ValueType(5), ValueType(523)},
-      "dataView");
+  auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -128,7 +128,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // ensure that we use the same data to run the std algo on
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     for (std::size_t j = 0; j < dataView.extent(1); ++j) {
-      stdDataView(i, j) = dataView_copy_h(i, j);
+      stdDataView(i, j) = dataViewBeforeOp_h(i, j);
     }
   }
   GreaterThanValueFunctor predicate(threshold);
