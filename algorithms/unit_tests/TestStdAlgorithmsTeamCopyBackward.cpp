@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -101,37 +100,23 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto sourceView =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView");
-
-  // sourceView might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to sourceView
-  auto sourceView_dc =
-      create_deep_copyable_compatible_view_with_same_extent(sourceView);
-  auto sourceView_dc_h = create_mirror_view(Kokkos::HostSpace(), sourceView_dc);
-
-  // randomly fill the view
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(sourceView_dc_h, pool, 11, 523);
-
-  // copy to sourceView_dc and then to sourceView
-  Kokkos::deep_copy(sourceView_dc, sourceView_dc_h);
-  // use CTAD
-  CopyFunctorRank2 F1(sourceView_dc, sourceView);
-  Kokkos::parallel_for("copy", sourceView.extent(0) * sourceView.extent(1), F1);
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range (11, 523)
+  auto [sourceView, sourceView_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(11), ValueType(523)},
+      "sourceView");
 
   // -----------------------------------------------
   // launch kokkos kernel
   // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
-  // create the destination view: note that to have a meaningful test,
-  // the destination view must have more columns that than the source
-  // view so that we can check that the elements are copied into the right
-  // place.
-  Kokkos::View<ValueType**> destView("destView", numTeams, numCols + 10);
+  // create the destination view: for a meaningful test, the destination
+  // view must have more columns that than the source view so that we
+  // can check that the elements are copied into the right place
+  constexpr std::size_t shift = 10;
+  Kokkos::View<ValueType**> destView("destView", numTeams, numCols + shift);
   // make a host copy of the destination view that should be unchanged after the
   // op
   auto destViewBeforeOp_h = create_host_space_copy(destView);
@@ -152,19 +137,20 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto distancesView_h   = create_host_space_copy(distancesView);
   auto destViewAfterOp_h = create_host_space_copy(destView);
   for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
-    // first 10 columns should be unchanged
-    for (std::size_t j = 0; j < 10; ++j) {
+    // first shift num of columns should be unchanged
+    for (std::size_t j = 0; j < shift; ++j) {
       EXPECT_TRUE(destViewAfterOp_h(i, j) == destViewBeforeOp_h(i, j));
     }
 
-    // all values after 10th column (inclusive) should match the source view
-    for (std::size_t j = 10; j < destViewBeforeOp_h.extent(1); ++j) {
-      EXPECT_TRUE(sourceView_dc_h(i, j - 10) == destViewAfterOp_h(i, j));
+    // all values after shift num of column (inclusive) should match the source
+    // view
+    for (std::size_t j = shift; j < destViewBeforeOp_h.extent(1); ++j) {
+      EXPECT_TRUE(sourceView_copy_h(i, j - shift) == destViewAfterOp_h(i, j));
     }
 
     // each team should have returned an interator whose distance
     // from the beginning of the row should satisfy this
-    EXPECT_TRUE(distancesView_h(i) == 10);
+    EXPECT_TRUE(distancesView_h(i) == shift);
   }
 }
 

@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -100,26 +99,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto sourceView =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView");
-
-  // sourceView might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to sourceView
-  auto sourceView_dc =
-      create_deep_copyable_compatible_view_with_same_extent(sourceView);
-  auto sourceView_dc_h = create_mirror_view(Kokkos::HostSpace(), sourceView_dc);
-
-  // randomly fill the view
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(sourceView_dc_h, pool, 11, 523);
-
-  // copy to sourceView_dc and then to sourceView
-  Kokkos::deep_copy(sourceView_dc, sourceView_dc_h);
-  // use CTAD
-  CopyFunctorRank2 F1(sourceView_dc, sourceView);
-  Kokkos::parallel_for("copy", sourceView.extent(0) * sourceView.extent(1), F1);
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range (11, 523)
+  auto [sourceView, sourceView_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(11), ValueType(523)},
+      "sourceView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -157,7 +142,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     EXPECT_TRUE(distancesView_h(i) == numCols);
   }
 
-  expect_equal_host_views(sourceView_dc_h, destViewAfterOp_h);
+  expect_equal_host_views(sourceView_copy_h, destViewAfterOp_h);
 }
 
 template <class LayoutTag, class ValueType>

@@ -156,7 +156,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // - all other elements are unchanged
   // -----------------------------------------------
 
-  // make a copy on host (generic to handle a non deep-copyable view)
   // check that the correct elements have the new value
   auto dataView2_h = create_host_space_copy(dataView);
   for (auto k : targetElementsLinearizedIds) {

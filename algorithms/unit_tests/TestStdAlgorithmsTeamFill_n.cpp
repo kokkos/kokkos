@@ -105,7 +105,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range (11, 523)
   auto [dataView, dataView_copy_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols, ValueType(5), ValueType(523), "dataView");
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(5), ValueType(523)},
+      "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel

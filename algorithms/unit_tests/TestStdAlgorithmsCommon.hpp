@@ -178,8 +178,10 @@ auto create_deep_copyable_compatible_clone(ViewType view) {
 
 template <class LayoutTagType, class ValueType>
 auto create_view_and_fill_randomly(LayoutTagType LayoutTag, std::size_t numRows,
-                                   std::size_t numCols, ValueType lower,
-                                   ValueType upper, const std::string& label) {
+                                   std::size_t numCols,
+                                   std::pair<ValueType, ValueType> bounds,
+                                   const std::string& label,
+                                   std::size_t seedIn = 12371) {
   // construct in memory space associated with default exespace
   auto dataView = create_view<ValueType>(LayoutTag, numRows, numCols, label);
 
@@ -192,8 +194,9 @@ auto create_view_and_fill_randomly(LayoutTagType LayoutTag, std::size_t numRows,
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
   // randomly fill the view
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(dataView_dc_h, pool, lower, upper);
+  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(
+      seedIn);
+  Kokkos::fill_random(dataView_dc_h, pool, bounds.first, bounds.second);
 
   // copy to dataView_dc and then to dataView
   Kokkos::deep_copy(dataView_dc, dataView_dc_h);

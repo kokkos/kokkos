@@ -104,27 +104,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto dataView =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
-
-  // dataView might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to dataView
-  auto dataView_dc =
-      create_deep_copyable_compatible_view_with_same_extent(dataView);
-  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
-
-  // randomly fill the view with values
-  // 5 is chosen because we want all values to be different than newVal==1
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(dataView_dc_h, pool, 5, 523);
-
-  // copy to dataView_dc and then to dataView
-  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
-  // use CTAD
-  CopyFunctorRank2 F1(dataView_dc, dataView);
-  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range (5, 523)
+  auto [dataView, dataView_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(5), ValueType(523)},
+      "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -136,16 +121,27 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
-  // run cpp-std kernel and check
+  // run cpp-std kernel
   // -----------------------------------------------
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDataView("stdDataView",
+                                                           numTeams, numCols);
+  // ensure that we use the same data to run the std algo on
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    for (std::size_t j = 0; j < dataView.extent(1); ++j) {
+      stdDataView(i, j) = dataView_copy_h(i, j);
+    }
+  }
   GreaterThanValueFunctor predicate(threshold);
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
-    auto thisRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    auto thisRow = Kokkos::subview(stdDataView, i, Kokkos::ALL());
     std::replace_if(KE::begin(thisRow), KE::end(thisRow), predicate, newVal);
   }
 
+  // -----------------------------------------------
+  // check
+  // -----------------------------------------------
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
-  expect_equal_host_views(dataView_dc_h, dataViewAfterOp_h);
+  expect_equal_host_views(stdDataView, dataViewAfterOp_h);
 }
 
 template <class LayoutTag, class ValueType>

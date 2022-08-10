@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -109,25 +108,26 @@ struct TestFunctorA {
   }
 };
 
-template <class ViewType>
-auto fill_view_randomly(ViewType view) {
-  // view might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to view
-  auto view_dc   = create_deep_copyable_compatible_view_with_same_extent(view);
-  auto view_dc_h = create_mirror_view(Kokkos::HostSpace(), view_dc);
+// template <class ViewType>
+// auto fill_view_randomly(ViewType view) {
+//   // view might not deep copyable (e.g. strided layout) so to fill it
+//   // we make a new view that is for sure deep copyable, modify it on the host
+//   // deep copy to device and then launch copy kernel to view
+//   auto view_dc   =
+//   create_deep_copyable_compatible_view_with_same_extent(view); auto view_dc_h
+//   = create_mirror_view(Kokkos::HostSpace(), view_dc);
 
-  // randomly fill the view
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(view_dc_h, pool, 0, 523);
+//   // randomly fill the view
+//   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>
+//   pool(12371); Kokkos::fill_random(view_dc_h, pool, 0, 523);
 
-  // copy to view_dc and then to view
-  Kokkos::deep_copy(view_dc, view_dc_h);
-  // use CTAD
-  CopyFunctorRank2 F1(view_dc, view);
-  Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
-  return view_dc_h;
-}
+//   // copy to view_dc and then to view
+//   Kokkos::deep_copy(view_dc, view_dc_h);
+//   // use CTAD
+//   CopyFunctorRank2 F1(view_dc, view);
+//   Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
+//   return view_dc_h;
+// }
 
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
@@ -140,13 +140,15 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto sourceView1 =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView1");
-  auto sourceView2 =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "sourceView2");
-  auto sourceView1_dc_h = fill_view_randomly(sourceView1);
-  auto sourceView2_dc_h = fill_view_randomly(sourceView2);
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range
+  auto [sourceView1, sourceView1_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(0), ValueType(523)},
+      "sourceView1", 317539 /*random seed*/);
+  auto [sourceView2, sourceView2_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(0), ValueType(523)},
+      "sourceView2", 957313 /*random seed*/);
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -174,11 +176,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   auto distancesView_h   = create_host_space_copy(distancesView);
   auto destViewAfterOp_h = create_host_space_copy(destView);
-  for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < destViewBeforeOp_h.extent(1); ++j) {
+  for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
+    for (std::size_t j = 0; j < destViewAfterOp_h.extent(1); ++j) {
       // elements in dest view should be the sum of source elements
       EXPECT_EQ(destViewAfterOp_h(i, j),
-                sourceView1_dc_h(i, j) + sourceView2_dc_h(i, j));
+                sourceView1_copy_h(i, j) + sourceView2_copy_h(i, j));
     }
 
     // each team should return an iterator whose distance from the
