@@ -45,6 +45,9 @@
 #ifndef KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
 #define KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
 
+#include <OpenACC/Kokkos_OpenACC.hpp>
+#include <Kokkos_Parallel.hpp>
+
 namespace Kokkos {
 namespace Impl {
 
