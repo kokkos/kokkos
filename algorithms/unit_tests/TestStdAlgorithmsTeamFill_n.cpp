@@ -44,7 +44,6 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <algorithm>
-#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -102,27 +101,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto dataView =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
-
-  // dataView might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to dataView
-  auto dataView_dc =
-      create_deep_copyable_compatible_view_with_same_extent(dataView);
-  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
-
-  // randomly fill the view with values
-  // 5 is chosen because we want all values to be different than newVal==1
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(dataView_dc_h, pool, 5, 523);
-
-  // copy to dataView_dc and then to dataView
-  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
-  // use CTAD
-  CopyFunctorRank2 F1(dataView_dc, dataView);
-  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range (11, 523)
+  auto [dataView, dataView_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, ValueType(5), ValueType(523), "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -145,13 +128,14 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
   // -----------------------------------------------
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
   auto distancesView_h   = create_host_space_copy(distancesView);
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     // check that values match what we expect
     for (std::size_t j = 0; j < fillCount; ++j) {
       EXPECT_EQ(dataViewAfterOp_h(i, j), ValueType(i));
     }
+    // all other elements should be unchanged from before op
     for (std::size_t j = fillCount; j < numCols; ++j) {
-      EXPECT_EQ(dataViewAfterOp_h(i, j), dataView_dc_h(i, j));
+      EXPECT_EQ(dataViewAfterOp_h(i, j), dataView_copy_h(i, j));
     }
 
     // check that returned iterators are correct
