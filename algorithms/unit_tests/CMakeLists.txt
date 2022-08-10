@@ -160,6 +160,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamCopyBackward
 	StdAlgorithmsTeamTransformUnaryOp
 	StdAlgorithmsTeamTransformBinaryOp
+	StdAlgorithmsTeamGenerate
 
 	# StdAlgorithmsTeamRotate
 	# StdAlgorithmsTeamRotateCopy
@@ -169,7 +170,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	# StdAlgorithmsTeamMoveBackward
 	# StdAlgorithmsTeamReverse
 	# StdAlgorithmsTeamReverseCopy
-	# StdAlgorithmsTeamGenerate
 	# StdAlgorithmsTeamGenerate_n
 	# StdAlgorithmsTeamCountIf
 	)

@@ -31,15 +31,15 @@ template <class ExecutionSpace, class IteratorType, class Generator>
 std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> generate(
     const ExecutionSpace& ex, IteratorType first, IteratorType last,
     Generator g) {
-  Impl::generate_impl("Kokkos::generate_iterator_api_default", ex, first, last,
-                      std::move(g));
+  Impl::generate_exespace_impl("Kokkos::generate_iterator_api_default", ex,
+                               first, last, std::move(g));
 }
 
 template <class ExecutionSpace, class IteratorType, class Generator>
 std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> generate(
     const std::string& label, const ExecutionSpace& ex, IteratorType first,
     IteratorType last, Generator g) {
-  Impl::generate_impl(label, ex, first, last, std::move(g));
+  Impl::generate_exespace_impl(label, ex, first, last, std::move(g));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -49,8 +49,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> generate(
     const ::Kokkos::View<DataType, Properties...>& view, Generator g) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  Impl::generate_impl("Kokkos::generate_view_api_default", ex, begin(view),
-                      end(view), std::move(g));
+  Impl::generate_exespace_impl("Kokkos::generate_view_api_default", ex,
+                               begin(view), end(view), std::move(g));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -60,7 +60,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> generate(
     const ::Kokkos::View<DataType, Properties...>& view, Generator g) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  Impl::generate_impl(label, ex, begin(view), end(view), std::move(g));
+  Impl::generate_exespace_impl(label, ex, begin(view), end(view), std::move(g));
 }
 
 //

@@ -42,20 +42,19 @@ struct StdGenerateFunctor {
 };
 
 template <class ExecutionSpace, class IteratorType, class Generator>
-void generate_impl(const std::string& label, const ExecutionSpace& ex,
-                   IteratorType first, IteratorType last, Generator g) {
+void generate_exespace_impl(const std::string& label, const ExecutionSpace& ex,
+                            IteratorType first, IteratorType last,
+                            Generator g) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
-
-  // aliases
-  using func_t = StdGenerateFunctor<IteratorType, Generator>;
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         func_t(first, g));
+                         // use CTAD
+                         StdGenerateFunctor(first, g));
   ex.fence("Kokkos::generate: fence after operation");
 }
 
@@ -66,7 +65,7 @@ IteratorType generate_n_impl(const std::string& label, const ExecutionSpace& ex,
     return first;
   }
 
-  generate_impl(label, ex, first, first + count, g);
+  generate_exespace_impl(label, ex, first, first + count, g);
   return first + count;
 }
 
@@ -81,13 +80,10 @@ KOKKOS_FUNCTION void generate_team_impl(const TeamHandleType& teamHandle,
   Impl::static_assert_random_access_and_accessible(teamHandle, first);
   Impl::expect_valid_range(first, last);
 
-  // aliases
-  using func_t = StdGenerateFunctor<IteratorType, Generator>;
-
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         func_t(first, g));
+                         StdGenerateFunctor(first, g));
   teamHandle.team_barrier();
 }
 

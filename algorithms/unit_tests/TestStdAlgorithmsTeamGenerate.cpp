@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <Kokkos_Random.hpp>
 
 namespace Test {
 namespace stdalgos {
@@ -52,66 +51,78 @@ namespace TeamGenerate {
 namespace KE = Kokkos::Experimental;
 
 template <class ValueType>
-struct GenerateFunctor {
+struct Generator {
   KOKKOS_INLINE_FUNCTION
   ValueType operator()() const { return static_cast<ValueType>(23); }
 };
 
-template <class ViewFromType, class MemberType>
+template <class ViewType>
 struct TestFunctorA {
-  ViewFromType m_from_view;
-  int m_api_pick;
+  ViewType m_view;
+  int m_apiPick;
 
-  TestFunctorA(const ViewFromType viewFrom, int apiPick)
-      : m_from_view(viewFrom), m_api_pick(apiPick) {}
+  TestFunctorA(const ViewType view, int apiPick)
+      : m_view(view), m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowView = Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
+    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    using value_type = typename ViewFromType::value_type;
-    if (m_api_pick == 0) {
+    using value_type = typename ViewType::value_type;
+    if (m_apiPick == 0) {
       KE::generate(member, KE::begin(myRowView), KE::end(myRowView),
-                   GenerateFunctor<value_type>());
-    } else if (m_api_pick == 1) {
-      KE::generate(member, myRowView, GenerateFunctor<value_type>());
+                   Generator<value_type>());
+    } else if (m_apiPick == 1) {
+      KE::generate(member, myRowView, Generator<value_type>());
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description: */
 
-  // v constructed on memory space associated with default exespace
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range. Pick range so that it does NOT
+  // contain the value produced by the generator (see top of file)
+  // otherwise test check below is ill-posed
+  auto [dataView, dataView_copy_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols, std::pair{ValueType(105), ValueType(523)},
+      "dataView");
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  using functor_type = TestFunctorA<decltype(v), team_member_type>;
-  functor_type fnc(v, apiId);
+  // use CTAD for functor
+  TestFunctorA fnc(dataView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
+  // -----------------------------------------------
   // check
-  auto v_h = create_host_space_copy(v);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(23));
+  // -----------------------------------------------
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
+    for (std::size_t j = 0; j < dataViewAfterOp_h.extent(1); ++j) {
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) == static_cast<ValueType>(23));
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) != dataView_copy_h(i, j));
     }
   }
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }
