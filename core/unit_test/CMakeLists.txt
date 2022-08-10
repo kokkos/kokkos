@@ -885,6 +885,15 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 )
 endif()
 
+if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+  foreach(INITTESTS_NUM RANGE 1 18)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_DefaultInit_${INITTESTS_NUM}
+    SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
+  )
+  endforeach(INITTESTS_NUM)
+endif()
+
 FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
   KOKKOS_OPTION( ${DEVICE}_EXCLUDE_TESTS "" STRING "Incremental test exclude list" )
   # Add unit test main
