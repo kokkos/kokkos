@@ -83,11 +83,13 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const FunctorType a_functor(m_functor);
 
+    int const async_arg = m_policy.space().acc_async_queue();
+
     if constexpr (std::is_void<WorkTag>::value) {
-#pragma acc parallel loop gang vector copyin(a_functor)
+#pragma acc parallel loop gang vector copyin(a_functor) async(async_arg)
       for (auto i = begin; i < end; ++i) a_functor(i);
     } else {
-#pragma acc parallel loop gang vector copyin(a_functor)
+#pragma acc parallel loop gang vector copyin(a_functor) async(async_arg)
       for (auto i = begin; i < end; ++i) a_functor(WorkTag(), i);
     }
   }
