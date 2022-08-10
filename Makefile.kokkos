@@ -94,14 +94,8 @@ KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
 KOKKOS_INTERNAL_USE_THREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Threads)
-# deprecated
-KOKKOS_INTERNAL_USE_PTHREAD := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
 KOKKOS_INTERNAL_USE_HPX := $(call kokkos_has_string,$(KOKKOS_DEVICES),HPX)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
-ifeq ($(KOKKOS_INTERNAL_USE_PTHREAD), 1)
-  KOKKOS_INTERNAL_USE_THREADS := 1
-  $(warning Warning: Pthread is deprecated. Use Threads instead! KOKKOS_DEVICES=$(KOKKOS_DEVICES))
-endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 0)
