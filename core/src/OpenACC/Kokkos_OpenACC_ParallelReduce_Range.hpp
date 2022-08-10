@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKO_OPENACC_REDUCTIONWRAPPER_HPP
-#define KOKKO_OPENACC_REDUCTIONWRAPPER_HPP
+#ifndef KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
+#define KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
 
 namespace Kokkos {
 namespace Impl {
@@ -341,4 +341,86 @@ struct OpenACCReductionWrapper<BOr<Scalar, Space>, FunctorType,
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+template <class FunctorType, class ReducerType, class... Traits>
+class Kokkos::Impl::ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
+    Kokkos::Experimental::OpenACC> {
+ public:
+  using Policy = Kokkos::RangePolicy<Traits...>;
+
+ private:
+  using WorkRange    = typename Policy::WorkRange;
+  using WorkTag      = typename Policy::work_tag;
+  using Member       = typename Policy::member_type;
+  using LaunchBounds = typename Policy::launch_bounds;
+
+  using ReducerConditional =
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+          FunctorType, ReducerType>;
+  using ReducerTypeFwd = typename ReducerConditional::type;
+  using WorkTagFwd =
+      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+          WorkTag, void>::type;
+
+  using Analysis =
+      Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
+          ReducerTypeFwd>;
+
+ public:
+  using pointer_type   = typename Analysis::pointer_type;
+  using value_type     = typename Analysis::value_type;
+  using reference_type = typename Analysis::reference_type;
+  using functor_type   = FunctorType;
+  using size_type      = Kokkos::Experimental::OpenACC::size_type;
+  using index_type     = typename Policy::index_type;
+
+  const FunctorType m_functor;
+  const Policy m_policy;
+  const ReducerType m_reducer;
+  const pointer_type m_result_ptr;
+
+  inline void execute() {
+    const auto begin = m_policy.begin();
+    const auto end   = m_policy.end();
+
+    if (end <= begin) {
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor< OpenACC > can not be executed with "
+          "a range <= 0."));
+    }
+
+    const FunctorType a_functor(m_functor);
+    value_type tmp;
+    typename Analysis::Reducer final_reducer(&a_functor);
+    final_reducer.init(&tmp);
+    static constexpr int UseReducer = is_reducer<ReducerType>::value;
+
+    if constexpr (!UseReducer) {
+      OpenACCReductionWrapper<Sum<value_type>, FunctorType, Policy,
+          WorkTag>::reduce(tmp, m_policy, a_functor);
+    } else {
+      OpenACCReductionWrapper<ReducerType, FunctorType, Policy,
+          WorkTag>::reduce(tmp, m_policy, a_functor);
+    }
+    m_result_ptr[0] = tmp;
+  }
+
+  template <class ViewType>
+  ParallelReduce(
+      const FunctorType& arg_functor, const Policy& arg_policy,
+      const ViewType& arg_result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_reducer(InvalidType()),
+        m_result_ptr(arg_result.data()) {}
+
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ReducerType& reducer)
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_reducer(reducer),
+        m_result_ptr(reducer.view().data()) {}
+};
+
 #endif

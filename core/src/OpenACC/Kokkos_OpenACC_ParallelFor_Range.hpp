@@ -42,16 +42,54 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_DECLARE_OPENACC_HPP
-#define KOKKOS_DECLARE_OPENACC_HPP
+#ifndef KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
+#define KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
 
-#if defined(KOKKOS_ENABLE_OPENACC)
-#include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
-#endif
+#include <Kokkos_Parallel.hpp>
+
+template <class FunctorType, class... Traits>
+class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
+                  Kokkos::Experimental::OpenACC> {
+ public:
+  using Policy = Kokkos::RangePolicy<Traits...>;
+
+ private:
+  using WorkTag      = typename Policy::work_tag;
+
+  const FunctorType m_functor;
+  const Policy m_policy;
+
+  ParallelFor()        = delete;
+  ParallelFor& operator=(const ParallelFor&) = delete;
+
+ public:
+  using functor_type = FunctorType;
+
+  inline void execute() const {
+    const auto begin = m_policy.begin();
+    const auto end   = m_policy.end();
+
+    if (end <= begin) {
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor< OpenACC > can not be executed with "
+          "a range <= 0."));
+    }
+
+    const FunctorType a_functor(m_functor);
+
+    int const async_arg = m_policy.space().acc_async_queue();
+
+    if constexpr (std::is_void<WorkTag>::value) {
+#pragma acc parallel loop gang vector copyin(a_functor) async(async_arg)
+      for (auto i = begin; i < end; ++i) a_functor(i);
+    } else {
+#pragma acc parallel loop gang vector copyin(a_functor) async(async_arg)
+      for (auto i = begin; i < end; ++i) a_functor(WorkTag(), i);
+    }
+  }
+
+  ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
+      : m_functor(arg_functor), m_policy(arg_policy) {}
+};
 
 #endif
