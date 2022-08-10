@@ -32,9 +32,9 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 generate_n(const ExecutionSpace& ex, IteratorType first, Size count,
            Generator g) {
-  Impl::generate_n_impl("Kokkos::generate_n_iterator_api_default", ex, first,
-                        count, std::move(g));
-  return first + count;
+  return Impl::generate_n_exespace_impl(
+      "Kokkos::generate_n_iterator_api_default", ex, first, count,
+      std::move(g));
 }
 
 template <class ExecutionSpace, class IteratorType, class Size, class Generator>
@@ -42,8 +42,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 generate_n(const std::string& label, const ExecutionSpace& ex,
            IteratorType first, Size count, Generator g) {
-  Impl::generate_n_impl(label, ex, first, count, std::move(g));
-  return first + count;
+  return Impl::generate_n_exespace_impl(label, ex, first, count, std::move(g));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties, class Size,
@@ -55,8 +54,8 @@ auto generate_n(const ExecutionSpace& ex,
                 Generator g) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  return Impl::generate_n_impl("Kokkos::generate_n_view_api_default", ex,
-                               begin(view), count, std::move(g));
+  return Impl::generate_n_exespace_impl("Kokkos::generate_n_view_api_default",
+                                        ex, begin(view), count, std::move(g));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties, class Size,
@@ -68,7 +67,8 @@ auto generate_n(const std::string& label, const ExecutionSpace& ex,
                 Generator g) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
-  return Impl::generate_n_impl(label, ex, begin(view), count, std::move(g));
+  return Impl::generate_n_exespace_impl(label, ex, begin(view), count,
+                                        std::move(g));
 }
 
 //
@@ -81,8 +81,7 @@ KOKKOS_FUNCTION
     std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
     generate_n(const TeamHandleType& teamHandle, IteratorType first, Size count,
                Generator g) {
-  Impl::generate_n_team_impl(teamHandle, first, count, std::move(g));
-  return first + count;
+  return Impl::generate_n_team_impl(teamHandle, first, count, std::move(g));
 }
 
 template <

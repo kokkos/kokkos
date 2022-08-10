@@ -57,97 +57,121 @@ struct GenerateFunctor {
   ValueType operator()() const { return static_cast<ValueType>(23); }
 };
 
-template <class ViewType, class AuxView, class MemberType>
-struct FunctorA {
-  AuxView m_viewOfDistances;
+template <class ViewType, class DistancesViewType>
+struct TestFunctorA {
   ViewType m_view;
-  int m_api_pick;
-  int m_numFills;
+  DistancesViewType m_distancesView;
+  std::size_t m_count;
+  int m_apiPick;
 
-  FunctorA(AuxView viewOfDistances, const ViewType view, int apiPick,
-           int numFills)
-      : m_viewOfDistances(viewOfDistances),
-        m_view(view),
-        m_api_pick(apiPick),
-        m_numFills(numFills) {}
+  TestFunctorA(const ViewType view, const DistancesViewType distancesView,
+               std::size_t count, int apiPick)
+      : m_view(view),
+        m_distancesView(distancesView),
+        m_count(count),
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
-    using value_type = typename ViewType::value_type;
-
-    const auto myRowIndex = member.league_rank();
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
+    const auto leagueRank = member.league_rank();
+    const auto myRowIndex = leagueRank;
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0) {
-      auto it = KE::generate_n(member, KE::begin(myRowView), m_numFills,
+    using value_type = typename ViewType::value_type;
+    if (m_apiPick == 0) {
+      auto it = KE::generate_n(member, KE::begin(myRowView), m_count,
                                GenerateFunctor<value_type>());
-      const auto itDist                = KE::distance(KE::begin(myRowView), it);
-      m_viewOfDistances(myRowIndex, 0) = itDist;
-    }
 
-    else if (m_api_pick == 1) {
-      auto it           = KE::generate_n(member, myRowView, m_numFills,
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+      });
+    } else if (m_apiPick == 1) {
+      auto it = KE::generate_n(member, myRowView, m_count,
                                GenerateFunctor<value_type>());
-      const auto itDist = KE::distance(KE::begin(myRowView), it);
-      m_viewOfDistances(myRowIndex, 0) = itDist;
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+      });
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t num_fills,
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, std::size_t count,
             int apiId) {
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range. Pick range so that it does NOT
+  // contain the value produced by the generator (see top of file)
+  // otherwise test check below is ill-posed
+  auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(105), ValueType(523)}, "dataView");
 
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // make view that will contain the computed distances
-  // from begin(v) of the iterators returned by generate_n
-  Kokkos::View<std::size_t**> computedDistances("cd", num_teams, 1);
+  // generate_n returns an iterator so to verify that it is correct
+  // each team stores the distance of the returned iterator from the
+  // beginning of the interval that team operates on and then we check
+  // that these distances match the expected value
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
-  using functor_type =
-      FunctorA<decltype(v), decltype(computedDistances), team_member_type>;
-  functor_type fnc(computedDistances, v, apiId, num_fills);
+  // use CTAD for functor
+  TestFunctorA fnc(dataView, distancesView, count, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  auto cd_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(),
-                                                  computedDistances);
-  for (std::size_t i = 0; i < cd_h.extent(0); ++i) {
-    EXPECT_TRUE(cd_h(i, 0) == num_fills);
-  }
+  // -----------------------------------------------
+  // check
+  // -----------------------------------------------
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  auto distancesView_h   = create_host_space_copy(distancesView);
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    // check that values match what we expect
+    for (std::size_t j = 0; j < count; ++j) {
+      EXPECT_EQ(dataViewAfterOp_h(i, j), static_cast<ValueType>(23));
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) != dataViewBeforeOp_h(i, j));
+    }
+    // all other elements should be unchanged from before op
+    for (std::size_t j = count; j < numCols; ++j) {
+      EXPECT_EQ(dataViewAfterOp_h(i, j), dataViewBeforeOp_h(i, j));
+    }
 
-  // check results
-  auto v_h = create_host_space_copy(v);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      if (j < num_fills) {
-        EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(23));
-      } else {
-        EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
-      }
+    // check that returned iterators are correct
+    if (count > 0) {
+      EXPECT_EQ(distancesView_h(i), std::size_t(count));
+    } else {
+      EXPECT_EQ(distancesView_h(i), std::size_t(0));
     }
   }
 }
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-  // key = num of columns,
-  // value = list of num of elements to generate
-  using v_t                          = std::vector<int>;
-  const std::map<int, v_t> scenarios = {{0, v_t{0}},
-                                        {2, v_t{0, 1, 2}},
-                                        {6, v_t{0, 1, 2, 5}},
-                                        {13, v_t{0, 1, 2, 8, 11}}};
+  // prepare a map where, for a given set of num cols
+  // we provide a list of counts of elements to generate
+  // key = num of columns
+  // value = list of num of elemenents to generate
+  const std::map<int, std::vector<int>> scenarios = {
+      {0, {0}},
+      {2, {0, 1, 2}},
+      {6, {0, 1, 2, 5}},
+      {13, {0, 1, 2, 8, 11}},
+      {56, {0, 1, 2, 8, 11, 33, 56}},
+      {123, {0, 1, 11, 33, 56, 89, 112}}};
 
-  for (int num_teams : team_sizes_to_test) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& scenario : scenarios) {
       const std::size_t numCols = scenario.first;
-      for (int numFills : scenario.second) {
+      for (int countToGenerate : scenario.second) {
         for (int apiId : {0, 1}) {
-          test_A<Tag, ValueType>(num_teams, numCols, numFills, apiId);
+          test_A<Tag, ValueType>(numTeams, numCols, countToGenerate, apiId);
         }
       }
     }

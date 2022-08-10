@@ -81,7 +81,11 @@ struct TestFunctorA {
 
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
-  /* description: */
+  /* description:
+     randomly fill a view and then do a team-level generate
+     with one team per row to assign to each element a value
+     produced via a generator functor
+   */
 
   // -----------------------------------------------
   // prepare data
