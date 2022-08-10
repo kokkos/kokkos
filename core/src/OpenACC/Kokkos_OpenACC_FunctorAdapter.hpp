@@ -42,44 +42,41 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
-#define KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
+#ifndef KOKKOS_KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
+#define KOKKOS_KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
 
-#include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
-#include <Kokkos_Parallel.hpp>
+#include <type_traits>
 
-template <class Functor, class... Traits>
-class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
-                                Kokkos::Experimental::OpenACC> {
-  using Policy = Kokkos::RangePolicy<Traits...>;
-  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
-  Policy m_policy;
+namespace Kokkos::Experimental::Impl {
+
+template <class Functor, class Policy,
+          bool = std::is_void_v<typename Policy::work_tag>>
+class FunctorAdapter {
+  Functor m_functor;
 
  public:
-  ParallelFor(Functor const& functor, Policy const& policy)
-      : m_functor(functor), m_policy(policy) {}
+  FunctorAdapter(Functor const &functor) : m_functor(functor) {}
 
-  void execute() const {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-
-    if (end <= begin) {
-      Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor< OpenACC > can not be executed with "
-          "a range <= 0."));
-    }
-
-    int const async_arg = m_policy.space().acc_async_queue();
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& a_functor(m_functor);
-
-#pragma acc parallel loop gang vector copyin(a_functor) async(async_arg)
-    for (auto i = begin; i < end; ++i) {
-      a_functor(i);
-    }
+  template <class... Args>
+  KOKKOS_FUNCTION void operator()(Args &&...args) const {
+    m_functor(static_cast<Args &&>(args)...);
   }
 };
+
+template <class Functor, class Policy>
+class FunctorAdapter<Functor, Policy, false> {
+  Functor m_functor;
+  using WorkTag = typename Policy::work_tag;
+
+ public:
+  FunctorAdapter(Functor const &functor) : m_functor(functor) {}
+
+  template <class... Args>
+  KOKKOS_FUNCTION void operator()(Args &&...args) const {
+    m_functor(WorkTag(), static_cast<Args &&>(args)...);
+  }
+};
+
+}  // namespace Kokkos::Experimental::Impl
 
 #endif
