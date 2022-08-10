@@ -92,8 +92,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // contain the value produced by the generator (see top of file)
   // otherwise test check below is ill-posed
   auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols, std::pair{ValueType(105), ValueType(523)},
-      "dataView");
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(105), ValueType(523)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
