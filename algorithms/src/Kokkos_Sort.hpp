@@ -50,6 +50,8 @@
 #endif
 
 #include <Kokkos_Core.hpp>
+#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
+#include <std_algorithms/Kokkos_Swap.hpp>
 
 #include <algorithm>
 
@@ -666,13 +668,6 @@ void sort(ViewType view, size_t const begin, size_t const end) {
 }
 
 namespace Impl {
-template <typename Key>
-struct LessThan {
-  KOKKOS_INLINE_FUNCTION bool operator()(const Key lhs, const Key rhs) const {
-    return lhs < rhs;
-  }
-};
-
 // When just doing sort (not sort_by_key), use nullptr_t for ValueViewType.
 // TODO: when nested policies get refactored, this won't need separate team and
 // thread versions.
@@ -687,6 +682,7 @@ KOKKOS_INLINE_FUNCTION void sort_team_impl(const TeamMember& t,
   SizeType n      = keyView.extent(0);
   SizeType npot   = 1;
   SizeType levels = 0;
+  // FIXME: ceiling power-of-two is a common thing to need - make it a utility
   while (npot < n) {
     levels++;
     npot <<= 1;
@@ -718,9 +714,8 @@ KOKKOS_INLINE_FUNCTION void sort_team_impl(const TeamMember& t,
                   keyView(elem2) = key1;
                   if constexpr (!std::is_same_v<ValueViewType,
                                                 std::nullptr_t>) {
-                    auto temp        = valueView(elem1);
-                    valueView(elem1) = valueView(elem2);
-                    valueView(elem2) = temp;
+                    Kokkos::Experimental::swap(valueView(elem1),
+                                               valueView(elem2));
                   }
                 }
               }
@@ -736,9 +731,8 @@ KOKKOS_INLINE_FUNCTION void sort_team_impl(const TeamMember& t,
                   keyView(elem2) = key1;
                   if constexpr (!std::is_same_v<ValueViewType,
                                                 std::nullptr_t>) {
-                    auto temp        = valueView(elem1);
-                    valueView(elem1) = valueView(elem2);
-                    valueView(elem2) = temp;
+                    Kokkos::Experimental::swap(valueView(elem1),
+                                               valueView(elem2));
                   }
                 }
               }
@@ -763,6 +757,7 @@ KOKKOS_INLINE_FUNCTION void sort_thread_impl(const TeamMember& t,
   SizeType n      = keyView.extent(0);
   SizeType npot   = 1;
   SizeType levels = 0;
+  // FIXME: same as above, make ceiling power-of-two a utility function
   while (npot < n) {
     levels++;
     npot <<= 1;
@@ -794,9 +789,8 @@ KOKKOS_INLINE_FUNCTION void sort_thread_impl(const TeamMember& t,
                   keyView(elem2) = key1;
                   if constexpr (!std::is_same_v<ValueViewType,
                                                 std::nullptr_t>) {
-                    auto temp        = valueView(elem1);
-                    valueView(elem1) = valueView(elem2);
-                    valueView(elem2) = temp;
+                    Kokkos::Experimental::swap(valueView(elem1),
+                                               valueView(elem2));
                   }
                 }
               }
@@ -812,9 +806,8 @@ KOKKOS_INLINE_FUNCTION void sort_thread_impl(const TeamMember& t,
                   keyView(elem2) = key1;
                   if constexpr (!std::is_same_v<ValueViewType,
                                                 std::nullptr_t>) {
-                    auto temp        = valueView(elem1);
-                    valueView(elem1) = valueView(elem2);
-                    valueView(elem2) = temp;
+                    Kokkos::Experimental::swap(valueView(elem1),
+                                               valueView(elem2));
                   }
                 }
               }
@@ -828,9 +821,9 @@ KOKKOS_INLINE_FUNCTION void sort_thread_impl(const TeamMember& t,
 template <class TeamMember, class ViewType>
 KOKKOS_INLINE_FUNCTION void sort_team(const TeamMember& t,
                                       const ViewType& view) {
-  Impl::sort_team_impl(
-      t, view, nullptr,
-      Impl::LessThan<typename ViewType::non_const_value_type>());
+  Impl::sort_team_impl(t, view, nullptr,
+                       Experimental::Impl::StdAlgoLessThanBinaryPredicate<
+                           typename ViewType::non_const_value_type>());
 }
 
 template <class TeamMember, class ViewType, class Comparator>
@@ -843,9 +836,9 @@ template <class TeamMember, class KeyViewType, class ValueViewType>
 KOKKOS_INLINE_FUNCTION void sort_by_key_team(const TeamMember& t,
                                              const KeyViewType& keyView,
                                              const ValueViewType& valueView) {
-  Impl::sort_team_impl(
-      t, keyView, valueView,
-      Impl::LessThan<typename KeyViewType::non_const_value_type>());
+  Impl::sort_team_impl(t, keyView, valueView,
+                       Experimental::Impl::StdAlgoLessThanBinaryPredicate<
+                           typename KeyViewType::non_const_value_type>());
 }
 
 template <class TeamMember, class KeyViewType, class ValueViewType,
@@ -860,9 +853,9 @@ KOKKOS_INLINE_FUNCTION void sort_by_key_team(const TeamMember& t,
 template <class TeamMember, class ViewType>
 KOKKOS_INLINE_FUNCTION void sort_thread(const TeamMember& t,
                                         const ViewType& view) {
-  Impl::sort_thread_impl(
-      t, view, nullptr,
-      Impl::LessThan<typename ViewType::non_const_value_type>());
+  Impl::sort_thread_impl(t, view, nullptr,
+                         Experimental::Impl::StdAlgoLessThanBinaryPredicate<
+                             typename ViewType::non_const_value_type>());
 }
 
 template <class TeamMember, class ViewType, class Comparator>
@@ -876,9 +869,9 @@ template <class TeamMember, class KeyViewType, class ValueViewType>
 KOKKOS_INLINE_FUNCTION void sort_by_key_thread(const TeamMember& t,
                                                const KeyViewType& keyView,
                                                const ValueViewType& valueView) {
-  Impl::sort_thread_impl(
-      t, keyView, valueView,
-      Impl::LessThan<typename KeyViewType::non_const_value_type>());
+  Impl::sort_thread_impl(t, keyView, valueView,
+                         Experimental::Impl::StdAlgoLessThanBinaryPredicate<
+                             typename KeyViewType::non_const_value_type>());
 }
 
 template <class TeamMember, class KeyViewType, class ValueViewType,
