@@ -65,19 +65,18 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
     auto const end   = m_policy.end();
 
     if (end <= begin) {
-      Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor< OpenACC > can not be executed with "
-          "a range <= 0."));
+      return;
     }
 
-    int const async_arg = m_policy.space().acc_async_queue();
     // avoid implicit capture of *this which would yield a memory access
     // violation when executing on the device
-    auto const& a_functor(m_functor);
+    auto const& functor(m_functor);
 
-#pragma acc parallel loop gang vector copyin(a_functor) async(async_arg)
+    int const async_arg = m_policy.space().acc_async_queue();
+
+#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
     for (auto i = begin; i < end; ++i) {
-      a_functor(i);
+      functor(i);
     }
   }
 };

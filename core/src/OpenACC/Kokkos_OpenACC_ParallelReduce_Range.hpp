@@ -49,338 +49,341 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
-// Default to catch all non implemented Reducers
-template <class Reducer, class FunctorType, class ExePolicy>
-struct OpenACCReductionWrapper {
-  using value_type = typename Reducer::value_type;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type&) {
+// primary template: catch-all non-implemented custom reducers
+template <class Functor, class Reducer, class Policy>
+struct OpenACCParallelReduceHelper {
+  OpenACCParallelReduceHelper(Functor const&, Reducer const&, Policy const&) {
     Kokkos::abort(
-        "[ERROR in reduce()] The given Reducer is not implemented in the "
-        "OpenACC backend.\n");
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type&, const ExePolicy&, const FunctorType&) {
-    Kokkos::abort(
-        "[ERROR in reduce()] The given Reducer is not implemented in the "
-        "OpenACC backend.\n");
+        "[ERROR in ParallelReduce<Functor, Reducer, RangePolicy, OpenACC>] not "
+        "implemented.\n");
   }
 };
 
-// Specializations with implemented Reducers
+}  // namespace Kokkos::Experimental::Impl
 
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<Sum<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::sum();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    value_type ltmp;
-    init(ltmp);
-
-#pragma acc parallel loop gang vector reduction(+ : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<Prod<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::prod();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(* : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<Min<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::min();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(min : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<Max<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::max();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(max : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<LAnd<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::land();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(&& : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<LOr<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-  using result_view_type = Kokkos::View<value_type, Space>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::lor();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(|| : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<BAnd<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::band();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(& : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) {
-      a_functor(i, ltmp);
-    }
-    tmp = ltmp;
-  }
-};
-
-template <class Scalar, class Space, class FunctorType, class... Traits>
-struct OpenACCReductionWrapper<BOr<Scalar, Space>, FunctorType,
-                               Kokkos::RangePolicy<Traits...>> {
- public:
-  using value_type = typename std::remove_cv<Scalar>::type;
-  using Policy     = Kokkos::RangePolicy<Traits...>;
-
-#pragma acc routine seq
-  KOKKOS_FUNCTION
-  static void init(value_type& val) {
-    val = reduction_identity<value_type>::bor();
-  }
-
-  KOKKOS_FUNCTION
-  static void reduce(value_type& tmp, const Policy& m_policy,
-                     const FunctorType& m_functor) {
-    auto const begin = m_policy.begin();
-    auto const end   = m_policy.end();
-    Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> a_functor =
-        m_functor;
-    value_type ltmp;
-    init(ltmp);
-#pragma acc parallel loop gang vector reduction(| : ltmp) copyin(a_functor)
-    for (auto i = begin; i < end; i++) a_functor(i, ltmp);
-    tmp = ltmp;
-  }
-};
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-template <class FunctorType, class ReducerType, class... Traits>
-class Kokkos::Impl::ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>,
+template <class Functor, class ReducerType, class... Traits>
+class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
+  using Policy = RangePolicy<Traits...>;
+
+  using Analysis = FunctorAnalysis<
+      FunctorPatternInterface::REDUCE, Policy,
+      std::conditional_t<std::is_same_v<InvalidType, ReducerType>, Functor,
+                         ReducerType>>;
+
+  using Pointer   = typename Analysis::pointer_type;
+  using ValueType = typename Analysis::value_type;
+
+  Functor m_functor;
+  Policy m_policy;
+  ReducerType m_reducer;
+  Pointer m_result_ptr;
+
  public:
-  using Policy = Kokkos::RangePolicy<Traits...>;
+  ParallelReduce(Functor const& functor, Policy const& policy,
+                 ReducerType const& reducer)
+      : m_functor(functor),
+        m_policy(policy),
+        m_reducer(reducer),
+        m_result_ptr(reducer.view().data()) {}
 
- private:
-  using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
-
-  using Analysis =
-      Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy,
-                                    ReducerTypeFwd>;
-
- public:
-  using pointer_type = typename Analysis::pointer_type;
-  using value_type   = typename Analysis::value_type;
-
-  const FunctorType m_functor;
-  const Policy m_policy;
-  const ReducerType m_reducer;
-  const pointer_type m_result_ptr;
+  template <class ViewType>
+  ParallelReduce(
+      const Functor& functor, const Policy& policy, const ViewType& result,
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+      : m_functor(functor),
+        m_policy(policy),
+        m_reducer(InvalidType()),
+        m_result_ptr(result.data()) {}
 
   void execute() {
     auto const begin = m_policy.begin();
     auto const end   = m_policy.end();
 
     if (end <= begin) {
-      Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor< OpenACC > can not be executed with "
-          "a range <= 0."));
+      return;
     }
 
-    auto const& a_functor = m_functor;
-    value_type tmp;
-    typename Analysis::Reducer final_reducer(&a_functor);
-    final_reducer.init(&tmp);
-    OpenACCReductionWrapper<std::conditional_t<is_reducer_v<ReducerType>,
-                                               ReducerType, Sum<value_type>>,
-                            FunctorType, Policy>::reduce(tmp, m_policy,
-                                                         a_functor);
-    m_result_ptr[0] = tmp;
+    ValueType val;
+    typename Analysis::Reducer final_reducer(&m_functor);
+    final_reducer.init(&val);
+
+    Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
+        Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy>(m_functor),
+        std::conditional_t<is_reducer_v<ReducerType>, ReducerType,
+                           Sum<ValueType>>(val),
+        m_policy);
+
+    *m_result_ptr = val;
   }
+};
 
-  template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(InvalidType()),
-        m_result_ptr(arg_result.data()) {}
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::Sum<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
 
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& reducer)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              v
+#pragma acc parallel loop gang vector reduction(+ : val) copyin(functor) async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::Prod<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              v
+#pragma acc parallel loop gang vector reduction(* : val) copyin(functor) async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::Min<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              vvv
+#pragma acc parallel loop gang vector reduction(min                    \
+                                                : val) copyin(functor) \
+    async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::Max<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              vvv
+#pragma acc parallel loop gang vector reduction(max                    \
+                                                : val) copyin(functor) \
+    async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::LAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              vv
+#pragma acc parallel loop gang vector reduction(&& : val) copyin(functor) \
+    async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::LOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              vv
+#pragma acc parallel loop gang vector reduction(||                     \
+                                                : val) copyin(functor) \
+    async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::BAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              v
+#pragma acc parallel loop gang vector reduction(& : val) copyin(functor) \
+    async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
+};
+
+template <class Functor, class Scalar, class Space, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
+    Functor, Kokkos::BOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+  //                 ^^^
+  using Policy    = RangePolicy<Traits...>;
+  using Reducer   = Sum<Scalar, Space>;
+  using ValueType = typename Reducer::value_type;
+
+  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
+                              Policy const& policy) {
+    auto const begin = policy.begin();
+    auto const end   = policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    ValueType val;
+    reducer.init(val);
+
+    int const async_arg = policy.space().acc_async_queue();
+
+//                                              v
+#pragma acc parallel loop gang vector reduction(|                      \
+                                                : val) copyin(functor) \
+    async(async_arg)
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+
+    reducer.reference() = val;
+  }
 };
 
 #endif

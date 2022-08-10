@@ -58,7 +58,7 @@ class FunctorAdapter {
   FunctorAdapter(Functor const &functor) : m_functor(functor) {}
 
   template <class... Args>
-  KOKKOS_FUNCTION void operator()(Args &&...args) const {
+  KOKKOS_FUNCTION void operator()(Args &&... args) const {
     m_functor(static_cast<Args &&>(args)...);
   }
 };
@@ -72,7 +72,7 @@ class FunctorAdapter<Functor, Policy, false> {
   FunctorAdapter(Functor const &functor) : m_functor(functor) {}
 
   template <class... Args>
-  KOKKOS_FUNCTION void operator()(Args &&...args) const {
+  KOKKOS_FUNCTION void operator()(Args &&... args) const {
     m_functor(WorkTag(), static_cast<Args &&>(args)...);
   }
 };
