@@ -150,7 +150,7 @@ template <class ExecutionSpace>
 struct Kokkos::Impl::DeepCopy<
     Kokkos::HostSpace, Kokkos::Experimental::OpenACCSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
-    if (n > 0) acc_memcpy_from_device_async(dst, const_cast<void*>(src), n);
+    if (n > 0) acc_memcpy_from_device(dst, const_cast<void*>(src), n);
   }
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence(
