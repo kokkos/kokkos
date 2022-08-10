@@ -474,11 +474,9 @@ using is_always_assignable = is_always_assignable_impl<
     std::remove_reference_t<View1>,
     std::remove_const_t<std::remove_reference_t<View2>>>;
 
-#ifdef KOKKOS_ENABLE_CXX17
 template <class T1, class T2>
 inline constexpr bool is_always_assignable_v =
     is_always_assignable<T1, T2>::value;
-#endif
 
 template <class... ViewTDst, class... ViewTSrc>
 constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
@@ -489,13 +487,8 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
       Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
                                 typename DstTraits::specialize>;
 
-#ifdef KOKKOS_ENABLE_CXX17
   return is_always_assignable_v<Kokkos::View<ViewTDst...>,
                                 Kokkos::View<ViewTSrc...>> ||
-#else
-  return is_always_assignable<Kokkos::View<ViewTDst...>,
-                              Kokkos::View<ViewTSrc...>>::value ||
-#endif
          (mapping_type::is_assignable &&
           ((DstTraits::dimension::rank_dynamic >= 1) ||
            (dst.static_extent(0) == src.extent(0))) &&

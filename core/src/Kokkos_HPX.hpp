@@ -455,7 +455,7 @@ class HPX {
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_on_exit_parallel {
+  struct [[nodiscard]] reset_on_exit_parallel {
     HPX const &m_space;
     reset_on_exit_parallel(HPX const &space) : m_space(space) {}
     ~reset_on_exit_parallel() {
@@ -471,21 +471,21 @@ class HPX {
   // data. It does, however, still decrement the parallel region count. It is
   // meant for use in parallel regions which do not capture the execution space
   // instance.
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_count_on_exit_parallel {
-    reset_count_on_exit_parallel() {}
+  struct [[nodiscard]] reset_count_on_exit_parallel {
+    reset_count_on_exit_parallel() = default;
     ~reset_count_on_exit_parallel() {
       HPX::impl_decrement_active_parallel_region_count();
     }
   };
 #else
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_on_exit_parallel {
-    reset_on_exit_parallel(HPX const &) {}
-    ~reset_on_exit_parallel() {}
+  struct [[nodiscard]] reset_on_exit_parallel {
+    reset_on_exit_parallel(HPX const &) = default;
+    ~reset_on_exit_parallel()           = default;
   };
 
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_count_on_exit_parallel {
-    reset_count_on_exit_parallel() {}
-    ~reset_count_on_exit_parallel() {}
+  struct [[nodiscard]] reset_count_on_exit_parallel {
+    reset_count_on_exit_parallel()  = default;
+    ~reset_count_on_exit_parallel() = default;
   };
 #endif
 
