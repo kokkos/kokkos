@@ -44,24 +44,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 1800)
-
-namespace {
-
-// error: expression must have a constant value
-//   std::enable_if_t<!has_deprecated_cuda_impl_initialize_v<T>>
-constexpr bool
-test_compiler_upgrade_needed_for_detection_idiom_and_variable_template() {
-  return true;
-}
-static_assert(
-    test_compiler_upgrade_needed_for_detection_idiom_and_variable_template(),
-    "Intel C++ compiler is awesome");
-
-}  // namespace
-
-#else
-
 // The purpose of this compile-only test is twofold:
 // 1. mimic Legion's use of Kokkos implementation details for initializing the
 //    exectution environment
@@ -153,5 +135,3 @@ static_assert(std::is_void<decltype(
 #endif
 
 }  // namespace
-
-#endif

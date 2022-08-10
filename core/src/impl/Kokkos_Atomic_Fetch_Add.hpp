@@ -171,8 +171,7 @@ __inline__ __device__ T atomic_fetch_add(
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
-#if defined(KOKKOS_ENABLE_ASM) && (defined(KOKKOS_ENABLE_ISA_X86_64) || \
-                                   defined(KOKKOS_KNL_USE_ASM_WORKAROUND))
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 inline int atomic_fetch_add(volatile int* dest, const int val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
