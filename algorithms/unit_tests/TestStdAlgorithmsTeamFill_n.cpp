@@ -103,7 +103,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
   // -----------------------------------------------
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
-  // values from an arbitrary range (11, 523)
+  // values from an arbitrary range
   auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
       LayoutTag{}, numTeams, numCols,
       Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
