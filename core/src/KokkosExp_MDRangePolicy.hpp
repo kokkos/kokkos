@@ -177,38 +177,16 @@ TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
 }  // namespace Impl
 
 // multi-dimensional iteration pattern
-//
-// Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
-// guides) are generated -> MDRangePolicy<>, which is incorrect.  If we make it
-// a template specialization instead, no implicit CTAD is generated.  This works
-// because there has to be at least one property specified which is Rank<N>;
-// otherwise, we'd get the static assert "Kokkos::Error: MD iteration pattern
-// not defined".  The template specialization uses <P, Properties...>
-// for correctness.
-
 template <typename... Properties>
 struct MDRangePolicy;
 
-// TODO remove the MDRangePolicy primary template and leave only the
-// MDRangePolicy<P, Properties...> specialization
-#ifdef KOKKOS_IMPL_MDRANGEPOLICY_PRIMARY_TEMPLATE
-
-template <typename... Properties>
-struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
-  using traits       = Kokkos::Impl::PolicyTraits<Properties...>;
-  using range_policy = RangePolicy<Properties...>;
-
-  typename traits::execution_space m_space;
-
-  using impl_range_policy =
-      RangePolicy<typename traits::execution_space,
-                  typename traits::schedule_type, typename traits::index_type>;
-
-  using execution_policy =
-      MDRangePolicy<Properties...>;  // needed for is_execution_space
-                                     // interrogation
-#else
-
+// Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
+// guides) are generated -> MDRangePolicy<> by some compilers, which is
+// incorrect.  By making it a template specialization instead, no implicit CTAD
+// is generated.  This works because there has to be at least one property
+// specified (which is Rank<...>); otherwise, we'd get the static_assert
+// "Kokkos::Error: MD iteration pattern not defined".  This template
+// specialization uses <P, Properties...> in all places for correctness.
 template <typename P, typename... Properties>
 struct MDRangePolicy<P, Properties...>
     : public Kokkos::Impl::PolicyTraits<P, Properties...> {
@@ -224,8 +202,6 @@ struct MDRangePolicy<P, Properties...>
   using execution_policy =
       MDRangePolicy<P, Properties...>;  // needed for is_execution_space
                                         // interrogation
-
-#endif
 
   template <class... OtherProperties>
   friend struct MDRangePolicy;
