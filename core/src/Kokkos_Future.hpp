@@ -445,10 +445,9 @@ struct is_future : public std::false_type {};
 
 template <typename ValueType, typename Scheduler, typename ExecSpace>
 struct is_future<BasicFuture<ValueType, Scheduler>, ExecSpace>
-    : std::integral_constant<
-          bool,
+    : std::bool_constant<
           std::is_same<ExecSpace, typename Scheduler::execution_space>::value ||
-              std::is_void<ExecSpace>::value> {};
+          std::is_void<ExecSpace>::value> {};
 
 ////////////////////////////////////////////////////////////////////////////////
 // END OLD CODE
