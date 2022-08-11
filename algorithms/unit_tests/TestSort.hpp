@@ -426,10 +426,12 @@ struct TeamSortFunctor {
     SizeType begin = offsets(i);
     SizeType end   = offsets(i + 1);
     if (sortDescending)
-      sort_team(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
-                GreaterThan<KeyType>());
+      Kokkos::Experimental::sort_team(
+          t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
+          GreaterThan<KeyType>());
     else
-      sort_team(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)));
+      Kokkos::Experimental::sort_team(
+          t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)));
   }
   KeyViewType keys;
   OffsetViewType offsets;
@@ -454,12 +456,14 @@ struct TeamSortByKeyFunctor {
     SizeType begin = offsets(i);
     SizeType end   = offsets(i + 1);
     if (sortDescending) {
-      sort_by_key_team(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
-                       Kokkos::subview(values, Kokkos::make_pair(begin, end)),
-                       GreaterThan<KeyType>());
+      Kokkos::Experimental::sort_by_key_team(
+          t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
+          Kokkos::subview(values, Kokkos::make_pair(begin, end)),
+          GreaterThan<KeyType>());
     } else {
-      sort_by_key_team(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
-                       Kokkos::subview(values, Kokkos::make_pair(begin, end)));
+      Kokkos::Experimental::sort_by_key_team(
+          t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
+          Kokkos::subview(values, Kokkos::make_pair(begin, end)));
     }
   }
   KeyViewType keys;
@@ -486,10 +490,12 @@ struct ThreadSortFunctor {
       SizeType begin = offsets(i);
       SizeType end   = offsets(i + 1);
       if (sortDescending)
-        sort_thread(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
-                    GreaterThan<KeyType>());
+        Kokkos::Experimental::sort_thread(
+            t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
+            GreaterThan<KeyType>());
       else
-        sort_thread(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)));
+        Kokkos::Experimental::sort_thread(
+            t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)));
     }
   }
   KeyViewType keys;
@@ -518,12 +524,12 @@ struct ThreadSortByKeyFunctor {
       SizeType begin = offsets(i);
       SizeType end   = offsets(i + 1);
       if (sortDescending) {
-        sort_by_key_thread(
+        Kokkos::Experimental::sort_by_key_thread(
             t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
             Kokkos::subview(values, Kokkos::make_pair(begin, end)),
             GreaterThan<KeyType>());
       } else {
-        sort_by_key_thread(
+        Kokkos::Experimental::sort_by_key_thread(
             t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
             Kokkos::subview(values, Kokkos::make_pair(begin, end)));
       }
