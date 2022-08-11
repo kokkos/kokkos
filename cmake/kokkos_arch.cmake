@@ -581,8 +581,32 @@ IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
     STRING(LENGTH "${GPU_ARCHS}" len_str)
     # enumerator always output gfx000 as the first line
     IF(${len_str} LESS 8)
-      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                         "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
+                         "Please manually enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+    # check for known gpu archs, otherwise error out
+    ELSE()
+      STRING(REGEX MATCH "(gfx900|gfx906|gfx908|gfx90a)" DETECTED_GPU_ARCH ${GPU_ARCHS})
+      IF("${DETECTED_GPU_ARCH}" STREQUAL "gfx900")
+        SET(AMD_ARCHITECTURE VEGA900)
+        KOKKOS_SET_OPTION(ARCH_VEGA900 ON)
+        CHECK_AMDGPU_ARCH(VEGA900 gfx900) # Radeon Instinct MI25
+      ELSEIF("${DETECTED_GPU_ARCH}" STREQUAL "gfx906")
+        SET(AMD_ARCHITECTURE VEGA906)
+        KOKKOS_SET_OPTION(ARCH_VEGA906 ON)
+        CHECK_AMDGPU_ARCH(VEGA906 gfx906) # Radeon Instinct MI50 and MI60
+      ELSEIF("${DETECTED_GPU_ARCH}" STREQUAL "gfx908")
+        SET(AMD_ARCHITECTURE VEGA908)
+        KOKKOS_SET_OPTION(ARCH_VEGA908 ON)
+        CHECK_AMDGPU_ARCH(VEGA908 gfx908) # Radeon Instinct MI100
+      ELSEIF("${DETECTED_GPU_ARCH}" STREQUAL "gfx90a")
+        SET(AMD_ARCHITECTURE VEGA90a)
+        KOKKOS_SET_OPTION(ARCH_VEGA90a ON)
+        CHECK_AMDGPU_ARCH(VEGA90A gfx90a) # Radeon Instinct MI200
+      ELSE()
+        MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
+                         "Please manually enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+      ENDIF()
+      LIST(APPEND KOKKOS_ENABLED_ARCH_LIST ${AMD_ARCHITECTURE})
     ENDIF()
   ELSE()
     MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
