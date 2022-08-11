@@ -596,11 +596,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_CONSTEXPR_14 constexpr
-#define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
-#endif
-
 // Guard intel compiler version 19 and older
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
@@ -647,11 +642,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #if defined(__CUDA_ARCH__) && !defined(__CUDACC__) && \
     !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_CUDA)
 #undef __CUDA_ARCH__
-#endif
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_THREAD_LOCAL \
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") thread_local
 #endif
 
 #if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \

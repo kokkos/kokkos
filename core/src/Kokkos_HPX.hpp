@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_HPX_HPP
 #define KOKKOS_HPX_HPP
@@ -371,13 +367,6 @@ class HPX {
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static std::vector<HPX> partition(...) {
-    Kokkos::abort(
-        "Kokkos::Experimental::HPX::partition_master: can't partition an HPX "
-        "instance\n");
-    return std::vector<HPX>();
-  }
-
   template <typename F>
   KOKKOS_DEPRECATED static void partition_master(
       F const &, int requested_num_partitions = 0, int = 0) {
