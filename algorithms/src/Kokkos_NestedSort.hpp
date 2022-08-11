@@ -42,11 +42,12 @@
 //@HEADER
 */
 
-#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
-#include <std_algorithms/Kokkos_Swap.hpp>
-
 #ifndef KOKKOS_NESTEDSORT_HPP_
 #define KOKKOS_NESTEDSORT_HPP_
+
+#include <Kokkos_Core.hpp>
+#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
+#include <std_algorithms/Kokkos_Swap.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -225,6 +226,6 @@ KOKKOS_INLINE_FUNCTION void sort_by_key_thread(const TeamMember& t,
                          Impl::NestedRange<false>());
 }
 
-}
-}
+}  // namespace Experimental
+}  // namespace Kokkos
 #endif
