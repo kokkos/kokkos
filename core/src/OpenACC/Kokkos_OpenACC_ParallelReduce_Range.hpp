@@ -48,11 +48,13 @@
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
+#include <type_traits>
 
 namespace Kokkos::Experimental::Impl {
 
 // primary template: catch-all non-implemented custom reducers
-template <class Functor, class Reducer, class Policy>
+template <class Functor, class Reducer, class Policy,
+          bool = std::is_arithmetic_v<typename Reducer::value_type>>
 struct OpenACCParallelReduceHelper {
   OpenACCParallelReduceHelper(Functor const&, Reducer const&, Policy const&) {
     Kokkos::abort(
@@ -122,7 +124,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Sum<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::Sum<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
   //                 ^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
@@ -154,7 +156,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Prod<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::Prod<Scalar, Space>, Kokkos::RangePolicy<Traits...>,
+    true> {
   //                 ^^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
@@ -186,7 +189,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Min<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::Min<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
   //                 ^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
@@ -220,8 +223,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Max<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
-  //                 ^^^
+    Functor, Kokkos::Max<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
+  //                 ^^^A
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
   using ValueType = typename Reducer::value_type;
@@ -254,7 +257,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::LAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::LAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>,
+    true> {
   //                 ^^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
@@ -287,7 +291,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::LOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::LOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
   //                 ^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
@@ -321,7 +325,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::BAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::BAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>,
+    true> {
   //                 ^^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
@@ -354,7 +359,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::BOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>> {
+    Functor, Kokkos::BOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
   //                 ^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
