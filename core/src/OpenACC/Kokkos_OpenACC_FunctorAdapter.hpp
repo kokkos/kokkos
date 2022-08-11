@@ -49,22 +49,8 @@
 
 namespace Kokkos::Experimental::Impl {
 
-template <class Functor, class Policy,
-          bool = std::is_void_v<typename Policy::work_tag>>
-class FunctorAdapter {
-  Functor m_functor;
-
- public:
-  FunctorAdapter(Functor const &functor) : m_functor(functor) {}
-
-  template <class... Args>
-  KOKKOS_FUNCTION void operator()(Args &&... args) const {
-    m_functor(static_cast<Args &&>(args)...);
-  }
-};
-
 template <class Functor, class Policy>
-class FunctorAdapter<Functor, Policy, false> {
+class FunctorAdapter {
   Functor m_functor;
   using WorkTag = typename Policy::work_tag;
 
@@ -73,7 +59,11 @@ class FunctorAdapter<Functor, Policy, false> {
 
   template <class... Args>
   KOKKOS_FUNCTION void operator()(Args &&... args) const {
-    m_functor(WorkTag(), static_cast<Args &&>(args)...);
+    if constexpr (std::is_void_v<WorkTag>) {
+      m_functor(static_cast<Args &&>(args)...);
+    }else {
+      m_functor(WorkTag(), static_cast<Args &&>(args)...);
+    }
   }
 };
 
