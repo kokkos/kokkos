@@ -57,9 +57,7 @@ template <class Functor, class Reducer, class Policy,
           bool = std::is_arithmetic_v<typename Reducer::value_type>>
 struct OpenACCParallelReduceHelper {
   OpenACCParallelReduceHelper(Functor const&, Reducer const&, Policy const&) {
-    Kokkos::abort(
-        "[ERROR in ParallelReduce<Functor, Reducer, RangePolicy, OpenACC>] not "
-        "implemented.\n");
+    static_assert(std::is_void_v<Functor>, "not implemented");
   }
 };
 
