@@ -120,281 +120,131 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
   }
 };
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Sum<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
-  //                 ^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = Sum<Scalar, Space>;
-  //              ^^^
-  using ValueType = typename Reducer::value_type;
+namespace Kokkos::Experimental::Impl {
 
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              v
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceSum(IndexType begin, IndexType end, ValueType& val,
+                              Functor const& functor, int async_arg) {
 #pragma acc parallel loop gang vector reduction(+ : val) copyin(functor) async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Prod<Scalar, Space>, Kokkos::RangePolicy<Traits...>,
-    true> {
-  //                 ^^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = Prod<Scalar, Space>;
-  //              ^^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              v
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceProd(IndexType begin, IndexType end, ValueType& val,
+                               Functor const& functor, int async_arg) {
 #pragma acc parallel loop gang vector reduction(* : val) copyin(functor) async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Min<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
-  //                 ^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = Min<Scalar, Space>;
-  //              ^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              vvv
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceMin(IndexType begin, IndexType end, ValueType& val,
+                              Functor const& functor, int async_arg) {
 #pragma acc parallel loop gang vector reduction(min                    \
                                                 : val) copyin(functor) \
     async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::Max<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
-  //                 ^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = Max<Scalar, Space>;
-  //              ^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              vvv
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceMax(IndexType begin, IndexType end, ValueType& val,
+                              Functor const& functor, int async_argc) {
 #pragma acc parallel loop gang vector reduction(max                    \
                                                 : val) copyin(functor) \
     async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::LAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>,
-    true> {
-  //                 ^^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = LAnd<Scalar, Space>;
-  //              ^^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              vv
-#pragma acc parallel loop gang vector reduction(&& : val) copyin(functor) \
-    async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceLAnd(IndexType begin, IndexType end, ValueType& val,
+                               Functor const& functor, int async_arg) {
+#pragma acc parallel loop gang vector reduction(&& : val) copyin(functor) async(async_arg)
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::LOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
-  //                 ^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = LOr<Scalar, Space>;
-  //              ^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              vv
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceLOr(IndexType begin, IndexType end, ValueType& val,
+                              Functor const& functor, int async_arg) {
 #pragma acc parallel loop gang vector reduction(||                     \
                                                 : val) copyin(functor) \
     async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::BAnd<Scalar, Space>, Kokkos::RangePolicy<Traits...>,
-    true> {
-  //                 ^^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = BAnd<Scalar, Space>;
-  //              ^^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              v
-#pragma acc parallel loop gang vector reduction(& : val) copyin(functor) \
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceBAnd(IndexType begin, IndexType end, ValueType& val,
+                               Functor const& functor, int async_arg) {
+#pragma acc parallel loop gang vector reduction(&                     \
+                                                : val) copyin(functor) \
     async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
 
-template <class Functor, class Scalar, class Space, class... Traits>
-struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Kokkos::BOr<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
-  //                 ^^^
-  using Policy  = RangePolicy<Traits...>;
-  using Reducer = BOr<Scalar, Space>;
-  //              ^^^
-  using ValueType = typename Reducer::value_type;
-
-  OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
-                              Policy const& policy) {
-    auto const begin = policy.begin();
-    auto const end   = policy.end();
-
-    if (end <= begin) {
-      return;
-    }
-
-    ValueType val;
-    reducer.init(val);
-
-    int const async_arg = policy.space().acc_async_queue();
-
-//                                              v
+template <class IndexType, class ValueType, class Functor>
+void OpenACCParallelReduceBOr(IndexType begin, IndexType end, ValueType& val,
+                              Functor const& functor, int async_arg) {
 #pragma acc parallel loop gang vector reduction(|                      \
                                                 : val) copyin(functor) \
     async(async_arg)
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-
-    reducer.reference() = val;
+  for (auto i = begin; i < end; i++) {
+    functor(i, val);
   }
-};
+}
+
+}  // namespace Kokkos::Experimental::Impl
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(REDUCER)                    \
+  template <class Functor, class Scalar, class Space, class... Traits>         \
+  struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<              \
+      Functor, Kokkos::REDUCER<Scalar, Space>, Kokkos::RangePolicy<Traits...>, \
+      true> {                                                                  \
+    using Policy    = RangePolicy<Traits...>;                                  \
+    using Reducer   = REDUCER<Scalar, Space>;                                  \
+    using ValueType = typename Reducer::value_type;                            \
+                                                                               \
+    OpenACCParallelReduceHelper(Functor const& functor,                        \
+                                Reducer const& reducer,                        \
+                                Policy const& policy) {                        \
+      auto const begin = policy.begin();                                       \
+      auto const end   = policy.end();                                         \
+                                                                               \
+      if (end <= begin) {                                                      \
+        return;                                                                \
+      }                                                                        \
+                                                                               \
+      ValueType val;                                                           \
+      reducer.init(val);                                                       \
+                                                                               \
+      int const async_arg = policy.space().acc_async_queue();                  \
+                                                                               \
+      OpenACCParallelReduce##REDUCER(begin, end, val, functor, async_arg);     \
+                                                                               \
+      reducer.reference() = val;                                               \
+    }                                                                          \
+  }
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Sum);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Prod);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Min);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Max);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(LAnd);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(LOr);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BAnd);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BOr);
+
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER
 
 #endif
