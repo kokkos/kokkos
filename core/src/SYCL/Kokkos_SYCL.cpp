@@ -142,10 +142,6 @@ void SYCL::impl_static_fence(const std::string& name) {
       });
 }
 
-int SYCL::sycl_device() const {
-  return impl_internal_space_instance()->m_syclDev;
-}
-
 void SYCL::impl_initialize(InitializationSettings const& settings) {
   std::vector<sycl::device> gpu_devices =
       sycl::device::get_devices(sycl::info::device_type::gpu);
@@ -158,11 +154,13 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
     !defined(KOKKOS_ARCH_AMPERE)
   if (!settings.has_device_id() && gpu_devices.empty()) {
     Impl::SYCLInternal::singleton().initialize(sycl::device());
+    Impl::SYCLInternal::m_syclDev = 0;
     return;
   }
 #endif
-  using Kokkos::Impl::get_gpu;
-  Impl::SYCLInternal::singleton().initialize(gpu_devices[get_gpu(settings)]);
+  const auto id = ::Kokkos::Impl::get_gpu(settings);
+  Impl::SYCLInternal::singleton().initialize(gpu_devices[id]);
+  Impl::SYCLInternal::m_syclDev = id;
 }
 
 std::ostream& SYCL::impl_sycl_info(std::ostream& os,

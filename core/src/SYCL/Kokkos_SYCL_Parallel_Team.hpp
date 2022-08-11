@@ -164,9 +164,6 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   inline void impl_set_vector_length(size_t size) { m_vector_length = size; }
   inline void impl_set_team_size(size_t size) { m_team_size = size; }
   int impl_vector_length() const { return m_vector_length; }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED int vector_length() const { return impl_vector_length(); }
-#endif
 
   int team_size() const { return m_team_size; }
 

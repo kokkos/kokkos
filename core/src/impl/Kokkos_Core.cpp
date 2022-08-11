@@ -624,11 +624,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_ASM", "no");
 #endif
-#ifdef KOKKOS_ENABLE_CXX14
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX14", "yes");
-#else
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX14", "no");
-#endif
 #ifdef KOKKOS_ENABLE_CXX17
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX17", "yes");
 #else
@@ -638,6 +633,11 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX20", "yes");
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX20", "no");
+#endif
+#ifdef KOKKOS_ENABLE_CXX23
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX23", "yes");
+#else
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX23", "no");
 #endif
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   declare_configuration_metadata("options", "KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK",
@@ -1091,10 +1091,9 @@ void Kokkos::push_finalize_hook(std::function<void()> f) {
 
 void Kokkos::finalize() { finalize_internal(); }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-KOKKOS_DEPRECATED void Kokkos::finalize_all() { finalize_internal(); }
+#ifdef KOKKOS_COMPILER_INTEL
+void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
 #endif
-
 void Kokkos::fence(const std::string& name) { fence_internal(name); }
 
 namespace {
@@ -1130,13 +1129,11 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
   Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_initialized() noexcept {
+[[nodiscard]] bool Kokkos::is_initialized() noexcept {
   return g_is_initialized;
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_finalized() noexcept {
-  return g_is_finalized;
-}
+[[nodiscard]] bool Kokkos::is_finalized() noexcept { return g_is_finalized; }
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 

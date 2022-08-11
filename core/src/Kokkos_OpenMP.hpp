@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_OPENMP_HPP
 #define KOKKOS_OPENMP_HPP
@@ -128,19 +124,6 @@ class OpenMP {
   inline static bool is_asynchronous(OpenMP const& = OpenMP()) noexcept;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /// \brief Partition the default instance into new instances without creating
-  ///  new masters
-  ///
-  /// This is a no-op on OpenMP since the default instance cannot be partitioned
-  /// without promoting other threads to 'master'
-  static std::vector<OpenMP> partition(...);
-
-  /// Non-default instances should be ref-counted so that when the last
-  /// is destroyed the instance resources are released
-  ///
-  /// This is a no-op on OpenMP since a non default instance cannot be created
-  static OpenMP create_instance(...);
-
   /// \brief Partition the default instance and call 'f' on each new 'master'
   /// thread
   ///

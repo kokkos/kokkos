@@ -463,9 +463,6 @@ if (Kokkos_ENABLE_OPENMP)
     openmp/TestOpenMP_Task.cpp
     openmp/TestOpenMP_PartitionMaster.cpp
   )
-  if (Kokkos_ENABLE_DEPRECATED_CODE_3)
-    list(APPEND OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
-  endif ()
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
     SOURCES

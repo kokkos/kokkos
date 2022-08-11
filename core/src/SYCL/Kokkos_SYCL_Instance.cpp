@@ -138,20 +138,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
         m_maxWorkgroupSize * 2 *
         d.template get_info<sycl::info::device::max_compute_units>();
 
-    // Setup concurent bitset for obtaining unique tokens from within an
-    // executing kernel.
-    {
-      const int32_t buffer_bound =
-          Kokkos::Impl::concurrent_bitset::buffer_bound(m_maxConcurrency);
-      using Record = Kokkos::Impl::SharedAllocationRecord<
-          Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
-      Record* const r =
-          Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                           "Kokkos::Experimental::SYCL::InternalScratchBitset",
-                           sizeof(uint32_t) * buffer_bound);
-      Record::increment(r);
-    }
-
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
 
@@ -355,6 +341,8 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
   }
   m_q.reset();
 }
+
+int SYCLInternal::m_syclDev;
 
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;

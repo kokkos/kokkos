@@ -460,12 +460,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  enum {
-    HasJoin =
-        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
-                              FunctorType>::has_join_member_function
-  };
-  enum { UseReducer = is_reducer<ReducerType>::value };
+  static constexpr bool UseReducer = is_reducer<ReducerType>::value;
 
   const pointer_type m_result_ptr;
   const FunctorType m_functor;

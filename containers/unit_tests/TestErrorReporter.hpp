@@ -178,8 +178,7 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType> {
   }
 };
 
-#if defined(KOKKOS_CLASS_LAMBDA) && \
-    (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA))
+#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 template <typename DeviceType>
 struct ErrorReporterDriverUseLambda
     : public ErrorReporterDriverBase<DeviceType> {
@@ -195,6 +194,7 @@ struct ErrorReporterDriverUseLambda
   void execute(int reporter_capacity, int test_size) {
     Kokkos::parallel_for(
         Kokkos::RangePolicy<execution_space>(0, test_size),
+        // NOLINTNEXTLINE(kokkos-implicit-this-capture)
         KOKKOS_CLASS_LAMBDA(const int work_idx) {
           if (driver_base::error_condition(work_idx)) {
             double val = Kokkos::Experimental::pi_v<double> *
@@ -234,7 +234,9 @@ struct ErrorReporterDriverNativeOpenMP
 };
 #endif
 
-#if defined(KOKKOS_CLASS_LAMBDA) && \
+// FIXME_MSVC MSVC just gets confused when using the base class in the
+// KOKKOS_CLASS_LAMBDA
+#if !defined(KOKKOS_COMPILER_MSVC) && \
     (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA))
 TEST(TEST_CATEGORY, ErrorReporterViaLambda) {
   TestErrorReporter<ErrorReporterDriverUseLambda<TEST_EXECSPACE>>();
