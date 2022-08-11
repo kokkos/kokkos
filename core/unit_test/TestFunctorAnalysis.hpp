@@ -90,7 +90,9 @@ void test_functor_analysis() {
   ASSERT_EQ(R01(&c01).length(), 0);
 
   //------------------------------
-  auto c02  = KOKKOS_LAMBDA(int, double&){};
+  struct C02 {
+    KOKKOS_FUNCTION void final(double&) const {}
+  } c02;
   using A02 = Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
       Kokkos::RangePolicy<ExecSpace>, decltype(c02)>;
@@ -104,7 +106,7 @@ void test_functor_analysis() {
 
   static_assert(!A02::has_join_member_function, "");
   static_assert(!A02::has_init_member_function, "");
-  static_assert(!A02::has_final_member_function, "");
+  static_assert(A02::has_final_member_function, "");
   static_assert(A02::StaticValueSize == sizeof(double), "");
   ASSERT_EQ(R02(&c02).length(), 1);
 
