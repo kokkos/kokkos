@@ -299,35 +299,20 @@ else
 endif
 
 # Set C++ version flags.
-ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-  KOKKOS_INTERNAL_CXX17_FLAG := --c++17
-  KOKKOS_INTERNAL_CXX20_FLAG := --c++20
-  KOKKOS_INTERNAL_CXX23_FLAG := --c++23
+ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+  KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
+  KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
+  KOKKOS_INTERNAL_CXX20_FLAG := -hstd=c++20
+  KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
+  KOKKOS_INTERNAL_CXX23_FLAG := -hstd=c++23
+  KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2b
 else
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-     KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
-     KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
-     KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
-     KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
-     KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
-     KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
-  else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-      KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
-      KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
-      KOKKOS_INTERNAL_CXX20_FLAG := -hstd=c++20
-      KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
-      KOKKOS_INTERNAL_CXX23_FLAG := -hstd=c++23
-      KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2b
-    else
-      KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
-      KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
-      KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
-      KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
-      KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
-      KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
-    endif
-  endif
+  KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
+  KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
+  KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
+  KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+  KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
+  KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
 endif
 
 # Check for Kokkos Architecture settings.
@@ -740,13 +725,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV80), 1)
     KOKKOS_CXXFLAGS +=
     KOKKOS_LDFLAGS +=
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-      KOKKOS_CXXFLAGS +=
-      KOKKOS_LDFLAGS +=
-    else
-      KOKKOS_CXXFLAGS += -march=armv8-a
-      KOKKOS_LDFLAGS += -march=armv8-a
-    endif
+    KOKKOS_CXXFLAGS += -march=armv8-a
+    KOKKOS_LDFLAGS += -march=armv8-a
   endif
 endif
 
@@ -757,13 +737,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV81), 1)
     KOKKOS_CXXFLAGS +=
     KOKKOS_LDFLAGS +=
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-      KOKKOS_CXXFLAGS +=
-      KOKKOS_LDFLAGS +=
-    else
-      KOKKOS_CXXFLAGS += -march=armv8.1-a
-      KOKKOS_LDFLAGS += -march=armv8.1-a
-    endif
+    KOKKOS_CXXFLAGS += -march=armv8.1-a
+    KOKKOS_LDFLAGS += -march=armv8.1-a
   endif
 endif
 
@@ -829,13 +804,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX), 1)
     KOKKOS_CXXFLAGS +=
     KOKKOS_LDFLAGS +=
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-      KOKKOS_CXXFLAGS +=
-      KOKKOS_LDFLAGS +=
-    else
-      KOKKOS_CXXFLAGS += -march=armv8-a -mtune=thunderx
-      KOKKOS_LDFLAGS += -march=armv8-a -mtune=thunderx
-    endif
+    KOKKOS_CXXFLAGS += -march=armv8-a -mtune=thunderx
+    KOKKOS_LDFLAGS += -march=armv8-a -mtune=thunderx
   endif
 endif
 
@@ -847,13 +817,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX2), 1)
     KOKKOS_CXXFLAGS +=
     KOKKOS_LDFLAGS +=
   else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-      KOKKOS_CXXFLAGS +=
-      KOKKOS_LDFLAGS +=
-    else
-      KOKKOS_CXXFLAGS += -mtune=thunderx2t99 -mcpu=thunderx2t99
-      KOKKOS_LDFLAGS += -mtune=thunderx2t99 -mcpu=thunderx2t99
-    endif
+    KOKKOS_CXXFLAGS += -mtune=thunderx2t99 -mcpu=thunderx2t99
+    KOKKOS_LDFLAGS += -mtune=thunderx2t99 -mcpu=thunderx2t99
   endif
 endif
 
@@ -867,14 +832,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SSE42), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-        KOKKOS_CXXFLAGS += -tp=nehalem
-        KOKKOS_LDFLAGS  += -tp=nehalem
-      else
-        # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -msse4.2
-        KOKKOS_LDFLAGS  += -msse4.2
-      endif
+      # Assume that this is a really a GNU compiler.
+      KOKKOS_CXXFLAGS += -msse4.2
+      KOKKOS_LDFLAGS  += -msse4.2
     endif
   endif
 endif
@@ -889,14 +849,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-        KOKKOS_CXXFLAGS += -tp=sandybridge
-        KOKKOS_LDFLAGS  += -tp=sandybridge
-      else
-        # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -mavx
-        KOKKOS_LDFLAGS  += -mavx
-      endif
+      # Assume that this is a really a GNU compiler.
+      KOKKOS_CXXFLAGS += -mavx
+      KOKKOS_LDFLAGS  += -mavx
     endif
   endif
 endif
@@ -904,35 +859,23 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER7), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_POWER7")
 
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-
-  else
-    # Assume that this is a really a GNU compiler or it could be XL on P8.
-    KOKKOS_CXXFLAGS += -mcpu=power7 -mtune=power7
-    KOKKOS_LDFLAGS  += -mcpu=power7 -mtune=power7
-  endif
+  # Assume that this is a really a GNU compiler or it could be XL on P8.
+  KOKKOS_CXXFLAGS += -mcpu=power7 -mtune=power7
+  KOKKOS_LDFLAGS  += -mcpu=power7 -mtune=power7
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER8), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_POWER8")
 
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-
-  else
-    KOKKOS_CXXFLAGS += -mcpu=power8 -mtune=power8
-    KOKKOS_LDFLAGS  += -mcpu=power8 -mtune=power8
-  endif
+  KOKKOS_CXXFLAGS += -mcpu=power8 -mtune=power8
+  KOKKOS_LDFLAGS  += -mcpu=power8 -mtune=power8
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER9), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_POWER9")
 
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-
-  else
-    KOKKOS_CXXFLAGS += -mcpu=power9 -mtune=power9
-    KOKKOS_LDFLAGS  += -mcpu=power9 -mtune=power9
-  endif
+  KOKKOS_CXXFLAGS += -mcpu=power9 -mtune=power9
+  KOKKOS_LDFLAGS  += -mcpu=power9 -mtune=power9
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HSW), 1)
@@ -945,14 +888,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HSW), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-        KOKKOS_CXXFLAGS += -tp=haswell
-        KOKKOS_LDFLAGS  += -tp=haswell
-      else
-        # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2
-        KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2
-      endif
+      # Assume that this is a really a GNU compiler.
+      KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2
+      KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2
     endif
   endif
 endif
@@ -967,14 +905,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_BDW), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-        KOKKOS_CXXFLAGS += -tp=haswell
-        KOKKOS_LDFLAGS  += -tp=haswell
-      else
-        # Assume that this is a really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2 -mrtm
-        KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2 -mrtm
-      endif
+      # Assume that this is a really a GNU compiler.
+      KOKKOS_CXXFLAGS += -march=core-avx2 -mtune=core-avx2 -mrtm
+      KOKKOS_LDFLAGS  += -march=core-avx2 -mtune=core-avx2 -mrtm
     endif
   endif
 endif
@@ -989,13 +922,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AVX512MIC), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-
-      else
-        # Asssume that this is really a GNU compiler.
-        KOKKOS_CXXFLAGS += -march=knl -mtune=knl
-        KOKKOS_LDFLAGS  += -march=knl -mtune=knl
-      endif
+      # Asssume that this is really a GNU compiler.
+      KOKKOS_CXXFLAGS += -march=knl -mtune=knl
+      KOKKOS_LDFLAGS  += -march=knl -mtune=knl
     endif
   endif
 endif
@@ -1010,13 +939,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SKL), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-
-      else
-        # Nothing here yet.
-	KOKKOS_CXXFLAGS += -march=skylake
-	KOKKOS_LDFLAGS  += -march=skylake
-      endif
+      # Nothing here yet.
+      KOKKOS_CXXFLAGS += -march=skylake
+      KOKKOS_LDFLAGS  += -march=skylake
     endif
   endif
 endif
@@ -1031,13 +956,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_SKX), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
 
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-
-      else
-        # Nothing here yet.
-        KOKKOS_CXXFLAGS += -march=skylake-avx512 -mtune=skylake-avx512
-        KOKKOS_LDFLAGS  += -march=skylake-avx512 -mtune=skylake-avx512
-      endif
+      # Nothing here yet.
+      KOKKOS_CXXFLAGS += -march=skylake-avx512 -mtune=skylake-avx512
+      KOKKOS_LDFLAGS  += -march=skylake-avx512 -mtune=skylake-avx512
     endif
   endif
 endif
