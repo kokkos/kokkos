@@ -599,7 +599,7 @@ IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
       ELSEIF("${DETECTED_GPU_ARCH}" STREQUAL "gfx908")
         SET_AND_CHECK_AMD_ARCH(VEGA908 ${DETECTED_GPU_ARCH})
       ELSEIF("${DETECTED_GPU_ARCH}" STREQUAL "gfx90a")
-        SET_AND_CHECK_AMD_ARCH(VEGA90a ${DETECTED_GPU_ARCH})
+        SET_AND_CHECK_AMD_ARCH(VEGA90A ${DETECTED_GPU_ARCH})
       ELSE()
         MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
                          "Please manually enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
