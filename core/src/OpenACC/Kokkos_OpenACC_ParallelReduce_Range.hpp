@@ -224,7 +224,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 template <class Functor, class Scalar, class Space, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
     Functor, Kokkos::Max<Scalar, Space>, Kokkos::RangePolicy<Traits...>, true> {
-  //                 ^^^A
+  //                 ^^^
   using Policy    = RangePolicy<Traits...>;
   using Reducer   = Sum<Scalar, Space>;
   using ValueType = typename Reducer::value_type;
