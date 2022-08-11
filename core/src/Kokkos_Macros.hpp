@@ -234,7 +234,7 @@
 #endif
 
 #if (1900 > KOKKOS_COMPILER_INTEL)
-#error "Compiling with Intel version earlier than 19.5 is not supported."
+#error "Compiling with Intel version earlier than 19.0.5 is not supported."
 #endif
 
 #if !defined(KOKKOS_ENABLE_ASM) && !defined(_WIN32)
