@@ -116,34 +116,20 @@ KOKKOS_INLINE_FUNCTION void sort_nested_impl(const TeamMember& t,
         SizeType boxStart  = boxID << (1 + i - j);  // boxID * boxSize
         SizeType boxOffset = k - (boxStart >> 1);   // k - boxID * boxSize / 2;
         SizeType elem1     = boxStart + boxOffset;
-        if (j == 0) {
-          // first phase (brown box): within a block, compare with the
-          // opposite value in the box
-          SizeType elem2 = boxStart + boxSize - 1 - boxOffset;
-          if (elem2 < n) {
-            KeyType key1 = keyView(elem1);
-            KeyType key2 = keyView(elem2);
-            if (comp(key2, key1)) {
-              keyView(elem1) = key2;
-              keyView(elem2) = key1;
-              if constexpr (!std::is_same_v<ValueViewType, std::nullptr_t>) {
-                Kokkos::Experimental::swap(valueView(elem1), valueView(elem2));
-              }
-            }
-          }
-        } else {
-          // later phases (pink box): within a block, compare with fixed
-          // distance (boxSize / 2) apart
-          SizeType elem2 = elem1 + boxSize / 2;
-          if (elem2 < n) {
-            KeyType key1 = keyView(elem1);
-            KeyType key2 = keyView(elem2);
-            if (comp(key2, key1)) {
-              keyView(elem1) = key2;
-              keyView(elem2) = key1;
-              if constexpr (!std::is_same_v<ValueViewType, std::nullptr_t>) {
-                Kokkos::Experimental::swap(valueView(elem1), valueView(elem2));
-              }
+        // In first phase (j == 0, brown box): within a box, compare with the
+        // opposite value in the box.
+        // In later phases (j > 0, pink box): within a box, compare with fixed
+        // distance (boxSize / 2) apart.
+        SizeType elem2 = (j == 0) ? (boxStart + boxSize - 1 - boxOffset)
+                                  : (elem1 + boxSize / 2);
+        if (elem2 < n) {
+          KeyType key1 = keyView(elem1);
+          KeyType key2 = keyView(elem2);
+          if (comp(key2, key1)) {
+            keyView(elem1) = key2;
+            keyView(elem2) = key1;
+            if constexpr (!std::is_same_v<ValueViewType, std::nullptr_t>) {
+              Kokkos::Experimental::swap(valueView(elem1), valueView(elem2));
             }
           }
         }

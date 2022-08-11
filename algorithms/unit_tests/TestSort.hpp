@@ -619,19 +619,20 @@ void test_nested_sort_impl(unsigned narray, unsigned n, bool useTeams,
       std::sort(begin, end);
   }
   if (useTeams) {
-    TeamPol policy(narray, Kokkos::AUTO(), TeamPol::vector_length_max());
+    int vectorLen = std::min<int>(4, TeamPol::vector_length_max());
+    TeamPol policy(narray, Kokkos::AUTO(), vectorLen);
     Kokkos::parallel_for(
         policy, TeamSortFunctor<ExecutionSpace, KeyViewType, OffsetViewType>(
                     keys, offsets, customCompare));
   } else {
     ThreadSortFunctor<ExecutionSpace, KeyViewType, OffsetViewType> functor(
         keys, offsets, customCompare);
-    TeamPol dummy(1, 1, TeamPol::vector_length_max());
+    int vectorLen = std::min<int>(4, TeamPol::vector_length_max());
+    TeamPol dummy(1, Kokkos::AUTO(), vectorLen);
     int teamSize =
         dummy.team_size_recommended(functor, Kokkos::ParallelForTag());
     int numTeams = (narray + teamSize - 1) / teamSize;
-    Kokkos::parallel_for(
-        TeamPol(numTeams, teamSize, TeamPol::vector_length_max()), functor);
+    Kokkos::parallel_for(TeamPol(numTeams, teamSize, vectorLen), functor);
   }
   auto keysOut = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), keys);
   for (unsigned i = 0; i < keys.extent(0); i++) {
@@ -687,7 +688,8 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
     }
   }
   if (useTeams) {
-    TeamPol policy(narray, Kokkos::AUTO(), TeamPol::vector_length_max());
+    int vectorLen = std::min<int>(4, TeamPol::vector_length_max());
+    TeamPol policy(narray, Kokkos::AUTO(), vectorLen);
     Kokkos::parallel_for(
         policy, TeamSortByKeyFunctor<ExecutionSpace, KeyViewType, ValueViewType,
                                      OffsetViewType>(keys, values, offsets,
@@ -696,12 +698,12 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
     ThreadSortByKeyFunctor<ExecutionSpace, KeyViewType, ValueViewType,
                            OffsetViewType>
         functor(keys, values, offsets, customCompare);
-    TeamPol dummy(1, 1, TeamPol::vector_length_max());
+    int vectorLen = std::min<int>(4, TeamPol::vector_length_max());
+    TeamPol dummy(1, Kokkos::AUTO(), vectorLen);
     int teamSize =
         dummy.team_size_recommended(functor, Kokkos::ParallelForTag());
     int numTeams = (narray + teamSize - 1) / teamSize;
-    Kokkos::parallel_for(
-        TeamPol(numTeams, teamSize, TeamPol::vector_length_max()), functor);
+    Kokkos::parallel_for(TeamPol(numTeams, teamSize, vectorLen), functor);
   }
   auto keysOut = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), keys);
   auto valuesOut =
