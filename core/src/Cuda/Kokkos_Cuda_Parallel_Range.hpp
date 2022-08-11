@@ -256,11 +256,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
 
-    // Doing code duplication here to fix issue #3428
-    // Suspect optimizer bug??
     // Reduce with final value at blockDim.y - 1 location.
     // Shortcut for length zero reduction
-    if (m_policy.begin() == m_policy.end()) {
+    bool zero_length        = m_policy.begin() == m_policy.end();
+    bool do_final_reduction = true;
+    if (!zero_length)
+      do_final_reduction = cuda_single_inter_block_reduce_scan<false>(
+          final_reducer, blockIdx.x, gridDim.x,
+          kokkos_impl_cuda_shared_memory<word_size_type>(), m_scratch_space,
+          m_scratch_flags);
+
+    if (do_final_reduction) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -282,39 +288,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
-      }
-    }
-
-    if (m_policy.begin() != m_policy.end()) {
-      {
-        if (cuda_single_inter_block_reduce_scan<false>(
-                final_reducer, blockIdx.x, gridDim.x,
-                kokkos_impl_cuda_shared_memory<word_size_type>(),
-                m_scratch_space, m_scratch_flags)) {
-          // This is the final block with the final result at the final threads'
-          // location
-
-          word_size_type* const shared =
-              kokkos_impl_cuda_shared_memory<word_size_type>() +
-              (blockDim.y - 1) * word_count.value;
-          word_size_type* const global =
-              m_result_ptr_device_accessible
-                  ? reinterpret_cast<word_size_type*>(m_result_ptr)
-                  : (m_unified_space ? m_unified_space : m_scratch_space);
-
-          if (threadIdx.y == 0) {
-            final_reducer.final(reinterpret_cast<value_type*>(shared));
-          }
-
-          if (CudaTraits::WarpSize < word_count.value) {
-            __syncthreads();
-          }
-
-          for (unsigned i = threadIdx.y; i < word_count.value;
-               i += blockDim.y) {
-            global[i] = shared[i];
-          }
-        }
       }
     }
   }
