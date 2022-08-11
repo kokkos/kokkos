@@ -183,18 +183,11 @@ KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
-    typename std::enable_if_t<is_view<std::decay_t<T>>::value,
+    T&&) noexcept ->
+    typename std::enable_if_t<is_view<std::decay_t<T>>::value ||
+                                  is_reducer<std::decay_t<T>>::value,
                               std::decay_t<T>>::value_type {
-  return arg();
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
-    typename std::enable_if_t<is_reducer<std::decay_t<T>>::value,
-                              std::decay_t<T>>::value_type {
-  return arg.reference();
+  return typename std::decay_t<T>::value_type{};
 }
 
 template <class IdxSeq, class Space, class...>
@@ -266,13 +259,26 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     return m_value_view;
   }
 
-  KOKKOS_FUNCTION
-  constexpr static void write_value_back_to_original_references(
-      value_type const& value,
+  template <class ExecutionSpace, int Idx, class View>
+  static void write_one_value_back(
+      const ExecutionSpace& exec_space, View const& view,
+      typename View::const_value_type& value) noexcept {
+    if (Kokkos::SpaceAccessibility<typename View::memory_space,
+                                   Space>::assignable)
+      view() = value;
+    else
+      Kokkos::deep_copy(exec_space, view, value);
+  }
+
+  template <class ExecutionSpace>
+  static void write_value_back_to_original_references(
+      const ExecutionSpace& exec_space, value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
     emulate_fold_comma_operator(
-        (reducers_that_reference_original_values.view()() =
-             value.template get<Idxs, typename Reducers::value_type>())...);
+        (write_one_value_back<ExecutionSpace, Idxs>(
+             exec_space, reducers_that_reference_original_values.view(),
+             value.template get<Idxs, typename Reducers::value_type>()),
+         0)...);
   }
 };
 
@@ -555,9 +561,12 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
           "Kokkos::parallel_reduce: fence due to result being value, not view",
           combined_reducer);
   combined_reducer.write_value_back_to_original_references(
-      value, Impl::_make_reducer_from_arg<space_type>(returnType1),
+      policy.space(), value,
+      Impl::_make_reducer_from_arg<space_type>(returnType1),
       Impl::_make_reducer_from_arg<space_type>(returnType2),
       Impl::_make_reducer_from_arg<space_type>(returnTypes)...);
+  policy.space().fence(
+      "Kokkos::parallel_reduce: fence after copying values back");
   //----------------------------------------
 }
 

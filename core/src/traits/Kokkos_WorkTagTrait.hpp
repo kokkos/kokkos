@@ -108,10 +108,10 @@ struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
   //   old code that just did a big long series of nested std::conditionals, but
   //   we should benchmark this assumption if it becomes a problem.
   template <class T>
-  using trait_matches_specification = std::integral_constant<
-      bool, !std::is_void<T>::value &&
-                !type_list_any<_trait_matches_spec_predicate<T>::template apply,
-                               _exec_policy_traits_without_work_tag>::value>;
+  using trait_matches_specification = std::bool_constant<
+      std::is_empty<T>::value &&
+      !type_list_any<_trait_matches_spec_predicate<T>::template apply,
+                     _exec_policy_traits_without_work_tag>::value>;
 };
 
 // </editor-fold> end trait specification }}}1

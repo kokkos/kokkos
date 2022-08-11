@@ -43,6 +43,10 @@
 */
 #ifndef KOKKOS_DETECTION_IDIOM_HPP
 #define KOKKOS_DETECTION_IDIOM_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
+#endif
 
 #include <impl/Kokkos_Utilities.hpp>  // void_t
 #include <type_traits>
@@ -98,7 +102,6 @@ template <class To, template <class...> class Op, class... Args>
 using is_detected_convertible =
     std::is_convertible<detected_t<Op, Args...>, To>;
 
-#ifdef KOKKOS_ENABLE_CXX17
 template <template <class...> class Op, class... Args>
 inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 
@@ -109,8 +112,11 @@ inline constexpr bool is_detected_exact_v =
 template <class Expected, template <class...> class Op, class... Args>
 inline constexpr bool is_detected_convertible_v =
     is_detected_convertible<Expected, Op, Args...>::value;
-#endif
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
+#endif
 #endif

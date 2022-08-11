@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_WORKGRAPHPOLICY_HPP
 
@@ -243,7 +248,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 }  // namespace Kokkos
 
 #ifdef KOKKOS_ENABLE_SERIAL
-#include "impl/Kokkos_Serial_WorkGraphPolicy.hpp"
+#include "Serial/Kokkos_Serial_WorkGraphPolicy.hpp"
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMP

@@ -43,8 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_Numeric.hpp>
 #include <utility>
 
 namespace Test {
@@ -350,7 +348,7 @@ void run_inclusive_scan_all_scenarios() {
   for (const auto& it : scenarios) {
     run_single_scenario_default_op<Tag, ValueType>(it);
 
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if !defined KOKKOS_ENABLE_OPENMPTARGET
     // the sum custom op is always run
     using sum_binary_op = SumFunctor<ValueType>;
     sum_binary_op sbop;

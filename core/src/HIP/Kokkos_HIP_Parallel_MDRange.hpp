@@ -382,17 +382,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
 
-      if (!m_result_ptr_device_accessible) {
-        m_policy.space().fence(
-            "Kokkos::Impl::ParallelReduce<MDRangePolicy,HIP>: fence because "
-            "reduction can't access result storage location");
-
-        if (m_result_ptr) {
-          const int size = Analysis::value_size(
-              ReducerConditional::select(m_functor, m_reducer));
-          DeepCopy<HostSpace, Experimental::HIPSpace>(m_result_ptr,
-                                                      m_scratch_space, size);
-        }
+      if (!m_result_ptr_device_accessible && m_result_ptr) {
+        const int size = Analysis::value_size(
+            ReducerConditional::select(m_functor, m_reducer));
+        DeepCopy<HostSpace, Experimental::HIPSpace, Experimental::HIP>(
+            m_policy.space(), m_result_ptr, m_scratch_space, size);
       }
     } else {
       if (m_result_ptr) {

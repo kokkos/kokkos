@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_NUMERIC_TRAITS_HPP
 #define KOKKOS_NUMERIC_TRAITS_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NUMERICTRAITS
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <cfloat>
@@ -126,7 +130,7 @@ template <> struct norm_min_helper<long double> { static constexpr long double v
 template <class> struct denorm_min_helper {};
 //                               Workaround for GCC <9.2, Clang <9, Intel
 //                               vvvvvvvvvvvvvvvvvvvvvvvvv
-#if defined(KOKKOS_ENABLE_CXX17) && defined (FLT_TRUE_MIN) || defined(_MSC_VER)
+#if defined (FLT_TRUE_MIN) || defined(_MSC_VER)
 template <> struct denorm_min_helper<float> { static constexpr float value = FLT_TRUE_MIN; };
 template <> struct denorm_min_helper<double> { static constexpr double value = DBL_TRUE_MIN; };
 template <> struct denorm_min_helper<long double> { static constexpr long double value = LDBL_TRUE_MIN; };
@@ -272,17 +276,11 @@ template <> struct max_exponent10_helper<long double> { static constexpr int val
 // clang-format on
 }  // namespace Impl
 
-#if defined(KOKKOS_ENABLE_CXX17)
 #define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT)                        \
   template <class T>                                           \
   struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {}; \
   template <class T>                                           \
   inline constexpr auto TRAIT##_v = TRAIT<T>::value;
-#else
-#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT) \
-  template <class T>                    \
-  struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {};
-#endif
 
 // Numeric distinguished value traits
 KOKKOS_IMPL_DEFINE_TRAIT(infinity)
@@ -650,4 +648,8 @@ struct reduction_identity<long double> {
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NUMERICTRAITS
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NUMERICTRAITS
+#endif
 #endif

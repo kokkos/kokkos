@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_MIN_MAX_CLAMP_HPP
 #define KOKKOS_MIN_MAX_CLAMP_HPP
 
@@ -51,7 +56,6 @@
 #include <initializer_list>
 
 namespace Kokkos {
-namespace Experimental {
 
 // clamp
 template <class T>
@@ -223,7 +227,15 @@ KOKKOS_INLINE_FUNCTION constexpr Kokkos::pair<T, T> minmax(
   return result;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+namespace Experimental {
+using ::Kokkos::clamp;
+using ::Kokkos::max;
+using ::Kokkos::min;
+using ::Kokkos::minmax;
 }  // namespace Experimental
+#endif
+
 }  // namespace Kokkos
 
 #endif

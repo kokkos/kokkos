@@ -44,6 +44,10 @@
 
 #ifndef KOKKOSP_PROFILE_SECTION_HPP
 #define KOKKOSP_PROFILE_SECTION_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_PROFILING_PROFILESECTION
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -59,11 +63,7 @@ class ProfilingSection {
   ProfilingSection(ProfilingSection const&) = delete;
   ProfilingSection& operator=(ProfilingSection const&) = delete;
 
-  ProfilingSection(const std::string& sectionName)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-      : secName(sectionName)
-#endif
-  {
+  ProfilingSection(const std::string& sectionName) {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::createProfileSection(sectionName, &secID);
     }
@@ -87,20 +87,15 @@ class ProfilingSection {
     }
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED std::string getName() { return secName; }
-
-  KOKKOS_DEPRECATED uint32_t getSectionID() { return secID; }
-#endif
-
  protected:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  const std::string secName;
-#endif
   uint32_t secID;
 };
 
 }  // namespace Profiling
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PROFILING_PROFILESECTION
+#endif
 #endif

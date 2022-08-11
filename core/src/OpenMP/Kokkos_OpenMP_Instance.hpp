@@ -107,11 +107,6 @@ class OpenMPInternal {
   void clear_thread_data();
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED static void validate_partition(const int nthreads,
-                                                   int& num_partitions,
-                                                   int& partition_size) {
-    validate_partition_impl(nthreads, num_partitions, partition_size);
-  }
   static void validate_partition_impl(const int nthreads, int& num_partitions,
                                       int& partition_size);
 #endif
@@ -167,8 +162,7 @@ int OpenMP::impl_thread_pool_rank() noexcept {
   KOKKOS_IF_ON_DEVICE((return -1;))
 }
 
-inline void OpenMP::impl_static_fence(OpenMP const& /**instance*/,
-                                      const std::string& name) noexcept {
+inline void OpenMP::impl_static_fence(std::string const& name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::

@@ -198,10 +198,6 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   inline void impl_set_team_size(size_t size) { m_team_size = size; }
   int impl_vector_length() const { return m_vector_length; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED int vector_length() const { return impl_vector_length(); }
-#endif
-
   int team_size() const { return m_team_size; }
 
   int league_size() const { return m_league_size; }
@@ -459,10 +455,10 @@ __device__ inline int64_t hip_get_scratch_index(
   int64_t threadid = 0;
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
-    int64_t const wraparound_len = Kokkos::Experimental::min(
-        int64_t(league_size),
-        (int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n)) /
-            (blockDim.x * blockDim.y));
+    int64_t const wraparound_len =
+        Kokkos::min(int64_t(league_size),
+                    (int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n)) /
+                        (blockDim.x * blockDim.y));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;

@@ -141,6 +141,8 @@ FUNCTION(kokkos_append_config_line LINE)
 ENDFUNCTION()
 
 MACRO(kokkos_export_cmake_tpl NAME)
+  cmake_parse_arguments(KOKKOS_EXTRA_ARG "REQUIRED" "" "COMPONENTS" ${ARGN})
+
   #CMake TPLs are located with a call to find_package
   #find_package locates XConfig.cmake files through
   #X_DIR or X_ROOT variables set prior to calling find_package
@@ -164,7 +166,16 @@ MACRO(kokkos_export_cmake_tpl NAME)
     KOKKOS_APPEND_CONFIG_LINE("  SET(${NAME}_ROOT  ${${NAME}_ROOT})")
     KOKKOS_APPEND_CONFIG_LINE("ENDIF()")
   ENDIF()
-  KOKKOS_APPEND_CONFIG_LINE("FIND_DEPENDENCY(${NAME})")
+  SET(KOKKOS_CONFIG_STRING "FIND_DEPENDENCY(${NAME}")
+
+  IF(KOKKOS_EXTRA_ARG_REQUIRED)
+    STRING(APPEND KOKKOS_CONFIG_STRING " REQUIRED")
+  ENDIF()
+  IF(KOKKOS_EXTRA_ARG_COMPONENTS)
+    STRING(APPEND KOKKOS_CONFIG_STRING " COMPONENTS ${KOKKOS_EXTRA_ARG_COMPONENTS}")
+  ENDIF()
+  STRING(APPEND KOKKOS_CONFIG_STRING ")")
+  KOKKOS_APPEND_CONFIG_LINE(${KOKKOS_CONFIG_STRING})
 ENDMACRO()
 
 MACRO(kokkos_export_imported_tpl NAME)
@@ -270,7 +281,11 @@ MACRO(kokkos_import_tpl NAME)
       MESSAGE(FATAL_ERROR "Find module succeeded for ${NAME}, but did not produce valid target ${TPL_IMPORTED_NAME}")
     ENDIF()
     IF(NOT TPL_NO_EXPORT)
-      KOKKOS_EXPORT_IMPORTED_TPL(${TPL_IMPORTED_NAME})
+      GET_TARGET_PROPERTY(TPL_ORIGINAL_NAME ${TPL_IMPORTED_NAME} ALIASED_TARGET)
+      IF (NOT TPL_ORIGINAL_NAME)
+        SET(TPL_ORIGINAL_NAME ${TPL_IMPORTED_NAME})
+      ENDIF()
+      KOKKOS_EXPORT_IMPORTED_TPL(${TPL_ORIGINAL_NAME})
     ENDIF()
     LIST(APPEND KOKKOS_ENABLED_TPLS ${NAME})
   ENDIF()
@@ -620,11 +635,16 @@ ENDMACRO()
 #
 #   ``LIBRARY <name>``
 #
-#     If specified, this gives the name of the library to look for
+#     If specified, this gives the name of the library to look for.
+#     The full path for the library found will be used as IMPORTED_LOCATION
+#     for the target created. Thus, this cannot be used for interface libraries.
 #
 #   ``LIBRARIES <name1> <name2> ...``
 #
-#     If specified, this gives a list of libraries to find for the package
+#     If specified, this gives a list of libraries to find for the package.
+#     As opposed to the LIBRARY argument, this can be used with interface
+#     libraries. In that case, we directly use the names provided here
+#     for linking when creating the new target.
 #
 #   ``LIBRARY_PATHS <path1> <path2> ...``
 #
@@ -740,6 +760,7 @@ MACRO(kokkos_find_imported NAME)
     SET(IMPORT_TYPE)
     IF (TPL_INTERFACE)
       SET(IMPORT_TYPE "INTERFACE")
+      SET(${NAME}_FOUND_LIBRARIES ${TPL_LIBRARIES})
     ENDIF()
     KOKKOS_CREATE_IMPORTED_TPL(${TPL_IMPORTED_NAME}
       ${IMPORT_TYPE}
@@ -823,15 +844,15 @@ FUNCTION(COMPILER_SPECIFIC_OPTIONS_HELPER)
     SET(COMPILER ${KOKKOS_CXX_COMPILER_ID})
   ENDIF()
 
-  SET(COMPILER_SPECIFIC_FLAGS_TMP)
+  SET(COMPILER_SPECIFIC_FLAGS_TMP ${PARSE_DEFAULT})
   FOREACH(COMP ${COMPILERS})
     IF (COMPILER STREQUAL "${COMP}")
       IF (PARSE_${COMPILER})
-        IF (NOT "${PARSE_${COMPILER}}" STREQUAL "NO-VALUE-SPECIFIED")
+        IF ("${PARSE_${COMPILER}}" STREQUAL "NO-VALUE-SPECIFIED")
+           SET(COMPILER_SPECIFIC_FLAGS_TMP "")
+        ELSE()
            SET(COMPILER_SPECIFIC_FLAGS_TMP ${PARSE_${COMPILER}})
         ENDIF()
-      ELSEIF(PARSE_DEFAULT)
-        SET(COMPILER_SPECIFIC_FLAGS_TMP ${PARSE_DEFAULT})
       ENDIF()
     ENDIF()
   ENDFOREACH()

@@ -43,6 +43,10 @@
 */
 #ifndef KOKKOS_COMPLEX_HPP
 #define KOKKOS_COMPLEX_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_COMPLEX
+#endif
 
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
@@ -993,4 +997,8 @@ struct reduction_identity<Kokkos::complex<T>> {
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_COMPLEX
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_COMPLEX
+#endif
 #endif  // KOKKOS_COMPLEX_HPP

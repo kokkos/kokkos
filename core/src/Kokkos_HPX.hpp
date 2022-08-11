@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_HPX_HPP
 #define KOKKOS_HPX_HPP
 
@@ -68,7 +73,7 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -279,9 +284,11 @@ class HPX {
   HPX() noexcept {}
 #endif
 
-  static void print_configuration(std::ostream &,
-                                  const bool /* verbose */ = false) {
-    std::cout << "HPX backend" << std::endl;
+  void print_configuration(std::ostream &os, bool /*verbose*/ = false) const {
+    os << "HPX backend\n";
+    os << "HPX Execution Space:\n";
+    os << "  KOKKOS_ENABLE_HPX: yes\n";
+    os << "\nHPX Runtime Configuration:\n";
   }
   uint32_t impl_instance_id() const noexcept { return m_instance_id; }
 
@@ -308,9 +315,9 @@ class HPX {
   }
 #endif
 
-  void impl_fence_instance(const std::string &name =
-                               "Kokkos::Experimental::HPX::impl_fence_instance:"
-                               " Unnamed Instance Fence") const {
+  void fence(
+      const std::string &name =
+          "Kokkos::Experimental::HPX::fence: Unnamed Instance Fence") const {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
@@ -326,9 +333,7 @@ class HPX {
         });
   }
 
-  static void impl_fence_global(const std::string &name =
-                                    "Kokkos::Experimental::HPX::impl_fence_"
-                                    "global: Unnamed Global Fence") {
+  static void impl_static_fence(const std::string &name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<
         Kokkos::Experimental::HPX>(
         name,
@@ -343,7 +348,7 @@ class HPX {
           // Reset the future to free variables that may have been captured in
           // parallel regions (however, we don't have access to futures from
           // instances other than the default instances, they will only be
-          // released by impl_fence_instance).
+          // released by fence).
           HPX().impl_get_future() = hpx::make_ready_future<void>();
 #endif
         });
@@ -352,9 +357,6 @@ class HPX {
   static hpx::execution::parallel_executor impl_get_executor() {
     return hpx::execution::parallel_executor();
   }
-
-  void fence() const { impl_fence_instance(); }
-  void fence(const std::string &name) const { impl_fence_instance(name); }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -365,13 +367,6 @@ class HPX {
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static std::vector<HPX> partition(...) {
-    Kokkos::abort(
-        "Kokkos::Experimental::HPX::partition_master: can't partition an HPX "
-        "instance\n");
-    return std::vector<HPX>();
-  }
-
   template <typename F>
   KOKKOS_DEPRECATED static void partition_master(
       F const &, int requested_num_partitions = 0, int = 0) {
@@ -384,8 +379,7 @@ class HPX {
 #endif
 
   static int concurrency();
-  static void impl_initialize(int thread_count);
-  static void impl_initialize();
+  static void impl_initialize(InitializationSettings const &);
   static bool impl_is_initialized() noexcept;
   static void impl_finalize();
 
@@ -450,7 +444,7 @@ class HPX {
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_on_exit_parallel {
+  struct [[nodiscard]] reset_on_exit_parallel {
     HPX const &m_space;
     reset_on_exit_parallel(HPX const &space) : m_space(space) {}
     ~reset_on_exit_parallel() {
@@ -466,21 +460,21 @@ class HPX {
   // data. It does, however, still decrement the parallel region count. It is
   // meant for use in parallel regions which do not capture the execution space
   // instance.
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_count_on_exit_parallel {
-    reset_count_on_exit_parallel() {}
+  struct [[nodiscard]] reset_count_on_exit_parallel {
+    reset_count_on_exit_parallel() = default;
     ~reset_count_on_exit_parallel() {
       HPX::impl_decrement_active_parallel_region_count();
     }
   };
 #else
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_on_exit_parallel {
-    reset_on_exit_parallel(HPX const &) {}
-    ~reset_on_exit_parallel() {}
+  struct [[nodiscard]] reset_on_exit_parallel {
+    reset_on_exit_parallel(HPX const &) = default;
+    ~reset_on_exit_parallel()           = default;
   };
 
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_count_on_exit_parallel {
-    reset_count_on_exit_parallel() {}
-    ~reset_count_on_exit_parallel() {}
+  struct [[nodiscard]] reset_count_on_exit_parallel {
+    reset_count_on_exit_parallel()  = default;
+    ~reset_count_on_exit_parallel() = default;
   };
 #endif
 
@@ -499,17 +493,6 @@ struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
 }  // namespace Tools
 
 namespace Impl {
-
-class HPXSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  HPXSpaceInitializer()  = default;
-  ~HPXSpaceInitializer() = default;
-  void initialize(const InitArguments &args) final;
-  void finalize(const bool) final;
-  void fence() final;
-  void fence(const std::string &) final;
-  void print_configuration(std::ostream &msg, const bool detail) final;
-};
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 template <typename Closure>

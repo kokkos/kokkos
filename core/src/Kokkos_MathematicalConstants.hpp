@@ -43,6 +43,10 @@
 */
 #ifndef KOKKOS_MATHEMATICAL_CONSTANTS_HPP
 #define KOKKOS_MATHEMATICAL_CONSTANTS_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <type_traits>
@@ -50,17 +54,10 @@
 namespace Kokkos {
 namespace Experimental {
 
-#if defined(KOKKOS_ENABLE_CXX17)
 #define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
   template <class T>                            \
   inline constexpr auto TRAIT##_v =             \
       std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE)
-#else
-#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
-  template <class T>                            \
-  constexpr auto TRAIT##_v =                    \
-      std::enable_if_t<std::is_floating_point<T>::value, T>(VALUE)
-#endif
 
 // clang-format off
 KOKKOS_IMPL_MATH_CONSTANT(e,          2.718281828459045235360287471352662498L);
@@ -82,4 +79,8 @@ KOKKOS_IMPL_MATH_CONSTANT(phi,        1.618033988749894848204586834365638118L);
 
 }  // namespace Experimental
 }  // namespace Kokkos
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS
+#endif
 #endif

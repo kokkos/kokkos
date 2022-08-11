@@ -68,10 +68,8 @@ class HostSharedPtr {
   template <class Deleter>
   HostSharedPtr(T* element_ptr, const Deleter& deleter)
       : m_element_ptr(element_ptr) {
-#ifdef KOKKOS_ENABLE_CXX17
     static_assert(std::is_invocable_v<Deleter, T*> &&
                   std::is_copy_constructible_v<Deleter>);
-#endif
     if (element_ptr) {
       try {
         m_control = new Control{deleter, 1};

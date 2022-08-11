@@ -42,6 +42,10 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
+
 #include "Kokkos_Core.hpp"
 #include "Kokkos_HostSpace_deepcopy.hpp"
 
@@ -49,7 +53,9 @@ namespace Kokkos {
 
 namespace Impl {
 
-void hostspace_fence(const DefaultHostExecutionSpace& exec) { exec.fence(); }
+void hostspace_fence(const DefaultHostExecutionSpace& exec) {
+  exec.fence("HostSpace fence");
+}
 
 void hostspace_parallel_deepcopy(void* dst, const void* src, ptrdiff_t n) {
   Kokkos::DefaultHostExecutionSpace exec;

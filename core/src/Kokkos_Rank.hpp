@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_KOKKOS_RANK_HPP
 #define KOKKOS_KOKKOS_RANK_HPP
 
@@ -57,7 +62,7 @@ struct Rank {
   static_assert(N != 0u, "Kokkos Error: rank 0 undefined");
   static_assert(N != 1u,
                 "Kokkos Error: rank 1 is not a multi-dimensional range");
-  static_assert(N < 7u, "Kokkos Error: Unsupported rank...");
+  static_assert(N < 9u, "Kokkos Error: Unsupported rank...");
 
   using iteration_pattern = Rank<N, OuterDir, InnerDir>;
 

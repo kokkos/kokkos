@@ -102,10 +102,9 @@ struct OccupancyControlTrait : TraitSpecificationBase<OccupancyControlTrait> {
   using mixin_matching_trait =
       OccupancyControlPolicyMixin<OccControl, AnalyzeNextTrait>;
   template <class T>
-  using trait_matches_specification = std::integral_constant<
-      bool,
+  using trait_matches_specification = std::bool_constant<
       std::is_same<T, Kokkos::Experimental::DesiredOccupancy>::value ||
-          std::is_same<T, Kokkos::Experimental::MaximizeOccupancy>::value>;
+      std::is_same<T, Kokkos::Experimental::MaximizeOccupancy>::value>;
 };
 
 // </editor-fold> end Occupancy control trait specification }}}1

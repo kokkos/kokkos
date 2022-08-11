@@ -21,8 +21,8 @@ KOKKOS_ARCH ?= ""
 KOKKOS_DEBUG ?= "no"
 # Options: hwloc,librt,experimental_memkind
 KOKKOS_USE_TPLS ?= ""
-# Options: c++14,c++1y,c++17,c++1z,c++2a
-KOKKOS_CXX_STANDARD ?= "c++14"
+# Options: c++17,c++1z,c++20,c++2a,c++23,c++2b
+KOKKOS_CXX_STANDARD ?= "c++17"
 # Options: aggressive_vectorization,disable_profiling,enable_large_mem_tests,disable_complex_align,disable_deprecated_code,enable_deprecation_warnings,disable_desul_atomics
 KOKKOS_OPTIONS ?= ""
 KOKKOS_CMAKE ?= "no"
@@ -57,12 +57,12 @@ kokkos_path_exists=$(if $(wildcard $1),1,0)
 # Check for general settings
 
 KOKKOS_INTERNAL_ENABLE_DEBUG := $(call kokkos_has_string,$(KOKKOS_DEBUG),yes)
-KOKKOS_INTERNAL_ENABLE_CXX14 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++14)
-KOKKOS_INTERNAL_ENABLE_CXX1Y := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1y)
 KOKKOS_INTERNAL_ENABLE_CXX17 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++17)
 KOKKOS_INTERNAL_ENABLE_CXX1Z := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1z)
-KOKKOS_INTERNAL_ENABLE_CXX2A := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2a)
 KOKKOS_INTERNAL_ENABLE_CXX20 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++20)
+KOKKOS_INTERNAL_ENABLE_CXX2A := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2a)
+KOKKOS_INTERNAL_ENABLE_CXX23 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++23)
+KOKKOS_INTERNAL_ENABLE_CXX2B := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2b)
 
 # Check for external libraries.
 KOKKOS_INTERNAL_USE_HWLOC := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),hwloc)
@@ -94,14 +94,8 @@ KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
 KOKKOS_INTERNAL_USE_THREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Threads)
-# deprecated
-KOKKOS_INTERNAL_USE_PTHREAD := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
 KOKKOS_INTERNAL_USE_HPX := $(call kokkos_has_string,$(KOKKOS_DEVICES),HPX)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
-ifeq ($(KOKKOS_INTERNAL_USE_PTHREAD), 1)
-  KOKKOS_INTERNAL_USE_THREADS := 1
-  $(warning Warning: Pthread is deprecated. Use Threads instead! KOKKOS_DEVICES=$(KOKKOS_DEVICES))
-endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 0)
@@ -136,21 +130,11 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   KOKKOS_DEVICELIST += HIP
 endif
-KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER := $(shell expr $(KOKKOS_INTERNAL_ENABLE_CXX17) \
-                                                  + $(KOKKOS_INTERNAL_ENABLE_CXX20) \
-                                                  + $(KOKKOS_INTERNAL_ENABLE_CXX2A))
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
   KOKKOS_DEVICELIST += SYCL
-  ifneq ($(KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER), 1)
-    $(error SYCL backend requires C++17 or newer)
-  endif
-
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   KOKKOS_DEVICELIST += OPENMPTARGET
-  ifneq ($(KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER), 1)
-    $(error OpenMPTarget backend requires C++17 or newer)
-  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
@@ -326,28 +310,32 @@ endif
 
 # Set C++ version flags.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-  KOKKOS_INTERNAL_CXX14_FLAG := --c++14
   KOKKOS_INTERNAL_CXX17_FLAG := --c++17
+  KOKKOS_INTERNAL_CXX20_FLAG := --c++20
+  KOKKOS_INTERNAL_CXX23_FLAG := --c++23
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-     KOKKOS_INTERNAL_CXX14_FLAG := -std=c++14
-     KOKKOS_INTERNAL_CXX1Y_FLAG := -std=c++1y
-     #KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
-     #KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1Z
-     #KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+     KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
+     KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
+     KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
+     KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+     KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
+     KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-      KOKKOS_INTERNAL_CXX14_FLAG := -hstd=c++14
-      #KOKKOS_INTERNAL_CXX1Y_FLAG := -hstd=c++1y
-      #KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
-      #KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
-      #KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
+      KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
+      KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
+      KOKKOS_INTERNAL_CXX20_FLAG := -hstd=c++20
+      KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
+      KOKKOS_INTERNAL_CXX23_FLAG := -hstd=c++23
+      KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2b
     else
-      KOKKOS_INTERNAL_CXX14_FLAG := -std=c++14
-      KOKKOS_INTERNAL_CXX1Y_FLAG := -std=c++1y
       KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
       KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
+      KOKKOS_INTERNAL_CXX20_FLAG := -std=c++20
       KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
+      KOKKOS_INTERNAL_CXX23_FLAG := -std=c++23
+      KOKKOS_INTERNAL_CXX2B_FLAG := -std=c++2b
     endif
   endif
 endif
@@ -566,20 +554,10 @@ endif
 tmp := $(call kokkos_append_header,"/* General Settings */")
 ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATED_CODE_3")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATED_CODE_4")
 endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATION_WARNINGS")
-endif
-ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX14), 1)
-ifneq ($(KOKKOS_STANDALONE_CMAKE), yes)
-  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX14_FLAG)
-endif
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX14")
-endif
-ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX1Y), 1)
-  #I cannot make CMake add this in a good way - so add it here
-  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX1Y_FLAG)
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX14")
 endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX17), 1)
 ifneq ($(KOKKOS_STANDALONE_CMAKE), yes)
@@ -592,15 +570,25 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX1Z), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX1Z_FLAG)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX17")
 endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX20), 1)
+  #I cannot make CMake add this in a good way - so add it here
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX20_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
+endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX2A), 1)
   #I cannot make CMake add this in a good way - so add it here
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX2A_FLAG)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
 endif
-ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX20), 1)
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX23), 1)
   #I cannot make CMake add this in a good way - so add it here
-  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX20_FLAG)
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX23_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX23")
+endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX2B), 1)
+  #I cannot make CMake add this in a good way - so add it here
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX2B_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX23")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DEBUG), 1)
@@ -1453,6 +1441,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
   KOKKOS_TPL_LIBRARY_NAMES += pthread
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Serial/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Serial/*.hpp)
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HPX/*.cpp)
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HPX/*.hpp)
@@ -1483,15 +1476,6 @@ endif
 # Don't include Kokkos_HBWSpace.cpp if not using MEMKIND to avoid a link warning.
 ifneq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp,$(KOKKOS_SRC))
-endif
-
-# Don't include Kokkos_Serial.cpp or Kokkos_Serial_Task.cpp if not using Serial
-# device to avoid a link warning.
-ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-endif
-ifneq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
-  KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial.cpp,$(KOKKOS_SRC))
-  KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_Serial_Task.cpp,$(KOKKOS_SRC))
 endif
 
 # With Cygwin functions such as fdopen and fileno are not defined

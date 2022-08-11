@@ -1,3 +1,9 @@
+
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_DESUL_ATOMICS_VOLATILE_WRAPPER_HPP_
 #define KOKKOS_DESUL_ATOMICS_VOLATILE_WRAPPER_HPP_
 #include <Kokkos_Macros.hpp>

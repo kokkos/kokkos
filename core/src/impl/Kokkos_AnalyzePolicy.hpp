@@ -205,6 +205,7 @@ struct ExecPolicyTraitsWithDefaults : AnalysisResults {
 };
 
 //------------------------------------------------------------------------------
+
 template <typename... Traits>
 struct PolicyTraits
     : ExecPolicyTraitsWithDefaults<AnalyzeExecPolicy<void, Traits...>> {

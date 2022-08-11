@@ -43,8 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_Numeric.hpp>
 #include <utility>
 
 namespace Test {
@@ -327,7 +325,7 @@ void run_all_scenarios() {
   }
 }
 
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if !defined KOKKOS_ENABLE_OPENMPTARGET
 TEST(std_algorithms_numeric_ops_test, transform_inclusive_scan) {
   run_all_scenarios<DynamicTag, double>();
   // run_all_scenarios<StridedThreeTag, double>();

@@ -197,7 +197,14 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION ViewDimension
   KOKKOS_INLINE_FUNCTION
   constexpr ViewDimension(size_t n0, size_t n1, size_t n2, size_t n3, size_t n4,
                           size_t n5, size_t n6, size_t n7)
-      : D0(n0), D1(n1), D2(n2), D3(n3), D4(n4), D5(n5), D6(n6), D7(n7) {}
+      : D0(n0 == KOKKOS_INVALID_INDEX ? 1 : n0),
+        D1(n1 == KOKKOS_INVALID_INDEX ? 1 : n1),
+        D2(n2 == KOKKOS_INVALID_INDEX ? 1 : n2),
+        D3(n3 == KOKKOS_INVALID_INDEX ? 1 : n3),
+        D4(n4 == KOKKOS_INVALID_INDEX ? 1 : n4),
+        D5(n5 == KOKKOS_INVALID_INDEX ? 1 : n5),
+        D6(n6 == KOKKOS_INVALID_INDEX ? 1 : n6),
+        D7(n7 == KOKKOS_INVALID_INDEX ? 1 : n7) {}
 
   KOKKOS_INLINE_FUNCTION
   constexpr size_t extent(const unsigned r) const noexcept {
@@ -973,8 +980,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1256,8 +1270,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1600,8 +1621,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1882,8 +1910,15 @@ struct ViewOffset<
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_dim.N1, m_dim.N2, m_dim.N3, m_dim.N4,
-                        m_dim.N5, m_dim.N6, m_dim.N7);
+    constexpr auto r = dimension_type::rank;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -2411,10 +2446,15 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
 
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
-    return array_layout(m_dim.N0, m_stride.S0, m_dim.N1, m_stride.S1, m_dim.N2,
-                        m_stride.S2, m_dim.N3, m_stride.S3, m_dim.N4,
-                        m_stride.S4, m_dim.N5, m_stride.S5, m_dim.N6,
-                        m_stride.S6, m_dim.N7, m_stride.S7);
+    constexpr auto r = dimension_type::rank;
+    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX), m_stride.S0,
+                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX), m_stride.S1,
+                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX), m_stride.S2,
+                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX), m_stride.S3,
+                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX), m_stride.S4,
+                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX), m_stride.S5,
+                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX), m_stride.S6,
+                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX), m_stride.S7);
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -3401,13 +3441,22 @@ class ViewMapping<
         static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
             arg_prop)
             .value;
-    // Create shared memory tracking record with allocate memory from the memory
-    // space
-    record_type* const record = record_type::allocate(
+    const execution_space& exec_space =
+        static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+            arg_prop)
+            .value;
+    const memory_space& mem_space =
         static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const&>(
             arg_prop)
-            .value,
-        alloc_name, alloc_size);
+            .value;
+
+    // Create shared memory tracking record with allocate memory from the memory
+    // space
+    record_type* const record =
+        execution_space_specified
+            ? record_type::allocate(exec_space, mem_space, alloc_name,
+                                    alloc_size)
+            : record_type::allocate(mem_space, alloc_name, alloc_size);
 
     m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
@@ -3417,17 +3466,12 @@ class ViewMapping<
       // Assume destruction is only required when construction is requested.
       // The ViewValueFunctor has both value construction and destruction
       // operators.
-      if (execution_space_specified) {
-        record->m_destroy = functor_type(
-            static_cast<
-                Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-                arg_prop)
-                .value,
-            (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
-      } else {
-        record->m_destroy = functor_type((value_type*)m_impl_handle,
-                                         m_impl_offset.span(), alloc_name);
-      }
+      record->m_destroy =
+          execution_space_specified
+              ? functor_type(exec_space, (value_type*)m_impl_handle,
+                             m_impl_offset.span(), alloc_name)
+              : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
+                             alloc_name);
 
       // Construct values
       record->m_destroy.construct_shared_allocation();

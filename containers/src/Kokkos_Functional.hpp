@@ -42,6 +42,10 @@
 
 #ifndef KOKKOS_FUNCTIONAL_HPP
 #define KOKKOS_FUNCTIONAL_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Functional_impl.hpp>
@@ -52,11 +56,6 @@ namespace Kokkos {
 
 template <typename T>
 struct pod_hash {
-  using argument_type        = T;
-  using first_argument_type  = T;
-  using second_argument_type = uint32_t;
-  using result_type          = uint32_t;
-
   KOKKOS_FORCEINLINE_FUNCTION
   uint32_t operator()(T const& t) const {
     return Impl::MurmurHash3_x86_32(&t, sizeof(T), 0);
@@ -70,10 +69,6 @@ struct pod_hash {
 
 template <typename T>
 struct pod_equal_to {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const {
     return Impl::bitwise_equal(&a, &b);
@@ -82,10 +77,6 @@ struct pod_equal_to {
 
 template <typename T>
 struct pod_not_equal_to {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const {
     return !Impl::bitwise_equal(&a, &b);
@@ -94,64 +85,44 @@ struct pod_not_equal_to {
 
 template <typename T>
 struct equal_to {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a == b; }
 };
 
 template <typename T>
 struct not_equal_to {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a != b; }
 };
 
 template <typename T>
 struct greater {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a > b; }
 };
 
 template <typename T>
 struct less {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a < b; }
 };
 
 template <typename T>
 struct greater_equal {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a >= b; }
 };
 
 template <typename T>
 struct less_equal {
-  using first_argument_type  = T;
-  using second_argument_type = T;
-  using result_type          = bool;
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a <= b; }
 };
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
+#endif
 #endif  // KOKKOS_FUNCTIONAL_HPP

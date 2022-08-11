@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_Numeric.hpp>
 
 namespace KE = Kokkos::Experimental;
 
@@ -159,7 +158,7 @@ struct std_algorithms_numerics_test : public ::testing::Test {
   }
 };
 
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if !defined KOKKOS_ENABLE_OPENMPTARGET
 
 // -------------------------------------------------------------------
 // test default case of transform_reduce

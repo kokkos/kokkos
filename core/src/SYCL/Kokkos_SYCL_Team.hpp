@@ -366,7 +366,7 @@ class SYCLTeamMember {
   KOKKOS_INLINE_FUNCTION
   SYCLTeamMember(sycl::local_ptr<void> shared, const int shared_begin,
                  const int shared_size,
-                 sycl::global_ptr<void> scratch_level_1_ptr,
+                 sycl::device_ptr<void> scratch_level_1_ptr,
                  const int scratch_level_1_size, const sycl::nd_item<2> item)
       : m_team_reduce(shared),
         m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,

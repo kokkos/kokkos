@@ -150,6 +150,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     CudaHostAlloc,
     HIPMalloc,
     HIPHostMalloc,
+    HIPMallocManaged,
     SYCLMallocDevice,
     SYCLMallocShared,
     SYCLMallocHost
@@ -185,8 +186,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 
   ~RawMemoryAllocationFailure() noexcept override = default;
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  const char *what() const noexcept override {
+  [[nodiscard]] const char *what() const noexcept override {
     if (m_failure_mode == FailureMode::OutOfMemoryError) {
       return "Memory allocation error: out of memory";
     } else if (m_failure_mode == FailureMode::AllocationNotAligned) {
@@ -196,23 +196,24 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     return nullptr;  // unreachable
   }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  size_t attempted_size() const noexcept { return m_attempted_size; }
+  [[nodiscard]] size_t attempted_size() const noexcept {
+    return m_attempted_size;
+  }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  size_t attempted_alignment() const noexcept { return m_attempted_alignment; }
+  [[nodiscard]] size_t attempted_alignment() const noexcept {
+    return m_attempted_alignment;
+  }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  AllocationMechanism allocation_mechanism() const noexcept {
+  [[nodiscard]] AllocationMechanism allocation_mechanism() const noexcept {
     return m_mechanism;
   }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  FailureMode failure_mode() const noexcept { return m_failure_mode; }
+  [[nodiscard]] FailureMode failure_mode() const noexcept {
+    return m_failure_mode;
+  }
 
   void print_error_message(std::ostream &o) const;
-  KOKKOS_ATTRIBUTE_NODISCARD
-  std::string get_error_message() const;
+  [[nodiscard]] std::string get_error_message() const;
 
   virtual void append_additional_error_information(std::ostream &) const {}
 };

@@ -73,6 +73,21 @@ jobs:
       # see https://github.com/actions/virtual-environments/issues/3812
       options: --security-opt seccomp=unconfined
     steps:
+      - name: Checkout desul
+        uses: actions/checkout@v2.2.0
+        with:
+          repository: desul/desul
+          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
+          path: desul
+      - name: Install desul
+        working-directory: desul
+        run: |
+          git submodule init
+          git submodule update
+          mkdir build
+          cd build
+          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
+          sudo cmake --build . --target install --parallel 2
       - name: Checkout code
         uses: actions/checkout@v2.2.0
       - uses: actions/cache@v2
@@ -92,18 +107,20 @@ jobs:
       - name: maybe_install_clang_tidy
         if: ${{ matrix.clang-tidy != '' }}
         run: sudo apt-get update && sudo apt-get install -y clang-tidy
-      - name: CMake
+      - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
+            -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_MEMKIND=${{ matrix.memkind }} \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_FLAGS=${{ matrix.cmake_cxx_flags }} \

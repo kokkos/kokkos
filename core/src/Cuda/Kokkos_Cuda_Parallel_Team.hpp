@@ -236,11 +236,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   //----------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED inline int vector_length() const {
-    return impl_vector_length();
-  }
-#endif
   inline int impl_vector_length() const { return m_vector_length; }
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
@@ -436,11 +431,10 @@ __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
   int64_t threadid = 0;
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
-    int64_t const wraparound_len = Kokkos::Experimental::max(
-        int64_t(1), Kokkos::Experimental::min(
-                        int64_t(league_size),
-                        (int64_t(Kokkos::Impl::g_device_cuda_lock_arrays.n)) /
-                            (blockDim.x * blockDim.y)));
+    int64_t const wraparound_len = Kokkos::max(
+        int64_t(1), Kokkos::min(int64_t(league_size),
+                                (int64_t(g_device_cuda_lock_arrays.n)) /
+                                    (blockDim.x * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;

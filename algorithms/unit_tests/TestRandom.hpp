@@ -522,13 +522,15 @@ struct TestDynRankView {
     Pool random(13);
     double min = 10.;
     double max = 100.;
-    Kokkos::fill_random(A, random, min, max);
+    ExecutionSpace exec;
+    Kokkos::fill_random(exec, A, random, min, max);
 
     ReducerValueType val;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, A.size()),
-                            *this, ReducerType(val));
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, A.size()), *this,
+        ReducerType(val));
 
-    Kokkos::fence();
+    exec.fence();
     ASSERT_GE(val.min_val, min);
     ASSERT_LE(val.max_val, max);
   }
