@@ -119,29 +119,6 @@ void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-namespace Kokkos {
-
-KOKKOS_DEPRECATED void Experimental::HIPSpace::access_error() {
-  const std::string msg(
-      "Kokkos::Experimental::HIPSpace::access_error attempt to execute "
-      "Experimental::HIP function from non-HIP space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-
-KOKKOS_DEPRECATED void Experimental::HIPSpace::access_error(const void* const) {
-  const std::string msg(
-      "Kokkos::Experimental::HIPSpace::access_error attempt to execute "
-      "Experimental::HIP function from non-HIP space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-
-}  // namespace Kokkos
-#endif
-
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-
 namespace Kokkos {
 namespace Experimental {
 
@@ -597,14 +574,6 @@ int g_hip_space_factory_initialized =
     initialize_space_factory<::Kokkos::Experimental::HIP>("150_HIP");
 
 }  // namespace Impl
-
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Kokkos::Experimental::HIP>::id;
-}
-}  // namespace Tools
-#endif
 
 }  // namespace Kokkos
 

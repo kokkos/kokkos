@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 
 #ifndef KOKKOS_OPENACC_SPACE_HPP
@@ -192,57 +188,6 @@ class Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace,
     } else {
       return nullptr;
     }
-  }
-};
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-// FIXME_OPENACC: Need to update the DeepCopy implementations below to support
-// multiple execution space instances.
-// The current OpenACC backend implementation assumes that there is only one
-// device execution space instance, and all the device operations (e.g., memory
-// transfers, kernel launches, etc.) are implemented to be synchronous, which
-// does not violate the Kokkos execution semantics with the single execution
-// space instance.
-template <class ExecutionSpace>
-struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
-                              Kokkos::Experimental::OpenACCSpace,
-                              ExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    // The behavior of acc_memcpy_device when bytes argument is zero is
-    // clarified only in the latest OpenACC specification (V3.2), and thus the
-    // value checking is added as a safeguard. (The current NVHPC (V22.5)
-    // supports OpenACC V2.7.)
-    if (n > 0) acc_memcpy_device(dst, const_cast<void*>(src), n);
-  }
-  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    if (n > 0) acc_memcpy_device(dst, const_cast<void*>(src), n);
-  }
-};
-
-template <class ExecutionSpace>
-struct Kokkos::Impl::DeepCopy<Kokkos::Experimental::OpenACCSpace,
-                              Kokkos::HostSpace, ExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    if (n > 0) acc_memcpy_to_device(dst, const_cast<void*>(src), n);
-  }
-  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    if (n > 0) acc_memcpy_to_device(dst, const_cast<void*>(src), n);
-  }
-};
-
-template <class ExecutionSpace>
-struct Kokkos::Impl::DeepCopy<
-    Kokkos::HostSpace, Kokkos::Experimental::OpenACCSpace, ExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    if (n > 0) acc_memcpy_from_device(dst, const_cast<void*>(src), n);
-  }
-  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    if (n > 0) acc_memcpy_from_device(dst, const_cast<void*>(src), n);
   }
 };
 

@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_SYCL_HPP
 #define KOKKOS_SYCL_HPP
@@ -134,8 +130,6 @@ class SYCL {
 
   static void impl_initialize(InitializationSettings const&);
 
-  int sycl_device() const;
-
   static bool impl_is_initialized();
 
   static int concurrency();
@@ -161,7 +155,7 @@ struct DeviceTypeTraits<Kokkos::Experimental::SYCL> {
   /// \brief An ID to differentiate (for example) Serial from OpenMP in Tooling
   static constexpr DeviceType id = DeviceType::SYCL;
   static int device_id(const Kokkos::Experimental::SYCL& exec) {
-    return exec.sycl_device();
+    return exec.impl_internal_space_instance()->m_syclDev;
   }
 };
 }  // namespace Experimental

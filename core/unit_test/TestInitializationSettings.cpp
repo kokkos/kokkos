@@ -91,15 +91,13 @@ TEST(defaultdevicetype, initialization_settings) {
   EXPECT_FALSE(settings.has_tools_args());
 }
 
-#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
-
 constexpr bool test_initialization_settings_getter() {
 #define CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(NAME, TYPE)           \
-  STATIC_ASSERT(std::is_same<                                                  \
+  static_assert(std::is_same<                                                  \
                 decltype(std::declval<Kokkos::InitializationSettings const&>() \
                              .has_##NAME()),                                   \
                 bool>::value);                                                 \
-  STATIC_ASSERT(std::is_same<                                                  \
+  static_assert(std::is_same<                                                  \
                 decltype(std::declval<Kokkos::InitializationSettings const&>() \
                              .get_##NAME()),                                   \
                 TYPE>::value);
@@ -116,9 +114,9 @@ constexpr bool test_initialization_settings_getter() {
   return true;
 }
 
-STATIC_ASSERT(test_initialization_settings_getter());
+static_assert(test_initialization_settings_getter());
 
-STATIC_ASSERT(
+static_assert(
     std::is_default_constructible<Kokkos::InitializationSettings>::value);
 
 }  // namespace

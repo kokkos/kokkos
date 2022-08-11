@@ -1728,9 +1728,15 @@ void apply_to_view_of_static_rank(Function&& f, DynRankView<Args...> a) {
     case 6: f(as_view_of_rank_n<6>(a)); break;
     case 7: f(as_view_of_rank_n<7>(a)); break;
     default:
-      Kokkos::Impl::throw_runtime_exception(
-          "Trying to apply a function to a view of unexpected rank " +
-          std::to_string(rank(a)));
+      KOKKOS_IF_ON_HOST(
+          Kokkos::abort(
+              std::string(
+                  "Trying to apply a function to a view of unexpected rank " +
+                  std::to_string(rank(a)))
+                  .c_str());)
+      KOKKOS_IF_ON_DEVICE(
+          Kokkos::abort(
+              "Trying to apply a function to a view of unexpected rank");)
   }
 }
 
@@ -1749,10 +1755,18 @@ KOKKOS_INLINE_FUNCTION constexpr auto DynRankView<D, P...>::layout() const ->
     case 6: return Impl::as_view_of_rank_n<6>(*this).layout();
     case 7: return Impl::as_view_of_rank_n<7>(*this).layout();
     default:
-      Kokkos::Impl::throw_runtime_exception(
-          "Calling DynRankView::layout on DRV of unexpected rank " +
-          std::to_string(rank()));
+      KOKKOS_IF_ON_HOST(
+          Kokkos::abort(
+              std::string(
+                  "Calling DynRankView::layout on DRV of unexpected rank " +
+                  std::to_string(rank()))
+                  .c_str());)
+      KOKKOS_IF_ON_DEVICE(
+          Kokkos::abort(
+              "Calling DynRankView::layout on DRV of unexpected rank");)
   }
+  // control flow should never reach here
+  return m_map.layout();
 }
 
 /** \brief  Deep copy a value from Host memory into a view.  */

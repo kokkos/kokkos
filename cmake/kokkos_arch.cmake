@@ -219,6 +219,10 @@ ENDIF()
 
 
 IF(KOKKOS_ARCH_NATIVE)
+  IF(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "MSVC")
+    MESSAGE(FATAL_ERROR "MSVC doesn't support ARCH_NATIVE!")
+  ENDIF()
+
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     DEFAULT -march=native -mtune=native
@@ -459,7 +463,7 @@ IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND WIN32)
 ENDIF()
 
 # MSVC ABI has many deprecation warnings, so ignore them
-IF (CMAKE_CXX_COMPILER_ID STREQUAL MSVC OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+IF (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
   COMPILER_SPECIFIC_DEFS(
     Clang _CRT_SECURE_NO_WARNINGS
   )
@@ -750,8 +754,8 @@ IF(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
     IF(CMAKE_CUDA_COMPILER)
       # copy our test to .cu so cmake compiles as CUDA
       CONFIGURE_FILE(
-        ${PROJECT_SOURCE_DIR}/cmake/compile_tests/cuda_compute_capability.cc
-        ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compile_tests/cuda_compute_capability.cc
+        ${CMAKE_CURRENT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
         COPYONLY
       )
       # run test again
@@ -759,7 +763,7 @@ IF(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
         _RESULT
         _COMPILE_RESULT
         ${_BINARY_TEST_DIR}
-        ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
+        ${CMAKE_CURRENT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
         COMPILE_DEFINITIONS -DSM_ONLY
         RUN_OUTPUT_VARIABLE _CUDA_COMPUTE_CAPABILITY)
     ENDIF()

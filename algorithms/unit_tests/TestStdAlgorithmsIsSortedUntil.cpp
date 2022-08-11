@@ -178,7 +178,7 @@ void run_single_scenario(const InfoType& scenario_info) {
   EXPECT_EQ(r3, gold);
   EXPECT_EQ(r4, gold);
 
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#if !defined KOKKOS_ENABLE_OPENMPTARGET
   CustomLessThanComparator<ValueType, ValueType> comp;
   auto r5 =
       KE::is_sorted_until(exespace(), KE::cbegin(view), KE::cend(view), comp);

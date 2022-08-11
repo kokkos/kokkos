@@ -191,23 +191,9 @@ struct type_list_remove_first
 template <template <class> class UnaryPred, class List>
 struct type_list_any;
 
-#ifdef KOKKOS_ENABLE_CXX17
 template <template <class> class UnaryPred, class... Ts>
 struct type_list_any<UnaryPred, type_list<Ts...>>
     : std::bool_constant<(UnaryPred<Ts>::value || ...)> {};
-#else
-template <template <class> class UnaryPred, class T, class... Ts>
-struct type_list_any<UnaryPred, type_list<T, Ts...>> {
-  using type = typename std::conditional_t<
-      UnaryPred<T>::value, std::true_type,
-      type_list_any<UnaryPred, type_list<Ts...>>>::type;
-  static constexpr auto value = type::value;
-};
-
-template <template <class> class UnaryPred>
-struct type_list_any<UnaryPred, type_list<>> : std::false_type {};
-
-#endif
 
 // </editor-fold> end type_list_any }}}2
 //------------------------------------------------------------------------------

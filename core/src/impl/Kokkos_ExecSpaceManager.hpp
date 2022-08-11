@@ -83,23 +83,19 @@ using fence_t = std::enable_if_t<
     std::is_void<decltype(std::declval<T const&>().fence("name"))>::value &&
     std::is_void<decltype(T::impl_static_fence("name"))>::value>;
 
-#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
-
 template <class ExecutionSpace>
 constexpr bool check_valid_execution_space() {
   using Kokkos::is_detected;
-  STATIC_ASSERT(std::is_default_constructible<ExecutionSpace>::value);
-  STATIC_ASSERT(is_detected<public_member_types_t, ExecutionSpace>::value);
-  STATIC_ASSERT(is_detected<print_configuration_t, ExecutionSpace>::value);
-  STATIC_ASSERT(is_detected<initialize_finalize_t, ExecutionSpace>::value);
-  STATIC_ASSERT(is_detected<fence_t, ExecutionSpace>::value);
+  static_assert(std::is_default_constructible<ExecutionSpace>::value);
+  static_assert(is_detected<public_member_types_t, ExecutionSpace>::value);
+  static_assert(is_detected<print_configuration_t, ExecutionSpace>::value);
+  static_assert(is_detected<initialize_finalize_t, ExecutionSpace>::value);
+  static_assert(is_detected<fence_t, ExecutionSpace>::value);
 #ifndef KOKKOS_ENABLE_HPX  // FIXME_HPX
-  STATIC_ASSERT(sizeof(ExecutionSpace) <= 2 * sizeof(void*));
+  static_assert(sizeof(ExecutionSpace) <= 2 * sizeof(void*));
 #endif
   return true;
 }
-
-#undef STATIC_ASSERT
 
 }  // namespace
 

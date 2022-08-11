@@ -124,8 +124,7 @@
 #define KOKKOS_LAMBDA [=]
 #endif
 
-#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)) && \
-    !defined(KOKKOS_CLASS_LAMBDA)
+#if !defined(KOKKOS_CLASS_LAMBDA)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
 
@@ -203,16 +202,6 @@
 //  where YYYY and MM are the year and month designation
 //  of the supported OpenMP API version.
 #endif  // #if defined( _OPENMP )
-
-#if defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
-#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
-#define KOKKOS_IMPL_FALLTHROUGH [[gnu::fallthrough]];
-#elif defined(KOKKOS_COMPILER_CLANG)
-#define KOKKOS_IMPL_FALLTHROUGH [[clang::fallthrough]];
-#else
-#define KOKKOS_IMPL_FALLTHROUGH
-#endif
 
 //----------------------------------------------------------------------------
 // Intel compiler macros
@@ -607,11 +596,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_CONSTEXPR_14 constexpr
-#define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
-#endif
-
 // Guard intel compiler version 19 and older
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
@@ -644,11 +628,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
-#else
-#define KOKKOS_ATTRIBUTE_NODISCARD
-#endif
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
@@ -662,11 +642,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #if defined(__CUDA_ARCH__) && !defined(__CUDACC__) && \
     !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_CUDA)
 #undef __CUDA_ARCH__
-#endif
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_THREAD_LOCAL \
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") thread_local
 #endif
 
 #if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \
