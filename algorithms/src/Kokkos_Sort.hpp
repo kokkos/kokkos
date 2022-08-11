@@ -677,12 +677,11 @@ struct NestedRange {};
 template <>
 struct NestedRange<true> {
   template <typename TeamMember, typename SizeType>
-  KOKKOS_FORCEINLINE_FUNCTION static auto create(const TeamMember& t,
-                                                 SizeType len) {
+  KOKKOS_FUNCTION static auto create(const TeamMember& t, SizeType len) {
     return Kokkos::TeamVectorRange(t, len);
   }
   template <typename TeamMember>
-  KOKKOS_FORCEINLINE_FUNCTION static void barrier(const TeamMember& t) {
+  KOKKOS_FUNCTION static void barrier(const TeamMember& t) {
     t.team_barrier();
   }
 };
@@ -691,14 +690,13 @@ struct NestedRange<true> {
 template <>
 struct NestedRange<false> {
   template <typename TeamMember, typename SizeType>
-  KOKKOS_FORCEINLINE_FUNCTION static auto create(const TeamMember& t,
-                                                 SizeType len) {
+  KOKKOS_FUNCTION static auto create(const TeamMember& t, SizeType len) {
     return Kokkos::ThreadVectorRange(t, len);
   }
   // Barrier is no-op, as vector lanes of a thread are implicitly synchronized
   // after parallel region
   template <typename TeamMember>
-  KOKKOS_FORCEINLINE_FUNCTION static void barrier(const TeamMember&) {}
+  KOKKOS_FUNCTION static void barrier(const TeamMember&) {}
 };
 
 // When just doing sort (not sort_by_key), use nullptr_t for ValueViewType.

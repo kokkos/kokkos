@@ -406,7 +406,8 @@ void test_sort_integer_overflow() {
 // Comparator for sorting in descending order
 template <typename Key>
 struct GreaterThan {
-  KOKKOS_INLINE_FUNCTION bool operator()(const Key lhs, const Key rhs) const {
+  KOKKOS_FUNCTION constexpr bool operator()(const Key& lhs,
+                                            const Key& rhs) const {
     return lhs > rhs;
   }
 };
