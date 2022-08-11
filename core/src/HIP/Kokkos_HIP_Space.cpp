@@ -42,6 +42,10 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
+
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Core.hpp>
@@ -51,6 +55,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 
 #include <stdlib.h>
 #include <iostream>
@@ -114,29 +119,6 @@ void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-namespace Kokkos {
-
-KOKKOS_DEPRECATED void Experimental::HIPSpace::access_error() {
-  const std::string msg(
-      "Kokkos::Experimental::HIPSpace::access_error attempt to execute "
-      "Experimental::HIP function from non-HIP space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-
-KOKKOS_DEPRECATED void Experimental::HIPSpace::access_error(const void* const) {
-  const std::string msg(
-      "Kokkos::Experimental::HIPSpace::access_error attempt to execute "
-      "Experimental::HIP function from non-HIP space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-
-}  // namespace Kokkos
-#endif
-
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-
 namespace Kokkos {
 namespace Experimental {
 
@@ -194,7 +176,8 @@ void* HIPHostPinnedSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
-  auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
+  auto const error_code =
+      hipHostMalloc(&ptr, arg_alloc_size, hipHostMallocNonCoherent);
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
@@ -516,8 +499,8 @@ int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
 }
 
-void HIP::impl_initialize(const HIP::SelectDevice config) {
-  Impl::HIPInternal::singleton().initialize(config.hip_device_id);
+void HIP::impl_initialize(InitializationSettings const& settings) {
+  Impl::HIPInternal::singleton().initialize(::Kokkos::Impl::get_gpu(settings));
 }
 
 void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
@@ -540,8 +523,21 @@ HIP::HIP(hipStream_t const stream, bool manage_stream)
                                manage_stream);
 }
 
-void HIP::print_configuration(std::ostream& s, const bool) {
-  Impl::HIPInternal::singleton().print_configuration(s);
+void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
+  os << "Device Execution Space:\n";
+  os << "  KOKKOS_ENABLE_HIP: yes\n";
+
+  os << "HIP Options:\n";
+  os << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
+#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
+
+  os << "\nRuntime Configuration:\n";
+
+  m_space_instance->print_configuration(os);
 }
 
 uint32_t HIP::impl_instance_id() const noexcept {
@@ -575,63 +571,9 @@ const char* HIP::name() { return "HIP"; }
 namespace Impl {
 
 int g_hip_space_factory_initialized =
-    initialize_space_factory<HIPSpaceInitializer>("150_HIP");
-
-void HIPSpaceInitializer::initialize(const InitializationSettings& settings) {
-  int use_gpu = Impl::get_gpu(settings);
-
-  if (std::is_same<Kokkos::Experimental::HIP,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Kokkos::Experimental::HIP::impl_initialize(
-          Kokkos::Experimental::HIP::SelectDevice(use_gpu));
-    } else {
-      Kokkos::Experimental::HIP::impl_initialize();
-    }
-  }
-}
-
-void HIPSpaceInitializer::finalize(const bool all_spaces) {
-  if (std::is_same<Kokkos::Experimental::HIP,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::HIP::impl_is_initialized())
-      Kokkos::Experimental::HIP::impl_finalize();
-  }
-}
-
-void HIPSpaceInitializer::fence(const std::string& name) {
-  Kokkos::Experimental::HIP::impl_static_fence(name);
-}
-
-void HIPSpaceInitializer::print_configuration(std::ostream& msg,
-                                              const bool detail) {
-  msg << "Devices:" << std::endl;
-  msg << "  KOKKOS_ENABLE_HIP: ";
-  msg << "yes" << std::endl;
-
-  msg << "HIP Options:" << std::endl;
-  msg << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
-#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-
-  msg << "\nRuntime Configuration:" << std::endl;
-  Experimental::HIP::print_configuration(msg, detail);
-}
+    initialize_space_factory<::Kokkos::Experimental::HIP>("150_HIP");
 
 }  // namespace Impl
-
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Kokkos::Experimental::HIP>::id;
-}
-}  // namespace Tools
-#endif
 
 }  // namespace Kokkos
 

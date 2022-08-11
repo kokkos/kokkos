@@ -76,8 +76,10 @@ bool checkMemoryCoarseGrainedness(HIPMemoryContainer const& container) {
 TEST(hip, memory_requirements) {
   // we want all user-facing memory in hip to be coarse grained. As of
   // today(07.01.22) the documentation is not reliable/correct, we test the
-  // memory on the device as well as the managed memory
+  // memory on the device and host
   KOKKOS_TEST_MEMORY_COARSEGRAINEDNESS(Kokkos::Experimental::HIPSpace, int, 10);
+  KOKKOS_TEST_MEMORY_COARSEGRAINEDNESS(Kokkos::Experimental::HIPHostPinnedSpace,
+                                       int, 10);
   KOKKOS_TEST_MEMORY_COARSEGRAINEDNESS(Kokkos::Experimental::HIPManagedSpace,
                                        int, 10);
 }

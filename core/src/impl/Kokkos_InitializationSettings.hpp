@@ -94,7 +94,10 @@ struct InitializationSettingsHelper<bool> {
   using value_type   = bool;
   using storage_type = char;
 
-  static constexpr storage_type unspecified = CHAR_MIN;
+  static constexpr storage_type unspecified = CHAR_MAX;
+  static_assert(static_cast<storage_type>(true) != unspecified &&
+                    static_cast<storage_type>(false) != unspecified,
+                "");
 };
 template <>
 struct InitializationSettingsHelper<std::string> {
@@ -137,13 +140,15 @@ class InitializationSettings {
  public:
   KOKKOS_IMPL_DECLARE(int, num_threads);
   KOKKOS_IMPL_DECLARE(int, device_id);
-  KOKKOS_IMPL_DECLARE(int, num_devices);
-  KOKKOS_IMPL_DECLARE(int, skip_device);
+  KOKKOS_IMPL_DECLARE(std::string, map_device_id_by);
+  KOKKOS_IMPL_DECLARE(int, num_devices);  // deprecated
+  KOKKOS_IMPL_DECLARE(int, skip_device);  // deprecated
   KOKKOS_IMPL_DECLARE(bool, disable_warnings);
+  KOKKOS_IMPL_DECLARE(bool, print_configuration);
   KOKKOS_IMPL_DECLARE(bool, tune_internals);
-  KOKKOS_IMPL_DECLARE(bool, tool_help);
-  KOKKOS_IMPL_DECLARE(std::string, tool_lib);
-  KOKKOS_IMPL_DECLARE(std::string, tool_args);
+  KOKKOS_IMPL_DECLARE(bool, tools_help);
+  KOKKOS_IMPL_DECLARE(std::string, tools_libs);
+  KOKKOS_IMPL_DECLARE(std::string, tools_args);
 
 #undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE
 #undef KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER
@@ -173,13 +178,13 @@ class InitializationSettings {
       set_tune_internals(true);
     }
     if (old.tool_help) {
-      set_tool_help(true);
+      set_tools_help(true);
     }
     if (!old.tool_lib.empty()) {
-      set_tool_lib(old.tool_lib);
+      set_tools_libs(old.tool_lib);
     }
     if (!old.tool_args.empty()) {
-      set_tool_args(old.tool_args);
+      set_tools_args(old.tool_args);
     }
   }
 #endif

@@ -42,83 +42,15 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_THREADS)
+#ifndef KOKKOS_OPENACC_FWD_HPP_
+#define KOKKOS_OPENACC_FWD_HPP_
 
-#include <Kokkos_Core_fwd.hpp>
-
-/* Standard C++ libraries */
-
-#include <cstdlib>
-#include <string>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-#include <mutex>
-
-#include <Kokkos_Threads.hpp>
-
-//----------------------------------------------------------------------------
-
+#if defined(KOKKOS_ENABLE_OPENACC)
 namespace Kokkos {
-namespace Impl {
-namespace {
-
-std::mutex host_internal_cppthread_mutex;
-
-// std::thread compatible driver.
-// Recovery from an exception would require constant intra-thread health
-// verification; which would negatively impact runtime.  As such simply
-// abort the process.
-
-void internal_cppthread_driver() {
-  try {
-    ThreadsExec::driver();
-  } catch (const std::exception& x) {
-    std::cerr << "Exception thrown from worker thread: " << x.what()
-              << std::endl;
-    std::cerr.flush();
-    std::abort();
-  } catch (...) {
-    std::cerr << "Exception thrown from worker thread" << std::endl;
-    std::cerr.flush();
-    std::abort();
-  }
-}
-
-}  // namespace
-
-//----------------------------------------------------------------------------
-// Spawn a thread
-
-void ThreadsExec::spawn() {
-  std::thread t(internal_cppthread_driver);
-  t.detach();
-}
-
-//----------------------------------------------------------------------------
-
-bool ThreadsExec::is_process() {
-  static const std::thread::id master_pid = std::this_thread::get_id();
-
-  return master_pid == std::this_thread::get_id();
-}
-
-void ThreadsExec::global_lock() { host_internal_cppthread_mutex.lock(); }
-
-void ThreadsExec::global_unlock() { host_internal_cppthread_mutex.unlock(); }
-
-//----------------------------------------------------------------------------
-
-void ThreadsExec::wait_yield(volatile int& flag, const int value) {
-  while (value == flag) {
-    std::this_thread::yield();
-  }
-}
-
-}  // namespace Impl
+namespace Experimental {
+class OpenACC;  ///< OpenACC execution space.
+class OpenACCSpace;
+}  // namespace Experimental
 }  // namespace Kokkos
-
-#else
-void KOKKOS_CORE_SRC_THREADS_EXEC_BASE_PREVENT_LINK_ERROR() {}
-#endif /* end #if defined( KOKKOS_ENABLE_THREADS ) */
+#endif
+#endif

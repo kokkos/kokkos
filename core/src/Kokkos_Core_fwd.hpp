@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_CORE_FWD_HPP
 #define KOKKOS_CORE_FWD_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE_FWD
+#endif
 
 //----------------------------------------------------------------------------
 // Kokkos_Macros.hpp does introspection on configuration options
@@ -135,6 +139,9 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::SYCL;
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC)
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
+    Experimental::OpenACC;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
@@ -146,7 +153,7 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
 #else
 #error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
+    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::Experimental::OpenACC, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
@@ -234,45 +241,6 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
               msg);))
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
-    defined(KOKKOS_ENABLE_CUDA)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = Kokkos::CudaSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED =
-    Kokkos::Experimental::SYCLDeviceUSMSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED =
-    Kokkos::Experimental::HIPSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = Kokkos::HostSpace;
-#else
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = void;
-#endif
-
-template <typename DstMemorySpace, typename SrcMemorySpace>
-struct MemorySpaceAccess;
-
-template <typename DstMemorySpace, typename SrcMemorySpace,
-          bool = Kokkos::Impl::MemorySpaceAccess<DstMemorySpace,
-                                                 SrcMemorySpace>::accessible>
-struct verify_space {
-  KOKKOS_DEPRECATED KOKKOS_FUNCTION static void check() {}
-};
-
-template <typename DstMemorySpace, typename SrcMemorySpace>
-struct verify_space<DstMemorySpace, SrcMemorySpace, false> {
-  KOKKOS_DEPRECATED KOKKOS_FUNCTION static void check() {
-    Kokkos::abort(
-        "Kokkos::View ERROR: attempt to access inaccessible memory space");
-  };
-};
-#endif
-
-// Base class for exec space initializer factories
-class ExecSpaceInitializerBase;
-
 }  // namespace Impl
 
 namespace Experimental {
@@ -282,20 +250,18 @@ class LogicalMemorySpace;
 
 }  // namespace Kokkos
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)        \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             DATA_SPACE>::check();
-
-#define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                      \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             DATA_SPACE>::check();
-#endif
-
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+// Getting ICE in Trilinos in Sacado and Intrepid in deep_copy
+// See issue https://github.com/kokkos/kokkos/issues/5290
+// Simply taking string by value did not resolve the issue
+#ifdef KOKKOS_COMPILER_INTEL
+void fence();
+void fence(const std::string &name);
+#else
 void fence(const std::string &name = "Kokkos::fence: Unnamed Global Fence");
+#endif
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -420,4 +386,8 @@ template <class Index, class Space = HostSpace>
 struct StdPartitionPoint;
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE_FWD
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE_FWD
+#endif
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */

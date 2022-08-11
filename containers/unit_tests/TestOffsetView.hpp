@@ -52,7 +52,6 @@
 #include <cstdio>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_OffsetView.hpp>
-#include <KokkosExp_MDRangePolicy.hpp>
 
 using std::cout;
 using std::endl;
@@ -64,13 +63,8 @@ void test_offsetview_construction() {
   using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
   using view_type        = Kokkos::View<Scalar**, Device>;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  Kokkos::Experimental::index_list_type range0 = {-1, 3};
-  Kokkos::Experimental::index_list_type range1 = {-2, 2};
-#else
   std::pair<int64_t, int64_t> range0 = {-1, 3};
   std::pair<int64_t, int64_t> range1 = {-2, 2};
-#endif
 
   {
     offset_view_type o1;

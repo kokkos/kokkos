@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_HIPSPACE_HPP
 #define KOKKOS_HIPSPACE_HPP
 
@@ -61,8 +66,8 @@
 #include <HIP/Kokkos_HIP_Error.hpp>  // HIP_SAFE_CALL
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <hip/hip_runtime_api.h>
 /*--------------------------------------------------------------------------*/
@@ -123,13 +128,6 @@ class HIPSpace {
  public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return "HIP"; }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  Error reporting for HostSpace attempt to access HIPSpace */
-  KOKKOS_DEPRECATED static void access_error();
-  KOKKOS_DEPRECATED static void access_error(const void* const);
-#endif
 
  private:
   int m_device;  ///< Which HIP device
@@ -713,7 +711,7 @@ class HIP {
   hipStream_t hip_stream() const;
 
   /// \brief Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   /// \brief Free any resources being consumed by the device.
   static void impl_finalize();
@@ -721,16 +719,10 @@ class HIP {
   /** \brief  Initialize the device.
    *
    */
-  struct SelectDevice {
-    int hip_device_id;
-    SelectDevice() : hip_device_id(0) {}
-    explicit SelectDevice(int id) : hip_device_id(id) {}
-  };
-
   int hip_device() const;
   static hipDeviceProp_t const& hip_device_prop();
 
-  static void impl_initialize(const SelectDevice = SelectDevice());
+  static void impl_initialize(InitializationSettings const&);
 
   static int impl_is_initialized();
 
@@ -764,17 +756,6 @@ struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
 }  // namespace Tools
 
 namespace Impl {
-
-class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
- public:
-  HIPSpaceInitializer()  = default;
-  ~HIPSpaceInitializer() = default;
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
   ZeroMemset(const Kokkos::Experimental::HIP& exec_space,

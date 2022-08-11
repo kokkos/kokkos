@@ -45,6 +45,11 @@
 /// \file Kokkos_Serial.hpp
 /// \brief Declaration and definition of Kokkos::Serial device.
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_SERIAL_HPP
 #define KOKKOS_SERIAL_HPP
 
@@ -64,8 +69,8 @@
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 namespace Kokkos {
 
@@ -166,10 +171,9 @@ class Serial {
   static int concurrency() { return 1; }
 
   //! Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&,
-                                  const bool /* detail */ = false) {}
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
-  static void impl_initialize();
+  static void impl_initialize(InitializationSettings const&);
 
   static bool impl_is_initialized();
 
@@ -220,20 +224,6 @@ struct DeviceTypeTraits<Serial> {
 };
 }  // namespace Experimental
 }  // namespace Tools
-
-namespace Impl {
-
-class SerialSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  SerialSpaceInitializer()  = default;
-  ~SerialSpaceInitializer() = default;
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

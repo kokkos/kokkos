@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_THREADS_HPP
 #define KOKKOS_THREADS_HPP
 
@@ -57,7 +62,7 @@
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -99,7 +104,7 @@ class Threads {
   static int in_parallel();
 
   /// \brief Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   /// \brief Wait until all dispatched functors complete.
   ///
@@ -126,7 +131,7 @@ class Threads {
   //! \name Space-specific functions
   //@{
 
-  static void impl_initialize(int thread_count = -1);
+  static void impl_initialize(InitializationSettings const&);
 
   static int impl_is_initialized();
 
@@ -167,20 +172,6 @@ struct DeviceTypeTraits<Threads> {
 };
 }  // namespace Experimental
 }  // namespace Tools
-
-namespace Impl {
-
-class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  ThreadsSpaceInitializer()  = default;
-  ~ThreadsSpaceInitializer() = default;
-  void initialize(const InitializationSettings& settings) final;
-  void finalize(const bool) final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -205,7 +196,10 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 #include <Kokkos_Parallel.hpp>
 #include <Threads/Kokkos_ThreadsExec.hpp>
 #include <Threads/Kokkos_ThreadsTeam.hpp>
-#include <Threads/Kokkos_Threads_Parallel.hpp>
+#include <Threads/Kokkos_Threads_Parallel_Range.hpp>
+#include <Threads/Kokkos_Threads_Parallel_MDRange.hpp>
+#include <Threads/Kokkos_Threads_Parallel_Team.hpp>
+#include <Threads/Kokkos_Threads_UniqueToken.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 

@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_VIEW_HPP
 #define KOKKOS_VIEW_HPP
 
@@ -492,11 +497,9 @@ using is_always_assignable = is_always_assignable_impl<
     std::remove_reference_t<View1>,
     std::remove_const_t<std::remove_reference_t<View2>>>;
 
-#ifdef KOKKOS_ENABLE_CXX17
 template <class T1, class T2>
 inline constexpr bool is_always_assignable_v =
     is_always_assignable<T1, T2>::value;
-#endif
 
 template <class... ViewTDst, class... ViewTSrc>
 constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
@@ -507,13 +510,8 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
       Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
                                 typename DstTraits::specialize>;
 
-#ifdef KOKKOS_ENABLE_CXX17
   return is_always_assignable_v<Kokkos::View<ViewTDst...>,
                                 Kokkos::View<ViewTSrc...>> ||
-#else
-  return is_always_assignable<Kokkos::View<ViewTDst...>,
-                              Kokkos::View<ViewTSrc...>>::value ||
-#endif
          (mapping_type::is_assignable &&
           ((DstTraits::dimension::rank_dynamic >= 1) ||
            (dst.static_extent(0) == src.extent(0))) &&
@@ -1554,7 +1552,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1571,7 +1573,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(arg_prop,
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 
   // Allocate with label and layout
   template <typename Label>
@@ -1600,8 +1606,8 @@ class View : public ViewTraits<DataType, Properties...> {
                                            arg_N4, arg_N5, arg_N6, arg_N7),
              check_input_args::yes) {
     static_assert(traits::array_layout::is_extent_constructible,
-                  "Layout is not extent constructible. A layout object should "
-                  "be passed too.\n");
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
   }
 
   // Construct view from ViewTracker and map
@@ -1637,9 +1643,17 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Memory span required to wrap these dimensions.
   static constexpr size_t required_allocation_size(
+      typename traits::array_layout const& layout) {
+    return map_type::memory_span(layout);
+  }
+
+  static constexpr size_t required_allocation_size(
       const size_t arg_N0 = 0, const size_t arg_N1 = 0, const size_t arg_N2 = 0,
       const size_t arg_N3 = 0, const size_t arg_N4 = 0, const size_t arg_N5 = 0,
       const size_t arg_N6 = 0, const size_t arg_N7 = 0) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
     return map_type::memory_span(typename traits::array_layout(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
@@ -1656,7 +1670,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(Impl::ViewCtorProp<pointer_type>(arg_ptr),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 
   explicit KOKKOS_INLINE_FUNCTION View(
       pointer_type arg_ptr, const typename traits::array_layout& arg_layout)
@@ -1674,11 +1692,9 @@ class View : public ViewTraits<DataType, Properties...> {
              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
              const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    if (is_layout_stride) {
-      Kokkos::abort(
-          "Kokkos::View::shmem_size(extents...) doesn't work with "
-          "LayoutStride. Pass a LayoutStride object instead");
-    }
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
     const size_t num_passed_args = Impl::count_valid_integers(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
 
@@ -1725,7 +1741,11 @@ class View : public ViewTraits<DataType, Properties...> {
                      sizeof(typename traits::value_type)))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7),
-             check_input_args::yes) {}
+             check_input_args::yes) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+  }
 };
 
 /** \brief Temporary free function rank()
@@ -1750,8 +1770,8 @@ struct RankDataType<ValueType, 0> {
 };
 
 template <unsigned N, typename... Args>
-std::enable_if_t<N == View<Args...>::Rank, View<Args...>> as_view_of_rank_n(
-    View<Args...> v) {
+KOKKOS_FUNCTION std::enable_if_t<N == View<Args...>::Rank, View<Args...>>
+as_view_of_rank_n(View<Args...> v) {
   return v;
 }
 
@@ -1872,7 +1892,6 @@ inline void shared_allocation_tracking_enable() {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 namespace Impl {
 
@@ -1958,25 +1977,24 @@ template <class... Views>
 using DeducedCommonPropsType =
     typename Impl::DeduceCommonViewAllocProp<Views...>::prop_type;
 
-// User function
+// This function is required in certain scenarios where users customize
+// Kokkos View internals. One example are dynamic length embedded ensemble
+// types. The function is used to propagate necessary information
+// (like the ensemble size) when creating new views.
+// However, most of the time it is called with a single view.
+// Furthermore, the propagated information is not just for view allocations.
+// From what I can tell, the type of functionality provided by
+// common_view_alloc_prop is the equivalent of propagating accessors in mdspan,
+// a mechanism we will eventually use to replace this clunky approach here, when
+// we are finally mdspan based.
+// TODO: get rid of this when we have mdspan
 template <class... Views>
-KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...>
-common_view_alloc_prop(Views const&... views) {
+KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
+    Views const&... views) {
   return DeducedCommonPropsType<Views...>(views...);
 }
 
 }  // namespace Kokkos
-
-namespace Kokkos {
-namespace Impl {
-
-template <class T>
-using is_view KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::is_view instead!") =
-    Kokkos::is_view<T>;
-
-} /* namespace Impl */
-} /* namespace Kokkos */
-#endif
 
 #include <impl/Kokkos_ViewUniformType.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>

@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_GRAPH_HPP
 #define KOKKOS_GRAPH_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH
+#endif
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>  // KOKKOS_EXPECTS
@@ -66,7 +70,7 @@ namespace Experimental {
 // <editor-fold desc="Graph"> {{{1
 
 template <class ExecutionSpace>
-struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
+struct [[nodiscard]] Graph {
  public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="public member types"> {{{2
@@ -188,4 +192,8 @@ Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
 #include <impl/Kokkos_GraphNodeImpl.hpp>
 #include <impl/Kokkos_Default_Graph_Impl.hpp>
 #include <Cuda/Kokkos_Cuda_Graph_Impl.hpp>
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH
+#endif
 #endif  // KOKKOS_GRAPH_HPP

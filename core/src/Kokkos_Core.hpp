@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_CORE_HPP
 #define KOKKOS_CORE_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
 
 //----------------------------------------------------------------------------
 // Include the execution space header files for the enabled execution spaces.
@@ -74,45 +78,13 @@
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <functional>
 #include <iosfwd>
-#include <map>
 #include <memory>
 #include <vector>
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
-/* ExecSpaceManager - Responsible for initializing all of the registered
- * backends. Backends are registered using the register_space_initializer()
- * function which should be called from a global context so that it is called
- * prior to initialize_spaces() which is called from Kokkos::initialize()
- */
-class ExecSpaceManager {
-  std::map<std::string, std::unique_ptr<ExecSpaceInitializerBase>>
-      exec_space_factory_list;
 
- public:
-  ExecSpaceManager() = default;
-
-  void register_space_factory(std::string name,
-                              std::unique_ptr<ExecSpaceInitializerBase> ptr);
-  void initialize_spaces(const InitializationSettings& settings);
-  void finalize_spaces();
-  void static_fence();
-  void static_fence(const std::string&);
-  void print_configuration(std::ostream& msg, const bool detail);
-  static ExecSpaceManager& get_instance();
-};
-
-template <class SpaceInitializerType>
-int initialize_space_factory(std::string name) {
-  auto space_ptr = std::make_unique<SpaceInitializerType>();
-  ExecSpaceManager::get_instance().register_space_factory(name,
-                                                          std::move(space_ptr));
-  return 1;
-}
-
-}  // namespace Impl
 void initialize(int& argc, char* argv[]);
 
 void initialize(
@@ -130,7 +102,8 @@ void declare_configuration_metadata(const std::string& category,
 
 }  // namespace Impl
 
-bool is_initialized() noexcept;
+[[nodiscard]] bool is_initialized() noexcept;
+[[nodiscard]] bool is_finalized() noexcept;
 
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
@@ -160,15 +133,10 @@ void finalize();
  */
 void push_finalize_hook(std::function<void()> f);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-/** \brief  Finalize all known execution spaces */
-KOKKOS_DEPRECATED void finalize_all();
-#endif
-
 void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
 
 /** \brief Print "Bill of Materials" */
-void print_configuration(std::ostream&, const bool detail = false);
+void print_configuration(std::ostream& os, bool verbose = false);
 
 }  // namespace Kokkos
 
@@ -222,37 +190,67 @@ namespace Kokkos {
  *     if Kokkos::is_initialized() in the constructor, don't call
  * Kokkos::initialize or Kokkos::finalize it is not copyable or assignable
  */
+namespace Impl {
 
-class ScopeGuard {
+inline std::string scopeguard_correct_usage() {
+  return std::string(
+      "Do instead:\n"
+      "  std::unique_ptr<Kokkos::ScopeGuard> guard =\n"
+      "    !Kokkos::is_initialized() && !Kokkos::is_finalized()?\n"
+      "    new ScopeGuard(argc,argv) : nullptr;\n");
+}
+
+inline std::string scopeguard_create_while_initialized_warning() {
+  return std::string(
+             "Kokkos Error: Creating a ScopeGuard while Kokkos is initialized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_create_after_finalize_warning() {
+  return std::string(
+             "Kokkos Error: Creating a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+inline std::string scopeguard_destruct_after_finalize_warning() {
+  return std::string(
+             "Kokkos Error: Destroying a ScopeGuard after Kokkos was finalized "
+             "is illegal.\n")
+      .append(scopeguard_correct_usage());
+}
+
+}  // namespace Impl
+
+class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
  public:
-  ScopeGuard(int& argc, char* argv[]) {
-    sg_init = false;
-    if (!Kokkos::is_initialized()) {
-      initialize(argc, argv);
-      sg_init = true;
+  template <class... Args>
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  [[nodiscard]]
+#endif
+  ScopeGuard(Args&&... args) {
+    if (is_initialized()) {
+      Kokkos::abort(
+          Impl::scopeguard_create_while_initialized_warning().c_str());
     }
-  }
-
-  ScopeGuard(
-      const InitializationSettings& settings = InitializationSettings()) {
-    sg_init = false;
-    if (!Kokkos::is_initialized()) {
-      initialize(settings);
-      sg_init = true;
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_create_after_finalize_warning().c_str());
     }
+    initialize(static_cast<Args&&>(args)...);
   }
 
   ~ScopeGuard() {
-    if (Kokkos::is_initialized() && sg_init) {
-      finalize();
+    if (is_finalized()) {
+      Kokkos::abort(Impl::scopeguard_destruct_after_finalize_warning().c_str());
     }
+    finalize();
   }
 
-  // private:
-  bool sg_init;
-
   ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard(const ScopeGuard&)            = delete;
+  ScopeGuard& operator=(ScopeGuard&&) = delete;
+  ScopeGuard(const ScopeGuard&)       = delete;
+  ScopeGuard(ScopeGuard&&)            = delete;
 };
 
 }  // namespace Kokkos
@@ -306,9 +304,14 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 // implementation of the RAII wrapper is using Kokkos::single.
 #include <Kokkos_AcquireUniqueTokenImpl.hpp>
 
-// Specializations requires after core definitions
+// Specializations required after core definitions
 #include <KokkosCore_Config_PostInclude.hpp>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
 #endif

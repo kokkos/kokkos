@@ -44,6 +44,10 @@
 
 #ifndef KOKKOS_STD_ALGORITHMS_HPP
 #define KOKKOS_STD_ALGORITHMS_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STD_ALGORITHMS
+#endif
 
 /// \file Kokkos_StdAlgorithms.hpp
 /// \brief Kokkos counterparts for Standard C++ Library algorithms
@@ -135,4 +139,8 @@
 #include "std_algorithms/Kokkos_InclusiveScan.hpp"
 #include "std_algorithms/Kokkos_TransformInclusiveScan.hpp"
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STD_ALGORITHMS
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STD_ALGORITHMS
+#endif
 #endif

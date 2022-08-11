@@ -66,9 +66,9 @@ TEST(defaultdevicetype,
   EXPECT_FALSE(settings.has_disable_warnings());
   EXPECT_TRUE(settings.has_tune_internals());
   EXPECT_TRUE(settings.get_tune_internals());
-  EXPECT_FALSE(settings.has_tool_help());
-  EXPECT_FALSE(settings.has_tool_lib());
-  EXPECT_FALSE(settings.has_tool_args());
+  EXPECT_FALSE(settings.has_tools_help());
+  EXPECT_FALSE(settings.has_tools_libs());
+  EXPECT_FALSE(settings.has_tools_args());
 }
 #endif
 
@@ -76,7 +76,7 @@ TEST(defaultdevicetype, initialization_settings) {
   auto const settings = Kokkos::InitializationSettings()
                             .set_num_threads(255)
                             .set_disable_warnings(false)
-                            .set_tool_lib("my_custom_tool.so");
+                            .set_tools_libs("my_custom_tool.so");
   EXPECT_TRUE(settings.has_num_threads());
   EXPECT_EQ(settings.get_num_threads(), 255);
   EXPECT_FALSE(settings.has_device_id());
@@ -85,21 +85,19 @@ TEST(defaultdevicetype, initialization_settings) {
   EXPECT_TRUE(settings.has_disable_warnings());
   EXPECT_FALSE(settings.get_disable_warnings());
   EXPECT_FALSE(settings.has_tune_internals());
-  EXPECT_FALSE(settings.has_tool_help());
-  EXPECT_TRUE(settings.has_tool_lib());
-  EXPECT_EQ(settings.get_tool_lib(), "my_custom_tool.so");
-  EXPECT_FALSE(settings.has_tool_args());
+  EXPECT_FALSE(settings.has_tools_help());
+  EXPECT_TRUE(settings.has_tools_libs());
+  EXPECT_EQ(settings.get_tools_libs(), "my_custom_tool.so");
+  EXPECT_FALSE(settings.has_tools_args());
 }
-
-#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
 
 constexpr bool test_initialization_settings_getter() {
 #define CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(NAME, TYPE)           \
-  STATIC_ASSERT(std::is_same<                                                  \
+  static_assert(std::is_same<                                                  \
                 decltype(std::declval<Kokkos::InitializationSettings const&>() \
                              .has_##NAME()),                                   \
                 bool>::value);                                                 \
-  STATIC_ASSERT(std::is_same<                                                  \
+  static_assert(std::is_same<                                                  \
                 decltype(std::declval<Kokkos::InitializationSettings const&>() \
                              .get_##NAME()),                                   \
                 TYPE>::value);
@@ -109,16 +107,16 @@ constexpr bool test_initialization_settings_getter() {
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(skip_device, int);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(disable_warnings, bool);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tune_internals, bool);
-  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tool_help, bool);
-  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tool_lib, std::string);
-  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tool_args, std::string);
+  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tools_help, bool);
+  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tools_libs, std::string);
+  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tools_args, std::string);
 #undef CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE
   return true;
 }
 
-STATIC_ASSERT(test_initialization_settings_getter());
+static_assert(test_initialization_settings_getter());
 
-STATIC_ASSERT(
+static_assert(
     std::is_default_constructible<Kokkos::InitializationSettings>::value);
 
 }  // namespace

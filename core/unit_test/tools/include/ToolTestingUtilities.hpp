@@ -1195,8 +1195,7 @@ template <int priority, class Config, class... Configs>
 void listen_tool_events_impl(std::integral_constant<int, priority> prio,
                              ToolValidatorConfiguration& in, Config conf,
                              Configs... configs) {
-  invoke_config(in, conf,
-                std::integral_constant<bool, priority == conf.value>{});
+  invoke_config(in, conf, std::bool_constant<priority == conf.value>{});
   listen_tool_events_impl(prio, in, configs...);
 }
 template <class... Configs>

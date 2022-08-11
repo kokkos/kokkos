@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
 #include <string>
@@ -3754,9 +3759,29 @@ create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
 }  // namespace Impl
 
 template <class T, class... P>
-typename Kokkos::View<T, P...>::HostMirror create_mirror_view(
-    Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror_view(v, Impl::ViewCtorProp<>{});
+std::enable_if_t<
+    std::is_same<
+        typename Kokkos::View<T, P...>::memory_space,
+        typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
+        std::is_same<
+            typename Kokkos::View<T, P...>::data_type,
+            typename Kokkos::View<T, P...>::HostMirror::data_type>::value,
+    typename Kokkos::View<T, P...>::HostMirror>
+create_mirror_view(const Kokkos::View<T, P...>& src) {
+  return src;
+}
+
+template <class T, class... P>
+std::enable_if_t<
+    !(std::is_same<
+          typename Kokkos::View<T, P...>::memory_space,
+          typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
+      std::is_same<
+          typename Kokkos::View<T, P...>::data_type,
+          typename Kokkos::View<T, P...>::HostMirror::data_type>::value),
+    typename Kokkos::View<T, P...>::HostMirror>
+create_mirror_view(const Kokkos::View<T, P...>& src) {
+  return Kokkos::create_mirror(src);
 }
 
 template <class T, class... P>
@@ -3765,11 +3790,24 @@ typename Kokkos::View<T, P...>::HostMirror create_mirror_view(
   return Impl::create_mirror_view(v, view_alloc(wi));
 }
 
+// FIXME_C++17 Improve SFINAE here.
 template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
-    Space const& space, Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror_view(space, v, Impl::ViewCtorProp<>{});
+    const Space&, const Kokkos::View<T, P...>& src,
+    std::enable_if_t<Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
+        nullptr) {
+  return src;
+}
+
+// FIXME_C++17 Improve SFINAE here.
+template <class Space, class T, class... P,
+          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
+    const Space& space, const Kokkos::View<T, P...>& src,
+    std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
+        nullptr) {
+  return Kokkos::create_mirror(space, src);
 }
 
 template <class Space, class T, class... P,
@@ -3869,9 +3907,13 @@ auto create_mirror_view_and_copy(
   return mirror;
 }
 
+// Previously when using auto here, the intel compiler 19.3 would
+// sometimes not create a symbol, guessing that it somehow is a combination
+// of auto and just forwarding arguments (see issue #5196)
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
-auto create_mirror_view_and_copy(
+typename Impl::MirrorViewType<Space, T, P...>::view_type
+create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     std::enable_if_t<
@@ -3880,35 +3922,6 @@ auto create_mirror_view_and_copy(
   return create_mirror_view_and_copy(
       Kokkos::view_alloc(typename Space::memory_space{}, name), src);
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-// Create a mirror view in a new space without initializing (specialization for
-// same space)
-template <class Space, class T, class... P>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the version taking WithoutInitializing as first argument")
-typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
-    const Space&, const Kokkos::View<T, P...>& src,
-    Kokkos::Impl::WithoutInitializing_t,
-    std::enable_if_t<Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
-        nullptr) {
-  return src;
-}
-
-// Create a mirror view in a new space without initializing (specialization for
-// different space)
-template <class Space, class T, class... P>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the version taking WithoutInitializing as first argument")
-typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
-    const Space&, const Kokkos::View<T, P...>& src,
-    Kokkos::Impl::WithoutInitializing_t,
-    std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace>* =
-        nullptr) {
-  using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
-  return Mirror(view_alloc(WithoutInitializing, src.label()), src.layout());
-}
-#endif
 
 } /* namespace Kokkos */
 

@@ -83,7 +83,6 @@ struct is_view_label<const char[N]> : public std::true_type {};
 template <typename... P>
 struct ViewCtorProp;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // Forward declare
 template <typename Specialize, typename T>
 struct CommonViewAllocProp;
@@ -110,7 +109,6 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
 
   type value;
 };
-#endif
 
 /*  std::integral_constant<unsigned,I> are dummy arguments
  *  that avoid duplicate base class errors

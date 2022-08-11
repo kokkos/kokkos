@@ -46,24 +46,21 @@
 
 namespace {
 
-#define STATIC_ASSERT(cond) static_assert(cond, "")
-
 KOKKOS_FUNCTION constexpr bool test_array() {
   constexpr Kokkos::Array<int, 3> a{{1, 2}};
 
-  STATIC_ASSERT(!a.empty());
-  STATIC_ASSERT(a.size() == 3);
-  STATIC_ASSERT(a.max_size() == 3);
+  static_assert(!a.empty());
+  static_assert(a.size() == 3);
+  static_assert(a.max_size() == 3);
 
-  STATIC_ASSERT(*a.data() == 1);
-  STATIC_ASSERT(a[1] == 2);
+  static_assert(*a.data() == 1);
+  static_assert(a[1] == 2);
 
   return true;
 }
 
-STATIC_ASSERT(test_array());
+static_assert(test_array());
 
-#ifdef KOKKOS_ENABLE_CXX17
 KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
   constexpr Kokkos::Array<float, 2> a{};
   auto& [xr, yr] = a;
@@ -78,7 +75,6 @@ KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
   return true;
 }
 
-STATIC_ASSERT(test_array_structured_binding_support());
-#endif
+static_assert(test_array_structured_binding_support());
 
 }  // namespace

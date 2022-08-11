@@ -20,13 +20,6 @@ KOKKOS_DEPRECATED_LIST(DEVICES ENABLE)
 
 
 KOKKOS_DEVICE_OPTION(THREADS OFF HOST "Whether to build C++ threads backend")
-IF(Kokkos_ENABLE_PTHREAD)  # for backward compatibility
-  SET(Kokkos_ENABLE_THREADS ON CACHE BOOL "Whether to build C++ threads backend" FORCE)
-  SET(KOKKOS_ENABLE_THREADS ON)
-  LIST(APPEND KOKKOS_ENABLED_DEVICES THREADS)
-  SET(KOKKOS_HAS_HOST ON)
-  MESSAGE(DEPRECATION "The Kokkos_ENABLE_PTHREAD option is deprecated. Use Kokkos_ENABLE_THREADS instead!")
-ENDIF()
 
 # detect clang++ / cl / clang-cl clashes
 IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
@@ -85,6 +78,8 @@ IF(KOKKOS_ENABLE_OPENMP)
     )
   ENDIF()
 ENDIF()
+
+KOKKOS_DEVICE_OPTION(OPENACC OFF DEVICE "Whether to build the OpenACC backend")
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
 IF (KOKKOS_ENABLE_OPENMPTARGET)

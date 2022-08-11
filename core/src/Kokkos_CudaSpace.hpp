@@ -42,6 +42,11 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_CUDASPACE_HPP
 #define KOKKOS_CUDASPACE_HPP
 
@@ -134,13 +139,6 @@ class CudaSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
-  KOKKOS_DEPRECATED static void access_error();
-  KOKKOS_DEPRECATED static void access_error(const void* const);
-#endif
-
  private:
   int m_device;  ///< Which Cuda device
 
@@ -171,12 +169,6 @@ class CudaUVMSpace {
 
   /** \brief  If UVM capability is available */
   static bool available();
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  CudaUVMSpace specific routine */
-  KOKKOS_DEPRECATED static int number_of_allocations();
-#endif
 
   /*--------------------------------*/
 
@@ -583,13 +575,35 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/, const Kokkos::CudaSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_tex_obj(0),
+        m_space(arg_space) {
+
+    SharedAllocationHeader header;
+
+    this->base_t::_fill_host_accessible_header_info(header, arg_label);
+
+    // Copy to device memory
+    // workaround for issue with NVCC and MSVC
+    // https://github.com/kokkos/kokkos/issues/5258
+    deep_copy_header_no_exec(RecordBase::m_alloc_ptr, &header);
+  }
 
   SharedAllocationRecord(
       const Kokkos::Cuda& exec_space, const Kokkos::CudaSpace& arg_space,
@@ -600,6 +614,10 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
       const Kokkos::CudaSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
+  // helper function to work around MSVC+NVCC issue
+  // https://github.com/kokkos/kokkos/issues/5258
+  static void deep_copy_header_no_exec(void*, const void*);
 
  public:
   template <typename AliasType>
@@ -647,14 +665,29 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/,
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_tex_obj(0),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                    arg_label);
+  }
 
   SharedAllocationRecord(
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
@@ -707,14 +740,29 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
   template <typename ExecutionSpace>
   SharedAllocationRecord(
       const ExecutionSpace& /*exec_space*/,
       const Kokkos::CudaHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
+                                    void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                    arg_label);
+  }
 
   SharedAllocationRecord(
       const Kokkos::CudaHostPinnedSpace& arg_space,

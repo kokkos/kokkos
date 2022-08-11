@@ -124,8 +124,7 @@
 #define KOKKOS_LAMBDA [=]
 #endif
 
-#if (defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)) && \
-    !defined(KOKKOS_CLASS_LAMBDA)
+#if !defined(KOKKOS_CLASS_LAMBDA)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
 
@@ -204,16 +203,6 @@
 //  of the supported OpenMP API version.
 #endif  // #if defined( _OPENMP )
 
-#if defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_FALLTHROUGH [[fallthrough]];
-#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
-#define KOKKOS_IMPL_FALLTHROUGH [[gnu::fallthrough]];
-#elif defined(KOKKOS_COMPILER_CLANG)
-#define KOKKOS_IMPL_FALLTHROUGH [[clang::fallthrough]];
-#else
-#define KOKKOS_IMPL_FALLTHROUGH
-#endif
-
 //----------------------------------------------------------------------------
 // Intel compiler macros
 
@@ -264,12 +253,13 @@
 #define KOKKOS_ENABLE_ASM 1
 #endif
 
-#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #if !defined(_WIN32)
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
-#define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE __attribute__((always_inline))
 #else
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
 #endif
 #endif
 
@@ -320,9 +310,10 @@
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 //#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
-#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
-#define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
 #if !defined(KOKKOS_IMPL_ALIGN_PTR)
@@ -345,9 +336,10 @@
 #define KOKKOS_ENABLE_RFO_PREFETCH 1
 #endif
 
-#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
-#define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  inline __attribute__((always_inline))
+#define KOKKOS_IMPL_HOST_FORCEINLINE __attribute__((always_inline))
 #endif
 
 #define KOKKOS_RESTRICT __restrict__
@@ -380,12 +372,20 @@
 //----------------------------------------------------------------------------
 // Define function marking macros if compiler specific macros are undefined:
 
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION inline
+#endif
+
+#if !defined(KOKKOS_IMPL_HOST_FORCEINLINE)
+#define KOKKOS_IMPL_HOST_FORCEINLINE inline
+#endif
+
 #if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
-#define KOKKOS_IMPL_FORCEINLINE inline
+#define KOKKOS_IMPL_FORCEINLINE KOKKOS_IMPL_HOST_FORCEINLINE
 #endif
 
 #if !defined(KOKKOS_IMPL_INLINE_FUNCTION)
@@ -596,11 +596,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_CONSTEXPR_14 constexpr
-#define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
-#endif
-
 // Guard intel compiler version 19 and older
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
@@ -633,11 +628,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
-#else
-#define KOKKOS_ATTRIBUTE_NODISCARD
-#endif
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
@@ -651,11 +642,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #if defined(__CUDA_ARCH__) && !defined(__CUDACC__) && \
     !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_CUDA)
 #undef __CUDA_ARCH__
-#endif
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_THREAD_LOCAL \
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use thread_local instead!") thread_local
 #endif
 
 #if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \

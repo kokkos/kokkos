@@ -195,11 +195,7 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
   if (value == 0) {
     *first = '0';
     return {first + 1, {}};
-  } else if
-#ifdef KOKKOS_ENABLE_CXX17
-      constexpr
-#endif
-      (std::is_signed<Integral>::value) {
+  } else if constexpr (std::is_signed<Integral>::value) {
     if (value < 0) {
       *first++     = '-';
       unsigned_val = Unsigned(~value) + Unsigned(1);

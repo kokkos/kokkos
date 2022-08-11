@@ -42,15 +42,20 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
+
 #include <Kokkos_Core.hpp>
 
-#include <cstdlib>
-#include <sstream>
 #include <Kokkos_Serial.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
-
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+
+#include <cstdlib>
+#include <iostream>
 #include <sstream>
 
 /*--------------------------------------------------------------------------*/
@@ -177,11 +182,26 @@ Serial::Serial()
 }
 #endif
 
+void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
+  os << "Host Serial Execution Space:\n";
+  os << "  KOKKOS_ENABLE_SERIAL: yes\n";
+
+  os << "Serial Atomics:\n";
+  os << "  KOKKOS_ENABLE_SERIAL_ATOMICS: ";
+#ifdef KOKKOS_ENABLE_SERIAL_ATOMICS
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
+
+  os << "\nSerial Runtime Configuration:\n";
+}
+
 bool Serial::impl_is_initialized() {
   return Impl::SerialInternal::singleton().is_initialized();
 }
 
-void Serial::impl_initialize() {
+void Serial::impl_initialize(InitializationSettings const&) {
   Impl::SerialInternal::singleton().initialize();
 }
 
@@ -192,53 +212,8 @@ const char* Serial::name() { return "Serial"; }
 namespace Impl {
 
 int g_serial_space_factory_initialized =
-    initialize_space_factory<SerialSpaceInitializer>("100_Serial");
-
-void SerialSpaceInitializer::initialize(
-    const InitializationSettings& settings) {
-  // Prevent "unused variable" warning for 'settings' input struct.  If
-  // Serial::initialize() ever needs to take arguments from the input
-  // struct, you may remove this line of code.
-  (void)settings;
-
-  // Always initialize Serial if it is configure time enabled
-  Kokkos::Serial::impl_initialize();
-}
-
-void SerialSpaceInitializer::finalize(const bool) {
-  if (Kokkos::Serial::impl_is_initialized()) Kokkos::Serial::impl_finalize();
-}
-
-void SerialSpaceInitializer::fence(const std::string& name) {
-  Kokkos::Serial::impl_static_fence(name);
-}
-
-void SerialSpaceInitializer::print_configuration(std::ostream& msg,
-                                                 const bool detail) {
-  msg << "Host Serial Execution Space:" << std::endl;
-  msg << "  KOKKOS_ENABLE_SERIAL: ";
-  msg << "yes" << std::endl;
-
-  msg << "Serial Atomics:" << std::endl;
-  msg << "  KOKKOS_ENABLE_SERIAL_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_SERIAL_ATOMICS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-
-  msg << "\nSerial Runtime Configuration:" << std::endl;
-  Serial::print_configuration(msg, detail);
-}
+    initialize_space_factory<Serial>("100_Serial");
 
 }  // namespace Impl
-
-#ifdef KOKKOS_ENABLE_CXX14
-namespace Tools {
-namespace Experimental {
-constexpr DeviceType DeviceTypeTraits<Serial>::id;
-}
-}  // namespace Tools
-#endif
 
 }  // namespace Kokkos

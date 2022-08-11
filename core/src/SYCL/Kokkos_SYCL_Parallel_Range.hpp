@@ -87,9 +87,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                         const sycl::event& memcpy_event) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q                          = space.sycl_queue();
 
     auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
       FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
@@ -223,9 +221,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
                                  const sycl::event& memcpy_event) const {
     // Convenience references
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *m_space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = m_space.sycl_queue();
 
     if (m_policy.m_num_tiles == 0) return {};
 

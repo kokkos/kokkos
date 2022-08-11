@@ -42,6 +42,10 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
+
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
@@ -118,24 +122,6 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-KOKKOS_DEPRECATED void CudaSpace::access_error() {
-  const std::string msg(
-      "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
-      "non-Cuda space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-
-KOKKOS_DEPRECATED void CudaSpace::access_error(const void *const) {
-  const std::string msg(
-      "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
-      "non-Cuda space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-#endif
-
-/*--------------------------------------------------------------------------*/
-
 bool CudaUVMSpace::available() {
 #if defined(CUDA_VERSION) && !defined(__APPLE__)
   enum : bool { UVM_available = true };
@@ -147,11 +133,6 @@ bool CudaUVMSpace::available() {
 
 /*--------------------------------------------------------------------------*/
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-int CudaUVMSpace::number_of_allocations() {
-  return Kokkos::Impl::num_uvm_allocations.load();
-}
-#endif
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
 // The purpose of the following variable is to allow a state-based choice
 // for pinning UVM allocations to the CPU. For now this is considered
@@ -523,6 +504,17 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
+}
+
+void SharedAllocationRecord<Kokkos::CudaSpace, void>::deep_copy_header_no_exec(
+    void *ptr, const void *header) {
+  Kokkos::Cuda exec;
+  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec, ptr, header,
+                                               sizeof(SharedAllocationHeader));
+  exec.fence(
+      "SharedAllocationRecord<Kokkos::CudaSpace, "
+      "void>::SharedAllocationRecord(): fence after copying header from "
+      "HostSpace");
 }
 
 SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::~SharedAllocationRecord() {

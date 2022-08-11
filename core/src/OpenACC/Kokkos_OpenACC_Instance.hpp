@@ -42,26 +42,46 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXEC_SPACE_INITIALIZER_HPP
-#define KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+#ifndef KOKKOS_OPENACC_INSTANCE_HPP
+#define KOKKOS_OPENACC_INSTANCE_HPP
 
+#include <impl/Kokkos_InitializationSettings.hpp>
+
+#include <openacc.h>
+
+#include <cstdint>
 #include <iosfwd>
+#include <string>
 
-namespace Kokkos {
-class InitializationSettings;
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
-class ExecSpaceInitializerBase {
+class OpenACCInternal {
+  bool m_is_initialized = false;
+
+  OpenACCInternal(const OpenACCInternal&) = default;
+  OpenACCInternal& operator=(const OpenACCInternal&) = default;
+
  public:
-  virtual void initialize(const InitializationSettings &settings)        = 0;
-  virtual void finalize(const bool all_spaces)                           = 0;
-  virtual void fence(const std::string &)                                = 0;
-  virtual void print_configuration(std::ostream &msg, const bool detail) = 0;
-  ExecSpaceInitializerBase()          = default;
-  virtual ~ExecSpaceInitializerBase() = default;
+  static int m_acc_device_num;
+  int m_async_arg = acc_async_sync;
+
+  OpenACCInternal() = default;
+
+  static OpenACCInternal& singleton();
+
+  bool verify_is_initialized(const char* const label) const;
+
+  void initialize(int async_arg = acc_async_sync);
+  void finalize();
+  bool is_initialized() const;
+
+  void print_configuration(std::ostream& os, bool verbose = false) const;
+
+  void fence(std::string const& name) const;
+
+  uint32_t instance_id() const noexcept;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
-#endif  // KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+#endif
