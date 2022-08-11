@@ -478,12 +478,12 @@ struct ThreadSortFunctor {
                     bool sortDescending_)
       : keys(keys_), offsets(offsets_), sortDescending(sortDescending_) {}
   KOKKOS_INLINE_FUNCTION void operator()(const TeamMem& t) const {
-    unsigned i     = t.league_rank() * t.team_size() + t.team_rank();
-    SizeType begin = offsets(i);
-    SizeType end   = offsets(i + 1);
+    int i = t.league_rank() * t.team_size() + t.team_rank();
     // Number of arrays to sort doesn't have to be divisible by team size, so
     // some threads may be idle.
-    if (i < offsets.extent(0) - 1) {
+    if (i < offsets.extent_int(0) - 1) {
+      SizeType begin = offsets(i);
+      SizeType end   = offsets(i + 1);
       if (sortDescending)
         sort_thread(t, Kokkos::subview(keys, Kokkos::make_pair(begin, end)),
                     GreaterThan<KeyType>());
@@ -510,10 +510,10 @@ struct ThreadSortByKeyFunctor {
         offsets(offsets_),
         sortDescending(sortDescending_) {}
   KOKKOS_INLINE_FUNCTION void operator()(const TeamMem& t) const {
-    unsigned i = t.league_rank() * t.team_size() + t.team_rank();
+    int i = t.league_rank() * t.team_size() + t.team_rank();
     // Number of arrays to sort doesn't have to be divisible by team size, so
     // some threads may be idle.
-    if (i < offsets.extent(0) - 1) {
+    if (i < offsets.extent_int(0) - 1) {
       SizeType begin = offsets(i);
       SizeType end   = offsets(i + 1);
       if (sortDescending) {
