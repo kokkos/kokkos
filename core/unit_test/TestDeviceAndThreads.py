@@ -29,6 +29,16 @@ class KokkosInitializationTestCase(unittest.TestCase):
         for device_id in range(device_count):
             self.assertEqual(device_id, GetFlag("device_id", "--kokkos-device-id={}".format(device_id)))
 
+    def test_disable_warnings(self):
+        self.assertEqual(0, GetFlag("disable_warnings"))
+        self.assertEqual(0, GetFlag("disable_warnings", "--kokkos-disable-warnings=0"))
+        self.assertEqual(1, GetFlag("disable_warnings", "--kokkos-disable-warnings=1"))
+
+    def test_tune_internals(self):
+        self.assertEqual(0, GetFlag("tune_internals"))
+        self.assertEqual(0, GetFlag("tune_internals", "--kokkos-tune-internals=0"))
+        self.assertEqual(1, GetFlag("tune_internals", "--kokkos-tune-internals=1"))
+
 
 if __name__ == '__main__':
     unittest.main()

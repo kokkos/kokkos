@@ -49,6 +49,10 @@ int get_num_threads() {
   return Kokkos::DefaultHostExecutionSpace().concurrency();
 }
 
+int get_disable_warnings() { return !Kokkos::show_warnings(); }
+
+int get_tune_internals() { return Kokkos::tune_internals(); }
+
 int print_flag(std::string const& flag) {
   std::vector<std::string> valid_flags;
 #define KOKKOS_TEST_PRINT_FLAG(NAME)   \
@@ -62,6 +66,8 @@ int print_flag(std::string const& flag) {
   KOKKOS_TEST_PRINT_FLAG(max_threads);
   KOKKOS_TEST_PRINT_FLAG(device_id);
   KOKKOS_TEST_PRINT_FLAG(device_count);
+  KOKKOS_TEST_PRINT_FLAG(disable_warnings);
+  KOKKOS_TEST_PRINT_FLAG(tune_internals);
 
 #undef KOKKOS_TEST_PRINT_FLAG
 
