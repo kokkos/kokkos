@@ -51,87 +51,97 @@ namespace TeamSwapRanges {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewFromType, class ViewDestType, class MemberType>
+template <class View1Type, class View2Type, class DistancesViewType>
 struct TestFunctorA {
-  ViewFromType m_from_view;
-  ViewDestType m_dest_view;
-  int m_api_pick;
+  View1Type m_view1;
+  View2Type m_view2;
+  DistancesViewType m_distancesView;
+  int m_apiPick;
 
-  TestFunctorA(const ViewFromType viewFrom, const ViewDestType viewDest,
-               int apiPick)
-      : m_from_view(viewFrom), m_dest_view(viewDest), m_api_pick(apiPick) {}
+  TestFunctorA(const View1Type view1, const View2Type view2,
+               const DistancesViewType distancesView, int apiPick)
+      : m_view1(view1),
+        m_view2(view2),
+        m_distancesView(distancesView),
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
+    auto myRowView1       = Kokkos::subview(m_view1, myRowIndex, Kokkos::ALL());
+    auto myRowView2       = Kokkos::subview(m_view2, myRowIndex, Kokkos::ALL());
 
-    auto myRowViewFrom =
-        Kokkos::subview(m_from_view, myRowIndex, Kokkos::ALL());
-    auto myRowViewDest =
-        Kokkos::subview(m_dest_view, myRowIndex, Kokkos::ALL());
+    if (m_apiPick == 0) {
+      auto it = KE::swap_ranges(member, KE::begin(myRowView1),
+                                KE::end(myRowView1), KE::begin(myRowView2));
 
-    if (m_api_pick == 0) {
-      auto it =
-          KE::swap_ranges(member, KE::begin(myRowViewFrom),
-                          KE::end(myRowViewFrom), KE::begin(myRowViewDest));
-      (void)it;
-    } else if (m_api_pick == 1) {
-      auto it = KE::swap_ranges(member, myRowViewFrom, myRowViewDest);
-      (void)it;
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView2), it);
+      });
+    } else if (m_apiPick == 1) {
+      auto it = KE::swap_ranges(member, myRowView1, myRowView2);
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView2), it);
+      });
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, int apiId) {
-  /* description: */
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
+  /* description:
+     randomly fill two views and call team level swap_ranges
+   */
 
-  // v constructed on memory space associated with default exespace
-  auto v = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  auto [dataView1, dataView1BeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(11), ValueType(523)}, "dataView1");
 
-  // v might not deep copyable so to modify it on the host
-  auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
-  auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(v_dc_h, pool, 0, 523);
-  // copy to v_dc and then to v
-  Kokkos::deep_copy(v_dc, v_dc_h);
-  CopyFunctorRank2<decltype(v_dc), decltype(v)> F1(v_dc, v);
-  Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
+  auto [dataView2, dataView2BeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(530), ValueType(1523)}, "dataView2");
 
-  // make copy of v before running algorithm
-  auto gold_v_h = create_host_space_copy(v);
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // each team stores the distance of the returned iterator from the
+  // beginning of the interval that team operates on and then we check
+  // that these distances match the expectation
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
-  // v2 is the destination view
-  auto v2 = create_view<ValueType>(Tag{}, num_teams, num_cols, "v2");
-  using functor_type =
-      TestFunctorA<decltype(v), decltype(v2), team_member_type>;
-  functor_type fnc(v, v2, apiId);
+  // use CTAD for functor
+  TestFunctorA fnc(dataView1, dataView2, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
+  // -----------------------------------------------
   // check
-  auto v_h  = create_host_space_copy(v);
-  auto v2_h = create_host_space_copy(v2);
-  for (std::size_t i = 0; i < v_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v_h.extent(1); ++j) {
-      EXPECT_TRUE(v_h(i, j) == static_cast<ValueType>(0));
-      EXPECT_TRUE(v2_h(i, j) == gold_v_h(i, j));
+  // -----------------------------------------------
+  auto distancesView_h    = create_host_space_copy(distancesView);
+  auto dataView1AfterOp_h = create_host_space_copy(dataView1);
+  auto dataView2AfterOp_h = create_host_space_copy(dataView2);
+
+  for (std::size_t i = 0; i < dataView1AfterOp_h.extent(0); ++i) {
+    for (std::size_t j = 0; j < dataView1AfterOp_h.extent(1); ++j) {
+      EXPECT_EQ(dataView1BeforeOp_h(i, j), dataView2AfterOp_h(i, j));
+      EXPECT_EQ(dataView2BeforeOp_h(i, j), dataView1AfterOp_h(i, j));
     }
+    // each team should return an iterator past the last column
+    EXPECT_TRUE(distancesView_h(i) == numCols);
   }
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 51153}) {
+  for (int numTeams : teamSizesToTest) {
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
       for (int apiId : {0, 1}) {
-        test_A<Tag, ValueType>(num_teams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }

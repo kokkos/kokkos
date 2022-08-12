@@ -32,8 +32,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType2>
 swap_ranges(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
             IteratorType2 first2) {
-  return Impl::swap_ranges_impl("Kokkos::swap_ranges_iterator_api_default", ex,
-                                first1, last1, first2);
+  return Impl::swap_ranges_exespace_impl(
+      "Kokkos::swap_ranges_iterator_api_default", ex, first1, last1, first2);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -47,8 +47,9 @@ auto swap_ranges(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   assert(source.extent(0) == dest.extent(0));
-  return Impl::swap_ranges_impl("Kokkos::swap_ranges_view_api_default", ex,
-                                begin(source), end(source), begin(dest));
+  return Impl::swap_ranges_exespace_impl("Kokkos::swap_ranges_view_api_default",
+                                         ex, begin(source), end(source),
+                                         begin(dest));
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
@@ -56,7 +57,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType2>
 swap_ranges(const std::string& label, const ExecutionSpace& ex,
             IteratorType1 first1, IteratorType1 last1, IteratorType2 first2) {
-  return Impl::swap_ranges_impl(label, ex, first1, last1, first2);
+  return Impl::swap_ranges_exespace_impl(label, ex, first1, last1, first2);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -70,8 +71,8 @@ auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
   assert(source.extent(0) == dest.extent(0));
-  return Impl::swap_ranges_impl(label, ex, begin(source), end(source),
-                                begin(dest));
+  return Impl::swap_ranges_exespace_impl(label, ex, begin(source), end(source),
+                                         begin(dest));
 }
 
 //
