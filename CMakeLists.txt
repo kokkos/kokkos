@@ -193,10 +193,8 @@ KOKKOS_SETUP_BUILD_ENVIRONMENT()
 
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
-SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms Kokkos::kokkossimd)
-SET(KOKKOS_SUB_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms kokkossimd)
-SET(KOKKOS_INT_LIBRARIES kokkos ${KOKKOS_SUB_LIBRARIES})
-SET_PROPERTY(GLOBAL PROPERTY KOKKOS_INT_LIBRARIES ${KOKKOS_INT_LIBRARIES})
+SET(KOKKOS_COMPONENT_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms kokkossimd)
+SET_PROPERTY(GLOBAL PROPERTY KOKKOS_INT_LIBRARIES kokkos ${KOKKOS_COMPONENT_LIBRARIES})
 
 IF (KOKKOS_HAS_TRILINOS)
   SET(TRILINOS_INCDIR ${CMAKE_INSTALL_PREFIX}/${${PROJECT_NAME}_INSTALL_INCLUDE_DIR})
@@ -287,7 +285,7 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
   #Make sure in-tree projects can reference this as Kokkos::
   #to match the installed target names
   ADD_LIBRARY(Kokkos::kokkos ALIAS kokkos)
-  TARGET_LINK_LIBRARIES(kokkos INTERFACE ${KOKKOS_SUB_LIBRARIES})
+  TARGET_LINK_LIBRARIES(kokkos INTERFACE ${KOKKOS_COMPONENT_LIBRARIES})
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
 ENDIF()
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
