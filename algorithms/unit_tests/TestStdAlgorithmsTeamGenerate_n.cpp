@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <algorithm>
 
 namespace Test {
 namespace stdalgos {
