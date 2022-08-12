@@ -957,6 +957,18 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 
 add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
 target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+  file(GENERATE
+    OUTPUT $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+    INPUT TestDeviceAndThreads.py
+    USE_SOURCE_PERMISSIONS
+  )
+  add_test(
+    NAME KokkosCore_UnitTest_DeviceAndThreads
+    COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+  )
+endif()
 
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
