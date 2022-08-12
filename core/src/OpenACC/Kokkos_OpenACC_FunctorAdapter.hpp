@@ -61,7 +61,7 @@ class FunctorAdapter {
   KOKKOS_FUNCTION void operator()(Args &&... args) const {
     if constexpr (std::is_void_v<WorkTag>) {
       m_functor(static_cast<Args &&>(args)...);
-    }else {
+    } else {
       m_functor(WorkTag(), static_cast<Args &&>(args)...);
     }
   }
