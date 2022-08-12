@@ -30,15 +30,15 @@ namespace Experimental {
 template <class ExecutionSpace, class InputIterator>
 std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const ExecutionSpace& ex, InputIterator first, InputIterator last) {
-  return Impl::reverse_impl("Kokkos::reverse_iterator_api_default", ex, first,
-                            last);
+  return Impl::reverse_exespace_impl("Kokkos::reverse_iterator_api_default", ex,
+                                     first, last);
 }
 
 template <class ExecutionSpace, class InputIterator>
 std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const std::string& label, const ExecutionSpace& ex, InputIterator first,
     InputIterator last) {
-  return Impl::reverse_impl(label, ex, first, last);
+  return Impl::reverse_exespace_impl(label, ex, first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
@@ -47,8 +47,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::reverse_impl("Kokkos::reverse_view_api_default", ex,
-                            KE::begin(view), KE::end(view));
+  return Impl::reverse_exespace_impl("Kokkos::reverse_view_api_default", ex,
+                                     KE::begin(view), KE::end(view));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
@@ -57,7 +57,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
-  return Impl::reverse_impl(label, ex, KE::begin(view), KE::end(view));
+  return Impl::reverse_exespace_impl(label, ex, KE::begin(view), KE::end(view));
 }
 
 //
