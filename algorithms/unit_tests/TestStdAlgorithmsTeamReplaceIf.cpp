@@ -93,9 +93,9 @@ struct TestFunctorA {
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     use a rank-2 view randomly filled with values between 5 and 523
+     use a rank-2 view randomly filled with values,
      and run a team-level replace_if where the values strictly greater
-     than a threshold (151) are replaced with a new value.
+     than a threshold are replaced with a new value.
    */
   const auto threshold = static_cast<ValueType>(151);
   const auto newVal    = static_cast<ValueType>(1);

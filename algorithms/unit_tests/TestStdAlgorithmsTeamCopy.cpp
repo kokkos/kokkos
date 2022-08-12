@@ -117,7 +117,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // op
   auto destViewBeforeOp_h = create_host_space_copy(destView);
 
-  // copy returns an iterator so to verify that it is correct
+  // KE::copy returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation
@@ -137,8 +137,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       EXPECT_EQ(destViewBeforeOp_h(i, j), ValueType(0));
       EXPECT_TRUE(destViewAfterOp_h(i, j) != destViewBeforeOp_h(i, j));
     }
-    // each team should return an iterator that is past the element in the last
-    // column
+    // each team should return an iterator past the last column
     EXPECT_TRUE(distancesView_h(i) == numCols);
   }
 

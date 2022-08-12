@@ -115,8 +115,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create the destination view: for a meaningful test, the destination
   // view must have more columns that than the source view so that we
   // can check that the elements are copied into the right place
-  constexpr std::size_t shift = 10;
-  Kokkos::View<ValueType**> destView("destView", numTeams, numCols + shift);
+  constexpr std::size_t extra = 10;
+  Kokkos::View<ValueType**> destView("destView", numTeams, numCols + extra);
   // make a host copy of the destination view that should be unchanged after the
   // op
   auto destViewBeforeOp_h = create_host_space_copy(destView);
@@ -137,21 +137,20 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto distancesView_h   = create_host_space_copy(distancesView);
   auto destViewAfterOp_h = create_host_space_copy(destView);
   for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
-    // first shift num of columns should be unchanged
-    for (std::size_t j = 0; j < shift; ++j) {
+    // first extra num of columns should be unchanged
+    for (std::size_t j = 0; j < extra; ++j) {
       EXPECT_TRUE(destViewAfterOp_h(i, j) == destViewBeforeOp_h(i, j));
     }
 
-    // all values after shift num of column (inclusive) should match the source
-    // view
-    for (std::size_t j = shift; j < destViewBeforeOp_h.extent(1); ++j) {
-      EXPECT_TRUE(sourceViewBeforeOp_h(i, j - shift) ==
+    // after extra # of column (inclusive) should match the source view
+    for (std::size_t j = extra; j < destViewBeforeOp_h.extent(1); ++j) {
+      EXPECT_TRUE(sourceViewBeforeOp_h(i, j - extra) ==
                   destViewAfterOp_h(i, j));
     }
 
     // each team should have returned an interator whose distance
     // from the beginning of the row should satisfy this
-    EXPECT_TRUE(distancesView_h(i) == shift);
+    EXPECT_TRUE(distancesView_h(i) == extra);
   }
 }
 

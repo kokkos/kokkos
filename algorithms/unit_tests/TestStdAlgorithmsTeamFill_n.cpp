@@ -92,8 +92,8 @@ template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
             int apiId) {
   /* description:
-     use a rank-2 matrix, team parfor with one row per team,
-     n elements of each row are filled up with the league_rank value
+     create a rank-2 view, run a team parfor with one row per team,
+     such that n elements of each row are filled up with the league_rank value
      of the team in charge of it, while the other elements in the row
      are left unchanged
    */

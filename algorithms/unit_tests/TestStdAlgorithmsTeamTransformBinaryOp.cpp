@@ -108,27 +108,6 @@ struct TestFunctorA {
   }
 };
 
-// template <class ViewType>
-// auto fill_view_randomly(ViewType view) {
-//   // view might not deep copyable (e.g. strided layout) so to fill it
-//   // we make a new view that is for sure deep copyable, modify it on the host
-//   // deep copy to device and then launch copy kernel to view
-//   auto view_dc   =
-//   create_deep_copyable_compatible_view_with_same_extent(view); auto view_dc_h
-//   = create_mirror_view(Kokkos::HostSpace(), view_dc);
-
-//   // randomly fill the view
-//   Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>
-//   pool(12371); Kokkos::fill_random(view_dc_h, pool, 0, 523);
-
-//   // copy to view_dc and then to view
-//   Kokkos::deep_copy(view_dc, view_dc_h);
-//   // use CTAD
-//   CopyFunctorRank2 F1(view_dc, view);
-//   Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
-//   return view_dc_h;
-// }
-
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
@@ -163,7 +142,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // to be all zeros
   auto destViewBeforeOp_h = create_host_space_copy(destView);
 
-  // copy returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation

@@ -127,10 +127,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create the destination view
   Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
   // make a host copy of the dest view that we can check below
-  // to be all zeros
+  // to be all zeros since this should remain unchanged
   auto destViewBeforeOp_h = create_host_space_copy(destView);
 
-  // copy returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation

@@ -90,7 +90,7 @@ struct TestFunctorA {
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     randomly fill two views and call team level swap_ranges
+     randomly fill two views and do team level swap_ranges
    */
 
   // -----------------------------------------------

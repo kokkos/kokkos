@@ -117,7 +117,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t count,
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // generate_n returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the expected value

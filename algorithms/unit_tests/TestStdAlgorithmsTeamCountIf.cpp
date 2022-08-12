@@ -99,9 +99,9 @@ struct TestFunctorA {
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     use a rank-2 view randomly filled with values between 5 and 523
-     and run a team-level count_if where only the values strictly
-     greater than a threshold are counted
+     use a rank-2 view randomly filled with values,
+     and run a team-level count_if where only the values
+     strictly greater than a threshold are counted
    */
 
   const auto threshold = static_cast<ValueType>(151);

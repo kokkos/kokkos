@@ -119,8 +119,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t copyCount,
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
   // create the destination view
   Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
-  // make a host copy of the destination view that should be unchanged after the
-  // op
+  // make a host copy of destView, should be unchanged after the op
   auto destViewBeforeOp_h = create_host_space_copy(destView);
 
   // copy_n returns an iterator so to verify that it is correct
@@ -145,8 +144,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t copyCount,
     for (std::size_t j = copyCount; j < numCols; ++j) {
       EXPECT_TRUE(destViewAfterOp_h(i, j) == destViewBeforeOp_h(i, j));
     }
-    // each team should return an iterator that is past the element in the last
-    // column
+    // each team should return an iterator past the last column
     EXPECT_TRUE(distancesView_h(i) == copyCount);
   }
 }

@@ -111,9 +111,9 @@ struct TestFunctorA {
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     use a rank-2 view randomly filled with values between 5 and 523
+     use a rank-2 view randomly filled with values,
      and run a team-level copy_if where only the values strictly
-     greater than a threshold (151) are copied into a new view
+     greater than a threshold are copied into a new view
    */
 
   const auto threshold = static_cast<ValueType>(151);
@@ -136,7 +136,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create the destination view
   Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
 
-  // replace_copy_if returns an iterator so to verify that it is correct
+  // copy_if returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the std result

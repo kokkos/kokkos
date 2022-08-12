@@ -75,9 +75,9 @@ struct TestFunctorA {
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     create a rank-2 view randomly with non trivial numbers
-     and do a team-level KE::fill where each team fills the row
-     it is responsible for with its league_rank value
+     create a rank-2 view, randomly fill with non trivial numbers
+     and do a team-level KE::fill where each team fills
+     with its league_rank value the row it is responsible for
    */
 
   // -----------------------------------------------
