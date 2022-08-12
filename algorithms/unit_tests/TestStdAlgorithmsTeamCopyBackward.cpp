@@ -166,9 +166,9 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_copy_backward_team_test, test) {
-  // run_all_scenarios<DynamicTag, double>();
+  run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
-  // run_all_scenarios<StridedThreeRowsTag, unsigned>();
+  run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
 }  // namespace TeamCopybackward
