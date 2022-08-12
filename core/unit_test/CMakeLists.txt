@@ -955,6 +955,9 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   ARGS "one 2 THREE"
 )
 
+add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
+target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
+
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
 endif()
