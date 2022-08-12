@@ -1366,16 +1366,38 @@ struct ParallelReduceAdaptor {
         typename return_value_adapter::reducer_type>(inner_policy, functor,
                                                      label, kpID);
 
-    Kokkos::Impl::shared_allocation_tracking_disable();
-    Impl::ParallelReduce<FunctorType, PolicyType,
-                         typename return_value_adapter::reducer_type,
-                         typename Impl::FunctorPolicyExecutionSpace<
-                             FunctorType, PolicyType>::execution_space,
-                         typename return_value_adapter::value_type>
-        closure(functor, inner_policy,
-                return_value_adapter::return_value(return_value, functor));
-    Kokkos::Impl::shared_allocation_tracking_enable();
-    closure.execute();
+    if constexpr (std::is_same_v<InvalidType, typename return_value_adapter::reducer_type>)
+    {
+      Kokkos::Impl::shared_allocation_tracking_disable();
+
+      using ReducerType = FunctorType;
+      using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, PolicyType,
+                                   ReducerType, typename return_value_adapter::value_type>;
+      typename Analysis::Reducer final_reducer(functor);
+
+      Impl::ParallelReduce<FunctorType, PolicyType,
+                           typename Analysis::Reducer,
+                           typename Impl::FunctorPolicyExecutionSpace<
+                               FunctorType, PolicyType>::execution_space>
+          closure(functor, inner_policy, final_reducer, return_value_adapter::return_value(return_value, functor));
+      Kokkos::Impl::shared_allocation_tracking_enable();
+      closure.execute();
+    } else {
+      Kokkos::Impl::shared_allocation_tracking_disable();
+
+      using ReducerType = typename return_value_adapter::reducer_type;
+      using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE, PolicyType,
+                                   ReducerType, typename return_value_adapter::value_type>;
+      auto reducer = return_value_adapter::return_value(return_value, functor);
+      typename Analysis::Reducer final_reducer(reducer);
+      Impl::ParallelReduce<FunctorType, PolicyType,
+                           typename Analysis::Reducer,
+                           typename Impl::FunctorPolicyExecutionSpace<
+                               FunctorType, PolicyType>::execution_space>
+          closure(functor, inner_policy, final_reducer, reducer.view());
+      Kokkos::Impl::shared_allocation_tracking_enable();
+      closure.execute();
+    }
 
     Kokkos::Tools::Impl::end_parallel_reduce<
         typename return_value_adapter::reducer_type>(inner_policy, functor,
