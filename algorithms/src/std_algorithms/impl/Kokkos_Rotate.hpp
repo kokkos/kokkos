@@ -67,31 +67,24 @@ IteratorType rotate_with_pivot_in_left_half(const std::string& label,
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
   tmp_view_type tmp_view("rotate_impl_for_pivot_in_left_half_impl",
                          num_elements_on_right);
-  using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
-
-  // index_type is the same and needed in all steps
-  using index_type = typename IteratorType::difference_type;
 
   // stage 1
-  using step1_func_type =
-      StdMoveFunctor<index_type, IteratorType, tmp_readwrite_iterator_type>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_on_right),
-      step1_func_type(n_first, begin(tmp_view)));
+      // use CTAD
+      StdMoveFunctor(n_first, begin(tmp_view)));
 
   // stage 2
-  using step2_func_type =
-      StdMoveFunctor<index_type, IteratorType, IteratorType>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_on_left),
-      step2_func_type(first, first + num_elements_on_right));
+      // use CTAD
+      StdMoveFunctor(first, first + num_elements_on_right));
 
   // step 3
-  using step3_func_type =
-      StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-                         step3_func_type(begin(tmp_view), first));
+                         // use CTAD
+                         StdMoveFunctor(begin(tmp_view), first));
 
   ex.fence("Kokkos::rotate: fence after operation");
   return first + (last - n_first);
@@ -135,31 +128,24 @@ IteratorType rotate_with_pivot_in_right_half(const std::string& label,
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
   tmp_view_type tmp_view("rotate_impl_for_pivot_in_left_half_impl",
                          num_elements_on_left);
-  using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
-
-  // index_type is the same and needed in all steps
-  using index_type = typename IteratorType::difference_type;
 
   // stage 1
-  using step1_func_type =
-      StdMoveFunctor<index_type, IteratorType, tmp_readwrite_iterator_type>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_on_left),
-      step1_func_type(first, begin(tmp_view)));
+      // use CTAD
+      StdMoveFunctor(first, begin(tmp_view)));
 
   // stage 2
-  using step2_func_type =
-      StdMoveFunctor<index_type, IteratorType, IteratorType>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_on_right),
-      step2_func_type(n_first, first));
+      // use CTAD
+      StdMoveFunctor(n_first, first));
 
   // step 3:
-  using step3_func_type =
-      StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-      step3_func_type(begin(tmp_view), first + num_elements_on_right));
+      // use CTAD
+      StdMoveFunctor(begin(tmp_view), first + num_elements_on_right));
 
   ex.fence("Kokkos::rotate: fence after operation");
   return first + (last - n_first);

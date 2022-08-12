@@ -81,23 +81,18 @@ IteratorType shift_right_impl(const std::string& label,
   using value_type    = typename IteratorType::value_type;
   using tmp_view_type = Kokkos::View<value_type*, ExecutionSpace>;
   tmp_view_type tmp_view("shift_right_impl", num_elements_to_move);
-  using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
-
-  using index_type = typename IteratorType::difference_type;
 
   // step 1
-  using step1_func_type =
-      StdMoveFunctor<index_type, IteratorType, tmp_readwrite_iterator_type>;
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_to_move),
-      step1_func_type(first, begin(tmp_view)));
+      // use CTAD
+      StdMoveFunctor(first, begin(tmp_view)));
 
   // step 2
-  using step2_func_type =
-      StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-                         step2_func_type(begin(tmp_view), first + n));
+                         // use CTAD
+                         StdMoveFunctor(begin(tmp_view), first + n));
 
   ex.fence("Kokkos::shift_right: fence after operation");
 

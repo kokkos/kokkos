@@ -121,9 +121,9 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
           func_type(it_found, last, tmp_first, pred), count);
 
       // move last element too, for the same reason as the unique_copy
-      auto unused_r =
-          Impl::move_impl("Kokkos::move_from_unique", ex, it_found + scan_size,
-                          last, tmp_first + count);
+      auto unused_r = Impl::move_exespace_impl("Kokkos::move_from_unique", ex,
+                                               it_found + scan_size, last,
+                                               tmp_first + count);
       (void)unused_r;  // r1 not used
 
       // ----------
@@ -131,15 +131,12 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
       // ----------
       // move back from tmp to original range,
       // ensuring we start overwriting after the original unique found
-      using tmp_readwrite_iterator_type = decltype(begin(tmp_view));
-      using step3_func_t =
-          StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
-
       ::Kokkos::parallel_for(
           "unique_step3_parfor",
           RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-          step3_func_t(begin(tmp_view),
-                       (first + num_unique_found_in_step_one)));
+          // use CTAD
+          StdMoveFunctor(begin(tmp_view),
+                         (first + num_unique_found_in_step_one)));
 
       ex.fence("Kokkos::unique: fence after operation");
 
