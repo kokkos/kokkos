@@ -162,6 +162,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamTransformBinaryOp
 	StdAlgorithmsTeamGenerate
 	StdAlgorithmsTeamGenerate_n
+	StdAlgorithmsTeamCountIf
 
 	# StdAlgorithmsTeamRotate
 	# StdAlgorithmsTeamRotateCopy
@@ -171,7 +172,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	# StdAlgorithmsTeamMoveBackward
 	# StdAlgorithmsTeamReverse
 	# StdAlgorithmsTeamReverseCopy
-	# StdAlgorithmsTeamCountIf
 	)
       list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
     endforeach()
