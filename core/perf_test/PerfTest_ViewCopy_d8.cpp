@@ -43,67 +43,9 @@
 */
 
 #include <benchmark/benchmark.h>
-
-#include <Kokkos_Core.hpp>
-#include <PerfTest_ViewCopy.hpp>  // Test::deepcopy_view
-
-#include <cmath>
+#include <PerfTest_ViewCopy.hpp>
 
 namespace Test {
-
-void report_results(benchmark::State& state, double time) {
-  state.SetIterationTime(time);
-
-  const auto N8        = std::pow(state.range(0), 8);
-  const auto size      = N8 * 8 / 1024 / 1024;
-  state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
-                                            benchmark::Counter::OneK::kIs1024);
-  state.counters["GB/s"] =
-      benchmark::Counter(2 * size / 1024 / time, benchmark::Counter::kDefaults,
-                         benchmark::Counter::OneK::kIs1024);
-}
-
-template <class LayoutA, class LayoutB>
-static void ViewDeepCopy_Rank8(benchmark::State& state) {
-  const auto N = state.range(0);
-  const auto R = state.range(1);
-
-  const int N1 = N;
-  Kokkos::View<double********, LayoutA> a("A8", N1, N1, N1, N1, N1, N1, N1, N1);
-  Kokkos::View<double********, LayoutB> b("B8", N1, N1, N1, N1, N1, N1, N1, N1);
-
-  for (auto _ : state) {
-    const auto elapsed_seconds = Test::deepcopy_view(a, b, R);
-
-    report_results(state, elapsed_seconds);
-  }
-}
-
-template <class LayoutA, class LayoutB>
-static void ViewDeepCopy_Rank8_Raw(benchmark::State& state) {
-  const auto N = state.range(0);
-  const auto R = state.range(1);
-
-  const int N1 = N;
-  const int N2 = N1 * N1;
-  const int N4 = N2 * N2;
-  const int N8 = N4 * N4;
-  Kokkos::View<double*, LayoutA> a("A1", N8);
-  Kokkos::View<double*, LayoutB> b("B1", N8);
-  double* const a_ptr       = a.data();
-  const double* const b_ptr = b.data();
-
-  for (auto _ : state) {
-    Kokkos::Timer timer;
-    for (int r = 0; r < R; r++) {
-      Kokkos::parallel_for(
-          N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = b_ptr[i]; });
-    }
-    Kokkos::fence();
-
-    report_results(state, timer.seconds());
-  }
-}
 
 BENCHMARK(ViewDeepCopy_Rank8<Kokkos::LayoutRight, Kokkos::LayoutLeft>)
     ->ArgNames({"N", "R"})
