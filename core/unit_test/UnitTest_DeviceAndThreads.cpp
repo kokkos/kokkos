@@ -12,6 +12,8 @@ int get_device_count() {
   int count;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&count));
   return count;
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return omp_get_num_devices();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(acc_get_device_type());
 #else
@@ -28,6 +30,8 @@ int get_device_id() {
   int device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&device_id));
   return device_id;
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return omp_get_device_num();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_device_num(acc_get_device_type());
 #else
