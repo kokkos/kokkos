@@ -93,9 +93,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using Policy  = Kokkos::RangePolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
 
-  using WorkTagFwd =
-      std::conditional_t<std::is_same_v<FunctorType, typename ReducerType::functor_type>, WorkTag,
-                         void>;
+  using WorkTagFwd = std::conditional_t<
+      std::is_same_v<FunctorType, typename ReducerType::functor_type>, WorkTag,
+      void>;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -127,7 +127,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    const size_t pool_reduce_size = m_reducer.value_size();
+    const size_t pool_reduce_size  = m_reducer.value_size();
     const size_t team_reduce_size  = 0;  // Never shrinks
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
@@ -156,12 +156,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   template <class ViewType>
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& arg_reducer,
-			const ViewType& arg_result_view)
+                        const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()) {
-   static_assert(Kokkos::is_view<ViewType>::value,
+    static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
 
     static_assert(

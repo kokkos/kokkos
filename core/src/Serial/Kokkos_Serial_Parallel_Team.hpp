@@ -369,12 +369,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  inline ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+  inline ParallelReduce(const FunctorType& arg_functor,
+                        const Policy& arg_policy,
                         const ReducerType& arg_reducer,
                         const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-	m_league(arg_policy.league_size()),
+        m_league(arg_policy.league_size()),
         m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +

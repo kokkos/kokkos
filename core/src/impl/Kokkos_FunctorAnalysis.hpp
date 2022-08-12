@@ -854,8 +854,7 @@ struct FunctorAnalysis {
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
 
-    unsigned value_size() const
-    {
+    unsigned value_size() const {
       return FunctorAnalysis::value_size(m_functor);
     }
 
