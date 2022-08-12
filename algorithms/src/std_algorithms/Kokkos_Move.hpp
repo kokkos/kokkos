@@ -32,8 +32,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   OutputIterator>
 move(const ExecutionSpace& ex, InputIterator first, InputIterator last,
      OutputIterator d_first) {
-  return Impl::move_impl("Kokkos::move_iterator_api_default", ex, first, last,
-                         d_first);
+  return Impl::move_exespace_impl("Kokkos::move_iterator_api_default", ex,
+                                  first, last, d_first);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
@@ -41,7 +41,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   OutputIterator>
 move(const std::string& label, const ExecutionSpace& ex, InputIterator first,
      InputIterator last, OutputIterator d_first) {
-  return Impl::move_impl(label, ex, first, last, d_first);
+  return Impl::move_exespace_impl(label, ex, first, last, d_first);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -54,8 +54,8 @@ auto move(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::move_impl("Kokkos::move_view_api_default", ex, begin(source),
-                         end(source), begin(dest));
+  return Impl::move_exespace_impl("Kokkos::move_view_api_default", ex,
+                                  begin(source), end(source), begin(dest));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -68,7 +68,8 @@ auto move(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::move_impl(label, ex, begin(source), end(source), begin(dest));
+  return Impl::move_exespace_impl(label, ex, begin(source), end(source),
+                                  begin(dest));
 }
 
 //

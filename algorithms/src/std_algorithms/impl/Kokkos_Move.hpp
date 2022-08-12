@@ -27,13 +27,14 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class IndexType, class InputIterator, class OutputIterator>
+template <class InputIterator, class OutputIterator>
 struct StdMoveFunctor {
+  using index_type = typename InputIterator::difference_type;
   InputIterator m_first;
   OutputIterator m_dest_first;
 
   KOKKOS_FUNCTION
-  void operator()(IndexType i) const {
+  void operator()(index_type i) const {
     m_dest_first[i] = std::move(m_first[i]);
   }
 
@@ -43,23 +44,20 @@ struct StdMoveFunctor {
 };
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
-                         InputIterator first, InputIterator last,
-                         OutputIterator d_first) {
+OutputIterator move_exespace_impl(const std::string& label,
+                                  const ExecutionSpace& ex, InputIterator first,
+                                  InputIterator last, OutputIterator d_first) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first, d_first);
   Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
   Impl::expect_valid_range(first, last);
 
-  // aliases
-  using index_type = typename InputIterator::difference_type;
-  using func_t     = StdMoveFunctor<index_type, InputIterator, OutputIterator>;
-
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         func_t(first, d_first));
+                         // use CTAD
+                         StdMoveFunctor(first, d_first));
   ex.fence("Kokkos::move: fence after operation");
 
   // return
@@ -76,14 +74,11 @@ KOKKOS_FUNCTION OutputIterator move_team_impl(const TeamHandleType& teamHandle,
   Impl::static_assert_iterators_have_matching_difference_type(first, d_first);
   Impl::expect_valid_range(first, last);
 
-  // aliases
-  using index_type = typename InputIterator::difference_type;
-  using func_t     = StdMoveFunctor<index_type, InputIterator, OutputIterator>;
-
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         func_t(first, d_first));
+                         // use CTAD
+                         StdMoveFunctor(first, d_first));
   teamHandle.team_barrier();
 
   // return
