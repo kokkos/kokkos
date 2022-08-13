@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <thread>
 
 int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
