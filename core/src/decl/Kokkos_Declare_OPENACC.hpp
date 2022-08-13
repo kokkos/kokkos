@@ -53,6 +53,7 @@
 #include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelFor_MDRange.hpp>
+#include <OpenACC/Kokkos_OpenACC_ParallelReduce_MDRange.hpp>
 #endif
 
 #endif
