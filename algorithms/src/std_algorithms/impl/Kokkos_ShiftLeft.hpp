@@ -29,9 +29,9 @@ namespace Experimental {
 namespace Impl {
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType shift_left_impl(const std::string& label, const ExecutionSpace& ex,
-                             IteratorType first, IteratorType last,
-                             typename IteratorType::difference_type n) {
+IteratorType shift_left_exespace_impl(
+    const std::string& label, const ExecutionSpace& ex, IteratorType first,
+    IteratorType last, typename IteratorType::difference_type n) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
@@ -95,6 +95,60 @@ IteratorType shift_left_impl(const std::string& label, const ExecutionSpace& ex,
                          StdMoveFunctor(begin(tmp_view), first));
 
   ex.fence("Kokkos::shift_left: fence after operation");
+
+  return last - n;
+}
+
+template <class Iterator>
+struct StdShiftLeftTeamSingleFunctor {
+  Iterator m_first;
+  Iterator m_last;
+  std::size_t m_shift;
+
+  KOKKOS_FUNCTION
+  void operator()() const {
+    // the impl function calling this functor guarantees that
+    // - m_shift is non-negative
+    // - m_first, m_last identify a valid range with m_last > m_first
+    // - m_shift is less than m_last - m_first
+    // so I can safely use std::size_t here
+    const std::size_t numElementsToMove =
+        ::Kokkos::Experimental::distance(m_first + m_shift, m_last);
+    for (std::size_t i = 0; i < numElementsToMove; ++i) {
+      m_first[i] = std::move(m_first[i + m_shift]);
+    }
+  }
+
+  KOKKOS_FUNCTION
+  StdShiftLeftTeamSingleFunctor(Iterator _first, Iterator _last, std::size_t n)
+      : m_first(std::move(_first)), m_last(std::move(_last)), m_shift(n) {}
+};
+
+template <class TeamHandleType, class IteratorType>
+KOKKOS_FUNCTION IteratorType shift_left_team_impl(
+    const TeamHandleType& teamHandle, IteratorType first, IteratorType last,
+    typename IteratorType::difference_type n) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+  KOKKOS_EXPECTS(n >= 0);
+
+  // handle trivial cases
+  if (n == 0) {
+    return last;
+  }
+
+  if (n >= Kokkos::Experimental::distance(first, last)) {
+    return first;
+  }
+
+  // we cannot use here a new allocation like we do for the
+  // execution space impl because for this team impl we are
+  // within a parallel region, so for now we solve as follows:
+  ::Kokkos::single(PerTeam(teamHandle),
+                   // use CTAD
+                   StdShiftLeftTeamSingleFunctor(first, last, n));
+  teamHandle.team_barrier();
 
   return last - n;
 }
