@@ -108,9 +108,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t copyCount,
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range
-  auto [sourceView, sourceViewBeforeOp_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(11), ValueType(523)}, "sourceView");
+  auto [sourceView, cloneOfSourceViewBeforeOp_h] =
+      create_random_view_and_host_clone(
+          LayoutTag{}, numTeams, numCols,
+          Kokkos::pair{ValueType(11), ValueType(523)}, "sourceView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -139,7 +140,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t copyCount,
   auto destViewAfterOp_h = create_host_space_copy(destView);
   for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < copyCount; ++j) {
-      EXPECT_EQ(destViewAfterOp_h(i, j), sourceViewBeforeOp_h(i, j));
+      EXPECT_EQ(destViewAfterOp_h(i, j), cloneOfSourceViewBeforeOp_h(i, j));
     }
     for (std::size_t j = copyCount; j < numCols; ++j) {
       EXPECT_TRUE(destViewAfterOp_h(i, j) == destViewBeforeOp_h(i, j));
@@ -163,12 +164,12 @@ void run_all_scenarios() {
       {56, {0, 1, 2, 8, 11, 33, 56}},
       {123, {0, 1, 11, 33, 56, 89, 112}}};
 
-  for (int num_teams : teamSizesToTest) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& scenario : scenarios) {
       const std::size_t numCols = scenario.first;
       for (int copyCount : scenario.second) {
         for (int apiId : {0, 1}) {
-          test_A<Tag, ValueType>(num_teams, numCols, copyCount, apiId);
+          test_A<Tag, ValueType>(numTeams, numCols, copyCount, apiId);
         }
       }
     }

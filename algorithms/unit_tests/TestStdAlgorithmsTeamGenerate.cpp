@@ -95,9 +95,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // values from an arbitrary range. Pick range so that it does NOT
   // contain the value produced by the generator (see top of file)
   // otherwise test check below is ill-posed
-  auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(105), ValueType(523)}, "dataView");
+  auto [dataView, cloneOfDataViewBeforeOp_h] =
+      create_random_view_and_host_clone(
+          LayoutTag{}, numTeams, numCols,
+          Kokkos::pair{ValueType(105), ValueType(523)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -116,7 +117,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < dataViewAfterOp_h.extent(1); ++j) {
       EXPECT_TRUE(dataViewAfterOp_h(i, j) == static_cast<ValueType>(23));
-      EXPECT_TRUE(dataViewAfterOp_h(i, j) != dataViewBeforeOp_h(i, j));
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) != cloneOfDataViewBeforeOp_h(i, j));
     }
   }
 }

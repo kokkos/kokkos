@@ -95,13 +95,15 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  auto [dataView1, dataView1BeforeOp_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(11), ValueType(523)}, "dataView1");
+  auto [dataView1, cloneOfDataView1BeforeOp_h] =
+      create_random_view_and_host_clone(
+          LayoutTag{}, numTeams, numCols,
+          Kokkos::pair{ValueType(11), ValueType(523)}, "dataView1");
 
-  auto [dataView2, dataView2BeforeOp_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(530), ValueType(1523)}, "dataView2");
+  auto [dataView2, cloneOfDataView2BeforeOp_h] =
+      create_random_view_and_host_clone(
+          LayoutTag{}, numTeams, numCols,
+          Kokkos::pair{ValueType(530), ValueType(1523)}, "dataView2");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -127,8 +129,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
   for (std::size_t i = 0; i < dataView1AfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < dataView1AfterOp_h.extent(1); ++j) {
-      EXPECT_EQ(dataView1BeforeOp_h(i, j), dataView2AfterOp_h(i, j));
-      EXPECT_EQ(dataView2BeforeOp_h(i, j), dataView1AfterOp_h(i, j));
+      EXPECT_EQ(cloneOfDataView1BeforeOp_h(i, j), dataView2AfterOp_h(i, j));
+      EXPECT_EQ(cloneOfDataView2BeforeOp_h(i, j), dataView1AfterOp_h(i, j));
     }
     // each team should return an iterator past the last column
     EXPECT_TRUE(distancesView_h(i) == numCols);

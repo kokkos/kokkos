@@ -121,9 +121,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range
-  auto [dataView, dataViewBeforeOp_h] = create_view_and_fill_randomly(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(11), ValueType(523)}, "dataView");
+  auto [dataView, cloneOfDataViewBeforeOp_h] =
+      create_random_view_and_host_clone(
+          LayoutTag{}, numTeams, numCols,
+          Kokkos::pair{ValueType(11), ValueType(523)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -143,18 +144,18 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   // -----------------------------------------------
   // run std algo and check
   // -----------------------------------------------
-  // here I can use dataViewBeforeOp_h to run std algo on
+  // here I can use cloneOfDataViewBeforeOp_h to run std algo on
   // since that contains a valid copy of the data
   auto distancesView_h = create_host_space_copy(distancesView);
-  for (std::size_t i = 0; i < dataViewBeforeOp_h.extent(0); ++i) {
-    auto myRow = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
+    auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
     auto it    = my_std_shift_left(KE::begin(myRow), KE::end(myRow), shift);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
-  expect_equal_host_views(dataViewBeforeOp_h, dataViewAfterOp_h);
+  expect_equal_host_views(cloneOfDataViewBeforeOp_h, dataViewAfterOp_h);
 }
 
 template <class Tag, class ValueType>
