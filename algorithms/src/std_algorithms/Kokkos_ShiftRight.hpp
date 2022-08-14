@@ -30,45 +30,38 @@ namespace Experimental {
 template <class ExecutionSpace, class IteratorType>
 std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
-shift_right(const ExecutionSpace& ex, IteratorType first,
-                         IteratorType last,
-                         typename IteratorType::difference_type n)
-{
-  return Impl::shift_right_exespace_impl("Kokkos::shift_right_iterator_api_default", ex,
-                                first, last, n);
+shift_right(const ExecutionSpace& ex, IteratorType first, IteratorType last,
+            typename IteratorType::difference_type n) {
+  return Impl::shift_right_exespace_impl(
+      "Kokkos::shift_right_iterator_api_default", ex, first, last, n);
 }
 
 template <class ExecutionSpace, class IteratorType>
 std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 shift_right(const std::string& label, const ExecutionSpace& ex,
-                         IteratorType first, IteratorType last,
-                         typename IteratorType::difference_type n)
-{
+            IteratorType first, IteratorType last,
+            typename IteratorType::difference_type n) {
   return Impl::shift_right_exespace_impl(label, ex, first, last, n);
 }
 
-template <
-  class ExecutionSpace, class DataType, class... Properties,
-  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
-  >
+template <class ExecutionSpace, class DataType, class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto shift_right(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
-                 typename decltype(begin(view))::difference_type n)
-{
+                 typename decltype(begin(view))::difference_type n) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::shift_right_exespace_impl("Kokkos::shift_right_view_api_default", ex,
-                                begin(view), end(view), n);
+  return Impl::shift_right_exespace_impl("Kokkos::shift_right_view_api_default",
+                                         ex, begin(view), end(view), n);
 }
 
-template <
-  class ExecutionSpace, class DataType, class... Properties,
-  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
-  >
+template <class ExecutionSpace, class DataType, class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto shift_right(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
-                 typename decltype(begin(view))::difference_type n)
-{
+                 typename decltype(begin(view))::difference_type n) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::shift_right_exespace_impl(label, ex, begin(view), end(view), n);
 }
@@ -80,20 +73,19 @@ auto shift_right(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class IteratorType>
 KOKKOS_FUNCTION
-std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-shift_right(const TeamHandleType& teamHandle, IteratorType first,
-	    IteratorType last, typename IteratorType::difference_type n)
-{
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
+    shift_right(const TeamHandleType& teamHandle, IteratorType first,
+                IteratorType last, typename IteratorType::difference_type n) {
   return Impl::shift_right_team_impl(teamHandle, first, last, n);
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties,
     std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
-KOKKOS_FUNCTION auto shift_right(const TeamHandleType& teamHandle,
-				 const ::Kokkos::View<DataType, Properties...>& view,
-				 typename decltype(begin(view))::difference_type n)
-{
+KOKKOS_FUNCTION auto shift_right(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType, Properties...>& view,
+    typename decltype(begin(view))::difference_type n) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::shift_right_team_impl(teamHandle, begin(view), end(view), n);
 }

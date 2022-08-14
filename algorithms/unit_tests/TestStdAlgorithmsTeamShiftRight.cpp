@@ -70,8 +70,8 @@ struct TestFunctorA {
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_apiPick == 0) {
-      auto it = KE::shift_right(member, KE::begin(myRowView), KE::end(myRowView),
-                               m_shift);
+      auto it = KE::shift_right(member, KE::begin(myRowView),
+                                KE::end(myRowView), m_shift);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
@@ -93,7 +93,6 @@ template <class ForwardIterator>
 ForwardIterator my_std_shift_right(
     ForwardIterator first, ForwardIterator last,
     typename std::iterator_traits<ForwardIterator>::difference_type n) {
-
   if (n == 0) {
     return first;
   }
@@ -157,16 +156,14 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios()
-{
-
+void run_all_scenarios() {
   // prepare a map where, for a given set of num cols
   // we provide a list of shifts to use for testing
   // key = num of columns
   // value = list of shifts
   // Note that the cornerCase number is here since the shift_right algo
   // should work even when the shift given is way larger than the range.
-  constexpr std::size_t cornerCase = 110111;
+  constexpr std::size_t cornerCase                        = 110111;
   const std::map<int, std::vector<std::size_t>> scenarios = {
       {0, {0, cornerCase}},
       {2, {0, 1, 2, cornerCase}},
@@ -194,6 +191,6 @@ TEST(std_algorithms_shift_right_team_test, test) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-}  // namespace TeamShiftLeft
+}  // namespace TeamShiftRight
 }  // namespace stdalgos
 }  // namespace Test

@@ -93,7 +93,6 @@ template <class ForwardIterator>
 ForwardIterator my_std_shift_left(
     ForwardIterator first, ForwardIterator last,
     typename std::iterator_traits<ForwardIterator>::difference_type n) {
-
   if (n == 0) {
     return last;
   }
@@ -166,7 +165,7 @@ void run_all_scenarios() {
   // value = list of shifts
   // Note that the cornerCase number is here since the shiftLeft algo
   // should work even when the shift given is way larger than the range.
-  constexpr std::size_t cornerCase = 110111;
+  constexpr std::size_t cornerCase                        = 110111;
   const std::map<int, std::vector<std::size_t>> scenarios = {
       {0, {0, cornerCase}},
       {2, {0, 1, 2, cornerCase}},

@@ -29,11 +29,9 @@ namespace Experimental {
 namespace Impl {
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType shift_right_exespace_impl(const std::string& label,
-				       const ExecutionSpace& ex, IteratorType first,
-				       IteratorType last,
-				       typename IteratorType::difference_type n)
-{
+IteratorType shift_right_exespace_impl(
+    const std::string& label, const ExecutionSpace& ex, IteratorType first,
+    IteratorType last, typename IteratorType::difference_type n) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
@@ -116,7 +114,7 @@ struct StdShiftRightTeamSingleFunctor {
     const std::size_t numElementsToMove =
         ::Kokkos::Experimental::distance(m_first, m_last - m_shift);
     for (std::size_t i = 0; i < numElementsToMove; ++i) {
-      m_last[-i-1] = std::move(m_last[-m_shift - i-1]);
+      m_last[-i - 1] = std::move(m_last[-m_shift - i - 1]);
     }
   }
 
