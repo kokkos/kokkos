@@ -17,42 +17,85 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SHIFT_RIGHT_HPP
 #define KOKKOS_STD_ALGORITHMS_SHIFT_RIGHT_HPP
 
+#include "./impl/Kokkos_IsTeamHandle.hpp"
 #include "impl/Kokkos_ShiftRight.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
+//
+// overload set accepting execution space
+//
 template <class ExecutionSpace, class IteratorType>
-IteratorType shift_right(const ExecutionSpace& ex, IteratorType first,
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                  IteratorType>
+shift_right(const ExecutionSpace& ex, IteratorType first,
                          IteratorType last,
-                         typename IteratorType::difference_type n) {
-  return Impl::shift_right_impl("Kokkos::shift_right_iterator_api_default", ex,
+                         typename IteratorType::difference_type n)
+{
+  return Impl::shift_right_exespace_impl("Kokkos::shift_right_iterator_api_default", ex,
                                 first, last, n);
 }
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType shift_right(const std::string& label, const ExecutionSpace& ex,
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                  IteratorType>
+shift_right(const std::string& label, const ExecutionSpace& ex,
                          IteratorType first, IteratorType last,
-                         typename IteratorType::difference_type n) {
-  return Impl::shift_right_impl(label, ex, first, last, n);
+                         typename IteratorType::difference_type n)
+{
+  return Impl::shift_right_exespace_impl(label, ex, first, last, n);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties>
+template <
+  class ExecutionSpace, class DataType, class... Properties,
+  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
+  >
 auto shift_right(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
-                 typename decltype(begin(view))::difference_type n) {
+                 typename decltype(begin(view))::difference_type n)
+{
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::shift_right_impl("Kokkos::shift_right_view_api_default", ex,
+  return Impl::shift_right_exespace_impl("Kokkos::shift_right_view_api_default", ex,
                                 begin(view), end(view), n);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties>
+template <
+  class ExecutionSpace, class DataType, class... Properties,
+  std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, int> = 0
+  >
 auto shift_right(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
-                 typename decltype(begin(view))::difference_type n) {
+                 typename decltype(begin(view))::difference_type n)
+{
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::shift_right_impl(label, ex, begin(view), end(view), n);
+  return Impl::shift_right_exespace_impl(label, ex, begin(view), end(view), n);
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <class TeamHandleType, class IteratorType>
+KOKKOS_FUNCTION
+std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
+shift_right(const TeamHandleType& teamHandle, IteratorType first,
+	    IteratorType last, typename IteratorType::difference_type n)
+{
+  return Impl::shift_right_team_impl(teamHandle, first, last, n);
+}
+
+template <
+    class TeamHandleType, class DataType, class... Properties,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto shift_right(const TeamHandleType& teamHandle,
+				 const ::Kokkos::View<DataType, Properties...>& view,
+				 typename decltype(begin(view))::difference_type n)
+{
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  return Impl::shift_right_team_impl(teamHandle, begin(view), end(view), n);
 }
 
 }  // namespace Experimental

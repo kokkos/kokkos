@@ -46,7 +46,7 @@
 
 namespace Test {
 namespace stdalgos {
-namespace TeamShiftLeft {
+namespace TeamShiftRight {
 
 namespace KE = Kokkos::Experimental;
 
@@ -70,14 +70,14 @@ struct TestFunctorA {
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_apiPick == 0) {
-      auto it = KE::shift_left(member, KE::begin(myRowView), KE::end(myRowView),
+      auto it = KE::shift_right(member, KE::begin(myRowView), KE::end(myRowView),
                                m_shift);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 1) {
-      auto it = KE::shift_left(member, myRowView, m_shift);
+      auto it = KE::shift_right(member, myRowView, m_shift);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
@@ -86,33 +86,31 @@ struct TestFunctorA {
   }
 };
 
-// shift_left is only supported starting from C++20,
+// shift_right is only supported starting from C++20,
 // so put here a working version of the std algo copied from
-// https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_left.h
+// https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_right.h
 template <class ForwardIterator>
-ForwardIterator my_std_shift_left(
+ForwardIterator my_std_shift_right(
     ForwardIterator first, ForwardIterator last,
     typename std::iterator_traits<ForwardIterator>::difference_type n) {
 
   if (n == 0) {
-    return last;
+    return first;
   }
 
-  ForwardIterator m = first;
-  for (; n > 0; --n) {
-    if (m == last) {
-      return first;
-    }
-    ++m;
+  decltype(n) d = last - first;
+  if (n >= d) {
+    return last;
   }
-  return std::move(m, last, first);
+  ForwardIterator m = first + (d - n);
+  return std::move_backward(first, m, last);
 }
 
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
             int apiId) {
   /* description:
-     randomly fill a rank-2 view and do a team-level KE::shift_left
+     randomly fill a rank-2 view and do a team-level KE::shift_right
      using shift as the shift count.
    */
 
@@ -149,7 +147,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   auto distancesView_h = create_host_space_copy(distancesView);
   for (std::size_t i = 0; i < dataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
-    auto it    = my_std_shift_left(KE::begin(myRow), KE::end(myRow), shift);
+    auto it    = my_std_shift_right(KE::begin(myRow), KE::end(myRow), shift);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
@@ -159,12 +157,14 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios() {
+void run_all_scenarios()
+{
+
   // prepare a map where, for a given set of num cols
   // we provide a list of shifts to use for testing
   // key = num of columns
   // value = list of shifts
-  // Note that the cornerCase number is here since the shiftLeft algo
+  // Note that the cornerCase number is here since the shift_right algo
   // should work even when the shift given is way larger than the range.
   constexpr std::size_t cornerCase = 110111;
   const std::map<int, std::vector<std::size_t>> scenarios = {
@@ -188,7 +188,7 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_shift_left_team_test, test) {
+TEST(std_algorithms_shift_right_team_test, test) {
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();

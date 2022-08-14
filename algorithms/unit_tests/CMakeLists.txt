@@ -169,6 +169,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamMove
 	StdAlgorithmsTeamMoveBackward
 	StdAlgorithmsTeamShiftLeft
+	StdAlgorithmsTeamShiftRight
 
 	# StdAlgorithmsTeamRotate
 	# StdAlgorithmsTeamRotateCopy
