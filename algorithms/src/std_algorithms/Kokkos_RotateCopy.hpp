@@ -32,8 +32,9 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   OutputIterator>
 rotate_copy(const ExecutionSpace& ex, InputIterator first,
             InputIterator n_first, InputIterator last, OutputIterator d_first) {
-  return Impl::rotate_copy_impl("Kokkos::rotate_copy_iterator_api_default", ex,
-                                first, n_first, last, d_first);
+  return Impl::rotate_copy_exespace_impl(
+      "Kokkos::rotate_copy_iterator_api_default", ex, first, n_first, last,
+      d_first);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
@@ -42,7 +43,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
 rotate_copy(const std::string& label, const ExecutionSpace& ex,
             InputIterator first, InputIterator n_first, InputIterator last,
             OutputIterator d_first) {
-  return Impl::rotate_copy_impl(label, ex, first, n_first, last, d_first);
+  return Impl::rotate_copy_exespace_impl(label, ex, first, n_first, last,
+                                         d_first);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -56,9 +58,9 @@ auto rotate_copy(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::rotate_copy_impl("Kokkos::rotate_copy_view_api_default", ex,
-                                cbegin(source), cbegin(source) + n_location,
-                                cend(source), begin(dest));
+  return Impl::rotate_copy_exespace_impl(
+      "Kokkos::rotate_copy_view_api_default", ex, cbegin(source),
+      cbegin(source) + n_location, cend(source), begin(dest));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
@@ -72,9 +74,9 @@ auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::rotate_copy_impl(label, ex, cbegin(source),
-                                cbegin(source) + n_location, cend(source),
-                                begin(dest));
+  return Impl::rotate_copy_exespace_impl(label, ex, cbegin(source),
+                                         cbegin(source) + n_location,
+                                         cend(source), begin(dest));
 }
 
 //

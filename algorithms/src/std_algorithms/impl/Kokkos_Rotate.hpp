@@ -152,17 +152,17 @@ IteratorType rotate_with_pivot_in_right_half(const std::string& label,
 }
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType rotate_impl(const std::string& label, const ExecutionSpace& ex,
-                         IteratorType first, IteratorType n_first,
-                         IteratorType last) {
+IteratorType rotate_exespace_impl(const std::string& label,
+                                  const ExecutionSpace& ex, IteratorType first,
+                                  IteratorType n_first, IteratorType last) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
   Impl::expect_valid_range(first, n_first);
   Impl::expect_valid_range(n_first, last);
 
-  // might be worth checking if doing something similar to
-  // team level below is better since it avoids a new allocation
+  // might be worth checking if for exespace we should do
+  // something similar to what we do for team since it avoids a new allocation
   namespace KE                     = ::Kokkos::Experimental;
   const auto num_elements          = KE::distance(first, last);
   const auto n_distance_from_first = KE::distance(first, n_first);

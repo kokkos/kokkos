@@ -32,8 +32,8 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 rotate(const ExecutionSpace& ex, IteratorType first, IteratorType n_first,
        IteratorType last) {
-  return Impl::rotate_impl("Kokkos::rotate_iterator_api_default", ex, first,
-                           n_first, last);
+  return Impl::rotate_exespace_impl("Kokkos::rotate_iterator_api_default", ex,
+                                    first, n_first, last);
 }
 
 template <class ExecutionSpace, class IteratorType>
@@ -41,7 +41,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
                   IteratorType>
 rotate(const std::string& label, const ExecutionSpace& ex, IteratorType first,
        IteratorType n_first, IteratorType last) {
-  return Impl::rotate_impl(label, ex, first, n_first, last);
+  return Impl::rotate_exespace_impl(label, ex, first, n_first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -51,8 +51,9 @@ auto rotate(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             std::size_t n_location) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::rotate_impl("Kokkos::rotate_view_api_default", ex, begin(view),
-                           begin(view) + n_location, end(view));
+  return Impl::rotate_exespace_impl("Kokkos::rotate_view_api_default", ex,
+                                    begin(view), begin(view) + n_location,
+                                    end(view));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
@@ -62,8 +63,8 @@ auto rotate(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             std::size_t n_location) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::rotate_impl(label, ex, begin(view), begin(view) + n_location,
-                           end(view));
+  return Impl::rotate_exespace_impl(label, ex, begin(view),
+                                    begin(view) + n_location, end(view));
 }
 
 //

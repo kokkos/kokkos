@@ -43,7 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <Kokkos_Random.hpp>
 #include <algorithm>
 
 namespace Test {
@@ -52,104 +51,107 @@ namespace TeamRotateCopy {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewTypeFrom, class ViewTypeDest, class ViewItDist,
-          class MemberType>
-struct FunctorA {
-  ViewTypeFrom m_view_from;
-  ViewTypeDest m_view_dest;
-  ViewItDist m_view_dist;
-  int m_pivotShift;
-  int m_api_pick;
+template <class SourceViewType, class DestViewType, class DistancesViewType>
+struct TestFunctorA {
+  SourceViewType m_sourceView;
+  DestViewType m_destView;
+  DistancesViewType m_distancesView;
+  std::size_t m_pivotShift;
+  int m_apiPick;
 
-  FunctorA(const ViewTypeFrom viewFrom, const ViewTypeDest viewDest,
-           const ViewItDist view_dist, int pivotShift, int apiPick)
-      : m_view_from(viewFrom),
-        m_view_dest(viewDest),
-        m_view_dist(view_dist),
+  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
+               const DistancesViewType distancesView, std::size_t pivotShift,
+               int apiPick)
+      : m_sourceView(sourceView),
+        m_destView(destView),
+        m_distancesView(distancesView),
         m_pivotShift(pivotShift),
-        m_api_pick(apiPick) {}
+        m_apiPick(apiPick) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const MemberType& member) const {
+  template <class MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowViewFrom =
-        Kokkos::subview(m_view_from, myRowIndex, Kokkos::ALL());
-    auto myRowViewDest =
-        Kokkos::subview(m_view_dest, myRowIndex, Kokkos::ALL());
+        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
-    if (m_api_pick == 0) {
+    if (m_apiPick == 0) {
       auto pivot = KE::cbegin(myRowViewFrom) + m_pivotShift;
       auto it =
           KE::rotate_copy(member, KE::cbegin(myRowViewFrom), pivot,
                           KE::cend(myRowViewFrom), KE::begin(myRowViewDest));
-      m_view_dist(myRowIndex) = KE::distance(KE::begin(myRowViewDest), it);
-    } else {
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
+      });
+    } else if (m_apiPick == 1) {
       auto it =
           KE::rotate_copy(member, myRowViewFrom, m_pivotShift, myRowViewDest);
-      m_view_dist(myRowIndex) = KE::distance(KE::begin(myRowViewDest), it);
+
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
+      });
     }
   }
 };
 
-template <class Tag, class ValueType>
-void test_A(std::size_t num_teams, std::size_t num_cols, std::size_t pivotShift,
+template <class LayoutTag, class ValueType>
+void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
             int apiId) {
-  /* description: */
+  /* description:
+     randomly fill a rank-2 view and for a given pivot,
+     do a team-level KE::rotateCopy
+   */
 
-  //
-  // fill v
-  //
-  auto v      = create_view<ValueType>(Tag{}, num_teams, num_cols, "v");
-  auto v_dc   = create_deep_copyable_compatible_view_with_same_extent(v);
-  auto v_dc_h = create_mirror_view(Kokkos::HostSpace(), v_dc);
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(12371);
-  Kokkos::fill_random(v_dc_h, pool, 0, 523);
-  // copy to v_dc and then to v
-  Kokkos::deep_copy(v_dc, v_dc_h);
-  CopyFunctorRank2<decltype(v_dc), decltype(v)> F1(v_dc, v);
-  Kokkos::parallel_for("copy", v.extent(0) * v.extent(1), F1);
+  // -----------------------------------------------
+  // prepare data
+  // -----------------------------------------------
+  // create a view in the memory space associated with default exespace
+  // with as many rows as the number of teams and fill it with random
+  // values from an arbitrary range
+  auto [sourceView, sourceViewBeforeOp_h] = create_view_and_fill_randomly(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(11), ValueType(523)}, "sourceView");
 
-  //
-  // make a copy of v on host and use it to run host algorithm
-  //
-  auto v2_h = create_host_space_copy(v);
-  Kokkos::View<ValueType**, Kokkos::HostSpace> v_gold_h("vgold", v2_h.extent(0),
-                                                        v2_h.extent(1));
-  for (std::size_t i = 0; i < v_dc_h.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(v2_h, i, Kokkos::ALL());
-    auto rowDest = Kokkos::subview(v_gold_h, i, Kokkos::ALL());
-    auto pivot   = KE::cbegin(rowFrom) + pivotShift;
-    auto it = std::rotate_copy(KE::cbegin(rowFrom), pivot, KE::cend(rowFrom),
-                               KE::begin(rowDest));
-    const int dist = KE::distance(KE::begin(rowDest), it);
-    EXPECT_TRUE(dist == (int)(num_cols));
-  }
+  // -----------------------------------------------
+  // launch kokkos kernel
+  // -----------------------------------------------
+  using space_t = Kokkos::DefaultExecutionSpace;
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // launch kernel
-  using space_t          = Kokkos::DefaultExecutionSpace;
-  using policy_type      = Kokkos::TeamPolicy<space_t>;
-  using team_member_type = typename policy_type::member_type;
-  policy_type policy(num_teams, Kokkos::AUTO());
+  // create the destination view
+  Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
 
-  auto v3        = create_view<ValueType>(Tag{}, num_teams, num_cols, "v3");
-  auto distances = create_view<int>(DynamicTag{}, num_teams, "view_it_dist");
-  using functor_type = FunctorA<decltype(v), decltype(v3), decltype(distances),
-                                team_member_type>;
-  functor_type fnc(v, v3, distances, pivotShift, apiId);
+  // each team stores the distance of the returned iterator from the
+  // beginning of the interval that team operates on and then we check
+  // that these distances match the expectation
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+
+  // use CTAD for functor
+  TestFunctorA fnc(sourceView, destView, distancesView, pivotShift, apiId);
   Kokkos::parallel_for(policy, fnc);
 
-  // check
-  auto distances_h = create_host_space_copy(distances);
-  for (std::size_t i = 0; i < v.extent(0); ++i) {
-    EXPECT_TRUE(distances_h(i) == (int)(num_cols));
+  // -----------------------------------------------
+  // run std algo and check
+  // -----------------------------------------------
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
+                                                           numTeams, numCols);
+  auto distancesView_h = create_host_space_copy(distancesView);
+  for (std::size_t i = 0; i < sourceViewBeforeOp_h.extent(0); ++i) {
+    auto myRowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
+    auto myRowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
+
+    auto pivot = KE::cbegin(myRowFrom) + pivotShift;
+    auto it    = std::rotate_copy(KE::cbegin(myRowFrom), pivot,
+                               KE::cend(myRowFrom), KE::begin(myRowDest));
+    const std::size_t stdDistance = KE::distance(KE::begin(myRowDest), it);
+    EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 
-  auto v3_h = create_host_space_copy(v3);
-  for (std::size_t i = 0; i < v3_h.extent(0); ++i) {
-    for (std::size_t j = 0; j < v3_h.extent(1); ++j) {
-      EXPECT_TRUE(v3_h(i, j) == v_gold_h(i, j));
-    }
-  }
+  auto destViewAfterOp_h = create_host_space_copy(destView);
+  expect_equal_host_views(stdDestView, destViewAfterOp_h);
 }
 
 template <class ValueType>
@@ -162,20 +164,21 @@ struct UnifDist<int> {
   dist_type m_dist;
 
   UnifDist(int b, std::size_t seedIn) : m_dist(0, b) { m_gen.seed(seedIn); }
-
   int operator()() { return m_dist(m_gen); }
 };
 
 template <class Tag, class ValueType>
 void run_all_scenarios() {
-  for (int num_teams : team_sizes_to_test) {
+  for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1153}) {
+      // given numTeams, numCols, randomly pick a few pivots to test
+      constexpr int numPivotsToTest = 5;
       UnifDist<int> pivotsProducer(numCols, 3123377);
-      // an arbitrary number of pivots to test
-      for (int k = 0; k < 5; ++k) {
+      for (int k = 0; k < numPivotsToTest; ++k) {
         const auto pivotIndex = pivotsProducer();
+        // test all apis
         for (int apiId : {0, 1}) {
-          test_A<Tag, ValueType>(num_teams, numCols, pivotIndex, apiId);
+          test_A<Tag, ValueType>(numTeams, numCols, pivotIndex, apiId);
         }
       }
     }

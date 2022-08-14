@@ -170,9 +170,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamMoveBackward
 	StdAlgorithmsTeamShiftLeft
 	StdAlgorithmsTeamShiftRight
+	StdAlgorithmsTeamRotate
+	StdAlgorithmsTeamRotateCopy
 
-	# StdAlgorithmsTeamRotate
-	# StdAlgorithmsTeamRotateCopy
 	# StdAlgorithmsTeamUniqueCopy
 	)
       list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
