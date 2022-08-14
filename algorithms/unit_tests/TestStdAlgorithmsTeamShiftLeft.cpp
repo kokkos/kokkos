@@ -57,34 +57,26 @@ struct TestFunctorA {
   std::size_t m_shift;
   int m_apiPick;
 
-  TestFunctorA(const ViewType view,
-               const DistancesViewType distancesView,
-	       std::size_t shift,
-               int apiPick)
+  TestFunctorA(const ViewType view, const DistancesViewType distancesView,
+               std::size_t shift, int apiPick)
       : m_view(view),
         m_distancesView(distancesView),
         m_shift(shift),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowView = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    if (m_apiPick == 0)
-    {
-      auto it = KE::shift_left(member,
-			       KE::begin(myRowView),
-			       KE::end(myRowView),
-			       m_shift);
+    if (m_apiPick == 0) {
+      auto it = KE::shift_left(member, KE::begin(myRowView), KE::end(myRowView),
+                               m_shift);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    }
-    else if (m_apiPick == 1)
-    {
+    } else if (m_apiPick == 1) {
       auto it = KE::shift_left(member, myRowView, m_shift);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
@@ -96,10 +88,9 @@ struct TestFunctorA {
 
 // shift_left is only supported starting from C++20
 template <class ForwardIterator>
-ForwardIterator my_std_shift_left(ForwardIterator first,
-				  ForwardIterator last,
-				  typename std::iterator_traits<ForwardIterator>::difference_type n)
-{
+ForwardIterator my_std_shift_left(
+    ForwardIterator first, ForwardIterator last,
+    typename std::iterator_traits<ForwardIterator>::difference_type n) {
   // copied from
   // https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_left.h
 
@@ -118,10 +109,8 @@ ForwardIterator my_std_shift_left(ForwardIterator first,
 }
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols,
-	    std::size_t shift,
-            int apiId)
-{
+void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
+            int apiId) {
   /* description:
      randomly fill a source view and copy a copyCount set of values
      for each row into a destination view. The operation is done via
@@ -159,10 +148,10 @@ void test_A(std::size_t numTeams, std::size_t numCols,
   // -----------------------------------------------
   // here I can use dataViewBeforeOp_h to run std algo on
   // since that contains a valid copy of the data
-  auto distancesView_h   = create_host_space_copy(distancesView);
-  for (std::size_t i = 0; i < dataViewBeforeOp_h.extent(0); ++i){
+  auto distancesView_h = create_host_space_copy(distancesView);
+  for (std::size_t i = 0; i < dataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
-    auto it = my_std_shift_left(KE::begin(myRow), KE::end(myRow), shift);
+    auto it    = my_std_shift_left(KE::begin(myRow), KE::end(myRow), shift);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
@@ -179,9 +168,9 @@ void run_all_scenarios() {
   // value = list of shifts
   // Note that the cornerCase number is here since the shiftLeft algo
   // should work even when the shift given is way larger than the range.
-  constexpr std::size_t cornerCase = 100000;
+  constexpr std::size_t cornerCase                        = 100000;
   const std::map<int, std::vector<std::size_t>> scenarios = {
-    {0, {0, cornerCase}},
+      {0, {0, cornerCase}},
       {2, {0, 1, 2, cornerCase}},
       {6, {0, 1, 2, 5, cornerCase}},
       {13, {0, 1, 2, 8, 11, cornerCase}},
@@ -207,6 +196,6 @@ TEST(std_algorithms_shift_left_team_test, test) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-}  // namespace TeamCopy_n
+}  // namespace TeamShiftLeft
 }  // namespace stdalgos
 }  // namespace Test
