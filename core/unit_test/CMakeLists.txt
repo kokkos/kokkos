@@ -958,7 +958,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
 target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
 find_package(Python3 COMPONENTS Interpreter)
-if(Python3_Interpreter_FOUND)
+if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
     set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
   endif()
