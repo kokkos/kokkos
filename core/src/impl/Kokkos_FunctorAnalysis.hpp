@@ -946,6 +946,10 @@ struct FunctorAnalysis {
       return FunctorAnalysis::value_size(m_functor);
     }
 
+    unsigned value_count() const {
+      return FunctorAnalysis::value_count(m_functor);
+    }
+
     template <bool is_array = candidate_is_array>
     KOKKOS_INLINE_FUNCTION static std::enable_if_t<is_array, reference_type>
     reference(ValueType* dst) noexcept {
@@ -970,7 +974,7 @@ struct FunctorAnalysis {
 
     KOKKOS_INLINE_FUNCTION
     void join(ValueType* dst, ValueType const* src) const noexcept {
-      DeduceJoin<>::join(m_functor, dst, src);
+      DeduceJoin<>::join(&m_functor, dst, src);
     }
 
     KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const

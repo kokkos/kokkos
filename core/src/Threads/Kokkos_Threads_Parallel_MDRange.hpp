@@ -163,20 +163,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
-  using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
-  using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
-
-  using Analysis =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                            MDRangePolicy, ReducerTypeFwd, ValueType>;
-  using pointer_type   = typename Analysis::pointer_type;
-  using value_type     = typename Analysis::value_type;
-  using reference_type = typename Analysis::reference_type;
+  using pointer_type   = typename ReducerType::pointer_type;
+  using value_type     = typename ReducerType::value_type;
+  using reference_type = typename ReducerType::reference_type;
 
   using iterate_type =
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
@@ -211,14 +200,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const ParallelReduce &self = *((const ParallelReduce *)arg);
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
-    typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_functor, self.m_reducer));
-
     ParallelReduce::exec_range(
         self.m_mdr_policy, self.m_functor, range.begin(), range.end(),
-        reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
+        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.fan_in_reduce(reducer);
+    exec.fan_in_reduce(self.m_reducer);
   }
 
   template <class Schedule>
@@ -232,11 +218,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     exec.barrier();
 
     long work_index = exec.get_work_index();
-    typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_functor, self.m_reducer));
 
     reference_type update =
-        reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
+        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
     while (work_index != -1) {
       const Member begin =
           static_cast<Member>(work_index) * self.m_policy.chunk_size();
@@ -249,14 +233,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       work_index = exec.get_work_index();
     }
 
-    exec.fan_in_reduce(reducer);
+    exec.fan_in_reduce(self.m_reducer);
   }
 
  public:
   inline void execute() const {
-    ThreadsExec::resize_scratch(
-        Analysis::value_size(ReducerConditional::select(m_functor, m_reducer)),
-        0);
+    ThreadsExec::resize_scratch(m_reducer.value_size(), 0);
 
     ThreadsExec::start(&ParallelReduce::exec, this);
 
@@ -266,45 +248,30 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       const pointer_type data =
           (pointer_type)ThreadsExec::root_reduce_scratch();
 
-      const unsigned n = Analysis::value_count(
-          ReducerConditional::select(m_functor, m_reducer));
+      const unsigned n = m_reducer.value_count();
       for (unsigned i = 0; i < n; ++i) {
         m_result_ptr[i] = data[i];
       }
     }
   }
 
-  template <class HostViewType>
-  ParallelReduce(const FunctorType &arg_functor,
-                 const MDRangePolicy &arg_policy,
-                 const HostViewType &arg_result_view,
-                 std::enable_if_t<Kokkos::is_view<HostViewType>::value &&
-                                      !Kokkos::is_reducer<ReducerType>::value,
-                                  void *> = nullptr)
+  template <class ViewType>
+  inline ParallelReduce(const FunctorType &arg_functor,
+                        const MDRangePolicy &arg_policy,
+                        const ReducerType &arg_reducer,
+                        const ViewType &arg_result_view)
       : m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
-        m_reducer(InvalidType()),
+        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()) {
-    static_assert(Kokkos::is_view<HostViewType>::value,
+    static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
-        "Kokkos::Threads reduce result must be a View in HostSpace");
-  }
-
-  inline ParallelReduce(const FunctorType &arg_functor,
-                        MDRangePolicy arg_policy, const ReducerType &reducer)
-      : m_functor(arg_functor),
-        m_mdr_policy(arg_policy),
-        m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {
-    /*static_assert( std::is_same< typename ViewType::memory_space
-                                    , Kokkos::HostSpace >::value
-      , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
-      );*/
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::Threads reduce result must be accessible from HostSpace");
   }
 
   template <typename Policy, typename Functor>

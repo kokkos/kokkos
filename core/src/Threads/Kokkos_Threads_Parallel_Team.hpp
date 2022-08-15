@@ -140,28 +140,17 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      arg_functor, m_policy.team_size())) {}
 };
 
-template <class FunctorType, class ReducerType, class... Properties,
-          class ValueType>
+template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Threads, ValueType> {
+                     ReducerType, Kokkos::Threads> {
  private:
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Threads, Properties...>;
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
 
-  using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
-  using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
-
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, ReducerTypeFwd, ValueType>;
-  using pointer_type   = typename Analysis::pointer_type;
-  using reference_type = typename Analysis::reference_type;
+  using pointer_type   = typename ReducerType::pointer_type;
+  using reference_type = typename ReducerType::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -189,29 +178,23 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   static void exec(ThreadsExec &exec, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
-    typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_functor, self.m_reducer));
-
     ParallelReduce::template exec_team<WorkTag>(
         self.m_functor, Member(&exec, self.m_policy, self.m_shared),
-        reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
+        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.fan_in_reduce(reducer);
+    exec.fan_in_reduce(self.m_reducer);
   }
 
  public:
   inline void execute() const {
     if (m_policy.league_size() * m_policy.team_size() == 0) {
       if (m_result_ptr) {
-        typename Analysis::Reducer final_reducer(
-            &ReducerConditional::select(m_functor, m_reducer));
-        final_reducer.init(m_result_ptr);
-        final_reducer.final(m_result_ptr);
+        m_reducer.init(m_result_ptr);
+        m_reducer.final(m_result_ptr);
       }
     } else {
       ThreadsExec::resize_scratch(
-          Analysis::value_size(
-              ReducerConditional::select(m_functor, m_reducer)),
+          m_reducer.value_size(),
           Policy::member_type::team_reduce_size() + m_shared);
 
       ThreadsExec::start(&ParallelReduce::exec, this);
@@ -222,8 +205,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const pointer_type data =
             (pointer_type)ThreadsExec::root_reduce_scratch();
 
-        const unsigned n = Analysis::value_count(
-            ReducerConditional::select(m_functor, m_reducer));
+        const unsigned n = m_reducer.value_count();
         for (unsigned i = 0; i < n; ++i) {
           m_result_ptr[i] = data[i];
         }
@@ -244,33 +226,23 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  inline ParallelReduce(
-      const FunctorType &arg_functor, const Policy &arg_policy,
-      const ViewType &arg_result,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value &&
-                           !Kokkos::is_reducer<ReducerType>::value,
-                       void *> = nullptr)
+  inline ParallelReduce(const FunctorType &arg_functor,
+                        const Policy &arg_policy,
+                        const ReducerType &arg_reducer,
+                        const ViewType &arg_result_view)
       : m_functor(arg_functor),
         m_policy(fix_policy(arg_policy)),
-        m_reducer(InvalidType()),
-        m_result_ptr(arg_result.data()),
-        m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
-                 FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, m_policy.team_size())) {}
+        m_reducer(arg_reducer),
+        m_result_ptr(arg_result_view.data()),
+        m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
+                 FunctorTeamShmemSize<FunctorType>::value(m_functor, 1)) {
+    static_assert(Kokkos::is_view<ViewType>::value,
+                  "Kokkos::Threads reduce result must be a View");
 
-  inline ParallelReduce(const FunctorType &arg_functor, Policy arg_policy,
-                        const ReducerType &reducer)
-      : m_functor(arg_functor),
-        m_policy(fix_policy(arg_policy)),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
-        m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
-                 FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, m_policy.team_size())) {
-    /*static_assert( std::is_same< typename ViewType::memory_space
-                            , Kokkos::HostSpace >::value
-    , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
-    );*/
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::Threads reduce result must be accessible from HostSpace");
   }
 };
 
