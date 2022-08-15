@@ -58,7 +58,9 @@ template <class Functor, class Reducer, class Policy,
 struct OpenACCParallelReduceMDRangeHelper {
   OpenACCParallelReduceMDRangeHelper(Functor const&, Reducer const&,
                                      Policy const&) {
-    static_assert(std::is_void_v<Functor>, "not implemented");
+    static_assert(
+        std::is_void_v<Functor>,
+        "Kokkos Error: not implemented reducer type for the OpenACC backend");
   }
 };
 
@@ -100,6 +102,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
         m_result_ptr(result.data()) {}
 
   void execute() {
+    static_assert(Policy::rank < 7 && Policy::rank > 1,
+                  "OpenACC Backend MDRangePolicy Error: Unsupported rank...");
     ValueType val;
     typename Analysis::Reducer final_reducer(&m_functor);
     final_reducer.init(&val);

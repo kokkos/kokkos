@@ -72,7 +72,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
       : m_functor(functor), m_policy(policy) {}
 
   void execute() const {
-    static_assert(Policy::rank < 7,
+    static_assert(Policy::rank < 7 && Policy::rank > 1,
                   "OpenACC Backend MDRangePolicy Error: Unsupported rank...");
     static_assert(Policy::inner_direction == Iterate::Left ||
                   Policy::inner_direction == Iterate::Right);
@@ -114,7 +114,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert("implementation bug");
+      static_assert(
+          "Kokkos Error: not supported memory layout for the OpenACC backend");
     }
   }
 };
@@ -157,7 +158,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert("implementation bug");
+      static_assert(
+          "Kokkos Error: not supported memory layout for the OpenACC backend");
     }
   }
 };
@@ -207,7 +209,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert("implementation bug");
+      static_assert(
+          "Kokkos Error: not supported memory layout for the OpenACC backend");
     }
   }
 };
@@ -263,7 +266,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert("implementation bug");
+      static_assert(
+          "Kokkos Error: not supported memory layout for the OpenACC backend");
     }
   }
 };
@@ -325,7 +329,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert("implementation bug");
+      static_assert(
+          "Kokkos Error: not supported memory layout for the OpenACC backend");
     }
   }
 };
