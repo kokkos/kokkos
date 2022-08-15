@@ -44,7 +44,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_OPENACC=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
@@ -80,7 +79,6 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_PERF_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
