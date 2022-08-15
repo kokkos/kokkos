@@ -43,85 +43,68 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <algorithm>
 
 namespace Test {
 namespace stdalgos {
-namespace TeamUniqueCopy {
+namespace TeamUniqueDefaultPredicate {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ValueType>
-struct CustomPredicate {
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(ValueType a, ValueType b) const { return a == b; }
-};
-
-template <class SourceViewType, class DestViewType, class DistancesViewType>
+template <class ViewType, class DistancesViewType>
 struct TestFunctorA {
-  SourceViewType m_sourceView;
-  DestViewType m_destView;
+  ViewType m_view;
   DistancesViewType m_distancesView;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType fromView, const DestViewType destView,
-               const DistancesViewType distancesView, int apiPick)
-      : m_sourceView(fromView),
-        m_destView(destView),
+  TestFunctorA(const ViewType view,
+	       const DistancesViewType distancesView,
+               int apiPick)
+      : m_view(view),
         m_distancesView(distancesView),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
+  {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom =
-        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
-    auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
+    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_apiPick == 0) {
-      auto it =
-          KE::unique_copy(member, KE::begin(myRowViewFrom),
-                          KE::end(myRowViewFrom), KE::begin(myRowViewDest));
-
+      auto it = KE::unique(member, KE::begin(myRowView), KE::end(myRowView));
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    } else if (m_apiPick == 1) {
-      auto it = KE::unique_copy(member, myRowViewFrom, myRowViewDest);
-
+    }
+    else if (m_apiPick == 1) {
+      auto it = KE::unique(member, myRowView);
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    } else if (m_apiPick == 2) {
-      using comparator_t =
-          CustomEqualityComparator<typename SourceViewType::value_type>;
-      auto it = KE::unique_copy(member, KE::begin(myRowViewFrom),
-                                KE::end(myRowViewFrom),
-                                KE::begin(myRowViewDest), comparator_t());
-
+    }
+    else if (m_apiPick == 2) {
+      using value_type = typename ViewType::value_type;
+      auto it = KE::unique(member, KE::begin(myRowView), KE::end(myRowView),
+			   CustomEqualityComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    } else if (m_apiPick == 3) {
-      using comparator_t =
-          CustomEqualityComparator<typename SourceViewType::value_type>;
-      auto it =
-          KE::unique_copy(member, myRowViewFrom, myRowViewDest, comparator_t());
-
+    }
+    else if (m_apiPick == 3) {
+      using value_type = typename ViewType::value_type;
+      auto it = KE::unique(member, myRowView, CustomEqualityComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
   }
 };
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
+{
   /* description:
-     team-level KE::unique_copy on a rank-2 view where
+     team-level KE::unique on a rank-2 view where
      data is filled randomly such that we have several subsets
      of consecutive equal elements. Use one team per row.
    */
@@ -133,10 +116,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // with as many rows as the number of teams and fill it with random
   // values from a range that is tight enough that there is a high likelihood
   // of having several consecutive subsets of equal elements
-  auto [sourceView, cloneOfDataViewBeforeOp_h] =
-      create_random_view_and_host_clone(
-          LayoutTag{}, numTeams, numCols,
-          Kokkos::pair{ValueType(121), ValueType(153)}, "sourceView");
+  auto [dataView, cloneOfDataViewBeforeOp_h] =
+      create_random_view_and_host_clone(LayoutTag{}, numTeams, numCols,
+					Kokkos::pair{ValueType(121), ValueType(153)},
+					"dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -144,46 +127,38 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // create the destination view
-  Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
-
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, destView, distancesView, apiId);
+  TestFunctorA fnc(dataView, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run std algo and check
   // -----------------------------------------------
+  // here I can use cloneOfDataViewBeforeOp_h to run std algo on
+  // since that contains a valid copy of the data
   auto distancesView_h = create_host_space_copy(distancesView);
-  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
-                                                           numTeams, numCols);
-
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
-    auto myRowFrom =
-        Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
-    auto myRowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
+    auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
 
     std::size_t stdDistance = 0;
-    if (apiId <= 1) {
-      auto it     = std::unique_copy(KE::cbegin(myRowFrom), KE::cend(myRowFrom),
-                                 KE::begin(myRowDest));
-      stdDistance = KE::distance(KE::begin(myRowDest), it);
-    } else {
-      auto it     = std::unique_copy(KE::cbegin(myRowFrom), KE::cend(myRowFrom),
-                                 KE::begin(myRowDest),
-                                 CustomEqualityComparator<value_type>{});
-      stdDistance = KE::distance(KE::begin(myRowDest), it);
+    if (apiId <= 1){
+      auto it = std::unique(KE::begin(myRow), KE::end(myRow));
+      stdDistance = KE::distance(KE::begin(myRow), it);
+    }
+    else{
+      auto it = std::unique(KE::begin(myRow), KE::end(myRow), CustomEqualityComparator<value_type>{});
+      stdDistance = KE::distance(KE::begin(myRow), it);
     }
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 
-  auto destViewAfterOp_h = create_host_space_copy(destView);
-  expect_equal_host_views(stdDestView, destViewAfterOp_h);
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  expect_equal_host_views(cloneOfDataViewBeforeOp_h, dataViewAfterOp_h);
 }
 
 template <class LayoutTag, class ValueType>
@@ -197,12 +172,12 @@ void run_all_scenarios() {
   }
 }
 
-TEST(std_algorithms_unique_copy_team_test, test) {
+TEST(std_algorithms_unique_team_test, test_default_predicate) {
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, int>();
 }
 
-}  // namespace TeamUniqueCopy
+}  // namespace TeamUniqueDefaultPredicate
 }  // namespace stdalgos
 }  // namespace Test

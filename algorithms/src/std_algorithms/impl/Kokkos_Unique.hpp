@@ -29,9 +29,10 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class IndexType, class InputIt, class OutputIt,
-          class BinaryPredicateType>
+template <class InputIt, class OutputIt, class BinaryPredicateType>
 struct StdUniqueFunctor {
+  using index_type = typename InputIt::difference_type;
+
   InputIt m_first_from;
   InputIt m_last_from;
   OutputIt m_first_dest;
@@ -46,7 +47,7 @@ struct StdUniqueFunctor {
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
-  void operator()(const IndexType i, IndexType& update,
+  void operator()(const index_type i, index_type& update,
                   const bool final_pass) const {
     auto& val_i         = m_first_from[i];
     const auto& val_ip1 = m_first_from[i + 1];
@@ -64,9 +65,9 @@ struct StdUniqueFunctor {
 };
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
-IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
-                         IteratorType first, IteratorType last,
-                         PredicateType pred) {
+IteratorType unique_exespace_impl(const std::string& label,
+                                  const ExecutionSpace& ex, IteratorType first,
+                                  IteratorType last, PredicateType pred) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
@@ -110,15 +111,12 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
       // for same reason as the one explained in unique_copy
       const auto scan_size = num_elements_to_explore - 1;
       auto tmp_first       = ::Kokkos::Experimental::begin(tmp_view);
-      using output_it      = decltype(tmp_first);
 
-      using index_type = typename IteratorType::difference_type;
-      using func_type =
-          StdUniqueFunctor<index_type, IteratorType, output_it, PredicateType>;
-      index_type count = 0;
+      typename IteratorType::difference_type count = 0;
       ::Kokkos::parallel_scan(
           label, RangePolicy<ExecutionSpace>(ex, 0, scan_size),
-          func_type(it_found, last, tmp_first, pred), count);
+          // use CTAD
+          StdUniqueFunctor(it_found, last, tmp_first, pred), count);
 
       // move last element too, for the same reason as the unique_copy
       auto unused_r = Impl::move_exespace_impl("Kokkos::move_from_unique", ex,
@@ -148,11 +146,116 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
-                         IteratorType first, IteratorType last) {
+IteratorType unique_exespace_impl(const std::string& label,
+                                  const ExecutionSpace& ex, IteratorType first,
+                                  IteratorType last) {
   using value_type    = typename IteratorType::value_type;
   using binary_pred_t = StdAlgoEqualBinaryPredicate<value_type>;
-  return unique_impl(label, ex, first, last, binary_pred_t());
+  return unique_exespace_impl(label, ex, first, last, binary_pred_t());
+}
+
+//
+// team level
+//
+template <class IteratorType, class BinaryPredicateType>
+struct StdUniqueTeamCountFunctor {
+  using index_type = typename IteratorType::difference_type;
+
+  IteratorType m_first;
+  BinaryPredicateType m_pred;
+
+  KOKKOS_FUNCTION
+  StdUniqueTeamCountFunctor(IteratorType first, BinaryPredicateType pred)
+      : m_first(std::move(first)), m_pred(std::move(pred)) {}
+
+  KOKKOS_FUNCTION
+  void operator()(index_type i, std::size_t& lsum) const {
+    const auto& val_i   = m_first[i];
+    const auto& val_ip1 = m_first[i + 1];
+    if (!m_pred(val_i, val_ip1)) {
+      lsum++;
+    }
+  }
+};
+
+template <class IteratorType, class BinaryPredicateType>
+struct StdUniqueTeamSingleFunctor {
+  using index_type = typename IteratorType::difference_type;
+
+  IteratorType m_first;
+  IteratorType m_last;
+  BinaryPredicateType m_pred;
+  index_type m_numElements;
+
+  KOKKOS_FUNCTION
+  StdUniqueTeamSingleFunctor(IteratorType first, IteratorType last,
+                             BinaryPredicateType pred)
+      : m_first(std::move(first)),
+        m_last(std::move(last)),
+        m_pred(std::move(pred)) {}
+
+  KOKKOS_FUNCTION
+  void operator()() const {
+    IteratorType first  = m_first;
+    IteratorType result = first;
+    while (++first != m_last) {
+      if (!m_pred(*result, *first) && ++result != first) {
+        *result = std::move(*first);
+      }
+    }
+  }
+};
+
+template <class TeamHandleType, class IteratorType, class PredicateType>
+KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
+                                              IteratorType first,
+                                              IteratorType last,
+                                              PredicateType pred) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  // branch for trivial vs non trivial case
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+  if (num_elements == 0) {
+    return first;
+  } else if (num_elements == 1) {
+    return last;
+  } else {
+    // for the execution-space-based impl we used an auxiliary allocation,
+    // but for the team level we cannot do the same, so use this impl:
+
+    // first, we compute the num of unique elements, which we need
+    // when we have to compute the return iterator
+    std::size_t count;
+    ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, num_elements - 1),
+                              // use CTAD
+                              StdUniqueTeamCountFunctor(first, pred), count);
+    teamHandle.team_barrier();
+
+    // second, use a Kokkos::single to do the unique impl
+    ::Kokkos::single(PerTeam(teamHandle),
+                     // use CTAD
+                     StdUniqueTeamSingleFunctor(first, last, pred));
+    teamHandle.team_barrier();
+
+    // return the correct iterator: we need +1 here because we need to
+    // return iterator to the element past the last element copied
+    return first + count + 1;
+  }
+}
+
+template <class TeamHandleType, class IteratorType>
+KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
+                                              IteratorType first,
+                                              IteratorType last) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  using binary_pred_t =
+      StdAlgoEqualBinaryPredicate<typename IteratorType::value_type>;
+  return unique_team_impl(teamHandle, first, last, binary_pred_t());
 }
 
 }  // namespace Impl
