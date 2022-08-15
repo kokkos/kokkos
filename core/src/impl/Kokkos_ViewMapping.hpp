@@ -4127,7 +4127,7 @@ struct RuntimeCheckViewMemoryAccessViolation<MemorySpace, AccessSpace, false> {
       (void)track;
     }))
 
-    strcat(err, "\")");
+    strcat(err, "\")\n");
 
     Kokkos::abort(err);
   }
