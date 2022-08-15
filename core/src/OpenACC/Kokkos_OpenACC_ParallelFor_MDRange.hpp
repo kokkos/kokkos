@@ -49,10 +49,21 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
+namespace Kokkos::Experimental::Impl {
+
+template <class Functor, class Policy, int Rank = Policy::rank>
+struct OpenACCParallelForHelper {
+  OpenACCParallelForHelper(Functor const&, Policy const&, int) {
+    static_assert(std::is_void_v<Functor>, "not implemented");
+  }
+};
+
+}  // namespace Kokkos::Experimental::Impl
+
 template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
-  using Policy = Kokkos::MDRangePolicy<Traits...>;
+  using Policy = MDRangePolicy<Traits...>;
   Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
   Policy m_policy;
 
@@ -60,183 +71,262 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
   ParallelFor(Functor const& functor, Policy const& policy)
       : m_functor(functor), m_policy(policy) {}
 
-  template <int Rank>
-  std::enable_if_t<Rank == 2> execute_impl() const {
-    auto const begin1 = m_policy.m_lower[1];
-    auto const end1   = m_policy.m_upper[1];
-    auto const begin0 = m_policy.m_lower[0];
-    auto const end0   = m_policy.m_upper[0];
+  void execute() const {
+    static_assert(Policy::rank < 7,
+                  "OpenACC Backend MDRangePolicy Error: Unsupported rank...");
+    static_assert(Policy::inner_direction == Iterate::Left ||
+                  Policy::inner_direction == Iterate::Right);
+    int const async_arg = m_policy.space().acc_async_queue();
+    Kokkos::Experimental::Impl::OpenACCParallelForHelper(m_functor, m_policy,
+                                                         async_arg);
+  }
+};
+
+template <class Functor, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
+    Functor, Kokkos::MDRangePolicy<Traits...>, 2> {
+  using Policy = MDRangePolicy<Traits...>;
+  OpenACCParallelForHelper(Functor const& functor, Policy const& policy,
+                           int async_arg) {
+    auto const begin1 = policy.m_lower[1];
+    auto const end1   = policy.m_upper[1];
+    auto const begin0 = policy.m_lower[0];
+    auto const end0   = policy.m_upper[0];
 
     if ((end0 <= begin0) || (end1 <= begin1)) {
       return;
     }
 
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& functor(m_functor);
-
-    int const async_arg = m_policy.space().acc_async_queue();
-
+    if constexpr (Policy::inner_direction == Iterate::Left) {
 #pragma acc parallel loop gang vector collapse(2) copyin(functor) \
     async(async_arg)
-    for (auto i1 = begin1; i1 < end1; ++i1) {
-      for (auto i0 = begin0; i0 < end0; ++i0) {
-        functor(i0, i1);
+      for (auto i1 = begin1; i1 < end1; ++i1) {
+        for (auto i0 = begin0; i0 < end0; ++i0) {
+          functor(i0, i1);
+        }
       }
+    } else if constexpr (Policy::inner_direction == Iterate::Right) {
+#pragma acc parallel loop gang vector collapse(2) copyin(functor) \
+    async(async_arg)
+      for (auto i0 = begin0; i0 < end0; ++i0) {
+        for (auto i1 = begin1; i1 < end1; ++i1) {
+          functor(i0, i1);
+        }
+      }
+    } else {
+      static_assert("implementation bug");
     }
   }
+};
 
-  template <int Rank>
-  std::enable_if_t<Rank == 3> execute_impl() const {
-    auto const begin2 = m_policy.m_lower[2];
-    auto const end2   = m_policy.m_upper[2];
-    auto const begin1 = m_policy.m_lower[1];
-    auto const end1   = m_policy.m_upper[1];
-    auto const begin0 = m_policy.m_lower[0];
-    auto const end0   = m_policy.m_upper[0];
+template <class Functor, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
+    Functor, Kokkos::MDRangePolicy<Traits...>, 3> {
+  using Policy = MDRangePolicy<Traits...>;
+  OpenACCParallelForHelper(Functor const& functor, Policy const& policy,
+                           int async_arg) {
+    auto const begin2 = policy.m_lower[2];
+    auto const end2   = policy.m_upper[2];
+    auto const begin1 = policy.m_lower[1];
+    auto const end1   = policy.m_upper[1];
+    auto const begin0 = policy.m_lower[0];
+    auto const end0   = policy.m_upper[0];
 
     if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
       return;
     }
 
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& functor(m_functor);
-
-    int const async_arg = m_policy.space().acc_async_queue();
-
+    if constexpr (Policy::inner_direction == Iterate::Left) {
 #pragma acc parallel loop gang vector collapse(3) copyin(functor) \
     async(async_arg)
-    for (auto i2 = begin2; i2 < end2; ++i2) {
-      for (auto i1 = begin1; i1 < end1; ++i1) {
-        for (auto i0 = begin0; i0 < end0; ++i0) {
-          functor(i0, i1, i2);
+      for (auto i2 = begin2; i2 < end2; ++i2) {
+        for (auto i1 = begin1; i1 < end1; ++i1) {
+          for (auto i0 = begin0; i0 < end0; ++i0) {
+            functor(i0, i1, i2);
+          }
         }
       }
+    } else if constexpr (Policy::inner_direction == Iterate::Right) {
+#pragma acc parallel loop gang vector collapse(3) copyin(functor) \
+    async(async_arg)
+      for (auto i0 = begin0; i0 < end0; ++i0) {
+        for (auto i1 = begin1; i1 < end1; ++i1) {
+          for (auto i2 = begin2; i2 < end2; ++i2) {
+            functor(i0, i1, i2);
+          }
+        }
+      }
+    } else {
+      static_assert("implementation bug");
     }
   }
+};
 
-  template <int Rank>
-  std::enable_if_t<Rank == 4> execute_impl() const {
-    auto const begin3 = m_policy.m_lower[3];
-    auto const end3   = m_policy.m_upper[3];
-    auto const begin2 = m_policy.m_lower[2];
-    auto const end2   = m_policy.m_upper[2];
-    auto const begin1 = m_policy.m_lower[1];
-    auto const end1   = m_policy.m_upper[1];
-    auto const begin0 = m_policy.m_lower[0];
-    auto const end0   = m_policy.m_upper[0];
+template <class Functor, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
+    Functor, Kokkos::MDRangePolicy<Traits...>, 4> {
+  using Policy = MDRangePolicy<Traits...>;
+  OpenACCParallelForHelper(Functor const& functor, Policy const& policy,
+                           int async_arg) {
+    auto const begin3 = policy.m_lower[3];
+    auto const end3   = policy.m_upper[3];
+    auto const begin2 = policy.m_lower[2];
+    auto const end2   = policy.m_upper[2];
+    auto const begin1 = policy.m_lower[1];
+    auto const end1   = policy.m_upper[1];
+    auto const begin0 = policy.m_lower[0];
+    auto const end0   = policy.m_upper[0];
 
     if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
         (end3 <= begin3)) {
       return;
     }
 
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& functor(m_functor);
-
-    int const async_arg = m_policy.space().acc_async_queue();
-
+    if constexpr (Policy::inner_direction == Iterate::Left) {
 #pragma acc parallel loop gang vector collapse(4) copyin(functor) \
     async(async_arg)
-    for (auto i3 = begin3; i3 < end3; ++i3) {
-      for (auto i2 = begin2; i2 < end2; ++i2) {
-        for (auto i1 = begin1; i1 < end1; ++i1) {
-          for (auto i0 = begin0; i0 < end0; ++i0) {
-            functor(i0, i1, i2, i3);
+      for (auto i3 = begin3; i3 < end3; ++i3) {
+        for (auto i2 = begin2; i2 < end2; ++i2) {
+          for (auto i1 = begin1; i1 < end1; ++i1) {
+            for (auto i0 = begin0; i0 < end0; ++i0) {
+              functor(i0, i1, i2, i3);
+            }
           }
         }
       }
+    } else if constexpr (Policy::inner_direction == Iterate::Right) {
+#pragma acc parallel loop gang vector collapse(4) copyin(functor) \
+    async(async_arg)
+      for (auto i0 = begin0; i0 < end0; ++i0) {
+        for (auto i1 = begin1; i1 < end1; ++i1) {
+          for (auto i2 = begin2; i2 < end2; ++i2) {
+            for (auto i3 = begin3; i3 < end3; ++i3) {
+              functor(i0, i1, i2, i3);
+            }
+          }
+        }
+      }
+    } else {
+      static_assert("implementation bug");
     }
   }
+};
 
-  template <int Rank>
-  std::enable_if_t<Rank == 5> execute_impl() const {
-    auto const begin4 = m_policy.m_lower[4];
-    auto const end4   = m_policy.m_upper[4];
-    auto const begin3 = m_policy.m_lower[3];
-    auto const end3   = m_policy.m_upper[3];
-    auto const begin2 = m_policy.m_lower[2];
-    auto const end2   = m_policy.m_upper[2];
-    auto const begin1 = m_policy.m_lower[1];
-    auto const end1   = m_policy.m_upper[1];
-    auto const begin0 = m_policy.m_lower[0];
-    auto const end0   = m_policy.m_upper[0];
+template <class Functor, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
+    Functor, Kokkos::MDRangePolicy<Traits...>, 5> {
+  using Policy = MDRangePolicy<Traits...>;
+  OpenACCParallelForHelper(Functor const& functor, Policy const& policy,
+                           int async_arg) {
+    auto const begin4 = policy.m_lower[4];
+    auto const end4   = policy.m_upper[4];
+    auto const begin3 = policy.m_lower[3];
+    auto const end3   = policy.m_upper[3];
+    auto const begin2 = policy.m_lower[2];
+    auto const end2   = policy.m_upper[2];
+    auto const begin1 = policy.m_lower[1];
+    auto const end1   = policy.m_upper[1];
+    auto const begin0 = policy.m_lower[0];
+    auto const end0   = policy.m_upper[0];
 
     if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
         (end3 <= begin3) || (end4 <= begin4)) {
       return;
     }
 
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& functor(m_functor);
-
-    int const async_arg = m_policy.space().acc_async_queue();
-
+    if constexpr (Policy::inner_direction == Iterate::Left) {
 #pragma acc parallel loop gang vector collapse(5) copyin(functor) \
     async(async_arg)
-    for (auto i4 = begin4; i4 < end4; ++i4) {
-      for (auto i3 = begin3; i3 < end3; ++i3) {
-        for (auto i2 = begin2; i2 < end2; ++i2) {
-          for (auto i1 = begin1; i1 < end1; ++i1) {
-            for (auto i0 = begin0; i0 < end0; ++i0) {
-              functor(i0, i1, i2, i3, i4);
+      for (auto i4 = begin4; i4 < end4; ++i4) {
+        for (auto i3 = begin3; i3 < end3; ++i3) {
+          for (auto i2 = begin2; i2 < end2; ++i2) {
+            for (auto i1 = begin1; i1 < end1; ++i1) {
+              for (auto i0 = begin0; i0 < end0; ++i0) {
+                functor(i0, i1, i2, i3, i4);
+              }
             }
           }
         }
       }
+    } else if constexpr (Policy::inner_direction == Iterate::Right) {
+#pragma acc parallel loop gang vector collapse(5) copyin(functor) \
+    async(async_arg)
+      for (auto i0 = begin0; i0 < end0; ++i0) {
+        for (auto i1 = begin1; i1 < end1; ++i1) {
+          for (auto i2 = begin2; i2 < end2; ++i2) {
+            for (auto i3 = begin3; i3 < end3; ++i3) {
+              for (auto i4 = begin4; i4 < end4; ++i4) {
+                functor(i0, i1, i2, i3, i4);
+              }
+            }
+          }
+        }
+      }
+    } else {
+      static_assert("implementation bug");
     }
   }
+};
 
-  template <int Rank>
-  std::enable_if_t<Rank == 6> execute_impl() const {
-    auto const begin5 = m_policy.m_lower[5];
-    auto const end5   = m_policy.m_upper[5];
-    auto const begin4 = m_policy.m_lower[4];
-    auto const end4   = m_policy.m_upper[4];
-    auto const begin3 = m_policy.m_lower[3];
-    auto const end3   = m_policy.m_upper[3];
-    auto const begin2 = m_policy.m_lower[2];
-    auto const end2   = m_policy.m_upper[2];
-    auto const begin1 = m_policy.m_lower[1];
-    auto const end1   = m_policy.m_upper[1];
-    auto const begin0 = m_policy.m_lower[0];
-    auto const end0   = m_policy.m_upper[0];
+template <class Functor, class... Traits>
+struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
+    Functor, Kokkos::MDRangePolicy<Traits...>, 6> {
+  using Policy = MDRangePolicy<Traits...>;
+  OpenACCParallelForHelper(Functor const& functor, Policy const& policy,
+                           int async_arg) {
+    auto const begin5 = policy.m_lower[5];
+    auto const end5   = policy.m_upper[5];
+    auto const begin4 = policy.m_lower[4];
+    auto const end4   = policy.m_upper[4];
+    auto const begin3 = policy.m_lower[3];
+    auto const end3   = policy.m_upper[3];
+    auto const begin2 = policy.m_lower[2];
+    auto const end2   = policy.m_upper[2];
+    auto const begin1 = policy.m_lower[1];
+    auto const end1   = policy.m_upper[1];
+    auto const begin0 = policy.m_lower[0];
+    auto const end0   = policy.m_upper[0];
 
     if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
         (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
       return;
     }
 
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& functor(m_functor);
-
-    int const async_arg = m_policy.space().acc_async_queue();
-
+    if constexpr (Policy::inner_direction == Iterate::Left) {
 #pragma acc parallel loop gang vector collapse(6) copyin(functor) \
     async(async_arg)
-    for (auto i5 = begin5; i5 < end5; ++i5) {
-      for (auto i4 = begin4; i4 < end4; ++i4) {
-        for (auto i3 = begin3; i3 < end3; ++i3) {
-          for (auto i2 = begin2; i2 < end2; ++i2) {
-            for (auto i1 = begin1; i1 < end1; ++i1) {
-              for (auto i0 = begin0; i0 < end0; ++i0) {
-                functor(i0, i1, i2, i3, i4, i5);
+      for (auto i5 = begin5; i5 < end5; ++i5) {
+        for (auto i4 = begin4; i4 < end4; ++i4) {
+          for (auto i3 = begin3; i3 < end3; ++i3) {
+            for (auto i2 = begin2; i2 < end2; ++i2) {
+              for (auto i1 = begin1; i1 < end1; ++i1) {
+                for (auto i0 = begin0; i0 < end0; ++i0) {
+                  functor(i0, i1, i2, i3, i4, i5);
+                }
               }
             }
           }
         }
       }
+    } else if constexpr (Policy::inner_direction == Iterate::Right) {
+#pragma acc parallel loop gang vector collapse(6) copyin(functor) \
+    async(async_arg)
+      for (auto i0 = begin0; i0 < end0; ++i0) {
+        for (auto i1 = begin1; i1 < end1; ++i1) {
+          for (auto i2 = begin2; i2 < end2; ++i2) {
+            for (auto i3 = begin3; i3 < end3; ++i3) {
+              for (auto i4 = begin4; i4 < end4; ++i4) {
+                for (auto i5 = begin5; i5 < end5; ++i5) {
+                  functor(i0, i1, i2, i3, i4, i5);
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      static_assert("implementation bug");
     }
-  }
-
-  void execute() const {
-    static_assert(Policy::rank < 7,
-                  "OpenACC Backend MDRangePolicy Error: Unsupported rank...");
-    execute_impl<Policy::rank>();
   }
 };
 
