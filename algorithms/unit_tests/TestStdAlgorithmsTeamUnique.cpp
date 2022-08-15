@@ -57,16 +57,12 @@ struct TestFunctorA {
   DistancesViewType m_distancesView;
   int m_apiPick;
 
-  TestFunctorA(const ViewType view,
-	       const DistancesViewType distancesView,
+  TestFunctorA(const ViewType view, const DistancesViewType distancesView,
                int apiPick)
-      : m_view(view),
-        m_distancesView(distancesView),
-        m_apiPick(apiPick) {}
+      : m_view(view), m_distancesView(distancesView), m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
@@ -75,24 +71,22 @@ struct TestFunctorA {
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    }
-    else if (m_apiPick == 1) {
+    } else if (m_apiPick == 1) {
       auto it = KE::unique(member, myRowView);
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    }
-    else if (m_apiPick == 2) {
+    } else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
       auto it = KE::unique(member, KE::begin(myRowView), KE::end(myRowView),
-			   CustomEqualityComparator<value_type>{});
+                           CustomEqualityComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    }
-    else if (m_apiPick == 3) {
+    } else if (m_apiPick == 3) {
       using value_type = typename ViewType::value_type;
-      auto it = KE::unique(member, myRowView, CustomEqualityComparator<value_type>{});
+      auto it =
+          KE::unique(member, myRowView, CustomEqualityComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
@@ -101,8 +95,7 @@ struct TestFunctorA {
 };
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
-{
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
      team-level KE::unique on a rank-2 view where
      data is filled randomly such that we have several subsets
@@ -117,9 +110,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
   // values from a range that is tight enough that there is a high likelihood
   // of having several consecutive subsets of equal elements
   auto [dataView, cloneOfDataViewBeforeOp_h] =
-      create_random_view_and_host_clone(LayoutTag{}, numTeams, numCols,
-					Kokkos::pair{ValueType(121), ValueType(153)},
-					"dataView");
+      create_random_view_and_host_clone(
+          LayoutTag{}, numTeams, numCols,
+          Kokkos::pair{ValueType(121), ValueType(153)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -146,12 +139,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
 
     std::size_t stdDistance = 0;
-    if (apiId <= 1){
-      auto it = std::unique(KE::begin(myRow), KE::end(myRow));
+    if (apiId <= 1) {
+      auto it     = std::unique(KE::begin(myRow), KE::end(myRow));
       stdDistance = KE::distance(KE::begin(myRow), it);
-    }
-    else{
-      auto it = std::unique(KE::begin(myRow), KE::end(myRow), CustomEqualityComparator<value_type>{});
+    } else {
+      auto it     = std::unique(KE::begin(myRow), KE::end(myRow),
+                            CustomEqualityComparator<value_type>{});
       stdDistance = KE::distance(KE::begin(myRow), it);
     }
     EXPECT_EQ(stdDistance, distancesView_h(i));
