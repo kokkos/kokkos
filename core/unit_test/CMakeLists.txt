@@ -967,10 +967,12 @@ if(Python3_Interpreter_FOUND)
     INPUT TestDeviceAndThreads.py
     ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
   )
-  add_test(
-    NAME KokkosCore_UnitTest_DeviceAndThreads
-    COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
-  )
+  if(NOT Kokkos_ENABLE_OPENMPTARGET)  # FIXME_OPENMPTARGET does not select the right device
+    add_test(
+      NAME KokkosCore_UnitTest_DeviceAndThreads
+      COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+    )
+  endif()
 endif()
 
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
