@@ -75,10 +75,10 @@ struct TestFunctorA {
   ValueType m_newValue;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType fromView, const DestViewType destView,
+  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
                const DistancesViewType distancesView, ValueType targetVal,
                ValueType newVal, int apiPick)
-      : m_sourceView(fromView),
+      : m_sourceView(sourceView),
         m_destView(destView),
         m_distancesView(distancesView),
         m_targetValue(targetVal),

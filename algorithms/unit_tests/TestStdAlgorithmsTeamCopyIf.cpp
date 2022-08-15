@@ -70,10 +70,10 @@ struct TestFunctorA {
   ValueType m_threshold;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType fromView, const DestViewType destView,
+  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
                const DistancesViewType distancesView, ValueType threshold,
                int apiPick)
-      : m_sourceView(fromView),
+      : m_sourceView(sourceView),
         m_destView(destView),
         m_distancesView(distancesView),
         m_threshold(threshold),

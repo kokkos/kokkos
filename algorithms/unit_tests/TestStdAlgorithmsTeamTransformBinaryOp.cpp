@@ -67,11 +67,11 @@ struct TestFunctorA {
   DistancesViewType m_distancesView;
   int m_apiPick;
 
-  TestFunctorA(const SourceView1Type fromView1, const SourceView2Type fromView2,
-               const DestViewType destView,
+  TestFunctorA(const SourceView1Type sourceView1,
+               const SourceView2Type sourceView2, const DestViewType destView,
                const DistancesViewType distancesView, int apiPick)
-      : m_sourceView1(fromView1),
-        m_sourceView2(fromView2),
+      : m_sourceView1(sourceView1),
+        m_sourceView2(sourceView2),
         m_destView(destView),
         m_distancesView(distancesView),
         m_apiPick(apiPick) {}
