@@ -18,7 +18,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt-get update && \
-    apt-get DEBIAN_FRONTEND=noninteractive install -yq g++-9 && \
+    apt-get install -y g++-9 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
