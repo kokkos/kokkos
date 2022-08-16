@@ -871,20 +871,20 @@ struct MDTeamRangeMode {
 // Tag class to keep track of the loop nest level and where to deploy thread and
 // vector parallelism
 //   - Rank is Kokkos::Rank<TotalRank, Iter>
-//     - TotalRank is the total number of loop nests
-//     - Iter is whether to go forward or backward through ranks (i.e. the
+//     - total_rank is the total number of loop nests
+//     - iter is whether to go forward or backward through ranks (i.e. the
 //       iteration order for MDRangePolicy)
 //   - ParThreadRank is the nesting level on which to deploy thread parallelism
 //   - ParVectorRank is the nesting level on which to deploy vector parallelism
 //   - CurrentRank is the current nest level
 template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank>
 struct MDTeamRangeRanks {
-  using rank_type                            = int;
-  static constexpr Iterate iter              = Rank::outer_direction;
-  static constexpr rank_type total_rank      = Rank::rank;
-  static constexpr rank_type par_thread_rank = ParThreadRank;
-  static constexpr rank_type par_vector_rank = ParVectorRank;
-  static constexpr rank_type current_rank    = CurrentRank;
+  using RankType                            = int;
+  static constexpr Iterate iter             = Rank::outer_direction;
+  static constexpr RankType total_rank      = Rank::rank;
+  static constexpr RankType par_thread_rank = ParThreadRank;
+  static constexpr RankType par_vector_rank = ParVectorRank;
+  static constexpr RankType current_rank    = CurrentRank;
 
   // We have to recursively process ranks [0..total_rank-1]
   using RangeMode = MDTeamRangeMode<
@@ -900,104 +900,106 @@ struct MDTeamRangeRanks {
 //     - TotalRank is the total number of loop nests
 //     - Iter is whether to go forward or backward through ranks (i.e. the
 //       iteration order for MDRangePolicy)
-//   - t_and_v determines whether both vector and thread parallelism is in use
-template <typename Rank, typename ExecSpace, MDTeamRangeThreadAndVector t_and_v>
+//   - ThreadAndVector determines whether both vector and thread parallelism is
+//   in use
+template <typename Rank, typename ExecSpace,
+          MDTeamRangeThreadAndVector ThreadAndVector>
 struct ParallelRank;
 
 #ifdef KOKKOS_ENABLE_SERIAL
-template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank<Rank, DefaultHostExecutionSpace, t_and_v> {
-  static constexpr bool isDirectionLeft =
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector>
+struct ParallelRank<Rank, Serial, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
-  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
-template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank<Rank, Cuda, t_and_v> {
-  static constexpr bool isDirectionLeft =
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector>
+struct ParallelRank<Rank, Cuda, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
   // If vector parallelism is in use deploy thread parallelism on
   // the second to the last rank, otherwise, thread parallelism on the last rank
   static constexpr int par_rt =
-      isDirectionLeft ? ((t_and_v) ? 1 : 0)
-                      : ((t_and_v) ? Rank::rank - 2 : Rank::rank - 1);
+      isDirectionLeft ? ((ThreadAndVector) ? 1 : 0)
+                      : ((ThreadAndVector) ? Rank::rank - 2 : Rank::rank - 1);
   // Vector parallelism will always be on the last index
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_HIP
-template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank<Rank, Experimental::HIP, t_and_v> {
-  static constexpr bool isDirectionLeft =
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector>
+struct ParallelRank<Rank, Experimental::HIP, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
   // If vector parallelism is in use deploy thread parallelism on
   // the second to the last rank, otherwise, thread parallelism on the last rank
   static constexpr int par_rt =
-      isDirectionLeft ? ((t_and_v) ? 1 : 0)
-                      : ((t_and_v) ? Rank::rank - 2 : Rank::rank - 1);
+      isDirectionLeft ? ((ThreadAndVector) ? 1 : 0)
+                      : ((ThreadAndVector) ? Rank::rank - 2 : Rank::rank - 1);
   // Vector parallelism will always be on the last index
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 // TODO check par_rt and par_rv validity
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank<Rank, Experimental::OpenMPTarget, t_and_v> {
-  static constexpr bool isDirectionLeft =
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector>
+struct ParallelRank<Rank, Experimental::OpenMPTarget, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
-  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMP
-template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank<Rank, OpenMP, t_and_v> {
-  static constexpr bool isDirectionLeft =
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector>
+struct ParallelRank<Rank, OpenMP, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
-  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_THREADS
-template <typename Rank, MDTeamRangeThreadAndVector t_and_v>
-struct ParallelRank<Rank, Threads, t_and_v> {
-  static constexpr bool isDirectionLeft =
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector>
+struct ParallelRank<Rank, Threads, ThreadAndVector> {
+  static constexpr bool is_directionLeft =
       (Rank::outer_direction == Iterate::Left);
-  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 // TODO check par_rt and par_rv validity
 #ifdef KOKKOS_ENABLE_SYCL
-struct ParallelRank<Rank, SYCL, t_and_v> {
-  static constexpr bool isDirectionLeft =
+struct ParallelRank<Rank, SYCL, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
-  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
-struct ParallelRank<Rank, Experimental::HPX, t_and_v> {
-  static constexpr bool isDirectionLeft =
+struct ParallelRank<Rank, Experimental::HPX, ThreadAndVector> {
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
-  static constexpr int par_rt  = isDirectionLeft ? Rank::rank - 1 : 0;
-  static constexpr int par_rv  = isDirectionLeft ? 0 : Rank::rank - 1;
+  static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
+  static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
 };
 #endif
@@ -1007,7 +1009,7 @@ KOKKOS_INLINE_FUNCTION auto nested_policy(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::ParThread,
                     MDTeamRangeParVector::NotParVector>,
-    TeamHandle const& team, int count) {
+    TeamHandle const team, int count) {
   return TeamThreadRange<int, TeamHandle>(team, count);
 }
 
@@ -1016,7 +1018,7 @@ KOKKOS_INLINE_FUNCTION auto nested_policy(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::NotParThread,
                     MDTeamRangeParVector::ParVector>,
-    TeamHandle const& team, int count) {
+    TeamHandle const team, int count) {
   return ThreadVectorRange(team, count);
 }
 
@@ -1025,7 +1027,7 @@ KOKKOS_INLINE_FUNCTION auto nested_policy(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::ParThread,
                     MDTeamRangeParVector::ParVector>,
-    TeamHandle const& team, int count) {
+    TeamHandle const team, int count) {
   return TeamVectorRange(team, count);
 }
 
@@ -1035,7 +1037,7 @@ template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank,
 KOKKOS_INLINE_FUNCTION void nested_loop(
     MDTeamRangeMode<MDTeamRangeEndRank::EndRank,
                     MDTeamRangeParThread::NotParThread,
-                    MDTeamRangeParVector::NotParVector> const&,
+                    MDTeamRangeParVector::NotParVector> const,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
     Policy const& policy, Lambda const& lambda, Impl::NoReductionTag,
     Args... args) {
@@ -1048,7 +1050,7 @@ template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank,
 KOKKOS_INLINE_FUNCTION void nested_loop(
     MDTeamRangeMode<MDTeamRangeEndRank::EndRank,
                     MDTeamRangeParThread::NotParThread,
-                    MDTeamRangeParVector::NotParVector> const&,
+                    MDTeamRangeParVector::NotParVector> const,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
     Policy const&, Lambda const& lambda, ReducerValueType& val, Args... args) {
   lambda(args..., val);
@@ -1061,14 +1063,14 @@ template <typename Rank, int ParThreadRank, int ParVectorRank, int CurrentRank,
 KOKKOS_INLINE_FUNCTION void nested_loop(
     MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank,
                     MDTeamRangeParThread::NotParThread,
-                    MDTeamRangeParVector::NotParVector> const&,
+                    MDTeamRangeParVector::NotParVector> const,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
     Policy const& policy, Lambda const& lambda, ReducerValueType& val,
     Args... args) {
-  constexpr int nextRank =
+  constexpr int next_rank =
       CurrentRank + (Rank::outer_direction == Iterate::Right ? 1 : -1);
   using MDTeamNextRanks =
-      MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, nextRank>;
+      MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, next_rank>;
   using MDTeamNextMode = typename MDTeamNextRanks::RangeMode;
 
   for (int i = 0; i != policy.boundaries[CurrentRank]; ++i) {
@@ -1087,15 +1089,15 @@ template <MDTeamRangeParThread ParThread, MDTeamRangeParVector ParVector,
           typename Policy, typename Lambda, typename ReducerValueType,
           typename... Args>
 KOKKOS_INLINE_FUNCTION void nested_loop(
-    MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank, ParThread, ParVector> const&
+    MDTeamRangeMode<MDTeamRangeEndRank::NotEndRank, ParThread, ParVector> const
         mode,
     MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
     Policy const& policy, Lambda const& lambda, ReducerValueType& val,
     Args... args) {
-  constexpr int nextRank =
+  constexpr int next_rank =
       CurrentRank + (Rank::outer_direction == Iterate::Right ? 1 : -1);
   using MDTeamNextRanks =
-      MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, nextRank>;
+      MDTeamRangeRanks<Rank, ParThreadRank, ParVectorRank, next_rank>;
   using MDTeamNextMode = typename MDTeamNextRanks::RangeMode;
 
   // This recursively processes ranks from [0..TotalRank-1]
@@ -1112,29 +1114,30 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                });
 }
 
-template <typename Rank, MDTeamRangeThreadAndVector threadAndVector,
+template <typename Rank, MDTeamRangeThreadAndVector ThreadAndVector,
           typename MDTeamPolicy, typename Lambda, typename ReductionValueType,
           typename Status>
 KOKKOS_INLINE_FUNCTION void md_parallel_impl(MDTeamPolicy const& policy,
                                              Lambda const& lambda,
-                                             Status const& rangeStatus,
+                                             Status const& range_status,
                                              ReductionValueType& val) {
-  constexpr auto TotalRank = MDTeamPolicy::total_rank;
-  constexpr auto Iter      = MDTeamPolicy::iter;
-  using TeamHandle         = typename MDTeamPolicy::team_handle_type;
+  using TeamHandle = typename MDTeamPolicy::TeamHandleType;
+
+  constexpr auto total_rank = MDTeamPolicy::total_rank;
+  constexpr auto iter       = MDTeamPolicy::iter;
 
   static_assert(MDTeamPolicy::total_rank >= 2 && MDTeamPolicy::total_rank <= 8);
 
   using par_rank_t =
       Impl::ParallelRank<Rank, typename TeamHandle::execution_space,
-                         threadAndVector>;
+                         ThreadAndVector>;
 
-  constexpr int beginRank = (Iter == Iterate::Right) ? 0 : (TotalRank - 1);
+  constexpr int begin_rank = (iter == Iterate::Right) ? 0 : (total_rank - 1);
 
   using md_team_iter = Impl::MDTeamRangeRanks<Rank, par_rank_t::par_rt,
-                                              par_rank_t::invalid, beginRank>;
+                                              par_rank_t::invalid, begin_rank>;
 
-  nested_loop(rangeStatus, md_team_iter(), policy, lambda, val);
+  nested_loop(range_status, md_team_iter(), policy, lambda, val);
 }
 }  // namespace Impl
 
@@ -1162,28 +1165,28 @@ struct MDTeamThreadRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct MDTeamThreadRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
-  using rank_type        = int;
-  using boundary_type    = int;
-  using team_handle_type = TeamHandle;
-  using execution_space  = typename team_handle_type::execution_space;
-  using array_layout     = typename execution_space::array_layout;
-  static constexpr rank_type total_rank = Rank<N, OuterDir, InnerDir>::rank;
-  static constexpr Iterate iter         = OuterDir;
+  using RankType       = int;
+  using BoundaryType   = int;
+  using TeamHandleType = TeamHandle;
+  using ExecutionSpace = typename TeamHandleType::execution_space;
+  using ArrayLayout    = typename ExecutionSpace::array_layout;
+
+  static constexpr RankType total_rank = Rank<N, OuterDir, InnerDir>::rank;
+  static constexpr Iterate iter        = OuterDir;
 
   static constexpr Iterate direction =
       iter == Iterate::Default
-          ? layout_iterate_type_selector<array_layout>::outer_iteration_pattern
+          ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
           : iter;
 
   template <class... Args>
-  KOKKOS_INLINE_FUNCTION MDTeamThreadRange(team_handle_type const& team_,
-                                           Args&&... args)
-      : team(team_), boundaries{static_cast<boundary_type>(args)...} {
+  KOKKOS_FUNCTION MDTeamThreadRange(TeamHandleType const& team_, Args&&... args)
+      : team(team_), boundaries{static_cast<BoundaryType>(args)...} {
     static_assert(sizeof...(Args) == total_rank);
   }
 
-  team_handle_type const& team;
-  boundary_type boundaries[total_rank];
+  TeamHandleType const& team;
+  BoundaryType boundaries[total_rank];
 };
 
 template <typename TeamHandle, typename... Args>
@@ -1195,28 +1198,29 @@ struct MDThreadVectorRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct MDThreadVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
-  using rank_type        = int;
-  using boundary_type    = int;
-  using team_handle_type = TeamHandle;
-  using execution_space  = typename team_handle_type::execution_space;
-  using array_layout     = typename execution_space::array_layout;
-  static constexpr rank_type total_rank = Rank<N, OuterDir, InnerDir>::rank;
-  static constexpr Iterate iter         = OuterDir;
+  using RankType       = int;
+  using BoundaryType   = int;
+  using TeamHandleType = TeamHandle;
+  using ExecutionSpace = typename TeamHandleType::execution_space;
+  using ArrayLayout    = typename ExecutionSpace::array_layout;
+
+  static constexpr RankType total_rank = Rank<N, OuterDir, InnerDir>::rank;
+  static constexpr Iterate iter        = OuterDir;
 
   static constexpr Iterate direction =
       iter == Iterate::Default
-          ? layout_iterate_type_selector<array_layout>::outer_iteration_pattern
+          ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
           : iter;
 
   template <class... Args>
-  KOKKOS_INLINE_FUNCTION MDThreadVectorRange(team_handle_type const& team_,
+  KOKKOS_INLINE_FUNCTION MDThreadVectorRange(TeamHandleType const& team_,
                                              Args&&... args)
-      : team(team_), boundaries{static_cast<boundary_type>(args)...} {
+      : team(team_), boundaries{static_cast<BoundaryType>(args)...} {
     static_assert(sizeof...(Args) == total_rank);
   }
 
-  team_handle_type const& team;
-  boundary_type boundaries[total_rank];
+  TeamHandleType const& team;
+  BoundaryType boundaries[total_rank];
 };
 
 template <typename TeamHandle, typename... Args>
@@ -1228,28 +1232,29 @@ struct MDTeamVectorRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct MDTeamVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
-  using rank_type        = int;
-  using boundary_type    = int;
-  using team_handle_type = TeamHandle;
-  using execution_space  = typename team_handle_type::execution_space;
-  using array_layout     = typename execution_space::array_layout;
-  static constexpr rank_type total_rank = Rank<N, OuterDir, InnerDir>::rank;
-  static constexpr Iterate iter         = OuterDir;
+  using RankType       = int;
+  using BoundaryType   = int;
+  using TeamHandleType = TeamHandle;
+  using ExecutionSpace = typename TeamHandleType::execution_space;
+  using ArrayLayout    = typename ExecutionSpace::array_layout;
+
+  static constexpr RankType total_rank = Rank<N, OuterDir, InnerDir>::rank;
+  static constexpr Iterate iter        = OuterDir;
 
   static constexpr Iterate direction =
       iter == Iterate::Default
-          ? layout_iterate_type_selector<array_layout>::outer_iteration_pattern
+          ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
           : iter;
 
   template <class... Args>
-  KOKKOS_INLINE_FUNCTION MDTeamVectorRange(team_handle_type const& team_,
+  KOKKOS_INLINE_FUNCTION MDTeamVectorRange(TeamHandleType const& team_,
                                            Args&&... args)
-      : team(team_), boundaries{static_cast<boundary_type>(args)...} {
+      : team(team_), boundaries{static_cast<BoundaryType>(args)...} {
     static_assert(sizeof...(Args) == total_rank);
   }
 
-  team_handle_type const& team;
-  boundary_type boundaries[total_rank];
+  TeamHandleType const& team;
+  BoundaryType boundaries[total_rank];
 };
 
 template <typename TeamHandle, typename... Args>
@@ -1291,6 +1296,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                         Impl::MDTeamRangeParThread::NotParThread,
                         Impl::MDTeamRangeParVector::ParVector>
       rangeMode;
+
   Impl::md_parallel_impl<Rank, Impl::MDTeamRangeThreadAndVector::NotBoth>(
       policy, lambda, rangeMode, val);
 }
@@ -1316,6 +1322,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                         Impl::MDTeamRangeParThread::ParThread,
                         Impl::MDTeamRangeParVector::ParVector>
       rangeMode;
+
   Impl::md_parallel_impl<Rank, Impl::MDTeamRangeThreadAndVector::Both>(
       policy, lambda, rangeMode, val);
 }
