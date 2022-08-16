@@ -24,7 +24,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_NestedSort.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <algorithm>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -66,12 +65,18 @@
 
 #endif
 
+
+// The order of includes (firstly oneDPL's, than std's) because of:
+// https://stackoverflow.com/questions/67923287/how-to-resolve-no-member-named-task-in-namespace-tbb-error-when-using-oned/67924408#67924408
+
 #if defined(KOKKOS_ENABLE_SYCL)
 
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
 
 #endif
+
+#include <algorithm>
 
 namespace Kokkos {
 
