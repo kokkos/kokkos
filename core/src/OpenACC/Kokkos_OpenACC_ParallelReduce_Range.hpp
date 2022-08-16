@@ -47,6 +47,7 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <OpenACC/Kokkos_OpenACC_ScheduleType.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 

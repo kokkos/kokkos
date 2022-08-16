@@ -49,6 +49,41 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
+namespace Kokkos::Experimental::Impl {
+template <class IndexType, class Functor>
+void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
+                                   IndexType begin, IndexType end,
+                                   Functor functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; ++i) {
+      functor(i);
+    }
+  } else {
+// clang-format off
+#pragma acc parallel loop gang(static:*) vector copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; ++i) {
+      functor(i);
+    }
+  }
+}
+
+template <class IndexType, class Functor>
+void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int /*chunk_size*/,
+                                   IndexType begin, IndexType end,
+                                   Functor functor, int async_arg) {
+// clang-format off
+#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
+  // clang-format on
+  for (auto i = begin; i < end; ++i) {
+    functor(i);
+  }
+}
+}  // namespace Kokkos::Experimental::Impl
+
 template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
@@ -68,16 +103,15 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
       return;
     }
 
-    // avoid implicit capture of *this which would yield a memory access
-    // violation when executing on the device
-    auto const& functor(m_functor);
+    int const async_arg  = m_policy.space().acc_async_queue();
+    int const chunk_size = m_policy.chunk_size();
 
-    int const async_arg = m_policy.space().acc_async_queue();
+    using ScheduleTag = std::conditional_t<
+        std::is_same_v<typename Policy::schedule_type, Schedule<Static>>,
+        Schedule<Static>, Schedule<Dynamic>>;
 
-#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
-    for (auto i = begin; i < end; ++i) {
-      functor(i);
-    }
+    Kokkos::Experimental::Impl::OpenACCParallelForRangePolicy(
+        ScheduleTag(), chunk_size, begin, end, m_functor, async_arg);
   }
 };
 
