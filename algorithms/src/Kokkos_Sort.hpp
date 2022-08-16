@@ -654,7 +654,8 @@ void sort(const Experimental::SYCL& space,
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
       ViewType::rank == 1 &&
-          !std::is_same<typename ViewType::array_layout, LayoutStride>::value,
+          (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
+           std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
       "SYCL sort only supports contiguous 1D Views.");
 
   static_assert(SpaceAccessibility<Experimental::SYCL,
