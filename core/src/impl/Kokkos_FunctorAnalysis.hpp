@@ -926,7 +926,7 @@ struct FunctorAnalysis {
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
         noexcept {
-      return m_functor->value_count;
+      return m_functor.value_count;
     }
 
     template <bool IsArray>
