@@ -47,6 +47,7 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <OpenACC/Kokkos_OpenACC_ScheduleType.hpp>
 #include <Kokkos_Parallel.hpp>
 
 namespace Kokkos::Experimental::Impl {
@@ -90,6 +91,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
   using Policy = Kokkos::RangePolicy<Traits...>;
   Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
   Policy m_policy;
+  using ScheduleType = Kokkos::Experimental::Impl::OpenACCScheduleType<Policy>;
 
  public:
   ParallelFor(Functor const& functor, Policy const& policy)
@@ -106,12 +108,8 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
     int const async_arg  = m_policy.space().acc_async_queue();
     int const chunk_size = m_policy.chunk_size();
 
-    using ScheduleTag = std::conditional_t<
-        std::is_same_v<typename Policy::schedule_type, Schedule<Static>>,
-        Schedule<Static>, Schedule<Dynamic>>;
-
     Kokkos::Experimental::Impl::OpenACCParallelForRangePolicy(
-        ScheduleTag(), chunk_size, begin, end, m_functor, async_arg);
+        ScheduleType(), chunk_size, begin, end, m_functor, async_arg);
   }
 };
 
