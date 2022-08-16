@@ -114,9 +114,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(
-          false,
-          "Kokkos Error: not supported memory layout for the OpenACC backend");
+      static_assert(false,
+                    "Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -159,9 +158,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(
-          false,
-          "Kokkos Error: not supported memory layout for the OpenACC backend");
+      static_assert(false,
+                    "Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -211,9 +209,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(
-          false,
-          "Kokkos Error: not supported memory layout for the OpenACC backend");
+      static_assert(false,
+                    "Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -269,9 +266,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(
-          false,
-          "Kokkos Error: not supported memory layout for the OpenACC backend");
+      static_assert(false,
+                    "Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -333,9 +329,8 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(
-          false,
-          "Kokkos Error: not supported memory layout for the OpenACC backend");
+      static_assert(false,
+                    "Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
