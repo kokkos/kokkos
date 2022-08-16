@@ -657,6 +657,11 @@ void sort(const Experimental::SYCL& space,
           !std::is_same<typename ViewType::array_layout, LayoutStride>::value,
       "SYCL sort only supports contiguous 1D Views.");
 
+  static_assert(SpaceAccessibility<Experimental::SYCL,
+                                   typename ViewType::memory_space>::accessible,
+                "SYCL execution space is not able to access the memory space "
+                "of the View argument!");
+
   auto queue  = space.impl_internal_space_instance()->m_queue.value();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = view.extent(0);
