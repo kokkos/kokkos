@@ -247,7 +247,7 @@ class HIPTeamMember {
     Impl::HIPJoinFunctor<Type> hip_join_functor;
     typename Kokkos::Impl::FunctorAnalysis<
         FunctorPatternInterface::REDUCE, TeamPolicy<Experimental::HIP>,
-        Impl::HIPJoinFunctor<Type>>::Reducer reducer(&hip_join_functor);
+        Impl::HIPJoinFunctor<Type>>::Reducer reducer(hip_join_functor);
     Impl::hip_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
     if (global_accum) {
