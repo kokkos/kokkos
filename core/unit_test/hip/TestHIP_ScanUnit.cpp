@@ -63,7 +63,7 @@ __global__ void start_intra_block_scan()
   typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN,
       Kokkos::RangePolicy<Kokkos::Experimental::HIP>, DummyFunctor>::Reducer
-      reducer(&f);
+      reducer(f);
   Kokkos::Impl::hip_intra_block_reduce_scan<true>(reducer, values);
 
   __syncthreads();

@@ -113,12 +113,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                               TeamPolicyInternal, FunctorType>;
-    using reducer_type = typename Impl::ParallelReduceReturnValue<
-        void, typename functor_analysis_type::value_type,
-        FunctorType>::reducer_type;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type, Kokkos::Experimental::HIP>;
+                             typename functor_analysis_type::Reducer, Kokkos::Experimental::HIP>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -145,12 +142,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                               TeamPolicyInternal, FunctorType>;
-    using reducer_type = typename Impl::ParallelReduceReturnValue<
-        void, typename functor_analysis_type::value_type,
-        FunctorType>::reducer_type;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type, Kokkos::Experimental::HIP>;
+                             typename functor_analysis_type::Reducer, Kokkos::Experimental::HIP>;
     return internal_team_size_recommended<closure_type>(f);
   }
 

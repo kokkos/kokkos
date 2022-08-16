@@ -168,7 +168,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   std::lock_guard<std::mutex> m_shared_memory_lock;
 
   static bool constexpr UseShflReduction =
-      static_cast<bool>(ReducerType::static_value_size);
+      static_cast<bool>(ReducerType::static_value_size());
 
  private:
   struct ShflReductionTag {};
@@ -446,7 +446,7 @@ class ParallelScanHIPBase {
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
                                                    sizeof(size_type)>
@@ -484,7 +484,7 @@ class ParallelScanHIPBase {
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
                                                    sizeof(size_type)>
