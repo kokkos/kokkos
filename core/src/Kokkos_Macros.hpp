@@ -469,7 +469,7 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
-//FIXME_OPENACC: will be enabled after fixing bugs
+// FIXME_OPENACC: will be enabled after fixing bugs
 //#elif defined(KOKKOS_ENABLE_OPENACC)
 //#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
