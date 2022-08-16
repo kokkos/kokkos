@@ -925,8 +925,8 @@ struct ParallelRank<Rank, Cuda, ThreadAndVector> {
   // If vector parallelism is in use deploy thread parallelism on
   // the second to the last rank, otherwise, thread parallelism on the last rank
   static constexpr int par_rt =
-      isDirectionLeft ? ((ThreadAndVector) ? 1 : 0)
-                      : ((ThreadAndVector) ? Rank::rank - 2 : Rank::rank - 1);
+      is_direction_left ? ((ThreadAndVector) ? 1 : 0)
+                        : ((ThreadAndVector) ? Rank::rank - 2 : Rank::rank - 1);
   // Vector parallelism will always be on the last index
   static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
@@ -941,8 +941,8 @@ struct ParallelRank<Rank, Experimental::HIP, ThreadAndVector> {
   // If vector parallelism is in use deploy thread parallelism on
   // the second to the last rank, otherwise, thread parallelism on the last rank
   static constexpr int par_rt =
-      isDirectionLeft ? ((ThreadAndVector) ? 1 : 0)
-                      : ((ThreadAndVector) ? Rank::rank - 2 : Rank::rank - 1);
+      is_direction_left ? ((ThreadAndVector) ? 1 : 0)
+                        : ((ThreadAndVector) ? Rank::rank - 2 : Rank::rank - 1);
   // Vector parallelism will always be on the last index
   static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
   static constexpr int invalid = -2;
