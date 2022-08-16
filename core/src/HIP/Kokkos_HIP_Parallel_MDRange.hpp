@@ -248,10 +248,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline __device__ void operator()() const {
-    const integral_nonzero_constant<size_type, ReducerType::static_value_size() /
-                                                   sizeof(size_type)>
-        word_count(m_reducer.value_size() /
-                   sizeof(size_type));
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(size_type)>
+        word_count(m_reducer.value_size() / sizeof(size_type));
 
     {
       reference_type value = m_reducer.init(reinterpret_cast<pointer_type>(
@@ -302,7 +301,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const auto& instance = m_policy.space().impl_internal_space_instance();
     auto shmem_functor   = [&f](unsigned n) {
       return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                      WorkTag, value_type>(f, n);
+                                                      WorkTag, value_type>(f,
+                                                                           n);
     };
     using closure_type = ParallelReduce<FunctorType, Policy, ReducerType,
                                         Kokkos::Experimental::HIP>;
@@ -375,9 +375,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy, const ReducerType& arg_reducer,
-      const ViewType& arg_result)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ReducerType& arg_reducer, const ViewType& arg_result)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(arg_reducer),
