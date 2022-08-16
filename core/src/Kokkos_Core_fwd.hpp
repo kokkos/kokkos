@@ -312,8 +312,7 @@ class ParallelFor;
 /// skip this and go directly to the nonmember function parallel_reduce.
 template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
           class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
-              FunctorType, ExecPolicy>::execution_space,
-          class ValueType = void>
+              FunctorType, ExecPolicy>::execution_space>
 class ParallelReduce;
 
 /// \class ParallelScan

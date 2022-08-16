@@ -71,9 +71,9 @@ struct DeduceFunctorPatternInterface<
 };
 
 template <class FunctorType, class ExecPolicy, class ReducerType,
-          class ExecutionSpace, class ValueType>
+          class ExecutionSpace>
 struct DeduceFunctorPatternInterface<ParallelReduce<
-    FunctorType, ExecPolicy, ReducerType, ExecutionSpace, ValueType>> {
+    FunctorType, ExecPolicy, ReducerType, ExecutionSpace>> {
   using type = FunctorPatternInterface::REDUCE;
 };
 
@@ -948,6 +948,10 @@ struct FunctorAnalysis {
 
     unsigned value_count() const {
       return FunctorAnalysis::value_count(m_functor);
+    }
+
+    KOKKOS_FUNCTION static constexpr unsigned int static_value_size() {
+      return StaticValueSize;
     }
 
     template <bool is_array = candidate_is_array>

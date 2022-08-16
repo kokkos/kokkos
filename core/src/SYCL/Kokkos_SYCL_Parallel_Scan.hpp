@@ -172,7 +172,7 @@ class ParallelScanSYCLBase {
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
           [=](sycl::nd_item<1> item) {
             const FunctorType& functor = functor_wrapper.get_functor();
-            typename Analysis::Reducer final_reducer(&functor);
+            typename Analysis::Reducer final_reducer(functor);
 
             const auto local_id  = item.get_local_linear_id();
             const auto global_id = item.get_global_linear_id();
@@ -205,7 +205,7 @@ class ParallelScanSYCLBase {
             [=](sycl::nd_item<1> item) {
               const auto global_id       = item.get_global_linear_id();
               const FunctorType& functor = functor_wrapper.get_functor();
-              typename Analysis::Reducer final_reducer(&functor);
+              typename Analysis::Reducer final_reducer(functor);
               if (global_id < size)
                 final_reducer.join(&global_mem[global_id],
                                    &group_results[item.get_group_linear_id()]);
@@ -235,7 +235,7 @@ class ParallelScanSYCLBase {
         const typename Policy::index_type id =
             static_cast<typename Policy::index_type>(item.get_id()) + begin;
         const FunctorType& functor = functor_wrapper.get_functor();
-        typename Analysis::Reducer final_reducer(&functor);
+        typename Analysis::Reducer final_reducer(functor);
 
         value_type update{};
         final_reducer.init(&update);
