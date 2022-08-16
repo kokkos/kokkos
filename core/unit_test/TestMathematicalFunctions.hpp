@@ -711,7 +711,9 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.f, 3.f, 4.f);
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2., 3., 4.);
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2, 3.f, 4.);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.l, 3.l, 4.l);
+#endif
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
