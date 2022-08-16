@@ -210,7 +210,7 @@ class HIPTeamMember {
 #ifdef __HIP_DEVICE_COMPILE__
     typename Kokkos::Impl::FunctorAnalysis<
         FunctorPatternInterface::REDUCE, TeamPolicy<Experimental::HIP>,
-        ReducerType>::Reducer wrapped_reducer(&reducer);
+        ReducerType>::Reducer wrapped_reducer(reducer);
     hip_intra_block_shuffle_reduction(value, wrapped_reducer, blockDim.y);
     reducer.reference() = value;
 #else
