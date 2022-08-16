@@ -47,6 +47,7 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <OpenACC/Kokkos_OpenACC_MDRangePolicy.hpp>
 #include <Kokkos_Parallel.hpp>
 
 namespace Kokkos::Experimental::Impl {
@@ -54,7 +55,8 @@ namespace Kokkos::Experimental::Impl {
 template <class Functor, class Policy, int Rank = Policy::rank>
 struct OpenACCParallelForHelper {
   OpenACCParallelForHelper(Functor const&, Policy const&, int) {
-    static_assert(std::is_void_v<Functor>, "not implemented");
+    static_assert(std::is_void_v<Functor>,
+                  "OpenACC Backend Error: not implemented");
   }
 };
 
@@ -114,8 +116,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(false,
-                    "Kokkos Error: implementation bug in the OpenACC backend");
+      Kokkos::abort("Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -158,8 +159,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(false,
-                    "Kokkos Error: implementation bug in the OpenACC backend");
+      Kokkos::abort("Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -209,8 +209,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(false,
-                    "Kokkos Error: implementation bug in the OpenACC backend");
+      Kokkos::abort("Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -266,8 +265,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(false,
-                    "Kokkos Error: implementation bug in the OpenACC backend");
+      Kokkos::abort("Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
@@ -329,8 +327,7 @@ struct Kokkos::Experimental::Impl::OpenACCParallelForHelper<
         }
       }
     } else {
-      static_assert(false,
-                    "Kokkos Error: implementation bug in the OpenACC backend");
+      Kokkos::abort("Kokkos Error: implementation bug in the OpenACC backend");
     }
   }
 };
