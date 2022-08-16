@@ -72,8 +72,8 @@ struct DeduceFunctorPatternInterface<
 
 template <class FunctorType, class ExecPolicy, class ReducerType,
           class ExecutionSpace>
-struct DeduceFunctorPatternInterface<ParallelReduce<
-    FunctorType, ExecPolicy, ReducerType, ExecutionSpace>> {
+struct DeduceFunctorPatternInterface<
+    ParallelReduce<FunctorType, ExecPolicy, ReducerType, ExecutionSpace>> {
   using type = FunctorPatternInterface::REDUCE;
 };
 

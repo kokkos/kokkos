@@ -592,8 +592,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    const unsigned int value_count =
-        m_reducer.value_count();
+    const unsigned int value_count = m_reducer.value_count();
     std::size_t size = std::size_t(m_league_size) * m_team_size * m_vector_size;
     value_type* results_ptr = nullptr;
 
@@ -628,7 +627,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
-              const auto& functor          = functor_wrapper.get_functor();
+              const auto& functor        = functor_wrapper.get_functor();
               const ReducerType& reducer = reducer_wrapper.get_functor();
 
               reference_type update = reducer.init(results_ptr);
@@ -643,8 +642,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               }
               reducer.final(results_ptr);
               if (device_accessible_result_ptr)
-                reducer.copy(device_accessible_result_ptr,
-                                   &results_ptr[0]);
+                reducer.copy(device_accessible_result_ptr, &results_ptr[0]);
             });
       });
       q.ext_oneapi_submit_barrier(
@@ -689,8 +687,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
                 auto& num_teams_done = reinterpret_cast<unsigned int&>(
                     local_mem[wgroup_size * std::max(value_count, 1u)]);
-                const auto local_id          = item.get_local_linear_id();
-                const auto& functor          = functor_wrapper.get_functor();
+                const auto local_id        = item.get_local_linear_id();
+                const auto& functor        = functor_wrapper.get_functor();
                 const ReducerType& reducer = reducer_wrapper.get_functor();
 
                 if constexpr (ReducerType::static_value_size() == 0) {
@@ -709,8 +707,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
                   SYCLReduction::workgroup_reduction<>(
                       item, local_mem.get_pointer(), results_ptr,
-                      device_accessible_result_ptr, value_count,
-                      reducer, false,
+                      device_accessible_result_ptr, value_count, reducer, false,
                       std::min<std::size_t>(size,
                                             item.get_local_range()[0] *
                                                 item.get_local_range()[1]));
@@ -728,18 +725,18 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                       reducer.init(&local_mem[local_id * value_count]);
                     else {
                       reducer.copy(&local_mem[local_id * value_count],
-                                         &results_ptr[local_id * value_count]);
+                                   &results_ptr[local_id * value_count]);
                       for (unsigned int id = local_id + wgroup_size;
                            id < n_wgroups; id += wgroup_size) {
                         reducer.join(&local_mem[local_id * value_count],
-                                           &results_ptr[id * value_count]);
+                                     &results_ptr[id * value_count]);
                       }
                     }
 
                     SYCLReduction::workgroup_reduction<>(
                         item, local_mem.get_pointer(), results_ptr,
-                        device_accessible_result_ptr, value_count,
-                        reducer, true,
+                        device_accessible_result_ptr, value_count, reducer,
+                        true,
                         std::min(n_wgroups, item.get_local_range()[0] *
                                                 item.get_local_range()[1]));
                   }
@@ -920,9 +917,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   template <class ViewType>
-  ParallelReduce(
-      FunctorType const& arg_functor, Policy const& arg_policy, ReducerType const& arg_reducer,
-      ViewType const& arg_result)
+  ParallelReduce(FunctorType const& arg_functor, Policy const& arg_policy,
+                 ReducerType const& arg_reducer, ViewType const& arg_result)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(arg_reducer),
