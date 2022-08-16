@@ -399,7 +399,49 @@ KOKKOS_IMPL_MATH_BINARY_FUNCTION(pow)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sqrt)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(cbrt)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(hypot)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+KOKKOS_INLINE_FUNCTION float hypot(float x, float y, float z) {
+  return sqrt(x * x + y * y + z * z);
+}
+KOKKOS_INLINE_FUNCTION double hypot(double x, double y, double z) {
+  return sqrt(x * x + y * y + z * z);
+}
+inline long double hypot(long double x, long double y, long double z) {
+  return sqrt(x * x + y * y + z * z);
+}
+KOKKOS_INLINE_FUNCTION float hypotf(float x, float y, float z) {
+  return sqrt(x * x + y * y + z * z);
+}
+inline long double hypotl(long double x, long double y, long double z) {
+  return sqrt(x * x + y * y + z * z);
+}
+template <
+    class T1, class T2, class T3,
+    class Promoted = std::enable_if_t<
+        std::is_arithmetic_v<T1> && std::is_arithmetic_v<T2> &&
+            std::is_arithmetic_v<T3> && !std::is_same_v<T1, long double> &&
+            !std::is_same_v<T2, long double> &&
+            !std::is_same_v<T3, long double>,
+        Impl::promote_3_t<T1, T2, T3>>>
+KOKKOS_INLINE_FUNCTION Promoted hypot(T1 x, T2 y, T3 z) {
+  return hypot(static_cast<Promoted>(x), static_cast<Promoted>(y),
+               static_cast<Promoted>(z));
+}
+template <
+    class T1, class T2, class T3,
+    class = std::enable_if_t<
+        std::is_arithmetic_v<T1> && std::is_arithmetic_v<T2> &&
+        std::is_arithmetic_v<T3> &&
+        (std::is_same_v<T1, long double> || std::is_same_v<T2, long double> ||
+         std::is_same_v<T3, long double>)>>
+inline long double hypot(T1 x, T2 y, T3 z) {
+  return hypot(static_cast<long double>(x), static_cast<long double>(y),
+               static_cast<long double>(z));
+}
+#else
 KOKKOS_IMPL_MATH_TERNARY_FUNCTION(hypot)
+#endif
 // Trigonometric functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sin)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(cos)
