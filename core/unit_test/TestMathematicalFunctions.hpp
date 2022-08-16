@@ -224,6 +224,9 @@ template <> struct math_binary_function_return_type<unsigned long long,        l
 template <class T, class U>
 using math_binary_function_return_type_t = typename math_binary_function_return_type<T, U>::type;
 // clang-format on
+template <class T, class U, class V>
+using math_ternary_function_return_type_t = math_binary_function_return_type_t<
+    T, math_binary_function_return_type_t<U, V>>;
 
 struct FloatingPointComparison {
  private:
@@ -292,29 +295,29 @@ struct FloatingPointComparison {
 template <class>
 struct math_function_name;
 
-#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                           \
-  struct MathUnaryFunction_##FUNC {                                            \
-    template <typename T>                                                      \
-    static KOKKOS_FUNCTION auto eval(T x) {                                    \
-      static_assert(std::is_same<decltype(Kokkos::FUNC((T)0)),                 \
-                                 math_unary_function_return_type_t<T>>::value, \
-                    "");                                                       \
-      return Kokkos::FUNC(x);                                                  \
-    }                                                                          \
-    template <typename T>                                                      \
-    static auto eval_std(T x) {                                                \
-      static_assert(std::is_same<decltype(std::FUNC((T)0)),                    \
-                                 math_unary_function_return_type_t<T>>::value, \
-                    "");                                                       \
-      return std::FUNC(x);                                                     \
-    }                                                                          \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }          \
-  };                                                                           \
-  using kk_##FUNC = MathUnaryFunction_##FUNC;                                  \
-  template <>                                                                  \
-  struct math_function_name<MathUnaryFunction_##FUNC> {                        \
-    static constexpr char name[] = #FUNC;                                      \
-  };                                                                           \
+#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                  \
+  struct MathUnaryFunction_##FUNC {                                   \
+    template <typename T>                                             \
+    static KOKKOS_FUNCTION auto eval(T x) {                           \
+      static_assert(                                                  \
+          std::is_same<decltype(Kokkos::FUNC((T)0)),                  \
+                       math_unary_function_return_type_t<T>>::value); \
+      return Kokkos::FUNC(x);                                         \
+    }                                                                 \
+    template <typename T>                                             \
+    static auto eval_std(T x) {                                       \
+      static_assert(                                                  \
+          std::is_same<decltype(std::FUNC((T)0)),                     \
+                       math_unary_function_return_type_t<T>>::value); \
+      return std::FUNC(x);                                            \
+    }                                                                 \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; } \
+  };                                                                  \
+  using kk_##FUNC = MathUnaryFunction_##FUNC;                         \
+  template <>                                                         \
+  struct math_function_name<MathUnaryFunction_##FUNC> {               \
+    static constexpr char name[] = #FUNC;                             \
+  };                                                                  \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
@@ -380,31 +383,29 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 
 #undef DEFINE_UNARY_FUNCTION_EVAL
 
-#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                    \
-  struct MathBinaryFunction_##FUNC {                                     \
-    template <typename T, typename U>                                    \
-    static KOKKOS_FUNCTION auto eval(T x, U y) {                         \
-      static_assert(                                                     \
-          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),               \
-                       math_binary_function_return_type_t<T, U>>::value, \
-          "");                                                           \
-      return Kokkos::FUNC(x, y);                                         \
-    }                                                                    \
-    template <typename T, typename U>                                    \
-    static auto eval_std(T x, U y) {                                     \
-      static_assert(                                                     \
-          std::is_same<decltype(std::FUNC((T)0, (U)0)),                  \
-                       math_binary_function_return_type_t<T, U>>::value, \
-          "");                                                           \
-      return std::FUNC(x, y);                                            \
-    }                                                                    \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }    \
-  };                                                                     \
-  using kk_##FUNC = MathBinaryFunction_##FUNC;                           \
-  template <>                                                            \
-  struct math_function_name<MathBinaryFunction_##FUNC> {                 \
-    static constexpr char name[] = #FUNC;                                \
-  };                                                                     \
+#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                     \
+  struct MathBinaryFunction_##FUNC {                                      \
+    template <typename T, typename U>                                     \
+    static KOKKOS_FUNCTION auto eval(T x, U y) {                          \
+      static_assert(                                                      \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),                \
+                       math_binary_function_return_type_t<T, U>>::value); \
+      return Kokkos::FUNC(x, y);                                          \
+    }                                                                     \
+    template <typename T, typename U>                                     \
+    static auto eval_std(T x, U y) {                                      \
+      static_assert(                                                      \
+          std::is_same<decltype(std::FUNC((T)0, (U)0)),                   \
+                       math_binary_function_return_type_t<T, U>>::value); \
+      return std::FUNC(x, y);                                             \
+    }                                                                     \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }     \
+  };                                                                      \
+  using kk_##FUNC = MathBinaryFunction_##FUNC;                            \
+  template <>                                                             \
+  struct math_function_name<MathBinaryFunction_##FUNC> {                  \
+    static constexpr char name[] = #FUNC;                                 \
+  };                                                                      \
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
@@ -417,6 +418,37 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
 #endif
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
+
+#define DEFINE_TERNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                        \
+  struct MathTernaryFunction_##FUNC {                                         \
+    template <typename T, typename U, typename V>                             \
+    static KOKKOS_FUNCTION auto eval(T x, U y, V z) {                         \
+      static_assert(                                                          \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0), (V)0),              \
+                       math_ternary_function_return_type_t<T, U, V>>::value); \
+      return Kokkos::FUNC(x, y, z);                                           \
+    }                                                                         \
+    template <typename T, typename U, typename V>                             \
+    static auto eval_std(T x, U y, V z) {                                     \
+      static_assert(                                                          \
+          std::is_same<decltype(std::FUNC((T)0, (U)0, (V)0)),                 \
+                       math_ternary_function_return_type_t<T, U, V>>::value); \
+      return std::FUNC(x, y, z);                                              \
+    }                                                                         \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }         \
+  };                                                                          \
+  using kk3_##FUNC = MathTernaryFunction_##FUNC;                              \
+  template <>                                                                 \
+  struct math_function_name<MathTernaryFunction_##FUNC> {                     \
+    static constexpr char name[] = #FUNC;                                     \
+  };                                                                          \
+  constexpr char math_function_name<MathTernaryFunction_##FUNC>::name[]
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+DEFINE_TERNARY_FUNCTION_EVAL(hypot, 2);
+#endif
+
+#undef DEFINE_TERNARY_FUNCTION_EVAL
 
 // clang-format off
 template <class>
@@ -507,6 +539,49 @@ template <class Space, class... Func, class Arg1, class Arg2>
 void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
   (void)std::initializer_list<int>{
       (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
+}
+
+template <class Space, class Func, class Arg1, class Arg2, class Arg3,
+          class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
+struct TestMathTernaryFunction : FloatingPointComparison {
+  Arg1 val1_;
+  Arg2 val2_;
+  Arg3 val3_;
+  Ret res_;
+  TestMathTernaryFunction(Arg1 val1, Arg2 val2, Arg3 val3)
+      : val1_(val1),
+        val2_(val2),
+        val3_(val3),
+        res_(Func::eval_std(val1, val2, val3)) {
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg3>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    bool ar =
+        compare(Func::eval(val1_, val2_, val3_), res_, Func::ulp_factor());
+    if (!ar) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %f, %f, %f which is %f was expected to be %f\n",
+          (double)val1_, (double)val2_, (double)val3_,
+          (double)Func::eval(val1_, val2_, val3_), (double)res_);
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg1, class Arg2, class Arg3>
+void do_test_math_ternary_function(Arg1 arg1, Arg2 arg2, Arg3 arg3) {
+  (void)std::initializer_list<int>{
+      (TestMathTernaryFunction<Space, Func, Arg1, Arg2, Arg3>(arg1, arg2, arg3),
+       0)...};
 }
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
@@ -632,6 +707,11 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.l, 3.l);
 #endif
 #endif
+
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.f, 3.f, 4.f);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2., 3., 4.);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2, 3.f, 4.);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.l, 3.l, 4.l);
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
