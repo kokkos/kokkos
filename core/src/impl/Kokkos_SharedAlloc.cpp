@@ -311,12 +311,14 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream& s, const char* const space_name,
     const SharedAllocationRecord* const root, const bool detail) {
-  const SharedAllocationRecord<void, void>* r = root;
+  // Print every node except the root, which does not represent an actual
+  // allocation.
+  const SharedAllocationRecord<void, void>* r = root->m_next;
 
   char buffer[256];
 
   if (detail) {
-    do {
+    while (r != root) {
       // Formatting dependent on sizeof(uintptr_t)
       const char* format_string;
 
@@ -336,12 +338,12 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
                reinterpret_cast<uintptr_t>(r->m_next),
                reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
                r->use_count(), reinterpret_cast<uintptr_t>(r->m_dealloc),
-               r->m_alloc_ptr->m_label);
+               r->m_alloc_ptr ? r->m_alloc_ptr->m_label : " [NOT ALLOCATED]");
       s << buffer;
       r = r->m_next;
-    } while (r != root);
+    }
   } else {
-    do {
+    while (r != root) {
       if (r->m_alloc_ptr) {
         // Formatting dependent on sizeof(uintptr_t)
         const char* format_string;
@@ -360,7 +362,7 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
       }
       s << buffer;
       r = r->m_next;
-    } while (r != root);
+    }
   }
 }
 #else
