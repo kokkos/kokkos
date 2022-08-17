@@ -1708,6 +1708,7 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 };
 
+// These deduction guides result in an unmanaged View
 template <typename T>
 View(T*) -> View<T>;
 
