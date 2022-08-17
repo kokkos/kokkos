@@ -295,7 +295,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
                                std::is_same_v<T3, long double>),            \
                           long double>                                      \
   FUNC(T1 x, T2 y, T3 z) {                                                  \
-    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                     \
+    using Promoted = Kokkos::Impl::promote_3_t<T1, T2, T3>;                 \
     static_assert(std::is_same_v<Promoted, long double>);                   \
     using std::FUNC;                                                        \
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y),         \
