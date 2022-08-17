@@ -68,13 +68,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
   using Policy = RangePolicy<Traits...>;
 
-  using Analysis = FunctorAnalysis<
-      FunctorPatternInterface::REDUCE, Policy,
-      std::conditional_t<std::is_same_v<InvalidType, ReducerType>, Functor,
-                         ReducerType>>;
-
-  using Pointer   = typename Analysis::pointer_type;
-  using ValueType = typename Analysis::value_type;
+  using Pointer   = typename ReducerType::pointer_type;
+  using ValueType = typename ReducerType::value_type;
 
   Functor m_functor;
   Policy m_policy;
@@ -82,20 +77,12 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
   Pointer m_result_ptr;
 
  public:
-  ParallelReduce(Functor const& functor, Policy const& policy,
-                 ReducerType const& reducer)
+  template <class ViewType>
+  ParallelReduce(const Functor& functor, const Policy& policy,
+                 const ReducerType& reducer, const ViewType& result)
       : m_functor(functor),
         m_policy(policy),
         m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
-
-  template <class ViewType>
-  ParallelReduce(
-      const Functor& functor, const Policy& policy, const ViewType& result,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
-      : m_functor(functor),
-        m_policy(policy),
-        m_reducer(InvalidType()),
         m_result_ptr(result.data()) {}
 
   void execute() {
@@ -107,15 +94,16 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     ValueType val;
-    typename Analysis::Reducer final_reducer(&m_functor);
-    final_reducer.init(&val);
+    m_reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy>(m_functor),
-        std::conditional_t<is_reducer_v<ReducerType>, ReducerType,
-                           Sum<ValueType>>(val),
+        std::conditional_t<
+            std::is_same_v<typename ReducerType::functor_type, Functor>,
+            Sum<ValueType>, typename ReducerType::functor_type>(val),
         m_policy);
 
+    m_reducer.final(&val);
     *m_result_ptr = val;
   }
 };
