@@ -985,6 +985,7 @@ struct ParallelRank<Rank, Threads, ThreadAndVector> {
 
 // TODO check par_rt and par_rv validity
 #ifdef KOKKOS_ENABLE_SYCL
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
 struct ParallelRank<Rank, SYCL, ThreadAndVector> {
   static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
@@ -995,6 +996,7 @@ struct ParallelRank<Rank, SYCL, ThreadAndVector> {
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
 struct ParallelRank<Rank, Experimental::HPX, ThreadAndVector> {
   static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
@@ -1039,7 +1041,7 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                     TeamMDRangeParThread::NotParThread,
                     TeamMDRangeParVector::NotParVector> const,
     TeamMDRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
-    Policy const& policy, Lambda const& lambda, Impl::NoReductionTag,
+    Policy const&, Lambda const& lambda, Impl::NoReductionTag,
     Args... args) {
   lambda(args...);
 }
