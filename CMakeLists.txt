@@ -67,13 +67,7 @@ ENDFUNCTION()
 
 LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
-
-IF(KOKKOS_HAS_TRILINOS)
-  # What language are we compiling Kokkos as
-  # downstream dependencies need to match this!
-  # We do not support using CUDA or HIP as CMake language yet in Trilinos
-  SET(KOKKOS_COMPILE_LANGUAGE CXX)
-ELSE()
+IF(NOT KOKKOS_HAS_TRILINOS)
   set(CMAKE_DISABLE_SOURCE_CHANGES ON)
   set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
