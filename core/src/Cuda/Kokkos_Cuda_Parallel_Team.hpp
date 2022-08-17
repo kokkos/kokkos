@@ -645,8 +645,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using size_type    = Cuda::size_type;
   using reducer_type = ReducerType;
 
-  static constexpr bool UseShflReduction =
-      (true && (ReducerType::static_value_size() != 0));
+  static constexpr bool UseShflReduction = true;
 
  private:
   struct ShflReductionTag {};
