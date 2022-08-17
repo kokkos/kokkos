@@ -229,13 +229,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline ParallelReduce(const FunctorType &arg_functor,
                         const Policy &arg_policy,
                         const ReducerType &arg_reducer,
-                        const ViewType &arg_result_view)
+                        const ViewType &arg_result)
       : m_functor(arg_functor),
         m_policy(fix_policy(arg_policy)),
         m_reducer(arg_reducer),
-        m_result_ptr(arg_result_view.data()),
-        m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
-                 FunctorTeamShmemSize<FunctorType>::value(m_functor, 1)) {
+        m_result_ptr(arg_result.data()),
+        m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
+                 FunctorTeamShmemSize<FunctorType>::value(
+                     arg_functor, m_policy.team_size())) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
 
