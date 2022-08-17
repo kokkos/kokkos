@@ -273,10 +273,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline __device__ void operator()() const {
-    const integral_nonzero_constant<size_type, ReducerType::static_value_size() /
-                                                   sizeof(size_type)>
-        word_count(m_reducer.value_size() /
-                   sizeof(size_type));
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(size_type)>
+        word_count(m_reducer.value_size() / sizeof(size_type));
 
     {
       reference_type value = m_reducer.init(reinterpret_cast<pointer_type>(
@@ -327,8 +326,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
                                                   value_type>(f, n);
-    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType,
-                                              Kokkos::Cuda>;
+    using closure_type =
+        Impl::ParallelReduce<FunctorType, Policy, ReducerType, Kokkos::Cuda>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -369,8 +368,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                 block_size /* block_size == max block_count */);
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = cuda_internal_scratch_unified(
-          m_policy.space(), m_reducer.value_size());
+      m_unified_space = cuda_internal_scratch_unified(m_policy.space(),
+                                                      m_reducer.value_size());
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);

@@ -216,10 +216,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   __device__ inline void operator()() const {
-    const integral_nonzero_constant<word_size_type, ReducerType::static_value_size() /
-                                                        sizeof(word_size_type)>
-        word_count(m_reducer.value_size() /
-                   sizeof(word_size_type));
+    const integral_nonzero_constant<word_size_type,
+                                    ReducerType::static_value_size() /
+                                        sizeof(word_size_type)>
+        word_count(m_reducer.value_size() / sizeof(word_size_type));
 
     {
       reference_type value = m_reducer.init(reinterpret_cast<pointer_type>(
@@ -282,8 +282,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
                                                   value_type>(f, n);
-    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType,
-                                              Kokkos::Cuda>;
+    using closure_type =
+        Impl::ParallelReduce<FunctorType, Policy, ReducerType, Kokkos::Cuda>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();

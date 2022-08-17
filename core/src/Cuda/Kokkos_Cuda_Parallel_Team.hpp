@@ -146,7 +146,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                               TeamPolicyInternal, FunctorType>;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             typename functor_analysis_type::Reducer, Kokkos::Cuda>;
+                             typename functor_analysis_type::Reducer,
+                             Kokkos::Cuda>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -184,7 +185,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                               TeamPolicyInternal, FunctorType>;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             typename functor_analysis_type::Reducer, Kokkos::Cuda>;
+                             typename functor_analysis_type::Reducer,
+                             Kokkos::Cuda>;
     return internal_team_size_recommended<closure_type>(f);
   }
 
@@ -644,7 +646,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using reducer_type = ReducerType;
 
   static constexpr bool UseShflReduction =
-      (true && (ReducerType::static_value_size()!=0));
+      (true && (ReducerType::static_value_size() != 0));
 
  private:
   struct ShflReductionTag {};
@@ -708,14 +710,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   __device__ inline void run(SHMEMReductionTag&, const int& threadid) const {
-    const integral_nonzero_constant<size_type, ReducerType::static_value_size() /
-                                                   sizeof(size_type)>
-        word_count(m_reducer.value_size() /
-                   sizeof(size_type));
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(size_type)>
+        word_count(m_reducer.value_size() / sizeof(size_type));
 
     reference_type value =
         m_reducer.init(kokkos_impl_cuda_shared_memory<size_type>() +
-                           threadIdx.y * word_count.value);
+                       threadIdx.y * word_count.value);
 
     // Iterate this block through the league
     const int int_league_size = (int)m_league_size;
@@ -807,26 +808,26 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const bool is_empty_range  = m_league_size == 0 || m_team_size == 0;
-    const bool need_device_set = ReducerType::has_init_member_function ||
-                                 ReducerType::has_final_member_function ||
-                                 !m_result_ptr_host_accessible ||
+    const bool is_empty_range = m_league_size == 0 || m_team_size == 0;
+    const bool need_device_set =
+        ReducerType::has_init_member_function ||
+        ReducerType::has_final_member_function ||
+        !m_result_ptr_host_accessible ||
 #ifdef KOKKOS_CUDA_ENABLE_GRAPHS
-                                 Policy::is_graph_kernel::value ||
+        Policy::is_graph_kernel::value ||
 #endif
-                                 !std::is_same<typename ReducerType::functor_type, FunctorType>::value;
+        !std::is_same<typename ReducerType::functor_type, FunctorType>::value;
     if (!is_empty_range || need_device_set) {
       const int block_count = std::max(
           1u, UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
                                : std::min(int(m_league_size), m_team_size));
 
       m_scratch_space = cuda_internal_scratch_space(
-          m_policy.space(), m_reducer.value_size() *
-                                block_count);
+          m_policy.space(), m_reducer.value_size() * block_count);
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = cuda_internal_scratch_unified(
-          m_policy.space(), m_reducer.value_size());
+      m_unified_space = cuda_internal_scratch_unified(m_policy.space(),
+                                                      m_reducer.value_size());
 
       dim3 block(m_vector_size, m_team_size, 1);
       dim3 grid(block_count, 1, 1);
