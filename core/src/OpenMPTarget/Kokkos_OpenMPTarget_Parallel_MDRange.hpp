@@ -452,7 +452,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
 
-  static constexpr bool UseReducer = !std::is_same<typename ReducerType::functor_type, FunctorType>::value;
+  static constexpr bool UseReducer =
+      !std::is_same<typename ReducerType::functor_type, FunctorType>::value;
 
   const pointer_type m_result_ptr;
   const FunctorType m_functor;
@@ -469,10 +470,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  inline ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ReducerType& arg_reducer,
-      const ViewType& arg_result_view)
+  inline ParallelReduce(const FunctorType& arg_functor,
+                        const Policy& arg_policy,
+                        const ReducerType& arg_reducer,
+                        const ViewType& arg_result_view)
       : m_result_ptr(arg_result_view.data()),
         m_functor(arg_functor),
         m_policy(arg_policy),
@@ -547,10 +548,13 @@ reduction(+:result)
     // FIXME_OPENMPTARGET: Unable to separate directives and their companion
     // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
-#pragma omp declare reduction(                                         \
-    custom:value_type                                                  \
-    : OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::join(omp_out, omp_in)) \
-    initializer(OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::init(omp_priv))
+#pragma omp declare reduction(                                                 \
+    custom:value_type                                                          \
+    : OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::join(   \
+        omp_out, omp_in))                                                      \
+    initializer(                                                               \
+        OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::init( \
+            omp_priv))
 
 #pragma omp target teams distribute parallel for collapse(3) map(to         \
                                                                  : functor) \
