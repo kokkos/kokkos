@@ -878,9 +878,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_lock_guard(m_policy.space()
                                  .impl_internal_space_instance()
                                  ->m_team_scratch_mutex) {
-    m_team_size = m_team_size >= 0 ? m_team_size
-                                   : arg_policy.team_size_recommended(
-                                         arg_functor, arg_reducer, ParallelReduceTag());
+    m_team_size = m_team_size >= 0
+                      ? m_team_size
+                      : arg_policy.team_size_recommended(
+                            arg_functor, arg_reducer, ParallelReduceTag());
 
     m_team_begin =
         UseShflReduction
