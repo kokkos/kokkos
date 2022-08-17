@@ -737,7 +737,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     bool do_final_reduction = true;
     if (!zero_length)
       do_final_reduction = cuda_single_inter_block_reduce_scan<false>(
-          final_reducer, blockIdx.x, gridDim.x,
+          m_reducer, blockIdx.x, gridDim.x,
           kokkos_impl_cuda_shared_memory<size_type>(), m_scratch_space,
           m_scratch_flags);
 
