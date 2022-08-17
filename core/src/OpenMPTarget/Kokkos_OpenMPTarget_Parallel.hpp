@@ -145,12 +145,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
-  using ReducerTypeFwd =
-      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd, ValueType>;
-  using ReferenceType = typename Analysis::reference_type;
+  using ReferenceType = typename ReducerType::reference_type;
 
   using ParReduceCommon = ParallelReduceCommon<PointerType>;
 
@@ -164,7 +159,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto end   = p.end();
 
     ValueType result;
-    OpenMPTargetReducerWrapper<ReducerType>::init(result);
+    OpenMPTargetReducerWrapper<typename ReducerType::functor_type>::init(result);
 
     // Initialize and copy back the result even if it is a zero length
     // reduction.
@@ -410,34 +405,28 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Traits,
-          class ValueType>
+template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
-                     Kokkos::Experimental::OpenMPTarget, ValueType> {
+                     Kokkos::Experimental::OpenMPTarget> {
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
 
-  using ReducerTypeFwd =
-      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, ReducerTypeFwd, ValueType>;
+  using value_type = typename ReducerType::value_type;
+  using pointer_type   = typename ReducerType::pointer_type;
+  using reference_type = typename ReducerType::reference_type;
 
-  using pointer_type   = typename Analysis::pointer_type;
-  using reference_type = typename Analysis::reference_type;
-
-  static constexpr int HasJoin =
+  static constexpr int FunctorHasJoin =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
-                            FunctorType, ValueType>::has_join_member_function;
-  static constexpr int UseReducer = is_reducer<ReducerType>::value;
+                            FunctorType, value_type>::has_join_member_function;
+  static constexpr int UseReducer = !std::is_same_v<typename ReducerType::functor_type, FunctorType>;
   static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
-                               typename Analysis::value_type>;
+                               value_type>;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -449,7 +438,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   void execute() const {
-    if constexpr (HasJoin) {
+    if constexpr (FunctorHasJoin) {
       // Enter this loop if the Functor has a init-join.
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
@@ -486,31 +475,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
-                 const ViewType& arg_result_view,
-                 std::enable_if_t<Kokkos::is_view<ViewType>::value &&
-                                      !Kokkos::is_reducer<ReducerType>::value,
-                                  void*> = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy, const ReducerType& arg_reducer,
+                 const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_reducer(InvalidType()),
+        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()),
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result_view.size()) {}
-
-  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
-                 const ReducerType& reducer)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
-        m_result_ptr_on_device(
-            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_result_ptr_num_elems(reducer.view().size()) {}
 };
 
 }  // namespace Impl
@@ -1204,11 +1178,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Properties,
-          class ValueType>
+template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::OpenMPTarget,
-                     ValueType> {
+                     ReducerType, Kokkos::Experimental::OpenMPTarget> {
  private:
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
@@ -1216,18 +1188,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
-  using ReducerTypeFwd =
-      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using WorkTagFwd =
-      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
-                         void>;
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         Policy, ReducerTypeFwd, ValueType>;
 
-  using pointer_type   = typename Analysis::pointer_type;
-  using reference_type = typename Analysis::reference_type;
-  using value_type     = typename Analysis::value_type;
+  using pointer_type   = typename ReducerType::pointer_type;
+  using reference_type = typename ReducerType::reference_type;
+  using value_type     = typename ReducerType::value_type;
 
   bool m_result_ptr_on_device;
   const int m_result_ptr_num_elems;
@@ -1240,7 +1204,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   using ParReduceSpecialize =
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
-                               typename Analysis::value_type>;
+                               value_type>;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -1283,33 +1247,16 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   template <class ViewType>
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ViewType& arg_result,
-                 std::enable_if_t<Kokkos::is_view<ViewType>::value &&
-                                      !Kokkos::is_reducer<ReducerType>::value,
-                                  void*> = nullptr)
+		  const ReducerType& arg_reducer,
+                 const ViewType& arg_result)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result.size()),
         m_functor(arg_functor),
         m_policy(arg_policy),
-        m_reducer(InvalidType()),
+        m_reducer(arg_reducer),
         m_result_ptr(arg_result.data()),
-        m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
-                     FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())) {}
-
-  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
-                 const ReducerType& reducer)
-      : m_result_ptr_on_device(
-            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_result_ptr_num_elems(reducer.view().size()),
-        m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {}
