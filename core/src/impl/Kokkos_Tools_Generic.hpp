@@ -46,6 +46,7 @@
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
 #include <impl/Kokkos_Profiling.hpp>
+#include <impl/Kokkos_FunctorAnalysis.hpp>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
@@ -127,9 +128,12 @@ struct SimpleTeamSizeCalculator {
                                         const Functor& functor,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
+    using analysis   = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, Functor>;
+
     using driver =
-        Kokkos::Impl::ParallelReduce<Functor, Policy, Kokkos::InvalidType,
-                                     exec_space>;
+        Kokkos::Impl::ParallelReduce<Functor, Policy,
+                                     typename analysis::Reducer, exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
 };
