@@ -42,16 +42,43 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_DECLARE_OPENACC_HPP
-#define KOKKOS_DECLARE_OPENACC_HPP
+#ifndef KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
+#define KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
 
-#if defined(KOKKOS_ENABLE_OPENACC)
 #include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
-#endif
+#include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <Kokkos_Parallel.hpp>
+
+template <class Functor, class... Traits>
+class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
+                                Kokkos::Experimental::OpenACC> {
+  using Policy = Kokkos::RangePolicy<Traits...>;
+  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
+  Policy m_policy;
+
+ public:
+  ParallelFor(Functor const& functor, Policy const& policy)
+      : m_functor(functor), m_policy(policy) {}
+
+  void execute() const {
+    auto const begin = m_policy.begin();
+    auto const end   = m_policy.end();
+
+    if (end <= begin) {
+      return;
+    }
+
+    // avoid implicit capture of *this which would yield a memory access
+    // violation when executing on the device
+    auto const& functor(m_functor);
+
+    int const async_arg = m_policy.space().acc_async_queue();
+
+#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
+    for (auto i = begin; i < end; ++i) {
+      functor(i);
+    }
+  }
+};
 
 #endif

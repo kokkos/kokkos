@@ -42,16 +42,31 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_DECLARE_OPENACC_HPP
-#define KOKKOS_DECLARE_OPENACC_HPP
+#ifndef KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
+#define KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
 
-#if defined(KOKKOS_ENABLE_OPENACC)
-#include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
-#endif
+#include <type_traits>
+
+namespace Kokkos::Experimental::Impl {
+
+template <class Functor, class Policy>
+class FunctorAdapter {
+  Functor m_functor;
+  using WorkTag = typename Policy::work_tag;
+
+ public:
+  FunctorAdapter(Functor const &functor) : m_functor(functor) {}
+
+  template <class... Args>
+  KOKKOS_FUNCTION void operator()(Args &&... args) const {
+    if constexpr (std::is_void_v<WorkTag>) {
+      m_functor(static_cast<Args &&>(args)...);
+    } else {
+      m_functor(WorkTag(), static_cast<Args &&>(args)...);
+    }
+  }
+};
+
+}  // namespace Kokkos::Experimental::Impl
 
 #endif
