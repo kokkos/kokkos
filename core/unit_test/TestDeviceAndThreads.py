@@ -54,13 +54,19 @@ def GetFlag(flag, *extra_args):
         raise Exception(p.stderr.decode("utf-8"))
     return int(p.stdout)
 
+def GetNumThreads(max_threads):
+    for x in [1, 2, 3, 5, 7]:
+        if x >= max_threads:
+            break
+        yield x
+    yield max_threads
 
 class KokkosInitializationTestCase(unittest.TestCase):
     def test_num_threads(self):
         max_threads = GetFlag("max_threads")
         if max_threads == 1:
             self.skipTest("no host parallel backend enabled")
-        for num_threads in range(1, max_threads + 1):
+        for num_threads in GetNumThreads(max_threads):
             self.assertEqual(
                 num_threads,
                 GetFlag(
