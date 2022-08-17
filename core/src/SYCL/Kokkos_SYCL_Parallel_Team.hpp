@@ -692,7 +692,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             [&](sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                                sycl::access::target::local>
                     local_mem,
-                sycl::device_ptr<value_type> results_ptr) mutable {
+                sycl::device_ptr<value_type> results_ptr) {
               sycl::global_ptr<value_type> device_accessible_result_ptr =
                   m_result_ptr_device_accessible ? m_result_ptr : nullptr;
               auto lambda = [=](sycl::nd_item<2> item) {

@@ -327,7 +327,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               sycl::accessor<unsigned int, 1, sycl::access::mode::read_write,
                              sycl::access::target::local>
                   num_teams_done,
-              sycl::device_ptr<value_type> results_ptr) mutable {
+              sycl::device_ptr<value_type> results_ptr) {
             const auto begin = policy.begin();
 
             auto lambda = [=](sycl::nd_item<1> item) {
