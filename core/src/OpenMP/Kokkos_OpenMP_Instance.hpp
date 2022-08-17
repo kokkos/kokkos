@@ -356,9 +356,6 @@ inline std::vector<OpenMP> create_OpenMP_instances(
     if (instance_pool_size == 0) {
       Kokkos::abort("Kokkos::abort: Instance has no resource allocated to it");
     }
-    std::cout << "instance " << i << " " << instance_pool_size << " "
-              << weights[i] << " " << total_weight << " " << main_pool_size
-              << std::endl;
     instances[i] = OpenMP(instance_pool_size);
     resources_left -= instance_pool_size;
   }
@@ -376,8 +373,8 @@ inline std::vector<OpenMP> create_OpenMP_instances(
 
 template <typename... Args>
 std::vector<OpenMP> partition_space(OpenMP const& main_instance, Args... args) {
-  // Unpack the arguments and create the weight vector. Note that if some of the
-  // types are not same, you will get a narrowing warning.
+  // Unpack the arguments and create the weight vector. Note that if not all of
+  // the types are the same, you will get a narrowing warning.
   std::vector<std::common_type_t<Args...>> const weights = {args...};
   return Impl::create_OpenMP_instances(main_instance, weights);
 }
