@@ -810,8 +810,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() {
     const bool is_empty_range = m_league_size == 0 || m_team_size == 0;
     const bool need_device_set =
-        ReducerType::has_init_member_function ||
-        ReducerType::has_final_member_function ||
+        ReducerType::has_init_member_function() ||
+        ReducerType::has_final_member_function() ||
         !m_result_ptr_host_accessible ||
 #ifdef KOKKOS_CUDA_ENABLE_GRAPHS
         Policy::is_graph_kernel::value ||

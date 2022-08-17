@@ -942,9 +942,15 @@ struct FunctorAnalysis {
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
 
-    enum { has_join_member_function = DeduceJoin<>::value };
-    enum { has_init_member_function = DeduceInit<>::value };
-    enum { has_final_member_function = DeduceFinal<>::value };
+    static constexpr bool has_join_member_function() {
+      return DeduceJoin<>::value;
+    }
+    static constexpr bool has_init_member_function() {
+      return DeduceInit<>::value;
+    }
+    static constexpr bool has_final_member_function() {
+      return DeduceFinal<>::value;
+    }
 
     KOKKOS_FUNCTION unsigned value_size() const {
       return FunctorAnalysis::value_size(m_functor);

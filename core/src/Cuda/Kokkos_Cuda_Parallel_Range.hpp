@@ -306,8 +306,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline void execute() {
     const index_type nwork     = m_policy.end() - m_policy.begin();
-    const bool need_device_set = ReducerType::has_init_member_function ||
-                                 ReducerType::has_final_member_function ||
+    const bool need_device_set = ReducerType::has_init_member_function() ||
+                                 ReducerType::has_final_member_function() ||
                                  !m_result_ptr_host_accessible ||
 #ifdef KOKKOS_CUDA_ENABLE_GRAPHS
                                  Policy::is_graph_kernel::value ||

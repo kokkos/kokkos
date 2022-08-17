@@ -800,8 +800,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() {
     const bool is_empty_range = m_league_size == 0 || m_team_size == 0;
     const bool need_device_set =
-        ReducerType::has_init_member_function ||
-        ReducerType::has_final_member_function ||
+        ReducerType::has_init_member_function() ||
+        ReducerType::has_final_member_function() ||
         !m_result_ptr_host_accessible ||
         !std::is_same_v<typename ReducerType::functor_type, FunctorType>;
     if (!is_empty_range || need_device_set) {

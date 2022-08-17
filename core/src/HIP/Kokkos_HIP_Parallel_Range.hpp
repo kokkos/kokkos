@@ -313,8 +313,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline void execute() {
     const index_type nwork     = m_policy.end() - m_policy.begin();
-    const bool need_device_set = ReducerType::has_init_member_function ||
-                                 ReducerType::has_final_member_function ||
+    const bool need_device_set = ReducerType::has_init_member_function() ||
+                                 ReducerType::has_final_member_function() ||
                                  !m_result_ptr_host_accessible ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
