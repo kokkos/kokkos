@@ -171,8 +171,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
-    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
-    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+    : OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::init(omp_priv))
 
 #pragma omp target teams distribute parallel for map(to                    \
                                                      : f) reduction(custom \
@@ -294,7 +294,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
 #pragma omp target map(to : f) is_device_ptr(scratch_ptr)
     {
-      typename FunctorAnalysis::Reducer final_reducer(&f);
+      typename FunctorAnalysis::Reducer final_reducer(f);
       // Enter this loop if the functor has an `init`
       if constexpr (HasInit) {
         // The `init` routine needs to be called on the device since it might
@@ -329,7 +329,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     map(to                                                                   \
         : f) is_device_ptr(scratch_ptr)
     {
-      typename FunctorAnalysis::Reducer final_reducer(&f);
+      typename FunctorAnalysis::Reducer final_reducer(f);
 #pragma omp parallel
       {
         const int team_num    = omp_get_team_num();
@@ -376,7 +376,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     is_device_ptr(scratch_ptr)
       for (int i = 0; i < max_teams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        typename FunctorAnalysis::Reducer final_reducer(&f);
+        typename FunctorAnalysis::Reducer final_reducer(f);
         ValueType* team_scratch = scratch_ptr;
         const int team_offset   = max_team_threads * value_count;
         final_reducer.join(
@@ -549,7 +549,7 @@ class ParallelScanOpenMPTargetBase {
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
-      typename Analysis::Reducer final_reducer(&a_functor);
+      typename Analysis::Reducer final_reducer(a_functor);
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
@@ -590,7 +590,7 @@ class ParallelScanOpenMPTargetBase {
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
-      typename Analysis::Reducer final_reducer(&a_functor);
+      typename Analysis::Reducer final_reducer(a_functor);
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
@@ -848,13 +848,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
-  using ReducerTypeFwd =
-      std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd>;
 
-  using ReferenceType = typename Analysis::reference_type;
+  using ReferenceType = typename ReducerType::reference_type;
 
   using ParReduceCommon = ParallelReduceCommon<PointerType>;
 
@@ -887,8 +882,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
-    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
-    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+    : OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::init(omp_priv))
 
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
@@ -1199,7 +1194,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   static constexpr int HasJoin =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
                             FunctorType>::has_join_member_function;
-  static constexpr int UseReducer = is_reducer<ReducerType>::value;
+  static constexpr int UseReducer = !std::is_same_v<typename ReducerType::functor_type, FunctorType>;
   static constexpr int IsArray    = std::is_pointer<reference_type>::value;
 
   using ParReduceSpecialize =

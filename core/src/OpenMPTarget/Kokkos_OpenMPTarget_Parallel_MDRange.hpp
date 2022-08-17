@@ -549,8 +549,8 @@ reduction(+:result)
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:value_type                                                  \
-    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
-    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+    : OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <typename ReducerType::functor_type>::init(omp_priv))
 
 #pragma omp target teams distribute parallel for collapse(3) map(to         \
                                                                  : functor) \
