@@ -644,7 +644,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using reducer_type = ReducerType;
 
   static constexpr bool UseShflReduction =
-      (true && (ReducerType::is_array()));
+      (true && (ReducerType::static_value_size()!=0));
 
  private:
   struct ShflReductionTag {};
