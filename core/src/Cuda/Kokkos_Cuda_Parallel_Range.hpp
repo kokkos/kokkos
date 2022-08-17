@@ -1060,8 +1060,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  template <class ViewType,
-            class Enable = std::enable_if_t<Kokkos::is_view<ViewType>::value>>
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const Policy& arg_policy,
                         const ViewType& arg_result_view)
@@ -1074,22 +1073,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible)
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-        ,
-        m_run_serial(Kokkos::Impl::CudaInternal::cuda_use_serial_execution())
-#endif
-  {
-  }
-
-  ParallelScanWithTotal(const FunctorType& arg_functor,
-                        const Policy& arg_policy, value_type& arg_returnvalue)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_scratch_space(nullptr),
-        m_scratch_flags(nullptr),
-        m_final(false),
-        m_result_ptr(&arg_returnvalue),
-        m_result_ptr_device_accessible(false)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
         ,
         m_run_serial(Kokkos::Impl::CudaInternal::cuda_use_serial_execution())

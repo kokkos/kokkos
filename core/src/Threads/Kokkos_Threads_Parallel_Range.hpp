@@ -473,8 +473,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     ThreadsExec::fence();
   }
 
-  template <class ViewType,
-            class Enable = std::enable_if_t<Kokkos::is_view<ViewType>::value>>
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType &arg_functor,
                         const Policy &arg_policy,
                         const ViewType &arg_result_view)
@@ -486,12 +485,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                         Kokkos::HostSpace>::accessible,
         "Kokkos::Threads parallel_scan result must be host-accessible!");
   }
-
-  ParallelScanWithTotal(const FunctorType &arg_functor,
-                        const Policy &arg_policy, value_type &arg_returnvalue)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_result_ptr(&arg_returnvalue) {}
 };
 
 }  // namespace Impl

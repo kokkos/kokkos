@@ -473,12 +473,20 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
 
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType> closure(
-      functor, inner_policy, return_value);
-  Kokkos::Impl::shared_allocation_tracking_enable();
-
-  closure.execute();
+  if constexpr (Kokkos::is_view<ReturnType>::value) {
+    Kokkos::Impl::shared_allocation_tracking_disable();
+    Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType>
+        closure(functor, inner_policy, return_value);
+    Kokkos::Impl::shared_allocation_tracking_enable();
+    closure.execute();
+  } else {
+    Kokkos::Impl::shared_allocation_tracking_disable();
+    Kokkos::View<ReturnType, Kokkos::HostSpace> view(&return_value);
+    Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType>
+        closure(functor, inner_policy, view);
+    Kokkos::Impl::shared_allocation_tracking_enable();
+    closure.execute();
+  }
 
   Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 

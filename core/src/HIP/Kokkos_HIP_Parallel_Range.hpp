@@ -747,19 +747,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  template <class ViewType,
-            class Enable = std::enable_if_t<Kokkos::is_view<ViewType>::value>>
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename Base::Policy& arg_policy,
                         const ViewType& arg_result_view)
       : Base(arg_functor, arg_policy, arg_result_view.data(),
              MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                                typename ViewType::memory_space>::accessible) {}
-
-  ParallelScanWithTotal(const FunctorType& arg_functor,
-                        const typename Base::Policy& arg_policy,
-                        typename Base::value_type& arg_returnvalue)
-      : Base(arg_functor, arg_policy, &arg_returnvalue, false) {}
 
   inline unsigned local_block_size(const FunctorType& f) {
     // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or

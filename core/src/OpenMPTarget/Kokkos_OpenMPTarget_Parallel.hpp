@@ -733,8 +733,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  template <class ViewType,
-            class Enable = std::enable_if_t<Kokkos::is_view<ViewType>::value>>
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename base_t::Policy& arg_policy,
                         const ViewType& arg_result_view)
@@ -742,11 +741,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                                  typename ViewType::memory_space>::accessible) {
   }
-
-  ParallelScanWithTotal(const FunctorType& arg_functor,
-                        const typename base_t::Policy& arg_policy,
-                        value_type& arg_returnvalue)
-      : base_t(arg_functor, arg_policy, &arg_returnvalue, false) {}
 };
 }  // namespace Impl
 }  // namespace Kokkos

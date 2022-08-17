@@ -337,13 +337,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                         Kokkos::HostSpace>::accessible,
         "Kokkos::Serial parallel_scan result must be host-accessible!");
   }
-
-  inline ParallelScanWithTotal(const FunctorType& arg_functor,
-                               const Policy& arg_policy,
-                               value_type& arg_returnvalue)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_result_ptr(&arg_returnvalue) {}
 };
 
 }  // namespace Impl
