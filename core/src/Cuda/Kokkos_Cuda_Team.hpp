@@ -225,7 +225,7 @@ class CudaTeamMember {
     KOKKOS_IF_ON_DEVICE(
         (typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                         TeamPolicy<Cuda>, ReducerType>::Reducer
-             wrapped_reducer(&reducer);
+             wrapped_reducer(reducer);
          cuda_intra_block_reduction(value, wrapped_reducer, blockDim.y);
          reducer.reference() = value;))
   }

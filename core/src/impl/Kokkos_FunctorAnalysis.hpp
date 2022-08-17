@@ -72,8 +72,8 @@ struct DeduceFunctorPatternInterface<
 
 template <class FunctorType, class ExecPolicy, class ReducerType,
           class ExecutionSpace>
-struct DeduceFunctorPatternInterface<
-    ParallelReduce<FunctorType, ExecPolicy, ReducerType, ExecutionSpace>> {
+struct DeduceFunctorPatternInterface<ParallelReduce<
+    FunctorType, ExecPolicy, ReducerType, ExecutionSpace>> {
   using type = FunctorPatternInterface::REDUCE;
 };
 
@@ -908,11 +908,11 @@ struct FunctorAnalysis {
     return DeduceTeamShmem<>::team_shmem_size(f);
   }
 
-  //----------------------------------------
+    enum { has_join_member_function = DeduceJoin<>::value };
+    enum { has_init_member_function = DeduceInit<>::value };
+    enum { has_final_member_function = DeduceFinal<>::value };
 
-  enum { has_join_member_function = DeduceJoin<>::value };
-  enum { has_init_member_function = DeduceInit<>::value };
-  enum { has_final_member_function = DeduceFinal<>::value };
+  //----------------------------------------
 
   static_assert((Kokkos::is_reducer<Functor>::value &&
                  has_join_member_function) ||
@@ -941,7 +941,7 @@ struct FunctorAnalysis {
     using pointer_type   = value_type*;
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
-
+				     
     enum { has_join_member_function = DeduceJoin<>::value };
     enum { has_init_member_function = DeduceInit<>::value };
     enum { has_final_member_function = DeduceFinal<>::value };

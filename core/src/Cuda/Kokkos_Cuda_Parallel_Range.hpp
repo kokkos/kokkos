@@ -310,7 +310,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
                                                   value_type>(f, n);
     using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType,
-                                              Kokkos::Cuda, value_type>;
+                                              Kokkos::Cuda>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -413,40 +413,19 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+  inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+                        const ReducerType& arg_reducer,
+                        const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_reducer(InvalidType()),
-        m_result_ptr(arg_result.data()),
+        m_reducer(arg_reducer),
+        m_result_ptr(arg_result_view.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_host_accessible(
             MemorySpaceAccess<Kokkos::HostSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_space(nullptr),
-        m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<value_type, WorkTag>(m_policy, m_functor);
-  }
-
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& reducer)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
-        m_result_ptr_device_accessible(
-            MemorySpaceAccess<Kokkos::CudaSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_result_ptr_host_accessible(
-            MemorySpaceAccess<Kokkos::HostSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
@@ -797,7 +776,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
                                                    sizeof(size_type)>
@@ -837,7 +816,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
                                                    sizeof(size_type)>

@@ -144,12 +144,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                               TeamPolicyInternal, FunctorType>;
-    using reducer_type = typename Impl::ParallelReduceReturnValue<
-        void, typename functor_analysis_type::value_type,
-        FunctorType>::reducer_type;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type, Kokkos::Cuda, void>;
+                             typename functor_analysis_type::Reducer, Kokkos::Cuda>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -158,7 +155,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                            const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType, Kokkos::Cuda, void>;
+                             ReducerType, Kokkos::Cuda>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -185,12 +182,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                               TeamPolicyInternal, FunctorType>;
-    using reducer_type = typename Impl::ParallelReduceReturnValue<
-        void, typename functor_analysis_type::value_type,
-        FunctorType>::reducer_type;
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type, Kokkos::Cuda, void>;
+                             typename functor_analysis_type::Reducer, Kokkos::Cuda>;
     return internal_team_size_recommended<closure_type>(f);
   }
 
@@ -199,7 +193,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                             const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType, Kokkos::Cuda, void>;
+                             ReducerType, Kokkos::Cuda>;
     return internal_team_size_recommended<closure_type>(f);
   }
 
@@ -640,7 +634,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using WorkTag      = typename Policy::work_tag;
   using LaunchBounds = typename Policy::launch_bounds;
 
-  using pointer_type   = typename ReducerType::pinter_type;
+  using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
   using value_type     = typename ReducerType::value_type;
 
@@ -901,14 +895,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+  inline ParallelReduce(const FunctorType& arg_functor,
+                        const Policy& arg_policy,
+                        const ReducerType& arg_reducer,
+                        const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_reducer(InvalidType()),
-        m_result_ptr(arg_result.data()),
+        m_reducer(arg_reducer),
+        m_result_ptr(arg_result_view.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
@@ -1001,115 +995,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     if (int(m_team_size) >
         arg_policy.team_size_max(m_functor, m_reducer, ParallelReduceTag())) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too "
-                      "large team size."));
-    }
-  }
-
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& reducer)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
-        m_result_ptr_device_accessible(
-            MemorySpaceAccess<Kokkos::CudaSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_result_ptr_host_accessible(
-            MemorySpaceAccess<Kokkos::HostSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_scratch_space(nullptr),
-        m_scratch_flags(nullptr),
-        m_unified_space(nullptr),
-        m_team_begin(0),
-        m_shmem_begin(0),
-        m_shmem_size(0),
-        m_scratch_ptr{nullptr, nullptr},
-        m_league_size(arg_policy.league_size()),
-        m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()) {
-    cudaFuncAttributes attr =
-        CudaParallelLaunch<ParallelReduce,
-                           LaunchBounds>::get_cuda_func_attributes();
-
-    // Valid team size not provided, deduce team size
-    m_team_size =
-        m_team_size >= 0
-            ? m_team_size
-            : Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
-                  m_policy.space().impl_internal_space_instance(), attr,
-                  m_functor, m_vector_size, m_policy.team_scratch_size(0),
-                  m_policy.thread_scratch_size(0)) /
-                  m_vector_size;
-
-    m_team_begin =
-        UseShflReduction
-            ? 0
-            : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                        WorkTag, value_type>(
-                  arg_functor, m_team_size);
-    m_shmem_begin = sizeof(double) * (m_team_size + 2);
-    m_shmem_size =
-        m_policy.scratch_size(0, m_team_size) +
-        FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
-    m_scratch_size[0] = m_shmem_size;
-    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks =
-        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
-    if (m_team_size <= 0) {
-      m_scratch_ptr[1] = nullptr;
-    } else {
-      auto scratch_ptr_id =
-          m_policy.space()
-              .impl_internal_space_instance()
-              ->resize_team_scratch_space(
-                  static_cast<std::int64_t>(m_scratch_size[1]) *
-                  (std::min(
-                      static_cast<std::int64_t>(Cuda::concurrency() /
-                                                (m_team_size * m_vector_size)),
-                      static_cast<std::int64_t>(m_league_size))));
-      m_scratch_ptr[1]  = scratch_ptr_id.first;
-      m_scratch_pool_id = scratch_ptr_id.second;
-    }
-
-    // The global parallel_reduce does not support vector_length other than 1 at
-    // the moment
-    if ((arg_policy.impl_vector_length() > 1) && !UseShflReduction)
-      Impl::throw_runtime_exception(
-          "Kokkos::parallel_reduce with a TeamPolicy using a vector length of "
-          "greater than 1 is not currently supported for CUDA for dynamic "
-          "sized reduction types.");
-
-    if ((m_team_size < 32) && !UseShflReduction)
-      Impl::throw_runtime_exception(
-          "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller "
-          "than 32 is not currently supported with CUDA for dynamic sized "
-          "reduction types.");
-
-    // Functor's reduce memory, team scan memory, and team shared memory depend
-    // upon team size.
-
-    const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
-
-    if ((!Kokkos::Impl::is_integral_power_of_two(m_team_size) &&
-         !UseShflReduction) ||
-        m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-            shmem_size_total) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
-    }
-
-    size_type team_size_max =
-        Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
-            m_policy.space().impl_internal_space_instance(), attr, m_functor,
-            m_vector_size, m_policy.team_scratch_size(0),
-            m_policy.thread_scratch_size(0)) /
-        m_vector_size;
-
-    if ((int)m_team_size > (int)team_size_max) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too "
                       "large team size."));
