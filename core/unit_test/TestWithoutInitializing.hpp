@@ -361,3 +361,13 @@ TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
+
+struct NotDefaultConstructible {
+  NotDefaultConstructible() = delete;
+};
+
+TEST(TEST_CATEGORY, view_not_default_constructible) {
+  using Space = TEST_EXECSPACE;
+  Kokkos::View<NotDefaultConstructible, Space> my_view(Kokkos::view_alloc(
+      "not_default_constructible", Kokkos::WithoutInitializing));
+}
