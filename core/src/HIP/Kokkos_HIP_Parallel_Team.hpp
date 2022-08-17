@@ -880,7 +880,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                  ->m_team_scratch_mutex) {
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
-                                         arg_functor, ParallelReduceTag());
+                                         arg_functor, arg_reducer, ParallelReduceTag());
 
     m_team_begin =
         UseShflReduction
@@ -942,7 +942,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     size_t max_size =
-        arg_policy.team_size_max(arg_functor, ParallelReduceTag());
+        arg_policy.team_size_max(arg_functor, arg_reducer, ParallelReduceTag());
     if (static_cast<int>(m_team_size) > static_cast<int>(max_size)) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > requested too "
