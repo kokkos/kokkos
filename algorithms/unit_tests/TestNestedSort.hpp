@@ -45,6 +45,9 @@
 #ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
 #define KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
 
+#include <unordered_set>
+#include <random>
+
 namespace Test {
 
 namespace Impl {

@@ -51,6 +51,5 @@ namespace Test {
 TEST(TEST_CATEGORY, SortUnsigned) {
   Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
-
 }  // namespace Test
 #endif

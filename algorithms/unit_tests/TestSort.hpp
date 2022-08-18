@@ -48,8 +48,6 @@
 #include <Kokkos_DynamicView.hpp>
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
-#include <unordered_set>
-#include <random>
 
 namespace Test {
 
@@ -446,7 +444,6 @@ void test_sort(unsigned int N) {
   test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
   test_sort_integer_overflow<ExecutionSpace, int>();
 }
-
 }  // namespace Impl
 }  // namespace Test
 #endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */
