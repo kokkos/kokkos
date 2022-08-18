@@ -152,7 +152,13 @@ struct ComplexReducerSizeCalculator {
     using value_type = typename ReducerType::value_type;
     value_type value;
     ReducerType reducer_example = ReducerType(value);
-    return policy.team_size_max(functor, reducer_example, tag);
+
+    using Analysis = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, ReducerType,
+        value_type>;
+    typename Analysis::Reducer final_reducer(reducer_example);
+
+    return policy.team_size_max(functor, final_reducer, tag);
   }
   template <typename Policy, typename Functor, typename Tag>
   int get_recommended_team_size(const Policy& policy, const Functor& functor,
@@ -160,7 +166,13 @@ struct ComplexReducerSizeCalculator {
     using value_type = typename ReducerType::value_type;
     value_type value;
     ReducerType reducer_example = ReducerType(value);
-    return policy.team_size_recommended(functor, reducer_example, tag);
+
+    using Analysis = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, ReducerType,
+        value_type>;
+    typename Analysis::Reducer final_reducer(reducer_example);
+
+    return policy.team_size_recommended(functor, final_reducer, tag);
   }
   template <typename Policy, typename Functor>
   int get_mdrange_max_tile_size_product(const Policy& policy,
