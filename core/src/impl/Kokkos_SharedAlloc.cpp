@@ -338,28 +338,24 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
                reinterpret_cast<uintptr_t>(r->m_next),
                reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
                r->use_count(), reinterpret_cast<uintptr_t>(r->m_dealloc),
-               r->m_alloc_ptr ? r->m_alloc_ptr->m_label : " [NOT ALLOCATED]");
+               r->m_alloc_ptr->m_label);
       s << buffer;
       r = r->m_next;
     }
   } else {
     while (r != root) {
-      if (r->m_alloc_ptr) {
-        // Formatting dependent on sizeof(uintptr_t)
-        const char* format_string;
+      // Formatting dependent on sizeof(uintptr_t)
+      const char* format_string;
 
-        if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-          format_string = "%s [ 0x%.12lx + %ld ] %s\n";
-        } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-          format_string = "%s [ 0x%.12llx + %ld ] %s\n";
-        }
-
-        snprintf(buffer, 256, format_string, space_name,
-                 reinterpret_cast<uintptr_t>(r->data()), r->size(),
-                 r->m_alloc_ptr->m_label);
-      } else {
-        snprintf(buffer, 256, "%s [ 0 + 0 ]\n", space_name);
+      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
+        format_string = "%s [ 0x%.12lx + %ld ] %s\n";
+      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
+        format_string = "%s [ 0x%.12llx + %ld ] %s\n";
       }
+
+      snprintf(buffer, 256, format_string, space_name,
+               reinterpret_cast<uintptr_t>(r->data()), r->size(),
+               r->m_alloc_ptr->m_label);
       s << buffer;
       r = r->m_next;
     }
