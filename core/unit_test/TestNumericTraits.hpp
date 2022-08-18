@@ -226,9 +226,8 @@ struct TestNumericTraits<
 TEST(TEST_CATEGORY, numeric_traits_infinity) {
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, double, Infinity>();
-  // fails with XL 16.1.1 see issue #4100
   // FIXME_NVHPC long double not supported
-#if !defined(KOKKOS_COMPILER_IBM) && !defined(KOKKOS_COMPILER_NVHPC)
+#if !defined(KOKKOS_COMPILER_NVHPC)
   TestNumericTraits<TEST_EXECSPACE, long double, Infinity>();
 #endif
 }
@@ -236,9 +235,8 @@ TEST(TEST_CATEGORY, numeric_traits_infinity) {
 TEST(TEST_CATEGORY, numeric_traits_epsilon) {
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
-  // fails with XL 16.1.1 see issue #4100
   // FIXME_NVHPC long double not supported
-#if !defined(KOKKOS_COMPILER_IBM) && !defined(KOKKOS_COMPILER_NVHPC)
+#if !defined(KOKKOS_COMPILER_NVHPC)
   TestNumericTraits<TEST_EXECSPACE, long double, Epsilon>();
 #endif
 }
@@ -505,9 +503,7 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, infinity);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, infinity);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, epsilon);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, epsilon);
-#ifndef KOKKOS_COMPILER_IBM  // fails with XL 16.1.1
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, epsilon);
-#endif
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(float, round_error);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, round_error);
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, round_error);
