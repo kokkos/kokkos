@@ -622,8 +622,11 @@ void test_nested_sort_impl(unsigned narray, unsigned n, bool useTeams,
     Kokkos::parallel_for(TeamPol(numTeams, teamSize, vectorLen), functor);
   }
   auto keysOut = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), keys);
+  std::string testLabel = useTeams ? "sort_team" : "sort_thread";
   for (unsigned i = 0; i < keys.extent(0); i++) {
-    EXPECT_EQ(keysOut(i), keysHost(i));
+    EXPECT_EQ(keysOut(i), keysHost(i))
+        << testLabel << ": after sorting, key at index " << i
+        << " is incorrect.";
   }
 }
 
@@ -695,9 +698,12 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
   auto keysOut = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), keys);
   auto valuesOut =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), values);
+  std::string testLabel = useTeams ? "sort_by_key_team" : "sort_by_key_thread";
   // First, compare keys since they will always match exactly
   for (unsigned i = 0; i < keys.extent(0); i++) {
-    EXPECT_EQ(keysOut(i), keysHost(i));
+    EXPECT_EQ(keysOut(i), keysHost(i))
+        << testLabel << ": after sorting, key at index " << i
+        << " is incorrect.";
   }
   // Kokkos::sort_by_key_X is not stable, so if a key happens to
   // appear more than once, the order of the values may not match exactly.
@@ -716,8 +722,12 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
     // Check one value at a time that they match
     for (auto it = correctVals.begin(); it != correctVals.end(); it++) {
       ValueType val = *it;
-      EXPECT_TRUE(outputVals.find(val) != outputVals.end());
-      EXPECT_EQ(correctVals.count(val), outputVals.count(val));
+      EXPECT_TRUE(outputVals.find(val) != outputVals.end())
+          << testLabel << ": after sorting, value " << val
+          << " corresponding to key " << key << " is missing.";
+      EXPECT_EQ(correctVals.count(val), outputVals.count(val))
+          << testLabel << ": after sorting, the number of occurences of value "
+          << val << " corresponding to key " << key << " changed.";
     }
     keyStart = keyEnd;
   }
