@@ -334,6 +334,9 @@ TEST(TEST_CATEGORY, UnorderedMap_clear_zero_size) {
   m.insert(5);
   m.insert(7);
   ASSERT_EQ(4u, m.size());
+  m.rehash(0);
+  ASSERT_EQ(128u, m.capacity());
+  ASSERT_EQ(4u, m.size());
 
   m.clear();
   ASSERT_EQ(0u, m.size());

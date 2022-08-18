@@ -77,7 +77,7 @@
  *  KOKKOS_COMPILER_CRAYC
  *  KOKKOS_COMPILER_APPLECC
  *  KOKKOS_COMPILER_CLANG
- *  KOKKOS_COMPILER_PGI
+ *  KOKKOS_COMPILER_NVHPC
  *  KOKKOS_COMPILER_MSVC
  *
  *  Macros for which compiler extension to use for atomics on intrinsic types
@@ -177,15 +177,6 @@
 #endif
 #endif
 
-#if defined(__PGIC__)
-#define KOKKOS_COMPILER_PGI \
-  __PGIC__ * 100 + __PGIC_MINOR__ * 10 + __PGIC_PATCHLEVEL__
-
-#if (1740 > KOKKOS_COMPILER_PGI)
-#error "Compiling with PGI version earlier than 17.4 is not supported."
-#endif
-#endif
-
 #if defined(__NVCOMPILER)
 #define KOKKOS_COMPILER_NVHPC                              \
   __NVCOMPILER_MAJOR__ * 100 + __NVCOMPILER_MINOR__ * 10 + \
@@ -213,12 +204,9 @@
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 #endif
-#if (1800 > KOKKOS_COMPILER_INTEL)
-#define KOKKOS_ENABLE_PRAGMA_SIMD 1
-#endif
 
-// FIXME Workaround for ICE with intel 17,18,19 in Trilinos
-#if (KOKKOS_COMPILER_INTEL <= 1900)
+// FIXME Workaround for ICE with intel <=21 in Trilinos
+#if (KOKKOS_COMPILER_INTEL <= 2100)
 #define KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
 #endif
 
@@ -245,8 +233,8 @@
 #endif
 #endif
 
-#if (1700 > KOKKOS_COMPILER_INTEL)
-#error "Compiling with Intel version earlier than 17.0 is not supported."
+#if (1900 > KOKKOS_COMPILER_INTEL)
+#error "Compiling with Intel version earlier than 19.0.5 is not supported."
 #endif
 
 #if !defined(KOKKOS_ENABLE_ASM) && !defined(_WIN32)
@@ -265,13 +253,6 @@
 
 #if defined(KOKKOS_ARCH_AVX512MIC)
 #define KOKKOS_ENABLE_RFO_PREFETCH 1
-#if (KOKKOS_COMPILER_INTEL < 1800) && !defined(KOKKOS_KNL_USE_ASM_WORKAROUND)
-#define KOKKOS_KNL_USE_ASM_WORKAROUND 1
-#endif
-#endif
-
-#if (1800 > KOKKOS_COMPILER_INTEL)
-#define KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION
 #endif
 
 #if defined(__MIC__)
@@ -293,7 +274,6 @@
 //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-//#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
 #if !defined(KOKKOS_ENABLE_ASM)
 #define KOKKOS_ENABLE_ASM 1
@@ -308,7 +288,6 @@
 //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-//#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
@@ -330,7 +309,6 @@
 //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-//#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
 #if defined(KOKKOS_ARCH_AVX512MIC)
 #define KOKKOS_ENABLE_RFO_PREFETCH 1
@@ -358,7 +336,6 @@
 #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-//#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 #endif
 
 //----------------------------------------------------------------------------

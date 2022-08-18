@@ -247,22 +247,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    // FIXME_SYCL optimize
-    constexpr size_t wgroup_size       = 128;
-    constexpr size_t values_per_thread = 2;
-    std::size_t size                   = policy.end() - policy.begin();
-    const auto init_size               = std::max<std::size_t>(
-        ((size + values_per_thread - 1) / values_per_thread + wgroup_size - 1) /
-            wgroup_size,
-        1);
-    const unsigned int value_count = m_reducer.value_count();
-    const auto results_ptr =
-        static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
-            sizeof(value_type) * std::max(value_count, 1u) * init_size));
+    constexpr size_t values_per_thread       = 2;
+    std::size_t size                         = policy.end() - policy.begin();
+    const unsigned int value_count           = m_reducer.value_count();
+    sycl::device_ptr<value_type> results_ptr = nullptr;
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
-    auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
-        instance.scratch_flags(sizeof(unsigned int)));
 
     sycl::event last_reduction_event;
 
@@ -270,6 +260,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
+      results_ptr =
+          static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
+              sizeof(value_type) * std::max(value_count, 1u)));
+
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
         cgh.depends_on(memcpy_events);
@@ -298,25 +292,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // until only one workgroup does the reduction and thus gets the final
     // value.
     if (size > 1) {
-      auto n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
-                        wgroup_size - 1) /
-                       wgroup_size;
-      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
-        sycl::accessor<value_type, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local>
-            local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
-                      cgh);
-        sycl::accessor<unsigned int, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local>
-            num_teams_done(1, cgh);
+      auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
+          instance.scratch_flags(sizeof(unsigned int)));
 
-        const auto begin = policy.begin();
+      auto reduction_lambda_factory =
+          [&](sycl::accessor<value_type, 1, sycl::access::mode::read_write,
+                             sycl::access::target::local>
+                  local_mem,
+              sycl::accessor<unsigned int, 1, sycl::access::mode::read_write,
+                             sycl::access::target::local>
+                  num_teams_done,
+              sycl::device_ptr<value_type> results_ptr) {
+            const auto begin = policy.begin();
 
-        cgh.depends_on(memcpy_events);
+            auto lambda = [=](sycl::nd_item<1> item) {
+              const auto n_wgroups   = item.get_group_range()[0];
+              const auto wgroup_size = item.get_local_range()[0];
 
-        cgh.parallel_for(
-            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-            [=](sycl::nd_item<1> item) {
               const auto local_id = item.get_local_linear_id();
               const auto global_id =
                   wgroup_size * item.get_group_linear_id() * values_per_thread +
@@ -412,9 +404,69 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                       std::min(n_wgroups, wgroup_size));
                 }
               }
-            });
+            };
+            return lambda;
+          };
+
+      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+        sycl::accessor<unsigned int, 1, sycl::access::mode::read_write,
+                       sycl::access::target::local>
+            num_teams_done(1, cgh);
+
+        auto dummy_reduction_lambda =
+            reduction_lambda_factory({1, cgh}, num_teams_done, nullptr);
+
+        static sycl::kernel kernel = [&] {
+          sycl::kernel_id functor_kernel_id =
+              sycl::get_kernel_id<decltype(dummy_reduction_lambda)>();
+          auto kernel_bundle =
+              sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+                  q.get_context(), std::vector{functor_kernel_id});
+          return kernel_bundle.get_kernel(functor_kernel_id);
+        }();
+        auto multiple = kernel.get_info<sycl::info::kernel_device_specific::
+                                            preferred_work_group_size_multiple>(
+            q.get_device());
+        auto max =
+            kernel
+                .get_info<sycl::info::kernel_device_specific::work_group_size>(
+                    q.get_device());
+
+// FIXME_SYCL 1024 seems to be invalid when running on a Volta70.
+#ifndef KOKKOS_ARCH_INTEL_GPU
+        if (max > 512) max = 512;
+#endif
+
+        const size_t wgroup_size =
+            static_cast<size_t>(max / multiple) * multiple;
+
+        const std::size_t init_size =
+            ((size + values_per_thread - 1) / values_per_thread + wgroup_size -
+             1) /
+            wgroup_size;
+        results_ptr =
+            static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
+                sizeof(value_type) * std::max(value_count, 1u) * init_size));
+
+        auto n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
+                          wgroup_size - 1) /
+                         wgroup_size;
+
+        sycl::accessor<value_type, 1, sycl::access::mode::read_write,
+                       sycl::access::target::local>
+            local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
+                      cgh);
+
+        cgh.depends_on(memcpy_events);
+
+        auto reduction_lambda =
+            reduction_lambda_factory(local_mem, num_teams_done, results_ptr);
+        cgh.parallel_for(
+            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+            reduction_lambda);
       });
-      last_reduction_event       = q.ext_oneapi_submit_barrier(
+
+      last_reduction_event = q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
     }
 
