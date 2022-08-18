@@ -577,7 +577,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
       for (auto i2 = begin2; i2 < end2; ++i2) {
         for (auto i3 = begin3; i3 < end3; ++i3) {
           for (auto i4 = begin4; i4 < end4; ++i4) {
-            for (auto i4 = begin4; i4 < end4; ++i4) {
+            for (auto i5 = begin5; i5 < end5; ++i5) {
               functor(i0, i1, i2, i3, i4, i5);
             }
           }
