@@ -250,32 +250,31 @@ endif
 
 # Set OpenMP flags.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 1)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
-    else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_FUJITSU), 1)
+  else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_FUJITSU), 1)
       # fujitsu (clang mode) fails with `=libomp`
       KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
-      else
-      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
-      endif
-    endif
-  else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
-      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-        KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
+      KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
+    endif
+  endif
+else
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
+    KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
+  else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
+      KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
+    else
+      ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
+        # OpenMP is turned on by default in Cray compiler environment.
+        KOKKOS_INTERNAL_OPENMP_FLAG :=
       else
-        ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-          # OpenMP is turned on by default in Cray compiler environment.
-          KOKKOS_INTERNAL_OPENMP_FLAG :=
+        ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL_CLANG), 1)
+          KOKKOS_INTERNAL_OPENMP_FLAG := -fiopenmp
         else
-          ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL_CLANG), 1)
-            KOKKOS_INTERNAL_OPENMP_FLAG := -fiopenmp
-          else
             KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
-          endif
         endif
       endif
     endif
