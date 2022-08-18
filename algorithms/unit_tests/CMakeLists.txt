@@ -35,6 +35,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
       "#include <Test${Tag}_Category.hpp>\n"
       "#include <TestRandomCommon.hpp>\n"
       "#include <TestSortCommon.hpp>\n"
+      "#include <TestNestedSort.hpp>\n"
       )
     configure_file(${dir}/dummy.cpp ${file})
     list(APPEND SOURCES_A ${file})
