@@ -111,44 +111,8 @@ struct FunctorAnalysis {
 
   struct void_tag {};
 
-  template <typename P = Policy, typename = std::false_type>
-  struct has_work_tag {
-    using type = void;
-    using wtag = void_tag;
-  };
-
-  template <typename P>
-  struct has_work_tag<P, typename std::is_void<typename P::work_tag>::type> {
-    using type = typename P::work_tag;
-    using wtag = typename P::work_tag;
-  };
-
-  using Tag  = typename has_work_tag<>::type;
-  using WTag = typename has_work_tag<>::wtag;
-
-  //----------------------------------------
-  // Check for T::execution_space
-
-  template <typename T, typename = std::false_type>
-  struct has_execution_space {
-    using type = void;
-    enum : bool { value = false };
-  };
-
-  template <typename T>
-  struct has_execution_space<
-      T, typename std::is_void<typename T::execution_space>::type> {
-    using type = typename T::execution_space;
-    enum : bool { value = true };
-  };
-
-  using policy_has_space  = has_execution_space<Policy>;
-  using functor_has_space = has_execution_space<Functor>;
-
-  static_assert(!policy_has_space::value || !functor_has_space::value ||
-                    std::is_same<typename policy_has_space::type,
-                                 typename functor_has_space::type>::value,
-                "Execution Policy and Functor execution space must match");
+  using Tag  = typename Policy::work_tag;
+  using WTag = std::conditional_t<std::is_void_v<Tag>, void_tag, Tag>;
 
   //----------------------------------------
   // Check for Functor::value_type, which is either a simple type T or T[]
@@ -316,21 +280,13 @@ struct FunctorAnalysis {
 
   using candidate_type = typename deduce_value_type<Functor>::type;
 
-  enum {
-    candidate_is_void  = std::is_void<candidate_type>::value,
-    candidate_is_array = std::rank<candidate_type>::value == 1
-  };
+  static constexpr bool candidate_is_void = std::is_void<candidate_type>::value;
+  static constexpr bool candidate_is_array =
+      std::rank<candidate_type>::value == 1;
 
   //----------------------------------------
 
  public:
-  using execution_space =
-      std::conditional_t<functor_has_space::value,
-                         typename functor_has_space::type,
-                         std::conditional_t<policy_has_space::value,
-                                            typename policy_has_space::type,
-                                            Kokkos::DefaultExecutionSpace>>;
-
   using value_type = std::remove_extent_t<candidate_type>;
 
   static_assert(!std::is_const<value_type>::value,
@@ -347,48 +303,23 @@ struct FunctorAnalysis {
       candidate_is_array, ValueType*,
       std::conditional_t<!candidate_is_void, ValueType&, void>>;
 
- private:
-  template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray, unsigned>
-  get_length(FF const& f) {
-    return f.value_count;
-  }
+  // FIXME still needed for parallel_scan here instead of in Reducer
+  static constexpr unsigned StaticValueSize =
+      !candidate_is_void && !candidate_is_array ? sizeof(ValueType) : 0;
 
-  template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray, unsigned>
-  get_length(FF const&) {
-    return candidate_is_void ? 0 : 1;
-  }
-
- public:
-  enum {
-    StaticValueSize =
-        !candidate_is_void && !candidate_is_array ? sizeof(ValueType) : 0
-  };
-
+  // FIXME still needed for parallel_scan here instead of in Reducer
   KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_count(
       const Functor& f) {
-    return FunctorAnalysis::template get_length<candidate_is_array>(f);
+    if constexpr (candidate_is_array)
+      return f.value_count;
+    else
+      return candidate_is_void ? 0 : 1;
   }
 
+  // FIXME still needed for parallel_scan here instead of in Reducer
   KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_size(
       const Functor& f) {
-    return FunctorAnalysis::template get_length<candidate_is_array>(f) *
-           sizeof(ValueType);
-  }
-
-  //----------------------------------------
-
-  template <class Unknown>
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_count(
-      const Unknown&) {
-    return candidate_is_void ? 0 : 1;
-  }
-
-  template <class Unknown>
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_size(
-      const Unknown&) {
-    return candidate_is_void ? 0 : sizeof(ValueType);
+    return value_count(f) * sizeof(ValueType);
   }
 
  private:
@@ -584,53 +515,38 @@ struct FunctorAnalysis {
   };
 
   template <class F, class = void>
-  struct detected_join_no_tag {
-    enum : bool { value = false };
-  };
+  struct detected_join_no_tag : std::false_type {};
 
   template <class F>
   struct detected_join_no_tag<
-      F, decltype(has_join_no_tag_function<F>::enable_if(&F::join))> {
-    enum : bool { value = true };
-  };
+      F, decltype(has_join_no_tag_function<F>::enable_if(&F::join))>
+      : std::true_type {};
 
   template <class F, class = void>
-  struct detected_volatile_join_no_tag {
-    enum : bool { value = false };
-  };
+  struct detected_volatile_join_no_tag : std::false_type {};
 
   template <class F>
   struct detected_volatile_join_no_tag<
-      F, decltype(has_volatile_join_no_tag_function<F>::enable_if(&F::join))> {
-    enum : bool { value = true };
-  };
+      F, decltype(has_volatile_join_no_tag_function<F>::enable_if(&F::join))>
+      : std::true_type {};
 
   template <class F, class = void>
-  struct detected_join_tag {
-    enum : bool { value = false };
-  };
+  struct detected_join_tag : std::false_type {};
 
   template <class F>
   struct detected_join_tag<F, decltype(has_join_tag_function<F>::enable_if(
-                                  &F::join))> {
-    enum : bool { value = true };
-  };
+                                  &F::join))> : std::true_type {};
 
   template <class F, class = void>
-  struct detected_volatile_join_tag {
-    enum : bool { value = false };
-  };
+  struct detected_volatile_join_tag : std::false_type {};
 
   template <class F>
   struct detected_volatile_join_tag<
-      F, decltype(has_volatile_join_tag_function<F>::enable_if(&F::join))> {
-    enum : bool { value = true };
-  };
+      F, decltype(has_volatile_join_tag_function<F>::enable_if(&F::join))>
+      : std::true_type {};
 
   template <class F = Functor, typename = void>
-  struct DeduceJoinNoTag {
-    enum : bool { value = false };
-
+  struct DeduceJoinNoTag : std::false_type {
     KOKKOS_INLINE_FUNCTION static void join(F const* const f, ValueType* dst,
                                             ValueType const* src) {
       const int n = FunctorAnalysis::value_count(*f);
@@ -643,9 +559,7 @@ struct FunctorAnalysis {
                                               (!is_reducer<F>::value &&
                                                std::is_void<Tag>::value)) &&
                                              detected_join_no_tag<F>::value>>
-      : public has_join_no_tag_function<F> {
-    enum : bool { value = true };
-  };
+      : public has_join_no_tag_function<F>, std::true_type {};
 
   template <class F>
   struct DeduceJoinNoTag<
@@ -654,9 +568,7 @@ struct FunctorAnalysis {
                         (!is_reducer<F>::value && std::is_void<Tag>::value)) &&
                        (!detected_join_no_tag<F>::value &&
                         detected_volatile_join_no_tag<F>::value)>>
-      : public has_volatile_join_no_tag_function<F> {
-    enum : bool { value = true };
-  };
+      : public has_volatile_join_no_tag_function<F>, std::true_type {};
 
   template <class F = Functor, typename = void>
   struct DeduceJoin : public DeduceJoinNoTag<F> {};
@@ -664,17 +576,13 @@ struct FunctorAnalysis {
   template <class F>
   struct DeduceJoin<
       F, std::enable_if_t<!is_reducer<F>::value && detected_join_tag<F>::value>>
-      : public has_join_tag_function<F> {
-    enum : bool { value = true };
-  };
+      : public has_join_tag_function<F>, std::true_type {};
 
   template <class F>
   struct DeduceJoin<F, std::enable_if_t<!is_reducer<F>::value &&
                                         (!detected_join_tag<F>::value &&
                                          detected_volatile_join_tag<F>::value)>>
-      : public has_volatile_join_tag_function<F> {
-    enum : bool { value = true };
-  };
+      : public has_volatile_join_tag_function<F>, std::true_type {};
 
   //----------------------------------------
 
@@ -743,9 +651,7 @@ struct FunctorAnalysis {
   };
 
   template <class F = Functor, typename = void>
-  struct DeduceInitNoTag {
-    enum : bool { value = false };
-
+  struct DeduceInitNoTag : std::false_type {
     KOKKOS_INLINE_FUNCTION static void init(F const* const, ValueType* dst) {
       new (dst) ValueType();
     }
@@ -756,10 +662,8 @@ struct FunctorAnalysis {
       F, std::enable_if_t<is_reducer<F>::value || (!is_reducer<F>::value &&
                                                    std::is_void<Tag>::value),
                           decltype(has_init_no_tag_function<F>::enable_if(
-                              &F::init))>>
-      : public has_init_no_tag_function<F> {
-    enum : bool { value = true };
-  };
+                              &F::init))>> : public has_init_no_tag_function<F>,
+                                             std::true_type {};
 
   template <class F = Functor, typename = void>
   struct DeduceInit : public DeduceInitNoTag<F> {};
@@ -769,9 +673,7 @@ struct FunctorAnalysis {
       F,
       std::enable_if_t<!is_reducer<F>::value,
                        decltype(has_init_tag_function<F>::enable_if(&F::init))>>
-      : public has_init_tag_function<F> {
-    enum : bool { value = true };
-  };
+      : public has_init_tag_function<F>, std::true_type {};
 
   //----------------------------------------
 
@@ -844,9 +746,7 @@ struct FunctorAnalysis {
   };
 
   template <class F = Functor, typename = void>
-  struct DeduceFinalNoTag {
-    enum : bool { value = false };
-
+  struct DeduceFinalNoTag : std::false_type {
     KOKKOS_INLINE_FUNCTION
     static void final(F const* const, ValueType*) {}
   };
@@ -857,9 +757,7 @@ struct FunctorAnalysis {
                                                    std::is_void<Tag>::value),
                           decltype(has_final_no_tag_function<F>::enable_if(
                               &F::final))>>
-      : public has_final_no_tag_function<F> {
-    enum : bool { value = true };
-  };
+      : public has_final_no_tag_function<F>, std::true_type {};
 
   template <class F = Functor, typename = void>
   struct DeduceFinal : public DeduceFinalNoTag<F> {};
@@ -868,51 +766,17 @@ struct FunctorAnalysis {
   struct DeduceFinal<F, std::enable_if_t<!is_reducer<F>::value,
                                          decltype(has_final_tag_function<
                                                   F>::enable_if(&F::final))>>
-      : public has_final_tag_function<F> {
-    enum : bool { value = true };
-  };
-
-  //----------------------------------------
-
-  template <class F = Functor, typename = void>
-  struct DeduceTeamShmem {
-    enum : bool { value = false };
-
-    static size_t team_shmem_size(F const&, int) { return 0; }
-  };
-
-  template <class F>
-  struct DeduceTeamShmem<F, std::enable_if_t<0 < sizeof(&F::team_shmem_size)>> {
-    enum : bool { value = true };
-
-    static size_t team_shmem_size(F const* const f, int team_size) {
-      return f->team_shmem_size(team_size);
-    }
-  };
-
-  template <class F>
-  struct DeduceTeamShmem<F,
-                         std::enable_if_t<(0 < sizeof(&F::shmem_size)) &&
-                                          !(0 < sizeof(&F::team_shmem_size))>> {
-    enum : bool { value = true };
-
-    static size_t team_shmem_size(F const* const f, int team_size) {
-      return f->shmem_size(team_size);
-    }
-  };
+      : public has_final_tag_function<F>, std::true_type {};
 
   //----------------------------------------
 
  public:
-  inline static size_t team_shmem_size(Functor const& f) {
-    return DeduceTeamShmem<>::team_shmem_size(f);
-  }
-
-  enum { has_join_member_function = DeduceJoin<>::value };
-  enum { has_init_member_function = DeduceInit<>::value };
-  enum { has_final_member_function = DeduceFinal<>::value };
-
-  //----------------------------------------
+  // FIXME_OPENMPTARGET Only OpenMPTarget is really using these three variables,
+  // instead of the corresponding member functions below and it shouldn't really
+  // need it.
+  static constexpr bool has_join_member_function  = DeduceJoin<>::value;
+  static constexpr bool has_init_member_function  = DeduceInit<>::value;
+  static constexpr bool has_final_member_function = DeduceFinal<>::value;
 
   static_assert((Kokkos::is_reducer<Functor>::value &&
                  has_join_member_function) ||
@@ -922,18 +786,6 @@ struct FunctorAnalysis {
   struct Reducer {
    private:
     Functor const m_functor;
-
-    template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
-        noexcept {
-      return m_functor.value_count;
-    }
-
-    template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<!IsArray, int> len() const
-        noexcept {
-      return candidate_is_void ? 0 : 1;
-    }
 
    public:
     using reducer        = Reducer;
