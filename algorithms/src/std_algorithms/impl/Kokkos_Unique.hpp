@@ -157,55 +157,6 @@ IteratorType unique_exespace_impl(const std::string& label,
 //
 // team level
 //
-template <class IteratorType, class BinaryPredicateType>
-struct StdUniqueTeamCountFunctor {
-  using index_type = typename IteratorType::difference_type;
-
-  IteratorType m_first;
-  BinaryPredicateType m_pred;
-
-  KOKKOS_FUNCTION
-  StdUniqueTeamCountFunctor(IteratorType first, BinaryPredicateType pred)
-      : m_first(std::move(first)), m_pred(std::move(pred)) {}
-
-  KOKKOS_FUNCTION
-  void operator()(index_type i, std::size_t& lsum) const {
-    const auto& val_i   = m_first[i];
-    const auto& val_ip1 = m_first[i + 1];
-    if (!m_pred(val_i, val_ip1)) {
-      lsum++;
-    }
-  }
-};
-
-template <class IteratorType, class BinaryPredicateType>
-struct StdUniqueTeamSingleFunctor {
-  using index_type = typename IteratorType::difference_type;
-
-  IteratorType m_first;
-  IteratorType m_last;
-  BinaryPredicateType m_pred;
-  index_type m_numElements;
-
-  KOKKOS_FUNCTION
-  StdUniqueTeamSingleFunctor(IteratorType first, IteratorType last,
-                             BinaryPredicateType pred)
-      : m_first(std::move(first)),
-        m_last(std::move(last)),
-        m_pred(std::move(pred)) {}
-
-  KOKKOS_FUNCTION
-  void operator()() const {
-    IteratorType first  = m_first;
-    IteratorType result = first;
-    while (++first != m_last) {
-      if (!m_pred(*result, *first) && ++result != first) {
-        *result = std::move(*first);
-      }
-    }
-  }
-};
-
 template <class TeamHandleType, class IteratorType, class PredicateType>
 KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
                                               IteratorType first,
@@ -223,24 +174,22 @@ KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
     return last;
   } else {
     // for the execution-space-based impl we used an auxiliary allocation,
-    // but for the team level we cannot do the same, so use this impl:
+    // but for the team level we cannot do the same, so do this serially
+    // for now and later figure out if this can be done in parallel
 
-    // first, we compute the num of unique elements, which we need
-    // when we have to compute the return iterator
-    std::size_t count;
-    ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, num_elements - 1),
-                              // use CTAD
-                              StdUniqueTeamCountFunctor(first, pred), count);
-    teamHandle.team_barrier();
+    std::size_t count = {};
+    if (teamHandle.team_rank() == 0) {
+      IteratorType result = first;
+      while (++first != last) {
+        if (!pred(*result, *first) && ++result != first) {
+          *result = std::move(*first);
+        }
+      }
+      count = Kokkos::Experimental::distance(first, result);
+    }
+    teamHandle.team_broadcast(count, 0);
 
-    // second, use a Kokkos::single to do the unique impl
-    ::Kokkos::single(PerTeam(teamHandle),
-                     // use CTAD
-                     StdUniqueTeamSingleFunctor(first, last, pred));
-    teamHandle.team_barrier();
-
-    // return the correct iterator: we need +1 here because we need to
-    // return iterator to the element past the last element copied
+    // +1 is needed because we want one element past the end
     return first + count + 1;
   }
 }

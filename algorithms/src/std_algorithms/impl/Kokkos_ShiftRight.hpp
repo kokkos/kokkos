@@ -111,11 +111,6 @@ struct StdShiftRightTeamSingleFunctor {
     // - m_first, m_last identify a valid range with m_last > m_first
     // - m_shift is less than m_last - m_first
     // so I can safely use std::size_t here
-    const std::size_t numElementsToMove =
-        ::Kokkos::Experimental::distance(m_first, m_last - m_shift);
-    for (std::size_t i = 0; i < numElementsToMove; ++i) {
-      m_last[-i - 1] = std::move(m_last[-m_shift - i - 1]);
-    }
   }
 
   KOKKOS_FUNCTION
@@ -143,10 +138,15 @@ KOKKOS_FUNCTION IteratorType shift_right_team_impl(
 
   // we cannot use here a new allocation like we do for the
   // execution space impl because for this team impl we are
-  // within a parallel region, so for now we solve as follows:
-  ::Kokkos::single(PerTeam(teamHandle),
-                   // use CTAD
-                   StdShiftRightTeamSingleFunctor(first, last, n));
+  // within a parallel region, so for now we solve serially
+
+  const std::size_t numElementsToMove =
+      ::Kokkos::Experimental::distance(first, last - n);
+  if (teamHandle.team_rank() == 0) {
+    for (std::size_t i = 0; i < numElementsToMove; ++i) {
+      last[-i - 1] = std::move(last[-n - i - 1]);
+    }
+  }
   teamHandle.team_barrier();
 
   return first + n;

@@ -57,32 +57,6 @@ struct StdCopyIfFunctor {
   }
 };
 
-template <class IndexType, class FirstFrom, class FirstDest, class PredType>
-struct StdCopyIfTeamSingleFunctor {
-  FirstFrom m_first_from;
-  FirstDest m_first_dest;
-  PredType m_pred;
-  IndexType m_numElements;
-
-  KOKKOS_FUNCTION
-  StdCopyIfTeamSingleFunctor(FirstFrom first_from, FirstDest first_dest,
-                             PredType pred, IndexType numElements)
-      : m_first_from(std::move(first_from)),
-        m_first_dest(std::move(first_dest)),
-        m_pred(std::move(pred)),
-        m_numElements(numElements) {}
-
-  KOKKOS_FUNCTION void operator()() const {
-    int mycount = 0;
-    for (IndexType i = 0; i < m_numElements; ++i) {
-      const auto& myval = m_first_from[i];
-      if (m_pred(myval)) {
-        m_first_dest[mycount++] = myval;
-      }
-    }
-  }
-};
-
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class PredicateType>
 OutputIterator copy_if_exespace_impl(const std::string& label,
@@ -147,24 +121,24 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
   if (first == last) {
     return d_first;
   } else {
-    // parallel_scan does not yet support TeamThreadRange, so we do this:
-    // first, since we need to return an iterator past the last element copied,
-    // we need to compute how many elements satisfy the predicate;
-    // second, to actually copy the elements, we use Kokkos::single()
+    // parallel_scan does not yet support TeamThreadRange, so we solve
+    // for now serially while we either wait for team parallel_scan
+    // or we find another solution alltogether
 
-    // count elements satisfying the condition
-    const auto numElemCounted =
-        ::Kokkos::Experimental::count_if(teamHandle, first, last, pred);
-    // count_if already calls the team barrier
+    const std::size_t num_elements =
+        Kokkos::Experimental::distance(first, last);
+    std::size_t count = {};
+    if (teamHandle.team_rank() == 0) {
+      for (std::size_t i = 0; i < num_elements; ++i) {
+        const auto& myval = first[i];
+        if (pred(myval)) {
+          d_first[count++] = myval;
+        }
+      }
+    }
+    teamHandle.team_broadcast(count, 0);
 
-    const auto num_elements = Kokkos::Experimental::distance(first, last);
-    ::Kokkos::single(
-        PerTeam(teamHandle),
-        // use CTAD
-        StdCopyIfTeamSingleFunctor(first, d_first, pred, num_elements));
-    teamHandle.team_barrier();
-
-    return d_first + numElemCounted;
+    return d_first + count;
   }
 }
 

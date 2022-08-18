@@ -121,58 +121,6 @@ OutputIterator unique_copy_exespace_impl(const std::string& label,
 // team level
 //
 
-template <class InputIt, class BinaryPredicateType>
-struct StdUniqueCopyTeamCountFunctor {
-  using index_type = typename InputIt::difference_type;
-  InputIt m_first_from;
-  BinaryPredicateType m_pred;
-
-  KOKKOS_FUNCTION
-  StdUniqueCopyTeamCountFunctor(InputIt first_from, BinaryPredicateType pred)
-      : m_first_from(std::move(first_from)), m_pred(std::move(pred)) {}
-
-  KOKKOS_FUNCTION
-  void operator()(index_type i, std::size_t& lsum) const {
-    const auto& val_i   = m_first_from[i];
-    const auto& val_ip1 = m_first_from[i + 1];
-    if (!m_pred(val_i, val_ip1)) {
-      lsum++;
-    }
-  }
-};
-
-template <class InputIt, class OutputIt, class BinaryPredicateType>
-struct StdUniqueCopyTeamSingleFunctor {
-  using index_type = typename InputIt::difference_type;
-  InputIt m_first_from;
-  OutputIt m_first_dest;
-  BinaryPredicateType m_pred;
-  std::size_t m_numElements;
-
-  KOKKOS_FUNCTION
-  StdUniqueCopyTeamSingleFunctor(InputIt first_from, OutputIt first_dest,
-                                 BinaryPredicateType pred,
-                                 std::size_t numElements)
-      : m_first_from(std::move(first_from)),
-        m_first_dest(std::move(first_dest)),
-        m_pred(std::move(pred)),
-        m_numElements(numElements) {}
-
-  KOKKOS_FUNCTION
-  void operator()() const {
-    std::size_t count = 0;
-    for (std::size_t i = 0; i < m_numElements - 1; ++i) {
-      const auto& val_i   = m_first_from[i];
-      const auto& val_ip1 = m_first_from[i + 1];
-      if (!m_pred(val_i, val_ip1)) {
-        m_first_dest[count++] = val_i;
-      }
-    }
-
-    m_first_dest[count++] = m_first_from[m_numElements - 1];
-  }
-};
-
 template <class TeamHandleType, class InputIterator, class OutputIterator,
           class PredicateType>
 KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
@@ -193,27 +141,27 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
   } else {
     // parallel_scan is what we used for the execution space impl,
     // but parallel_scan does not support TeamThreadRange, so for the
-    // team-level impl we do the following:
+    // team-level impl we do this serially for now and later figure out
+    // if this can be done in parallel
 
-    // first, we compute the num of unique elements, which we need to
-    // compute the return iterator
-    std::size_t count;
-    ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, num_elements - 1),
-                              // use CTAD
-                              StdUniqueCopyTeamCountFunctor(first, pred),
-                              count);
-    teamHandle.team_barrier();
+    std::size_t count = 0;
+    if (teamHandle.team_rank() == 0) {
+      for (std::size_t i = 0; i < num_elements - 1; ++i) {
+        const auto& val_i   = first[i];
+        const auto& val_ip1 = first[i + 1];
+        if (!pred(val_i, val_ip1)) {
+          d_first[count++] = val_i;
+        }
+      }
 
-    // second, we copy all unique elements
-    ::Kokkos::single(
-        PerTeam(teamHandle),
-        // use CTAD
-        StdUniqueCopyTeamSingleFunctor(first, d_first, pred, num_elements));
-    teamHandle.team_barrier();
+      // we need to copy the last element always
+      d_first[count++] = first[num_elements - 1];
+    }
+    teamHandle.team_broadcast(count, 0);
 
     // return the correct iterator: we need +1 here because we need to
     // return iterator to the element past the last element copied
-    return d_first + count + 1;
+    return d_first + count;
   }
 }
 
