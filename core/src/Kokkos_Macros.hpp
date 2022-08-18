@@ -579,7 +579,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
     KOKKOS_IMPL_STRIP_PARENS(CODE)   \
   }
 #else
-// FIXE acc_on_device is a non-constexpr function
+// FIXME_OPENACC acc_on_device is a non-constexpr function
 #define KOKKOS_IF_ON_DEVICE(CODE)                     \
   if constexpr (acc_on_device(acc_device_not_host)) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)                    \
