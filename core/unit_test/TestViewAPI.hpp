@@ -1386,9 +1386,7 @@ class TestViewAPI {
       Kokkos::deep_copy(h, d);
     }
 
-#if !defined(KOKKOS_ENABLE_OPENACC)
-    // FIXME_OPENACC: this can be removed when MDRange parallel_for is
-    // implemented.
+#if !defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC MDRange parallel_for not implemented
     // Check Deep Copy of two empty 2D views
     {
       Kokkos::View<double * [3], Kokkos::LayoutRight> d;
