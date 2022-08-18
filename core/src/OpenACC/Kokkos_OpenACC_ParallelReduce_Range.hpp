@@ -63,15 +63,18 @@ struct OpenACCParallelReduceHelper {
 
 }  // namespace Kokkos::Experimental::Impl
 
-template <class Functor, class ReducerType, class... Traits>
+template <class Functor, class ReducerType, class... Traits,
+          class InputValueType>
 class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
-                                   ReducerType, Kokkos::Experimental::OpenACC> {
+                                   ReducerType, Kokkos::Experimental::OpenACC,
+                                   InputValueType> {
   using Policy = RangePolicy<Traits...>;
 
   using Analysis = FunctorAnalysis<
       FunctorPatternInterface::REDUCE, Policy,
       std::conditional_t<std::is_same_v<InvalidType, ReducerType>, Functor,
-                         ReducerType>>;
+                         ReducerType>,
+      InputValueType>;
 
   using Pointer   = typename Analysis::pointer_type;
   using ValueType = typename Analysis::value_type;
