@@ -584,13 +584,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("vectorization",
                                  "KOKKOS_ENABLE_PRAGMA_LOOPCOUNT", "no");
 #endif
-#ifdef KOKKOS_ENABLE_PRAGMA_SIMD
-  declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_SIMD",
-                                 "yes");
-#else
-  declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_SIMD",
-                                 "no");
-#endif
 #ifdef KOKKOS_ENABLE_PRAGMA_UNROLL
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_UNROLL",
                                  "yes");

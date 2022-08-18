@@ -200,12 +200,7 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
   const Kokkos::Experimental::HBWSpace m_space;
 
  protected:
-  ~SharedAllocationRecord()
-#if defined( \
-    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
-      noexcept
-#endif
-      ;
+  ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
