@@ -42,35 +42,14 @@
 //@HEADER
 */
 
-#include <cstdio>
-#include <sstream>
-#include <iostream>
+#ifndef KOKKOS_TEST_OACC_HPP
+#define KOKKOS_TEST_OACC_HPP
 
-#include <Kokkos_Core.hpp>
+#include <gtest/gtest.h>
 
-namespace Test {
-TEST(TEST_CATEGORY, init) { ; }
+#define TEST_CATEGORY openacc
+#define TEST_CATEGORY_NUMBER 8
+#define TEST_CATEGORY_DEATH openacc_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::OpenACC
 
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-
-template <class ExecSpace>
-void test_dispatch() {
-  const int repeat = 100;
-  for (int i = 0; i < repeat; ++i) {
-    for (int j = 0; j < repeat; ++j) {
-      Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, j),
-                           KOKKOS_LAMBDA(int){});
-    }
-  }
-}
-
-TEST(TEST_CATEGORY, dispatch) { test_dispatch<TEST_EXECSPACE>(); }
-#endif
-
-}  // namespace Test
-
-#include <TestCompilerMacros.hpp>
-#ifndef KOKKOS_ENABLE_OPENACC
-//FIXME_OPENACC: not implemented yet.
-#include <TestPolicyConstruction.hpp>
 #endif
