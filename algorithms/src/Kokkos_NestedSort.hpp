@@ -91,7 +91,7 @@ KOKKOS_INLINE_FUNCTION void sort_nested_impl(const TeamMember& t,
                                              const KeyViewType& keyView,
                                              const ValueViewType& valueView,
                                              const Comparator& comp,
-                                             const NestedRange<useTeamLevel>&) {
+                                             const NestedRange<useTeamLevel>) {
   using SizeType  = typename KeyViewType::size_type;
   using KeyType   = typename KeyViewType::non_const_value_type;
   using Range     = NestedRange<useTeamLevel>;
