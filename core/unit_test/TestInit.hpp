@@ -71,6 +71,6 @@ TEST(TEST_CATEGORY, dispatch) { test_dispatch<TEST_EXECSPACE>(); }
 
 #include <TestCompilerMacros.hpp>
 #ifndef KOKKOS_ENABLE_OPENACC
-//FIXME_OPENACC: not implemented yet.
+// FIXME_OPENACC: not implemented yet.
 #include <TestPolicyConstruction.hpp>
 #endif

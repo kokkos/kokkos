@@ -46,7 +46,7 @@
 #include <gtest/gtest.h>
 
 #ifndef KOKKOS_ENABLE_OPENACC
-//FIXME_OPENACC
+// FIXME_OPENACC
 namespace {
 
 enum MyErrorCode {
