@@ -111,8 +111,20 @@ struct FunctorAnalysis {
 
   struct void_tag {};
 
-  using Tag  = typename Policy::work_tag;
-  using WTag = std::conditional_t<std::is_void_v<Tag>, void_tag, Tag>;
+  template <typename P = Policy, typename = std::false_type>
+  struct has_work_tag {
+    using type = void;
+    using wtag = void_tag;
+  };
+
+  template <typename P>
+  struct has_work_tag<P, typename std::is_void<typename P::work_tag>::type> {
+    using type = typename P::work_tag;
+    using wtag = typename P::work_tag;
+  };
+
+  using Tag  = typename has_work_tag<>::type;
+  using WTag = typename has_work_tag<>::wtag;
 
   //----------------------------------------
   // Check for Functor::value_type, which is either a simple type T or T[]
@@ -828,14 +840,9 @@ struct FunctorAnalysis {
       return *dst;
     }
 
-    KOKKOS_INLINE_FUNCTION constexpr int length() const noexcept {
-      return Reducer::template len<candidate_is_array>();
-    }
-
     KOKKOS_INLINE_FUNCTION
     void copy(ValueType* const dst, ValueType const* const src) const noexcept {
-      for (int i = 0; i < Reducer::template len<candidate_is_array>(); ++i)
-        dst[i] = src[i];
+      for (int i = 0; i < value_count(); ++i) dst[i] = src[i];
     }
 
     KOKKOS_INLINE_FUNCTION
