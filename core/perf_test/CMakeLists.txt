@@ -15,30 +15,6 @@ IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
   RETURN()
 ENDIF()
 
-find_package(benchmark QUIET)
-IF(NOT benchmark_FOUND)
-  message(STATUS "No installed benchmark found, fetching from GitHub")
-  include(FetchContent)
-  SET(BENCHMARK_ENABLE_TESTING OFF)
-
-  FetchContent_Declare(
-        googlebenchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG v1.6.2)
-
-  FetchContent_MakeAvailable(
-        googlebenchmark)
-
-  include_directories(${benchmark_SOURCE_DIR}/include)
-
-  # Suppress clang-tidy diagnostics on code that we do not have control over
-  IF(CMAKE_CXX_CLANG_TIDY)
-    SET_TARGET_PROPERTIES(benchmark PROPERTIES CXX_CLANG_TIDY "")
-  ENDIF()
-
-  target_compile_options(benchmark PRIVATE -w)
-  target_compile_options(benchmark_main PRIVATE -w)
-ENDIF()
 
 SET(SOURCES
   PerfTestMain.cpp
@@ -139,8 +115,77 @@ IF(NOT Kokkos_ENABLE_OPENMPTARGET)
   )
 ENDIF()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  PerformanceTest_SampleBenchmark
-  SOURCES BenchmarkMain.cpp Benchmark_Sample.cpp
-  CATEGORIES PERFORMANCE
+
+IF(NOT Kokkos_ENABLE_BENCHMARKS OR KOKKOS_HAS_TRILINOS)
+  RETURN()
+ENDIF()
+
+find_package(benchmark QUIET)
+IF(NOT benchmark_FOUND)
+  message(STATUS "No installed benchmark found, fetching from GitHub")
+  include(FetchContent)
+  SET(BENCHMARK_ENABLE_TESTING OFF)
+
+  FetchContent_Declare(
+        googlebenchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG v1.6.2)
+
+  FetchContent_MakeAvailable(
+        googlebenchmark)
+
+  include_directories(${benchmark_SOURCE_DIR}/include)
+
+  # Suppress clang-tidy diagnostics on code that we do not have control over
+  IF(CMAKE_CXX_CLANG_TIDY)
+    SET_TARGET_PROPERTIES(benchmark PROPERTIES CXX_CLANG_TIDY "")
+  ENDIF()
+
+  target_compile_options(benchmark PRIVATE -w)
+  target_compile_options(benchmark_main PRIVATE -w)
+ENDIF()
+
+
+# reduce KOKKOS_ADD_EXECUTABLE_AND_TEST to pure CMake
+# FIXME: add missing properties, arguments
+# FIXME: create reasonable macros / functions out of this
+SET(BENCHMARK_NAME KokkosCore_PerformanceTest_SampleBenchmark)
+
+ADD_EXECUTABLE(
+  ${BENCHMARK_NAME}
+  BenchmarkMain.cpp
+  Benchmark_Sample.cpp
+)
+
+SET_SOURCE_FILES_PROPERTIES(
+  BenchmarkMain.cpp
+  PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE}
+)
+SET_SOURCE_FILES_PROPERTIES(
+  Benchmark_Sample.cpp
+  PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE}
+)
+
+TARGET_LINK_LIBRARIES(
+  ${BENCHMARK_NAME}
+  PRIVATE benchmark::benchmark Kokkos::kokkos
+)
+
+# Some benchmark-specific arguments to consider:
+# --benchmark_out=<filename>
+# --benchmark_out_format=<json|console|csv>
+# --benchmark_counters_tabular=true
+ADD_TEST(
+  # FIXME: See `KOKKOS_ADD_TEST` for naming:
+  # # Prepend package name to the test name
+  # # These should be the full target name
+  # SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
+  # SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
+  NAME ${BENCHMARK_NAME}
+  COMMAND ${BENCHMARK_NAME} ${TEST_ARGS}
+)
+
+SET_TESTS_PROPERTIES(
+  ${BENCHMARK_NAME}
+  PROPERTIES FAIL_REGULAR_EXPRESSION "  FAILED  "
 )
