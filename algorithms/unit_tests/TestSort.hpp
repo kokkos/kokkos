@@ -49,6 +49,7 @@
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
 #include <unordered_set>
+#include <random>
 
 namespace Test {
 
@@ -541,54 +542,40 @@ struct ThreadSortByKeyFunctor {
   bool sortDescending;
 };
 
-// Randomly generate n arrays of up to k elements each, packed into a single 1D
-// view. Like a row in a StaticCrsGraph, array i begins at offsets(i)
-// (inclusive) and ends at offsets(i+1) (exclusive)
-template <typename KeyType, typename KeyViewType, typename OffsetViewType>
-void randomPackedArrays(unsigned n, unsigned k, KeyViewType& keys,
-                        OffsetViewType& offsets, KeyType minKey,
-                        KeyType maxKey) {
+// Generate the offsets view for a set of n packed arrays, each with uniform
+// random length in [0,k]. Array i will occupy the indices [offsets(i),
+// offsets(i+1)), like a row in a CRS graph. Returns the total length of all the
+// arrays.
+template <typename OffsetViewType>
+size_t randomPackedArrayOffsets(unsigned n, unsigned k,
+                                OffsetViewType& offsets) {
   offsets          = OffsetViewType("Offsets", n + 1);
   auto offsetsHost = Kokkos::create_mirror_view(Kokkos::HostSpace(), offsets);
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> gHost(1931);
-  Kokkos::fill_random(offsetsHost, gHost, k);
-  Kokkos::DefaultHostExecutionSpace().fence();
-  offsetsHost(0) = 0;
-  // Prefix-sum
-  for (unsigned i = 1; i <= n; i++) {
-    offsetsHost(i) += offsetsHost(i - 1);
+  std::mt19937 gen;
+  std::uniform_int_distribution<> distrib(0, k);
+  // This will leave offsetsHost(n) == 0.
+  std::generate(offsetsHost.data(), offsetsHost.data() + n,
+                [&]() { return distrib(gen); });
+  // Exclusive prefix-sum to get offsets
+  size_t accum = 0;
+  for (unsigned i = 0; i <= n; i++) {
+    size_t num     = offsetsHost(i);
+    offsetsHost(i) = accum;
+    accum += num;
   }
   Kokkos::deep_copy(offsets, offsetsHost);
-  unsigned totalLength = offsetsHost(n);
-  keys                 = KeyViewType("Keys", totalLength);
-  Kokkos::Random_XorShift64_Pool<typename KeyViewType::execution_space> g(1931);
-  Kokkos::fill_random(keys, g, minKey, maxKey);
+  return offsetsHost(n);
 }
 
-// Same as above, but also generate values array with same length as keys
-template <typename KeyType, typename KeyViewType, typename ValueType,
-          typename ValueViewType, typename OffsetViewType>
-void randomPackedArrays(unsigned n, unsigned k, KeyViewType& keys,
-                        ValueViewType& values, OffsetViewType& offsets,
-                        KeyType minKey, KeyType maxKey, ValueType minVal,
-                        ValueType maxVal) {
-  offsets          = OffsetViewType("Offsets", n + 1);
-  auto offsetsHost = Kokkos::create_mirror_view(Kokkos::HostSpace(), offsets);
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> gHost(1931);
-  Kokkos::fill_random(offsetsHost, gHost, k);
-  Kokkos::DefaultHostExecutionSpace().fence();
-  offsetsHost(0) = 0;
-  // Prefix-sum
-  for (unsigned i = 1; i <= n; i++) {
-    offsetsHost(i) += offsetsHost(i - 1);
-  }
-  Kokkos::deep_copy(offsets, offsetsHost);
-  unsigned totalLength = offsetsHost(n);
-  keys                 = KeyViewType("Keys", totalLength);
-  values               = ValueViewType("Values", totalLength);
-  Kokkos::Random_XorShift64_Pool<typename KeyViewType::execution_space> g(1931);
-  Kokkos::fill_random(keys, g, minKey, maxKey);
-  Kokkos::fill_random(values, g, minVal, maxVal);
+template <typename ValueViewType>
+ValueViewType uniformRandomViewFill(size_t totalLength,
+                                    typename ValueViewType::value_type minVal,
+                                    typename ValueViewType::value_type maxVal) {
+  ValueViewType vals("vals", totalLength);
+  Kokkos::Random_XorShift64_Pool<typename ValueViewType::execution_space> g(
+      1931);
+  Kokkos::fill_random(vals, g, minVal, maxVal);
+  return vals;
 }
 
 template <class ExecutionSpace, typename KeyType>
@@ -597,10 +584,10 @@ void test_nested_sort_impl(unsigned narray, unsigned n, bool useTeams,
   using KeyViewType    = Kokkos::View<KeyType*, ExecutionSpace>;
   using OffsetViewType = Kokkos::View<unsigned*, ExecutionSpace>;
   using TeamPol        = Kokkos::TeamPolicy<ExecutionSpace>;
-  KeyViewType keys;
   OffsetViewType offsets;
-  randomPackedArrays<KeyType, KeyViewType, OffsetViewType>(
-      narray, n, keys, offsets, minKey, maxKey);
+  size_t totalLength = randomPackedArrayOffsets(narray, n, offsets);
+  KeyViewType keys =
+      uniformRandomViewFill<KeyViewType>(totalLength, minKey, maxKey);
   // note: doing create_mirror because we always want this to be a separate
   // copy, even if keys is already host-accessible. keysHost becomes the correct
   // result to compare against.
@@ -649,12 +636,12 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
   using ValueViewType  = Kokkos::View<ValueType*, ExecutionSpace>;
   using OffsetViewType = Kokkos::View<unsigned*, ExecutionSpace>;
   using TeamPol        = Kokkos::TeamPolicy<ExecutionSpace>;
-  KeyViewType keys;
-  ValueViewType values;
   OffsetViewType offsets;
-  randomPackedArrays<KeyType, KeyViewType, ValueType, ValueViewType,
-                     OffsetViewType>(narray, n, keys, values, offsets, minKey,
-                                     maxKey, minVal, maxVal);
+  size_t totalLength = randomPackedArrayOffsets(narray, n, offsets);
+  KeyViewType keys =
+      uniformRandomViewFill<KeyViewType>(totalLength, minKey, maxKey);
+  ValueViewType values =
+      uniformRandomViewFill<ValueViewType>(totalLength, minVal, maxVal);
   // note: doing create_mirror because we always want this to be a separate
   // copy, even if keys/vals are already host-accessible. keysHost and valsHost
   // becomes the correct result to compare against.
