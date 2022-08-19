@@ -180,12 +180,13 @@ struct ComplexReducerSizeCalculator {
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
     using value_type = typename ReducerType::value_type;
-    using Analysis = Kokkos::Impl::FunctorAnalysis<
+    using Analysis   = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, ReducerType,
         value_type>;
 
     using driver =
-        Kokkos::Impl::ParallelReduce<Functor, Policy, typename Analysis::Reducer, exec_space>;
+        Kokkos::Impl::ParallelReduce<Functor, Policy,
+                                     typename Analysis::Reducer, exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
 };
