@@ -3282,14 +3282,13 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    auto const& label = v.label();  // Save the label
-    v = view_type();  // Best effort to deallocate in case no other view refers
-                      // to the shared allocation
     using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
     alloc_prop arg_prop_copy(arg_prop);
     static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
-        .value = label;
-    v          = view_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+        .value = v.label();
+    v = view_type();  // Best effort to deallocate in case no other view refers
+                      // to the shared allocation
+    v = view_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
   } else if (alloc_prop_input::initialize) {
     if (alloc_prop_input::has_execution_space) {
       using alloc_prop = Impl::ViewCtorProp<
