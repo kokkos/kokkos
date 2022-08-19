@@ -282,8 +282,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
                                                   value_type>(f, n);
-    using closure_type =
-        Impl::ParallelReduce<FunctorType, Policy, ReducerType, Kokkos::Cuda>;
+    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();

@@ -156,7 +156,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                            const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType, Kokkos::Cuda>;
+                             ReducerType>;
     return internal_team_size_max<closure_type>(f);
   }
 
@@ -195,7 +195,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                             const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType, Kokkos::Cuda>;
+                             ReducerType>;
     return internal_team_size_recommended<closure_type>(f);
   }
 
