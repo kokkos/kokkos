@@ -74,7 +74,7 @@ namespace Impl {
 
 template <class Reducer>
 struct OpenMPTargetReducerWrapper {
-  using value_type = int;
+  using value_type = typename Reducer::value_type;
 
   // Using a generic unknown Reducer for the OpenMPTarget backend is not
   // implemented.

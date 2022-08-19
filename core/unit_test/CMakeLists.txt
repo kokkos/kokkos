@@ -476,12 +476,12 @@ if (Kokkos_ENABLE_OPENMP)
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
   )
-  #KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  #  UnitTest_OpenMPGraph
-  #  SOURCES
-  #    UnitTestMainInit.cpp
-  #    openmp/TestOpenMP_Graph.cpp
-  #)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      openmp/TestOpenMP_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_HPX)
