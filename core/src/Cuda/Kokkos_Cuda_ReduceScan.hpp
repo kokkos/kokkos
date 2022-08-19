@@ -444,7 +444,7 @@ __device__ void cuda_intra_block_reduce_scan(
     const typename FunctorType::pointer_type base_data) {
   using pointer_type = typename FunctorType::pointer_type;
 
-  const unsigned value_count = functor.length();
+  const unsigned value_count = functor.value_count();
   const unsigned not_less_power_of_two =
       (1 << (Impl::int_log2(blockDim.y - 1) + 1));
   const unsigned BlockSizeMask = not_less_power_of_two - 1;
@@ -620,7 +620,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       size_type, std::is_pointer<typename FunctorType::reference_type>::value
                      ? 0
                      : sizeof(value_type) / sizeof(size_type)>
-      word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
+      word_count(functor.value_size() / sizeof(size_type));
 
   // Reduce the accumulation for the entire block.
   cuda_intra_block_reduce_scan<false>(functor, pointer_type(shared_data));

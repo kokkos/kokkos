@@ -408,7 +408,7 @@ class ThreadsExec {
     using scalar_type = typename FunctorType::value_type;
 
     const int rev_rank   = m_pool_size - (m_pool_rank + 1);
-    const unsigned count = f.length();
+    const unsigned count = f.value_count();
 
     scalar_type *const work_value = (scalar_type *)reduce_memory();
 

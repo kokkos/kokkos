@@ -842,7 +842,7 @@ struct FunctorAnalysis {
 
     KOKKOS_INLINE_FUNCTION
     void copy(ValueType* const dst, ValueType const* const src) const noexcept {
-      for (int i = 0; i < value_count(); ++i) dst[i] = src[i];
+      for (unsigned int i = 0; i < value_count(); ++i) dst[i] = src[i];
     }
 
     KOKKOS_INLINE_FUNCTION
