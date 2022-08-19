@@ -197,9 +197,12 @@ KOKKOS_FUNCTION auto remove_team_impl(const TeamHandleType& teamHandle,
 //
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-auto remove_copy_impl(const std::string& label, const ExecutionSpace& ex,
-                      InputIteratorType first_from, InputIteratorType last_from,
-                      OutputIteratorType first_dest, const ValueType& value) {
+auto remove_copy_exespace_impl(const std::string& label,
+                               const ExecutionSpace& ex,
+                               InputIteratorType first_from,
+                               InputIteratorType last_from,
+                               OutputIteratorType first_dest,
+                               const ValueType& value) {
   // this is like copy_if except that we need to *ignore* the elements
   // that match the value, so we can solve this as follows:
 
@@ -208,16 +211,32 @@ auto remove_copy_impl(const std::string& label, const ExecutionSpace& ex,
                                          first_dest, predicate_type(value));
 }
 
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class ValueType>
+KOKKOS_FUNCTION auto remove_copy_team_impl(const TeamHandleType& teamHandle,
+                                           InputIteratorType first_from,
+                                           InputIteratorType last_from,
+                                           OutputIteratorType first_dest,
+                                           const ValueType& value) {
+  // this is like copy_if except that we need to *ignore* the elements
+  // that match the value, so we can solve this as follows:
+
+  using predicate_type = StdAlgoNotEqualsValUnaryPredicate<ValueType>;
+  return ::Kokkos::Experimental::copy_if(teamHandle, first_from, last_from,
+                                         first_dest, predicate_type(value));
+}
+
 //
 // remove_copy_if
 //
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class UnaryPredicate>
-auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
-                         InputIteratorType first_from,
-                         InputIteratorType last_from,
-                         OutputIteratorType first_dest,
-                         const UnaryPredicate& pred) {
+auto remove_copy_if_exespace_impl(const std::string& label,
+                                  const ExecutionSpace& ex,
+                                  InputIteratorType first_from,
+                                  InputIteratorType last_from,
+                                  OutputIteratorType first_dest,
+                                  const UnaryPredicate& pred) {
   // this is like copy_if except that we need to *ignore* the elements
   // satisfying the pred, so we can solve this as follows:
 
@@ -225,6 +244,20 @@ auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
   using pred_wrapper_type =
       StdAlgoNegateUnaryPredicateWrapper<value_type, UnaryPredicate>;
   return ::Kokkos::Experimental::copy_if(label, ex, first_from, last_from,
+                                         first_dest, pred_wrapper_type(pred));
+}
+
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class UnaryPredicate>
+KOKKOS_FUNCTION auto remove_copy_if_team_impl(const TeamHandleType& teamHandle,
+                                              InputIteratorType first_from,
+                                              InputIteratorType last_from,
+                                              OutputIteratorType first_dest,
+                                              const UnaryPredicate& pred) {
+  using value_type = typename InputIteratorType::value_type;
+  using pred_wrapper_type =
+      StdAlgoNegateUnaryPredicateWrapper<value_type, UnaryPredicate>;
+  return ::Kokkos::Experimental::copy_if(teamHandle, first_from, last_from,
                                          first_dest, pred_wrapper_type(pred));
 }
 
