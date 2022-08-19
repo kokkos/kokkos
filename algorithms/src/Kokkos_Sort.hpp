@@ -69,7 +69,7 @@
 // The order of includes (firstly oneDPL's, than std's) because of:
 // https://stackoverflow.com/questions/67923287/how-to-resolve-no-member-named-task-in-namespace-tbb-error-when-using-oned/67924408#67924408
 
-#if defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_ONEDPL)
 
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
@@ -646,7 +646,7 @@ sort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
-#if defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
           const Kokkos::View<DataType, Properties...>& view,
