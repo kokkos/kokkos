@@ -45,8 +45,8 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-#ifndef KOKKOS_ENABLE_OPENACC
-// FIXME_OPENACC
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC - temporarily disabled due to
+                               // unimplemented features
 namespace {
 
 enum MyErrorCode {

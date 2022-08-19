@@ -70,6 +70,6 @@ TEST(TEST_CATEGORY, dispatch) { test_dispatch<TEST_EXECSPACE>(); }
 }  // namespace Test
 
 #include <TestCompilerMacros.hpp>
-#ifndef KOKKOS_ENABLE_OPENACC.  // FIXME_OPENACC not implemented
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC not implemented
 #include <TestPolicyConstruction.hpp>
 #endif
