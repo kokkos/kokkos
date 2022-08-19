@@ -442,6 +442,7 @@
 #if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL) ? 1 : 0) +         \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC) ? 1 : 0) +      \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS) ? 1 : 0) +      \
@@ -451,10 +452,12 @@
 #endif
 
 // If default is not specified then chose from enabled execution spaces.
-// Priority: CUDA, HIP, SYCL, OPENMPTARGET, OPENMP, THREADS, HPX, SERIAL
+// Priority: CUDA, HIP, SYCL, OPENACC, OPENMPTARGET, OPENMP, THREADS, HPX,
+// SERIAL
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
@@ -466,6 +469,8 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
+#elif defined(KOKKOS_ENABLE_OPENACC)
+#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_OPENMP)
@@ -536,6 +541,29 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IF_ON_HOST(CODE)         \
   if constexpr (kokkos_omp_on_host()) { \
     KOKKOS_IMPL_STRIP_PARENS(CODE)      \
+  }
+#endif
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENACC
+#ifdef KOKKOS_COMPILER_NVHPC
+#define KOKKOS_IF_ON_DEVICE(CODE)   \
+  if (__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
+  }
+#define KOKKOS_IF_ON_HOST(CODE)      \
+  if (!__builtin_is_device_code()) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)   \
+  }
+#else
+// FIXME_OPENACC acc_on_device is a non-constexpr function
+#define KOKKOS_IF_ON_DEVICE(CODE)                     \
+  if constexpr (acc_on_device(acc_device_not_host)) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)                    \
+  }
+#define KOKKOS_IF_ON_HOST(CODE)                   \
+  if constexpr (acc_on_device(acc_device_host)) { \
+    KOKKOS_IMPL_STRIP_PARENS(CODE)                \
   }
 #endif
 #endif

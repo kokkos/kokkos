@@ -42,47 +42,14 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_OACC_HPP
+#define KOKKOS_TEST_OACC_HPP
+
 #include <gtest/gtest.h>
-#include <cstdlib>
 
-#include <Kokkos_Core.hpp>
+#define TEST_CATEGORY openacc
+#define TEST_CATEGORY_NUMBER 8
+#define TEST_CATEGORY_DEATH openacc_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::OpenACC
 
-#ifdef KOKKOS_ENABLE_CUDA
-#include <TestCuda_Category.hpp>
 #endif
-#ifdef KOKKOS_ENABLE_HIP
-#include <TestHIP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-#include <TestSYCL_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <TestOpenMP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-#include <TestThreads_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-#include <TestHPX_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-#include <TestOpenMPTarget_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENACC
-#include <TestOpenACC_Category.hpp>
-#endif
-#ifndef TEST_EXECSPACE
-#ifdef KOKKOS_ENABLE_SERIAL
-#include <TestSerial_Category.hpp>
-#endif
-#endif
-#include <TestReducers_d.hpp>
-
-int main(int argc, char *argv[]) {
-  Kokkos::initialize(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int result = RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
-}
