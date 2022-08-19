@@ -69,10 +69,8 @@ struct TestFunctorA {
   DistancesViewType m_distancesView;
   int m_apiPick;
 
-  TestFunctorA(const ViewType view,
-	       ValueType oldVal,
-	       const DistancesViewType distancesView,
-               int apiPick)
+  TestFunctorA(const ViewType view, ValueType oldVal,
+               const DistancesViewType distancesView, int apiPick)
       : m_view(view),
         m_threshold(oldVal),
         m_distancesView(distancesView),
@@ -85,21 +83,16 @@ struct TestFunctorA {
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
-      auto it = KE::remove_if(member,
-			      KE::begin(myRowView), KE::end(myRowView),
-			      predicate);
+      auto it = KE::remove_if(member, KE::begin(myRowView), KE::end(myRowView),
+                              predicate);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    }
-    else if (m_apiPick == 1)
-    {
+    } else if (m_apiPick == 1) {
       auto it = KE::remove_if(member, myRowView, predicate);
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
   }
@@ -146,16 +139,15 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   GreaterThanValueFunctor predicate(threshold);
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
-  auto distancesView_h = create_host_space_copy(distancesView);
-  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i)
-  {
+  auto distancesView_h   = create_host_space_copy(distancesView);
+  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
     auto stdIt = std::remove_if(KE::begin(myRow), KE::end(myRow), predicate);
-    const std::size_t stdDistance = KE::distance(KE::begin(myRow), stdIt) ;
-    EXPECT_TRUE( distancesView_h(i) == stdDistance);
+    const std::size_t stdDistance = KE::distance(KE::begin(myRow), stdIt);
+    EXPECT_TRUE(distancesView_h(i) == stdDistance);
 
-    for (std::size_t j = 0; j < distancesView_h(i); ++j){
-      EXPECT_TRUE( dataViewAfterOp_h(i,j) == cloneOfDataViewBeforeOp_h(i, j));
+    for (std::size_t j = 0; j < distancesView_h(i); ++j) {
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) == cloneOfDataViewBeforeOp_h(i, j));
     }
   }
 }

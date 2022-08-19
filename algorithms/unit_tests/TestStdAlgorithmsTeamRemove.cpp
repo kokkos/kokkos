@@ -73,8 +73,7 @@ struct TestFunctorA {
   int m_apiPick;
 
   TestFunctorA(const ViewType view, ValueType oldVal,
-	       const DistancesViewType distancesView,
-               int apiPick)
+               const DistancesViewType distancesView, int apiPick)
       : m_view(view),
         m_targetValue(oldVal),
         m_distancesView(distancesView),
@@ -87,18 +86,15 @@ struct TestFunctorA {
 
     if (m_apiPick == 0) {
       auto it = KE::remove(member, KE::begin(myRowView), KE::end(myRowView),
-			 m_targetValue);
+                           m_targetValue);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
-    }
-    else if (m_apiPick == 1) {
+    } else if (m_apiPick == 1) {
       auto it = KE::remove(member, myRowView, m_targetValue);
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
   }
@@ -128,7 +124,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(45234399);
+  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(
+      45234399);
   Kokkos::fill_random(dataView_dc_h, pool, ValueType(0), ValueType(1177));
 
   // for each row, randomly select columns, fill with targetVal
@@ -136,14 +133,13 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   const std::size_t maxColInd = numCols > 0 ? numCols - 1 : 0;
   UnifDist<int> colCountProducer(maxColInd, 3123377);
   UnifDist<int> colIndicesProducer(maxColInd, 455225);
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i)
-  {
+  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
     const std::size_t currCount = colCountProducer();
     std::vector<std::size_t> colIndForThisRow(currCount);
     for (std::size_t j = 0; j < currCount; ++j) {
       const auto colInd        = colIndicesProducer();
       dataView_dc_h(i, colInd) = targetVal;
-      colIndForThisRow[j] = colInd;
+      colIndForThisRow[j]      = colInd;
     }
 
     // note that we need to count how many elements are equal
@@ -152,8 +148,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     // than what we manually set above
     std::size_t realCount = 0;
     for (std::size_t j = 0; j < dataView_dc_h.extent(1); ++j) {
-      if (dataView_dc_h(i, j) == targetVal){
-	realCount++;
+      if (dataView_dc_h(i, j) == targetVal) {
+        realCount++;
       }
     }
     perRowRealCount[i] = realCount;
@@ -183,17 +179,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // check against std
   // -----------------------------------------------
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
-  auto distancesView_h = create_host_space_copy(distancesView);
-  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i)
-  {
+  auto distancesView_h   = create_host_space_copy(distancesView);
+  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
     auto stdIt = std::remove(KE::begin(myRow), KE::end(myRow), targetVal);
-    const std::size_t stdDistance = KE::distance(KE::begin(myRow), stdIt) ;
-    EXPECT_TRUE( distancesView_h(i) == stdDistance);
-    EXPECT_TRUE( distancesView_h(i) == numCols - perRowRealCount[i]) ;
+    const std::size_t stdDistance = KE::distance(KE::begin(myRow), stdIt);
+    EXPECT_TRUE(distancesView_h(i) == stdDistance);
+    EXPECT_TRUE(distancesView_h(i) == numCols - perRowRealCount[i]);
 
-    for (std::size_t j = 0; j < distancesView_h(i); ++j){
-      EXPECT_TRUE( dataViewAfterOp_h(i,j) == dataView_dc_h(i, j));
+    for (std::size_t j = 0; j < distancesView_h(i); ++j) {
+      EXPECT_TRUE(dataViewAfterOp_h(i, j) == dataView_dc_h(i, j));
     }
   }
 }
