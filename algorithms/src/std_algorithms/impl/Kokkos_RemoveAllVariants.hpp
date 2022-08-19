@@ -76,10 +76,14 @@ struct StdRemoveIfStage2Functor {
   }
 };
 
+//
+// remove if
+//
 template <class ExecutionSpace, class IteratorType, class UnaryPredicateType>
-IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
-                            IteratorType first, IteratorType last,
-                            UnaryPredicateType pred) {
+IteratorType remove_if_exespace_impl(const std::string& label,
+                                     const ExecutionSpace& ex,
+                                     IteratorType first, IteratorType last,
+                                     UnaryPredicateType pred) {
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
 
@@ -139,14 +143,58 @@ IteratorType remove_if_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
-template <class ExecutionSpace, class IteratorType, class ValueType>
-auto remove_impl(const std::string& label, const ExecutionSpace& ex,
-                 IteratorType first, IteratorType last,
-                 const ValueType& value) {
-  using predicate_type = StdAlgoEqualsValUnaryPredicate<ValueType>;
-  return remove_if_impl(label, ex, first, last, predicate_type(value));
+template <class TeamHandleType, class IteratorType, class UnaryPredicateType>
+KOKKOS_FUNCTION IteratorType
+remove_if_team_impl(const TeamHandleType& teamHandle, IteratorType first,
+                    IteratorType last, UnaryPredicateType pred) {
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  if (first == last) {
+    return last;
+  } else {
+    const auto remove_count =
+        ::Kokkos::Experimental::count_if(teamHandle, first, last, pred);
+    const std::size_t num_elements =
+        ::Kokkos::Experimental::distance(first, last);
+
+    if (teamHandle.team_rank() == 0) {
+      if (remove_count > 0) {
+        std::size_t count = 0;
+        for (std::size_t i = 0; i < num_elements; ++i) {
+          if (!pred(first[i])) {
+            first[count++] = std::move(first[i]);
+          }
+        }
+      }
+    }
+    teamHandle.team_barrier();
+    return first + num_elements - remove_count;
+  }
 }
 
+//
+// remove
+//
+template <class ExecutionSpace, class IteratorType, class ValueType>
+auto remove_exespace_impl(const std::string& label, const ExecutionSpace& ex,
+                          IteratorType first, IteratorType last,
+                          const ValueType& value) {
+  using predicate_type = StdAlgoEqualsValUnaryPredicate<ValueType>;
+  return remove_if_exespace_impl(label, ex, first, last, predicate_type(value));
+}
+
+template <class TeamHandleType, class IteratorType, class ValueType>
+KOKKOS_FUNCTION auto remove_team_impl(const TeamHandleType& teamHandle,
+                                      IteratorType first, IteratorType last,
+                                      const ValueType& value) {
+  using predicate_type = StdAlgoEqualsValUnaryPredicate<ValueType>;
+  return remove_if_team_impl(teamHandle, first, last, predicate_type(value));
+}
+
+//
+// remove_copy
+//
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
 auto remove_copy_impl(const std::string& label, const ExecutionSpace& ex,
@@ -160,6 +208,9 @@ auto remove_copy_impl(const std::string& label, const ExecutionSpace& ex,
                                          first_dest, predicate_type(value));
 }
 
+//
+// remove_copy_if
+//
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class UnaryPredicate>
 auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,

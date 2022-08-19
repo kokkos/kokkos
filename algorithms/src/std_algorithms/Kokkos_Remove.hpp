@@ -17,44 +17,79 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REMOVE_HPP
 #define KOKKOS_STD_ALGORITHMS_REMOVE_HPP
 
+#include "./impl/Kokkos_IsTeamHandle.hpp"
 #include "impl/Kokkos_RemoveAllVariants.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
+//
+// overload set accepting execution space
+//
 template <class ExecutionSpace, class Iterator, class ValueType>
-Iterator remove(const ExecutionSpace& ex, Iterator first, Iterator last,
-                const ValueType& value) {
-  return Impl::remove_impl("Kokkos::remove_iterator_api_default", ex, first,
-                           last, value);
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
+remove(const ExecutionSpace& ex, Iterator first, Iterator last,
+       const ValueType& value) {
+  return Impl::remove_exespace_impl("Kokkos::remove_iterator_api_default", ex,
+                                    first, last, value);
 }
 
 template <class ExecutionSpace, class Iterator, class ValueType>
-Iterator remove(const std::string& label, const ExecutionSpace& ex,
-                Iterator first, Iterator last, const ValueType& value) {
-  return Impl::remove_impl(label, ex, first, last, value);
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
+remove(const std::string& label, const ExecutionSpace& ex, Iterator first,
+       Iterator last, const ValueType& value) {
+  return Impl::remove_exespace_impl(label, ex, first, last, value);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          class ValueType>
+          class ValueType,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto remove(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::remove_impl("Kokkos::remove_iterator_api_default", ex,
-                           ::Kokkos::Experimental::begin(view),
-                           ::Kokkos::Experimental::end(view), value);
+  return Impl::remove_exespace_impl("Kokkos::remove_iterator_api_default", ex,
+                                    ::Kokkos::Experimental::begin(view),
+                                    ::Kokkos::Experimental::end(view), value);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          class ValueType>
+          class ValueType,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto remove(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
-  return Impl::remove_impl(label, ex, ::Kokkos::Experimental::begin(view),
-                           ::Kokkos::Experimental::end(view), value);
+  return Impl::remove_exespace_impl(label, ex,
+                                    ::Kokkos::Experimental::begin(view),
+                                    ::Kokkos::Experimental::end(view), value);
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <class TeamHandleType, class Iterator, class ValueType>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, Iterator>
+    remove(const TeamHandleType& teamHandle, Iterator first, Iterator last,
+           const ValueType& value) {
+  return Impl::remove_team_impl(teamHandle, first, last, value);
+}
+
+template <
+    class TeamHandleType, class DataType, class... Properties, class ValueType,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto remove(const TeamHandleType& teamHandle,
+                            const ::Kokkos::View<DataType, Properties...>& view,
+                            const ValueType& value) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  return Impl::remove_team_impl(teamHandle, ::Kokkos::Experimental::begin(view),
+                                ::Kokkos::Experimental::end(view), value);
 }
 
 }  // namespace Experimental
