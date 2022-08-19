@@ -1143,7 +1143,3 @@ void _kokkos_pgi_compiler_bug_workaround() {}
 }  // end namespace Impl
 #endif
 }  // namespace Kokkos
-
-Kokkos::Impl::InitializationSettingsHelper<std::string>::storage_type const
-    Kokkos::Impl::InitializationSettingsHelper<std::string>::unspecified =
-        "some string we don't expect user would ever provide";
