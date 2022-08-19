@@ -1,4 +1,4 @@
-// This file is need in order to get the linker language
+// This file is needed in order to get the linker language
 // for the header only submodule.
 // While we set the language properties in our normal cmake
 // path it does not get set in the Trilinos environment.
