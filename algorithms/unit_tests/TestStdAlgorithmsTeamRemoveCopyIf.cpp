@@ -62,20 +62,18 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class SourceViewType, class DestViewType, class DistancesViewType, class ValueType>
-struct TestFunctorA
-{
+template <class SourceViewType, class DestViewType, class DistancesViewType,
+          class ValueType>
+struct TestFunctorA {
   SourceViewType m_sourceView;
   DestViewType m_destView;
   ValueType m_threshold;
   DistancesViewType m_distancesView;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType sourceView,
-	       const DestViewType destView,
-	       ValueType threshold,
-               const DistancesViewType distancesView,
-	       int apiPick)
+  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
+               ValueType threshold, const DistancesViewType distancesView,
+               int apiPick)
       : m_sourceView(sourceView),
         m_destView(destView),
         m_threshold(threshold),
@@ -83,27 +81,28 @@ struct TestFunctorA
         m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom = Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom =
+        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
     auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
-      auto it = KE::remove_copy_if(member,
-				   KE::cbegin(myRowViewFrom), KE::cend(myRowViewFrom),
-				   KE::begin(myRowViewDest),
-				   predicate);
+      auto it = KE::remove_copy_if(member, KE::cbegin(myRowViewFrom),
+                                   KE::cend(myRowViewFrom),
+                                   KE::begin(myRowViewDest), predicate);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
       });
-    }
-    else if (m_apiPick == 1) {
-      auto it = KE::remove_copy_if(member, myRowViewFrom, myRowViewDest, predicate);
+    } else if (m_apiPick == 1) {
+      auto it =
+          KE::remove_copy_if(member, myRowViewFrom, myRowViewDest, predicate);
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDest), it);
       });
     }
   }
@@ -153,20 +152,20 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
                                                            numTeams, numCols);
   GreaterThanValueFunctor predicate(threshold);
-  for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i)
-  {
-    auto rowFrom = Kokkos::subview(cloneOfSourceViewBeforeOp_h, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
+    auto rowFrom =
+        Kokkos::subview(cloneOfSourceViewBeforeOp_h, i, Kokkos::ALL());
     auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
 
     auto stdIt = std::remove_copy_if(KE::cbegin(rowFrom), KE::cend(rowFrom),
-				     KE::begin(rowDest), predicate);
+                                     KE::begin(rowDest), predicate);
     const std::size_t stdDistance = KE::distance(KE::begin(rowDest), stdIt);
 
     EXPECT_TRUE(distancesView_h(i) == stdDistance);
     for (std::size_t j = 0; j < distancesView_h(i); ++j) {
       EXPECT_TRUE(destViewAfterOp_h(i, j) == stdDestView(i, j));
     }
-   }
+  }
 }
 
 template <class LayoutTag, class ValueType>
