@@ -424,9 +424,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   //----------------------------------------
 
   template <class ViewType>
-  inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
-                        const ReducerType& arg_reducer,
-                        const ViewType& arg_result_view)
+  ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+                 const ReducerType& arg_reducer,
+                 const ViewType& arg_result_view)
       : m_instance(nullptr),
         m_functor(arg_functor),
         m_policy(arg_policy),
@@ -554,10 +554,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   //----------------------------------------
 
   template <class ViewType>
-  inline ParallelReduce(const FunctorType& arg_functor,
-                        const MDRangePolicy& arg_policy,
-                        const ReducerType& arg_reducer,
-                        const ViewType& arg_result_view)
+  ParallelReduce(const FunctorType& arg_functor,
+                 const MDRangePolicy& arg_policy,
+                 const ReducerType& arg_reducer,
+                 const ViewType& arg_result_view)
       : m_instance(nullptr),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),

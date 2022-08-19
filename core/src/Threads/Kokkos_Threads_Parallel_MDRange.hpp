@@ -255,10 +255,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  inline ParallelReduce(const FunctorType &arg_functor,
-                        const MDRangePolicy &arg_policy,
-                        const ReducerType &arg_reducer,
-                        const ViewType &arg_result_view)
+  ParallelReduce(const FunctorType &arg_functor,
+                 const MDRangePolicy &arg_policy,
+                 const ReducerType &arg_reducer,
+                 const ViewType &arg_result_view)
       : m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
