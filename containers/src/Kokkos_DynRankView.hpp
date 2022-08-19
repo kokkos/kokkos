@@ -2445,15 +2445,12 @@ inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a memory space instance!");
 
-  const std::string label = v.label();
-
-  v = drview_type();  // Deallocate first, if the only view to allocation
-
   using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
   alloc_prop arg_prop_copy(arg_prop);
   static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
       .value = v.label();
 
+  v = drview_type();  // Deallocate first, if the only view to allocation
   v = drview_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
