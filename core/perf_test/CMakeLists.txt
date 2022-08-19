@@ -146,46 +146,63 @@ IF(NOT benchmark_FOUND)
 ENDIF()
 
 
-# reduce KOKKOS_ADD_EXECUTABLE_AND_TEST to pure CMake
-# FIXME: add missing properties, arguments
-# FIXME: create reasonable macros / functions out of this
-SET(BENCHMARK_NAME KokkosCore_PerformanceTest_SampleBenchmark)
+FUNCTION(KOKKOS_ADD_BENCHMARK NAME)
+  CMAKE_PARSE_ARGUMENTS(
+    BENCHMARK
+    ""
+    ""
+    "SOURCES"
+    ${ARGN}
+  )
+  IF(DEFINED BENCHMARK_UNPARSED_ARGUMENTS)
+    MESSAGE(
+      WARNING
+      "Unexpected arguments when adding a benchmark: "
+      ${BENCHMARK_UNPARSED_ARGUMENTS}
+    )
+  ENDIF()
 
-ADD_EXECUTABLE(
-  ${BENCHMARK_NAME}
+  SET(BENCHMARK_NAME ${PACKAGE_NAME}_${NAME})
+
+  ADD_EXECUTABLE(
+    ${BENCHMARK_NAME}
+    ${BENCHMARK_SOURCES}
+  )
+  TARGET_LINK_LIBRARIES(
+    ${BENCHMARK_NAME}
+    PRIVATE benchmark::benchmark Kokkos::kokkos
+  )
+  FOREACH(SOURCE_FILE ${BENCHMARK_SOURCES})
+    SET_SOURCE_FILES_PROPERTIES(
+      ${SOURCE_FILE}
+      PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE}
+    )
+  ENDFOREACH()
+
+  STRING(TIMESTAMP BENCHMARK_TIME "%Y-%m-%d_T%H-%M-%S" UTC)
+  SET(
+    BENCHMARK_ARGS
+    --benchmark_counters_tabular=true
+    --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json
+  )
+
+  ADD_TEST(
+    NAME ${BENCHMARK_NAME}
+    COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS}
+  )
+  SET_TESTS_PROPERTIES(
+    ${BENCHMARK_NAME}
+    PROPERTIES FAIL_REGULAR_EXPRESSION "  FAILED  "
+  )
+ENDFUNCTION()
+
+SET(
+  BENCHMARK_SOURCES
   BenchmarkMain.cpp
   Benchmark_Sample.cpp
 )
 
-SET_SOURCE_FILES_PROPERTIES(
-  BenchmarkMain.cpp
-  PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE}
-)
-SET_SOURCE_FILES_PROPERTIES(
-  Benchmark_Sample.cpp
-  PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE}
-)
-
-TARGET_LINK_LIBRARIES(
-  ${BENCHMARK_NAME}
-  PRIVATE benchmark::benchmark Kokkos::kokkos
-)
-
-# Some benchmark-specific arguments to consider:
-# --benchmark_out=<filename>
-# --benchmark_out_format=<json|console|csv>
-# --benchmark_counters_tabular=true
-ADD_TEST(
-  # FIXME: See `KOKKOS_ADD_TEST` for naming:
-  # # Prepend package name to the test name
-  # # These should be the full target name
-  # SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
-  # SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
-  NAME ${BENCHMARK_NAME}
-  COMMAND ${BENCHMARK_NAME} ${TEST_ARGS}
-)
-
-SET_TESTS_PROPERTIES(
-  ${BENCHMARK_NAME}
-  PROPERTIES FAIL_REGULAR_EXPRESSION "  FAILED  "
+KOKKOS_ADD_BENCHMARK(
+  PerformanceTest_SampleBenchmark
+  SOURCES ${BENCHMARK_SOURCES}
 )
