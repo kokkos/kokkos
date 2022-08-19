@@ -58,7 +58,7 @@ void report_results(benchmark::State& state, double time) {
   const auto size      = N8 * 8 / 1024 / 1024;
   state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
                                             benchmark::Counter::OneK::kIs1024);
-  state.counters["GB/s"] =
+  state.counters["FOM: GB/s"] =
       benchmark::Counter(2 * size / 1024 / time, benchmark::Counter::kDefaults,
                          benchmark::Counter::OneK::kIs1024);
 }
