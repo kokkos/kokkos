@@ -91,7 +91,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
+  ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 

@@ -418,7 +418,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #endif
   }
 
-  inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
+  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
   // TODO DZP: based on a conversation with Christian, we're using 256 as a
   // heuristic here. We need something better once we can query these kinds of

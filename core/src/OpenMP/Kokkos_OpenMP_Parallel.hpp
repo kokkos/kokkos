@@ -171,7 +171,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 #endif
   }
 
-  inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
+  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_instance(nullptr), m_functor(arg_functor), m_policy(arg_policy) {
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
@@ -424,7 +424,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   //----------------------------------------
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& arg_reducer,
                  const ViewType& arg_result_view)
       : m_instance(nullptr),

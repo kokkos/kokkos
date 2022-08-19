@@ -200,7 +200,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   }  // end execute
 
   //  inline
-  ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
+  ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_rp(arg_policy) {}
 };
 
