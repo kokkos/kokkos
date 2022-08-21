@@ -48,6 +48,9 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
 #endif
 
+#include <Kokkos_Macros.hpp>  // FIXME doesn't actually need it if it wasn't
+                              // for the header self-containment test
+
 #include <type_traits>
 
 // NOTE This header implements the detection idiom from Version 2 of the C++
