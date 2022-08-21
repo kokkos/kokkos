@@ -91,10 +91,18 @@ IF(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_UNSUPPORTED_
   SET(KOKKOS_SHOW_HIP_ARCHS ON)
 ENDIF()
 
-KOKKOS_ARCH_OPTION(VEGA900         GPU  "AMD GPU MI25 GFX900"      "KOKKOS_SHOW_HIP_ARCHS")
-KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906" "KOKKOS_SHOW_HIP_ARCHS")
-KOKKOS_ARCH_OPTION(VEGA908         GPU  "AMD GPU MI100 GFX908"     "KOKKOS_SHOW_HIP_ARCHS")
-KOKKOS_ARCH_OPTION(VEGA90A         GPU  "AMD GPU MI200 GFX90A"     "KOKKOS_SHOW_HIP_ARCHS")
+# AMD archs ordered in decreasing priority of autodetection
+LIST(APPEND SUPPORTED_AMD_GPUS       MI200    MI100    MI50/60 MI25)
+LIST(APPEND SUPPORTED_AMD_ARCHS      VEGA90A  VEGA908  VEGA906 VEGA900)
+LIST(APPEND CORRESPONDING_AMD_FLAGS  gfx90a   gfx908   gfx906  gfx900)
+
+#FIXME CAN BE REPLACED WITH LIST_ZIP IN CMAKE 3.17
+FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+  LIST(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
+  LIST(GET SUPPORTED_AMD_GPUS ${LIST_INDEX} GPU)
+  LIST(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
+  KOKKOS_ARCH_OPTION(${ARCH}         GPU  "AMD GPU ${GPU} ${FLAG}"      "KOKKOS_SHOW_HIP_ARCHS")
+ENDFOREACH()
 
 IF(Kokkos_ENABLE_SYCL OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_UNSUPPORTED_ARCHS)
   SET(KOKKOS_SHOW_SYCL_ARCHS ON)
@@ -566,26 +574,17 @@ ENDFUNCTION()
 
 #These will define KOKKOS_AMDGPU_ARCH_FLAG
 #to the corresponding flag name if ON
-CHECK_AMDGPU_ARCH(VEGA900 gfx900) # Radeon Instinct MI25
-CHECK_AMDGPU_ARCH(VEGA906 gfx906) # Radeon Instinct MI50 and MI60
-CHECK_AMDGPU_ARCH(VEGA908 gfx908) # Radeon Instinct MI100
-CHECK_AMDGPU_ARCH(VEGA90A gfx90a) # Radeon Instinct MI200
+FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+  LIST(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
+  LIST(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
+  CHECK_AMDGPU_ARCH(${ARCH} ${FLAG})
+ENDFOREACH()
 
-IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
-    FIND_PROGRAM(ROCM_ENUMERATOR rocm_agent_enumerator)
-    EXECUTE_PROCESS(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
-    STRING(LENGTH "${GPU_ARCHS}" len_str)
-    # enumerator always output gfx000 as the first line
-    IF(${len_str} LESS 8)
-      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                         "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
-    ENDIF()
-  ELSE()
-    MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                       "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
-  ENDIF()
-ENDIF()
+MACRO(SET_AND_CHECK_AMD_ARCH ARCH FLAG)
+  KOKKOS_SET_OPTION(ARCH_${ARCH} ON)
+  CHECK_AMDGPU_ARCH(${ARCH} ${FLAG})
+  LIST(APPEND KOKKOS_ENABLED_ARCH_LIST ${ARCH})
+ENDMACRO()
 
 MACRO(CHECK_MULTIPLE_INTEL_ARCH)
   IF(KOKKOS_ARCH_INTEL_GPU)
@@ -805,10 +804,52 @@ IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
   SET(KOKKOS_ARCH_AMPERE ON)
 ENDIF()
 
-#Regardless of version, make sure we define the general architecture name
-IF (KOKKOS_ARCH_VEGA900 OR KOKKOS_ARCH_VEGA906 OR KOKKOS_ARCH_VEGA908 OR KOKKOS_ARCH_VEGA90A)
-  SET(KOKKOS_ARCH_VEGA ON)
+#HIP detection of gpu arch
+IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
+  FIND_PROGRAM(ROCM_ENUMERATOR rocm_agent_enumerator)
+  IF(NOT ROCM_ENUMERATOR)
+    MESSAGE(FATAL_ERROR "Autodetection of AMD GPU architecture not possible as "
+      "rocm_agent_enumerator could not be found. "
+      "Please specify an arch manually via -DKokkos_ARCH_{..}=ON")
+  ELSE()
+    EXECUTE_PROCESS(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
+    STRING(LENGTH "${GPU_ARCHS}" len_str)
+    # enumerator always output gfx000 as the first line
+    IF(${len_str} LESS 8)
+      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
+                         "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+    # check for known gpu archs, otherwise error out
+    ELSE()
+      SET(AMD_ARCH_DETECTED "")
+      FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+        LIST(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
+        LIST(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
+        STRING(REGEX MATCH "(${FLAG})" DETECTED_GPU_ARCH ${GPU_ARCHS})
+        IF("${DETECTED_GPU_ARCH}" STREQUAL "${FLAG}")
+          SET_AND_CHECK_AMD_ARCH(${ARCH} ${FLAG})
+          SET(AMD_ARCH_DETECTED ${ARCH})
+          BREAK()
+        ENDIF()
+      ENDFOREACH()
+      IF("${AMD_ARCH_DETECTED}" STREQUAL "")
+        MESSAGE(FATAL_ERROR "HIP enabled but no automatically detected AMD GPU architecture "
+         "is supported. "
+         "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+      ENDIF()
+    ENDIF()
+  ENDIF()
 ENDIF()
+
+#Regardless of version, make sure we define the general architecture name
+FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+  IF (KOKKOS_ARCH_${ARCH})
+    STRING(REGEX MATCH "(VEGA)" IS_VEGA ${ARCH})
+    IF(IS_VEGA)
+      SET(KOKKOS_ARCH_VEGA ON)
+      BREAK()
+    ENDIF()
+  ENDIF()
+ENDFOREACH()
 
 #CMake verbose is kind of pointless
 #Let's just always print things
