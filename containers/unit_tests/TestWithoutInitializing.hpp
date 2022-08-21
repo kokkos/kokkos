@@ -61,9 +61,12 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
+        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
         Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
                         6, 7, 8);
+        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -89,7 +92,9 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 8, 7, 6, 5);
+        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 7, 6, 5);
+        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -119,6 +124,7 @@ TEST(TEST_CATEGORY, resize_exec_space_dualview) {
         Kokkos::resize(
             Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
             bla, 5, 6, 7, 8);
+        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
       },
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("Kokkos::resize(View)") !=
@@ -159,7 +165,10 @@ TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
   view_type v(Kokkos::view_alloc(TEST_EXECSPACE{}, "bla"), 8);
 
   auto success = validate_absence(
-      [&]() { Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), v, 8); },
+      [&]() {
+        Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), v, 8);
+        EXPECT_EQ(v.template view<TEST_EXECSPACE>().label(), "bla");
+      },
       [&](BeginFenceEvent event) {
         if ((event.descriptor().find("Debug Only Check for Execution Error") !=
              std::string::npos) ||
@@ -179,9 +188,12 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_dynrankview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 5, 6, 7, 9);
+        EXPECT_EQ(bla.label(), "bla");
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        EXPECT_EQ(bla.label(), "bla");
         Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
                         6, 7, 8);
+        EXPECT_EQ(bla.label(), "bla");
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -208,6 +220,7 @@ TEST(TEST_CATEGORY, resize_exec_space_dynrankview) {
         Kokkos::resize(
             Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
             bla, 5, 6, 7, 8);
+        EXPECT_EQ(bla.label(), "bla");
       },
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("Kokkos::resize(View)") !=
@@ -260,6 +273,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
         Kokkos::realloc(
             Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
             inner_view, 10);
+        EXPECT_EQ(inner_view.label(), "bla");
         outer_view2 = inner_view;
       },
       [&](BeginFenceEvent event) {
@@ -283,9 +297,12 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(Kokkos::WithoutInitializing, bla, 4, 5, 6, 8);
+        EXPECT_EQ(bla.subview().label(), "bla");
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 8, 8, 8, 8);
+        EXPECT_EQ(bla.subview().label(), "bla");
         Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), bla, 5,
                         6, 7, 8);
+        EXPECT_EQ(bla.subview().label(), "bla");
       },
       [&](BeginParallelForEvent event) {
         if (event.descriptor().find("initialization") != std::string::npos)
@@ -312,7 +329,9 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_scatterview) {
   auto success = validate_absence(
       [&]() {
         Kokkos::resize(bla, 7, 6, 5, 4);
+        EXPECT_EQ(bla.subview().label(), "bla");
         Kokkos::realloc(Kokkos::WithoutInitializing, bla, 7, 6, 5, 4);
+        EXPECT_EQ(bla.subview().label(), "bla");
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -343,6 +362,7 @@ TEST(TEST_CATEGORY, resize_exec_space_scatterview) {
         Kokkos::resize(
             Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
             bla, 5, 6, 7, 8);
+        EXPECT_EQ(bla.subview().label(), "bla");
       },
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("Kokkos::resize(View)") !=
@@ -396,8 +416,10 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
         Kokkos::realloc(
             Kokkos::view_alloc(Kokkos::WithoutInitializing, TEST_EXECSPACE{}),
             inner_view, 10);
+        EXPECT_EQ(inner_view.subview().label(), "bla");
         outer_view2 = inner_view;
         Kokkos::realloc(Kokkos::view_alloc(TEST_EXECSPACE{}), inner_view, 10);
+        EXPECT_EQ(inner_view.subview().label(), "bla");
       },
       [&](BeginFenceEvent event) {
         if ((event.descriptor().find("Debug Only Check for Execution Error") !=
