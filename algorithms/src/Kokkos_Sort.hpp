@@ -53,6 +53,10 @@
 
 #include <algorithm>
 
+#if defined(KOKKOS_ENABLE_SERIAL)
+#include "std_algorithms/Kokkos_BeginEnd.hpp"
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
@@ -615,6 +619,17 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
+
+#if defined(KOKKOS_ENABLE_SERIAL)
+template <class DataType, class... Properties>
+void sort(const Serial& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  space.fence("Kokkos::sort: Fence before sorting on the host");
+  auto first = Experimental::begin(view);
+  auto last  = Experimental::end(view);
+  std::sort(first, last);
+}
+#endif
 
 template <class ViewType>
 void sort(ViewType const& view) {
