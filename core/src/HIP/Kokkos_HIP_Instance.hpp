@@ -96,10 +96,9 @@ class HIPInternal {
   std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   unsigned m_maxWavesPerCU            = 0;
   unsigned m_maxSharedWords           = 0;
-  int m_regsPerSM;
-  int m_shmemPerSM       = 0;
-  int m_maxShmemPerBlock = 0;
-  int m_maxThreadsPerSM  = 0;
+  int m_shmemPerSM                    = 0;
+  int m_maxShmemPerBlock              = 0;
+  int m_maxThreadsPerSM               = 0;
 
   // array of DriverTypes to be allocated in host-pinned memory for async
   // kernel launches
