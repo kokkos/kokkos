@@ -125,17 +125,21 @@ IF (KOKKOS_HAS_TRILINOS)
 ENDIF()
 
 find_package(benchmark QUIET)
-IF(NOT benchmark_FOUND)
+IF(benchmark_FOUND)
+  MESSAGE(STATUS "Using google benchmark found in ${benchmark_DIR}")
+ELSE()
   message(STATUS "No installed google benchmark found, fetching from GitHub")
   include(FetchContent)
   SET(BENCHMARK_ENABLE_TESTING OFF)
 
+  list(APPEND CMAKE_MESSAGE_INDENT "    ")
   FetchContent_Declare(
     googlebenchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.6.2
+    URL https://github.com/google/benchmark/archive/refs/tags/v1.6.2.tar.gz
+    URL_HASH MD5=14d14849e075af116143a161bc3b927b
   )
   FetchContent_MakeAvailable(googlebenchmark)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
 
   include_directories(${benchmark_SOURCE_DIR}/include)
 
