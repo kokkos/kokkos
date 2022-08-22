@@ -154,14 +154,15 @@ template <class KernelType,
           class Tag =
               typename PatternTagFromImplSpecialization<KernelType>::type>
 struct get_graph_node_kernel_type
-    : identity<GraphNodeKernelImpl<Kokkos::Cuda, typename KernelType::Policy,
-                                   typename KernelType::functor_type, Tag>> {};
+    : type_identity<
+          GraphNodeKernelImpl<Kokkos::Cuda, typename KernelType::Policy,
+                              typename KernelType::functor_type, Tag>> {};
 template <class KernelType>
 struct get_graph_node_kernel_type<KernelType, Kokkos::ParallelReduceTag>
-    : identity<GraphNodeKernelImpl<Kokkos::Cuda, typename KernelType::Policy,
-                                   typename KernelType::functor_type,
-                                   Kokkos::ParallelReduceTag,
-                                   typename KernelType::reducer_type>> {};
+    : type_identity<GraphNodeKernelImpl<
+          Kokkos::Cuda, typename KernelType::Policy,
+          typename KernelType::functor_type, Kokkos::ParallelReduceTag,
+          typename KernelType::reducer_type>> {};
 
 //==============================================================================
 // <editor-fold desc="get_cuda_graph_*() helper functions"> {{{1

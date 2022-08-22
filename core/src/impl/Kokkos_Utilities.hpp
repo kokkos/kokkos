@@ -57,19 +57,24 @@
 namespace Kokkos {
 namespace Impl {
 
-template <typename T>
-struct identity {
-  using type = T;
-};
-
-template <typename T>
-using identity_t = typename identity<T>::type;
-
 template <typename... Is>
 struct always_true : std::true_type {};
 
 //==============================================================================
-// <editor-fold desc="remove_cvref_t"> {{{1
+
+#if defined(__cpp_lib_type_identity)
+// since C++20
+using std::type_identity;
+using std::type_identity_t;
+#else
+template <typename T>
+struct type_identity {
+  using type = T;
+};
+
+template <typename T>
+using type_identity_t = typename type_identity<T>::type;
+#endif
 
 #if defined(__cpp_lib_remove_cvref)
 // since C++20
@@ -84,9 +89,6 @@ struct remove_cvref {
 template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;
 #endif
-
-// </editor-fold> end remove_cvref_t }}}1
-//==============================================================================
 
 //==============================================================================
 // <editor-fold desc="is_specialization_of"> {{{1
@@ -168,7 +170,7 @@ struct _type_list_remove_first_impl<Entry, type_list<Entry, Ts...>,
 
 template <class Entry, class... OutTs>
 struct _type_list_remove_first_impl<Entry, type_list<>, type_list<OutTs...>>
-    : identity<type_list<OutTs...>> {};
+    : type_identity<type_list<OutTs...>> {};
 
 template <class Entry, class List>
 struct type_list_remove_first
