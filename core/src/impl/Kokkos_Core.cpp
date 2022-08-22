@@ -130,14 +130,14 @@ void combine(Kokkos::InitializationSettings& out,
 void combine(Kokkos::InitializationSettings& out,
              Kokkos::Tools::InitArguments const& in) {
   using Kokkos::Tools::InitArguments;
-  if (in.help != InitArguments::PossiblyUnsetOption::unset) {
-    out.set_tools_help(in.help == InitArguments::PossiblyUnsetOption::on);
+  if (in.help.has_value()) {
+    out.set_tools_help(in.help.value());
   }
-  if (in.lib != InitArguments::unset_string_option) {
-    out.set_tools_libs(in.lib);
+  if (in.lib.has_value()) {
+    out.set_tools_libs(in.lib.value());
   }
-  if (in.args != InitArguments::unset_string_option) {
-    out.set_tools_args(in.args);
+  if (in.args.has_value()) {
+    out.set_tools_args(in.args.value());
   }
 }
 
@@ -145,8 +145,7 @@ void combine(Kokkos::Tools::InitArguments& out,
              Kokkos::InitializationSettings const& in) {
   using Kokkos::Tools::InitArguments;
   if (in.has_tools_help()) {
-    out.help = in.get_tools_help() ? InitArguments::PossiblyUnsetOption::on
-                                   : InitArguments::PossiblyUnsetOption::off;
+    out.help = in.get_tools_help();
   }
   if (in.has_tools_libs()) {
     out.lib = in.get_tools_libs();
@@ -476,7 +475,7 @@ void initialize_profiling(const Kokkos::Tools::InitArguments& args) {
   } else if (initialization_status.result ==
              Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
                  success) {
-    Kokkos::Tools::parseArgs(args.args);
+    Kokkos::Tools::parseArgs(args.args.value_or(""));
     for (const auto& category_value : metadata_map) {
       for (const auto& key_value : category_value.second) {
         Kokkos::Tools::declareMetadata(key_value.first, key_value.second);
@@ -950,9 +949,7 @@ void Kokkos::Impl::parse_command_line_arguments(
     print_help_message();
   }
 
-  if ((tools_init_arguments.args ==
-       Kokkos::Tools::InitArguments::unset_string_option) &&
-      argc > 0) {
+  if (!tools_init_arguments.args.has_value() && argc > 0) {
     settings.set_tools_args(argv[0]);
   }
 }
