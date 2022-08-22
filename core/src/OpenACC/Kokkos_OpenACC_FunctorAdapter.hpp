@@ -42,49 +42,31 @@
 //@HEADER
 */
 
-#include <Kokkos_DetectionIdiom.hpp>
+#ifndef KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
+#define KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
 
-void test_nonesuch() {
-  using Kokkos::nonesuch;
-  static_assert(!std::is_constructible<nonesuch>::value);
-  static_assert(!std::is_destructible<nonesuch>::value);
-  static_assert(!std::is_copy_constructible<nonesuch>::value);
-  static_assert(!std::is_move_constructible<nonesuch>::value);
-  static_assert(!std::is_aggregate<nonesuch>::value);
-}
+#include <type_traits>
 
-namespace Example {
-// Example from https://en.cppreference.com/w/cpp/experimental/is_detected
-template <class T>
-using copy_assign_t = decltype(std::declval<T&>() = std::declval<const T&>());
+namespace Kokkos::Experimental::Impl {
 
-struct Meow {};
-struct Purr {
-  void operator=(const Purr&) = delete;
+template <class Functor, class Policy>
+class FunctorAdapter {
+  Functor m_functor;
+  using WorkTag = typename Policy::work_tag;
+
+ public:
+  FunctorAdapter(Functor const &functor) : m_functor(functor) {}
+
+  template <class... Args>
+  KOKKOS_FUNCTION void operator()(Args &&... args) const {
+    if constexpr (std::is_void_v<WorkTag>) {
+      m_functor(static_cast<Args &&>(args)...);
+    } else {
+      m_functor(WorkTag(), static_cast<Args &&>(args)...);
+    }
+  }
 };
 
-static_assert(Kokkos::is_detected<copy_assign_t, Meow>::value,
-              "Meow should be copy assignable!");
-static_assert(!Kokkos::is_detected<copy_assign_t, Purr>::value,
-              "Purr should not be copy assignable!");
-static_assert(Kokkos::is_detected_exact<Meow&, copy_assign_t, Meow>::value,
-              "Copy assignment of Meow should return Meow&!");
+}  // namespace Kokkos::Experimental::Impl
 
-template <class T>
-using diff_t = typename T::difference_type;
-
-template <class Ptr>
-using difference_type = Kokkos::detected_or_t<std::ptrdiff_t, diff_t, Ptr>;
-
-struct Woof {
-  using difference_type = int;
-};
-struct Bark {};
-
-static_assert(std::is_same<difference_type<Woof>, int>::value,
-              "Woof's difference_type should be int!");
-static_assert(std::is_same<difference_type<Bark>, std::ptrdiff_t>::value,
-              "Bark's difference_type should be ptrdiff_t!");
-}  // namespace Example
-
-int main() {}
+#endif

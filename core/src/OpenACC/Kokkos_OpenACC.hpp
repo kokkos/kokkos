@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 
 #ifndef KOKKOS_OPENACC_HPP
@@ -62,6 +58,7 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <OpenACC/Kokkos_OpenACC_Traits.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <openacc.h>
 
@@ -75,7 +72,7 @@ class OpenACCInternal;
 namespace Kokkos::Experimental {
 
 class OpenACC {
-  Impl::OpenACCInternal* m_space_instance = nullptr;
+  Kokkos::Impl::HostSharedPtr<Impl::OpenACCInternal> m_space_instance;
 
  public:
   using execution_space = OpenACC;
@@ -88,6 +85,8 @@ class OpenACC {
   using scratch_memory_space = ScratchMemorySpace<OpenACC>;
 
   OpenACC();
+
+  explicit OpenACC(int async_arg);
 
   static void impl_initialize(InitializationSettings const& settings);
   static void impl_finalize();
@@ -103,6 +102,12 @@ class OpenACC {
   static int concurrency() { return 256000; }  // FIXME_OPENACC
   static bool in_parallel() { return acc_on_device(acc_device_not_host); }
   uint32_t impl_instance_id() const noexcept;
+  Impl::OpenACCInternal* impl_internal_space_instance() const {
+    return m_space_instance.get();
+  }
+
+  int acc_async_queue() const;
+  int acc_device_number() const;
 };
 
 }  // namespace Kokkos::Experimental
@@ -112,14 +117,8 @@ struct Kokkos::Tools::Experimental::DeviceTypeTraits<
     ::Kokkos::Experimental::OpenACC> {
   static constexpr DeviceType id =
       ::Kokkos::Profiling::Experimental::DeviceType::OpenACC;
-  // FIXME_OPENACC: Need to return the device id from the execution space
-  // instance. In fact, acc_get_device_num() will return the same value as the
-  // device id from the execution space instance except for the host fallback
-  // case, where the device id may need to be updated with the value of
-  // acc_get_device_num().
-  static int device_id(const Kokkos::Experimental::OpenACC&) {
-    using Kokkos::Experimental::Impl::OpenACC_Traits;
-    return acc_get_device_num(OpenACC_Traits::dev_type);
+  static int device_id(const Kokkos::Experimental::OpenACC& accInstance) {
+    return accInstance.acc_device_number();
   }
 };
 

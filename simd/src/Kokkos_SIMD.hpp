@@ -111,6 +111,13 @@ struct ForSpace<Kokkos::Experimental::OpenMPTarget> {
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENACC
+template <>
+struct ForSpace<Kokkos::Experimental::OpenACC> {
+  using type = scalar;
+};
+#endif
+
 #ifdef KOKKOS_ENABLE_HIP
 template <>
 struct ForSpace<Kokkos::Experimental::HIP> {

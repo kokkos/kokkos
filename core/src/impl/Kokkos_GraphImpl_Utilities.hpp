@@ -85,10 +85,9 @@ struct is_compatible_type_erasure<
     std::enable_if_t<!std::is_same<TSrc, TDst>::value ||
                      !std::is_same<USrc, UDst>::value ||
                      !std::is_same<VSrc, VDst>::value>>
-    : std::integral_constant<
-          bool, is_compatible_type_erasure<TSrc, TDst>::value &&
-                    is_compatible_type_erasure<USrc, UDst>::value &&
-                    is_compatible_type_erasure<VSrc, VDst>::value> {};
+    : std::bool_constant<is_compatible_type_erasure<TSrc, TDst>::value &&
+                         is_compatible_type_erasure<USrc, UDst>::value &&
+                         is_compatible_type_erasure<VSrc, VDst>::value> {};
 
 // </editor-fold> end is_compatible_type_erasure }}}1
 //==============================================================================

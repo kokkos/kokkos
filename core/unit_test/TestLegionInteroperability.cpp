@@ -44,32 +44,12 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 1800)
-
-namespace {
-
-// error: expression must have a constant value
-//   std::enable_if_t<!has_deprecated_cuda_impl_initialize_v<T>>
-constexpr bool
-test_compiler_upgrade_needed_for_detection_idiom_and_variable_template() {
-  return true;
-}
-static_assert(
-    test_compiler_upgrade_needed_for_detection_idiom_and_variable_template(),
-    "Intel C++ compiler is awesome");
-
-}  // namespace
-
-#else
-
 // The purpose of this compile-only test is twofold:
 // 1. mimic Legion's use of Kokkos implementation details for initializing the
 //    exectution environment
 // 2. demonstrate how to leverage SFINAE to support Kokkos version through the
 //    ExecutionSpace::impl_initialize breaking change before release 3.7
 namespace {
-#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
-
 #ifdef KOKKOS_ENABLE_CUDA
 template <class T>
 using deprecated_cuda_impl_initialize_t =
@@ -96,7 +76,7 @@ legion_initialize_kokkos_cuda() {
   T::impl_initialize(settings);
 }
 
-STATIC_ASSERT(std::is_void<
+static_assert(std::is_void<
               decltype(legion_initialize_kokkos_cuda<Kokkos::Cuda>())>::value);
 #endif
 
@@ -124,7 +104,7 @@ legion_initialize_kokkos_openmp() {
   T::impl_initialize(settings);
 }
 
-STATIC_ASSERT(std::is_void<decltype(
+static_assert(std::is_void<decltype(
                   legion_initialize_kokkos_openmp<Kokkos::OpenMP>())>::value);
 
 #endif
@@ -150,10 +130,8 @@ legion_initialize_kokkos_serial() {
   T::impl_initialize(settings);
 }
 
-STATIC_ASSERT(std::is_void<decltype(
+static_assert(std::is_void<decltype(
                   legion_initialize_kokkos_serial<Kokkos::Serial>())>::value);
 #endif
 
 }  // namespace
-
-#endif

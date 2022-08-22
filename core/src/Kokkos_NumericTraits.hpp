@@ -130,7 +130,7 @@ template <> struct norm_min_helper<long double> { static constexpr long double v
 template <class> struct denorm_min_helper {};
 //                               Workaround for GCC <9.2, Clang <9, Intel
 //                               vvvvvvvvvvvvvvvvvvvvvvvvv
-#if defined(KOKKOS_ENABLE_CXX17) && defined (FLT_TRUE_MIN) || defined(_MSC_VER)
+#if defined (FLT_TRUE_MIN) || defined(_MSC_VER)
 template <> struct denorm_min_helper<float> { static constexpr float value = FLT_TRUE_MIN; };
 template <> struct denorm_min_helper<double> { static constexpr double value = DBL_TRUE_MIN; };
 template <> struct denorm_min_helper<long double> { static constexpr long double value = LDBL_TRUE_MIN; };
@@ -139,32 +139,6 @@ template <> struct denorm_min_helper<float> { static constexpr float value = __F
 template <> struct denorm_min_helper<double> { static constexpr double value = __DBL_DENORM_MIN__; };
 template <> struct denorm_min_helper<long double> { static constexpr long double value = __LDBL_DENORM_MIN__; };
 #endif
-// GCC <10.3 is not able to evaluate T(1) / finite_max_v<T> at compile time when passing -frounding-math
-// https://godbolt.org/z/zj9svb1T7
-// Similar issue was reported on IBM Power without the compiler option
-#define KOKKOS_IMPL_WORKAROUND_CONSTANT_EXPRESSION_COMPILER_BUG
-#ifndef KOKKOS_IMPL_WORKAROUND_CONSTANT_EXPRESSION_COMPILER_BUG
-// NOTE see ?lamch routine from LAPACK that determines machine parameters for floating-point arithmetic
-template <class T>
-constexpr T safe_minimum(T /*ignored*/) {
-  constexpr auto one  = static_cast<T>(1);
-  constexpr auto eps  = epsilon_helper<T>::value;
-  constexpr auto tiny = norm_min_helper<T>::value;
-  constexpr auto huge = finite_max_helper<T>::value;
-  constexpr auto small = one / huge;  // error: is not a constant expression
-  return small >= tiny ? small * (one + eps) : tiny;
-}
-template <class> struct reciprocal_overflow_threshold_helper {};
-template <> struct reciprocal_overflow_threshold_helper<float> { static constexpr float value = safe_minimum(0.f); };
-template <> struct reciprocal_overflow_threshold_helper<double> { static constexpr double value = safe_minimum(0.); };
-template <> struct reciprocal_overflow_threshold_helper<long double> { static constexpr long double value = safe_minimum(0.l); };
-#else
-template <class> struct reciprocal_overflow_threshold_helper {};
-template <> struct reciprocal_overflow_threshold_helper<float> { static constexpr float value = norm_min_helper<float>::value; };  // OK for IEEE-754 floating-point numbers
-template <> struct reciprocal_overflow_threshold_helper<double> { static constexpr double value = norm_min_helper<double>::value; };
-template <> struct reciprocal_overflow_threshold_helper<long double> { static constexpr long double value = norm_min_helper<long double>::value; };
-#endif
-#undef KOKKOS_IMPL_WORKAROUND_CONSTANT_EXPRESSION_COMPILER_BUG
 template <class> struct quiet_NaN_helper {};
 template <> struct quiet_NaN_helper<float> { static constexpr float value = __builtin_nanf(""); };
 template <> struct quiet_NaN_helper<double> { static constexpr double value = __builtin_nan(""); };
@@ -276,17 +250,11 @@ template <> struct max_exponent10_helper<long double> { static constexpr int val
 // clang-format on
 }  // namespace Impl
 
-#if defined(KOKKOS_ENABLE_CXX17)
 #define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT)                        \
   template <class T>                                           \
   struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {}; \
   template <class T>                                           \
   inline constexpr auto TRAIT##_v = TRAIT<T>::value;
-#else
-#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT) \
-  template <class T>                    \
-  struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {};
-#endif
 
 // Numeric distinguished value traits
 KOKKOS_IMPL_DEFINE_TRAIT(infinity)
@@ -296,7 +264,6 @@ KOKKOS_IMPL_DEFINE_TRAIT(epsilon)
 KOKKOS_IMPL_DEFINE_TRAIT(round_error)
 KOKKOS_IMPL_DEFINE_TRAIT(norm_min)
 KOKKOS_IMPL_DEFINE_TRAIT(denorm_min)
-KOKKOS_IMPL_DEFINE_TRAIT(reciprocal_overflow_threshold)
 KOKKOS_IMPL_DEFINE_TRAIT(quiet_NaN)
 KOKKOS_IMPL_DEFINE_TRAIT(signaling_NaN)
 

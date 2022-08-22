@@ -45,6 +45,8 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC - temporarily disabled due to
+                               // unimplemented features
 namespace {
 
 enum MyErrorCode {
@@ -124,12 +126,6 @@ void test_join_backward_compatibility() {
   MyJoinBackCompatValueType result;
   Kokkos::RangePolicy<> policy(0, 1);
 
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  Kokkos::parallel_reduce(
-      policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result);
-  ASSERT_EQ(result.err, no_error);
-#endif
-
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs{},
       result);
@@ -152,3 +148,4 @@ TEST(TEST_CATEGORY, join_backward_compatibility) {
 }
 
 }  // namespace
+#endif

@@ -42,28 +42,43 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPLWALLTIME_HPP
-#define KOKKOS_IMPLWALLTIME_HPP
+#ifndef KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
+#define KOKKOS_OPENACC_PARALLEL_FOR_RANGE_HPP
 
-#include <Kokkos_Macros.hpp>
+#include <OpenACC/Kokkos_OpenACC.hpp>
+#include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <Kokkos_Parallel.hpp>
 
-KOKKOS_IMPL_WARNING("This file is deprecated. Use <Kokkos_Timer.hpp> instead.")
+template <class Functor, class... Traits>
+class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
+                                Kokkos::Experimental::OpenACC> {
+  using Policy = Kokkos::RangePolicy<Traits...>;
+  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
+  Policy m_policy;
 
-#include <Kokkos_Timer.hpp>
+ public:
+  ParallelFor(Functor const& functor, Policy const& policy)
+      : m_functor(functor), m_policy(policy) {}
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-namespace Kokkos {
-namespace Impl {
+  void execute() const {
+    auto const begin = m_policy.begin();
+    auto const end   = m_policy.end();
 
-/** \brief  Time since construction
- *   Timer promoted from Impl to Kokkos ns
- *   This file included for backwards compatibility
- */
-using Timer KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::Timer instead!") =
-    Kokkos::Timer;
+    if (end <= begin) {
+      return;
+    }
 
-}  // namespace Impl
-}  // namespace Kokkos
+    // avoid implicit capture of *this which would yield a memory access
+    // violation when executing on the device
+    auto const& functor(m_functor);
+
+    int const async_arg = m_policy.space().acc_async_queue();
+
+#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
+    for (auto i = begin; i < end; ++i) {
+      functor(i);
+    }
+  }
+};
+
 #endif
-
-#endif /* #ifndef KOKKOS_IMPLWALLTIME_HPP */

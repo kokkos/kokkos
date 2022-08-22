@@ -46,6 +46,7 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
+#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 
@@ -80,24 +81,8 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
     const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
     const size_t arg_alloc_size, const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
-  static_assert(sizeof(void *) == sizeof(uintptr_t),
-                "Error sizeof(void*) != sizeof(uintptr_t)");
-
-  void *ptr = nullptr;
-
-  // FIXME_OPENACC multiple device instances are not yet supported, and thus
-  // exec_space is ignored for now.
   (void)exec_space;
-
-  ptr = acc_malloc(arg_alloc_size);
-
-  if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
-  }
-
-  return ptr;
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size, arg_handle);
 }
 
 void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
@@ -109,21 +94,8 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
 
   void *ptr = nullptr;
 
-  //[DEBUG] Disabled due to the synchronous behavior of the current
-  // implementation.
-  /*
-    OpenACC::impl_static_fence(
-        "Kokkos::OpenACCSpace::impl_allocate: Pre OpenACC Allocation");
-  */
-
   ptr = acc_malloc(arg_alloc_size);
 
-  //[DEBUG] Disabled due to the synchronous behavior of the current
-  // implementation.
-  /*
-    OpenACC::impl_static_fence(
-        "Kokkos::OpenACCSpace::impl_allocate: Post OpenACC Allocation");
-  */
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -203,6 +175,33 @@ Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, void>::
       "SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");
+}
+
+Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, void>::
+    SharedAllocationRecord(
+        const Kokkos::Experimental::OpenACC &arg_exec_space,
+        const Kokkos::Experimental::OpenACCSpace &arg_space,
+        const std::string &arg_label, const size_t arg_alloc_size,
+        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+    // Pass through allocated [ SharedAllocationHeader , user_memory ]
+    // Pass through deallocation function
+    : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+          &SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace,
+                                  void>::s_root_record,
+#endif
+          Impl::checked_allocation_with_header(arg_exec_space, arg_space,
+                                               arg_label, arg_alloc_size),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
+      m_space(arg_space) {
+  SharedAllocationHeader header;
+
+  this->base_t::_fill_host_accessible_header_info(header, arg_label);
+
+  Kokkos::Impl::DeepCopy<Experimental::OpenACCSpace, HostSpace>(
+      arg_exec_space, RecordBase::m_alloc_ptr, &header,
+      sizeof(SharedAllocationHeader));
 }
 
 //==============================================================================

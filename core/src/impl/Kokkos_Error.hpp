@@ -89,7 +89,7 @@ namespace Impl {
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
 // FIXME_SYCL SYCL doesn't abort
 #define KOKKOS_IMPL_ABORT_NORETURN
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 // Host aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
 #else
@@ -103,8 +103,9 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC)
 KOKKOS_IMPL_ABORT_NORETURN_DEVICE inline KOKKOS_IMPL_DEVICE_FUNCTION void
 device_abort(const char *const msg) {
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -113,8 +114,8 @@ device_abort(const char *const msg) {
   ::Kokkos::Impl::hip_abort(msg);
 #elif defined(KOKKOS_ENABLE_SYCL)
   ::Kokkos::Impl::sycl_abort(msg);
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  printf("%s", msg);  // FIXME_OPENMPTARGET
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  printf("%s", msg);  // FIXME_OPENMPTARGET FIXME_OPENACC
 #else
 #error faulty logic
 #endif
@@ -186,8 +187,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 
   ~RawMemoryAllocationFailure() noexcept override = default;
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  const char *what() const noexcept override {
+  [[nodiscard]] const char *what() const noexcept override {
     if (m_failure_mode == FailureMode::OutOfMemoryError) {
       return "Memory allocation error: out of memory";
     } else if (m_failure_mode == FailureMode::AllocationNotAligned) {
@@ -197,23 +197,24 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     return nullptr;  // unreachable
   }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  size_t attempted_size() const noexcept { return m_attempted_size; }
+  [[nodiscard]] size_t attempted_size() const noexcept {
+    return m_attempted_size;
+  }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  size_t attempted_alignment() const noexcept { return m_attempted_alignment; }
+  [[nodiscard]] size_t attempted_alignment() const noexcept {
+    return m_attempted_alignment;
+  }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  AllocationMechanism allocation_mechanism() const noexcept {
+  [[nodiscard]] AllocationMechanism allocation_mechanism() const noexcept {
     return m_mechanism;
   }
 
-  KOKKOS_ATTRIBUTE_NODISCARD
-  FailureMode failure_mode() const noexcept { return m_failure_mode; }
+  [[nodiscard]] FailureMode failure_mode() const noexcept {
+    return m_failure_mode;
+  }
 
   void print_error_message(std::ostream &o) const;
-  KOKKOS_ATTRIBUTE_NODISCARD
-  std::string get_error_message() const;
+  [[nodiscard]] std::string get_error_message() const;
 
   virtual void append_additional_error_information(std::ostream &) const {}
 };

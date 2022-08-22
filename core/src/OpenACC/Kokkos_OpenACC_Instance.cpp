@@ -44,9 +44,8 @@
 
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 
-#include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
+#include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 
@@ -54,35 +53,34 @@
 
 #include <iostream>
 
-namespace Kokkos {
-bool show_warnings() noexcept;
-}
+// Arbitrary value to denote that we don't know yet what device to use.
+int Kokkos::Experimental::Impl::OpenACCInternal::m_acc_device_num = -1;
 
-Kokkos::Experimental::Impl::OpenACCInternal*
+Kokkos::Experimental::Impl::OpenACCInternal&
 Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
   static OpenACCInternal self;
-  return &self;
+  return self;
 }
 
-void Kokkos::Experimental::Impl::OpenACCInternal::initialize(
-    InitializationSettings const& settings) {
-  if (OpenACC_Traits::may_fallback_to_host &&
-      acc_get_num_devices(OpenACC_Traits::dev_type) == 0 &&
-      !settings.has_device_id()) {
-    if (show_warnings()) {
-      std::cerr << "Warning: No GPU available for execution, falling back to"
-                   " using the host!"
-                << std::endl;
-    }
-    acc_set_device_type(acc_device_host);
-    // FIXME_OPENACC if multiple execution space instances are supported,
-    // device id variable should be explicitly set to the value returned by
-    // acc_get_device_num(acc_device_host).
-  } else {
-    using Kokkos::Impl::get_gpu;
-    int const dev_num = get_gpu(settings);
-    acc_set_device_num(dev_num, OpenACC_Traits::dev_type);
+bool Kokkos::Experimental::Impl::OpenACCInternal::verify_is_initialized(
+    const char* const label) const {
+  if (!m_is_initialized) {
+    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::") + label +
+                   " : ERROR device not initialized\n")
+                      .c_str());
   }
+  return m_is_initialized;
+}
+
+void Kokkos::Experimental::Impl::OpenACCInternal::initialize(int async_arg) {
+  if ((async_arg < 0) && (async_arg != acc_async_sync) &&
+      (async_arg != acc_async_noval)) {
+    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::initialize()") +
+                   " : ERROR async_arg should be a non-negative integer" +
+                   " unless being a special value defined in OpenACC\n")
+                      .c_str());
+  }
+  m_async_arg      = async_arg;
   m_is_initialized = true;
 }
 
@@ -105,14 +103,11 @@ void Kokkos::Experimental::Impl::OpenACCInternal::fence(
       Kokkos::Experimental::OpenACC>(
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{instance_id()},
-      [&]() {
-        //[DEBUG] disabled due to synchronous behaviors of the current
-        // parallel construct implementations. acc_wait_all();
-      });
+      [&]() { acc_wait(m_async_arg); });
 }
 
 uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id() const
     noexcept {
-  return Kokkos::Tools::Experimental::Impl::idForInstance<
-      Kokkos::Experimental::OpenACC>(reinterpret_cast<uintptr_t>(this));
+  return Kokkos::Tools::Experimental::Impl::idForInstance<OpenACC>(
+      reinterpret_cast<uintptr_t>(this));
 }

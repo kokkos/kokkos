@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_HBWSPACE_HPP
 #define KOKKOS_HBWSPACE_HPP
@@ -204,12 +200,7 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
   const Kokkos::Experimental::HBWSpace m_space;
 
  protected:
-  ~SharedAllocationRecord()
-#if defined( \
-    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
-      noexcept
-#endif
-      ;
+  ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
