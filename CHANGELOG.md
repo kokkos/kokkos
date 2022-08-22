@@ -4,11 +4,11 @@
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.6.01...3.7.00)
 
 ### Features:
-- Use non-volatile `join()` routines in `parallel_reduce/scan` [\#4931](https://github.com/kokkos/kokkos/pull/4931) [\#4954](https://github.com/kokkos/kokkos/pull/4954) [\#4951](https://github.com/kokkos/kokkos/pull/4951)
+- Use non-volatile `join()` member functions and `operator+=` in `parallel_reduce/scan` [\#4931](https://github.com/kokkos/kokkos/pull/4931) [\#4954](https://github.com/kokkos/kokkos/pull/4954) [\#4951](https://github.com/kokkos/kokkos/pull/4951)
 - Add `SIMD` sub package (requires C++17) [\#5016](https://github.com/kokkos/kokkos/pull/5016)
 - Add `is_finalized()` [\#5247](https://github.com/kokkos/kokkos/pull/5247)
-- Promote mathematical functions to Kokkos namespace [\#4791](https://github.com/kokkos/kokkos/pull/4791)
-- Promote `min`, `max`, `clamp`, `minmax` functions to Kokkos namespace [\#5170](https://github.com/kokkos/kokkos/pull/5170)
+- Promote mathematical functions from `namespace Kokkos::Experimental` to `namespace Kokkos` [\#4791](https://github.com/kokkos/kokkos/pull/4791)
+- Promote `min`, `max`, `clamp`, `minmax` functions from `namespace Kokkos::Experimental` to `namespace Kokkos` [\#5170](https://github.com/kokkos/kokkos/pull/5170)
 - Add `round`, `logb`, `nextafter`, `copysign`, and `signbit` math functions [\#4768](https://github.com/kokkos/kokkos/pull/4768)
 - Add `HIPManagedSpace`, similar to `CudaUVMSpace` [\#5112](https://github.com/kokkos/kokkos/pull/5112)
 - Accept view construction allocation properties in `create_mirror[_view,_view_and_copy]` and `resize/realloc` [\#5125](https://github.com/kokkos/kokkos/pull/5125) [\#5095](https://github.com/kokkos/kokkos/pull/5095) [\#5035](https://github.com/kokkos/kokkos/pull/5035) [\#4805](https://github.com/kokkos/kokkos/pull/4805) [\#4844](https://github.com/kokkos/kokkos/pull/4844)
@@ -108,8 +108,8 @@
 - Warn about `parallel_reduce` cases that call `join()` with volatile-qualified arguments [\#5215](https://github.com/kokkos/kokkos/pull/5215)
 
 ### Bug Fixes:
-- CUDA Reductions: Fix data races reported [\#4855](https://github.com/kokkos/kokkos/pull/4855)
-- Work around intel compiler bug [\#5301](https://github.com/kokkos/kokkos/pull/5301)
+- CUDA Reductions: Fix data races reported by Nvidia `compute-sanitizer` [\#4855](https://github.com/kokkos/kokkos/pull/4855)
+- Work around Intel compiler bug [\#5301](https://github.com/kokkos/kokkos/pull/5301)
 - Avoid allocating memory for UniqueToken [\#5300](https://github.com/kokkos/kokkos/pull/5300)
 - DynamicView: Properly resize mirror instances after construction [\#5276](https://github.com/kokkos/kokkos/pull/5276)
 - Remove Kokkos::Rank limit of 6 ranks [\#5271](https://github.com/kokkos/kokkos/pull/5271)
@@ -117,7 +117,7 @@
 - Fix CUDA+MSVC build issue [\#5261](https://github.com/kokkos/kokkos/pull/5261)
 - Fix `DynamicView::resize_serial` [\#5220](https://github.com/kokkos/kokkos/pull/5220)
 - Fix cmake default compiler flags for unknown compiler [\#5217](https://github.com/kokkos/kokkos/pull/5217)
-- Fix move backward [\#5191](https://github.com/kokkos/kokkos/pull/5191)
+- Fix `move_backward` [\#5191](https://github.com/kokkos/kokkos/pull/5191)
 - Fixing issue 5196 - missing symbol with intel compiler [\#5207](https://github.com/kokkos/kokkos/pull/5207)
 - Preserve `KOKKOS_INVALID_INDEX` in ViewDimension and ArrayLayout construction [\#5188](https://github.com/kokkos/kokkos/pull/5188)
 - Finalize `deep_copy_space` early avoiding printing to `std::cerr` for Cuda [\#5151](https://github.com/kokkos/kokkos/pull/5151)
