@@ -3263,10 +3263,7 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-    alloc_prop arg_prop_copy(arg_prop);
-    static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
-        .value = v.label();
+    auto arg_prop_copy = Impl::add_properties(arg_prop, v.label());
     v = view_type();  // Best effort to deallocate in case no other view refers
                       // to the shared allocation
     v = view_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
@@ -3414,13 +3411,10 @@ impl_realloc(Kokkos::View<T, P...>& v,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a memory space instance!");
 
-  v = view_type();  // Deallocate first, if the only view to allocation
+  auto arg_prop_copy = Impl::add_properties(arg_prop, v.label());
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop arg_prop_copy(arg_prop);
-  static_cast<Kokkos::Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy)
-      .value = v.label();
-  v          = view_type(arg_prop_copy, layout);
+  v = view_type();  // Deallocate first, if the only view to allocation
+  v = view_type(arg_prop_copy, layout);
 }
 
 template <class T, class... P, class... ViewCtorArgs>
