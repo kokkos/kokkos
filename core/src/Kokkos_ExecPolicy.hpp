@@ -975,7 +975,7 @@ struct ParallelRank<Rank, OpenMP, ThreadAndVector> {
 #ifdef KOKKOS_ENABLE_THREADS
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
 struct ParallelRank<Rank, Threads, ThreadAndVector> {
-  static constexpr bool is_directionLeft =
+  static constexpr bool is_direction_left =
       (Rank::outer_direction == Iterate::Left);
   static constexpr int par_rt  = is_direction_left ? Rank::rank - 1 : 0;
   static constexpr int par_rv  = is_direction_left ? 0 : Rank::rank - 1;
@@ -1012,7 +1012,7 @@ KOKKOS_INLINE_FUNCTION auto nested_policy(
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::NotParVector>,
     TeamHandle const team, int count) {
-  return TeamThreadRange<int, TeamHandle>(team, count);
+  return TeamThreadRange(team, count);
 }
 
 template <typename TeamHandle>
@@ -1041,8 +1041,7 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                     TeamMDRangeParThread::NotParThread,
                     TeamMDRangeParVector::NotParVector> const,
     TeamMDRangeRanks<Rank, ParThreadRank, ParVectorRank, CurrentRank>,
-    Policy const&, Lambda const& lambda, Impl::NoReductionTag,
-    Args... args) {
+    Policy const&, Lambda const& lambda, Impl::NoReductionTag, Args... args) {
   lambda(args...);
 }
 
