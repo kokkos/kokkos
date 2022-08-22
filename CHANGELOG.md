@@ -1,7 +1,7 @@
 # Change Log
 
-## [3.7.00](https://github.com/kokkos/kokkos/tree/3.7.00) (2022-08-18)
-[Full Changelog](https://github.com/kokkos/kokkos/compare/3.6.01...3.7.09)
+## [3.7.00](https://github.com/kokkos/kokkos/tree/3.7.00) (2022-08-22)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/3.6.01...3.7.00)
 
 ### Features:
 - Use non-volatile `join()` routines in `parallel_reduce/scan` [\#4931](https://github.com/kokkos/kokkos/pull/4931) [\#4954](https://github.com/kokkos/kokkos/pull/4954) [\#4951](https://github.com/kokkos/kokkos/pull/4951)
@@ -13,7 +13,7 @@
 - Add `HIPManagedSpace`, similar to `CudaUVMSpace` [\#5112](https://github.com/kokkos/kokkos/pull/5112)
 - Accept view construction allocation properties in `create_mirror[_view,_view_and_copy]` and `resize/realloc` [\#5125](https://github.com/kokkos/kokkos/pull/5125) [\#5095](https://github.com/kokkos/kokkos/pull/5095) [\#5035](https://github.com/kokkos/kokkos/pull/5035) [\#4805](https://github.com/kokkos/kokkos/pull/4805) [\#4844](https://github.com/kokkos/kokkos/pull/4844)
 - Allow `MemorySpace::allocate()` to be called with execution space [\#4826](https://github.com/kokkos/kokkos/pull/4826)
-- Experimental: Compile time view subscriber and dynamic view hooks [\#4197](https://github.com/kokkos/kokkos/pull/4197)
+- Experimental: Compile time view subscriber [\#4197](https://github.com/kokkos/kokkos/pull/4197)
 
 ### Backends and Archs Enhancements:
 - Add support for Sapphire Rapids Intel architecture [\#5015](https://github.com/kokkos/kokkos/pull/5015)
@@ -26,7 +26,7 @@
 - OpenMPTarget: Adding a workaound for team scan [\#5219](https://github.com/kokkos/kokkos/pull/5219)
 - OpenMPTarget: Adding logic to skip the kernel launch if `league_size=0` [\#5067](https://github.com/kokkos/kokkos/pull/5067)
 - OpenMPTarget: Make sure `Kokkos::abort()` causes abnormal program termination when called on the host-side [\#4808](https://github.com/kokkos/kokkos/pull/4808)
-- HIP: Make HIPHostPinnedSpace goarse grain [\#5152](https://github.com/kokkos/kokkos/pull/5152)
+- HIP: Make HIPHostPinnedSpace coarse-grained [\#5152](https://github.com/kokkos/kokkos/pull/5152)
 - Refactor OpenMP `parallel_for` implementation to use more native OpenMP constructs [\#4664](https://github.com/kokkos/kokkos/pull/4664)
 - Add option to optimize for local CPU architecture `Kokkos_ARCH_NATIVE` [\#4930](https://github.com/kokkos/kokkos/pull/4930)
 
@@ -45,7 +45,6 @@
 - Cleanup/rework fence overloads [\#5148](https://github.com/kokkos/kokkos/pull/5148)
 - Assert that `Layout` construction from extents is valid in functions taking integer extents [\#5209](https://github.com/kokkos/kokkos/pull/5209)
 - Add `fill_random` overload that takes an execution space as first argument [\#5181](https://github.com/kokkos/kokkos/pull/5181)
-- Remove useless `memcpy` [\#5161](https://github.com/kokkos/kokkos/pull/5161)
 - Avoid some unnecessary fences in `parallel_reduce/scan` [\#5154](https://github.com/kokkos/kokkos/pull/5154)
 - Include `KOKKOS_ENABLE_LIBDL` in options when printing configuration [\#5086](https://github.com/kokkos/kokkos/pull/5086)
 - DynRankView: make `layout()` return the same as a corresponding static View [\#5026](https://github.com/kokkos/kokkos/pull/5026)
@@ -69,8 +68,6 @@
 - Give back to Core what belongs to Core (aka moving tune_internals option from Tools back to Core) [\#5202](https://github.com/kokkos/kokkos/pull/5202)
 
 #### Build system updates:
-- Support finding libquadmath with native compiler support [\#5286](https://github.com/kokkos/kokkos/pull/5286)
-- Enable using C++23 [\#5283](https://github.com/kokkos/kokkos/pull/5283)
 - `nvcc_wrapper`: filter out -pedantic-errors from nvcc options [\#5235](https://github.com/kokkos/kokkos/pull/5235)
 - `nvcc_wrapper`: add known nvcc option --source-in-ptx [\#5052](https://github.com/kokkos/kokkos/pull/5052)
 - Link libdl as interface library [\#5179](https://github.com/kokkos/kokkos/pull/5179)
@@ -87,7 +84,6 @@
 - Move CMake version check up [\#4797](https://github.com/kokkos/kokkos/pull/4797)
 
 ### Incompatibilities:
-- Turn setting Kokkos_CXX_STANDARD into an error [\#5293](https://github.com/kokkos/kokkos/pull/5293)
 - Remove KOKKOS_THREAD_LOCAL [\#5064](https://github.com/kokkos/kokkos/pull/5064)
 - Remove KOKKOS_ENABLE_POSIX_MEMALIGN [\#5011](https://github.com/kokkos/kokkos/pull/5011)
 - Remove unused KOKKOS_ENABLE_TM [\#4995](https://github.com/kokkos/kokkos/pull/4995)
