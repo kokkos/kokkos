@@ -110,10 +110,10 @@
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_COMPILER_NVCC)
-#define KOKKOS_INLINE_FUNCTION_DELETED inline
+#define KOKKOS_INLINE_FUNCTION_DELETED
 #else
-#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
+#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__
 #endif
-#define KOKKOS_DEFAULTED_FUNCTION inline
+#define KOKKOS_DEFAULTED_FUNCTION
 
 #endif /* KOKKOS_CUDA_SETUP_HPP_ */
