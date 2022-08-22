@@ -50,8 +50,7 @@ namespace {
 
 template <class ExecutionSpace>
 struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
-  Kokkos::DefaultExecutionSpace device;
-  Kokkos::DefaultHostExecutionSpace host;
+  Kokkos::ExecutionSpace device;
 
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     auto copy = *this;
@@ -64,8 +63,8 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
 
   CheckClassWithExecutionSpaceAsDataMemberIsCopyable() {
     int errors;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1), *this,
-                            errors);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(device, 0, 1),
+                            *this, errors);
     EXPECT_EQ(errors, 0);
   }
 };
