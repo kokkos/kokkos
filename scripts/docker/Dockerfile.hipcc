@@ -2,7 +2,6 @@ ARG BASE=rocm/dev-ubuntu-20.04:4.5
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
-        git \
         kmod \
         wget \
         ccache \
