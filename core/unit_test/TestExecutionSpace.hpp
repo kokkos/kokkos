@@ -53,10 +53,9 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
   ExecutionSpace device;
 
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    auto copy = *this;
     // not actually doing anything useful, mostly checking that
     // ExecutionSpace::in_parallel() is callable
-    if (static_cast<int>(copy.device.in_parallel()) < 0) {
+    if (static_cast<int>(device.in_parallel()) < 0) {
       ++e;
     }
   }
