@@ -53,7 +53,7 @@ BENCHMARK(ViewDeepCopy_Rank8<Kokkos::LayoutLeft, Kokkos::LayoutRight>)
     ->UseManualTime();
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-BENCHMARK(ViewDeepCopy_Rank8_Raw<Kokkos::LayoutLeft, Kokkos::LayoutRight>)
+BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutLeft, Kokkos::LayoutRight>)
     ->ArgNames({"N", "R"})
     ->Args({10, 1})
     ->UseManualTime();

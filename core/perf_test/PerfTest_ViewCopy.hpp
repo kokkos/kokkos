@@ -186,39 +186,4 @@ void run_deepcopyview_tests6(int N, int R) {
          2.0 * size / 1024 / time6);
 }
 
-template <class LayoutA, class LayoutB>
-void run_deepcopyview_tests7(int N, int R) {
-  const int N1 = N;
-  const int N2 = N1 * N1;
-  const int N4 = N2 * N2;
-  const int N8 = N4 * N4;
-
-  double time7, time_raw = 100000.0;
-  {
-    Kokkos::View<double*******, LayoutA> a("A7", N2, N1, N1, N1, N1, N1, N1);
-    Kokkos::View<double*******, LayoutB> b("B7", N2, N1, N1, N1, N1, N1, N1);
-    time7 = deepcopy_view(a, b, R) / R;
-  }
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-  {
-    Kokkos::View<double*, LayoutA> a("A1", N8);
-    Kokkos::View<double*, LayoutB> b("B1", N8);
-    double* const a_ptr       = a.data();
-    const double* const b_ptr = b.data();
-    Kokkos::Timer timer;
-    for (int r = 0; r < R; r++) {
-      Kokkos::parallel_for(
-          N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = b_ptr[i]; });
-    }
-    Kokkos::fence();
-    time_raw = timer.seconds() / R;
-  }
-#endif
-  double size = 1.0 * N8 * 8 / 1024 / 1024;
-  printf("   Raw:   %lf s   %lf MB   %lf GB/s\n", time_raw, size,
-         2.0 * size / 1024 / time_raw);
-  printf("   Rank7: %lf s   %lf MB   %lf GB/s\n", time7, size,
-         2.0 * size / 1024 / time7);
-}
-
 }  // namespace Test

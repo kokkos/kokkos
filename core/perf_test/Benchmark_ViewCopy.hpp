@@ -49,59 +49,51 @@
 #include <benchmark/benchmark.h>
 #include <cmath>
 
-namespace {
-
-void report_results(benchmark::State& state, double time) {
-  state.SetIterationTime(time);
-
-  const auto N8        = std::pow(state.range(0), 8);
-  const auto size      = N8 * 8 / 1024 / 1024;
-  state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
-                                            benchmark::Counter::OneK::kIs1024);
-  state.counters["FOM: GB/s"] =
-      benchmark::Counter(2 * size / 1024 / time, benchmark::Counter::kDefaults,
-                         benchmark::Counter::OneK::kIs1024);
-}
-
-}  // namespace
-
 namespace Test {
 
+void report_results(benchmark::State& state, double time);
+
 template <class ViewTypeA, class ViewTypeB>
-double deepcopy_view(ViewTypeA& a, ViewTypeB& b, int repeat) {
-  Kokkos::Timer timer;
-  for (int i = 0; i < repeat; i++) {
-    Kokkos::deep_copy(a, b);
+void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {
+  const auto R = state.range(1);
+
+  for (auto _ : state) {
+    Kokkos::Timer timer;
+    for (int i = 0; i < R; i++) {
+      Kokkos::deep_copy(a, b);
+    }
+    Kokkos::fence();
+
+    report_results(state, timer.seconds() / R);
   }
-  Kokkos::fence();
-  return timer.seconds();
+}
+
+template <class LayoutA, class LayoutB>
+static void ViewDeepCopy_Rank7(benchmark::State& state) {
+  const int N1 = state.range(0);
+  const int N2 = N1 * N1;
+
+  Kokkos::View<double*******, LayoutA> a("A7", N2, N1, N1, N1, N1, N1, N1);
+  Kokkos::View<double*******, LayoutB> b("B7", N2, N1, N1, N1, N1, N1, N1);
+
+  deepcopy_view(a, b, state);
 }
 
 template <class LayoutA, class LayoutB>
 static void ViewDeepCopy_Rank8(benchmark::State& state) {
-  const auto N = state.range(0);
-  const auto R = state.range(1);
+  const int N1 = state.range(0);
 
-  const int N1 = N;
   Kokkos::View<double********, LayoutA> a("A8", N1, N1, N1, N1, N1, N1, N1, N1);
   Kokkos::View<double********, LayoutB> b("B8", N1, N1, N1, N1, N1, N1, N1, N1);
 
-  for (auto _ : state) {
-    const auto elapsed_seconds = deepcopy_view(a, b, R);
-
-    ::report_results(state, elapsed_seconds);
-  }
+  deepcopy_view(a, b, state);
 }
 
 template <class LayoutA, class LayoutB>
-static void ViewDeepCopy_Rank8_Raw(benchmark::State& state) {
-  const auto N = state.range(0);
-  const auto R = state.range(1);
+static void ViewDeepCopy_Raw(benchmark::State& state) {
+  const auto N8 = std::pow(state.range(0), 8);
+  const auto R  = state.range(1);
 
-  const int N1 = N;
-  const int N2 = N1 * N1;
-  const int N4 = N2 * N2;
-  const int N8 = N4 * N4;
   Kokkos::View<double*, LayoutA> a("A1", N8);
   Kokkos::View<double*, LayoutB> b("B1", N8);
   double* const a_ptr       = a.data();
@@ -115,7 +107,7 @@ static void ViewDeepCopy_Rank8_Raw(benchmark::State& state) {
     }
     Kokkos::fence();
 
-    ::report_results(state, timer.seconds());
+    report_results(state, timer.seconds() / R);
   }
 }
 

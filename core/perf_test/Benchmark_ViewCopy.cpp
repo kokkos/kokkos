@@ -46,16 +46,16 @@
 
 namespace Test {
 
-BENCHMARK(ViewDeepCopy_Rank7<Kokkos::LayoutRight, Kokkos::LayoutRight>)
-    ->ArgNames({"N", "R"})
-    ->Args({10, 1})
-    ->UseManualTime();
+void report_results(benchmark::State& state, double time) {
+  state.SetIterationTime(time);
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutRight, Kokkos::LayoutRight>)
-    ->ArgNames({"N", "R"})
-    ->Args({10, 1})
-    ->UseManualTime();
-#endif
+  const auto N8        = std::pow(state.range(0), 8);
+  const auto size      = N8 * 8 / 1024 / 1024;
+  state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
+                                            benchmark::Counter::OneK::kIs1024);
+  state.counters["FOM: GB/s"] =
+      benchmark::Counter(2 * size / 1024 / time, benchmark::Counter::kDefaults,
+                         benchmark::Counter::OneK::kIs1024);
+}
 
 }  // namespace Test
