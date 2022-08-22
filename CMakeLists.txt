@@ -166,7 +166,7 @@ IF(NOT MSVC)
 ENDIF()
 
 IF(Kokkos_ENABLE_TESTS AND NOT KOKKOS_HAS_TRILINOS)
-    find_package(GTest QUIET)
+  find_package(GTest QUIET)
 ENDIF()
 
 # Include a set of Kokkos-specific wrapper functions that

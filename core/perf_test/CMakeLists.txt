@@ -116,23 +116,26 @@ IF(NOT Kokkos_ENABLE_OPENMPTARGET)
 ENDIF()
 
 
-IF(NOT Kokkos_ENABLE_BENCHMARKS OR KOKKOS_HAS_TRILINOS)
+IF(NOT Kokkos_ENABLE_BENCHMARKS)
   RETURN()
+ENDIF()
+
+IF (KOKKOS_HAS_TRILINOS)
+  message(FATAL_ERROR "Benchmarks are not supported when building as part of Trilinos")
 ENDIF()
 
 find_package(benchmark QUIET)
 IF(NOT benchmark_FOUND)
-  message(STATUS "No installed benchmark found, fetching from GitHub")
+  message(STATUS "No installed google benchmark found, fetching from GitHub")
   include(FetchContent)
   SET(BENCHMARK_ENABLE_TESTING OFF)
 
   FetchContent_Declare(
-        googlebenchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG v1.6.2)
-
-  FetchContent_MakeAvailable(
-        googlebenchmark)
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.6.2
+  )
+  FetchContent_MakeAvailable(googlebenchmark)
 
   include_directories(${benchmark_SOURCE_DIR}/include)
 
