@@ -53,9 +53,7 @@
 
 #include <algorithm>
 
-#if defined(KOKKOS_ENABLE_SERIAL)
 #include "std_algorithms/Kokkos_BeginEnd.hpp"
-#endif
 
 namespace Kokkos {
 
@@ -580,9 +578,14 @@ struct min_max_functor {
 
 }  // namespace Impl
 
-template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType const& view) {
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (not SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace& exec,
+     const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = typename Kokkos::View<DataType, Properties...>;
   using CompType = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
@@ -620,16 +623,18 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   bin_sort.sort(exec, view);
 }
 
-#if defined(KOKKOS_ENABLE_SERIAL)
-template <class DataType, class... Properties>
-void sort(const Serial& space,
-          const Kokkos::View<DataType, Properties...>& view) {
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace& space,
+     const Kokkos::View<DataType, Properties...>& view) {
   space.fence("Kokkos::sort: Fence before sorting on the host");
   auto first = Experimental::begin(view);
   auto last  = Experimental::end(view);
   std::sort(first, last);
 }
-#endif
 
 template <class ViewType>
 void sort(ViewType const& view) {
