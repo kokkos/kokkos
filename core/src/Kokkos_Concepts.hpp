@@ -212,7 +212,7 @@ struct is_team_handle {
       is_detected<m5, T>::value && is_detected<m6, T>::value &&
       is_detected<m7, T>::value && is_detected<m8, T>::value &&
       is_detected<m9, T>::value && is_detected<m10, T>::value &&
-      /*is_detected<m11, T>::value && */ is_detected<m12, T>::value;
+      is_detected<m11, T>::value && is_detected<m12, T>::value;
   constexpr operator bool() const noexcept { return value; }
 };
 
