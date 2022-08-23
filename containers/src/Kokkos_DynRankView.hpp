@@ -2145,8 +2145,7 @@ create_mirror_view(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using MemorySpace = typename Space::memory_space;
-  using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., MemorySpace>;
-  alloc_prop prop_copy(arg_prop);
+  auto prop_copy    = Impl::add_properties(arg_prop, MemorySpace{});
 
   return Kokkos::Impl::create_mirror(src, prop_copy);
 }
