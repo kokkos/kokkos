@@ -156,6 +156,81 @@ KOKKOS_IMPL_IS_CONCEPT(work_item_property)
 KOKKOS_IMPL_IS_CONCEPT(hooks_policy)
 }  // namespace Experimental
 
+//
+// is_team_handle
+// - based on
+// https://kokkos.github.io/kokkos-core-wiki/API/core/policies/TeamHandleConcept.html
+//
+
+template <typename T>
+struct is_team_handle {
+ private:
+  struct TrivialFunctor {
+    void operator()(double &) {}
+  };
+  double lvalueForMethodsNeedingIt_;
+  double *ptrForMethodsNeedingIt_;
+
+  template <typename U>
+  using m1 = decltype(std::declval<const U &>().team_rank());
+  template <typename U>
+  using m2 = decltype(std::declval<const U &>().team_size());
+  template <typename U>
+  using m3 = decltype(std::declval<const U &>().league_rank());
+  template <typename U>
+  using m4 = decltype(std::declval<const U &>().league_size());
+  template <typename U>
+  using m5 = decltype(std::declval<const U &>().team_shmem());
+  template <typename U>
+  using m6 = decltype(std::declval<const U &>().team_scratch(int{}));
+  template <typename U>
+  using m7 = decltype(std::declval<const U &>().thread_scratch(int{}));
+  template <typename U>
+  using m8 = decltype(std::declval<const U &>().team_barrier());
+  template <typename U>
+  using m9 = decltype(std::declval<const U &>().team_broadcast(
+      lvalueForMethodsNeedingIt_, int{}));
+  template <typename U>
+  using m10 = decltype(std::declval<const U &>().team_broadcast(
+      TrivialFunctor{}, lvalueForMethodsNeedingIt_, int{}));
+
+  template <typename U>
+  using m11 = decltype(std::declval<const U &>().team_reduce(
+      Kokkos::Min<double>{lvalueForMethodsNeedingIt_}));
+
+  template <typename U>
+  using m12 = decltype(std::declval<const U &>().team_scan(
+      lvalueForMethodsNeedingIt_, ptrForMethodsNeedingIt_));
+
+ public:
+  static constexpr bool value =
+      is_detected<m1, T>::value && is_detected<m2, T>::value &&
+      is_detected<m3, T>::value && is_detected<m4, T>::value &&
+      is_detected<m5, T>::value && is_detected<m6, T>::value &&
+      is_detected<m7, T>::value && is_detected<m8, T>::value &&
+      is_detected<m9, T>::value && is_detected<m10, T>::value &&
+      is_detected<m11, T>::value && is_detected<m12, T>::value;
+  constexpr operator bool() const noexcept { return value; }
+};
+
+template <typename T>
+struct is_team_handle<T &> {
+  static constexpr bool value = false;
+};
+template <typename T>
+struct is_team_handle<T *> {
+  static constexpr bool value = false;
+};
+template <typename T>
+struct is_team_handle<T *const> {
+  static constexpr bool value = false;
+};
+template <typename T>
+struct is_team_handle<const T> : is_team_handle<T> {};
+
+template <typename T>
+inline constexpr bool is_team_handle_v = is_team_handle<T>::value;
+
 namespace Impl {
 
 // Implementation concept:
