@@ -1932,10 +1932,8 @@ create_mirror(const Space&,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy = Impl::add_properties(
+      arg_prop, std::string(src.label()).append("_mirror"));
 
   return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
       prop_copy, src.layout(),

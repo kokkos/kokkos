@@ -3133,11 +3133,8 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
   if (v.layout() != layout) {
     auto prop_copy = Impl::add_properties(
-        arg_prop, std::string{}, typename view_type::execution_space{});
+        arg_prop, v.label(), typename view_type::execution_space{});
     using alloc_prop = decltype(prop_copy);
-
-    static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-        v.label();
 
     view_type v_resized(prop_copy, layout);
 
@@ -3517,10 +3514,8 @@ create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy = Impl::add_properties(
+      arg_prop, std::string(src.label()).append("_mirror"));
 
   return dst_type(
       prop_copy,
@@ -3579,10 +3574,8 @@ create_mirror(const Kokkos::View<T, P...>& src,
   layout.stride[6] = src.stride_6();
   layout.stride[7] = src.stride_7();
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy = Impl::add_properties(
+      arg_prop, std::string(src.label()).append("_mirror"));
 
   return dst_type(prop_copy, layout);
 }
@@ -3608,10 +3601,9 @@ auto create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy = Impl::add_properties(
+      arg_prop, std::string(src.label()).append("_mirror"));
+  using alloc_prop = decltype(prop_copy);
 
   return typename Impl::MirrorType<typename alloc_prop::memory_space, T,
                                    P...>::view_type(prop_copy, src.layout());

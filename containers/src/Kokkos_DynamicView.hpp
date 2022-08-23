@@ -639,10 +639,8 @@ inline auto create_mirror(
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy = Impl::add_properties(
+      arg_prop, std::string(src.label()).append("_mirror"));
 
   auto ret = typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
       prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
@@ -674,10 +672,8 @@ inline auto create_mirror(
       "not explicitly allow padding!");
 
   using MemorySpace = typename alloc_prop_input::memory_space;
-  using alloc_prop  = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy    = Impl::add_properties(
+      arg_prop, std::string(src.label()).append("_mirror"));
 
   auto ret = typename Kokkos::Impl::MirrorDynamicViewType<
       MemorySpace, T, P...>::view_type(prop_copy, src.chunk_size(),
