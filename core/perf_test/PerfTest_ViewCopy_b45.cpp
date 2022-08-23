@@ -47,13 +47,13 @@
 namespace Test {
 
 BENCHMARK(ViewDeepCopy_Rank4<Kokkos::LayoutRight, Kokkos::LayoutRight>)
-    ->ArgNames({"N", "R"})
-    ->Args({10, 1})
+    ->ArgName("N")
+    ->Arg(10)
     ->UseManualTime();
 
 BENCHMARK(ViewDeepCopy_Rank5<Kokkos::LayoutRight, Kokkos::LayoutRight>)
-    ->ArgNames({"N", "R"})
-    ->Args({10, 1})
+    ->ArgName("N")
+    ->Arg(10)
     ->UseManualTime();
 
 }  // namespace Test

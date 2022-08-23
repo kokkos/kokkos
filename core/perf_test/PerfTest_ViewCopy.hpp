@@ -55,16 +55,11 @@ void report_results(benchmark::State& state, double time);
 
 template <class ViewTypeA, class ViewTypeB>
 void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {
-  const auto R = state.range(1);
-
   for (auto _ : state) {
     Kokkos::Timer timer;
-    for (int i = 0; i < R; i++) {
-      Kokkos::deep_copy(a, b);
-    }
+    Kokkos::deep_copy(a, b);
     Kokkos::fence();
-
-    report_results(state, timer.seconds() / R);
+    report_results(state, timer.seconds());
   }
 }
 
@@ -158,8 +153,7 @@ static void ViewDeepCopy_Rank8(benchmark::State& state) {
 
 template <class LayoutA, class LayoutB>
 static void ViewDeepCopy_Raw(benchmark::State& state) {
-  const auto N8 = std::pow(state.range(0), 8);
-  const auto R  = state.range(1);
+  const int N8 = std::pow(state.range(0), 8);
 
   Kokkos::View<double*, LayoutA> a("A1", N8);
   Kokkos::View<double*, LayoutB> b("B1", N8);
@@ -168,13 +162,11 @@ static void ViewDeepCopy_Raw(benchmark::State& state) {
 
   for (auto _ : state) {
     Kokkos::Timer timer;
-    for (int r = 0; r < R; r++) {
-      Kokkos::parallel_for(
-          N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = b_ptr[i]; });
-    }
+    Kokkos::parallel_for(
+        N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = b_ptr[i]; });
     Kokkos::fence();
 
-    report_results(state, timer.seconds() / R);
+    report_results(state, timer.seconds());
   }
 }
 

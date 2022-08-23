@@ -47,8 +47,8 @@
 namespace Test {
 
 BENCHMARK(ViewDeepCopy_Rank6<Kokkos::LayoutLeft, Kokkos::LayoutRight>)
-    ->ArgNames({"N", "R"})
-    ->Args({10, 1})
+    ->ArgName("N")
+    ->Arg(10)
     ->UseManualTime();
 
 }  // namespace Test
