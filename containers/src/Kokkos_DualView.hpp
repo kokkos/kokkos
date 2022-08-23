@@ -940,12 +940,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       }
     } else if (alloc_prop_input::initialize) {
       if constexpr (alloc_prop_input::has_execution_space) {
-        using execution_space_type = typename alloc_prop_input::execution_space;
-        const execution_space_type& exec_space =
-            static_cast<
-                Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-                arg_prop)
-                .value;
+        const auto& exec_space =
+            Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
         ::Kokkos::deep_copy(exec_space, d_view, typename t_dev::value_type{});
       } else
         ::Kokkos::deep_copy(d_view, typename t_dev::value_type{});

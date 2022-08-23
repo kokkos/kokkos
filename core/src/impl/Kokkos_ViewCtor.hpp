@@ -174,19 +174,20 @@ struct ViewCtorProp<void, T *> {
 // For some reason I don't understand I needed this specialization explicitly
 // for NVCC/MSVC
 template <typename T>
-struct ViewCtorProp<T *> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+struct ViewCtorProp<T *> : public ViewCtorProp<void, T *> {
+  enum { has_memory_space = false };
+  enum { has_execution_space = false };
+  enum { has_pointer = true };
+  enum { has_label = false };
+  enum { allow_padding = false };
+  enum { initialize = true };
 
-  using type = T *;
+  using memory_space    = void;
+  using execution_space = void;
+  using pointer_type    = T *;
 
-  KOKKOS_INLINE_FUNCTION
-  ViewCtorProp(const type arg) : value(arg) {}
-
-  enum : bool { has_pointer = true };
-  using pointer_type = type;
-  type value;
+  KOKKOS_INLINE_FUNCTION ViewCtorProp(const pointer_type arg)
+      : ViewCtorProp<void, pointer_type>(arg) {}
 };
 
 // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` directly
@@ -284,6 +285,68 @@ auto add_properties(const ViewCtorProp<P...> &view_ctor_prop,
     return add_properties(new_view_ctor_prop, properties...);
   } else
     return add_properties(view_ctor_prop, properties...);
+}
+
+struct ExecutionSpaceTag {};
+struct MemorySpaceTag {};
+struct LabelTag {};
+struct PointerTag {};
+
+template <typename Tag, typename... P>
+KOKKOS_FUNCTION const auto &get_property(
+    const ViewCtorProp<P...> &view_ctor_prop) {
+  if constexpr (std::is_same_v<Tag, ExecutionSpaceTag>) {
+    static_assert(ViewCtorProp<P...>::has_execution_space);
+    using execution_space_type = typename ViewCtorProp<P...>::execution_space;
+    return static_cast<const ViewCtorProp<void, execution_space_type> &>(
+               view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, MemorySpaceTag>) {
+    static_assert(ViewCtorProp<P...>::has_memory_space);
+    using memory_space_type = typename ViewCtorProp<P...>::memory_space;
+    return static_cast<const ViewCtorProp<void, memory_space_type> &>(
+               view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, LabelTag>) {
+    static_assert(ViewCtorProp<P...>::has_label);
+    return static_cast<const ViewCtorProp<void, std::string> &>(view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, PointerTag>) {
+    static_assert(ViewCtorProp<P...>::has_pointer);
+    using pointer_type = typename ViewCtorProp<P...>::pointer_type;
+    return static_cast<const ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
+        .value;
+  } else {
+    static_assert(!std::is_same_v<Tag, void>, "Invalid property tag!");
+    return view_ctor_prop;
+  }
+}
+
+template <typename Tag, typename... P>
+KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {
+  if constexpr (std::is_same_v<Tag, ExecutionSpaceTag>) {
+    static_assert(ViewCtorProp<P...>::has_execution_space);
+    using execution_space_type = typename ViewCtorProp<P...>::execution_space;
+    return static_cast<ViewCtorProp<void, execution_space_type> &>(
+               view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, MemorySpaceTag>) {
+    static_assert(ViewCtorProp<P...>::has_memory_space);
+    using memory_space_type = typename ViewCtorProp<P...>::memory_space;
+    return static_cast<ViewCtorProp<void, memory_space_type> &>(view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, LabelTag>) {
+    static_assert(ViewCtorProp<P...>::has_label);
+    return static_cast<ViewCtorProp<void, std::string> &>(view_ctor_prop).value;
+  } else if constexpr (std::is_same_v<Tag, PointerTag>) {
+    static_assert(ViewCtorProp<P...>::has_pointer);
+    using pointer_type = typename ViewCtorProp<P...>::pointer_type;
+    return static_cast<ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
+        .value;
+  } else {
+    static_assert(!std::is_same_v<Tag, void>, "Invalid property tag!");
+    return view_ctor_prop;
+  }
 }
 
 } /* namespace Impl */

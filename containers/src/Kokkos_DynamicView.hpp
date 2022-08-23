@@ -534,10 +534,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         m_chunk_size(2 << (m_chunk_shift - 1)) {
     m_chunks = device_accessor(m_chunk_max, m_chunk_size);
 
-    const std::string& label =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
-            arg_prop)
-            .value;
+    const std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop);
 
     if (device_accessor::template IsAccessibleFrom<host_space>::value) {
       m_chunks.template allocate_with_destroy<device_space>(label);
@@ -1053,18 +1050,14 @@ auto create_mirror_view_and_copy(
                            typename Space::execution_space{});
   using alloc_prop = decltype(arg_prop_copy);
 
-  std::string& label =
-      static_cast<Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy).value;
+  std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type(
       arg_prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
   mirror.resize_serial(src.extent(0));
   if (alloc_prop_input::has_execution_space) {
-    using ExecutionSpace = typename alloc_prop::execution_space;
-    deep_copy(
-        static_cast<Impl::ViewCtorProp<void, ExecutionSpace>&>(arg_prop_copy)
-            .value,
-        mirror, src);
+    deep_copy(Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop_copy),
+              mirror, src);
   } else
     deep_copy(mirror, src);
   return mirror;

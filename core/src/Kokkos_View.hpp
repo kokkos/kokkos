@@ -1438,9 +1438,7 @@ class View : public ViewTraits<DataType, Properties...> {
       size_t i7 = arg_layout.dimension[7];
 
       const std::string& alloc_name =
-          static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
-              prop_copy)
-              .value;
+          Impl::get_property<Impl::LabelTag>(prop_copy);
       Impl::runtime_check_rank(
           traits::rank, traits::rank_dynamic,
           std::is_same<typename traits::specialize, void>::value, i0, i1, i2,

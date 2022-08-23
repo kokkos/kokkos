@@ -3397,9 +3397,7 @@ class ViewMapping<
   KOKKOS_INLINE_FUNCTION ViewMapping(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
       typename Traits::array_layout const& arg_layout)
-      : m_impl_handle(
-            ((Kokkos::Impl::ViewCtorProp<void, pointer_type> const&)arg_prop)
-                .value),
+      : m_impl_handle(Impl::get_property<Impl::PointerTag>(arg_prop)),
         m_impl_offset(std::integral_constant<unsigned, 0>(), arg_layout) {}
 
   /**\brief  Assign data */
@@ -3441,17 +3439,11 @@ class ViewMapping<
         (m_impl_offset.span() * MemorySpanSize + MemorySpanMask) &
         ~size_t(MemorySpanMask);
     const std::string& alloc_name =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::LabelTag>(arg_prop);
     const execution_space& exec_space =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
     const memory_space& mem_space =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const&>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::MemorySpaceTag>(arg_prop);
 
     // Create shared memory tracking record with allocate memory from the memory
     // space

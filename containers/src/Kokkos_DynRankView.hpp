@@ -2281,17 +2281,13 @@ auto create_mirror_view_and_copy(
                            typename Space::execution_space{});
   using alloc_prop = decltype(arg_prop_copy);
 
-  std::string& label =
-      static_cast<Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy).value;
+  std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type{
       arg_prop_copy, Impl::reconstructLayout(src.layout(), src.rank())};
   if (alloc_prop_input::has_execution_space) {
-    using ExecutionSpace = typename alloc_prop::execution_space;
-    deep_copy(
-        static_cast<Impl::ViewCtorProp<void, ExecutionSpace>&>(arg_prop_copy)
-            .value,
-        mirror, src);
+    deep_copy(Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop_copy),
+              mirror, src);
   } else
     deep_copy(mirror, src);
   return mirror;

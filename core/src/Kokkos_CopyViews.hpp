@@ -3268,10 +3268,7 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
     if constexpr (alloc_prop_input::has_execution_space) {
       using execution_space_type = typename alloc_prop_input::execution_space;
       const execution_space_type& exec_space =
-          static_cast<
-              Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-              arg_prop)
-              .value;
+          Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
     } else
       Kokkos::deep_copy(v, typename view_type::value_type{});
@@ -3366,12 +3363,8 @@ impl_realloc(Kokkos::View<T, P...>& v,
     v = view_type(arg_prop, layout);
   } else if (alloc_prop_input::initialize) {
     if constexpr (alloc_prop_input::has_execution_space) {
-      using execution_space_type = typename alloc_prop_input::execution_space;
-      const execution_space_type& exec_space =
-          static_cast<
-              Kokkos::Impl::ViewCtorProp<void, execution_space_type> const&>(
-              arg_prop)
-              .value;
+      const auto& exec_space =
+          Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
     } else
       Kokkos::deep_copy(v, typename view_type::value_type{});
@@ -3840,16 +3833,12 @@ auto create_mirror_view_and_copy(
                            typename Space::execution_space{});
   using alloc_prop = decltype(arg_prop_copy);
 
-  std::string& label =
-      static_cast<Impl::ViewCtorProp<void, std::string>&>(arg_prop_copy).value;
+  std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type{arg_prop_copy, src.layout()};
   if (alloc_prop_input::has_execution_space) {
-    using ExecutionSpace = typename alloc_prop::execution_space;
-    deep_copy(
-        static_cast<Impl::ViewCtorProp<void, ExecutionSpace>&>(arg_prop_copy)
-            .value,
-        mirror, src);
+    deep_copy(Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop_copy),
+              mirror, src);
   } else
     deep_copy(mirror, src);
   return mirror;
