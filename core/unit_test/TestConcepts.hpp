@@ -171,7 +171,7 @@ TEST(TEST_CATEGORY, team_handle_concept) {
 
     - OpenACC: not supporting teams yet
    */
-#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENMACC
+#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENACC
   static_assert(Kokkos::is_team_handle_v<ValidTeamMember>, "");
 #endif
 
