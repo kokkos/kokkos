@@ -102,9 +102,9 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
 
   using type = CommonViewAllocProp<Specialize, T>;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ViewCtorProp(const type &arg) : value(arg) {}
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ViewCtorProp(type &&arg) : value(arg) {}
 
   type value;
@@ -165,7 +165,7 @@ struct ViewCtorProp<void, T *> {
 
   using type = T *;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ViewCtorProp(const type arg) : value(arg) {}
 
   type value;
@@ -175,18 +175,18 @@ struct ViewCtorProp<void, T *> {
 // for NVCC/MSVC
 template <typename T>
 struct ViewCtorProp<T *> : public ViewCtorProp<void, T *> {
-  enum { has_memory_space = false };
-  enum { has_execution_space = false };
-  enum { has_pointer = true };
-  enum { has_label = false };
-  enum { allow_padding = false };
-  enum { initialize = true };
+  static constexpr bool has_memory_space    = false;
+  static constexpr bool has_execution_space = false;
+  static constexpr bool has_pointer         = true;
+  static constexpr bool has_label           = false;
+  static constexpr bool allow_padding       = false;
+  static constexpr bool initialize          = true;
 
   using memory_space    = void;
   using execution_space = void;
   using pointer_type    = T *;
 
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(const pointer_type arg)
+  KOKKOS_FUNCTION ViewCtorProp(const pointer_type arg)
       : ViewCtorProp<void, pointer_type>(arg) {}
 };
 
@@ -218,14 +218,15 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
  public:
   /* Flags for the common properties */
-  enum { has_memory_space = var_memory_space::value };
-  enum { has_execution_space = var_execution_space::value };
-  enum { has_pointer = var_pointer::value };
-  enum { has_label = Kokkos::Impl::has_type<std::string, P...>::value };
-  enum { allow_padding = Kokkos::Impl::has_type<AllowPadding_t, P...>::value };
-  enum {
-    initialize = !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value
-  };
+  static constexpr bool has_memory_space    = var_memory_space::value;
+  static constexpr bool has_execution_space = var_execution_space::value;
+  static constexpr bool has_pointer         = var_pointer::value;
+  static constexpr bool has_label =
+      Kokkos::Impl::has_type<std::string, P...>::value;
+  static constexpr bool allow_padding =
+      Kokkos::Impl::has_type<AllowPadding_t, P...>::value;
+  static constexpr bool initialize =
+      !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value;
 
   using memory_space    = typename var_memory_space::type;
   using execution_space = typename var_execution_space::type;
@@ -238,12 +239,12 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   inline ViewCtorProp(Args const &... args) : ViewCtorProp<void, P>(args)... {}
 
   template <typename... Args>
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0, Args const &... args)
+  KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &... args)
       : ViewCtorProp<void, pointer_type>(arg0),
         ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
 
   /* Copy from a matching property subset */
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0)
+  KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0)
       : ViewCtorProp<void, pointer_type>(arg0) {}
 
   // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` here
