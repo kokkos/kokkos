@@ -161,7 +161,6 @@ KOKKOS_IMPL_IS_CONCEPT(hooks_policy)
 // - based on
 // https://kokkos.github.io/kokkos-core-wiki/API/core/policies/TeamHandleConcept.html
 //
-
 template <typename T>
 struct is_team_handle {
  private:
@@ -171,35 +170,39 @@ struct is_team_handle {
   double lvalueForMethodsNeedingIt_;
   double *ptrForMethodsNeedingIt_;
 
+  // we use Sum here but any other reducer can be used
+  // since we just want something that meets the ReducerConcept
+  using reduction_to_test_t = ::Kokkos::Sum<double>;
+
   template <typename U>
-  using m1 = decltype(std::declval<const U &>().team_rank());
+  using m1 = decltype(std::declval<U const &>().team_rank());
   template <typename U>
-  using m2 = decltype(std::declval<const U &>().team_size());
+  using m2 = decltype(std::declval<U const &>().team_size());
   template <typename U>
-  using m3 = decltype(std::declval<const U &>().league_rank());
+  using m3 = decltype(std::declval<U const &>().league_rank());
   template <typename U>
-  using m4 = decltype(std::declval<const U &>().league_size());
+  using m4 = decltype(std::declval<U const &>().league_size());
   template <typename U>
-  using m5 = decltype(std::declval<const U &>().team_shmem());
+  using m5 = decltype(std::declval<U const &>().team_shmem());
   template <typename U>
-  using m6 = decltype(std::declval<const U &>().team_scratch(int{}));
+  using m6 = decltype(std::declval<U const &>().team_scratch(int{}));
   template <typename U>
-  using m7 = decltype(std::declval<const U &>().thread_scratch(int{}));
+  using m7 = decltype(std::declval<U const &>().thread_scratch(int{}));
   template <typename U>
-  using m8 = decltype(std::declval<const U &>().team_barrier());
+  using m8 = decltype(std::declval<U const &>().team_barrier());
   template <typename U>
-  using m9 = decltype(std::declval<const U &>().team_broadcast(
+  using m9 = decltype(std::declval<U const &>().team_broadcast(
       lvalueForMethodsNeedingIt_, int{}));
   template <typename U>
-  using m10 = decltype(std::declval<const U &>().team_broadcast(
+  using m10 = decltype(std::declval<U const &>().team_broadcast(
       TrivialFunctor{}, lvalueForMethodsNeedingIt_, int{}));
 
   template <typename U>
-  using m11 = decltype(std::declval<const U &>().team_reduce(
-      Min<double>{lvalueForMethodsNeedingIt_}));
+  using m11 = decltype(std::declval<U const &>().team_reduce(
+      std::declval<reduction_to_test_t>()));
 
   template <typename U>
-  using m12 = decltype(std::declval<const U &>().team_scan(
+  using m12 = decltype(std::declval<U const &>().team_scan(
       lvalueForMethodsNeedingIt_, ptrForMethodsNeedingIt_));
 
  public:
@@ -209,7 +212,7 @@ struct is_team_handle {
       is_detected<m5, T>::value && is_detected<m6, T>::value &&
       is_detected<m7, T>::value && is_detected<m8, T>::value &&
       is_detected<m9, T>::value && is_detected<m10, T>::value &&
-      is_detected<m11, T>::value && is_detected<m12, T>::value;
+      /*is_detected<m11, T>::value && */ is_detected<m12, T>::value;
   constexpr operator bool() const noexcept { return value; }
 };
 
