@@ -1028,7 +1028,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
     check_scatter_view_allocation_properties_argument(arg_prop);
 
     auto const& exec_space =
-        Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
+        Kokkos::Impl::get_property<Kokkos::Impl::ExecutionSpaceTag>(arg_prop);
     reset(exec_space);
   }
 
@@ -1287,13 +1287,14 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     Kokkos::Impl::Experimental::args_to_array(arg_N, 0, dims...);
     arg_N[internal_view_type::rank - 1] = unique_token.size();
 
-    auto const& name = Impl::get_property<Impl::LabelTag>(arg_prop);
-    internal_view    = internal_view_type(view_alloc(WithoutInitializing, name),
+    auto const& name =
+        Kokkos::Impl::get_property<Kokkos::Impl::LabelTag>(arg_prop);
+    internal_view = internal_view_type(view_alloc(WithoutInitializing, name),
                                        arg_N[0], arg_N[1], arg_N[2], arg_N[3],
                                        arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
 
     auto const& exec_space =
-        Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
+        Kokkos::Impl::get_property<Kokkos::Impl::ExecutionSpaceTag>(arg_prop);
     reset(exec_space);
   }
 

@@ -534,7 +534,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         m_chunk_size(2 << (m_chunk_shift - 1)) {
     m_chunks = device_accessor(m_chunk_max, m_chunk_size);
 
-    const std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop);
+    const std::string& label =
+        Kokkos::Impl::get_property<Kokkos::Impl::LabelTag>(arg_prop);
 
     if (device_accessor::template IsAccessibleFrom<host_space>::value) {
       m_chunks.template allocate_with_destroy<device_space>(label);
