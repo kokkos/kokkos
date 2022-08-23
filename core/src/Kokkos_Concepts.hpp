@@ -196,7 +196,7 @@ struct is_team_handle {
 
   template <typename U>
   using m11 = decltype(std::declval<const U &>().team_reduce(
-      ::Kokkos::Min<double>{lvalueForMethodsNeedingIt_}));
+      Min<double>{lvalueForMethodsNeedingIt_}));
 
   template <typename U>
   using m12 = decltype(std::declval<const U &>().team_scan(
