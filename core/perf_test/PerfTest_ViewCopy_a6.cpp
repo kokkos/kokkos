@@ -51,11 +51,4 @@ BENCHMARK(ViewDeepCopy_Rank6<Kokkos::LayoutLeft, Kokkos::LayoutLeft>)
     ->Args({10, 1})
     ->UseManualTime();
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutLeft, Kokkos::LayoutLeft>)
-    ->ArgNames({"N", "R"})
-    ->Args({10, 1})
-    ->UseManualTime();
-#endif
-
 }  // namespace Test
