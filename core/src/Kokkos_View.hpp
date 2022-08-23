@@ -1402,7 +1402,9 @@ class View : public ViewTraits<DataType, Properties...> {
                        typename traits::array_layout> const& arg_layout,
       check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
-    // Append layout and spaces if not input, split for MSVC
+    // Append layout and spaces if not input
+    // We get compiler errors with MSVC without splitting the definition of the
+    // alias.
     using alloc_prop_tmp =
         decltype(Impl::add_properties(arg_prop, std::string{}));
     using alloc_prop = decltype(
