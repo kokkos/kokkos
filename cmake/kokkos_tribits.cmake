@@ -8,8 +8,10 @@ MESSAGE(STATUS "The project name is: ${PROJECT_NAME}")
 
 IF(GTest_FOUND)
   SET(KOKKOS_GTEST_LIB GTest::gtest)
+  MESSAGE(STATUS "Using gtest found in ${GTest_DIR}")
 ELSE()  # fallback to internal gtest
   SET(KOKKOS_GTEST_LIB kokkos_gtest)
+  MESSAGE(STATUS "Using internal gtest for testing")
 ENDIF()
 
 FUNCTION(VERIFY_EMPTY CONTEXT)
@@ -215,6 +217,7 @@ MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
   SET(Kokkos_INSTALL_TESTING OFF CACHE INTERNAL "Whether to build tests and examples against installation")
   IF (Kokkos_INSTALL_TESTING)
     SET(KOKKOS_ENABLE_TESTS ON)
+    SET(KOKKOS_ENABLE_BENCHMARKS ON)
     SET(KOKKOS_ENABLE_EXAMPLES ON)
     # This looks a little weird, but what we are doing
     # is to NOT build Kokkos but instead look for an
