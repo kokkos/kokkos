@@ -149,6 +149,14 @@ struct InvalidTeamMember12 {
 };
 
 TEST(TEST_CATEGORY, team_handle_concept) {
+  /* disabling as follows:
+
+    - OpenMPTarget: due to this
+    https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860
+
+    - OpenACC: not supporting team yet
+   */
+#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENACC
   using space_t  = TEST_EXECSPACE;
   using policy_t = Kokkos::TeamPolicy<space_t>;
   using member_t = typename policy_t::member_type;
@@ -162,19 +170,10 @@ TEST(TEST_CATEGORY, team_handle_concept) {
   static_assert(!Kokkos::is_team_handle_v<member_t *>, "");
   static_assert(!Kokkos::is_team_handle_v<member_t const *>, "");
   static_assert(!Kokkos::is_team_handle_v<member_t *const>, "");
-
-  /*
-    disabling as follows:
-
-    - OpenMPTARGET: due to this
-    https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860
-
-    - OpenACC: not supporting teams yet
-   */
-#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENACC
-  static_assert(Kokkos::is_team_handle_v<ValidTeamMember>, "");
 #endif
 
+  // these always work since use a custom struct defined above
+  static_assert(Kokkos::is_team_handle_v<ValidTeamMember>, "");
   static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember1>, "");
   static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember2>, "");
   static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember3>, "");
