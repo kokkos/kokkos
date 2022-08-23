@@ -26,10 +26,6 @@ SET(SOURCES
   PerfTest_ViewCopy_b123.cpp
   PerfTest_ViewCopy_c123.cpp
   PerfTest_ViewCopy_d123.cpp
-  PerfTest_ViewCopy_a45.cpp
-  PerfTest_ViewCopy_b45.cpp
-  PerfTest_ViewCopy_c45.cpp
-  PerfTest_ViewCopy_d45.cpp
   PerfTest_ViewAllocate.cpp
   PerfTest_ViewFill_123.cpp
   PerfTest_ViewFill_45.cpp
@@ -191,6 +187,10 @@ SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
   Benchmark_ViewCopy.cpp
+  PerfTest_ViewCopy_a45.cpp
+  PerfTest_ViewCopy_b45.cpp
+  PerfTest_ViewCopy_c45.cpp
+  PerfTest_ViewCopy_d45.cpp
   PerfTest_ViewCopy_a6.cpp
   PerfTest_ViewCopy_b6.cpp
   PerfTest_ViewCopy_c6.cpp

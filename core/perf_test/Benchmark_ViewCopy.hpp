@@ -69,6 +69,28 @@ void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {
 }
 
 template <class LayoutA, class LayoutB>
+static void ViewDeepCopy_Rank4(benchmark::State& state) {
+  const int N1 = state.range(0);
+  const int N2 = N1 * N1;
+
+  Kokkos::View<double****, LayoutA> a("A4", N2, N2, N2, N2);
+  Kokkos::View<double****, LayoutB> b("B4", N2, N2, N2, N2);
+
+  deepcopy_view(a, b, state);
+}
+
+template <class LayoutA, class LayoutB>
+static void ViewDeepCopy_Rank5(benchmark::State& state) {
+  const int N1 = state.range(0);
+  const int N2 = N1 * N1;
+
+  Kokkos::View<double*****, LayoutA> a("A5", N2, N2, N1, N1, N2);
+  Kokkos::View<double*****, LayoutB> b("B5", N2, N2, N1, N1, N2);
+
+  deepcopy_view(a, b, state);
+}
+
+template <class LayoutA, class LayoutB>
 static void ViewDeepCopy_Rank6(benchmark::State& state) {
   const int N1 = state.range(0);
   const int N2 = N1 * N1;
