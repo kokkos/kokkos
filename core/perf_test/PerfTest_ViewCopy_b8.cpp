@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <Benchmark_ViewCopy.hpp>
+#include <PerfTest_ViewCopy.hpp>
 
 // DeepCopy Performance for LayoutRight to LayoutRight
 namespace Test {
