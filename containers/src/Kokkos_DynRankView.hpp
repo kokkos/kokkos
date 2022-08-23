@@ -2278,7 +2278,6 @@ auto create_mirror_view_and_copy(
   auto arg_prop_copy =
       Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
                            typename Space::execution_space{});
-  using alloc_prop = decltype(arg_prop_copy);
 
   std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();
