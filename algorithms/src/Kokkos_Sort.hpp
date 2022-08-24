@@ -624,38 +624,12 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   bin_sort.sort(exec, view);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class ExecutionSpace, class ViewType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload not taking bool always_use_kokkos_sort")
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType const& view,
-    bool const always_use_kokkos_sort) {
-  if (!always_use_kokkos_sort && Impl::try_std_sort(view, exec)) {
-    return;
-  } else {
-    sort(exec, view);
-  }
-}
-#endif
-
 template <class ViewType>
 void sort(ViewType const& view) {
   typename ViewType::execution_space exec;
   sort(exec, view);
   exec.fence("Kokkos::Sort: fence after sorting");
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-template <class ViewType>
-KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use the overload not taking bool always_use_kokkos_sort")
-void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
-  typename ViewType::execution_space exec;
-  sort(exec, view, always_use_kokkos_sort);
-  exec.fence("Kokkos::Sort: fence after sorting");
-}
-#endif
 
 template <class ExecutionSpace, class ViewType>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
