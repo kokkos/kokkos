@@ -22,6 +22,7 @@
 #include <benchmark/benchmark.h>
 
 #include <Kokkos_Core.hpp>
+#include <Environment_Info.hpp>
 
 namespace KokkosBenchmark {
 
@@ -60,10 +61,20 @@ void add_kokkos_configuration(bool verbose) {
   }
 }
 
+void add_git_info() {
+  benchmark::AddCustomContext("GIT_BRANCH", KOKKOS_GIT_BRANCH);
+  benchmark::AddCustomContext("GIT_COMMIT_HASH", KOKKOS_GIT_COMMIT_HASH);
+  benchmark::AddCustomContext("GIT_CLEAN_STATUS", KOKKOS_GIT_CLEAN_STATUS);
+  benchmark::AddCustomContext("GIT_COMMIT_DESCRIPTION", KOKKOS_GIT_COMMIT_DESCRIPTION);
+  benchmark::AddCustomContext("GIT_COMMIT_DATE", KOKKOS_GIT_COMMIT_DATE);
+}
+
 /// \brief Gather all context information and add it to benchmark context data
 void add_benchmark_context(bool verbose = false) {
   // Add Kokkos configuration to benchmark context data
   add_kokkos_configuration(verbose);
+
+  add_git_info();
 }
 
 }  // namespace KokkosBenchmark

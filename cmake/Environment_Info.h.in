@@ -1,0 +1,8 @@
+
+#include <string>
+
+std::string const KOKKOS_GIT_BRANCH = "@GIT_BRANCH@";
+std::string const KOKKOS_GIT_COMMIT_HASH = "@GIT_COMMIT_HASH@";
+std::string const KOKKOS_GIT_CLEAN_STATUS = "@GIT_CLEAN_STATUS@";
+std::string const KOKKOS_GIT_COMMIT_DESCRIPTION = "@GIT_COMMIT_DESCRIPTION@";
+std::string const KOKKOS_GIT_COMMIT_DATE = "@GIT_COMMIT_DATE@";

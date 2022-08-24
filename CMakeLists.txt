@@ -330,3 +330,6 @@ IF (HAS_PARENT)
     SET_PROPERTY(GLOBAL PROPERTY Kokkos_ENABLE_${DEV} ON)
   ENDFOREACH()
 ENDIF()
+
+# Gather information about the runtime environment
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
