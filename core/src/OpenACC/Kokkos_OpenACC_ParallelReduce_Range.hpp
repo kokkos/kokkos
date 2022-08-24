@@ -145,14 +145,23 @@ void OpenACCParallelReduceSum(Schedule<Static>, int chunk_size, IndexType begin,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceSum(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceSum(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
                               Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(+:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(+:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -178,14 +187,23 @@ void OpenACCParallelReduceProd(Schedule<Static>, int chunk_size,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceProd(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceProd(Schedule<Dynamic>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
                                Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(*:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(*:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -211,14 +229,23 @@ void OpenACCParallelReduceMin(Schedule<Static>, int chunk_size, IndexType begin,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceMin(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceMin(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
                               Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(min:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(min:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -244,14 +271,23 @@ void OpenACCParallelReduceMax(Schedule<Static>, int chunk_size, IndexType begin,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceMax(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceMax(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
                               Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(max:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(max:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -277,14 +313,23 @@ void OpenACCParallelReduceLAnd(Schedule<Static>, int chunk_size,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceLAnd(Schedule<Dynamic>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
                                Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(&&:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -310,14 +355,23 @@ void OpenACCParallelReduceLOr(Schedule<Static>, int chunk_size, IndexType begin,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceLOr(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceLOr(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
                               Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(||:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(||:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -343,14 +397,23 @@ void OpenACCParallelReduceBAnd(Schedule<Static>, int chunk_size,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceBAnd(Schedule<Dynamic>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
                                Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(&&:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 
@@ -376,14 +439,23 @@ void OpenACCParallelReduceBOr(Schedule<Static>, int chunk_size, IndexType begin,
 }
 
 template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceBOr(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelReduceBOr(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
                               Functor const& functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector reduction(|:val) copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector reduction(|:val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; i++) {
-    functor(i, val);
+    // clang-format on
+    for (auto i = begin; i < end; i++) {
+      functor(i, val);
+    }
   }
 }
 

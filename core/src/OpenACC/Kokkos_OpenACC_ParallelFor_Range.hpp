@@ -73,14 +73,23 @@ void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
 }
 
 template <class IndexType, class Functor>
-void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int /*chunk_size*/,
+void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int chunk_size,
                                    IndexType begin, IndexType end,
                                    Functor functor, int async_arg) {
+  if (chunk_size >= 1) {
+// clang-format off
+#pragma acc parallel loop gang(static:chunk_size) vector copyin(functor) async(async_arg)
+    // clang-format on
+    for (auto i = begin; i < end; ++i) {
+      functor(i);
+    }
+  } else {
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
-  // clang-format on
-  for (auto i = begin; i < end; ++i) {
-    functor(i);
+    // clang-format on
+    for (auto i = begin; i < end; ++i) {
+      functor(i);
+    }
   }
 }
 }  // namespace Kokkos::Experimental::Impl
