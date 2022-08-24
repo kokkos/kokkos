@@ -549,24 +549,6 @@ struct BinOp3D {
 
 namespace Impl {
 
-template <class ViewType, class ExecutionSpace>
-bool try_std_sort(ViewType view, const ExecutionSpace& exec) {
-  bool possible    = true;
-  size_t stride[8] = {view.stride_0(), view.stride_1(), view.stride_2(),
-                      view.stride_3(), view.stride_4(), view.stride_5(),
-                      view.stride_6(), view.stride_7()};
-  possible         = possible &&
-             SpaceAccessibility<HostSpace,
-                                typename ViewType::memory_space>::accessible;
-  possible = possible && (ViewType::Rank == 1);
-  possible = possible && (stride[0] == 1);
-  if (possible) {
-    exec.fence("Kokkos::sort: Fence before sorting on the host");
-    std::sort(view.data(), view.data() + view.extent(0));
-  }
-  return possible;
-}
-
 template <class ViewType>
 struct min_max_functor {
   using minmax_scalar =
