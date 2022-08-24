@@ -47,7 +47,12 @@
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_SYCL)
+// FIXME_SYCL
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
 #include <CL/sycl.hpp>
+#endif
 
 namespace Kokkos {
 namespace Impl {

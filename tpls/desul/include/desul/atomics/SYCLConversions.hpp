@@ -13,7 +13,12 @@ SPDX-License-Identifier: (BSD-3-Clause)
 // clang-format off
 #include "desul/atomics/Common.hpp"
 
+// FIXME_SYCL
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
 #include <CL/sycl.hpp>
+#endif
 // clang-format on
 
 namespace desul {
