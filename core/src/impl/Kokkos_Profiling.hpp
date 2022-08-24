@@ -50,6 +50,7 @@
 #include <iosfwd>
 #include <unordered_map>
 #include <map>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <mutex>
