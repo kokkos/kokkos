@@ -67,9 +67,8 @@ struct TestFunctorA {
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_apiPick == 0) {
-      auto it = KE::max_element(member,
-				KE::cbegin(myRowView),
-				KE::cend(myRowView));
+      auto it =
+          KE::max_element(member, KE::cbegin(myRowView), KE::cend(myRowView));
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::cbegin(myRowView), it);
       });
@@ -84,8 +83,9 @@ struct TestFunctorA {
 
     else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
-      auto it = KE::max_element(member, KE::cbegin(myRowView), KE::cend(myRowView),
-				CustomLessThanComparator<value_type>{});
+      auto it =
+          KE::max_element(member, KE::cbegin(myRowView), KE::cend(myRowView),
+                          CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::cbegin(myRowView), it);
       });
@@ -93,7 +93,8 @@ struct TestFunctorA {
 
     else if (m_apiPick == 3) {
       using value_type = typename ViewType::value_type;
-      auto it = KE::max_element(member, myRowView, CustomLessThanComparator<value_type>{});
+      auto it          = KE::max_element(member, myRowView,
+                                CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
@@ -138,7 +139,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // here I can use cloneOfDataViewBeforeOp_h to run std algo on
   // since that contains a valid copy of the data
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h   = create_host_space_copy(distancesView);
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
@@ -147,10 +148,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     if (apiId <= 1) {
       auto it     = std::max_element(KE::cbegin(myRow), KE::cend(myRow));
       stdDistance = KE::distance(KE::cbegin(myRow), it);
-    }
-    else {
+    } else {
       auto it     = std::max_element(KE::cbegin(myRow), KE::cend(myRow),
-				     CustomLessThanComparator<value_type>{});
+                                 CustomLessThanComparator<value_type>{});
       stdDistance = KE::distance(KE::cbegin(myRow), it);
     }
 
@@ -165,13 +165,12 @@ template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
-
       // for OpenMPTarget we need to avod api accepting a custom
       // comparator because it is not supported
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
-      for (int apiId : {0,1,2,3}) {
+      for (int apiId : {0, 1, 2, 3}) {
 #else
-      for (int apiId : {0,1}) {
+      for (int apiId : {0, 1}) {
 #endif
         test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
