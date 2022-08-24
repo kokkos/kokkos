@@ -42,20 +42,46 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_CORE_PERFTEST_BENCHMARK_CONTEXT_HPP
+#define KOKKOS_CORE_PERFTEST_BENCHMARK_CONTEXT_HPP
+
+#include <string>
+
 #include <benchmark/benchmark.h>
 
-#include <Benchmark_Context.hpp>
 #include <Kokkos_Core.hpp>
 
-int main(int argc, char** argv) {
-  Kokkos::initialize(argc, argv);
-  benchmark::Initialize(&argc, argv);
-  benchmark::SetDefaultTimeUnit(benchmark::kSecond);
-  Test::add_benchmark_context(true);
+namespace Test {
 
-  benchmark::RunSpecifiedBenchmarks();
-
-  benchmark::Shutdown();
-  Kokkos::finalize();
-  return 0;
+std::string remove_unwanted_prefix(std::string str) {
+  auto found = str.find_first_not_of(" :,");
+  if(found != std::string::npos) {
+    return str.substr(found);
+  }
+  return str;
 }
+
+void add_kokkos_configuration(bool verbose = false) {
+  std::ostringstream msg;
+  Kokkos::print_configuration(msg, verbose);
+
+  std::stringstream ss{msg.str()};
+  for(std::string line; std::getline(ss, line, '\n');) {
+    auto found = line.find_first_of(':');
+    if(found != std::string::npos){
+      auto val = remove_unwanted_prefix(line.substr(found + 1));
+      if(val.length()) {
+        benchmark::AddCustomContext(remove_unwanted_prefix(line.substr(0, found)), val);
+      }
+    }
+  }
+}
+
+void add_benchmark_context(bool verbose = false) {
+  // Add Kokkos configuration to benchmark context data
+  add_kokkos_configuration(verbose);
+}
+
+}  // namespace Test
+
+#endif
