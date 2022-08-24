@@ -105,6 +105,7 @@
 - Deprecate `Kokkos::common_view_alloc_prop` [\#5059](https://github.com/kokkos/kokkos/pull/5059)
 - Deprecate `Kokkos::is_reducer_type` [\#4957](https://github.com/kokkos/kokkos/pull/4957)
 - Deprecate `OffsetView` constructors taking `index_list_type` [\#4810](https://github.com/kokkos/kokkos/pull/4810)
+- Deprecate overloads of `Kokkos::sort` taking a parameter `bool always_use_kokkos_sort` [\#5382](https://github.com/kokkos/kokkos/issues/5382)
 - Warn about `parallel_reduce` cases that call `join()` with volatile-qualified arguments [\#5215](https://github.com/kokkos/kokkos/pull/5215)
 
 ### Bug Fixes:
