@@ -1201,9 +1201,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   {
     for (size_t i = 0; i < Rank; ++i) m_begins[i] = minIndices.begin()[i];
 
-    using alloc_prop = decltype(::Kokkos::Impl::add_properties(
+    // Copy the input allocation properties with possibly defaulted properties
+    auto prop_copy = Kokkos::Impl::add_properties(
         arg_prop, std::string{}, typename traits::device_type::memory_space{},
-        typename traits::device_type::execution_space{}));
+        typename traits::device_type::execution_space{});
+    using alloc_prop = decltype(prop_copy);
 
     static_assert(traits::is_managed,
                   "OffsetView allocation constructor requires managed memory");
@@ -1216,9 +1218,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           "Constructing OffsetView and initializing data with uninitialized "
           "execution space");
     }
-
-    // Copy the input allocation properties with possibly defaulted properties
-    alloc_prop prop_copy(arg_prop);
 
     //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)

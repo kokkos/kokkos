@@ -1402,15 +1402,11 @@ class View : public ViewTraits<DataType, Properties...> {
                        typename traits::array_layout> const& arg_layout,
       check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
-    // Append layout and spaces if not input
-    // We get compiler errors with MSVC without splitting the definition of the
-    // alias.
-    using alloc_prop_tmp =
-        decltype(Impl::add_properties(arg_prop, std::string{}));
-    using alloc_prop = decltype(
-        Impl::add_properties(std::declval<alloc_prop_tmp>(),
-                             typename traits::device_type::memory_space{},
-                             typename traits::device_type::execution_space{}));
+    // Copy the input allocation properties with possibly defaulted properties
+    auto prop_copy = Impl::add_properties(
+        arg_prop, std::string{}, typename traits::device_type::memory_space{},
+        typename traits::device_type::execution_space{});
+    using alloc_prop = decltype(prop_copy);
 
     static_assert(traits::is_managed,
                   "View allocation constructor requires managed memory");
@@ -1423,9 +1419,6 @@ class View : public ViewTraits<DataType, Properties...> {
           "Constructing View and initializing data with uninitialized "
           "execution space");
     }
-
-    // Copy the input allocation properties with possibly defaulted properties
-    alloc_prop prop_copy(arg_prop);
 
     if (check_args == check_input_args::yes) {
       size_t i0 = arg_layout.dimension[0];
