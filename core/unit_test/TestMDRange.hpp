@@ -71,20 +71,6 @@ struct TestMDRange_ReduceArray_2D {
       : input_view("input_view", N0, N1), value_count(array_size) {}
 
   KOKKOS_INLINE_FUNCTION
-  void init(scalar_type dst[]) const {
-    for (unsigned i = 0; i < value_count; ++i) {
-      dst[i] = 0.0;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(scalar_type dst[], const scalar_type src[]) const {
-    for (unsigned i = 0; i < value_count; ++i) {
-      dst[i] += src[i];
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void operator()(const int i, const int j) const { input_view(i, j) = 1; }
 
   KOKKOS_INLINE_FUNCTION
