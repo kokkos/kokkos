@@ -1770,12 +1770,14 @@ void apply_to_view_of_static_rank(Function&& f, View<Args...> a) {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#if defined KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class V, class... Args>
-using Subview =
+using Subview KOKKOS_DEPRECATED =
     typename Kokkos::Impl::ViewMapping<void /* deduce subview type from source
                                                view traits */
                                        ,
                                        typename V::traits, Args...>::type;
+#endif
 
 template <class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION
