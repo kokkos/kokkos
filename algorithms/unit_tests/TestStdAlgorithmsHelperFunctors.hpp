@@ -139,7 +139,7 @@ struct EqualsValFunctor {
   bool operator()(const ValueType val) const { return val == m_value; }
 };
 
-template <class ValueType1, class ValueType2>
+template <class ValueType1, class ValueType2 = ValueType1>
 struct CustomLessThanComparator {
   KOKKOS_INLINE_FUNCTION
   bool operator()(const ValueType1& a, const ValueType2& b) const {
