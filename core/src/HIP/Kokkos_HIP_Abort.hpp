@@ -46,7 +46,6 @@
 #define KOKKOS_HIP_ABORT_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_HIP)
 
 #include <hip/hip_runtime.h>
 
@@ -81,5 +80,4 @@ namespace Impl {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif
 #endif
