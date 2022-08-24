@@ -630,7 +630,6 @@ std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
                                     memory_space>::accessible)>
 sort(const ExecutionSpace& space,
      const Kokkos::View<DataType, Properties...>& view) {
-  space.fence("Kokkos::sort: Fence before sorting on the host");
   auto first = Experimental::begin(view);
   auto last  = Experimental::end(view);
   std::sort(first, last);
