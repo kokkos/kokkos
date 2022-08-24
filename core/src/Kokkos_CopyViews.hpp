@@ -3030,16 +3030,12 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   if (sizeMismatch) {
     auto prop_copy = Impl::add_properties(
         arg_prop, typename view_type::execution_space{}, v.label());
-    using alloc_prop = decltype(prop_copy);
 
     view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
 
-    if (alloc_prop_input::has_execution_space)
+    if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(
-          v_resized, v,
-          static_cast<const Impl::ViewCtorProp<
-              void, typename alloc_prop::execution_space>&>(prop_copy)
-              .value);
+          v_resized, v, Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy));
     else {
       Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
       Kokkos::fence("Kokkos::resize(View)");
@@ -3132,18 +3128,13 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "not include a memory space instance!");
 
   if (v.layout() != layout) {
-    auto prop_copy = Impl::add_properties(
-        arg_prop, v.label(), typename view_type::execution_space{});
-    using alloc_prop = decltype(prop_copy);
+    auto prop_copy = Impl::add_properties(arg_prop, v.label());
 
     view_type v_resized(prop_copy, layout);
 
-    if (alloc_prop::has_execution_space)
+    if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(
-          v_resized, v,
-          static_cast<const Impl::ViewCtorProp<
-              void, typename alloc_prop::execution_space>&>(prop_copy)
-              .value);
+          v_resized, v, Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop));
     else {
       Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
       Kokkos::fence("Kokkos::resize(View)");
@@ -3183,18 +3174,13 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "The view constructor arguments passed to Kokkos::resize must "
                 "not include a memory space instance!");
 
-  auto prop_copy   = Impl::add_properties(arg_prop, v.label(),
-                                        typename view_type::execution_space{});
-  using alloc_prop = decltype(prop_copy);
+  auto prop_copy = Impl::add_properties(arg_prop, v.label());
 
   view_type v_resized(prop_copy, layout);
 
-  if (alloc_prop::has_execution_space)
+  if constexpr (alloc_prop_input::has_execution_space)
     Kokkos::Impl::ViewRemap<view_type, view_type>(
-        v_resized, v,
-        static_cast<const Impl::ViewCtorProp<
-            void, typename alloc_prop::execution_space>&>(prop_copy)
-            .value);
+        v_resized, v, Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop));
   else {
     Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
     Kokkos::fence("Kokkos::resize(View)");
@@ -3834,7 +3820,7 @@ auto create_mirror_view_and_copy(
   std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type{arg_prop_copy, src.layout()};
-  if (alloc_prop_input::has_execution_space) {
+  if constexpr (alloc_prop_input::has_execution_space) {
     deep_copy(Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop_copy),
               mirror, src);
   } else

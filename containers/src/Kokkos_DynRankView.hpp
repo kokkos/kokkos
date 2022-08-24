@@ -2283,7 +2283,7 @@ auto create_mirror_view_and_copy(
   if (label.empty()) label = src.label();
   auto mirror = typename Mirror::non_const_type{
       arg_prop_copy, Impl::reconstructLayout(src.layout(), src.rank())};
-  if (alloc_prop_input::has_execution_space) {
+  if constexpr (alloc_prop_input::has_execution_space) {
     deep_copy(Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop_copy),
               mirror, src);
   } else
@@ -2330,16 +2330,12 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
   auto prop_copy = Impl::add_properties(
       arg_prop, v.label(), typename drview_type::execution_space{});
-  using alloc_prop = decltype(prop_copy);
 
   drview_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
 
-  if (alloc_prop_input::has_execution_space)
+  if constexpr (alloc_prop_input::has_execution_space)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
-        static_cast<const Impl::ViewCtorProp<
-            void, typename alloc_prop::execution_space>&>(prop_copy)
-            .value,
-        v_resized, v);
+        Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
   else
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
 
