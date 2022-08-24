@@ -49,13 +49,16 @@
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Core.hpp>
-#include <Kokkos_HIP.hpp>
 #include <Kokkos_HIP_Space.hpp>
+
+#include <HIP/Kokkos_HIP_DeepCopy.hpp>
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+
+#include <hip/hip_runtime_api.h>
 
 #include <stdlib.h>
 #include <iostream>
@@ -78,42 +81,6 @@ bool hip_driver_check_page_migration(int deviceId) {
   return static_cast<bool>(hasManagedMemory);
 }
 }  // namespace
-namespace Kokkos {
-namespace Impl {
-
-namespace {
-hipStream_t get_deep_copy_stream() {
-  static hipStream_t s = nullptr;
-  if (s == nullptr) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&s));
-  }
-  return s;
-}
-}  // namespace
-
-void DeepCopyHIP(void* dst, void const* src, size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault));
-}
-
-void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
-                      size_t n) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-}
-
-void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
-  hipStream_t s = get_deep_copy_stream();
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<HIP>(
-      "Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy "
-      "stream",
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          DeepCopyResourceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(s)); });
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

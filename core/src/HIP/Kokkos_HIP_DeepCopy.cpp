@@ -43,41 +43,43 @@
 */
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#include <Kokkos_Macros.hpp>
-static_assert(false,
-              "Including non-public Kokkos header files is not allowed.");
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
-#ifndef KOKKOS_HIP_HPP
-#define KOKKOS_HIP_HPP
-
-#include <Kokkos_Core_fwd.hpp>
-
-#if defined(KOKKOS_ENABLE_HIP)
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#include <Kokkos_HIP_Space.hpp>
-#include <Kokkos_Parallel.hpp>
 
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
-#include <HIP/Kokkos_HIP_Half_Impl_Type.hpp>
-#include <HIP/Kokkos_HIP_Half_Conversion.hpp>
-#include <HIP/Kokkos_HIP_Instance.hpp>
-#include <HIP/Kokkos_HIP_MDRangePolicy.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Range.hpp>
-#include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Team.hpp>
-#include <HIP/Kokkos_HIP_UniqueToken.hpp>
+#include <HIP/Kokkos_HIP_Error.hpp>  // HIP_SAFE_CALL
 
 namespace Kokkos {
-namespace Experimental {
-using HIPSpace           = ::Kokkos::HIPSpace;
-using HIPHostPinnedSpace = ::Kokkos::HIPHostPinnedSpace;
-using HIPManagedSpace    = ::Kokkos::HIPManagedSpace;
-using HIP                = ::Kokkos::HIP;
-}  // namespace Experimental
-}  // namespace Kokkos
+namespace Impl {
+namespace {
+hipStream_t get_deep_copy_stream() {
+  static hipStream_t s = nullptr;
+  if (s == nullptr) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&s));
+  }
+  return s;
+}
+}  // namespace
 
-#endif
-#endif
+void DeepCopyHIP(void* dst, void const* src, size_t n) {
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault));
+}
+
+void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
+                      size_t n) {
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
+}
+
+void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
+  hipStream_t s = get_deep_copy_stream();
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<HIP>(
+      "Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy "
+      "stream",
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          DeepCopyResourceSynchronization,
+      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(s)); });
+}
+}  // namespace Impl
+}  // namespace Kokkos
