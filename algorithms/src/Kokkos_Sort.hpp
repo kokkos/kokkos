@@ -580,7 +580,7 @@ struct min_max_functor {
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
-                 (not SpaceAccessibility<
+                 (!SpaceAccessibility<
                      HostSpace, typename Kokkos::View<DataType, Properties...>::
                                     memory_space>::accessible)>
 sort(const ExecutionSpace& exec,
