@@ -14,7 +14,6 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
 namespace TestConcept {
@@ -62,7 +61,12 @@ static_assert(std::is_same<float, Kokkos::Impl::remove_cvref_t<float>>{}, "");
 
 namespace TestIsTeamHandle {
 
+struct FakeExeSpace {};
 struct FakeScratchMemorySpace {};
+
+#define a1() using execution_space = FakeExeSpace;
+
+#define a2() using scratch_memory_space = FakeScratchMemorySpace;
 
 #define m1() KOKKOS_INLINE_FUNCTION int team_rank() const noexcept;
 
@@ -109,84 +113,91 @@ struct FakeScratchMemorySpace {};
       const noexcept;
 
 struct ValidTeamMember {
-  m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
+  a1() a2() m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember1 {
-  /*m1()*/ m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
+  /*a1()*/ a2() m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember2 {
-  m1() /*m2()*/ m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
+  a1() /*a2()*/ m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember3 {
-  m1() m2() /*m3()*/ m4() m5() m6() m7() m8() m9() m10() m11() m12()
+  a1() a2() /*m1()*/ m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember4 {
-  m1() m2() m3() /*m4()*/ m5() m6() m7() m8() m9() m10() m11() m12()
+  a1() a2() m1() /*m2()*/ m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember5 {
-  m1() m2() m3() m4() /*m5()*/ m6() m7() m8() m9() m10() m11() m12()
+  a1() a2() m1() m2() /*m3()*/ m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember6 {
-  m1() m2() m3() m4() m5() /*m6()*/ m7() m8() m9() m10() m11() m12()
+  a1() a2() m1() m2() m3() /*m4()*/ m5() m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember7 {
-  m1() m2() m3() m4() m5() m6() /*m7()*/ m8() m9() m10() m11() m12()
+  a1() a2() m1() m2() m3() m4() /*m5()*/ m6() m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember8 {
-  m1() m2() m3() m4() m5() m6() m7() /*m8()*/ m9() m10() m11() m12()
+  a1() a2() m1() m2() m3() m4() m5() /*m6()*/ m7() m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember9 {
-  m1() m2() m3() m4() m5() m6() m7() m8() /*m9()*/ m10() m11() m12()
+  a1() a2() m1() m2() m3() m4() m5() m6() /*m7()*/ m8() m9() m10() m11() m12()
 };
 struct InvalidTeamMember10 {
-  m1() m2() m3() m4() m5() m6() m7() m8() m9() /*m10()*/ m11() m12()
+  a1() a2() m1() m2() m3() m4() m5() m6() m7() /*m8()*/ m9() m10() m11() m12()
 };
 struct InvalidTeamMember11 {
-  m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() /*m11()*/ m12()
+  a1() a2() m1() m2() m3() m4() m5() m6() m7() m8() /*m9()*/ m10() m11() m12()
 };
 struct InvalidTeamMember12 {
-  m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() /*m12()*/
+  a1() a2() m1() m2() m3() m4() m5() m6() m7() m8() m9() /*m10()*/ m11() m12()
+};
+struct InvalidTeamMember13 {
+  a1() a2() m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() /*m11()*/ m12()
+};
+struct InvalidTeamMember14 {
+  a1() a2() m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() /*m12()*/
 };
 
-TEST(TEST_CATEGORY, team_handle_concept) {
-  /* disabling as follows:
+// TEST(TEST_CATEGORY, team_handle_concept) {
+/* disabling as follows:
 
-    - OpenMPTarget: due to this
-    https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860
+   - OpenMPTarget: due to this
+   https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860
 
-    - OpenACC: not supporting team yet
-   */
+   - OpenACC: not supporting team yet
+*/
 #if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENACC
-  using space_t  = TEST_EXECSPACE;
-  using policy_t = Kokkos::TeamPolicy<space_t>;
-  using member_t = typename policy_t::member_type;
+using space_t  = TEST_EXECSPACE;
+using policy_t = Kokkos::TeamPolicy<space_t>;
+using member_t = typename policy_t::member_type;
 
-  static_assert(Kokkos::is_team_handle<member_t>::value, "");
-  static_assert(Kokkos::is_team_handle_v<member_t>, "");
-  static_assert(Kokkos::is_team_handle_v<member_t const>, "");
-
-  static_assert(!Kokkos::is_team_handle_v<member_t &>, "");
-  static_assert(!Kokkos::is_team_handle_v<member_t const &>, "");
-  static_assert(!Kokkos::is_team_handle_v<member_t *>, "");
-  static_assert(!Kokkos::is_team_handle_v<member_t const *>, "");
-  static_assert(!Kokkos::is_team_handle_v<member_t *const>, "");
+static_assert(Kokkos::is_team_handle<member_t>::value);
+static_assert(Kokkos::is_team_handle_v<member_t>);
+static_assert(Kokkos::is_team_handle_v<member_t const>);
+static_assert(!Kokkos::is_team_handle_v<member_t &>);
+static_assert(!Kokkos::is_team_handle_v<member_t const &>);
+static_assert(!Kokkos::is_team_handle_v<member_t *>);
+static_assert(!Kokkos::is_team_handle_v<member_t const *>);
+static_assert(!Kokkos::is_team_handle_v<member_t *const>);
 #endif
 
-  // these always work since use a custom struct defined above
-  static_assert(Kokkos::is_team_handle_v<ValidTeamMember>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember1>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember2>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember3>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember4>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember5>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember6>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember7>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember8>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember9>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember10>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember11>, "");
-  static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember12>, "");
-}
+// the following do not need guards since use a custom struct defined above
+static_assert(Kokkos::is_team_handle_v<ValidTeamMember>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember1>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember2>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember3>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember4>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember5>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember6>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember7>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember8>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember9>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember10>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember11>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember12>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember13>);
+static_assert(!Kokkos::is_team_handle_v<InvalidTeamMember14>);
+
 }  // end namespace TestIsTeamHandle
 
 }  // namespace TestConcept

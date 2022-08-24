@@ -167,71 +167,100 @@ struct is_team_handle {
   struct TrivialFunctor {
     void operator()(double &) {}
   };
-  double lvalueForMethodsNeedingIt_;
-  double *ptrForMethodsNeedingIt_;
-
+  using test_value_type = double;
+  test_value_type lvalueForMethodsNeedingIt_;
+  test_value_type *ptrForMethodsNeedingIt_;
   // we use Sum here but any other reducer can be used
   // since we just want something that meets the ReducerConcept
-  using reduction_to_test_t = ::Kokkos::Sum<double>;
+  using reduction_to_test_t = ::Kokkos::Sum<test_value_type>;
 
-  template <typename U>
-  using m1 = decltype(std::declval<U const &>().team_rank());
-  template <typename U>
-  using m2 = decltype(std::declval<U const &>().team_size());
-  template <typename U>
-  using m3 = decltype(std::declval<U const &>().league_rank());
-  template <typename U>
-  using m4 = decltype(std::declval<U const &>().league_size());
-  template <typename U>
-  using m5 = decltype(std::declval<U const &>().team_shmem());
-  template <typename U>
-  using m6 = decltype(std::declval<U const &>().team_scratch(int{}));
-  template <typename U>
-  using m7 = decltype(std::declval<U const &>().thread_scratch(int{}));
-  template <typename U>
-  using m8 = decltype(std::declval<U const &>().team_barrier());
-  template <typename U>
-  using m9 = decltype(std::declval<U const &>().team_broadcast(
-      lvalueForMethodsNeedingIt_, int{}));
-  template <typename U>
-  using m10 = decltype(std::declval<U const &>().team_broadcast(
-      TrivialFunctor{}, lvalueForMethodsNeedingIt_, int{}));
+  // nested aliases
+  template <class U>
+  using ExecutionSpaceArchetypeAlias = typename U::execution_space;
+  template <class U>
+  using ScratchMemorySpaceArchetypeAlias = typename U::scratch_memory_space;
 
-  template <typename U>
-  using m11 = decltype(std::declval<U const &>().team_reduce(
-      std::declval<reduction_to_test_t>()));
+  // "indices" methods
+  template <class U>
+  using TeamRankArchetypeExpr = decltype(std::declval<U const &>().team_rank());
 
-  template <typename U>
-  using m12 = decltype(std::declval<U const &>().team_scan(
+  template <class U>
+  using TeamSizeArchetypeExpr = decltype(std::declval<U const &>().team_size());
+
+  template <class U>
+  using LeagueRankArchetypeExpr =
+      decltype(std::declval<U const &>().league_rank());
+
+  template <class U>
+  using LeagueSizeArchetypeExpr =
+      decltype(std::declval<U const &>().league_size());
+
+  // scratch space
+  template <class U>
+  using TeamShmemArchetypeExpr =
+      decltype(std::declval<U const &>().team_shmem());
+
+  template <class U>
+  using TeamScratchArchetypeExpr =
+      decltype(std::declval<U const &>().team_scratch(int{}));
+
+  template <class U>
+  using ThreadScracthArchetypeExpr =
+      decltype(std::declval<U const &>().thread_scratch(int{}));
+
+  // collectives
+  template <class U>
+  using TeamBarrierArchetypeExpr =
+      decltype(std::declval<U const &>().team_barrier());
+
+  template <class U>
+  using TeamBroadcastArchetypeExpr =
+      decltype(std::declval<U const &>().team_broadcast(
+          lvalueForMethodsNeedingIt_, int{}));
+
+  template <class U>
+  using TeamBroadcastAcceptClosureArchetypeExpr =
+      decltype(std::declval<U const &>().team_broadcast(
+          TrivialFunctor{}, lvalueForMethodsNeedingIt_, int{}));
+
+  template <class U>
+  using TeamReducedArchetypeExpr =
+      decltype(std::declval<U const &>().team_reduce(
+          std::declval<reduction_to_test_t>()));
+
+  template <class U>
+  using TeamScanArchetypeExpr = decltype(std::declval<U const &>().team_scan(
       lvalueForMethodsNeedingIt_, ptrForMethodsNeedingIt_));
 
  public:
   static constexpr bool value =
-      is_detected<m1, T>::value && is_detected<m2, T>::value &&
-      is_detected<m3, T>::value && is_detected<m4, T>::value &&
-      is_detected<m5, T>::value && is_detected<m6, T>::value &&
-      is_detected<m7, T>::value && is_detected<m8, T>::value &&
-      is_detected<m9, T>::value && is_detected<m10, T>::value &&
-      is_detected<m11, T>::value && is_detected<m12, T>::value;
+      is_detected_v<ExecutionSpaceArchetypeAlias, T> &&
+      is_detected_v<ScratchMemorySpaceArchetypeAlias, T> &&
+      //
+      is_detected_exact_v<int, TeamRankArchetypeExpr, T> &&
+      is_detected_exact_v<int, TeamSizeArchetypeExpr, T> &&
+      is_detected_exact_v<int, LeagueRankArchetypeExpr, T> &&
+      is_detected_exact_v<int, LeagueSizeArchetypeExpr, T> &&
+      //
+      is_detected_exact_v<
+          detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
+          TeamShmemArchetypeExpr, T> &&
+      is_detected_exact_v<
+          detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
+          TeamScratchArchetypeExpr, T> &&
+      is_detected_exact_v<
+          detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
+          ThreadScracthArchetypeExpr, T> &&
+      //
+      is_detected_exact_v<void, TeamBarrierArchetypeExpr, T> &&
+      is_detected_exact_v<void, TeamBroadcastArchetypeExpr, T> &&
+      is_detected_exact_v<void, TeamBroadcastAcceptClosureArchetypeExpr, T> &&
+      is_detected_exact_v<void, TeamReducedArchetypeExpr, T> &&
+      is_detected_exact_v<test_value_type, TeamScanArchetypeExpr, T>;
   constexpr operator bool() const noexcept { return value; }
 };
 
-template <typename T>
-struct is_team_handle<T &> {
-  static constexpr bool value = false;
-};
-template <typename T>
-struct is_team_handle<T *> {
-  static constexpr bool value = false;
-};
-template <typename T>
-struct is_team_handle<T *const> {
-  static constexpr bool value = false;
-};
-template <typename T>
-struct is_team_handle<const T> : is_team_handle<T> {};
-
-template <typename T>
+template <class T>
 inline constexpr bool is_team_handle_v = is_team_handle<T>::value;
 
 namespace Impl {
