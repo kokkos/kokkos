@@ -34,6 +34,8 @@
 
 namespace KokkosBenchmark {
 
+std::string benchmark_fom(const std::string& label);
+
 /// \brief Remove unwanted spaces and colon signs from input string. In case of
 /// invalid input it will return an empty string.
 std::string remove_unwanted_characters(std::string str) {

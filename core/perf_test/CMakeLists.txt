@@ -200,6 +200,12 @@ SET(
   PerfTest_ViewCopy_c8.cpp
   PerfTest_ViewCopy_d8.cpp
   PerfTest_ViewCopy_Raw.cpp
+  PerfTest_ViewFill.cpp
+  PerfTest_ViewFill_123.cpp
+  PerfTest_ViewFill_45.cpp
+  PerfTest_ViewFill_6.cpp
+  PerfTest_ViewFill_7.cpp
+  PerfTest_ViewFill_8.cpp
 )
 
 KOKKOS_ADD_BENCHMARK(

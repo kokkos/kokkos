@@ -17,10 +17,15 @@
 #include <PerfTest_ViewFill.hpp>
 
 namespace Test {
-TEST(default_exec, ViewFill_Rank6) {
-  printf("ViewFill Performance for LayoutLeft:\n");
-  run_fillview_tests6<Kokkos::LayoutLeft>(10, 1);
-  printf("ViewFill Performance for LayoutRight:\n");
-  run_fillview_tests6<Kokkos::LayoutRight>(10, 1);
-}
+
+BENCHMARK(ViewFill_Rank6<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
+BENCHMARK(ViewFill_Rank6<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
 }  // namespace Test

@@ -16,6 +16,8 @@
 
 #include "PerfTest_ViewCopy.hpp"
 
+#include <Benchmark_Context.hpp>
+
 namespace Test {
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)

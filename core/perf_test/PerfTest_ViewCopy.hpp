@@ -168,7 +168,6 @@ static void ViewDeepCopy_Raw(benchmark::State& state) {
     Kokkos::parallel_for(
         N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = b_ptr[i]; });
     Kokkos::fence();
-
     report_results(state, a.size(), timer.seconds());
   }
 }
