@@ -396,7 +396,7 @@ void test_sort_integer_overflow() {
             Kokkos::Experimental::finite_min<T>::value};
   auto vd = Kokkos::create_mirror_view_and_copy(
       ExecutionSpace(), Kokkos::View<T[2], Kokkos::HostSpace>(a));
-  Kokkos::sort(vd, /*force using Kokkos bin sort*/ true);
+  Kokkos::sort(vd);
   auto vh = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), vd);
   EXPECT_TRUE(std::is_sorted(vh.data(), vh.data() + 2))
       << "view (" << vh[0] << ", " << vh[1] << ") is not sorted";
