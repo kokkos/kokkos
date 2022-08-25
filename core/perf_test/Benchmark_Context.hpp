@@ -55,7 +55,7 @@ namespace Test {
 
 std::string remove_unwanted_prefix(std::string str) {
   auto found = str.find_first_not_of(" :,");
-  if(found != std::string::npos) {
+  if (found != std::string::npos) {
     return str.substr(found);
   }
   return str;
@@ -66,12 +66,13 @@ void add_kokkos_configuration(bool verbose = false) {
   Kokkos::print_configuration(msg, verbose);
 
   std::stringstream ss{msg.str()};
-  for(std::string line; std::getline(ss, line, '\n');) {
+  for (std::string line; std::getline(ss, line, '\n');) {
     auto found = line.find_first_of(':');
-    if(found != std::string::npos){
+    if (found != std::string::npos) {
       auto val = remove_unwanted_prefix(line.substr(found + 1));
-      if(val.length()) {
-        benchmark::AddCustomContext(remove_unwanted_prefix(line.substr(0, found)), val);
+      if (val.length()) {
+        benchmark::AddCustomContext(
+            remove_unwanted_prefix(line.substr(0, found)), val);
       }
     }
   }
