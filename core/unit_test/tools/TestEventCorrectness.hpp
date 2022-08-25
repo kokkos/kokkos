@@ -382,7 +382,7 @@ TEST(kokkosp, parallel_reduce) {
 #endif
 
 #ifndef KOKKOS_ENABLE_OPENACC
-// FIXME_OPENACC: not implemented yet
+// FIXME_OPENACC: parallel_scan not implemented yet
 TEST(kokkosp, parallel_scan) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
