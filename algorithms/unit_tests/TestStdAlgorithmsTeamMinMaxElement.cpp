@@ -67,11 +67,14 @@ struct TestFunctorA {
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     if (m_apiPick == 0) {
-      auto itPair = KE::minmax_element(member, KE::cbegin(myRowView), KE::cend(myRowView));
+      auto itPair = KE::minmax_element(member, KE::cbegin(myRowView),
+                                       KE::cend(myRowView));
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex, 0) = KE::distance(KE::cbegin(myRowView), itPair.first);
-	m_distancesView(myRowIndex, 1) = KE::distance(KE::cbegin(myRowView), itPair.second);
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::cbegin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::cbegin(myRowView), itPair.second);
       });
     }
 
@@ -79,31 +82,37 @@ struct TestFunctorA {
       auto itPair = KE::minmax_element(member, myRowView);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-	m_distancesView(myRowIndex, 0) = KE::distance(KE::begin(myRowView), itPair.first);
-	m_distancesView(myRowIndex, 1) = KE::distance(KE::begin(myRowView), itPair.second);
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::begin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::begin(myRowView), itPair.second);
       });
     }
 
     else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
-      auto itPair = KE::minmax_element(member, KE::cbegin(myRowView), KE::cend(myRowView),
-				    CustomLessThanComparator<value_type>{});
+      auto itPair =
+          KE::minmax_element(member, KE::cbegin(myRowView), KE::cend(myRowView),
+                             CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-	m_distancesView(myRowIndex, 0) = KE::distance(KE::cbegin(myRowView), itPair.first);
-	m_distancesView(myRowIndex, 1) = KE::distance(KE::cbegin(myRowView), itPair.second);
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::cbegin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::cbegin(myRowView), itPair.second);
       });
     }
 
     else if (m_apiPick == 3) {
       using value_type = typename ViewType::value_type;
-      auto itPair = KE::minmax_element(member, myRowView,
-				    CustomLessThanComparator<value_type>{});
+      auto itPair      = KE::minmax_element(member, myRowView,
+                                       CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-	m_distancesView(myRowIndex, 0) = KE::distance(KE::begin(myRowView), itPair.first);
-	m_distancesView(myRowIndex, 1) = KE::distance(KE::begin(myRowView), itPair.second);
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::begin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::begin(myRowView), itPair.second);
       });
     }
-
   }
 };
 
@@ -151,19 +160,18 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     std::size_t stdDistance[2];
     if (apiId <= 1) {
-      auto itPair = std::minmax_element(KE::cbegin(myRow), KE::cend(myRow));
+      auto itPair    = std::minmax_element(KE::cbegin(myRow), KE::cend(myRow));
       stdDistance[0] = KE::distance(KE::cbegin(myRow), itPair.first);
       stdDistance[1] = KE::distance(KE::cbegin(myRow), itPair.second);
-    }
-    else {
-      auto itPair = std::minmax_element(KE::cbegin(myRow), KE::cend(myRow),
-					CustomLessThanComparator<value_type>{});
+    } else {
+      auto itPair    = std::minmax_element(KE::cbegin(myRow), KE::cend(myRow),
+                                        CustomLessThanComparator<value_type>{});
       stdDistance[0] = KE::distance(KE::cbegin(myRow), itPair.first);
       stdDistance[1] = KE::distance(KE::cbegin(myRow), itPair.second);
     }
 
-    EXPECT_EQ(stdDistance[0], distancesView_h(i,0));
-    EXPECT_EQ(stdDistance[1], distancesView_h(i,1));
+    EXPECT_EQ(stdDistance[0], distancesView_h(i, 0));
+    EXPECT_EQ(stdDistance[1], distancesView_h(i, 1));
   }
 
   // dataView should remain unchanged
@@ -176,7 +184,7 @@ void run_all_scenarios() {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 5113}) {
       // for OpenMPTarget we need to avod api accepting a custom
       // comparator because it is not supported
-      for (int apiId : {0,1,2,3}) {
+      for (int apiId : {0, 1, 2, 3}) {
         test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
