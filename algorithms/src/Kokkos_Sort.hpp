@@ -650,7 +650,7 @@ void sort(ViewType const& view) {
 template <class ViewType>
 KOKKOS_DEPRECATED_WITH_COMMENT(
     "Use the overload not taking bool always_use_kokkos_sort")
-void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
+void sort(ViewType const& view, bool const always_use_kokkos_sort) {
   typename ViewType::execution_space exec;
   sort(exec, view, always_use_kokkos_sort);
   exec.fence("Kokkos::Sort: fence after sorting");
