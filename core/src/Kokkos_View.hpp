@@ -1403,8 +1403,10 @@ class View : public ViewTraits<DataType, Properties...> {
       check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
     // Copy the input allocation properties with possibly defaulted properties
-    auto prop_copy = Impl::add_properties(
-        arg_prop, std::string{}, typename traits::device_type::memory_space{},
+    // We need to split it into to avoid MSVC compiler errors
+    auto prop_copy_tmp = Impl::add_properties(arg_prop, std::string{});
+    auto prop_copy     = Impl::add_properties(
+        prop_copy_tmp, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{});
     using alloc_prop = decltype(prop_copy);
 
