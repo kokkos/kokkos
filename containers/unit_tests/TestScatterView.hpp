@@ -832,9 +832,9 @@ TEST(TEST_CATEGORY, scatterview_devicetype) {
   using device_memory_space    = Kokkos::CudaSpace;
   using host_accessible_space  = Kokkos::CudaUVMSpace;
 #else
-  using device_execution_space = Kokkos::Experimental::HIP;
-  using device_memory_space    = Kokkos::Experimental::HIPSpace;
-  using host_accessible_space  = Kokkos::Experimental::HIPManagedSpace;
+  using device_execution_space = Kokkos::HIP;
+  using device_memory_space    = Kokkos::HIPSpace;
+  using host_accessible_space  = Kokkos::HIPManagedSpace;
 #endif
   if (std::is_same<TEST_EXECSPACE, device_execution_space>::value) {
     using device_device_type =

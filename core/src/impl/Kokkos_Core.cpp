@@ -160,7 +160,7 @@ int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
   return Kokkos::Cuda::detect_device_count();
 #elif defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::Experimental::HIP::detect_device_count();
+  return Kokkos::HIP::detect_device_count();
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)

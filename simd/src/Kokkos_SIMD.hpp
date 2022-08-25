@@ -120,7 +120,7 @@ struct ForSpace<Kokkos::Experimental::OpenACC> {
 
 #ifdef KOKKOS_ENABLE_HIP
 template <>
-struct ForSpace<Kokkos::Experimental::HIP> {
+struct ForSpace<Kokkos::HIP> {
   using type = scalar;
 };
 #endif
