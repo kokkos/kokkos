@@ -149,8 +149,7 @@ class HIPInternal {
 
   int is_initialized() const { return m_hipDev >= 0; }
 
-  void initialize(int hip_device_id, hipStream_t stream = nullptr,
-                  bool manage_stream = false);
+  void initialize(int hip_device_id, hipStream_t stream, bool manage_stream);
   void finalize();
 
   void print_configuration(std::ostream &) const;

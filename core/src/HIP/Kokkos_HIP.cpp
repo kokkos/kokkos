@@ -65,7 +65,10 @@ int HIP::impl_is_initialized() {
 }
 
 void HIP::impl_initialize(InitializationSettings const& settings) {
-  Impl::HIPInternal::singleton().initialize(::Kokkos::Impl::get_gpu(settings));
+  hipStream_t singleton_stream;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
+  Impl::HIPInternal::singleton().initialize(::Kokkos::Impl::get_gpu(settings),
+                                            singleton_stream, /*manage*/ true);
 }
 
 void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }

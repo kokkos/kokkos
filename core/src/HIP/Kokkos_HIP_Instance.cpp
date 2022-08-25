@@ -296,11 +296,11 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
   }
 
   // Init the array for used for arbitrarily sized atomics
-  if (m_stream == nullptr) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+  if (this == &singleton()) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
-  if (m_stream == nullptr) {
+  if (this == &singleton()) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc((void **)&constantMemHostStaging,
                                             HIPTraits::ConstantMemoryUsage));
 
