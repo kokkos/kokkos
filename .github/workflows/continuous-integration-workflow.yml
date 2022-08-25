@@ -110,7 +110,7 @@ jobs:
       - name: Test with valgrind
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         working-directory: builddir
-        run: ctest --output-on-failure  -D ExperimentalMemCheck --overwrite MemoryCheckCommand=valgrind --overwrite MemoryCheckCommandOptions="--leak-check=full --show-leak-kinds=all"
+        run: ctest --output-on-failure -T MemCheck --overwrite MemoryCheckCommandOptions="--leak-check=full --show-leak-kinds=all"
       - name: Test without valgrind
         if: ${{ matrix.distro != 'ubuntu:latest' }}
         working-directory: builddir
