@@ -76,6 +76,8 @@ jobs:
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
+      - name: install_valgrind
+        run: sudo apt-get update && sudo apt-get install -y valgrind
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
@@ -106,7 +108,8 @@ jobs:
           ccache -s
       - name: Tests
         working-directory: builddir
-        run: ctest --output-on-failure
+        run: ctest --output-on-failure  -D ExperimentalMemCheck --overwrite MemoryCheckCommand=valgrind --overwrite MemoryCheckCommandOptions="--leak-check=full --show-leak-kinds=all"
+
       - name: Test DESTDIR Install
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install
@@ -116,4 +119,4 @@ jobs:
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir
-          ctest -D ExperimentalMemCheck --overwrite MemoryCheckCommandOptions="--leak-check=full --show-leak-kinds=all"
+          cmake --build builddir --target test
