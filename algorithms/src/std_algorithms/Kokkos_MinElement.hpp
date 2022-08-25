@@ -145,14 +145,13 @@ KOKKOS_FUNCTION auto min_element(
                                                          end(v));
 }
 
-// for OpenMPTarget we cannot have a custom comparator
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
 template <
     class TeamHandleType, class IteratorType, class ComparatorType,
     std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto min_element(const TeamHandleType& teamHandle,
                                  IteratorType first, IteratorType last,
                                  ComparatorType comp) {
+  Impl::static_assert_is_not_openmptarget(teamHandle);
   return Impl::min_or_max_element_team_impl<MinFirstLocCustomComparator>(
       teamHandle, first, last, std::move(comp));
 }
@@ -164,11 +163,11 @@ template <
 KOKKOS_FUNCTION auto min_element(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& v, ComparatorType comp) {
+  Impl::static_assert_is_not_openmptarget(teamHandle);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   return Impl::min_or_max_element_team_impl<MinFirstLocCustomComparator>(
       teamHandle, begin(v), end(v), std::move(comp));
 }
-#endif
 
 }  // namespace Experimental
 }  // namespace Kokkos
