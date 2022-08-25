@@ -205,7 +205,10 @@ void Serial::impl_initialize(InitializationSettings const&) {
   Impl::SerialInternal::singleton().initialize();
 }
 
-void Serial::impl_finalize() { Impl::SerialInternal::singleton().finalize(); }
+void Serial::impl_finalize() {
+  Impl::SerialInternal::singleton().finalize();
+  delete &Impl::SerialInternal::singleton();
+}
 
 const char* Serial::name() { return "Serial"; }
 

@@ -116,4 +116,4 @@ jobs:
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir
-          cmake --build builddir --target test
+          ctest -D ExperimentalMemCheck --overwrite MemoryCheckCommandOptions="--leak-check=full --show-leak-kinds=all"
