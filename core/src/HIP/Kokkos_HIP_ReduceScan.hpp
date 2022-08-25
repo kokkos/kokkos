@@ -74,20 +74,19 @@ struct HIPReductionsFunctor<FunctorType, true> {
       int const width,         // How much of the warp participates
       Scalar& result) {
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      Scalar tmp = Kokkos::Experimental::shfl_down(value, delta, width);
+      Scalar tmp = shfl_down(value, delta, width);
       functor.join(&value, &tmp);
     }
 
-    Experimental::Impl::in_place_shfl(result, value, 0, width);
+    in_place_shfl(result, value, 0, width);
   }
 
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip,
       Scalar* my_global_team_buffer_element, int const shared_elements,
       Scalar* shared_team_buffer_element) {
-    unsigned int constexpr warp_size =
-        Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-    int const warp_id = (threadIdx.y * blockDim.x) / warp_size;
+    unsigned int constexpr warp_size = HIPTraits::WarpSize;
+    int const warp_id                = (threadIdx.y * blockDim.x) / warp_size;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + warp_id % shared_elements;
 
@@ -122,22 +121,19 @@ struct HIPReductionsFunctor<FunctorType, true> {
   }
 
   __device__ static inline bool scalar_inter_block_reduction(
-      FunctorType const& functor,
-      ::Kokkos::Experimental::HIP::size_type const block_count,
-      ::Kokkos::Experimental::HIP::size_type* const shared_data,
-      ::Kokkos::Experimental::HIP::size_type* const global_data,
-      ::Kokkos::Experimental::HIP::size_type* const global_flags) {
+      FunctorType const& functor, HIP::size_type const block_count,
+      HIP::size_type* const shared_data, HIP::size_type* const global_data,
+      HIP::size_type* const global_flags) {
     Scalar* const global_team_buffer_element =
         reinterpret_cast<Scalar*>(global_data);
     Scalar* const my_global_team_buffer_element =
         global_team_buffer_element + blockIdx.x;
     Scalar* shared_team_buffer_elements =
         reinterpret_cast<Scalar*>(shared_data);
-    Scalar value = shared_team_buffer_elements[threadIdx.y];
-    unsigned int constexpr warp_size =
-        Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-    int shared_elements = blockDim.x * blockDim.y / warp_size;
-    int global_elements = block_count;
+    Scalar value                     = shared_team_buffer_elements[threadIdx.y];
+    unsigned int constexpr warp_size = Impl::HIPTraits::WarpSize;
+    int shared_elements              = blockDim.x * blockDim.y / warp_size;
+    int global_elements              = block_count;
     __syncthreads();
 
     scalar_intra_block_reduction(functor, value, true,
@@ -185,10 +181,10 @@ struct HIPReductionsFunctor<FunctorType, false> {
                                // part of the reduction
       int const width)         // How much of the warp participates
   {
-    int const lane_id = (threadIdx.y * blockDim.x + threadIdx.x) %
-                        ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+    int const lane_id =
+        (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      if (lane_id + delta < ::Kokkos::Experimental::Impl::HIPTraits::WarpSize) {
+      if (lane_id + delta < HIPTraits::WarpSize) {
         functor.join(value, value + delta);
       }
     }
@@ -198,39 +194,33 @@ struct HIPReductionsFunctor<FunctorType, false> {
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip, Scalar* result,
       int const /*shared_elements*/, Scalar* shared_team_buffer_element) {
-    int const warp_id = (threadIdx.y * blockDim.x) /
-                        ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+    int const warp_id = (threadIdx.y * blockDim.x) / HIPTraits::WarpSize;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + threadIdx.y * blockDim.x + threadIdx.x;
     *my_shared_team_buffer_element = value;
     // Warp Level Reduction, ignoring Kokkos vector entries
-    scalar_intra_warp_reduction(
-        functor, my_shared_team_buffer_element, skip,
-        ::Kokkos::Experimental::Impl::HIPTraits::WarpSize);
+    scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, skip,
+                                HIPTraits::WarpSize);
     // Wait for every warp to be done before using one warp to do final cross
     // warp reduction
     __syncthreads();
 
     if (warp_id == 0) {
       const unsigned int delta =
-          (threadIdx.y * blockDim.x + threadIdx.x) *
-          ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+          (threadIdx.y * blockDim.x + threadIdx.x) * HIPTraits::WarpSize;
       if (delta < blockDim.x * blockDim.y)
         *my_shared_team_buffer_element = shared_team_buffer_element[delta];
       scalar_intra_warp_reduction(
           functor, my_shared_team_buffer_element, false,
-          blockDim.x * blockDim.y /
-              ::Kokkos::Experimental::Impl::HIPTraits::WarpSize);
+          blockDim.x * blockDim.y / HIPTraits::WarpSize);
       if (threadIdx.x + threadIdx.y == 0) *result = *shared_team_buffer_element;
     }
   }
 
   __device__ static inline bool scalar_inter_block_reduction(
-      FunctorType const& functor,
-      ::Kokkos::Experimental::HIP::size_type const block_count,
-      ::Kokkos::Experimental::HIP::size_type* const shared_data,
-      ::Kokkos::Experimental::HIP::size_type* const global_data,
-      ::Kokkos::Experimental::HIP::size_type* const global_flags) {
+      FunctorType const& functor, HIP::size_type const block_count,
+      HIP::size_type* const shared_data, HIP::size_type* const global_data,
+      HIP::size_type* const global_flags) {
     Scalar* const global_team_buffer_element =
         reinterpret_cast<Scalar*>(global_data);
     Scalar* const my_global_team_buffer_element =
@@ -238,8 +228,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
     Scalar* shared_team_buffer_elements =
         reinterpret_cast<Scalar*>(shared_data);
     Scalar value        = shared_team_buffer_elements[threadIdx.y];
-    int shared_elements = (blockDim.x * blockDim.y) /
-                          ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+    int shared_elements = (blockDim.x * blockDim.y) / HIPTraits::WarpSize;
     int global_elements = block_count;
     __syncthreads();
 
@@ -300,9 +289,8 @@ __device__ void hip_intra_block_reduce_scan(
   // For that warp, we shift all indices logically to the end and ignore join
   // operations with unassigned indices in the warp when performing the intra
   // warp reduction/scan.
-  const bool is_full_warp =
-      (((threadIdx.y >> Experimental::Impl::HIPTraits::WarpIndexShift) + 1)
-       << Experimental::Impl::HIPTraits::WarpIndexShift) <= blockDim.y;
+  const bool is_full_warp = (((threadIdx.y >> HIPTraits::WarpIndexShift) + 1)
+                             << HIPTraits::WarpIndexShift) <= blockDim.y;
 
   auto block_reduce_step = [&functor, value_count](
                                int const R, pointer_type const TD, int const S,
@@ -316,16 +304,13 @@ __device__ void hip_intra_block_reduce_scan(
   // Intra-warp reduction:
   {
     const unsigned mapped_idx =
-        threadIdx.y + (is_full_warp
-                           ? 0
-                           : (not_less_power_of_two - blockDim.y) &
-                                 (Experimental::Impl::HIPTraits::WarpSize - 1));
+        threadIdx.y + (is_full_warp ? 0
+                                    : (not_less_power_of_two - blockDim.y) &
+                                          (HIPTraits::WarpSize - 1));
     const pointer_type tdata_intra = base_data + value_count * threadIdx.y;
     const pointer_type warp_start =
-        base_data +
-        value_count *
-            ((threadIdx.y >> Experimental::Impl::HIPTraits::WarpIndexShift)
-             << Experimental::Impl::HIPTraits::WarpIndexShift);
+        base_data + value_count * ((threadIdx.y >> HIPTraits::WarpIndexShift)
+                                   << HIPTraits::WarpIndexShift);
     block_reduce_step(mapped_idx, tdata_intra, 0, warp_start, 0);
     block_reduce_step(mapped_idx, tdata_intra, 1, warp_start, 0);
     block_reduce_step(mapped_idx, tdata_intra, 2, warp_start, 0);
@@ -343,27 +328,22 @@ __device__ void hip_intra_block_reduce_scan(
     // following reduction, we shift all indices logically to the end of the
     // next power-of-two to the number of warps.
     const unsigned n_active_warps =
-        ((blockDim.y - 1) >> Experimental::Impl::HIPTraits::WarpIndexShift) + 1;
+        ((blockDim.y - 1) >> HIPTraits::WarpIndexShift) + 1;
     if (threadIdx.y < n_active_warps) {
       const bool is_full_warp_inter =
-          threadIdx.y <
-          (blockDim.y >> Experimental::Impl::HIPTraits::WarpIndexShift);
+          threadIdx.y < (blockDim.y >> HIPTraits::WarpIndexShift);
       pointer_type const tdata_inter =
           base_data +
-          value_count *
-              (is_full_warp_inter
-                   ? (threadIdx.y
-                      << Experimental::Impl::HIPTraits::WarpIndexShift) +
-                         (Experimental::Impl::HIPTraits::WarpSize - 1)
-                   : blockDim.y - 1);
+          value_count * (is_full_warp_inter
+                             ? (threadIdx.y << HIPTraits::WarpIndexShift) +
+                                   (HIPTraits::WarpSize - 1)
+                             : blockDim.y - 1);
       const unsigned index_shift =
           is_full_warp_inter
               ? 0
-              : blockDim.y - (threadIdx.y
-                              << Experimental::Impl::HIPTraits::WarpIndexShift);
-      const int rtid_inter =
-          (threadIdx.y << Experimental::Impl::HIPTraits::WarpIndexShift) +
-          (Experimental::Impl::HIPTraits::WarpSize - 1) - index_shift;
+              : blockDim.y - (threadIdx.y << HIPTraits::WarpIndexShift);
+      const int rtid_inter = (threadIdx.y << HIPTraits::WarpIndexShift) +
+                             (HIPTraits::WarpSize - 1) - index_shift;
 
       if ((1 << 6) < BlockSizeMask) {
         block_reduce_step(rtid_inter, tdata_inter, 6, base_data, index_shift);
@@ -388,13 +368,11 @@ __device__ void hip_intra_block_reduce_scan(
   if (DoScan) {
     // Update all the values for the respective warps (except for the last one)
     // by adding from the last value of the previous warp.
-    const unsigned int WarpMask = Experimental::Impl::HIPTraits::WarpSize - 1;
+    const unsigned int WarpMask = HIPTraits::WarpSize - 1;
     const int is_last_thread_in_warp =
-        is_full_warp ? ((threadIdx.y & WarpMask) ==
-                        Experimental::Impl::HIPTraits::WarpSize - 1)
+        is_full_warp ? ((threadIdx.y & WarpMask) == HIPTraits::WarpSize - 1)
                      : (threadIdx.y == blockDim.y - 1);
-    if (threadIdx.y >= Experimental::Impl::HIPTraits::WarpSize &&
-        !is_last_thread_in_warp) {
+    if (threadIdx.y >= HIPTraits::WarpSize && !is_last_thread_in_warp) {
       const int offset_to_previous_warp_total = (threadIdx.y & (~WarpMask)) - 1;
       functor.join(base_data + value_count * threadIdx.y,
                    base_data + value_count * offset_to_previous_warp_total);
@@ -413,13 +391,10 @@ __device__ void hip_intra_block_reduce_scan(
 
 template <bool DoScan, class FunctorType>
 __device__ bool hip_single_inter_block_reduce_scan_impl(
-    FunctorType const& functor,
-    ::Kokkos::Experimental::HIP::size_type const block_id,
-    ::Kokkos::Experimental::HIP::size_type const block_count,
-    ::Kokkos::Experimental::HIP::size_type* const shared_data,
-    ::Kokkos::Experimental::HIP::size_type* const global_data,
-    ::Kokkos::Experimental::HIP::size_type* const global_flags) {
-  using size_type = ::Kokkos::Experimental::HIP::size_type;
+    FunctorType const& functor, HIP::size_type const block_id,
+    HIP::size_type const block_count, HIP::size_type* const shared_data,
+    HIP::size_type* const global_data, HIP::size_type* const global_flags) {
+  using size_type = HIP::size_type;
 
   using value_type   = typename FunctorType::value_type;
   using pointer_type = typename FunctorType::pointer_type;
@@ -520,12 +495,9 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
 
 template <bool DoScan, typename FunctorType>
 __device__ bool hip_single_inter_block_reduce_scan(
-    FunctorType const& functor,
-    ::Kokkos::Experimental::HIP::size_type const block_id,
-    ::Kokkos::Experimental::HIP::size_type const block_count,
-    ::Kokkos::Experimental::HIP::size_type* const shared_data,
-    ::Kokkos::Experimental::HIP::size_type* const global_data,
-    ::Kokkos::Experimental::HIP::size_type* const global_flags) {
+    FunctorType const& functor, HIP::size_type const block_id,
+    HIP::size_type const block_count, HIP::size_type* const shared_data,
+    HIP::size_type* const global_data, HIP::size_type* const global_flags) {
   // If we are doing a reduction and we don't do an array reduction, we use the
   // reduction-only path. Otherwise, we use the common path between reduction
   // and scan.
@@ -550,8 +522,7 @@ inline std::enable_if_t<DoScan, unsigned>
 hip_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
                                          const unsigned BlockSize) {
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
-                                         RangePolicy<Experimental::HIP, ArgTag>,
-                                         FunctorType>;
+                                         RangePolicy<HIP, ArgTag>, FunctorType>;
 
   return (BlockSize + 2) * Analysis::value_size(functor);
 }
@@ -561,8 +532,7 @@ inline std::enable_if_t<!DoScan, unsigned>
 hip_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
                                          const unsigned BlockSize) {
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         RangePolicy<Experimental::HIP, ArgTag>,
-                                         FunctorType>;
+                                         RangePolicy<HIP, ArgTag>, FunctorType>;
 
   return (BlockSize + 2) * Analysis::value_size(functor);
 }

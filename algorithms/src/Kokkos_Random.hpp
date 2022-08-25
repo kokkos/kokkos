@@ -631,8 +631,7 @@ struct Random_XorShift1024_UseCArrayState<Kokkos::Cuda> : std::false_type {};
 #endif
 #ifdef KOKKOS_ENABLE_HIP
 template <>
-struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::HIP>
-    : std::false_type {};
+struct Random_XorShift1024_UseCArrayState<Kokkos::HIP> : std::false_type {};
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 template <>
@@ -657,7 +656,7 @@ struct Random_UniqueIndex {
 #if defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::Cuda
 #elif defined(KOKKOS_ENABLE_HIP)
-#define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::Experimental::HIP
+#define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::HIP
 #endif
 
 template <class MemorySpace>

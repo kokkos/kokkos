@@ -26,8 +26,7 @@ bool is_overlapping<Kokkos::Cuda>(const Kokkos::Cuda&) {
 
 #ifdef KOKKOS_ENABLE_HIP
 template <>
-bool is_overlapping<Kokkos::Experimental::HIP>(
-    const Kokkos::Experimental::HIP&) {
+bool is_overlapping<Kokkos::HIP>(const Kokkos::HIP&) {
   // FIXME_HIP This doesn't pass yet in CI.
   return false;
   // bool value          = true;

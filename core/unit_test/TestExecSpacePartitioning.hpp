@@ -64,8 +64,7 @@ void check_distinctive(Kokkos::Cuda exec1, Kokkos::Cuda exec2) {
 }
 #endif
 #ifdef KOKKOS_ENABLE_HIP
-void check_distinctive(Kokkos::Experimental::HIP exec1,
-                       Kokkos::Experimental::HIP exec2) {
+void check_distinctive(Kokkos::HIP exec1, Kokkos::HIP exec2) {
   ASSERT_NE(exec1.hip_stream(), exec2.hip_stream());
 }
 #endif
@@ -101,7 +100,7 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
     check_distinctive(Kokkos::Cuda(), Kokkos::Cuda());
 #endif
 #ifdef KOKKOS_ENABLE_HIP
-    check_distinctive(Kokkos::Experimental::HIP(), Kokkos::Experimental::HIP());
+    check_distinctive(Kokkos::HIP(), Kokkos::HIP());
 #endif
 #ifdef KOKKOS_ENABLE_SYCL
     check_distinctive(Kokkos::Experimental::SYCL(),

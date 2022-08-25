@@ -48,7 +48,6 @@
 #include <Kokkos_Macros.hpp>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 //----------------------------------------------------------------------------
@@ -196,7 +195,6 @@ __device__ inline T shfl_up(const T& val, int delta, int width) {
   return rv;
 }
 
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif

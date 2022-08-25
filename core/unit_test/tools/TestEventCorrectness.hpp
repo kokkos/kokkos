@@ -55,9 +55,9 @@ class Serial;
 class OpenMP;
 class Cuda;
 class Threads;
+class HIP;
 namespace Experimental {
 class SYCL;
-class HIP;
 class OpenMPTarget;
 class HPX;
 }  // namespace Experimental
