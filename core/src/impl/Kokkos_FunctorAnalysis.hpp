@@ -745,8 +745,9 @@ struct FunctorAnalysis {
   struct DeduceInitNoTag {
     enum : bool { value = false };
 
-    KOKKOS_INLINE_FUNCTION static void init(F const* const, ValueType* dst) {
-      new (dst) ValueType();
+    KOKKOS_INLINE_FUNCTION static void init(F const* const f, ValueType* dst) {
+      const int n = FunctorAnalysis::value_count(*f);
+      for (int i = 0; i < n; ++i) new (&dst[i]) ValueType();
     }
   };
 
