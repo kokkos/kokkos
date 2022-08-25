@@ -17,86 +17,159 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MINMAX_ELEMENT_HPP
 #define KOKKOS_STD_ALGORITHMS_MINMAX_ELEMENT_HPP
 
+#include "./impl/Kokkos_IsTeamHandle.hpp"
 #include "impl/Kokkos_MinMaxMinmaxElement.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
-template <class ExecutionSpace, class IteratorType>
+//
+// overload set accepting execution space
+//
+template <class ExecutionSpace, class IteratorType,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const ExecutionSpace& ex, IteratorType first,
                     IteratorType last) {
-  return Impl::minmax_element_impl<MinMaxFirstLastLoc>(
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLoc>(
       "Kokkos::minmax_element_iterator_api_default", ex, first, last);
 }
 
-template <class ExecutionSpace, class IteratorType>
+template <class ExecutionSpace, class IteratorType,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last) {
-  return Impl::minmax_element_impl<MinMaxFirstLastLoc>(label, ex, first, last);
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLoc>(label, ex,
+                                                                first, last);
 }
 
-template <class ExecutionSpace, class IteratorType, class ComparatorType>
+template <class ExecutionSpace, class IteratorType, class ComparatorType,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const ExecutionSpace& ex, IteratorType first,
                     IteratorType last, ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(ex);
 
-  return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLocCustomComparator>(
       "Kokkos::minmax_element_iterator_api_default", ex, first, last,
       std::move(comp));
 }
 
-template <class ExecutionSpace, class IteratorType, class ComparatorType>
+template <class ExecutionSpace, class IteratorType, class ComparatorType,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const std::string& label, const ExecutionSpace& ex,
                     IteratorType first, IteratorType last,
                     ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(ex);
 
-  return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLocCustomComparator>(
       label, ex, first, last, std::move(comp));
 }
 
-template <class ExecutionSpace, class DataType, class... Properties>
+template <class ExecutionSpace, class DataType, class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
-  return Impl::minmax_element_impl<MinMaxFirstLastLoc>(
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLoc>(
       "Kokkos::minmax_element_view_api_default", ex, begin(v), end(v));
 }
 
-template <class ExecutionSpace, class DataType, class... Properties>
+template <class ExecutionSpace, class DataType, class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
-  return Impl::minmax_element_impl<MinMaxFirstLastLoc>(label, ex, begin(v),
-                                                       end(v));
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLoc>(
+      label, ex, begin(v), end(v));
 }
 
 template <class ExecutionSpace, class DataType, class ComparatorType,
-          class... Properties>
+          class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v,
                     ComparatorType comp) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   Impl::static_assert_is_not_openmptarget(ex);
 
-  return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLocCustomComparator>(
       "Kokkos::minmax_element_view_api_default", ex, begin(v), end(v),
       std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class ComparatorType,
-          class... Properties>
+          class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto minmax_element(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType, Properties...>& v,
                     ComparatorType comp) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
   Impl::static_assert_is_not_openmptarget(ex);
 
-  return Impl::minmax_element_impl<MinMaxFirstLastLocCustomComparator>(
+  return Impl::minmax_element_exespace_impl<MinMaxFirstLastLocCustomComparator>(
       label, ex, begin(v), end(v), std::move(comp));
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <
+    class TeamHandleType, class IteratorType,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto minmax_element(const TeamHandleType& teamHandle,
+                                    IteratorType first, IteratorType last) {
+  return Impl::minmax_element_team_impl<MinMaxFirstLastLoc>(teamHandle, first,
+                                                            last);
+}
+
+template <
+    class TeamHandleType, class IteratorType, class ComparatorType,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto minmax_element(const TeamHandleType& teamHandle,
+                                    IteratorType first, IteratorType last,
+                                    ComparatorType comp) {
+  Impl::static_assert_is_not_openmptarget(teamHandle);
+
+  return Impl::minmax_element_team_impl<MinMaxFirstLastLocCustomComparator>(
+      teamHandle, first, last, std::move(comp));
+}
+
+template <
+    class TeamHandleType, class DataType, class... Properties,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto minmax_element(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType, Properties...>& v) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
+
+  return Impl::minmax_element_team_impl<MinMaxFirstLastLoc>(teamHandle,
+                                                            begin(v), end(v));
+}
+
+template <
+    class TeamHandleType, class DataType, class ComparatorType,
+    class... Properties,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto minmax_element(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType, Properties...>& v, ComparatorType comp) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  Impl::static_assert_is_not_openmptarget(teamHandle);
+
+  return Impl::minmax_element_team_impl<MinMaxFirstLastLocCustomComparator>(
+      teamHandle, begin(v), end(v), std::move(comp));
 }
 
 }  // namespace Experimental

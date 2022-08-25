@@ -190,6 +190,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsCommon
 	StdAlgorithmsTeamMinElement
 	StdAlgorithmsTeamMaxElement
+	StdAlgorithmsTeamMinMaxElement
 	)
       list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
     endforeach()
@@ -223,16 +224,16 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
   )
 endif()
 
-# foreach(ID A;B;C;D;E)
-#   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-#     UnitTest_StdSet_${ID}
-#     SOURCES
-#     UnitTestMain.cpp
-#     ${STDALGO_SOURCES_${ID}}
-#     )
-# endforeach()
+foreach(ID A;B;C;D;E)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_StdSet_${ID}
+    SOURCES
+    UnitTestMain.cpp
+    ${STDALGO_SOURCES_${ID}}
+    )
+endforeach()
 
-foreach(ID B)
+foreach(ID A;B)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_StdSet_Team_${ID}
     SOURCES
