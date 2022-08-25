@@ -861,6 +861,14 @@ int Cuda::impl_is_initialized() {
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
   Impl::CudaInternal::singleton().initialize(Impl::get_gpu(settings));
+
+  // In order to support setting an atexit hook for Kokkos::finalize
+  // We need to ensure that the Cuda deep_copy instance is not destroyed
+  // before that atexit hook is getting called.
+  // Thus we create the static instance here, so that it will be deallocated
+  // after the potential atexit call.
+  // This is neccessary since we will access that instance in Kokkos::finalize
+  (void)::Kokkos::Impl::cuda_get_deep_copy_space(true);
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {
