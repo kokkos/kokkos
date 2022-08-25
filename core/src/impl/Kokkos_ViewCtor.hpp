@@ -318,7 +318,7 @@ KOKKOS_FUNCTION const auto &get_property(
     return static_cast<const ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
         .value;
   } else {
-    static_assert(!std::is_same_v<Tag, void>, "Invalid property tag!");
+    static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
     return view_ctor_prop;
   }
 }
@@ -345,7 +345,7 @@ KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {
     return static_cast<ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
         .value;
   } else {
-    static_assert(!std::is_same_v<Tag, void>, "Invalid property tag!");
+    static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
     return view_ctor_prop;
   }
 }
