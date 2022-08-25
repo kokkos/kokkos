@@ -30,13 +30,13 @@ struct is_admissible_to_kokkos_std_algorithms : std::false_type {};
 
 template <typename T>
 struct is_admissible_to_kokkos_std_algorithms<
-    T, std::enable_if_t< ::Kokkos::is_view<T>::value && T::rank == 1 &&
-                         (std::is_same<typename T::traits::array_layout,
-                                       Kokkos::LayoutLeft>::value ||
-                          std::is_same<typename T::traits::array_layout,
-                                       Kokkos::LayoutRight>::value ||
-                          std::is_same<typename T::traits::array_layout,
-                                       Kokkos::LayoutStride>::value)> >
+    T, std::enable_if_t<::Kokkos::is_view<T>::value && T::rank == 1 &&
+                        (std::is_same<typename T::traits::array_layout,
+                                      Kokkos::LayoutLeft>::value ||
+                         std::is_same<typename T::traits::array_layout,
+                                      Kokkos::LayoutRight>::value ||
+                         std::is_same<typename T::traits::array_layout,
+                                      Kokkos::LayoutStride>::value)>>
     : std::true_type {};
 
 template <class ViewType>
@@ -231,11 +231,23 @@ struct not_openmptarget {
 };
 
 template <class ExecutionSpace>
-KOKKOS_INLINE_FUNCTION constexpr void static_assert_is_not_openmptarget(
-    const ExecutionSpace&) {
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    ::Kokkos::is_execution_space<ExecutionSpace>::value>
+static_assert_is_not_openmptarget(const ExecutionSpace&) {
   static_assert(not_openmptarget<ExecutionSpace>::value,
                 "Currently, Kokkos standard algorithms do not support custom "
                 "comparators in OpenMPTarget");
+}
+
+// we need this for the same reason as the random_access_and_accessible
+template <class TeamHandleType>
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    is_team_handle<TeamHandleType>::value>
+static_assert_is_not_openmptarget(const TeamHandleType&) {
+  static_assert(
+      not_openmptarget<typename TeamHandleType::execution_space>::value,
+      "Currently, Kokkos standard algorithms do not support custom "
+      "comparators in OpenMPTarget");
 }
 
 //
