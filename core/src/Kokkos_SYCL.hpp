@@ -143,6 +143,13 @@ class SYCL {
   static std::ostream& impl_sycl_info(std::ostream& os,
                                       const sycl::device& device);
 
+  friend bool operator==(SYCL const& lhs, SYCL const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(SYCL const& lhs, SYCL const& rhs) {
+    return !(lhs == rhs);
+  }
   Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
 };
 
