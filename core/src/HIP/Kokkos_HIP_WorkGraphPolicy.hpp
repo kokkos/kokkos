@@ -46,6 +46,7 @@
 #define KOKKOS_HIP_WORKGRAPHPOLICY_HPP
 
 #include <Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
 
 namespace Kokkos {
 namespace Impl {

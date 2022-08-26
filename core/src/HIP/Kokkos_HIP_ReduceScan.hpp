@@ -49,6 +49,7 @@
 
 #if defined(__HIPCC__)
 
+#include <Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Vectorization.hpp>
 
 namespace Kokkos {

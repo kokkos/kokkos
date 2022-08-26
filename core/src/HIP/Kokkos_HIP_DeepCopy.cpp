@@ -48,6 +48,7 @@
 
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>  // HIP_SAFE_CALL
+#include <Kokkos_HIP.hpp>
 
 namespace Kokkos {
 namespace Impl {

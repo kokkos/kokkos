@@ -309,92 +309,6 @@ void HIPManagedSpace::impl_deallocate(
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
-namespace Kokkos {
-
-int HIP::concurrency() {
-  auto const& prop = hip_device_prop();
-  return prop.maxThreadsPerMultiProcessor * prop.multiProcessorCount;
-}
-int HIP::impl_is_initialized() {
-  return Impl::HIPInternal::singleton().is_initialized();
-}
-
-void HIP::impl_initialize(InitializationSettings const& settings) {
-  Impl::HIPInternal::singleton().initialize(::Kokkos::Impl::get_gpu(settings));
-}
-
-void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
-
-HIP::HIP()
-    : m_space_instance(&Impl::HIPInternal::singleton(),
-                       [](Impl::HIPInternal*) {}) {
-  Impl::HIPInternal::singleton().verify_is_initialized(
-      "HIP instance constructor");
-}
-
-HIP::HIP(hipStream_t const stream, bool manage_stream)
-    : m_space_instance(new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
-  Impl::HIPInternal::singleton().verify_is_initialized(
-      "HIP instance constructor");
-  m_space_instance->initialize(Impl::HIPInternal::singleton().m_hipDev, stream,
-                               manage_stream);
-}
-
-void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
-  os << "Device Execution Space:\n";
-  os << "  KOKKOS_ENABLE_HIP: yes\n";
-
-  os << "HIP Options:\n";
-  os << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
-#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-
-  os << "\nRuntime Configuration:\n";
-
-  m_space_instance->print_configuration(os);
-}
-
-uint32_t HIP::impl_instance_id() const noexcept {
-  return m_space_instance->impl_get_instance_id();
-}
-void HIP::impl_static_fence(const std::string& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<HIP>(
-      name,
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          GlobalDeviceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
-}
-
-void HIP::fence(const std::string& name) const {
-  m_space_instance->fence(name);
-}
-
-hipStream_t HIP::hip_stream() const { return m_space_instance->m_stream; }
-
-int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
-
-hipDeviceProp_t const& HIP::hip_device_prop() {
-  return Impl::HIPInternal::singleton().m_deviceProp;
-}
-
-const char* HIP::name() { return "HIP"; }
-
-namespace Impl {
-
-int g_hip_space_factory_initialized = initialize_space_factory<HIP>("150_HIP");
-
-}  // namespace Impl
-
-}  // namespace Kokkos
-
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
 
 #include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
@@ -411,6 +325,3 @@ template class SharedAllocationRecordCommon<HIPManagedSpace>;
 
 }  // end namespace Impl
 }  // end namespace Kokkos
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================
