@@ -264,6 +264,9 @@ struct is_device_helper<Device<ExecutionSpace, MemorySpace>> : std::true_type {
 template <typename T>
 using is_device = typename Impl::is_device_helper<std::remove_cv_t<T>>::type;
 
+template <typename T>
+inline constexpr bool is_device_v = is_device<T>::value;
+
 //----------------------------------------------------------------------------
 
 template <typename T>
