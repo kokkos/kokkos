@@ -479,6 +479,14 @@ class HPX {
 #endif
 
   static constexpr const char *name() noexcept { return "HPX"; }
+
+ private:
+  friend bool operator==(HPX const &lhs, HPX const &rhs) {
+    return lhs.m_instance_id == rhs.m_instance_id;
+  }
+  friend bool operator!=(HPX const &lhs, HPX const &rhs) {
+    return !(lhs == rhs);
+  }
 };
 }  // namespace Experimental
 
