@@ -54,7 +54,10 @@ namespace Kokkos::Experimental::Impl {
 template <class IndexType, class Functor>
 void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
                                    IndexType begin, IndexType end,
-                                   Functor functor, int async_arg) {
+                                   Functor afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector copyin(functor) async(async_arg)
@@ -75,7 +78,10 @@ void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
 template <class IndexType, class Functor>
 void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int chunk_size,
                                    IndexType begin, IndexType end,
-                                   Functor functor, int async_arg) {
+                                   Functor afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector copyin(functor) async(async_arg)

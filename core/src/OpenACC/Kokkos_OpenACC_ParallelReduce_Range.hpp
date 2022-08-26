@@ -126,7 +126,10 @@ namespace Kokkos::Experimental::Impl {
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceSum(Schedule<Static>, int chunk_size, IndexType begin,
                               IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(+:val) copyin(functor) async(async_arg)
@@ -147,7 +150,10 @@ void OpenACCParallelReduceSum(Schedule<Static>, int chunk_size, IndexType begin,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceSum(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(+:val) copyin(functor) async(async_arg)
@@ -168,7 +174,10 @@ void OpenACCParallelReduceSum(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceProd(Schedule<Static>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
-                               Functor const& functor, int async_arg) {
+                               Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(*:val) copyin(functor) async(async_arg)
@@ -189,7 +198,10 @@ void OpenACCParallelReduceProd(Schedule<Static>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceProd(Schedule<Dynamic>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
-                               Functor const& functor, int async_arg) {
+                               Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(*:val) copyin(functor) async(async_arg)
@@ -210,7 +222,10 @@ void OpenACCParallelReduceProd(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceMin(Schedule<Static>, int chunk_size, IndexType begin,
                               IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(min:val) copyin(functor) async(async_arg)
@@ -231,7 +246,10 @@ void OpenACCParallelReduceMin(Schedule<Static>, int chunk_size, IndexType begin,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceMin(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(min:val) copyin(functor) async(async_arg)
@@ -252,7 +270,10 @@ void OpenACCParallelReduceMin(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceMax(Schedule<Static>, int chunk_size, IndexType begin,
                               IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(max:val) copyin(functor) async(async_arg)
@@ -273,7 +294,10 @@ void OpenACCParallelReduceMax(Schedule<Static>, int chunk_size, IndexType begin,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceMax(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(max:val) copyin(functor) async(async_arg)
@@ -294,7 +318,10 @@ void OpenACCParallelReduceMax(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceLAnd(Schedule<Static>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
-                               Functor const& functor, int async_arg) {
+                               Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
@@ -315,7 +342,10 @@ void OpenACCParallelReduceLAnd(Schedule<Static>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceLAnd(Schedule<Dynamic>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
-                               Functor const& functor, int async_arg) {
+                               Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
@@ -336,7 +366,10 @@ void OpenACCParallelReduceLAnd(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceLOr(Schedule<Static>, int chunk_size, IndexType begin,
                               IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(||:val) copyin(functor) async(async_arg)
@@ -357,7 +390,10 @@ void OpenACCParallelReduceLOr(Schedule<Static>, int chunk_size, IndexType begin,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceLOr(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(||:val) copyin(functor) async(async_arg)
@@ -378,7 +414,10 @@ void OpenACCParallelReduceLOr(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceBAnd(Schedule<Static>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
-                               Functor const& functor, int async_arg) {
+                               Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
@@ -399,7 +438,10 @@ void OpenACCParallelReduceBAnd(Schedule<Static>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceBAnd(Schedule<Dynamic>, int chunk_size,
                                IndexType begin, IndexType end, ValueType& val,
-                               Functor const& functor, int async_arg) {
+                               Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
@@ -420,7 +462,10 @@ void OpenACCParallelReduceBAnd(Schedule<Dynamic>, int chunk_size,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceBOr(Schedule<Static>, int chunk_size, IndexType begin,
                               IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(|:val) copyin(functor) async(async_arg)
@@ -441,7 +486,10 @@ void OpenACCParallelReduceBOr(Schedule<Static>, int chunk_size, IndexType begin,
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceBOr(Schedule<Dynamic>, int chunk_size,
                               IndexType begin, IndexType end, ValueType& val,
-                              Functor const& functor, int async_arg) {
+                              Functor const& afunctor, int async_arg) {
+  // Create a local copy of the functor to avoid errors due to incorect scope
+  // analysis.
+  auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector reduction(|:val) copyin(functor) async(async_arg)
