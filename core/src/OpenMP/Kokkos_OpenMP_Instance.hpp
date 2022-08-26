@@ -48,8 +48,10 @@ class OpenMPInternal;
 
 inline int g_openmp_hardware_max_threads = 1;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // FIXME_OPENMP we can remove this after we remove partition_master
 inline thread_local OpenMPInternal* t_openmp_instance = nullptr;
+#endif
 
 struct OpenMPTraits {
   static int constexpr MAX_THREAD_COUNT = 512;
@@ -120,25 +122,39 @@ inline bool OpenMP::impl_is_initialized() noexcept {
 }
 
 inline bool OpenMP::in_parallel(OpenMP const& exec_space) noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   return (
       (exec_space.impl_internal_space_instance()->m_level < omp_get_level()) &&
       (!Impl::t_openmp_instance ||
        Impl::t_openmp_instance->m_level < omp_get_level()));
+#else
+  return exec_space.impl_internal_space_instance()->m_level < omp_get_level();
+#endif
 }
 
 inline int OpenMP::impl_thread_pool_size(OpenMP const& exec_space) noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   return OpenMP::in_parallel(exec_space)
              ? omp_get_num_threads()
              : (Impl::t_openmp_instance
                     ? Impl::t_openmp_instance->m_pool_size
                     : exec_space.impl_internal_space_instance()->m_pool_size);
+#else
+  return OpenMP::in_parallel(exec_space)
+             ? omp_get_num_threads()
+             : exec_space.impl_internal_space_instance()->m_pool_size;
+#endif
 }
 
 inline int OpenMP::impl_thread_pool_rank() noexcept {
   // FIXME_OPENMP Can we remove this when removing partition_master? It's only
   // used in one partition_master test
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   KOKKOS_IF_ON_HOST(
       (return Impl::t_openmp_instance ? 0 : omp_get_thread_num();))
+#else
+  KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
+#endif
 
   KOKKOS_IF_ON_DEVICE((return -1;))
 }
