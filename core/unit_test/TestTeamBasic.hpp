@@ -294,7 +294,7 @@ TEST(TEST_CATEGORY, team_broadcast_float) {
 #endif
     // FIXME_HIP
 #ifdef KOKKOS_ENABLE_HIP
-      if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
+      if (!std::is_same<TEST_EXECSPACE, Kokkos::HIP>::value)
 #endif
       {
         TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
@@ -328,7 +328,7 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
 #endif
     // FIXME_HIP
 #ifdef KOKKOS_ENABLE_HIP
-      if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
+      if (!std::is_same<TEST_EXECSPACE, Kokkos::HIP>::value)
 #endif
       {
         TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,

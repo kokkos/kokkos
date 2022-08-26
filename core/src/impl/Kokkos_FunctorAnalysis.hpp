@@ -665,7 +665,8 @@ struct FunctorAnalysis {
   template <class F = Functor, typename = void>
   struct DeduceInitNoTag : std::false_type {
     KOKKOS_INLINE_FUNCTION static void init(F const* const, ValueType* dst) {
-      new (dst) ValueType();
+      const int n = FunctorAnalysis::value_count(*f);
+      for (int i = 0; i < n; ++i) new (&dst[i]) ValueType();
     }
   };
 

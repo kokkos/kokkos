@@ -355,7 +355,7 @@ struct CountAndFillBase {
 #if defined(KOKKOS_ENABLE_CUDA)
 #define EXEC_SPACE Kokkos::Cuda
 #elif defined(KOKKOS_ENABLE_HIP)
-#define EXEC_SPACE Kokkos::Experimental::HIP
+#define EXEC_SPACE Kokkos::HIP
 #endif
 template <class CrsType, class Functor>
 struct CountAndFillBase<CrsType, Functor, EXEC_SPACE> {

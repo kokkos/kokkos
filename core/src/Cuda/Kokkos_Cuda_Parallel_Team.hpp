@@ -811,10 +811,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const bool need_device_set =
         ReducerType::has_init_member_function() ||
         ReducerType::has_final_member_function() ||
-        !m_result_ptr_host_accessible ||
-#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
-        Policy::is_graph_kernel::value ||
-#endif
+        !m_result_ptr_host_accessible || Policy::is_graph_kernel::value ||
         !std::is_same<typename ReducerType::functor_type, FunctorType>::value;
     if (!is_empty_range || need_device_set) {
       const int block_count = std::max(

@@ -492,8 +492,8 @@ struct UVMSpaceFor<Kokkos::Experimental::SYCL> {
 
 #ifdef KOKKOS_ENABLE_HIP  // specific to HIP
 template <>
-struct UVMSpaceFor<Kokkos::Experimental::HIP> {
-  using type = Kokkos::Experimental::HIPManagedSpace;
+struct UVMSpaceFor<Kokkos::HIP> {
+  using type = Kokkos::HIPManagedSpace;
 };
 #endif
 

@@ -61,23 +61,19 @@ __device__ __constant__ extern unsigned long
     kokkos_impl_hip_constant_memory_buffer[];
 #else
 __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
-    [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
-     sizeof(unsigned long)];
+    [Kokkos::Impl::HIPTraits::ConstantMemoryUsage / sizeof(unsigned long)];
 #endif
 #endif
 
 namespace Kokkos {
-namespace Experimental {
 template <typename T>
 inline __device__ T *kokkos_impl_hip_shared_memory() {
-  extern __shared__ Kokkos::Experimental::HIPSpace::size_type sh[];
+  extern __shared__ Kokkos::HIPSpace::size_type sh[];
   return (T *)sh;
 }
-}  // namespace Experimental
 }  // namespace Kokkos
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 // The hip_parallel_launch_*_memory code is identical to the cuda code
@@ -501,7 +497,7 @@ struct HIPParallelLaunch<
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());
       hip_instance->fence(
-          "Kokkos::Experimental::Impl::HIParallelLaunch: Debug Only Check for "
+          "Kokkos::Impl::HIParallelLaunch: Debug Only Check for "
           "Execution Error");
 #endif
     }
@@ -547,7 +543,6 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
 #endif
 }
 }  // namespace Impl
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif

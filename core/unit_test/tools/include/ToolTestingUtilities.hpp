@@ -218,7 +218,7 @@ struct function_traits<R (C::*)(A...) const>  // const
  * @tparam T The functor type
  */
 template <typename T>
-struct function_traits<T, Kokkos::Impl::void_t<decltype(&T::operator())> >
+struct function_traits<T, std::void_t<decltype(&T::operator())> >
     : public function_traits<decltype(&T::operator())> {};
 
 /**
