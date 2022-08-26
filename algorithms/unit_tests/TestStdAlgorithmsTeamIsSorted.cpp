@@ -50,57 +50,48 @@ namespace TeamIsSorted {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ValueType>
-struct GreaterThanValueFunctor {
-  ValueType m_val;
-
-  KOKKOS_INLINE_FUNCTION
-  GreaterThanValueFunctor(ValueType val) : m_val(val) {}
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(ValueType val) const { return (val > m_val); }
-};
-
 template <class ViewType, class ReturnViewType>
 struct TestFunctorA {
   ViewType m_view;
   ReturnViewType m_returnsView;
   int m_apiPick;
 
-  TestFunctorA(const ViewType view,
-	       const ReturnViewType returnsView,
+  TestFunctorA(const ViewType view, const ReturnViewType returnsView,
                int apiPick)
-      : m_view(view),
-        m_returnsView(returnsView),
-        m_apiPick(apiPick) {}
+      : m_view(view), m_returnsView(returnsView), m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    //GreaterThanValueFunctor predicate(m_threshold);
+    using value_type = typename ViewType::value_type;
+    CustomLessThanComparator<value_type> comp;
     if (m_apiPick == 0) {
-      const bool result = KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView));
-
+      const bool result =
+          KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView));
       Kokkos::single(Kokkos::PerTeam(member),
                      [=]() { m_returnsView(myRowIndex) = result; });
-
+    } else if (m_apiPick == 1) {
+      const bool result = KE::is_sorted(member, myRowView);
+      Kokkos::single(Kokkos::PerTeam(member),
+                     [=]() { m_returnsView(myRowIndex) = result; });
+    } else if (m_apiPick == 2) {
+      const bool result = KE::is_sorted(member, KE::cbegin(myRowView),
+                                        KE::cend(myRowView), comp);
+      Kokkos::single(Kokkos::PerTeam(member),
+                     [=]() { m_returnsView(myRowIndex) = result; });
+    } else if (m_apiPick == 3) {
+      const bool result = KE::is_sorted(member, myRowView, comp);
+      Kokkos::single(Kokkos::PerTeam(member),
+                     [=]() { m_returnsView(myRowIndex) = result; });
     }
-    // else if (m_apiPick == 1) {
-    //   auto myCount = KE::count_if(member, myRowView, predicate);
-    //   Kokkos::single(Kokkos::PerTeam(member),
-    //                  [=]() { m_returnsView(myRowIndex) = myCount; });
-    // }
   }
 };
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols,
-	    int apiId,
-	    bool makeDataSortedOnPurpose)
-{
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
+            bool makeDataSortedOnPurpose) {
   /* description:
      use a rank-2 view randomly filled with values,
      and run a team-level is_sorted
@@ -110,7 +101,8 @@ void test_A(std::size_t numTeams, std::size_t numCols,
   // prepare data
   // -----------------------------------------------
   // construct in memory space associated with default exespace
-  auto dataView = create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
+  auto dataView =
+      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
 
   // dataView might not deep copyable (e.g. strided layout) so to
   // randomize it, we make a new view that is for sure deep copyable,
@@ -120,16 +112,16 @@ void test_A(std::size_t numTeams, std::size_t numCols,
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  if (makeDataSortedOnPurpose){
-    for (std::size_t i=0; i<dataView_dc_h.extent(0); ++i){
-      for (std::size_t j=0; j<dataView_dc_h.extent(1); ++j){
-	dataView_dc_h(i,j) = ValueType(j);
+  if (makeDataSortedOnPurpose) {
+    for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
+      for (std::size_t j = 0; j < dataView_dc_h.extent(1); ++j) {
+        dataView_dc_h(i, j) = ValueType(j);
       }
     }
-  }
-  else{
+  } else {
     // randomly fill the view
-    using rand_pool = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
+    using rand_pool =
+        Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
     rand_pool pool(45234977);
     Kokkos::fill_random(dataView_dc_h, pool, ValueType{5}, ValueType{1545});
   }
@@ -139,7 +131,6 @@ void test_A(std::size_t numTeams, std::size_t numCols,
   // use CTAD
   CopyFunctorRank2 F1(dataView_dc, dataView);
   Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
-
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -159,23 +150,29 @@ void test_A(std::size_t numTeams, std::size_t numCols,
   // check
   // -----------------------------------------------
   auto returnView_h = create_host_space_copy(returnView);
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i)
-  {
+  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
-    if (apiId <= 1) {
-      auto stdResult = std::is_sorted(KE::cbegin(myRow), KE::cend(myRow));
-      EXPECT_TRUE(stdResult == returnView_h(i));
 
-      // note that we have to be careful because when we have only
-      // 0, 1 columns, then the data is sorted by definition
-      // and when we have 2 columns it is very likely it is sorted
-      // so only do the following check for large enough cols count
-      if (numCols <= 1){
-	EXPECT_TRUE(stdResult == true);
-      }
-      else if (numCols > 10){
-	EXPECT_TRUE(stdResult == makeDataSortedOnPurpose);
-      }
+    bool stdResult;
+    if (apiId <= 1) {
+      stdResult = std::is_sorted(KE::cbegin(myRow), KE::cend(myRow));
+    } else {
+      stdResult = std::is_sorted(KE::cbegin(myRow), KE::cend(myRow),
+                                 CustomLessThanComparator<ValueType>{});
+    }
+
+    // our result must match std
+    EXPECT_TRUE(stdResult == returnView_h(i));
+
+    // check also since we know in advance when data is really sorted.
+    // note that we have to be careful because when we have only
+    // 0, 1 columns, then the data is sorted by definition
+    // and when we have 2 columns it is very likely it is sorted
+    // so only do the following check for large enough cols count
+    if (numCols <= 1) {
+      EXPECT_TRUE(stdResult == true);
+    } else if (numCols > 10) {
+      EXPECT_TRUE(stdResult == makeDataSortedOnPurpose);
     }
   }
 
@@ -185,27 +182,32 @@ void test_A(std::size_t numTeams, std::size_t numCols,
 }
 
 template <class LayoutTag, class ValueType>
-void run_all_scenarios(bool makeDataSortedOnPurpose)
-{
+void run_all_scenarios(bool makeDataSortedOnPurpose) {
   for (int numTeams : teamSizesToTest) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
-      for (int apiId : {0}) {
-	test_A<LayoutTag, ValueType>(numTeams, numCols, apiId, makeDataSortedOnPurpose);
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 5153}) {
+      for (int apiId : {0, 1, 2, 3}) {
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId,
+                                     makeDataSortedOnPurpose);
       }
     }
   }
 }
 
-TEST(std_algorithms_is_sorted_team_test, test_data_almost_certainly_not_sorted) {
+TEST(std_algorithms_is_sorted_team_test,
+     test_data_almost_certainly_not_sorted) {
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
   run_all_scenarios<DynamicTag, double>(false);
   run_all_scenarios<StridedTwoRowsTag, double>(false);
   run_all_scenarios<StridedThreeRowsTag, unsigned>(false);
+#endif
 }
 
 TEST(std_algorithms_is_sorted_team_test, test_data_certainly_sorted) {
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
   run_all_scenarios<DynamicTag, double>(true);
   run_all_scenarios<StridedTwoRowsTag, double>(true);
   run_all_scenarios<StridedThreeRowsTag, unsigned>(true);
+#endif
 }
 
 }  // namespace TeamIsSorted
