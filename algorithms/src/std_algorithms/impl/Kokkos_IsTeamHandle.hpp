@@ -46,13 +46,13 @@
 #define KOKKOS_STD_ALGORITHMS_IS_TEAM_HANDLE_IMPL_HPP
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_DetectionIdiom.hpp>
 
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
 // this is just a draft to get started and finish later
-
 template <class T, class = void>
 struct is_team_handle : std::false_type {};
 

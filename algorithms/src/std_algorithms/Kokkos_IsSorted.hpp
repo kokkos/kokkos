@@ -17,84 +17,145 @@
 #ifndef KOKKOS_STD_ALGORITHMS_IS_SORTED_HPP
 #define KOKKOS_STD_ALGORITHMS_IS_SORTED_HPP
 
+#include "./impl/Kokkos_IsTeamHandle.hpp"
 #include "impl/Kokkos_IsSorted.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
+//
+// overload set accepting execution space
+//
 template <class ExecutionSpace, class IteratorType>
-bool is_sorted(const ExecutionSpace& ex, IteratorType first,
-               IteratorType last) {
-  return Impl::is_sorted_impl("Kokkos::is_sorted_iterator_api_default", ex,
-                              first, last);
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last) {
+  return Impl::is_sorted_exespace_impl("Kokkos::is_sorted_iterator_api_default",
+                                       ex, first, last);
 }
 
 template <class ExecutionSpace, class IteratorType>
-bool is_sorted(const std::string& label, const ExecutionSpace& ex,
-               IteratorType first, IteratorType last) {
-  return Impl::is_sorted_impl(label, ex, first, last);
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const std::string& label, const ExecutionSpace& ex,
+          IteratorType first, IteratorType last) {
+  return Impl::is_sorted_exespace_impl(label, ex, first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
-bool is_sorted(const ExecutionSpace& ex,
-               const ::Kokkos::View<DataType, Properties...>& view) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const ExecutionSpace& ex,
+          const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_impl("Kokkos::is_sorted_view_api_default", ex,
-                              KE::cbegin(view), KE::cend(view));
+  return Impl::is_sorted_exespace_impl("Kokkos::is_sorted_view_api_default", ex,
+                                       KE::cbegin(view), KE::cend(view));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
-bool is_sorted(const std::string& label, const ExecutionSpace& ex,
-               const ::Kokkos::View<DataType, Properties...>& view) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const std::string& label, const ExecutionSpace& ex,
+          const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_impl(label, ex, KE::cbegin(view), KE::cend(view));
+  return Impl::is_sorted_exespace_impl(label, ex, KE::cbegin(view),
+                                       KE::cend(view));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
-bool is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-               ComparatorType comp) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last,
+          ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(ex);
-  return Impl::is_sorted_impl("Kokkos::is_sorted_iterator_api_default", ex,
-                              first, last, std::move(comp));
+  return Impl::is_sorted_exespace_impl("Kokkos::is_sorted_iterator_api_default",
+                                       ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
-bool is_sorted(const std::string& label, const ExecutionSpace& ex,
-               IteratorType first, IteratorType last, ComparatorType comp) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const std::string& label, const ExecutionSpace& ex,
+          IteratorType first, IteratorType last, ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(ex);
-  return Impl::is_sorted_impl(label, ex, first, last, std::move(comp));
+  return Impl::is_sorted_exespace_impl(label, ex, first, last, std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class ComparatorType>
-bool is_sorted(const ExecutionSpace& ex,
-               const ::Kokkos::View<DataType, Properties...>& view,
-               ComparatorType comp) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const ExecutionSpace& ex,
+          const ::Kokkos::View<DataType, Properties...>& view,
+          ComparatorType comp) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_not_openmptarget(ex);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_impl("Kokkos::is_sorted_view_api_default", ex,
-                              KE::cbegin(view), KE::cend(view),
-                              std::move(comp));
+  return Impl::is_sorted_exespace_impl("Kokkos::is_sorted_view_api_default", ex,
+                                       KE::cbegin(view), KE::cend(view),
+                                       std::move(comp));
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class ComparatorType>
-bool is_sorted(const std::string& label, const ExecutionSpace& ex,
-               const ::Kokkos::View<DataType, Properties...>& view,
-               ComparatorType comp) {
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+is_sorted(const std::string& label, const ExecutionSpace& ex,
+          const ::Kokkos::View<DataType, Properties...>& view,
+          ComparatorType comp) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_not_openmptarget(ex);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::is_sorted_impl(label, ex, KE::cbegin(view), KE::cend(view),
-                              std::move(comp));
+  return Impl::is_sorted_exespace_impl(label, ex, KE::cbegin(view),
+                                       KE::cend(view), std::move(comp));
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <class TeamHandleType, class IteratorType>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    is_sorted(const TeamHandleType& teamHandle, IteratorType first,
+              IteratorType last) {
+  return Impl::is_sorted_team_impl(teamHandle, first, last);
+}
+
+template <class TeamHandleType, class DataType, class... Properties>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    is_sorted(const TeamHandleType& teamHandle,
+              const ::Kokkos::View<DataType, Properties...>& view) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::is_sorted_team_impl(teamHandle, KE::cbegin(view),
+                                   KE::cend(view));
+}
+
+template <class TeamHandleType, class IteratorType, class ComparatorType>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    is_sorted(const TeamHandleType& teamHandle, IteratorType first,
+              IteratorType last, ComparatorType comp) {
+  Impl::static_assert_is_not_openmptarget(teamHandle);
+  return Impl::is_sorted_team_impl(teamHandle, first, last, std::move(comp));
+}
+
+template <class TeamHandleType, class DataType, class... Properties,
+          class ComparatorType>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    is_sorted(const TeamHandleType& teamHandle,
+              const ::Kokkos::View<DataType, Properties...>& view,
+              ComparatorType comp) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
+  Impl::static_assert_is_not_openmptarget(teamHandle);
+
+  namespace KE = ::Kokkos::Experimental;
+  return Impl::is_sorted_team_impl(teamHandle, KE::cbegin(view), KE::cend(view),
+                                   std::move(comp));
 }
 
 }  // namespace Experimental
