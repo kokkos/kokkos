@@ -14,27 +14,33 @@ jobs:
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
+        clang-tidy: ['']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
+            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
           - distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
@@ -45,6 +51,21 @@ jobs:
       # see https://github.com/actions/virtual-environments/issues/3812
       options: --security-opt seccomp=unconfined
     steps:
+      - name: Checkout desul
+        uses: actions/checkout@v2.2.0
+        with:
+          repository: desul/desul
+          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
+          path: desul
+      - name: Install desul
+        working-directory: desul
+        run: |
+          git submodule init
+          git submodule update
+          mkdir build
+          cd build
+          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
+          sudo cmake --build . --target install --parallel 2
       - name: Checkout code
         uses: actions/checkout@v2.2.0
       - uses: actions/cache@v2
@@ -58,11 +79,17 @@ jobs:
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
-      - name: CMake
+      - name: maybe_install_clang_tidy
+        if: ${{ matrix.clang-tidy != '' }}
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy
+      - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            ${{ matrix.clang-tidy }} \
+            -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \

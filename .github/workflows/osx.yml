@@ -31,6 +31,7 @@ jobs:
             -DKokkos_ENABLE_${{ matrix.backend }}=On
             -DCMAKE_CXX_FLAGS="-Werror"
             -DCMAKE_CXX_STANDARD=14
+            -DKokkos_ARCH_NATIVE=ON
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON
             -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF
             -DKokkos_ENABLE_TESTS=On
