@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_CORE_CONCEPTS_HPP
 #define KOKKOS_CORE_CONCEPTS_HPP
@@ -171,7 +167,9 @@ namespace Kokkos {
         std::is_base_of<detected_t<have_t, T>, T>::value ||    \
         std::is_base_of<detected_t<have_type_t, T>, T>::value; \
     constexpr operator bool() const noexcept { return value; } \
-  };
+  };                                                           \
+  template <typename T>                                        \
+  inline constexpr bool is_##CONCEPT##_v = is_##CONCEPT<T>::value;
 
 // Public concept:
 
@@ -187,21 +185,6 @@ KOKKOS_IMPL_IS_CONCEPT(hooks_policy)
 }  // namespace Experimental
 
 namespace Impl {
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-// For backward compatibility:
-
-template <typename T>
-using is_array_layout KOKKOS_DEPRECATED = Kokkos::is_array_layout<T>;
-template <typename T>
-using is_execution_policy KOKKOS_DEPRECATED = Kokkos::is_execution_policy<T>;
-template <typename T>
-using is_execution_space KOKKOS_DEPRECATED = Kokkos::is_execution_space<T>;
-template <typename T>
-using is_memory_space KOKKOS_DEPRECATED = Kokkos::is_memory_space<T>;
-template <typename T>
-using is_memory_traits KOKKOS_DEPRECATED = Kokkos::is_memory_traits<T>;
-#endif
 
 // Implementation concept:
 
@@ -344,10 +327,8 @@ struct is_space {
           || std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
           std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value
 #elif defined(KOKKOS_ENABLE_HIP)
-          || std::is_same<memory_space,
-                          Kokkos::Experimental::HIPHostPinnedSpace>::value ||
-          std::is_same<memory_space,
-                       Kokkos::Experimental::HIPManagedSpace>::value
+          || std::is_same<memory_space, Kokkos::HIPHostPinnedSpace>::value ||
+          std::is_same<memory_space, Kokkos::HIPManagedSpace>::value
 #elif defined(KOKKOS_ENABLE_SYCL)
           || std::is_same<memory_space,
                           Kokkos::Experimental::SYCLSharedUSMSpace>::value ||
@@ -361,7 +342,7 @@ struct is_space {
 #if defined(KOKKOS_ENABLE_CUDA)
       std::is_same<execution_space, Kokkos::Cuda>::value ||
 #elif defined(KOKKOS_ENABLE_HIP)
-      std::is_same<execution_space, Kokkos::Experimental::HIP>::value ||
+      std::is_same<execution_space, Kokkos::HIP>::value ||
 #elif defined(KOKKOS_ENABLE_SYCL)
       std::is_same<execution_space, Kokkos::Experimental::SYCL>::value ||
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -370,31 +351,7 @@ struct is_space {
 #endif
           false,
       Kokkos::DefaultHostExecutionSpace, execution_space>;
-
- public:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using host_memory_space KOKKOS_DEPRECATED = do_not_use_host_memory_space;
-  using host_execution_space KOKKOS_DEPRECATED =
-      do_not_use_host_execution_space;
-  using host_mirror_space KOKKOS_DEPRECATED = std::conditional_t<
-      std::is_same<execution_space, do_not_use_host_execution_space>::value &&
-          std::is_same<memory_space, do_not_use_host_memory_space>::value,
-      T,
-      Kokkos::Device<do_not_use_host_execution_space,
-                     do_not_use_host_memory_space>>;
-#endif
 };
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-// For backward compatibility
-
-namespace Impl {
-
-template <typename T>
-using is_space KOKKOS_DEPRECATED = Kokkos::is_space<T>;
-
-}
-#endif
 
 }  // namespace Kokkos
 
@@ -513,19 +470,6 @@ struct SpaceAccessibility {
 };
 
 }  // namespace Kokkos
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-namespace Kokkos {
-namespace Impl {
-
-// For backward compatibility
-template <typename AccessSpace, typename MemorySpace>
-using SpaceAccessibility KOKKOS_DEPRECATED =
-    Kokkos::SpaceAccessibility<AccessSpace, MemorySpace>;
-
-}  // namespace Impl
-}  // namespace Kokkos
-#endif
 
 //----------------------------------------------------------------------------
 

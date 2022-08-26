@@ -42,28 +42,16 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPLWALLTIME_HPP
-#define KOKKOS_IMPLWALLTIME_HPP
+#include <benchmark/benchmark.h>
 
-#include <Kokkos_Macros.hpp>
+void SomeFunction() { return; }
 
-KOKKOS_IMPL_WARNING("This file is deprecated. Use <Kokkos_Timer.hpp> instead.")
+static void BM_SomeFunction(benchmark::State& state) {
+  // Perform setup here
+  for (auto _ : state) {
+    // This code gets timed
+    SomeFunction();
+  }
+}
 
-#include <Kokkos_Timer.hpp>
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-namespace Kokkos {
-namespace Impl {
-
-/** \brief  Time since construction
- *   Timer promoted from Impl to Kokkos ns
- *   This file included for backwards compatibility
- */
-using Timer KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::Timer instead!") =
-    Kokkos::Timer;
-
-}  // namespace Impl
-}  // namespace Kokkos
-#endif
-
-#endif /* #ifndef KOKKOS_IMPLWALLTIME_HPP */
+BENCHMARK(BM_SomeFunction);

@@ -62,8 +62,7 @@ __global__ void start_intra_block_scan()
   DummyFunctor f;
   typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN,
-      Kokkos::RangePolicy<Kokkos::Experimental::HIP>, DummyFunctor>::Reducer
-      reducer(&f);
+      Kokkos::RangePolicy<Kokkos::HIP>, DummyFunctor>::Reducer reducer(&f);
   Kokkos::Impl::hip_intra_block_reduce_scan<true>(reducer, values);
 
   __syncthreads();
@@ -82,9 +81,8 @@ void test_intra_block_scan() {
 }
 
 TEST(TEST_CATEGORY, scan_unit) {
-  if (std::is_same<
-          TEST_EXECSPACE,
-          typename Kokkos::Experimental::HIPSpace::execution_space>::value) {
+  if (std::is_same<TEST_EXECSPACE,
+                   typename Kokkos::HIPSpace::execution_space>::value) {
     test_intra_block_scan<1>();
     test_intra_block_scan<2>();
     test_intra_block_scan<4>();

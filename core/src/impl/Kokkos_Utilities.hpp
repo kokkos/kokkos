@@ -57,27 +57,24 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename... Is>
+struct always_true : std::true_type {};
+
+//==============================================================================
+
+#if defined(__cpp_lib_type_identity)
+// since C++20
+using std::type_identity;
+using std::type_identity_t;
+#else
 template <typename T>
-struct identity {
+struct type_identity {
   using type = T;
 };
 
 template <typename T>
-using identity_t = typename identity<T>::type;
-
-template <typename... Is>
-struct always_true : std::true_type {};
-
-#if defined(__cpp_lib_void_t)
-// since C++17
-using std::void_t;
-#else
-template <class...>
-using void_t = void;
+using type_identity_t = typename type_identity<T>::type;
 #endif
-
-//==============================================================================
-// <editor-fold desc="remove_cvref_t"> {{{1
 
 #if defined(__cpp_lib_remove_cvref)
 // since C++20
@@ -92,9 +89,6 @@ struct remove_cvref {
 template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;
 #endif
-
-// </editor-fold> end remove_cvref_t }}}1
-//==============================================================================
 
 //==============================================================================
 // <editor-fold desc="is_specialization_of"> {{{1
@@ -176,7 +170,7 @@ struct _type_list_remove_first_impl<Entry, type_list<Entry, Ts...>,
 
 template <class Entry, class... OutTs>
 struct _type_list_remove_first_impl<Entry, type_list<>, type_list<OutTs...>>
-    : identity<type_list<OutTs...>> {};
+    : type_identity<type_list<OutTs...>> {};
 
 template <class Entry, class List>
 struct type_list_remove_first
@@ -191,23 +185,9 @@ struct type_list_remove_first
 template <template <class> class UnaryPred, class List>
 struct type_list_any;
 
-#ifdef KOKKOS_ENABLE_CXX17
 template <template <class> class UnaryPred, class... Ts>
 struct type_list_any<UnaryPred, type_list<Ts...>>
     : std::bool_constant<(UnaryPred<Ts>::value || ...)> {};
-#else
-template <template <class> class UnaryPred, class T, class... Ts>
-struct type_list_any<UnaryPred, type_list<T, Ts...>> {
-  using type = typename std::conditional_t<
-      UnaryPred<T>::value, std::true_type,
-      type_list_any<UnaryPred, type_list<Ts...>>>::type;
-  static constexpr auto value = type::value;
-};
-
-template <template <class> class UnaryPred>
-struct type_list_any<UnaryPred, type_list<>> : std::false_type {};
-
-#endif
 
 // </editor-fold> end type_list_any }}}2
 //------------------------------------------------------------------------------

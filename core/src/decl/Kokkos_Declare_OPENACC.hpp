@@ -48,7 +48,12 @@
 #if defined(KOKKOS_ENABLE_OPENACC)
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
+#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <OpenACC/Kokkos_OpenACC_Traits.hpp>
+#include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
+#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
+#include <OpenACC/Kokkos_OpenACC_MDRangePolicy.hpp>
+#include <OpenACC/Kokkos_OpenACC_ParallelFor_MDRange.hpp>
 #endif
 
 #endif

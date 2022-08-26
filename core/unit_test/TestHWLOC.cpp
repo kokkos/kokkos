@@ -46,6 +46,7 @@
 
 #include <iostream>
 
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_hwloc.hpp>
 
 namespace Test {

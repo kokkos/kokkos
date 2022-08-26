@@ -160,7 +160,7 @@ int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
   return Kokkos::Cuda::detect_device_count();
 #elif defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::Experimental::HIP::detect_device_count();
+  return Kokkos::HIP::detect_device_count();
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
@@ -583,13 +583,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("vectorization",
                                  "KOKKOS_ENABLE_PRAGMA_LOOPCOUNT", "no");
-#endif
-#ifdef KOKKOS_ENABLE_PRAGMA_SIMD
-  declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_SIMD",
-                                 "yes");
-#else
-  declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_SIMD",
-                                 "no");
 #endif
 #ifdef KOKKOS_ENABLE_PRAGMA_UNROLL
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_UNROLL",
@@ -1091,10 +1084,6 @@ void Kokkos::push_finalize_hook(std::function<void()> f) {
 
 void Kokkos::finalize() { finalize_internal(); }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-KOKKOS_DEPRECATED void Kokkos::finalize_all() { finalize_internal(); }
-#endif
-
 #ifdef KOKKOS_COMPILER_INTEL
 void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
 #endif
@@ -1133,13 +1122,11 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
   Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_initialized() noexcept {
+[[nodiscard]] bool Kokkos::is_initialized() noexcept {
   return g_is_initialized;
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_finalized() noexcept {
-  return g_is_finalized;
-}
+[[nodiscard]] bool Kokkos::is_finalized() noexcept { return g_is_finalized; }
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 
@@ -1156,7 +1143,3 @@ void _kokkos_pgi_compiler_bug_workaround() {}
 }  // end namespace Impl
 #endif
 }  // namespace Kokkos
-
-Kokkos::Impl::InitializationSettingsHelper<std::string>::storage_type const
-    Kokkos::Impl::InitializationSettingsHelper<std::string>::unspecified =
-        "some string we don't expect user would ever provide";

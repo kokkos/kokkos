@@ -183,8 +183,8 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  private:
   template <class T>
   struct impl_is_input_iterator
-      : /* TODO replace this */ std::integral_constant<
-            bool, !std::is_convertible<T, size_type>::value> {};
+      : /* TODO replace this */ std::bool_constant<
+            !std::is_convertible<T, size_type>::value> {};
 
  public:
   // TODO: can use detection idiom to generate better error message here later

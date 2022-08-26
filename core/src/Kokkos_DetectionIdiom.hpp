@@ -48,7 +48,9 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DETECTIONIDIOM
 #endif
 
-#include <impl/Kokkos_Utilities.hpp>  // void_t
+#include <Kokkos_Macros.hpp>  // FIXME doesn't actually need it if it wasn't
+                              // for the header self-containment test
+
 #include <type_traits>
 
 // NOTE This header implements the detection idiom from Version 2 of the C++
@@ -73,7 +75,7 @@ struct detector {
 
 // specialization recognizes and handles only types supporting Op
 template <class Default, template <class...> class Op, class... Args>
-struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
   using value_t = std::true_type;
   using type    = Op<Args...>;
 };
@@ -102,7 +104,6 @@ template <class To, template <class...> class Op, class... Args>
 using is_detected_convertible =
     std::is_convertible<detected_t<Op, Args...>, To>;
 
-#ifdef KOKKOS_ENABLE_CXX17
 template <template <class...> class Op, class... Args>
 inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 
@@ -113,7 +114,6 @@ inline constexpr bool is_detected_exact_v =
 template <class Expected, template <class...> class Op, class... Args>
 inline constexpr bool is_detected_convertible_v =
     is_detected_convertible<Expected, Op, Args...>::value;
-#endif
 
 }  // namespace Kokkos
 

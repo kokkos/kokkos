@@ -134,8 +134,7 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Cuda;
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::OpenMPTarget;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Experimental::HIP;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = HIP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::SYCL;
@@ -153,7 +152,7 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
 #else
 #error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::Experimental::OpenACC, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
+    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::HIP, Kokkos::Experimental::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::Experimental::OpenACC, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
@@ -241,42 +240,6 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
               msg);))
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
-    defined(KOKKOS_ENABLE_CUDA)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = Kokkos::CudaSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED =
-    Kokkos::Experimental::SYCLDeviceUSMSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED =
-    Kokkos::Experimental::HIPSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = Kokkos::HostSpace;
-#else
-using ActiveExecutionMemorySpace KOKKOS_DEPRECATED = void;
-#endif
-
-template <typename DstMemorySpace, typename SrcMemorySpace>
-struct MemorySpaceAccess;
-
-template <typename DstMemorySpace, typename SrcMemorySpace,
-          bool = Kokkos::Impl::MemorySpaceAccess<DstMemorySpace,
-                                                 SrcMemorySpace>::accessible>
-struct verify_space {
-  KOKKOS_DEPRECATED KOKKOS_FUNCTION static void check() {}
-};
-
-template <typename DstMemorySpace, typename SrcMemorySpace>
-struct verify_space<DstMemorySpace, SrcMemorySpace, false> {
-  KOKKOS_DEPRECATED KOKKOS_FUNCTION static void check() {
-    Kokkos::abort(
-        "Kokkos::View ERROR: attempt to access inaccessible memory space");
-  };
-};
-#endif
-
 }  // namespace Impl
 
 namespace Experimental {
@@ -285,16 +248,6 @@ class LogicalMemorySpace;
 }
 
 }  // namespace Kokkos
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)        \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             DATA_SPACE>::check();
-
-#define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                      \
-  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
-                             DATA_SPACE>::check();
-#endif
 
 //----------------------------------------------------------------------------
 

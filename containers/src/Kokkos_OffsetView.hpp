@@ -1146,36 +1146,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
             {range0.first, range1.first, range2.first, range3.first,
              range4.first, range5.first, range6.first, range7.first}) {}
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  template <typename Label>
-  KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use the constructor taking std::pair<int64_t, int64_t> arguments "
-      "instead!")
-  explicit OffsetView(
-      const Label& arg_label,
-      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
-                       const index_list_type>
-          range0,
-      const index_list_type range1 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range2 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range3 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range4 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range5 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range6 = KOKKOS_INVALID_INDEX_RANGE,
-      const index_list_type range7 = KOKKOS_INVALID_INDEX_RANGE)
-      : OffsetView(
-            arg_label,
-            std::pair<int64_t, int64_t>(range0.begin()[0], range0.begin()[1]),
-            std::pair<int64_t, int64_t>(range1.begin()[0], range1.begin()[1]),
-            std::pair<int64_t, int64_t>(range2.begin()[0], range2.begin()[1]),
-            std::pair<int64_t, int64_t>(range3.begin()[0], range3.begin()[1]),
-            std::pair<int64_t, int64_t>(range4.begin()[0], range4.begin()[1]),
-            std::pair<int64_t, int64_t>(range5.begin()[0], range5.begin()[1]),
-            std::pair<int64_t, int64_t>(range6.begin()[0], range6.begin()[1]),
-            std::pair<int64_t, int64_t>(range7.begin()[0], range7.begin()[1])) {
-  }
-#endif
-
   template <class... P>
   explicit OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,

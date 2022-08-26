@@ -46,19 +46,17 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <limits>
-#include <iostream>
-#include <vector>
-
 #include <Kokkos_Core.hpp>
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+
+#include <cstdlib>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 namespace Kokkos {
 namespace Impl {
@@ -270,14 +268,12 @@ void OpenMPInternal::initialize(int thread_count) {
 
   {
     if (Kokkos::show_warnings() && nullptr == std::getenv("OMP_PROC_BIND")) {
-      printf(
-          "Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment "
-          "variable not set\n");
-      printf(
-          "  In general, for best performance with OpenMP 4.0 or better set "
-          "OMP_PROC_BIND=spread and OMP_PLACES=threads\n");
-      printf("  For best performance with OpenMP 3.1 set OMP_PROC_BIND=true\n");
-      printf("  For unit testing set OMP_PROC_BIND=false\n");
+      std::cerr
+          << R"WARNING(Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set
+  In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread and OMP_PLACES=threads
+  For best performance with OpenMP 3.1 set OMP_PROC_BIND=true
+  For unit testing set OMP_PROC_BIND=false
+)WARNING" << std::endl;
     }
 
     OpenMP::memory_space space;
@@ -308,11 +304,12 @@ void OpenMPInternal::initialize(int thread_count) {
       }
     } else {
       if (Kokkos::show_warnings() && thread_count > process_num_threads) {
-        printf(
-            "Kokkos::OpenMP::initialize WARNING: You are likely "
-            "oversubscribing your CPU cores.\n");
-        printf("  process threads available : %3d,  requested thread : %3d\n",
-               process_num_threads, thread_count);
+        std::cerr << "Kokkos::OpenMP::initialize WARNING: You are likely "
+                     "oversubscribing your CPU cores.\n"
+                  << "  process threads available : " << std::setw(3)
+                  << process_num_threads
+                  << ",  requested thread : " << std::setw(3) << thread_count
+                  << std::endl;
       }
       Impl::g_openmp_hardware_max_threads = thread_count;
       omp_set_num_threads(Impl::g_openmp_hardware_max_threads);
@@ -455,12 +452,6 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
 
   m_space_instance->print_configuration(os);
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-std::vector<OpenMP> OpenMP::partition(...) { return std::vector<OpenMP>(1); }
-
-OpenMP OpenMP::create_instance(...) { return OpenMP(); }
-#endif
 
 int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
 

@@ -78,7 +78,11 @@ struct UnorderedMapRehash {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
-    if (m_src.valid_at(i)) m_dst.insert(m_src.key_at(i), m_src.value_at(i));
+    if constexpr (std::is_void_v<typename map_type::value_type>) {
+      if (m_src.valid_at(i)) m_dst.insert(m_src.key_at(i));
+    } else {
+      if (m_src.valid_at(i)) m_dst.insert(m_src.key_at(i), m_src.value_at(i));
+    }
   }
 };
 

@@ -56,13 +56,6 @@ namespace Kokkos {
 
 template <typename T>
 struct pod_hash {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using argument_type KOKKOS_DEPRECATED        = T;
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = uint32_t;
-  using result_type KOKKOS_DEPRECATED          = uint32_t;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   uint32_t operator()(T const& t) const {
     return Impl::MurmurHash3_x86_32(&t, sizeof(T), 0);
@@ -76,12 +69,6 @@ struct pod_hash {
 
 template <typename T>
 struct pod_equal_to {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const {
     return Impl::bitwise_equal(&a, &b);
@@ -90,12 +77,6 @@ struct pod_equal_to {
 
 template <typename T>
 struct pod_not_equal_to {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const {
     return !Impl::bitwise_equal(&a, &b);
@@ -104,72 +85,36 @@ struct pod_not_equal_to {
 
 template <typename T>
 struct equal_to {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a == b; }
 };
 
 template <typename T>
 struct not_equal_to {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a != b; }
 };
 
 template <typename T>
 struct greater {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a > b; }
 };
 
 template <typename T>
 struct less {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a < b; }
 };
 
 template <typename T>
 struct greater_equal {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a >= b; }
 };
 
 template <typename T>
 struct less_equal {
-#if defined KOKKOS_ENABLE_DEPRECATED_CODE_3
-  using first_argument_type KOKKOS_DEPRECATED  = T;
-  using second_argument_type KOKKOS_DEPRECATED = T;
-  using result_type KOKKOS_DEPRECATED          = bool;
-#endif
-
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator()(T const& a, T const& b) const { return a <= b; }
 };

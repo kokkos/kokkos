@@ -62,7 +62,6 @@
 //<editor-fold desc="numeric traits __float128 specializations">
 namespace Kokkos {
 namespace Experimental {
-#if defined(KOKKOS_ENABLE_CXX17)
 #define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
   template <>                                                                \
   struct TRAIT<TYPE> {                                                       \
@@ -70,32 +69,18 @@ namespace Experimental {
   };                                                                         \
   template <>                                                                \
   inline constexpr auto TRAIT##_v<TYPE> = TRAIT<TYPE>::value;
-#else
-#define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
-  template <>                                                                \
-  struct TRAIT<TYPE> {                                                       \
-    static constexpr VALUE_TYPE value = VALUE;                               \
-  };
-#endif
 
 // clang-format off
 // Numeric distinguished value traits
-// Workaround GCC bug https://godbolt.org/z/qWb5oe4dx
-// error: '__builtin_huge_valq()' is not a constant expression
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(infinity,       __float128, __float128, HUGE_VALQ)
-#endif
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_min,     __float128, __float128, -FLT128_MAX)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_max,     __float128, __float128, FLT128_MAX)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(epsilon,        __float128, __float128, FLT128_EPSILON)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(round_error,    __float128, __float128, static_cast<__float128>(0.5))
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(norm_min,       __float128, __float128, FLT128_MIN)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(denorm_min,     __float128, __float128, FLT128_DENORM_MIN)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(reciprocal_overflow_threshold, __float128, __float128, FLT128_MIN)
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 710)
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(quiet_NaN,      __float128, __float128, __builtin_nanq(""))
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(signaling_NaN,  __float128, __float128, __builtin_nansq(""))
-#endif
 
 // Numeric characteristics traits
 KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits,         __float128,        int, FLT128_MANT_DIG)
@@ -201,9 +186,7 @@ inline __float128 nearbyint(__float128 x) { return ::nearbyintq(x); }
 // scalbn
 // scalbln
 // ilog
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 610)
 inline __float128 logb(__float128 x) { return ::logbq(x); }
-#endif
 inline __float128 nextafter(__float128 x, __float128 y) { return ::nextafterq(x, y); }
 // nexttoward
 inline __float128 copysign(__float128 x, __float128 y) { return ::copysignq(x, y); }

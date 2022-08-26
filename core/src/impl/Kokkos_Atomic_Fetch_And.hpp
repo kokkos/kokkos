@@ -176,7 +176,7 @@ T atomic_fetch_and(volatile T* const dest_v, const T val) {
 #if defined(__CUDA_ARCH__) && !defined(KOKKOS_ENABLE_CUDA)
 template <typename T>
 __inline__ __device__ T atomic_fetch_and(volatile T* const,
-                                         Kokkos::Impl::identity_t<T>) {
+                                         Kokkos::Impl::type_identity_t<T>) {
   return T();
 }
 #endif

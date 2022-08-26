@@ -55,9 +55,9 @@ class Serial;
 class OpenMP;
 class Cuda;
 class Threads;
+class HIP;
 namespace Experimental {
 class SYCL;
-class HIP;
 class OpenMPTarget;
 class HPX;
 }  // namespace Experimental
@@ -359,6 +359,8 @@ TEST(kokkosp, parallel_for) {
   ASSERT_TRUE(success);
 }
 
+#ifndef KOKKOS_ENABLE_OPENACC
+// FIXME_OPENACC: not supported reducer type
 TEST(kokkosp, parallel_reduce) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -382,7 +384,10 @@ TEST(kokkosp, parallel_reduce) {
       });
   ASSERT_TRUE(success);
 }
+#endif
 
+#ifndef KOKKOS_ENABLE_OPENACC
+// FIXME_OPENACC: parallel_scan not implemented yet
 TEST(kokkosp, parallel_scan) {
   // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
@@ -479,6 +484,7 @@ TEST(kokkosp, parallel_scan_no_fence_view) {
       });
   ASSERT_TRUE(success);
 }
+#endif
 
 TEST(kokkosp, regions) {
   using namespace Kokkos::Test::Tools;

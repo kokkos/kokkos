@@ -68,7 +68,7 @@ namespace Performance {
 TEST(TEST_CATEGORY, dynrankview_perf) {
   std::cout << "HIP" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
-  test_dynrankview_op_perf<Kokkos::Experimental::HIP>(40960);
+  test_dynrankview_op_perf<Kokkos::HIP>(40960);
 }
 
 TEST(TEST_CATEGORY, global_2_local) {
@@ -76,15 +76,15 @@ TEST(TEST_CATEGORY, global_2_local) {
   std::cout << "size, create, generate, fill, find" << std::endl;
   for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
        i *= Performance::id_step)
-    test_global_to_local_ids<Kokkos::Experimental::HIP>(i);
+    test_global_to_local_ids<Kokkos::HIP>(i);
 }
 
 TEST(TEST_CATEGORY, unordered_map_performance_near) {
-  Perf::run_performance_tests<Kokkos::Experimental::HIP, true>("hip-near");
+  Perf::run_performance_tests<Kokkos::HIP, true>("hip-near");
 }
 
 TEST(TEST_CATEGORY, unordered_map_performance_far) {
-  Perf::run_performance_tests<Kokkos::Experimental::HIP, false>("hip-far");
+  Perf::run_performance_tests<Kokkos::HIP, false>("hip-far");
 }
 
 }  // namespace Performance

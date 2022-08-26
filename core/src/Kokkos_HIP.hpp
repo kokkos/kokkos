@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_HIP_HPP
 #define KOKKOS_HIP_HPP
@@ -72,6 +68,15 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
 #include <HIP/Kokkos_HIP_Parallel_Team.hpp>
 #include <HIP/Kokkos_HIP_UniqueToken.hpp>
+
+namespace Kokkos {
+namespace Experimental {
+using HIPSpace           = ::Kokkos::HIPSpace;
+using HIPHostPinnedSpace = ::Kokkos::HIPHostPinnedSpace;
+using HIPManagedSpace    = ::Kokkos::HIPManagedSpace;
+using HIP                = ::Kokkos::HIP;
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #endif
 #endif

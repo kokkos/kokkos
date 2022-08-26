@@ -70,7 +70,7 @@ namespace Experimental {
 // <editor-fold desc="Graph"> {{{1
 
 template <class ExecutionSpace>
-struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
+struct [[nodiscard]] Graph {
  public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="public member types"> {{{2
