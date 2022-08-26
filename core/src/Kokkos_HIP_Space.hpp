@@ -69,6 +69,8 @@ static_assert(false,
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 
+#include <hip/hip_runtime_api.h>
+
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
@@ -93,9 +95,9 @@ class HIPSpace {
   /*--------------------------------*/
 
   HIPSpace();
-  HIPSpace(HIPSpace&& rhs)      = default;
-  HIPSpace(const HIPSpace& rhs) = default;
-  HIPSpace& operator=(HIPSpace&& rhs) = default;
+  HIPSpace(HIPSpace&& rhs)                 = default;
+  HIPSpace(const HIPSpace& rhs)            = default;
+  HIPSpace& operator=(HIPSpace&& rhs)      = default;
   HIPSpace& operator=(const HIPSpace& rhs) = default;
   ~HIPSpace()                              = default;
 
@@ -157,9 +159,9 @@ class HIPHostPinnedSpace {
   /*--------------------------------*/
 
   HIPHostPinnedSpace();
-  HIPHostPinnedSpace(HIPHostPinnedSpace&& rhs)      = default;
-  HIPHostPinnedSpace(const HIPHostPinnedSpace& rhs) = default;
-  HIPHostPinnedSpace& operator=(HIPHostPinnedSpace&& rhs) = default;
+  HIPHostPinnedSpace(HIPHostPinnedSpace&& rhs)                 = default;
+  HIPHostPinnedSpace(const HIPHostPinnedSpace& rhs)            = default;
+  HIPHostPinnedSpace& operator=(HIPHostPinnedSpace&& rhs)      = default;
   HIPHostPinnedSpace& operator=(const HIPHostPinnedSpace& rhs) = default;
   ~HIPHostPinnedSpace()                                        = default;
 
@@ -222,9 +224,9 @@ class HIPManagedSpace {
   /*--------------------------------*/
 
   HIPManagedSpace();
-  HIPManagedSpace(HIPManagedSpace&& rhs)      = default;
-  HIPManagedSpace(const HIPManagedSpace& rhs) = default;
-  HIPManagedSpace& operator=(HIPManagedSpace&& rhs) = default;
+  HIPManagedSpace(HIPManagedSpace&& rhs)                 = default;
+  HIPManagedSpace(const HIPManagedSpace& rhs)            = default;
+  HIPManagedSpace& operator=(HIPManagedSpace&& rhs)      = default;
   HIPManagedSpace& operator=(const HIPManagedSpace& rhs) = default;
   ~HIPManagedSpace()                                     = default;
 
@@ -374,125 +376,6 @@ struct MemorySpaceAccess<HIPManagedSpace, HIPHostPinnedSpace> {
   enum : bool { deepcopy = true };
 };
 
-}  // namespace Impl
-
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-template <>
-class SharedAllocationRecord<HIPSpace, void>
-    : public HostInaccessibleSharedAllocationRecordCommon<HIPSpace> {
- private:
-  friend class SharedAllocationRecordCommon<HIPSpace>;
-  friend class HostInaccessibleSharedAllocationRecordCommon<HIPSpace>;
-  using base_t     = HostInaccessibleSharedAllocationRecordCommon<HIPSpace>;
-  using RecordBase = SharedAllocationRecord<void, void>;
-
-  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
-  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  static RecordBase s_root_record;
-#endif
-
-  const HIPSpace m_space;
-
- protected:
-  ~SharedAllocationRecord();
-
-  template <typename ExecutionSpace>
-  SharedAllocationRecord(
-      const ExecutionSpace& /*exec*/, const HIPSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
-
-  SharedAllocationRecord(
-      const HIP& exec_space, const HIPSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-
-  SharedAllocationRecord(
-      const HIPSpace& arg_space, const std::string& arg_label,
-      const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-};
-
-template <>
-class SharedAllocationRecord<HIPHostPinnedSpace, void>
-    : public SharedAllocationRecordCommon<HIPHostPinnedSpace> {
- private:
-  friend class SharedAllocationRecordCommon<HIPHostPinnedSpace>;
-  using base_t     = SharedAllocationRecordCommon<HIPHostPinnedSpace>;
-  using RecordBase = SharedAllocationRecord<void, void>;
-
-  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
-  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  static RecordBase s_root_record;
-#endif
-
-  const HIPHostPinnedSpace m_space;
-
- protected:
-  ~SharedAllocationRecord();
-  SharedAllocationRecord() = default;
-
-  template <typename ExecutionSpace>
-  SharedAllocationRecord(
-      const ExecutionSpace& /*exec_space*/, const HIPHostPinnedSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
-
-  SharedAllocationRecord(
-      const HIPHostPinnedSpace& arg_space, const std::string& arg_label,
-      const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-};
-
-template <>
-class SharedAllocationRecord<HIPManagedSpace, void>
-    : public SharedAllocationRecordCommon<HIPManagedSpace> {
- private:
-  friend class SharedAllocationRecordCommon<HIPManagedSpace>;
-  using base_t     = SharedAllocationRecordCommon<HIPManagedSpace>;
-  using RecordBase = SharedAllocationRecord<void, void>;
-
-  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
-  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  static RecordBase s_root_record;
-#endif
-
-  const HIPManagedSpace m_space;
-
- protected:
-  ~SharedAllocationRecord();
-  SharedAllocationRecord() = default;
-
-  template <typename ExecutionSpace>
-  SharedAllocationRecord(
-      const ExecutionSpace& /*exec_space*/, const HIPManagedSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
-      : SharedAllocationRecord(arg_space, arg_label, arg_alloc_size,
-                               arg_dealloc) {}
-
-  SharedAllocationRecord(
-      const HIPManagedSpace& arg_space, const std::string& arg_label,
-      const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-};
 }  // namespace Impl
 }  // namespace Kokkos
 

@@ -68,6 +68,7 @@ static_assert(false,
 #include <HIP/Kokkos_HIP_Parallel_Range.hpp>
 #include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
 #include <HIP/Kokkos_HIP_Parallel_Team.hpp>
+#include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
 #include <HIP/Kokkos_HIP_UniqueToken.hpp>
 
 namespace Kokkos {
