@@ -94,7 +94,7 @@ struct HIPJoinFunctor {
  */
 class HIPTeamMember {
  public:
-  using execution_space      = Kokkos::Experimental::HIP;
+  using execution_space      = HIP;
   using scratch_memory_space = execution_space::scratch_memory_space;
 
  private:
@@ -166,8 +166,7 @@ class HIPTeamMember {
       val = *(reinterpret_cast<ValueType*>(m_team_reduce));
     } else {               // team <= warp
       ValueType tmp(val);  // input might not be a register variable
-      ::Kokkos::Experimental::Impl::in_place_shfl(
-          val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
+      in_place_shfl(val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
     }
 #else
     (void)val;
@@ -209,8 +208,8 @@ class HIPTeamMember {
               typename ReducerType::value_type& value) const noexcept {
 #ifdef __HIP_DEVICE_COMPILE__
     typename Kokkos::Impl::FunctorAnalysis<
-        FunctorPatternInterface::REDUCE, TeamPolicy<Experimental::HIP>,
-        ReducerType>::Reducer wrapped_reducer(&reducer);
+        FunctorPatternInterface::REDUCE, TeamPolicy<HIP>, ReducerType>::Reducer
+        wrapped_reducer(&reducer);
     hip_intra_block_shuffle_reduction(value, wrapped_reducer, blockDim.y);
     reducer.reference() = value;
 #else
@@ -246,7 +245,7 @@ class HIPTeamMember {
 
     Impl::HIPJoinFunctor<Type> hip_join_functor;
     typename Kokkos::Impl::FunctorAnalysis<
-        FunctorPatternInterface::REDUCE, TeamPolicy<Experimental::HIP>,
+        FunctorPatternInterface::REDUCE, TeamPolicy<HIP>,
         Impl::HIPJoinFunctor<Type>>::Reducer reducer(&hip_join_functor);
     Impl::hip_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
@@ -297,8 +296,7 @@ class HIPTeamMember {
     typename ReducerType::value_type tmp2 = tmp;
 
     for (int i = blockDim.x; (i >>= 1);) {
-      ::Kokkos::Experimental::Impl::in_place_shfl_down(tmp2, tmp, i,
-                                                       blockDim.x);
+      in_place_shfl_down(tmp2, tmp, i, blockDim.x);
       if (static_cast<int>(threadIdx.x) < i) {
         reducer.join(tmp, tmp2);
       }
@@ -309,7 +307,7 @@ class HIPTeamMember {
     // because floating point summation is not associative
     // and thus different threads could have different results.
 
-    ::Kokkos::Experimental::Impl::in_place_shfl(tmp2, tmp, 0, blockDim.x);
+    in_place_shfl(tmp2, tmp, 0, blockDim.x);
     value               = tmp2;
     reducer.reference() = tmp2;
 #else
@@ -824,7 +822,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     //  inversion.
     for (int j = 1; j < static_cast<int>(blockDim.x); j <<= 1) {
       value_type tmp = identity;
-      ::Kokkos::Experimental::Impl::in_place_shfl_up(tmp, val, j, blockDim.x);
+      Impl::in_place_shfl_up(tmp, val, j, blockDim.x);
       if (j <= static_cast<int>(threadIdx.x)) {
         reducer.join(val, tmp);
       }
@@ -836,8 +834,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     // Update i's contribution into the val
     // and add it to accum for next round
     if (i < loop_boundaries.end) closure(i, val, true);
-    ::Kokkos::Experimental::Impl::in_place_shfl(accum, val, blockDim.x - 1,
-                                                blockDim.x);
+    Impl::in_place_shfl(accum, val, blockDim.x - 1, blockDim.x);
   }
 #else
   (void)loop_boundaries;
@@ -899,7 +896,7 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda, ValueType& val) {
 #ifdef __HIP_DEVICE_COMPILE__
   if (threadIdx.x == 0) lambda(val);
-  ::Kokkos::Experimental::Impl::in_place_shfl(val, val, 0, blockDim.x);
+  Impl::in_place_shfl(val, val, 0, blockDim.x);
 #else
   (void)lambda;
   (void)val;

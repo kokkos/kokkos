@@ -50,17 +50,14 @@ namespace Test {
 namespace Impl {
 
 struct HIPStreamScratchTestFunctor {
-  using team_t = Kokkos::TeamPolicy<Kokkos::Experimental::HIP>::member_type;
-  using scratch_t =
-      Kokkos::View<int64_t*, Kokkos::Experimental::HIP::scratch_memory_space>;
+  using team_t    = Kokkos::TeamPolicy<Kokkos::HIP>::member_type;
+  using scratch_t = Kokkos::View<int64_t*, Kokkos::HIP::scratch_memory_space>;
 
-  Kokkos::View<int64_t, Kokkos::Experimental::HIPSpace,
-               Kokkos::MemoryTraits<Kokkos::Atomic>>
+  Kokkos::View<int64_t, Kokkos::HIPSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
       counter;
   int N, M;
-  HIPStreamScratchTestFunctor(
-      Kokkos::View<int64_t, Kokkos::Experimental::HIPSpace> counter_, int N_,
-      int M_)
+  HIPStreamScratchTestFunctor(Kokkos::View<int64_t, Kokkos::HIPSpace> counter_,
+                              int N_, int M_)
       : counter(counter_), N(N_), M(M_) {}
 
   KOKKOS_FUNCTION
@@ -81,13 +78,11 @@ struct HIPStreamScratchTestFunctor {
 };
 
 void hip_stream_scratch_test_one(
-    int N, int T, int M_base,
-    Kokkos::View<int64_t, Kokkos::Experimental::HIPSpace> counter,
-    Kokkos::Experimental::HIP hip, int tid) {
+    int N, int T, int M_base, Kokkos::View<int64_t, Kokkos::HIPSpace> counter,
+    Kokkos::HIP hip, int tid) {
   int M = M_base + tid * 5;
-  Kokkos::TeamPolicy<Kokkos::Experimental::HIP> p(hip, T, 64);
-  using scratch_t =
-      Kokkos::View<int64_t*, Kokkos::Experimental::HIP::scratch_memory_space>;
+  Kokkos::TeamPolicy<Kokkos::HIP> p(hip, T, 64);
+  using scratch_t = Kokkos::View<int64_t*, Kokkos::HIP::scratch_memory_space>;
 
   int bytes = scratch_t::shmem_size(M);
 
@@ -97,15 +92,14 @@ void hip_stream_scratch_test_one(
   }
 }
 
-void hip_stream_scratch_test(
-    int N, int T, int M_base,
-    Kokkos::View<int64_t, Kokkos::Experimental::HIPSpace> counter) {
+void hip_stream_scratch_test(int N, int T, int M_base,
+                             Kokkos::View<int64_t, Kokkos::HIPSpace> counter) {
   int K = 4;
   hipStream_t stream[4];
-  Kokkos::Experimental::HIP hip[4];
+  Kokkos::HIP hip[4];
   for (int i = 0; i < K; i++) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream[i]));
-    hip[i] = Kokkos::Experimental::HIP(stream[i]);
+    hip[i] = Kokkos::HIP(stream[i]);
   }
 // Test that growing scratch size in subsequent calls doesn't crash things
 #if defined(KOKKOS_ENABLE_OPENMP)
@@ -130,7 +124,7 @@ void hip_stream_scratch_test(
 
   Kokkos::fence();
   for (int i = 0; i < K; i++) {
-    hip[i] = Kokkos::Experimental::HIP();
+    hip[i] = Kokkos::HIP();
     KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(stream[i]));
   }
 }
@@ -141,7 +135,7 @@ TEST(hip, team_scratch_1_streams) {
   int T      = 10;
   int M_base = 150;
 
-  Kokkos::View<int64_t, Kokkos::Experimental::HIPSpace> counter("C");
+  Kokkos::View<int64_t, Kokkos::HIPSpace> counter("C");
 
   Impl::hip_stream_scratch_test(N, T, M_base, counter);
 

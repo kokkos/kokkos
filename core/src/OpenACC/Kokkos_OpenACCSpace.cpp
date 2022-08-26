@@ -177,6 +177,33 @@ Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, void>::
       "HostSpace");
 }
 
+Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace, void>::
+    SharedAllocationRecord(
+        const Kokkos::Experimental::OpenACC &arg_exec_space,
+        const Kokkos::Experimental::OpenACCSpace &arg_space,
+        const std::string &arg_label, const size_t arg_alloc_size,
+        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+    // Pass through allocated [ SharedAllocationHeader , user_memory ]
+    // Pass through deallocation function
+    : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+          &SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace,
+                                  void>::s_root_record,
+#endif
+          Impl::checked_allocation_with_header(arg_exec_space, arg_space,
+                                               arg_label, arg_alloc_size),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+          arg_label),
+      m_space(arg_space) {
+  SharedAllocationHeader header;
+
+  this->base_t::_fill_host_accessible_header_info(header, arg_label);
+
+  Kokkos::Impl::DeepCopy<Experimental::OpenACCSpace, HostSpace>(
+      arg_exec_space, RecordBase::m_alloc_ptr, &header,
+      sizeof(SharedAllocationHeader));
+}
+
 //==============================================================================
 // <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
 

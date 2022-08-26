@@ -156,7 +156,7 @@ void OpenACCParallelReduceMin(IndexType begin, IndexType end, ValueType& val,
 
 template <class IndexType, class ValueType, class Functor>
 void OpenACCParallelReduceMax(IndexType begin, IndexType end, ValueType& val,
-                              Functor const& functor, int async_argc) {
+                              Functor const& functor, int async_arg) {
 #pragma acc parallel loop gang vector reduction(max                    \
                                                 : val) copyin(functor) \
     async(async_arg)

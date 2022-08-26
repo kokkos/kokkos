@@ -68,6 +68,9 @@
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 #include <TestOpenMPTarget_Category.hpp>
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+#include <TestOpenACC_Category.hpp>
+#endif
 #ifndef TEST_EXECSPACE
 #ifdef KOKKOS_ENABLE_SERIAL
 #include <TestSerial_Category.hpp>

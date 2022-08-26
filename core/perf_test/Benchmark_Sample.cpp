@@ -42,18 +42,16 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_DECLARE_OPENACC_HPP
-#define KOKKOS_DECLARE_OPENACC_HPP
+#include <benchmark/benchmark.h>
 
-#if defined(KOKKOS_ENABLE_OPENACC)
-#include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_MDRangePolicy.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_MDRange.hpp>
-#endif
+void SomeFunction() { return; }
 
-#endif
+static void BM_SomeFunction(benchmark::State& state) {
+  // Perform setup here
+  for (auto _ : state) {
+    // This code gets timed
+    SomeFunction();
+  }
+}
+
+BENCHMARK(BM_SomeFunction);

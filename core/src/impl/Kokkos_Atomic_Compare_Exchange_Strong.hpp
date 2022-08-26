@@ -315,9 +315,9 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(volatile T* const dest_v,
 // dummy for non-CUDA Kokkos headers being processed by NVCC
 #if defined(__CUDA_ARCH__) && !defined(KOKKOS_ENABLE_CUDA)
 template <typename T>
-__inline__ __device__ T
-atomic_compare_exchange(volatile T* const, const Kokkos::Impl::identity_t<T>,
-                        const Kokkos::Impl::identity_t<T>) {
+__inline__ __device__ T atomic_compare_exchange(
+    volatile T* const, const Kokkos::Impl::type_identity_t<T>,
+    const Kokkos::Impl::type_identity_t<T>) {
   return T();
 }
 #endif

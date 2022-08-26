@@ -68,11 +68,9 @@ __device__ inline void hip_intra_warp_shuffle_reduction(
   unsigned int shift = 1;
 
   // Reduce over values from threads with different threadIdx.y
-  unsigned int constexpr warp_size =
-      Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+  unsigned int constexpr warp_size = HIPTraits::WarpSize;
   while (blockDim.x * shift < warp_size) {
-    ValueType const tmp =
-        Kokkos::Experimental::shfl_down(result, blockDim.x * shift, warp_size);
+    ValueType const tmp = shfl_down(result, blockDim.x * shift, warp_size);
     // Only join if upper thread is active (this allows non power of two for
     // blockDim.y)
     if (threadIdx.y + shift < max_active_thread) {
@@ -82,16 +80,15 @@ __device__ inline void hip_intra_warp_shuffle_reduction(
   }
 
   // Broadcast the result to all the threads in the warp
-  result = Kokkos::Experimental::shfl(result, 0, warp_size);
+  result = shfl(result, 0, warp_size);
 }
 
 template <typename ValueType, typename ReducerType>
 __device__ inline void hip_inter_warp_shuffle_reduction(
     ValueType& value, const ReducerType& reducer,
     const int max_active_thread = blockDim.y) {
-  unsigned int constexpr warp_size =
-      Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-  int constexpr step_width = 8;
+  unsigned int constexpr warp_size = HIPTraits::WarpSize;
+  int constexpr step_width         = 8;
   // Depending on the ValueType __shared__ memory must be aligned up to 8 byte
   // boundaries. The reason not to use ValueType directly is that for types with
   // constructors it could lead to race conditions.
@@ -130,9 +127,9 @@ template <class FunctorType>
 __device__ inline bool hip_inter_block_shuffle_reduction(
     typename FunctorType::reference_type value,
     typename FunctorType::reference_type neutral, FunctorType const& reducer,
-    Kokkos::Experimental::HIP::size_type* const m_scratch_space,
+    HIP::size_type* const m_scratch_space,
     typename FunctorType::pointer_type const /*result*/,
-    Kokkos::Experimental::HIP::size_type* const m_scratch_flags,
+    HIP::size_type* const m_scratch_flags,
     int const max_active_thread = blockDim.y) {
   using pointer_type = typename FunctorType::pointer_type;
   using value_type   = typename FunctorType::value_type;
@@ -154,13 +151,13 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
   // block values from global scratch_memory
   bool last_block = false;
   __syncthreads();
-  int constexpr warp_size = Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+  int constexpr warp_size = HIPTraits::WarpSize;
   if (id < warp_size) {
-    Kokkos::Experimental::HIP::size_type count;
+    HIP::size_type count;
 
     // Figure out whether this is the last block
     if (id == 0) count = Kokkos::atomic_fetch_add(m_scratch_flags, 1);
-    count = Kokkos::Experimental::shfl(count, 0, warp_size);
+    count = shfl(count, 0, warp_size);
 
     // Last block does the inter block reduction
     if (count == gridDim.x - 1) {
@@ -185,7 +182,7 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
       // valid (allows gridDim.x non power of two and <warp_size)
       for (unsigned int i = 1; i < warp_size; i *= 2) {
         if ((blockDim.x * blockDim.y) > i) {
-          value_type tmp = Kokkos::Experimental::shfl_down(value, i, warp_size);
+          value_type tmp = shfl_down(value, i, warp_size);
           if (id + i < gridDim.x) reducer.join(&value, &tmp);
         }
       }

@@ -95,8 +95,8 @@ void DeepCopyHIP(void* dst, void const* src, size_t n) {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault));
 }
 
-void DeepCopyAsyncHIP(const Kokkos::Experimental::HIP& instance, void* dst,
-                      void const* src, size_t n) {
+void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
+                      size_t n) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
 }
@@ -104,8 +104,7 @@ void DeepCopyAsyncHIP(const Kokkos::Experimental::HIP& instance, void* dst,
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
   hipStream_t s = get_deep_copy_stream();
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::HIP>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<HIP>(
       "Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy "
       "stream",
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
@@ -120,7 +119,6 @@ void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Experimental {
 
 HIPSpace::HIPSpace() : m_device(HIP().hip_device()) {}
 
@@ -149,9 +147,10 @@ void* HIPSpace::impl_allocate(
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
     (void)hipGetLastError();
-    throw HIPRawMemoryAllocationFailure(
+    throw Experimental::HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
-        RawMemoryAllocationFailure::AllocationMechanism::HIPMalloc);
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            HIPMalloc);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -182,9 +181,10 @@ void* HIPHostPinnedSpace::impl_allocate(
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
     (void)hipGetLastError();
-    throw HIPRawMemoryAllocationFailure(
+    throw Experimental::HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
-        RawMemoryAllocationFailure::AllocationMechanism::HIPHostMalloc);
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            HIPHostMalloc);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -244,9 +244,10 @@ Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_X
       // This is the only way to clear the last error, which we should do here
       // since we're turning it into an exception here
       (void)hipGetLastError();
-      throw HIPRawMemoryAllocationFailure(
+      throw Experimental::HIPRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
-          RawMemoryAllocationFailure::AllocationMechanism::HIPMallocManaged);
+          Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+              HIPMallocManaged);
     }
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemAdvise(
         ptr, arg_alloc_size, hipMemAdviseSetCoarseGrain, m_device));
@@ -336,7 +337,6 @@ void HIPManagedSpace::impl_deallocate(
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
 
-}  // namespace Experimental
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -347,48 +347,43 @@ namespace Impl {
 
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
-    SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::s_root_record;
+    SharedAllocationRecord<HIPSpace, void>::s_root_record;
 
-SharedAllocationRecord<void, void> SharedAllocationRecord<
-    Kokkos::Experimental::HIPHostPinnedSpace, void>::s_root_record;
+SharedAllocationRecord<void, void>
+    SharedAllocationRecord<HIPHostPinnedSpace, void>::s_root_record;
 
-SharedAllocationRecord<void, void> SharedAllocationRecord<
-    Kokkos::Experimental::HIPManagedSpace, void>::s_root_record;
+SharedAllocationRecord<void, void>
+    SharedAllocationRecord<HIPManagedSpace, void>::s_root_record;
 #endif
 
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                       void>::~SharedAllocationRecord() {
+SharedAllocationRecord<HIPSpace, void>::~SharedAllocationRecord() {
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
-SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
-                       void>::~SharedAllocationRecord() {
+SharedAllocationRecord<HIPHostPinnedSpace, void>::~SharedAllocationRecord() {
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
 
-SharedAllocationRecord<Kokkos::Experimental::HIPManagedSpace,
-                       void>::~SharedAllocationRecord() {
+SharedAllocationRecord<HIPManagedSpace, void>::~SharedAllocationRecord() {
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
 
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
-    SharedAllocationRecord(
-        const Kokkos::Experimental::HIPSpace& arg_space,
-        const std::string& arg_label, const size_t arg_alloc_size,
-        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+SharedAllocationRecord<HIPSpace, void>::SharedAllocationRecord(
+    const HIPSpace& arg_space, const std::string& arg_label,
+    const size_t arg_alloc_size,
+    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                  void>::s_root_record,
+          &SharedAllocationRecord<HIPSpace, void>::s_root_record,
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
@@ -401,27 +396,24 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Experimental::HIP exec;
-  Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
+  HIP exec;
+  Kokkos::Impl::DeepCopy<HIPSpace, HostSpace>(
       exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
   exec.fence(
-      "SharedAllocationRecord<Kokkos::Experimental::HIPSpace, "
+      "SharedAllocationRecord<Kokkos::HIPSpace, "
       "void>::SharedAllocationRecord(): fence after copying header from "
       "HostSpace");
 }
 
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
-    SharedAllocationRecord(
-        const Kokkos::Experimental::HIP& arg_exec_space,
-        const Kokkos::Experimental::HIPSpace& arg_space,
-        const std::string& arg_label, const size_t arg_alloc_size,
-        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+SharedAllocationRecord<HIPSpace, void>::SharedAllocationRecord(
+    const HIP& arg_exec_space, const HIPSpace& arg_space,
+    const std::string& arg_label, const size_t arg_alloc_size,
+    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                  void>::s_root_record,
+          &SharedAllocationRecord<HIPSpace, void>::s_root_record,
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
@@ -434,22 +426,20 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
-      arg_exec_space, RecordBase::m_alloc_ptr, &header,
-      sizeof(SharedAllocationHeader));
+  Kokkos::Impl::DeepCopy<HIPSpace, HostSpace>(arg_exec_space,
+                                              RecordBase::m_alloc_ptr, &header,
+                                              sizeof(SharedAllocationHeader));
 }
 
-SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
-    SharedAllocationRecord(
-        const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-        const std::string& arg_label, const size_t arg_alloc_size,
-        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+SharedAllocationRecord<HIPHostPinnedSpace, void>::SharedAllocationRecord(
+    const HIPHostPinnedSpace& arg_space, const std::string& arg_label,
+    const size_t arg_alloc_size,
+    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
-                                  void>::s_root_record,
+          &SharedAllocationRecord<HIPHostPinnedSpace, void>::s_root_record,
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
@@ -461,17 +451,15 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
                                                   arg_label);
 }
 
-SharedAllocationRecord<Kokkos::Experimental::HIPManagedSpace, void>::
-    SharedAllocationRecord(
-        const Kokkos::Experimental::HIPManagedSpace& arg_space,
-        const std::string& arg_label, const size_t arg_alloc_size,
-        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
+SharedAllocationRecord<HIPManagedSpace, void>::SharedAllocationRecord(
+    const HIPManagedSpace& arg_space, const std::string& arg_label,
+    const size_t arg_alloc_size,
+    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::Experimental::HIPManagedSpace,
-                                  void>::s_root_record,
+          &SharedAllocationRecord<HIPManagedSpace, void>::s_root_record,
 #endif
           Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                        arg_alloc_size),
@@ -489,7 +477,6 @@ SharedAllocationRecord<Kokkos::Experimental::HIPManagedSpace, void>::
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
-namespace Experimental {
 
 int HIP::concurrency() {
   auto const& prop = hip_device_prop();
@@ -544,8 +531,7 @@ uint32_t HIP::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 void HIP::impl_static_fence(const std::string& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::HIP>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<HIP>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
@@ -566,12 +552,9 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 
 const char* HIP::name() { return "HIP"; }
 
-}  // namespace Experimental
-
 namespace Impl {
 
-int g_hip_space_factory_initialized =
-    initialize_space_factory<::Kokkos::Experimental::HIP>("150_HIP");
+int g_hip_space_factory_initialized = initialize_space_factory<HIP>("150_HIP");
 
 }  // namespace Impl
 
@@ -588,13 +571,10 @@ namespace Impl {
 // To avoid additional compilation cost for something that's (mostly?) not
 // performance sensitive, we explicity instantiate these CRTP base classes here,
 // where we have access to the associated *_timpl.hpp header files.
-template class HostInaccessibleSharedAllocationRecordCommon<
-    Kokkos::Experimental::HIPSpace>;
-template class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
-template class SharedAllocationRecordCommon<
-    Kokkos::Experimental::HIPHostPinnedSpace>;
-template class SharedAllocationRecordCommon<
-    Kokkos::Experimental::HIPManagedSpace>;
+template class HostInaccessibleSharedAllocationRecordCommon<HIPSpace>;
+template class SharedAllocationRecordCommon<HIPSpace>;
+template class SharedAllocationRecordCommon<HIPHostPinnedSpace>;
+template class SharedAllocationRecordCommon<HIPManagedSpace>;
 
 }  // end namespace Impl
 }  // end namespace Kokkos

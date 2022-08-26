@@ -128,7 +128,7 @@ ENDIF()
 
 
 set(Kokkos_VERSION_MAJOR 3)
-set(Kokkos_VERSION_MINOR 6)
+set(Kokkos_VERSION_MINOR 7)
 set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MINOR} * 100 + ${Kokkos_VERSION_PATCH}")
@@ -166,7 +166,7 @@ IF(NOT MSVC)
 ENDIF()
 
 IF(Kokkos_ENABLE_TESTS AND NOT KOKKOS_HAS_TRILINOS)
-  find_package(GTest)
+  find_package(GTest QUIET)
 ENDIF()
 
 # Include a set of Kokkos-specific wrapper functions that

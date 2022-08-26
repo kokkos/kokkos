@@ -42,18 +42,14 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_DECLARE_OPENACC_HPP
-#define KOKKOS_DECLARE_OPENACC_HPP
+#ifndef KOKKOS_TEST_OACC_HPP
+#define KOKKOS_TEST_OACC_HPP
 
-#if defined(KOKKOS_ENABLE_OPENACC)
-#include <OpenACC/Kokkos_OpenACC.hpp>
-#include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_Traits.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
-#include <OpenACC/Kokkos_OpenACC_MDRangePolicy.hpp>
-#include <OpenACC/Kokkos_OpenACC_ParallelFor_MDRange.hpp>
-#endif
+#include <gtest/gtest.h>
+
+#define TEST_CATEGORY openacc
+#define TEST_CATEGORY_NUMBER 8
+#define TEST_CATEGORY_DEATH openacc_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::OpenACC
 
 #endif
