@@ -53,9 +53,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest, class BinaryOpType, class UnaryOpType>
@@ -228,8 +226,6 @@ OutputIteratorType transform_inclusive_scan_impl(
   return first_dest + num_elements;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

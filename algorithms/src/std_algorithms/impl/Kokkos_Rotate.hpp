@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class ExecutionSpace, class IteratorType>
 IteratorType rotate_with_pivot_in_left_half(const std::string& label,
@@ -212,8 +210,6 @@ IteratorType rotate_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

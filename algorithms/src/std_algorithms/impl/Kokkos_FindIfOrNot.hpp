@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <bool is_find_if, class IndexType, class IteratorType,
           class ReducerType, class PredicateType>
@@ -139,8 +137,6 @@ InputIterator find_impl(const std::string& label, ExecutionSpace ex,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_CountCountIf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class T>
 typename IteratorType::difference_type count(const ExecutionSpace& ex,
@@ -88,7 +87,6 @@ auto count(const std::string& label, const ExecutionSpace& ex,
   return Impl::count_impl(label, ex, KE::cbegin(v), KE::cend(v), value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

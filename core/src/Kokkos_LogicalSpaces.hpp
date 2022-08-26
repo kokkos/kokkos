@@ -58,8 +58,7 @@ static_assert(false,
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <cstring>
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 struct DefaultMemorySpaceNamer {
   static constexpr const char* get_name() {
     return "DefaultLogicalMemorySpaceName";
@@ -159,14 +158,11 @@ class LogicalMemorySpace {
                                      arg_logical_size, arg_handle);
   }
 };
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <typename BaseSpace, typename DefaultBaseExecutionSpace, class Namer,
           typename OtherSpace>
@@ -205,15 +201,11 @@ struct MemorySpaceAccess<
   enum { deepcopy = true };
 };
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 template <class BaseSpace, class DefaultBaseExecutionSpace, class Namer,
           class SharesAccessSemanticsWithBase>
 class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
@@ -384,15 +376,11 @@ SharedAllocationRecord<void, void>
                            void>::s_root_record;
 #endif
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
           class SharesAccess, class ExecutionSpace>
@@ -435,7 +423,5 @@ struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
     DeepCopy<BaseSpace, DestinationSpace, ExecutionSpace>(exec, dst, src, n);
   }
 };
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 #endif  // KOKKOS_LOGICALSPACES_HPP

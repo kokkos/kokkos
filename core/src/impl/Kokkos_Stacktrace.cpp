@@ -19,8 +19,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 #ifndef KOKKOS_IMPL_ENABLE_STACKTRACE
 int backtrace(void**, int) { return 0; }
 char** backtrace_symbols(void* const*, int) { return nullptr; }
@@ -248,5 +247,4 @@ void set_kokkos_terminate_handler(std::function<void()> user_post) {
   std::set_terminate(kokkos_terminate_handler);
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

@@ -47,9 +47,7 @@
 #include <algorithm>
 #include <numeric>
 
-namespace Test {
-namespace stdalgos {
-namespace Mismatch {
+namespace Test::stdalgos::Mismatch {
 
 namespace KE = Kokkos::Experimental;
 
@@ -221,6 +219,4 @@ TEST(std_algorithms_mismatch_test, test) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace Mismatch
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Mismatch

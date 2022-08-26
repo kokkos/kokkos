@@ -46,9 +46,7 @@
 #include <iterator>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace Find {
+namespace Test::stdalgos::Find {
 
 namespace KE = Kokkos::Experimental;
 
@@ -184,6 +182,4 @@ TEST(std_algorithms_find_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
-}  // namespace Find
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Find

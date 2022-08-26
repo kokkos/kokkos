@@ -51,8 +51,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 struct TypeErasedTag {};
 
@@ -63,8 +62,7 @@ template <class ExecutionSpace, class Kernel = TypeErasedTag,
           class Predecessor = TypeErasedTag>
 class GraphNodeRef;
 
-}  // end namespace Experimental
-}  // end namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH_FWD
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

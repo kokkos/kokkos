@@ -255,8 +255,7 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
 
 }  // namespace Kokkos
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
 //   Customization point for backends
@@ -290,8 +289,7 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
   for (int s = 0; s < int(weights.size()); s++) instances[s] = space;
   return instances;
 }
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>

@@ -58,8 +58,7 @@
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_Complex.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 //! Compute exponential integral E1(x) (x > 0).
 template <class RealType>
@@ -1275,8 +1274,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h21(const CmplxType& z) {
   return ch21;
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHSPECFUNCTIONS
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

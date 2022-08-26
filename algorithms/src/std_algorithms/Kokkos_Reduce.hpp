@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Reduce.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 //
 // overload set 1
@@ -215,7 +214,6 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex,
                                            joiner);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

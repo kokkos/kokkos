@@ -53,9 +53,7 @@
 #include <std_algorithms/Kokkos_CopyIf.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class FirstFrom, class FirstDest, class PredType>
 struct StdRemoveIfStage1Functor {
@@ -205,8 +203,6 @@ auto remove_copy_if_impl(const std::string& label, const ExecutionSpace& ex,
                                          first_dest, pred_wrapper_type(pred));
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

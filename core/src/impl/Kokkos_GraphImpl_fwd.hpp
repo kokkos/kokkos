@@ -47,8 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class ExecutionSpace, class Kernel, class Predecessor>
 struct GraphNodeImpl;
@@ -81,7 +80,6 @@ struct KernelInGraphProperty {};
 
 struct IsGraphKernelTag {};
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP

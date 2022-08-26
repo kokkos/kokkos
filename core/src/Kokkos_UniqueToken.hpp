@@ -54,8 +54,7 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 enum class UniqueTokenScope : int { Instance, Global };
 
@@ -178,7 +177,6 @@ class AcquireTeamUniqueToken {
   static std::size_t shmem_size() { return scratch_view::shmem_size(); }
 };
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif  // KOKKOS_UNIQUE_TOKEN_HPP

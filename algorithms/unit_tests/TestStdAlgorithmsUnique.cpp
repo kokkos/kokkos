@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace Unique {
+namespace Test::stdalgos::Unique {
 
 namespace KE = Kokkos::Experimental;
 
@@ -305,6 +303,4 @@ TEST(std_algorithms_mod_seq_ops, unique) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace Unique
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Unique

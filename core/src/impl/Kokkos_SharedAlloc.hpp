@@ -52,8 +52,7 @@
 #include <cstdint>
 #include <string>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class MemorySpace = void, class DestroyFunctor = void>
 class SharedAllocationRecord;
@@ -534,6 +533,5 @@ union SharedAllocationTracker {
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 #endif

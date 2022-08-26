@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Swap.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class IteratorType1, class IteratorType2>
 struct StdSwapRangesFunctor {
@@ -105,8 +103,6 @@ IteratorType2 swap_ranges_impl(const std::string& label,
   return first2 + num_elements_to_swap;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_AllOfAnyOfNoneOf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class Predicate>
 bool any_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
@@ -88,7 +87,6 @@ bool any_of(const std::string& label, const ExecutionSpace& ex,
                            std::move(predicate));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

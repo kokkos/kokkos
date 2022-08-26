@@ -48,8 +48,7 @@
 #include "impl/Kokkos_RemoveAllVariants.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class Iterator, class UnaryPredicate>
 Iterator remove_if(const ExecutionSpace& ex, Iterator first, Iterator last,
@@ -86,7 +85,6 @@ auto remove_if(const std::string& label, const ExecutionSpace& ex,
                               ::Kokkos::Experimental::end(view), pred);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

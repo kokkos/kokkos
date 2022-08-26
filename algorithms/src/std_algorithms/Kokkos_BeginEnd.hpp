@@ -52,8 +52,7 @@
 /// \file Kokkos_BeginEnd.hpp
 /// \brief Kokkos begin, end, cbegin, cend
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class DataType, class... Properties>
 KOKKOS_INLINE_FUNCTION auto begin(
@@ -99,7 +98,6 @@ KOKKOS_INLINE_FUNCTION auto cend(
   return it_t(cv, cv.extent(0));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

@@ -49,8 +49,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // This header provides a subset of the functionality from <cstring>.  In
 // contrast to the standard library header, functions are usable on the device
@@ -210,7 +209,6 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
 }
 //</editor-fold>
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace RemoveCopy {
+namespace Test::stdalgos::RemoveCopy {
 
 namespace KE = Kokkos::Experimental;
 
@@ -258,6 +256,4 @@ TEST(std_algorithms_mod_seq_ops, remove_copy) {
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace RemoveCopy
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::RemoveCopy

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_TransformReduce.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // ----------------------------
 // overload set1:
@@ -277,7 +276,6 @@ ValueType transform_reduce(const std::string& label, const ExecutionSpace& ex,
       std::move(transformer));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_GenerateGenerateN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class Size, class Generator>
 IteratorType generate_n(const ExecutionSpace& ex, IteratorType first,
@@ -87,7 +86,6 @@ auto generate_n(const std::string& label, const ExecutionSpace& ex,
   return Impl::generate_n_impl(label, ex, begin(view), count, std::move(g));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

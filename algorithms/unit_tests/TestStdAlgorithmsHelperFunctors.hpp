@@ -48,8 +48,7 @@
 #include <Kokkos_Core.hpp>
 #include <type_traits>
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 template <class ViewTypeFrom, class ViewTypeTo>
 struct CopyFunctor {
@@ -176,7 +175,6 @@ struct IsEqualFunctor {
   }
 };
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos
 
 #endif

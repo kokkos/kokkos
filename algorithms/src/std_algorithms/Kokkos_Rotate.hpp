@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Rotate.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType>
 IteratorType rotate(const ExecutionSpace& ex, IteratorType first,
@@ -83,7 +82,6 @@ auto rotate(const std::string& label, const ExecutionSpace& ex,
                            end(view));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

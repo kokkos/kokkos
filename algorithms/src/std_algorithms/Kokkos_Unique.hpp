@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Unique.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // note: the enable_if below is to avoid "call to ... is ambiguous"
 // for example in the unit test when using a variadic function
@@ -118,7 +117,6 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
   return Impl::unique_impl(label, ex, begin(view), end(view), std::move(pred));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

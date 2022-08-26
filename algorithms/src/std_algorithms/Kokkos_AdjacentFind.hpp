@@ -48,8 +48,7 @@
 #include "impl/Kokkos_AdjacentFind.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // overload set1
 template <class ExecutionSpace, class IteratorType>
@@ -118,7 +117,6 @@ auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
   return Impl::adjacent_find_impl(label, ex, KE::begin(v), KE::end(v), pred);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

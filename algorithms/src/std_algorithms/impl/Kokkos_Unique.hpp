@@ -53,9 +53,7 @@
 #include <std_algorithms/Kokkos_AdjacentFind.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class InputIt, class OutputIt,
           class BinaryPredicateType>
@@ -186,8 +184,6 @@ IteratorType unique_impl(const std::string& label, const ExecutionSpace& ex,
   return unique_impl(label, ex, first, last, binary_pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

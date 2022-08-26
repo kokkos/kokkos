@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace Equal {
+namespace Test::stdalgos::Equal {
 
 namespace KE = Kokkos::Experimental;
 
@@ -142,6 +140,4 @@ TEST(std_algorithms_equal_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
-}  // namespace Equal
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Equal

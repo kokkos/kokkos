@@ -65,8 +65,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class TeamMember, class Scheduler>
 class TaskTeamMemberAdapter : public TeamMember {
@@ -118,8 +117,7 @@ class TaskTeamMemberAdapter : public TeamMember {
   //----------------------------------------
 };
 
-}  // end namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

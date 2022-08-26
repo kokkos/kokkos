@@ -64,10 +64,7 @@ static_assert(false,
 #include <map>
 #include <cassert>
 
-namespace Kokkos {
-namespace Tools {
-
-namespace Experimental {
+namespace Kokkos::Tools::Experimental {
 
 // forward declarations
 SetOrRange make_candidate_set(size_t size, int64_t* data);
@@ -655,8 +652,6 @@ auto make_categorical_tuner(std::string name, std::vector<Choice> choices)
   return CategoricalTuner<Choice>(name, choices);
 }
 
-}  // namespace Experimental
-}  // namespace Tools
-}  // namespace Kokkos
+}  // namespace Kokkos::Tools::Experimental
 
 #endif

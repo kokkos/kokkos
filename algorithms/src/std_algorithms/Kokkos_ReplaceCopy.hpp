@@ -48,8 +48,7 @@
 #include "impl/Kokkos_ReplaceCopy.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class ValueType>
@@ -101,7 +100,6 @@ auto replace_copy(const std::string& label, const ExecutionSpace& ex,
                                  old_value, new_value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

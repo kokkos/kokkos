@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IteratorType, class ComparatorType>
 struct StdIsSortedFunctor {
@@ -110,8 +108,6 @@ bool is_sorted_impl(const std::string& label, const ExecutionSpace& ex,
   return is_sorted_impl(label, ex, first, last, pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

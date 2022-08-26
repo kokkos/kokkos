@@ -48,8 +48,7 @@
 #include "impl/Kokkos_ShiftRight.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType>
 IteratorType shift_right(const ExecutionSpace& ex, IteratorType first,
@@ -83,7 +82,6 @@ auto shift_right(const std::string& label, const ExecutionSpace& ex,
   return Impl::shift_right_impl(label, ex, begin(view), end(view), n);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

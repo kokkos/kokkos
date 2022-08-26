@@ -46,9 +46,7 @@
 #include <utility>
 #include <Kokkos_Random.hpp>
 
-namespace Test {
-namespace stdalgos {
-namespace MoveBackward {
+namespace Test::stdalgos::MoveBackward {
 
 namespace KE = Kokkos::Experimental;
 
@@ -130,6 +128,4 @@ TEST(std_algorithms_mod_seq_ops, move_backward) {
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace MoveBackward
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::MoveBackward

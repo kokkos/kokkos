@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace RemoveIf {
+namespace Test::stdalgos::RemoveIf {
 
 namespace KE = Kokkos::Experimental;
 
@@ -224,6 +222,4 @@ TEST(std_algorithms_mod_seq_ops, remove_if) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace RemoveIf
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::RemoveIf

@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace ReplaceIf {
+namespace Test::stdalgos::ReplaceIf {
 
 namespace KE = Kokkos::Experimental;
 
@@ -250,6 +248,4 @@ TEST(std_algorithms_replace_ops_test, replace_if) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace ReplaceIf
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::ReplaceIf

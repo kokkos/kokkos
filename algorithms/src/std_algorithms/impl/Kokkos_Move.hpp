@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class InputIterator, class OutputIterator>
 struct StdMoveFunctor {
@@ -93,8 +91,6 @@ OutputIterator move_impl(const std::string& label, const ExecutionSpace& ex,
   return d_first + num_elements;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

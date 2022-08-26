@@ -48,8 +48,7 @@
 #include "impl/Kokkos_ReplaceIf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class Predicate,
           class ValueType>
@@ -90,7 +89,6 @@ void replace_if(const std::string& label, const ExecutionSpace& ex,
                                new_value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

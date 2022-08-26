@@ -48,8 +48,7 @@
 
 #include <atomic>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /** @file
  * Provides strongly-typed analogs of the standard memory order enumerators.
@@ -115,7 +114,6 @@ constexpr memory_order_acq_rel_t memory_order_acq_rel = {};
 
 // Intentionally omit consume (for now)
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_ATOMIC_MEMORY_ORDER_HPP

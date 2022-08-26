@@ -878,8 +878,7 @@ void declareMetadata(const std::string& key, const std::string& value) {
 
 }  // namespace Tools
 
-namespace Tools {
-namespace Experimental {
+namespace Tools::Experimental {
 void set_init_callback(initFunction callback) {
   current_callbacks.init = callback;
 }
@@ -1005,8 +1004,7 @@ Kokkos::Tools::Experimental::EventSet get_callbacks() {
 void set_callbacks(Kokkos::Tools::Experimental::EventSet new_events) {
   current_callbacks = new_events;
 }
-}  // namespace Experimental
-}  // namespace Tools
+}  // namespace Tools::Experimental
 
 namespace Profiling {
 bool profileLibraryLoaded() { return Kokkos::Tools::profileLibraryLoaded(); }
@@ -1088,8 +1086,7 @@ SpaceHandle make_space_handle(const char* space_name) {
 
 // Tuning
 
-namespace Tools {
-namespace Experimental {
+namespace Tools::Experimental {
 static size_t& get_context_counter() {
   static size_t x;
   return x;
@@ -1290,7 +1287,6 @@ void declare_optimization_goal(const size_t context,
   (void)goal;
 #endif
 }
-}  // end namespace Experimental
-}  // end namespace Tools
+}  // namespace Tools::Experimental
 
 }  // end namespace Kokkos

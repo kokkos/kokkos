@@ -48,8 +48,7 @@
 #include "impl/Kokkos_AdjacentDifference.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
@@ -182,7 +181,6 @@ auto adjacent_difference(
                                         KE::begin(view_dest), bin_op);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

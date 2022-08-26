@@ -1,12 +1,10 @@
 #include <gtest/gtest.h>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 int get_ctest_gpu(const char *local_rank_str);
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #ifdef _WIN32
 int setenv(const char *name, const char *value, int overwrite) {

@@ -58,8 +58,7 @@
 
 #include <memory>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="Fully type-erased GraphNodeImpl"> {{{1
@@ -292,7 +291,6 @@ struct GraphNodeImpl
 
 // </editor-fold> end Fully concrete GraphNodeImpl }}}1
 //==============================================================================
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_GRAPHNODEIMPL_HPP

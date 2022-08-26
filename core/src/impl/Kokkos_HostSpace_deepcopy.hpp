@@ -47,9 +47,7 @@
 
 #include <cstdint>
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 void hostspace_fence(const DefaultHostExecutionSpace& exec);
 
@@ -59,8 +57,6 @@ void hostspace_parallel_deepcopy_async(void* dst, const void* src, ptrdiff_t n);
 void hostspace_parallel_deepcopy_async(const DefaultHostExecutionSpace& exec,
                                        void* dst, const void* src, ptrdiff_t n);
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_HOSTSPACE_DEEPCOPY_HPP

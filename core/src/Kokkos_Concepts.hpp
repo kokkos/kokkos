@@ -198,8 +198,7 @@ KOKKOS_IMPL_IS_CONCEPT(graph_kernel)
 
 }  // namespace Kokkos
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Object>
 class has_member_team_shmem_size {
@@ -233,8 +232,7 @@ class has_member_shmem_size {
       sizeof(test_for_member<Object>(0)) == sizeof(int32_t);
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
@@ -357,8 +355,7 @@ struct is_space {
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /**\brief  Access relationship between DstMemorySpace and SrcMemorySpace
  *
@@ -391,8 +388,7 @@ struct MemorySpaceAccess {
   enum { deepcopy = assignable };
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 

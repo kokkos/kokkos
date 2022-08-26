@@ -50,8 +50,7 @@
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
@@ -93,7 +92,6 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
 // </editor-fold> end trait specification }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_EXECUTIONSPACETRAIT_HPP

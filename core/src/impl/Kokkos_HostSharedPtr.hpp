@@ -51,8 +51,7 @@
 
 #include <functional>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <typename T>
 class HostSharedPtr {
@@ -171,7 +170,6 @@ class HostSharedPtr {
   T* m_element_ptr   = nullptr;
   Control* m_control = nullptr;
 };
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

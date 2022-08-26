@@ -70,11 +70,7 @@
 #include <iostream>
 #include <utility>
 #include <type_traits>
-namespace Kokkos {
-
-namespace Test {
-
-namespace Tools {
+namespace Kokkos::Test::Tools {
 
 /**
  * @brief This is what a matcher should return
@@ -1317,6 +1313,4 @@ bool validate_existence(const Lambda& lam, const Matcher matcher) {
   return false;
 }
 
-}  // namespace Tools
-}  // namespace Test
-}  // namespace Kokkos
+}  // namespace Kokkos::Test::Tools

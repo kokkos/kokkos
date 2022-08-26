@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class ValueType>
 struct StdTranformReduceDefaultBinaryTransformFunctor {
@@ -238,8 +236,6 @@ ValueType transform_reduce_default_functors_impl(
       joiner_type(), transformer_type());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

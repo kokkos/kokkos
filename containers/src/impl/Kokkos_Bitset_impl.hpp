@@ -54,8 +54,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 KOKKOS_FORCEINLINE_FUNCTION
 unsigned rotate_right(unsigned i, int r) {
@@ -94,7 +93,6 @@ struct BitsetCount {
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_BITSET_IMPL_HPP

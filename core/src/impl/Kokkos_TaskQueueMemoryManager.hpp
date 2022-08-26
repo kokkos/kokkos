@@ -66,8 +66,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class ExecSpace, class MemorySpace,
           class MemoryPool =
@@ -213,8 +212,7 @@ class TaskQueueMemoryManager : public TaskQueueBase {
   int allocation_count() const noexcept { return m_count_alloc; }
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 ////////////////////////////////////////////////////////////////////////////////
 // END OLD CODE

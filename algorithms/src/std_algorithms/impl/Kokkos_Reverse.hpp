@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Swap.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class InputIterator>
 struct StdReverseFunctor {
@@ -104,8 +102,6 @@ void reverse_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

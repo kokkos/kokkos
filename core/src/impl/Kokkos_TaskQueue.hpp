@@ -68,8 +68,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /** \brief  Manage task allocation, deallocation, and scheduling.
  *
@@ -232,8 +231,7 @@ class TaskQueue : public TaskQueueBase {
   }
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

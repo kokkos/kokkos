@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace IncScan {
+namespace Test::stdalgos::IncScan {
 
 namespace KE = Kokkos::Experimental;
 
@@ -381,6 +379,4 @@ TEST(std_algorithms_numeric_ops_test, inclusive_scan) {
   run_inclusive_scan_all_scenarios<StridedThreeTag, CustomValueType>();
 }
 
-}  // namespace IncScan
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::IncScan

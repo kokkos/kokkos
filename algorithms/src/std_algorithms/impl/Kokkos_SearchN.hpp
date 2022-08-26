@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class IteratorType, class SizeType, class ValueType,
           class ReducerType, class PredicateType>
@@ -198,8 +196,6 @@ IteratorType search_n_impl(const std::string& label, const ExecutionSpace& ex,
   return search_n_impl(label, ex, first, last, count, value, predicate_type());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

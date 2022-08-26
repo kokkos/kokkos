@@ -46,8 +46,7 @@
 
 namespace KE = Kokkos::Experimental;
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 struct std_algorithms_min_max_element_test : std_algorithms_test {
   const int m_number_of_filling_cases = 5;
@@ -487,5 +486,4 @@ TEST_F(std_algorithms_min_max_element_test,
 }
 #endif
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

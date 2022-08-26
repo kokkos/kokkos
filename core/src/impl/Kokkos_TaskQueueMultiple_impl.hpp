@@ -52,8 +52,7 @@
 
 #define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING_MULTIPLE 0
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class ExecSpace, class MemorySpace>
 void TaskQueueMultiple<ExecSpace,
@@ -61,8 +60,7 @@ void TaskQueueMultiple<ExecSpace,
   m_queue->get_team_queue(0).~TaskQueueMultiple();
 }
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP */

@@ -48,9 +48,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_ValueWrapperForNoNeutralElement.hpp"
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 // This reducer is here and not where all other reducers are
 // because it is inside Impl and also because it would not work
@@ -106,8 +104,6 @@ struct ReducerWithArbitraryJoinerNoNeutralElement {
   bool references_scalar() const { return m_references_scalar_v; }
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

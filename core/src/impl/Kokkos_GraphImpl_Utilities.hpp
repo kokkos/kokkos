@@ -51,8 +51,7 @@
 
 #include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="is_compatible_type_erasure"> {{{1
@@ -112,7 +111,6 @@ struct is_more_type_erased<Kokkos::Experimental::TypeErasedTag,
 // </editor-fold> end is_more_type_erased }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_GRAPHIMPL_UTILITIES_HPP

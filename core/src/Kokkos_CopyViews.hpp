@@ -57,9 +57,7 @@ static_assert(false,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Layout>
 struct ViewFillLayoutSelector {};
@@ -74,11 +72,9 @@ struct ViewFillLayoutSelector<Kokkos::LayoutRight> {
   static const Kokkos::Iterate iterate = Kokkos::Iterate::Right;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
 struct ViewFill<ViewType, Layout, ExecSpace, 0, iType> {
@@ -536,8 +532,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
   };
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 namespace Impl {

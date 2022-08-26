@@ -57,13 +57,11 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template class TaskQueue<Kokkos::Serial, typename Kokkos::Serial::memory_space>;
 
-}
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #else
 void KOKKOS_CORE_SRC_IMPL_SERIAL_TASK_PREVENT_LINK_ERROR() {}

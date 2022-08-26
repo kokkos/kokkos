@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class IteratorType1, class IteratorType2,
           class ReducerType, class BinaryPredicateType>
@@ -155,8 +153,6 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2>
   return mismatch_impl(label, ex, first1, last1, first2, last2, pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

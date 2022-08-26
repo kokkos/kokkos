@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace TransformEScan {
+namespace Test::stdalgos::TransformEScan {
 
 namespace KE = Kokkos::Experimental;
 
@@ -307,6 +305,4 @@ TEST(std_algorithms_numeric_ops_test, transform_exclusive_scan) {
 }
 #endif
 
-}  // namespace TransformEScan
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::TransformEScan

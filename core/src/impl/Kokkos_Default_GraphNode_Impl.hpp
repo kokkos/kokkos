@@ -54,8 +54,7 @@
 #include <vector>
 #include <memory>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="GraphNodeBackendSpecificDetails"> {{{1
@@ -164,7 +163,6 @@ struct GraphNodeBackendSpecificDetails {
 // </editor-fold> end GraphNodeBackendSpecificDetails }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_HOST_GRAPHNODE_IMPL_HPP

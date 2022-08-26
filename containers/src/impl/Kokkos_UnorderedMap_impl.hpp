@@ -53,8 +53,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 uint32_t find_hash_size(uint32_t size);
 
@@ -278,7 +277,6 @@ template <typename Key, typename Value>
 struct UnorderedMapCanAssign<const Key, const Value, const Key, Value>
     : public std::true_type {};
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_UNORDERED_MAP_IMPL_HPP

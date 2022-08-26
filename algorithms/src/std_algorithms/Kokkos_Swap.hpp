@@ -47,8 +47,7 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // swap
 template <class T>
@@ -63,7 +62,6 @@ KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) noexcept {
   b     = std::move(tmp);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

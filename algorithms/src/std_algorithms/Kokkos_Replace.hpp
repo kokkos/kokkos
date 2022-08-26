@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Replace.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class Iterator, class ValueType>
 void replace(const ExecutionSpace& ex, Iterator first, Iterator last,
@@ -87,7 +86,6 @@ void replace(const std::string& label, const ExecutionSpace& ex,
                             old_value, new_value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

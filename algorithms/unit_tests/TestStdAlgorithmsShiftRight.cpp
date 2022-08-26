@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace ShiftRight {
+namespace Test::stdalgos::ShiftRight {
 
 namespace KE = Kokkos::Experimental;
 
@@ -240,6 +238,4 @@ TEST(std_algorithms_mod_seq_ops, shift_right) {
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace ShiftRight
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::ShiftRight

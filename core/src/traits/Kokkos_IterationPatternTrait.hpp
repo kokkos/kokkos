@@ -51,8 +51,7 @@
 #include <Kokkos_Layout.hpp>                     // Iterate
 #include <type_traits>                           // is_void
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
@@ -96,7 +95,6 @@ struct PolicyTraitMatcher<IterationPatternTrait, Rank<N, OuterDir, InnerDir>>
 // </editor-fold> end  }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_ITERATIONPATTERNTRAIT_HPP

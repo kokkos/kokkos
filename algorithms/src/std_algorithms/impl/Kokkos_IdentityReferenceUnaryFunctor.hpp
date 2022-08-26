@@ -47,9 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class ValueType>
 struct StdNumericScanIdentityReferenceUnaryFunctor {
@@ -57,8 +55,6 @@ struct StdNumericScanIdentityReferenceUnaryFunctor {
   constexpr const ValueType& operator()(const ValueType& a) const { return a; }
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

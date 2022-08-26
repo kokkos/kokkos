@@ -56,8 +56,7 @@
 
 #include <string>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // Defined in implementation file to avoid having to include iostream
 void safe_throw_allocation_with_header_failure(
@@ -92,7 +91,6 @@ SharedAllocationHeader *checked_allocation_with_header(
   return nullptr;  // unreachable
 }
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_MEMORYSPACE_HPP

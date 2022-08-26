@@ -46,8 +46,7 @@
 
 namespace KE = Kokkos::Experimental;
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 template <class ValueType>
 struct TimesTwoUnaryTransformFunctor {
@@ -631,5 +630,4 @@ TEST_F(std_algorithms_numerics_test,
 
 #endif  // not defined KOKKOS_ENABLE_OPENMPTARGET
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

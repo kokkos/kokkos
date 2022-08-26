@@ -54,21 +54,7 @@ static_assert(false,
 
 #include <utility>
 
-namespace Kokkos {
-
-/** \brief  Minimal subset of logical 'hwloc' functionality available
- *          from http://www.open-mpi.org/projects/hwloc/.
- *
- *  The calls are NOT thread safe in order to avoid mutexes,
- *  memory allocations, or other actions which could give the
- *  runtime system an opportunity to migrate the threads or
- *  touch allocated memory during the function calls.
- *
- *  All calls to these functions should be performed by a thread
- *  when it has guaranteed exclusive access; e.g., for OpenMP
- *  within a 'critical' region.
- */
-namespace hwloc {
+namespace Kokkos::hwloc {
 
 /** \brief  Query if hwloc is available */
 bool available();
@@ -89,15 +75,13 @@ unsigned get_available_cores_per_numa();
  * hyperthreads */
 unsigned get_available_threads_per_core();
 
-} /* namespace hwloc */
-} /* namespace Kokkos */
+}  // namespace Kokkos::hwloc
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // Internal functions for binding persistent spawned threads.
 
-namespace Kokkos {
-namespace hwloc {
+namespace Kokkos::hwloc {
 
 /** \brief  Recommend mapping of threads onto cores.
  *
@@ -140,8 +124,7 @@ unsigned bind_this_thread(const unsigned coordinate_count,
 /** \brief  Unbind the current thread back to the original process binding */
 bool unbind_this_thread();
 
-} /* namespace hwloc */
-} /* namespace Kokkos */
+}  // namespace Kokkos::hwloc
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

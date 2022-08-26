@@ -58,8 +58,7 @@
 #include <Kokkos_Core.hpp>
 #include <utility>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 /*
  * Reduction Type list
@@ -77,12 +76,9 @@ struct ScatterDuplicated {};
 struct ScatterNonAtomic {};
 struct ScatterAtomic {};
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
-namespace Kokkos {
-namespace Impl {
-namespace Experimental {
+namespace Kokkos::Impl::Experimental {
 
 template <typename ExecSpace>
 struct DefaultDuplication;
@@ -673,12 +669,9 @@ void check_scatter_view_allocation_properties_argument(
                 "label, and must perform the view initialization");
 }
 
-}  // namespace Experimental
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl::Experimental
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <typename DataType,
           typename Layout      = Kokkos::DefaultExecutionSpace::array_layout,
@@ -1558,11 +1551,9 @@ create_scatter_view(Op, Duplication, Contribution,
   return original_view;  // implicit ScatterView constructor call
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
           typename CT, typename DP, typename... VP>
@@ -1581,8 +1572,7 @@ void contribute(
   contribute(execution_space{}, dest, src);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 namespace Kokkos {
 

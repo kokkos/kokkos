@@ -901,9 +901,7 @@ struct ParallelConstructName<FunctorType, TagType, false> {
 
 }  // namespace Kokkos
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class PatternTag, class... Args>
 struct PatternImplSpecializationFromTag;
@@ -935,7 +933,5 @@ template <class... Args>
 struct PatternTagFromImplSpecialization<ParallelScan<Args...>>
     : type_identity<ParallelScanTag> {};
 
-}  // end namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 #endif /* #define KOKKOS_EXECPOLICY_HPP */

@@ -44,9 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 
-namespace Test {
-namespace stdalgos {
-namespace ModOps {
+namespace Test::stdalgos::ModOps {
 
 namespace KE = Kokkos::Experimental;
 
@@ -203,6 +201,4 @@ TEST(std_algorithms_mod_ops_test, iter_swap_static_view) {
   test_iter_swap(a2);
 }
 
-}  // namespace ModOps
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::ModOps

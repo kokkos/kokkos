@@ -48,8 +48,7 @@
 #include "impl/Kokkos_CopyCopyN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator copy(const ExecutionSpace& ex, InputIterator first,
@@ -91,7 +90,6 @@ auto copy(const std::string& label, const ExecutionSpace& ex,
                          KE::begin(dest));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

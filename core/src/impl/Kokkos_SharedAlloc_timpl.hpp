@@ -56,8 +56,7 @@
 #include <cstring>   // strncpy
 #include <iostream>  // ostream
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class MemorySpace>
 auto SharedAllocationRecordCommon<MemorySpace>::allocate(
@@ -289,7 +288,6 @@ HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_label() const {
   return record_base_t::m_label;
 }
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_SHAREDALLOC_TIMPL_HPP

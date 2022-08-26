@@ -54,8 +54,7 @@
 #include <Kokkos_View.hpp>
 #include <Kokkos_DualView.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <typename ReportType, typename DeviceType>
 class ErrorReporter {
@@ -193,8 +192,7 @@ void ErrorReporter<ReportType, DeviceType>::resize(const size_t new_size) {
       "Kokkos::Experimental::ErrorReporter::resize: fence after resizing");
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ERRORREPORTER
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

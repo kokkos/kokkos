@@ -48,8 +48,7 @@
 #include "impl/Kokkos_FindFirstOf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // overload set 1: no binary predicate passed
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
@@ -144,7 +143,6 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                                   KE::begin(s_view), KE::end(s_view), pred);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

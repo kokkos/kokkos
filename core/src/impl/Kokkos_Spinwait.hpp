@@ -52,8 +52,7 @@
 
 #include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 enum class WaitMode : int {
   ACTIVE  // Used for tight loops to keep threads active longest
@@ -131,7 +130,6 @@ std::enable_if_t<std::is_integral<T>::value, void> yield_until_equal(
   Kokkos::load_fence();
 }
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 #endif /* #ifndef KOKKOS_SPINWAIT_HPP */

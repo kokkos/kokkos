@@ -53,8 +53,7 @@
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 namespace simd_abi {
 
@@ -162,7 +161,6 @@ using device_abi_set = abi_set<simd_abi::scalar>;
 
 }  // namespace Impl
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

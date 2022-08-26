@@ -48,8 +48,7 @@
 #include "impl/Kokkos_GenerateGenerateN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class Generator>
 void generate(const ExecutionSpace& ex, IteratorType first, IteratorType last,
@@ -85,7 +84,6 @@ void generate(const std::string& label, const ExecutionSpace& ex,
   Impl::generate_impl(label, ex, begin(view), end(view), std::move(g));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

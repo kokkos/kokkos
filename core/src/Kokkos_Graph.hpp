@@ -63,8 +63,7 @@
 #include <functional>
 #include <memory>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 //==============================================================================
 // <editor-fold desc="Graph"> {{{1
@@ -182,8 +181,7 @@ Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
 // </editor-fold> end create_graph }}}1
 //==============================================================================
 
-}  // end namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 // Even though these things are separable, include them here for now so that
 // the user only needs to include Kokkos_Graph.hpp to get the whole facility.

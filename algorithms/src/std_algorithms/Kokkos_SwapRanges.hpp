@@ -48,8 +48,7 @@
 #include "impl/Kokkos_SwapRanges.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 swap_ranges(const ExecutionSpace& ex, IteratorType1 first1,
@@ -91,7 +90,6 @@ auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
                                 begin(dest));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

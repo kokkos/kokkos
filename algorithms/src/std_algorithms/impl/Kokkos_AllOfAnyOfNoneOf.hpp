@@ -47,9 +47,7 @@
 
 #include "Kokkos_FindIfOrNot.hpp"
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class ExecutionSpace, class InputIterator, class Predicate>
 bool all_of_impl(const std::string& label, const ExecutionSpace& ex,
@@ -70,8 +68,6 @@ bool none_of_impl(const std::string& label, const ExecutionSpace& ex,
   return (find_if_or_not_impl<true>(label, ex, first, last, predicate) == last);
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

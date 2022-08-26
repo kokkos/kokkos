@@ -44,8 +44,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 std::string view_tag_to_string(DynamicTag) { return "dynamic_view"; }
 
@@ -53,5 +52,4 @@ std::string view_tag_to_string(StridedTwoTag) { return "stride2_view"; }
 
 std::string view_tag_to_string(StridedThreeTag) { return "stride3_view"; }
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

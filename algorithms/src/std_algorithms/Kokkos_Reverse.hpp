@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Reverse.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator>
 void reverse(const ExecutionSpace& ex, InputIterator first,
@@ -81,7 +80,6 @@ void reverse(const std::string& label, const ExecutionSpace& ex,
   return Impl::reverse_impl(label, ex, KE::begin(view), KE::end(view));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

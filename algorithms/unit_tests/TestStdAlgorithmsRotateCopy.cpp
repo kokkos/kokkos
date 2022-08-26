@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace RotateCopy {
+namespace Test::stdalgos::RotateCopy {
 
 namespace KE = Kokkos::Experimental;
 
@@ -268,6 +266,4 @@ TEST(std_algorithms_mod_seq_ops, rotate_copy) {
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace RotateCopy
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::RotateCopy

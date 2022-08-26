@@ -48,8 +48,7 @@
 #include "impl/Kokkos_PartitionPoint.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
 IteratorType partition_point(const ExecutionSpace& ex, IteratorType first,
@@ -85,7 +84,6 @@ auto partition_point(const ExecutionSpace& ex,
                                     ex, begin(v), end(v), std::move(p));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

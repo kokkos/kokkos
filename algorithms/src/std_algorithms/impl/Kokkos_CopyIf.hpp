@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class FirstFrom, class FirstDest, class PredType>
 struct StdCopyIfFunctor {
@@ -135,8 +133,6 @@ OutputIterator copy_if_impl(const std::string& label, const ExecutionSpace& ex,
   }
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

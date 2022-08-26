@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace ReplaceCopy {
+namespace Test::stdalgos::ReplaceCopy {
 
 namespace KE = Kokkos::Experimental;
 
@@ -292,6 +290,4 @@ TEST(std_algorithms_replace_ops_test, replace_copy) {
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace ReplaceCopy
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::ReplaceCopy

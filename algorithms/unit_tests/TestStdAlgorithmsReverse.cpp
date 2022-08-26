@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace Reverse {
+namespace Test::stdalgos::Reverse {
 
 namespace KE = Kokkos::Experimental;
 
@@ -173,6 +171,4 @@ TEST(std_algorithms_modseq_test, reverse) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace Reverse
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Reverse

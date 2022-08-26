@@ -52,8 +52,7 @@
 #include <string>
 #include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //----------------------------------------------------------------------------
 // Help with C++11 variadic argument packs
@@ -136,15 +135,13 @@ struct are_integral<T, Args...> {
 };
 
 //----------------------------------------------------------------------------
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // Other traits
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //----------------------------------------------------------------------------
 // if_
@@ -307,8 +304,7 @@ struct make_all_extents_into_pointers<T*> {
   using type = typename make_all_extents_into_pointers<T>::type*;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

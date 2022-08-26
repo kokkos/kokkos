@@ -63,8 +63,7 @@ static_assert(false,
 
 #include <memory>  // std::shared_ptr
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class Kernel /*= TypeErasedTag*/,
           class Predecessor /*= TypeErasedTag*/>
@@ -457,7 +456,6 @@ class GraphNodeRef {
   // TODO @graph parallel scan, deep copy, etc.
 };
 
-}  // end namespace Experimental
-}  // end namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif  // KOKKOS_KOKKOS_GRAPHNODE_HPP

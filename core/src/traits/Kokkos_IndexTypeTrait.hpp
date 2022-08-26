@@ -50,8 +50,7 @@
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Trait, class AnalyzeNextTrait>
 struct IndexTypePolicyMixin;
@@ -135,7 +134,6 @@ struct PolicyTraitMatcher<
 // </editor-fold> end PolicyTraitMatcher specialization"> }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_INDEXTYPETRAIT_HPP

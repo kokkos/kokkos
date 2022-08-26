@@ -60,8 +60,7 @@
 #include <windows.h>
 #endif
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 void HostBarrier::impl_backoff_wait_until_equal(
     int* ptr, const int v, const bool active_wait) noexcept {
@@ -91,5 +90,4 @@ void HostBarrier::impl_backoff_wait_until_equal(
 #endif
   }
 }
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

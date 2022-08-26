@@ -48,9 +48,7 @@
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_View.hpp>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <typename T, typename enable = void>
 struct is_admissible_to_kokkos_std_algorithms : std::false_type {};
@@ -230,8 +228,6 @@ void expect_valid_range(IteratorType first, IteratorType last) {
   (void)last;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

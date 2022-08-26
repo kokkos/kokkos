@@ -48,8 +48,7 @@
 #include "impl/Kokkos_FillFillN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class SizeType, class T>
 IteratorType fill_n(const ExecutionSpace& ex, IteratorType first, SizeType n,
@@ -85,7 +84,6 @@ auto fill_n(const std::string& label, const ExecutionSpace& ex,
   return Impl::fill_n_impl(label, ex, begin(view), n, value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

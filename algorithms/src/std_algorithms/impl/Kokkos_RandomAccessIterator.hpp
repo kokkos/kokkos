@@ -50,9 +50,7 @@
 #include <Kokkos_View.hpp>
 #include "Kokkos_Constraints.hpp"
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class T>
 class RandomAccessIterator;
@@ -185,8 +183,6 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   ptrdiff_t m_current_index = 0;
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

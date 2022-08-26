@@ -52,8 +52,7 @@ static_assert(false,
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_UniqueToken.hpp>
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <typename TeamPolicy>
 KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::AcquireTeamUniqueToken(
@@ -74,7 +73,6 @@ KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::~AcquireTeamUniqueToken() {
   my_team.team_barrier();
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif  // KOKKOS_UNIQUE_TOKEN_HPP

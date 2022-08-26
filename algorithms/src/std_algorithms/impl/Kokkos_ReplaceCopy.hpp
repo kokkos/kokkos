@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class InputIterator, class OutputIterator, class ValueType>
 struct StdReplaceCopyFunctor {
@@ -115,8 +113,6 @@ OutputIteratorType replace_copy_impl(const std::string& label,
   return first_dest + num_elements;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

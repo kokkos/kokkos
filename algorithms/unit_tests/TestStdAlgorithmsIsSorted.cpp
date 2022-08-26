@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace IsSorted {
+namespace Test::stdalgos::IsSorted {
 
 namespace KE = Kokkos::Experimental;
 
@@ -215,6 +213,4 @@ TEST(std_algorithms_sorting_ops_test, is_sorted) {
   run_is_sorted_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace IsSorted
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::IsSorted

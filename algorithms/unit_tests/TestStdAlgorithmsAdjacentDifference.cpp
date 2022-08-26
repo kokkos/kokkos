@@ -48,9 +48,7 @@
 #include <utility>
 #include <numeric>
 
-namespace Test {
-namespace stdalgos {
-namespace AdjacentDifference {
+namespace Test::stdalgos::AdjacentDifference {
 
 namespace KE = Kokkos::Experimental;
 
@@ -288,6 +286,4 @@ TEST(std_algorithms_numerics_ops_test, adjecent_difference) {
   run_all_scenarios<StridedThreeTag, value_type>(custom_binary_op{});
 }
 
-}  // namespace AdjacentDifference
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::AdjacentDifference

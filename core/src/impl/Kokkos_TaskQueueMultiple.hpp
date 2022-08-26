@@ -68,8 +68,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <typename ExecSpace,
           typename MemorySpace = typename ExecSpace::memory_space>
@@ -260,8 +259,7 @@ class LeagueQueueCollection {
   }
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -60,8 +60,7 @@
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace hwloc {
+namespace Kokkos::hwloc {
 
 /* Return 0 if asynchronous, 1 if synchronous and include process. */
 unsigned thread_mapping(const char* const label, const bool allow_async,
@@ -228,8 +227,7 @@ unsigned thread_mapping(const char* const label, const bool allow_async,
   return thread_spawn_synchronous;
 }
 
-} /* namespace hwloc */
-} /* namespace Kokkos */
+}  // namespace Kokkos::hwloc
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -719,8 +717,7 @@ std::pair<unsigned, unsigned> get_this_thread_coordinate() {
 
 #else /* ! defined( KOKKOS_ENABLE_HWLOC ) */
 
-namespace Kokkos {
-namespace hwloc {
+namespace Kokkos::hwloc {
 
 bool available() { return false; }
 bool can_bind_threads() { return false; }
@@ -741,8 +738,7 @@ std::pair<unsigned, unsigned> get_this_thread_coordinate() {
   return std::pair<unsigned, unsigned>(0, 0);
 }
 
-}  // namespace hwloc
-}  // namespace Kokkos
+}  // namespace Kokkos::hwloc
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

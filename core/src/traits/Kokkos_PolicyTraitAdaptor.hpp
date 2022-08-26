@@ -49,8 +49,7 @@
 #ifndef KOKKOS_KOKKOS_POLICYTRAITADAPTOR_HPP
 #define KOKKOS_KOKKOS_POLICYTRAITADAPTOR_HPP
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="Adapter for replacing/adding a trait"> {{{1
@@ -150,7 +149,6 @@ struct TraitSpecificationBase {
 // </editor-fold> end CRTP Base class for trait specifications }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_POLICYTRAITADAPTOR_HPP

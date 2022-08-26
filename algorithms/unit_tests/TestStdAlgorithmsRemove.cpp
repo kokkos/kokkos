@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace Remove {
+namespace Test::stdalgos::Remove {
 
 namespace KE = Kokkos::Experimental;
 
@@ -227,6 +225,4 @@ TEST(std_algorithms_mod_seq_ops, remove) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace Remove
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Remove

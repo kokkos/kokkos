@@ -49,8 +49,7 @@
 #include "impl/Kokkos_Constraints.hpp"
 #include "Kokkos_Swap.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 namespace Impl {
 
 template <class IteratorType1, class IteratorType2>
@@ -86,7 +85,6 @@ void iter_swap(IteratorType1 a, IteratorType2 b) {
   Impl::iter_swap_impl(a, b);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

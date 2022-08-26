@@ -61,8 +61,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /** \brief  Base class for task management, access, and execution.
  *
@@ -263,14 +262,12 @@ static_assert(sizeof(TaskBase) == expected_task_base_size,
 // </editor-fold> end Verify the size of TaskBase is as expected }}}2
 //------------------------------------------------------------------------------
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Scheduler, typename ResultType, class FunctorType>
 class Task : public TaskBase, public FunctorType {
@@ -339,8 +336,7 @@ class Task : public TaskBase, public FunctorType {
   ~Task() = delete;
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

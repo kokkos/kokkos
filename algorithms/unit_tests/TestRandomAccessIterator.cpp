@@ -46,8 +46,7 @@
 
 namespace KE = Kokkos::Experimental;
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 struct random_access_iterator_test : std_algorithms_test {
  public:
@@ -245,5 +244,4 @@ TEST_F(random_access_iterator_test, distance) {
   EXPECT_EQ(m_dynamic_view.extent(0), size_t(KE::distance(first, last)));
 }
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

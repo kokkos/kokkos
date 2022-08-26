@@ -48,8 +48,7 @@
 #include <string>
 #include <regex>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 bool is_unsigned_int(const char* str);
 bool check_arg(char const* arg, char const* expected);
 bool check_arg_bool(char const* arg, char const* name, bool& val);
@@ -65,7 +64,6 @@ void warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string use_instead);
 void warn_not_recognized_command_line_argument(std::string not_recognized);
 void do_not_warn_not_recognized_command_line_argument(std::regex ignore);
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

@@ -41,12 +41,10 @@
 // ************************************************************************
 //@HEADER
 */
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 int processors_per_node();
 int mpi_ranks_per_node();
 int mpi_local_rank_on_node();
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

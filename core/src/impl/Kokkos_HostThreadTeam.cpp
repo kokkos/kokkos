@@ -55,8 +55,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 void HostThreadTeamData::organize_pool(HostThreadTeamData *members[],
                                        const int size) {
@@ -307,5 +306,4 @@ int HostThreadTeamData::get_work_stealing() noexcept {
   return w.first;
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

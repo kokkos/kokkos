@@ -48,8 +48,7 @@
 
 #include <Kokkos_UnorderedMap.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 uint32_t find_hash_size(uint32_t size) {
   if (size == 0u) return 0u;
@@ -106,5 +105,4 @@ uint32_t find_hash_size(uint32_t size) {
   return hsize;
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

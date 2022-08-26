@@ -58,8 +58,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <int I>
 struct NotOnDeviceCtorDisambiguator {};
@@ -318,8 +317,7 @@ class MemorySpaceInstanceStorage
   }
 };
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

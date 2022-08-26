@@ -45,9 +45,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_VALUE_WRAPPER_FOR_NO_NEUTRAL_ELEMENT_HPP
 #define KOKKOS_STD_ALGORITHMS_VALUE_WRAPPER_FOR_NO_NEUTRAL_ELEMENT_HPP
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 //
 // scalar wrapper used for reductions and scans
@@ -65,8 +63,6 @@ struct ValueWrapperForNoNeutralElement {
   }
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

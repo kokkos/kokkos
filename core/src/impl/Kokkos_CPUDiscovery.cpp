@@ -61,8 +61,7 @@
 #include <cerrno>
 #include <string>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 int processors_per_node() {
 #ifdef _SC_NPROCESSORS_ONLN
@@ -120,5 +119,4 @@ int mpi_local_rank_on_node() {
   return local_rank;
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

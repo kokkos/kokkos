@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Constraints.hpp"
 #include "impl/Kokkos_RandomAccessIterator.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class IteratorType>
 KOKKOS_INLINE_FUNCTION constexpr typename IteratorType::difference_type
@@ -63,7 +62,6 @@ distance(IteratorType first, IteratorType last) {
   return last - first;
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

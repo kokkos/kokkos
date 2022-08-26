@@ -50,8 +50,7 @@
 #include <Kokkos_Graph_fwd.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // Customizable for backends
 template <class ExecutionSpace, class Kernel, class PredecessorRef>
@@ -92,7 +91,6 @@ struct GraphNodeBackendDetailsBeforeTypeErasure {
   //----------------------------------------------------------------------------
 };
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_GRAPHNODECUSTOMIZATION_HPP

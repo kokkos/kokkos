@@ -53,9 +53,7 @@
 
 #include <Kokkos_View.hpp>
 
-namespace Kokkos {
-
-namespace Experimental {
+namespace Kokkos::Experimental {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1729,13 +1727,11 @@ KOKKOS_INLINE_FUNCTION
   return Kokkos::Experimental::Impl::subview_offset(src, args...);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 template <class LT, class... LP, class RT, class... RP>
 KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
                                        const OffsetView<RT, RP...>& rhs) {
@@ -1794,8 +1790,7 @@ KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
   return rhs == lhs;
 }
 
-}  // namespace Experimental
-} /* namespace Kokkos */
+}  // namespace Kokkos::Experimental
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

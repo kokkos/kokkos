@@ -215,22 +215,19 @@ class Serial {
   //--------------------------------------------------------------------------
 };
 
-namespace Tools {
-namespace Experimental {
+namespace Tools::Experimental {
 template <>
 struct DeviceTypeTraits<Serial> {
   static constexpr DeviceType id = DeviceType::Serial;
   static int device_id(const Serial&) { return 0; }
 };
-}  // namespace Experimental
-}  // namespace Tools
+}  // namespace Tools::Experimental
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // We only need to provide a specialization for Serial if there is a host
 // parallel execution space since the specialization for
@@ -257,8 +254,7 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
   enum : bool { deepcopy = false };
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #include <Serial/Kokkos_Serial_Parallel_Range.hpp>
 #include <Serial/Kokkos_Serial_Parallel_MDRange.hpp>

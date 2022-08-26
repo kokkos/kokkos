@@ -47,8 +47,7 @@
 
 #include <Kokkos_Array.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class DataType, class ArrayLayout, class V, size_t N, class P>
 struct ViewDataAnalysis<DataType, ArrayLayout, Kokkos::Array<V, N, P>> {
@@ -98,14 +97,12 @@ struct ViewDataAnalysis<DataType, ArrayLayout, Kokkos::Array<V, N, P>> {
                             array_scalar_dimension>::type;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /** \brief  View mapping for non-specialized data type and standard layout */
 template <class Traits>
@@ -641,8 +638,7 @@ class ViewMapping<
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

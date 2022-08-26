@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class IteratorType, class ReducerType,
           class PredicateType>
@@ -133,8 +131,6 @@ IteratorType adjacent_find_impl(const std::string& label,
   return adjacent_find_impl(label, ex, first, last, default_pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

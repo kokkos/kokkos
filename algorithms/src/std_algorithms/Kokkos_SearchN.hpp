@@ -48,8 +48,7 @@
 #include "impl/Kokkos_SearchN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // overload set 1: no binary predicate passed
 template <class ExecutionSpace, class IteratorType, class SizeType,
@@ -138,7 +137,6 @@ auto search_n(const std::string& label, const ExecutionSpace& ex,
                              value, pred);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

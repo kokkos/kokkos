@@ -53,8 +53,7 @@
 #include <immintrin.h>
 #endif
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 KOKKOS_FORCEINLINE_FUNCTION
 int int_log2_fallback(unsigned i) {
@@ -266,7 +265,6 @@ unsigned integral_power_of_two_that_contains(const unsigned N) {
   return ((1u << i) < N) ? i + 1 : i;
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_BITOPS_HPP

@@ -5,8 +5,7 @@
 #include <ostream>
 #include <string>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /// \brief Return the demangled version of the input symbol, or the
 ///   original input if demangling is not possible.
@@ -39,7 +38,6 @@ void print_demangled_saved_stacktrace(std::ostream& out);
 /// portable way.
 void set_kokkos_terminate_handler(std::function<void()> user_post = nullptr);
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_STACKTRACE_HPP

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_ReplaceCopyIf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class PredicateType, class ValueType>
@@ -105,7 +104,6 @@ auto replace_copy_if(const std::string& label, const ExecutionSpace& ex,
                                     pred, new_value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

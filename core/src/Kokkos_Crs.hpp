@@ -160,8 +160,7 @@ void transpose_crs(Crs<DataType, Arg1Type, Arg2Type, SizeType>& out,
 
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class InCrs, class OutCounts>
 class GetCrsTransposeCounts {
@@ -274,8 +273,7 @@ class FillCrsTransposeEntries {
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 /*--------------------------------------------------------------------------*/
 

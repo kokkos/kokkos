@@ -47,10 +47,8 @@
 
 #include <cstdint>
 #include <impl/Kokkos_Profiling_C_Interface.h>
-namespace Kokkos {
-namespace Profiling {
+namespace Kokkos::Profiling {
 using KokkosPDeviceInfo = Kokkos_Profiling_KokkosPDeviceInfo;
-}  // namespace Profiling
-}  // namespace Kokkos
+}  // namespace Kokkos::Profiling
 
 #endif

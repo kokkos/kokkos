@@ -62,8 +62,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -371,14 +370,12 @@ class SingleConsumeOperationLIFO : private LockBasedLIFOCommon<T> {
   }
 };
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 struct TaskQueueTraitsLockBased {
   // TODO @tasking @documentation DSH document what concepts these match
@@ -396,8 +393,7 @@ struct TaskQueueTraitsLockBased {
   static constexpr auto ready_queue_insertion_may_fail = false;
 };
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

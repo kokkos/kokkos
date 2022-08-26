@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Mismatch.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // FIXME: add mismatch overloads accepting 3 iterators.
 // An overload consistent with other algorithms:
@@ -154,7 +153,6 @@ auto mismatch(const std::string& label, const ExecutionSpace& ex,
                              std::forward<BinaryPredicateType>(predicate));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

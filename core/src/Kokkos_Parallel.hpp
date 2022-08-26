@@ -71,8 +71,7 @@ static_assert(false,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class T>
 using execution_space_t = typename T::execution_space;
@@ -126,8 +125,7 @@ struct FunctorPolicyExecutionSpace {
       execution_space_t, Policy>;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -471,8 +469,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class FunctorType,
           bool HasTeamShmemSize =
@@ -507,8 +504,7 @@ struct FunctorTeamShmemSize<FunctorType, true, true> {
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

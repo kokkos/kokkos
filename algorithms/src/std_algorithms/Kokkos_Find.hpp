@@ -48,8 +48,7 @@
 #include "impl/Kokkos_FindIfOrNot.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class T>
 InputIterator find(const ExecutionSpace& ex, InputIterator first,
@@ -83,7 +82,6 @@ auto find(const std::string& label, const ExecutionSpace& ex,
   return Impl::find_impl(label, ex, KE::begin(view), KE::end(view), value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

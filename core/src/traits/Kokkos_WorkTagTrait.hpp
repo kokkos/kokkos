@@ -51,8 +51,7 @@
 #include <traits/Kokkos_Traits_fwd.hpp>
 #include <impl/Kokkos_Utilities.hpp>  // type_list_any, type_list_remove_first
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
@@ -117,7 +116,6 @@ struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
 // </editor-fold> end trait specification }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_WORKTAGTRAIT_HPP

@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace FindFirstOf {
+namespace Test::stdalgos::FindFirstOf {
 
 namespace KE = Kokkos::Experimental;
 
@@ -296,6 +294,4 @@ TEST(std_algorithms_non_mod_seq_ops, find_first_of) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace FindFirstOf
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::FindFirstOf

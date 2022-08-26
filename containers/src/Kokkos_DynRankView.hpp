@@ -1569,8 +1569,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const DynRankView<LT, LP...>& lhs,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class OutputView, class Enable = void>
 struct DynRankViewFill {
@@ -1690,8 +1689,7 @@ struct DynRankViewRemap {
   }
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 

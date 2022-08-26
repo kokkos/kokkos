@@ -56,8 +56,7 @@
 #include <impl/Kokkos_Utilities.hpp>
 #include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // ------------------------------------------------------------------ //
 //  this is used to convert
@@ -99,8 +98,7 @@ struct python_view_type_impl<ViewT<ValueT, Types...>>
 template <typename... T>
 using python_view_type_impl_t = typename python_view_type_impl<T...>::type;
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_FillFillN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class T>
 void fill(const ExecutionSpace& ex, IteratorType first, IteratorType last,
@@ -80,7 +79,6 @@ void fill(const std::string& label, const ExecutionSpace& ex,
   Impl::fill_impl(label, ex, begin(view), end(view), value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

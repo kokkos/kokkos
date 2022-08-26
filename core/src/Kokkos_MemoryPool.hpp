@@ -59,8 +59,7 @@ static_assert(false,
 
 #include <iostream>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 /* Report violation of size constraints:
  *   min_block_alloc_size <= max_block_alloc_size
  *   max_block_alloc_size <= min_superblock_size
@@ -75,8 +74,7 @@ void memory_pool_bounds_verification(size_t min_block_alloc_size,
                                      size_t max_superblock_size,
                                      size_t max_block_per_superblock,
                                      size_t min_total_alloc_size);
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 

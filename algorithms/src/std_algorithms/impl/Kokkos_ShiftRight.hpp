@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class ExecutionSpace, class IteratorType>
 IteratorType shift_right_impl(const std::string& label,
@@ -132,8 +130,6 @@ IteratorType shift_right_impl(const std::string& label,
   return first + n;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

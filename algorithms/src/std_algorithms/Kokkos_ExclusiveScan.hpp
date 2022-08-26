@@ -48,8 +48,7 @@
 #include "impl/Kokkos_ExclusiveScan.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // overload set 1
 template <class ExecutionSpace, class InputIteratorType,
@@ -184,7 +183,6 @@ auto exclusive_scan(const std::string& label, const ExecutionSpace& ex,
       KE::begin(view_dest), init_value, bop);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

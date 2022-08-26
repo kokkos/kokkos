@@ -46,8 +46,7 @@
 
 namespace KE = Kokkos::Experimental;
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 struct std_algorithms_mod_seq_ops_test : std_algorithms_test {
  public:
@@ -423,5 +422,4 @@ TEST_F(std_algorithms_mod_seq_ops_test, swap_ranges) {
   test_swap_ranges(m_strided_view);
 }
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class InputIt, class OutputIt,
           class BinaryPredicateType>
@@ -149,8 +147,6 @@ OutputIterator unique_copy_impl(const std::string& label,
   return unique_copy_impl(label, ex, first, last, d_first, binary_pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

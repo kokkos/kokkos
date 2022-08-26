@@ -67,8 +67,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 #ifdef KOKKOS_COMPILER_PGI
 // Bizzarely, an extra jump instruction forces the PGI compiler to not have a
@@ -691,9 +690,7 @@ class alignas(16) RunnableTask
   }
 };
 
-} /* namespace Impl */
-
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

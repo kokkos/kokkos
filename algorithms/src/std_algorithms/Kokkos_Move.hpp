@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Move.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
 OutputIterator move(const ExecutionSpace& ex, InputIterator first,
@@ -88,7 +87,6 @@ auto move(const std::string& label, const ExecutionSpace& ex,
   return Impl::move_impl(label, ex, begin(source), end(source), begin(dest));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

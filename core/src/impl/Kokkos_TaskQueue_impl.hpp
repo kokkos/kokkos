@@ -49,8 +49,7 @@
 
 #define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING 0
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //----------------------------------------------------------------------------
 
@@ -668,8 +667,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
 
 //----------------------------------------------------------------------------
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKQUEUE_IMPL_HPP */

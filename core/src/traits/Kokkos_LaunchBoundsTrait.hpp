@@ -50,8 +50,7 @@
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
@@ -90,7 +89,6 @@ struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP

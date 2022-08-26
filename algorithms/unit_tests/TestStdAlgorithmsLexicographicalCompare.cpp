@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace LexicographicalCompare {
+namespace Test::stdalgos::LexicographicalCompare {
 
 namespace KE = Kokkos::Experimental;
 
@@ -176,6 +174,4 @@ TEST(std_algorithms_lexicographical_compare_test, test) {
 #endif
 }
 
-}  // namespace LexicographicalCompare
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::LexicographicalCompare

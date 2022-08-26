@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <typename ValueType>
 using in_scan_has_reduction_identity_sum_t =
@@ -236,8 +234,6 @@ OutputIteratorType inclusive_scan_custom_binary_op_impl(
   return first_dest + num_elements;
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

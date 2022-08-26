@@ -55,8 +55,7 @@
 
 #include <string>
 
-namespace Kokkos {
-namespace Profiling {
+namespace Kokkos::Profiling {
 
 class ProfilingSection {
  public:
@@ -91,8 +90,7 @@ class ProfilingSection {
   uint32_t secID;
 };
 
-}  // namespace Profiling
-}  // namespace Kokkos
+}  // namespace Kokkos::Profiling
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

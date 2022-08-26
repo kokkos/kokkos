@@ -47,8 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class ExecutionSpace>
 struct GraphNodeKernelDefaultImpl;
@@ -56,7 +55,6 @@ struct GraphNodeKernelDefaultImpl;
 template <class ExecutionSpace>
 struct GraphNodeAggregateKernelDefaultImpl;
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP

@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace Count {
+namespace Test::stdalgos::Count {
 
 namespace KE = Kokkos::Experimental;
 
@@ -135,6 +133,4 @@ TEST(std_algorithms_count_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
-}  // namespace Count
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Count

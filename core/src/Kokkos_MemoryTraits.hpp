@@ -104,8 +104,7 @@ using MemoryRandomAccess =
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 static_assert((0 < int(KOKKOS_MEMORY_ALIGNMENT)) &&
                   (0 == (int(KOKKOS_MEMORY_ALIGNMENT) &
@@ -132,7 +131,6 @@ struct is_default_memory_trait : std::false_type {};
 template <>
 struct is_default_memory_trait<Kokkos::MemoryTraits<0>> : std::true_type {};
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif /* #ifndef KOKKOS_MEMORYTRAITS_HPP */

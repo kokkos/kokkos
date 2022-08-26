@@ -48,8 +48,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 struct WithoutInitializing_t {};
 struct AllowPadding_t {};
@@ -273,8 +272,7 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   }
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

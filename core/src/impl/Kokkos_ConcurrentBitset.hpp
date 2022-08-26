@@ -50,8 +50,7 @@
 #include <impl/Kokkos_BitOps.hpp>
 #include <impl/Kokkos_ClockTic.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 struct concurrent_bitset {
  public:
@@ -344,7 +343,6 @@ struct concurrent_bitset {
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif /* #ifndef KOKKOS_CONCURRENTBITSET_HPP */

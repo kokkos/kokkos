@@ -56,8 +56,7 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 struct InPlaceTag {};
 
@@ -225,8 +224,7 @@ struct OptionalRef {
   bool has_value() const volatile { return m_value != nullptr; }
 };
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

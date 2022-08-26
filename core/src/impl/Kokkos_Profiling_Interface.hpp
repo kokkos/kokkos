@@ -54,9 +54,7 @@
 // NOTE: in this Kokkos::Profiling block, do not define anything that shouldn't
 // exist should Profiling be disabled
 
-namespace Kokkos {
-namespace Tools {
-namespace Experimental {
+namespace Kokkos::Tools::Experimental {
 
 constexpr const uint32_t NumReservedDeviceIDs = 1;
 
@@ -129,9 +127,7 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
           << num_instance_bits) +
          space.impl_instance_id();
 }
-}  // namespace Experimental
-}  // namespace Tools
-}  // end namespace Kokkos
+}  // namespace Kokkos::Tools::Experimental
 
 #if defined(KOKKOS_ENABLE_LIBDL)
 // We check at configure time that libdl is available.
@@ -203,9 +199,7 @@ using declareMetadataFunction = Kokkos_Profiling_declareMetadataFunction;
 
 // Profiling
 
-namespace Kokkos {
-
-namespace Profiling {
+namespace Kokkos::Profiling {
 
 /** The Profiling namespace is being renamed to Tools.
  * This is reexposing the contents of what used to be the Profiling
@@ -239,14 +233,11 @@ using Kokkos::Tools::SpaceHandle;
 using Kokkos::Tools::startProfileSectionFunction;
 using Kokkos::Tools::stopProfileSectionFunction;
 
-}  // namespace Profiling
-}  // namespace Kokkos
+}  // namespace Kokkos::Profiling
 
 // Tuning
 
-namespace Kokkos {
-namespace Tools {
-namespace Experimental {
+namespace Kokkos::Tools::Experimental {
 using ValueSet            = Kokkos_Tools_ValueSet;
 using ValueRange          = Kokkos_Tools_ValueRange;
 using StatisticalCategory = Kokkos_Tools_VariableInfo_StatisticalCategory;
@@ -266,9 +257,6 @@ using contextBeginFunction         = Kokkos_Tools_contextBeginFunction;
 using contextEndFunction           = Kokkos_Tools_contextEndFunction;
 using optimizationGoalDeclarationFunction =
     Kokkos_Tools_optimizationGoalDeclarationFunction;
-}  // end namespace Experimental
-}  // end namespace Tools
-
-}  // end namespace Kokkos
+}  // namespace Kokkos::Tools::Experimental
 
 #endif

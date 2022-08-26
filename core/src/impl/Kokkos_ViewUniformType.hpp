@@ -47,8 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 template <class ScalarType, int Rank>
 struct ViewScalarToDataType {
   using type = typename ViewScalarToDataType<ScalarType, Rank - 1>::type *;
@@ -115,7 +114,6 @@ struct ViewUniformType {
       Kokkos::View<runtime_const_data_type, array_layout, anonymous_device_type,
                    memory_traits>;
 };
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

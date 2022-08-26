@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Equal.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 std::enable_if_t< ::Kokkos::Experimental::Impl::are_iterators<
@@ -192,7 +191,6 @@ equal(const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
                           std::move(predicate));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

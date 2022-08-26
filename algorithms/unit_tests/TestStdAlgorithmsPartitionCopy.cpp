@@ -46,9 +46,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace PartitionCopy {
+namespace Test::stdalgos::PartitionCopy {
 
 namespace KE = Kokkos::Experimental;
 
@@ -296,6 +294,4 @@ TEST(std_algorithms_partitioning_ops, partition_copy) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace PartitionCopy
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::PartitionCopy

@@ -59,8 +59,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template class TaskQueue<Kokkos::OpenMP, typename Kokkos::OpenMP::memory_space>;
 
@@ -104,8 +103,7 @@ HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton() {
                    static_cast<size_t>(HostThreadTeamData::scratch_bytes()));
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 #else

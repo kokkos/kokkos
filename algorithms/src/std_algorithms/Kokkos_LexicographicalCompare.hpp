@@ -48,8 +48,7 @@
 #include "impl/Kokkos_LexicographicalCompare.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 bool lexicographical_compare(const ExecutionSpace& ex, IteratorType1 first1,
@@ -148,7 +147,6 @@ bool lexicographical_compare(
                                             KE::cend(view2), comp);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

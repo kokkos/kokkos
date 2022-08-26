@@ -45,8 +45,7 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
 #define KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 namespace Impl {
 template <typename View>
@@ -145,7 +144,6 @@ struct SubscribableViewHooks {
 
 using DefaultViewHooks = EmptyViewHooks;
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif  // KOKKOS_EXPERIMENTAL_VIEWHOOKS_HPP

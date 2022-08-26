@@ -49,9 +49,7 @@
 #include "Kokkos_Core.hpp"
 #include "Kokkos_HostSpace_deepcopy.hpp"
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 void hostspace_fence(const DefaultHostExecutionSpace& exec) {
   exec.fence("HostSpace fence");
@@ -165,6 +163,4 @@ void hostspace_parallel_deepcopy_async(const DefaultHostExecutionSpace& exec,
   }
 }
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_UniqueCopy.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // overload set1
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
@@ -137,7 +136,6 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
                                 begin(dest), std::move(pred));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

@@ -51,8 +51,7 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 namespace simd_abi {
 
@@ -347,7 +346,6 @@ hmin(const_where_expression<simd_mask<T, simd_abi::scalar>,
                                      : Kokkos::reduction_identity<T>::min();
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

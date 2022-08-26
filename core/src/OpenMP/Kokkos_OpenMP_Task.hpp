@@ -59,8 +59,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 class HostThreadTeamDataSingleton : private HostThreadTeamData {
  private:
@@ -374,8 +373,7 @@ class TaskQueueSpecializationConstrained<
 extern template class TaskQueue<Kokkos::OpenMP,
                                 typename Kokkos::OpenMP::memory_space>;
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

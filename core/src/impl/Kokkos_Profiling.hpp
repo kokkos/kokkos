@@ -360,8 +360,7 @@ using Kokkos::Tools::Experimental::set_callbacks;
 }  // namespace Experimental
 }  // namespace Profiling
 
-namespace Tools {
-namespace Experimental {
+namespace Tools::Experimental {
 
 VariableValue make_variable_value(size_t id, int64_t val);
 VariableValue make_variable_value(size_t id, double val);
@@ -397,8 +396,7 @@ size_t get_new_context_id();
 size_t get_current_context_id();
 
 size_t get_new_variable_id();
-}  // namespace Experimental
-}  // namespace Tools
+}  // namespace Tools::Experimental
 
 }  // namespace Kokkos
 

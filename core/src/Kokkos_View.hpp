@@ -66,8 +66,7 @@ static_assert(false,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class DataType>
 struct ViewArrayAnalysis;
@@ -123,16 +122,13 @@ void runtime_check_rank(const size_t rank, const size_t dyn_rank,
   }
 }
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 // Class to provide a uniform type
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 template <class ViewType, int Traits = 0>
 struct ViewUniformType;
-}
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1848,8 +1844,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 inline void shared_allocation_tracking_disable() {
   Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
@@ -1859,8 +1854,7 @@ inline void shared_allocation_tracking_enable() {
   Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
 }
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

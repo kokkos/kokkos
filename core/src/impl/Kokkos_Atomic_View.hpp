@@ -47,8 +47,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // The following tag is used to prevent an implicit call of the constructor when
 // trying to assign a literal 0 int ( = 0 );
@@ -378,7 +377,6 @@ struct Kokkos_Atomic_is_only_allowed_with_32bit_and_64bit_scalars<8> {
   using type = int64_t;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

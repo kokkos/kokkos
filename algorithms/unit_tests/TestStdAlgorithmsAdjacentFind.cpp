@@ -47,9 +47,7 @@
 #include "std_algorithms/Kokkos_AdjacentFind.hpp"
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace AdjacentFind {
+namespace Test::stdalgos::AdjacentFind {
 
 namespace KE = Kokkos::Experimental;
 
@@ -320,6 +318,4 @@ TEST(std_algorithms_nonmod_seq_ops, adjacent_find) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace AdjacentFind
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::AdjacentFind

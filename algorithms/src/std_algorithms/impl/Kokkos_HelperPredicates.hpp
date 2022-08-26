@@ -51,9 +51,7 @@
 // StdAlgoSomeExpressiveNameUnaryPredicate
 // StdAlgoSomeExpressiveNameBinaryPredicate
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 // ------------------
 // UNARY PREDICATES
@@ -114,7 +112,5 @@ struct StdAlgoLessThanBinaryPredicate {
   }
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 #endif

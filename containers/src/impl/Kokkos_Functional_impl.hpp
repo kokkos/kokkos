@@ -46,8 +46,7 @@
 #include <Kokkos_Macros.hpp>
 #include <cstdint>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // MurmurHash3 was written by Austin Appleby, and is placed in the public
 // domain. The author hereby disclaims copyright to this source code.
@@ -183,7 +182,6 @@ KOKKOS_FORCEINLINE_FUNCTION bool bitwise_equal(T const* const a_ptr,
 
 #undef KOKKOS_IMPL_MAY_ALIAS
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_FUNCTIONAL_IMPL_HPP

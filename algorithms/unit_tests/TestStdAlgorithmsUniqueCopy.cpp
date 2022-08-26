@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace UniqueCopy {
+namespace Test::stdalgos::UniqueCopy {
 
 namespace KE = Kokkos::Experimental;
 
@@ -354,6 +352,4 @@ TEST(std_algorithms_mod_seq_ops, unique_copy) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace UniqueCopy
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::UniqueCopy

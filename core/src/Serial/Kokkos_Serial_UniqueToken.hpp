@@ -47,8 +47,7 @@
 
 #include <Kokkos_UniqueToken.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <>
 class UniqueToken<Serial, UniqueTokenScope::Instance> {
@@ -103,7 +102,6 @@ class UniqueToken<Serial, UniqueTokenScope::Global> {
   void release(int) const noexcept {}
 };
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

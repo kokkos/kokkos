@@ -46,8 +46,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 TEST(std_algorithms, is_admissible_to_std_algorithms) {
   namespace KE     = Kokkos::Experimental;
@@ -109,5 +108,4 @@ TEST(std_algorithms, is_admissible_to_std_algorithms) {
                strided_view_3d_t>::value);
 }
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

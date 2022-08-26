@@ -59,8 +59,7 @@
 
 #include <algorithm>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // Temporary, for testing new loop macros
 #define KOKKOS_ENABLE_NEW_LOOP_MACROS 1
@@ -2760,7 +2759,6 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 
 #undef KOKKOS_ENABLE_NEW_LOOP_MACROS
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_ForEachForEachN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class SizeType,
           class UnaryFunctorType>
@@ -90,7 +89,6 @@ auto for_each_n(const ExecutionSpace& ex,
                                KE::begin(v), n, std::move(functor));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

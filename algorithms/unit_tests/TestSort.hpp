@@ -49,9 +49,7 @@
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
 
-namespace Test {
-
-namespace Impl {
+namespace Test::Impl {
 
 template <class ExecutionSpace, class Scalar>
 struct is_sorted_struct {
@@ -444,6 +442,5 @@ void test_sort(unsigned int N) {
   test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
   test_sort_integer_overflow<ExecutionSpace, int>();
 }
-}  // namespace Impl
-}  // namespace Test
+}  // namespace Test::Impl
 #endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */

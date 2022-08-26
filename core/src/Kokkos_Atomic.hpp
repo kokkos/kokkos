@@ -82,8 +82,7 @@
 // Helper functions for places where we really should have called SeqCst atomics
 // anyway These can go away when we call desul unconditionally Non-Desul
 // versions are below
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 using desul::MemoryOrderSeqCst;
 using desul::MemoryScopeDevice;
 
@@ -120,8 +119,7 @@ KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
                                         desul::MemoryScopeDevice());
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 #else
 
 #include <Kokkos_HostSpace.hpp>

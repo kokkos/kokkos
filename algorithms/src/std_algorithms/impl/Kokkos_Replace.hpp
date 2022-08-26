@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class InputIterator, class ValueType>
 struct StdReplaceFunctor {
@@ -96,8 +94,6 @@ void replace_impl(const std::string& label, const ExecutionSpace& ex,
   ex.fence("Kokkos::replace: fence after operation");
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

@@ -252,8 +252,7 @@ void HostSpace::impl_deallocate(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
@@ -309,8 +308,7 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
                                                   arg_label);
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -353,16 +351,14 @@ void unlock_address_host_space(void *ptr) {
 
 #include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // To avoid additional compilation cost for something that's (mostly?) not
 // performance sensitive, we explicity instantiate these CRTP base classes here,
 // where we have access to the associated *_timpl.hpp header files.
 template class SharedAllocationRecordCommon<Kokkos::HostSpace>;
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 // </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
 //==============================================================================

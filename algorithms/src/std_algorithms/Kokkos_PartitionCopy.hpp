@@ -48,8 +48,7 @@
 #include "impl/Kokkos_PartitionCopy.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorTrueType, class OutputIteratorFalseType,
@@ -104,7 +103,6 @@ auto partition_copy(
                                    begin(view_dest_false), std::move(p));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

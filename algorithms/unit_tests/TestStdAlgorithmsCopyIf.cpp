@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace CopyIf {
+namespace Test::stdalgos::CopyIf {
 
 namespace KE = Kokkos::Experimental;
 
@@ -302,6 +300,4 @@ TEST(std_algorithms_mod_seq_ops, copy_if) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace CopyIf
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::CopyIf

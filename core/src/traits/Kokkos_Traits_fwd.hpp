@@ -54,8 +54,7 @@
 #define KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
 #endif
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Enable, class... TraitsList>
 struct AnalyzeExecPolicy;
@@ -116,7 +115,6 @@ using execution_policy_trait_specifications =
 // </editor-fold> end Execution policy trait specifications }}}1
 //==============================================================================
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_KOKKOS_TRAITS_FWD_HPP

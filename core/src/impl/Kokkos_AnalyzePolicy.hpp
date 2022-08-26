@@ -60,8 +60,7 @@
 #include <traits/Kokkos_WorkItemPropertyTrait.hpp>
 #include <traits/Kokkos_WorkTagTrait.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="AnalyzePolicyBaseTraits"> {{{1
@@ -214,7 +213,6 @@ struct PolicyTraits
   using base_t::base_t;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_ANALYZE_POLICY_HPP

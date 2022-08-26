@@ -53,14 +53,12 @@ static_assert(false,
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Crs.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class functor_type, class execution_space, class... policy_args>
 class WorkGraphExec;
 
-}
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 

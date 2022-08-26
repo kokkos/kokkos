@@ -52,8 +52,7 @@
 #include <numeric>
 #include <random>
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 using exespace = Kokkos::DefaultExecutionSpace;
 
@@ -315,7 +314,6 @@ struct CustomValueType {
   value_type value = {};
 };
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos
 
 #endif

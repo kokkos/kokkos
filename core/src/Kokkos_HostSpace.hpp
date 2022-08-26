@@ -69,9 +69,7 @@ static_assert(false,
 
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 /// \brief Initialize lock array for arbitrary size atomics.
 ///
@@ -96,9 +94,7 @@ bool lock_address_host_space(void* ptr);
 /// lock_address.
 void unlock_address_host_space(void* ptr);
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 /// \class HostSpace
@@ -182,9 +178,7 @@ class HostSpace {
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                               Kokkos::HostSpace>::assignable,
@@ -218,15 +212,11 @@ struct HostMirror {
                          Kokkos::HostSpace>>;
 };
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <>
 class SharedAllocationRecord<Kokkos::HostSpace, void>
@@ -290,15 +280,11 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
   }
 };
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class DT, class... DP>
 struct ZeroMemset<typename HostSpace::execution_space, DT, DP...> {
@@ -347,8 +333,6 @@ struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   }
 };
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // #define KOKKOS_HOSTSPACE_HPP

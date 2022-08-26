@@ -52,13 +52,9 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
 
-namespace Kokkos {
+namespace Kokkos::Tools {
 
-namespace Tools {
-
-namespace Experimental {
-
-namespace Impl {
+namespace Experimental::Impl {
 
 static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
@@ -354,9 +350,7 @@ void report_policy_results(const size_t /**tuning_context*/,
       });
 }
 
-}  // namespace Impl
-
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 
 namespace Impl {
 
@@ -483,8 +477,6 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 
 }  // end namespace Impl
 
-}  // namespace Tools
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Tools
 
 #endif  // header guard

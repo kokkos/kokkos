@@ -47,8 +47,7 @@
 
 #include <Kokkos_Parallel.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /*
  * < Kokkos::Serial , WorkArgTag >
@@ -418,7 +417,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

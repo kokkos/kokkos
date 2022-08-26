@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace EScan {
+namespace Test::stdalgos::EScan {
 
 namespace KE = Kokkos::Experimental;
 
@@ -372,6 +370,4 @@ TEST(std_algorithms_numeric_ops_test, exclusive_scan) {
   run_exclusive_scan_all_scenarios<StridedThreeTag, CustomValueType>();
 }
 
-}  // namespace EScan
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::EScan

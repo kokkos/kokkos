@@ -61,8 +61,7 @@ extern SYCL_EXTERNAL unsigned long __attribute__((overloadable))
 intel_get_cycle_counter();
 #endif
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /**\brief  Quick query of clock register tics
  *
@@ -132,7 +131,6 @@ uint64_t clock_tic() noexcept {
   KOKKOS_IF_ON_HOST((return clock_tic_host();))
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_CLOCKTIC_HPP

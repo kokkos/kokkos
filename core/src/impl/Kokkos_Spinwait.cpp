@@ -61,8 +61,7 @@
 
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 void host_thread_yield(const uint32_t i, const WaitMode mode) {
   static constexpr uint32_t sleep_limit = 1 << 13;
@@ -136,5 +135,4 @@ void host_thread_yield(const uint32_t i, const WaitMode mode) {
 #endif /* defined( KOKKOS_ENABLE_ASM ) */
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

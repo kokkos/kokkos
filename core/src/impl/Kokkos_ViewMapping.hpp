@@ -64,8 +64,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <unsigned I, size_t... Args>
 struct variadic_size_t {
@@ -307,14 +306,12 @@ struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
   };
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 struct ALL_t {
   KOKKOS_INLINE_FUNCTION
@@ -324,11 +321,9 @@ struct ALL_t {
   constexpr bool operator==(const ALL_t&) const { return true; }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class T>
 struct is_integral_extent_type {
@@ -721,14 +716,12 @@ struct SubviewExtents {
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /** \brief  Given a value type and dimension generate the View data type */
 template <class T, class Dim>
@@ -858,14 +851,12 @@ struct ViewDataAnalysis {
   using non_const_scalar_array_type = non_const_type;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Dimension, class Layout, class Enable = void>
 struct ViewOffset {
@@ -2666,14 +2657,12 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
             stride(sub.range_index(6), rhs), stride(sub.range_index(7), rhs)) {}
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /** \brief  ViewDataHandle provides the type of the 'data handle' which the view
  *          uses to access data with the [] operator. It also provides
@@ -2851,14 +2840,12 @@ struct ViewDataHandle<
     return (value_type*)(arg_data_ptr + offset);
   }
 };
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <typename T>
 inline bool is_zero_byte(const T& t) {
@@ -3974,14 +3961,12 @@ class ViewMapping<
 
 //----------------------------------------------------------------------------
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <unsigned, class MapType>
 KOKKOS_INLINE_FUNCTION bool view_verify_operator_bounds(const MapType&) {
@@ -4146,8 +4131,7 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
            msg, track, map);))
 }
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

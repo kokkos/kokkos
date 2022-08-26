@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IteratorType, class ReducerType>
 struct StdMinOrMaxElemFunctor {
@@ -160,8 +158,6 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
   return {first + red_result.min_loc, first + red_result.max_loc};
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

@@ -50,8 +50,7 @@
 
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
@@ -352,8 +351,7 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
   using member_type = Impl::HostThreadTeamMember<Kokkos::OpenMP>;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif
 #endif /* KOKKOS_OPENMP_TEAM_HPP */

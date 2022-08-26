@@ -48,8 +48,7 @@
 #include "impl/Kokkos_TransformExclusiveScan.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
@@ -125,7 +124,6 @@ auto transform_exclusive_scan(
       KE::begin(view_dest), init_value, binary_op, unary_op);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

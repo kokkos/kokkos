@@ -175,22 +175,19 @@ class OpenMP {
   Kokkos::Impl::HostSharedPtr<Impl::OpenMPInternal> m_space_instance;
 };
 
-namespace Tools {
-namespace Experimental {
+namespace Tools::Experimental {
 template <>
 struct DeviceTypeTraits<OpenMP> {
   static constexpr DeviceType id = DeviceType::OpenMP;
   static int device_id(const OpenMP&) { return 0; }
 };
-}  // namespace Experimental
-}  // namespace Tools
+}  // namespace Tools::Experimental
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <>
 struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
@@ -200,8 +197,7 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
   enum : bool { deepcopy = false };
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

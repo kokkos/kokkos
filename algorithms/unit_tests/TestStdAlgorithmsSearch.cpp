@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace Search {
+namespace Test::stdalgos::Search {
 
 namespace KE = Kokkos::Experimental;
 
@@ -357,6 +355,4 @@ TEST(std_algorithms_non_mod_seq_ops, search) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace Search
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::Search

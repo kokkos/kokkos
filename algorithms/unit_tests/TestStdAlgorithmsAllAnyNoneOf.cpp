@@ -49,9 +49,7 @@
 #include <std_algorithms/Kokkos_NoneOf.hpp>
 #include <algorithm>
 
-namespace Test {
-namespace stdalgos {
-namespace AllAnyNoneOf {
+namespace Test::stdalgos::AllAnyNoneOf {
 
 namespace KE = Kokkos::Experimental;
 
@@ -180,6 +178,4 @@ TEST(std_algorithms_all_any_none_of_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
-}  // namespace AllAnyNoneOf
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::AllAnyNoneOf

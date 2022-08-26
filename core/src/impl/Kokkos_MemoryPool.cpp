@@ -54,8 +54,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 /* Verify size constraints:
  *   min_block_alloc_size <= max_block_alloc_size
@@ -135,5 +134,4 @@ void _print_memory_pool_state(std::ostream& s, uint32_t const* sb_state_ptr,
   }
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl

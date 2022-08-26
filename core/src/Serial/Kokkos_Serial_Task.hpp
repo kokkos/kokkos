@@ -57,8 +57,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class QueueType>
 class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType>> {
@@ -240,8 +239,7 @@ class TaskQueueSpecializationConstrained<
 extern template class TaskQueue<Kokkos::Serial,
                                 typename Kokkos::Serial::memory_space>;
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

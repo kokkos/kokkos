@@ -44,9 +44,7 @@
 
 #include <Kokkos_StdAlgorithms.hpp>
 
-namespace Test {
-namespace stdalgos {
-namespace compileonly {
+namespace Test::stdalgos::compileonly {
 
 template <class ValueType>
 struct TrivialUnaryFunctor {
@@ -527,8 +525,6 @@ void numeric() {
 #endif
 }
 
-}  // namespace compileonly
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::compileonly
 
 int main() { return 0; }

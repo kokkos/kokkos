@@ -48,8 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // class HostBarrier
 //
@@ -251,7 +250,6 @@ class HostBarrier {
   int* m_buffer{nullptr};
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_HOST_BARRIER_HPP

@@ -51,9 +51,7 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IndexType, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
@@ -140,8 +138,6 @@ bool equal_impl(const std::string& label, const ExecutionSpace& ex,
   return equal_impl(label, ex, first1, last1, first2, last2, pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

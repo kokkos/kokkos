@@ -46,8 +46,7 @@
 
 namespace KE = Kokkos::Experimental;
 
-namespace Test {
-namespace stdalgos {
+namespace Test::stdalgos {
 
 struct std_algorithms_partitioning_test : public std_algorithms_test {
   enum FixtureViews {
@@ -253,5 +252,4 @@ TEST_F(std_algorithms_partitioning_test, partition_point) {
   }
 }
 
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos

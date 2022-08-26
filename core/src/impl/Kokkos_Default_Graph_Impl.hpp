@@ -60,8 +60,7 @@
 
 #include <set>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="GraphImpl default implementation"> {{{1
@@ -185,9 +184,7 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 // </editor-fold> end GraphImpl default implementation }}}1
 //==============================================================================
 
-}  // end namespace Impl
-
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 

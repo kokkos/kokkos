@@ -52,9 +52,7 @@
 #include <std_algorithms/Kokkos_Find.hpp>
 #include <string>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <class IteratorType, class IndicatorViewType, class ComparatorType>
 struct StdIsSortedUntilFunctor {
@@ -146,8 +144,6 @@ IteratorType is_sorted_until_impl(const std::string& label,
   return is_sorted_until_impl(label, ex, first, last, pred_t());
 }
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

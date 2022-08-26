@@ -84,9 +84,7 @@ class AnonymousSpace {
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <typename OtherSpace>
 struct MemorySpaceAccess<Kokkos::AnonymousSpace, OtherSpace> {
@@ -109,8 +107,6 @@ struct MemorySpaceAccess<Kokkos::AnonymousSpace, Kokkos::AnonymousSpace> {
   enum : bool { deepcopy = true };
 };
 
-}  // namespace Impl
-
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // #define KOKKOS_ANONYMOUSSPACE_HPP

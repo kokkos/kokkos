@@ -48,8 +48,7 @@
 #include "impl/Kokkos_IsPartitioned.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType, class PredicateType>
 bool is_partitioned(const ExecutionSpace& ex, IteratorType first,
@@ -86,7 +85,6 @@ bool is_partitioned(const std::string& label, const ExecutionSpace& ex,
   return Impl::is_partitioned_impl(label, ex, cbegin(v), cend(v), std::move(p));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

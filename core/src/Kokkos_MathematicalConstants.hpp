@@ -51,8 +51,7 @@
 #include <Kokkos_Macros.hpp>
 #include <type_traits>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 #define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
   template <class T>                            \
@@ -77,8 +76,7 @@ KOKKOS_IMPL_MATH_CONSTANT(phi,        1.618033988749894848204586834365638118L);
 
 #undef KOKKOS_IMPL_MATH_CONSTANT
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS

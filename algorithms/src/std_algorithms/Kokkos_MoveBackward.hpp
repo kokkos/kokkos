@@ -48,8 +48,7 @@
 #include "impl/Kokkos_MoveBackward.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
 IteratorType2 move_backward(const ExecutionSpace& ex, IteratorType1 first,
@@ -89,7 +88,6 @@ auto move_backward(const std::string& label, const ExecutionSpace& ex,
                                   end(dest));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

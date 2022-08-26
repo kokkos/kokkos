@@ -48,8 +48,7 @@
 #include "impl/Kokkos_MinMaxMinmaxElement.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType>
 auto max_element(const ExecutionSpace& ex, IteratorType first,
@@ -126,7 +125,6 @@ auto max_element(const std::string& label, const ExecutionSpace& ex,
       label, ex, begin(v), end(v), std::move(comp));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

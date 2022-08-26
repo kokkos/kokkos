@@ -57,8 +57,7 @@
 #include <string>
 #include <sstream>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 void safe_throw_allocation_with_header_failure(
     std::string const& space_name, std::string const& label,
@@ -95,5 +94,4 @@ void safe_throw_allocation_with_header_failure(
   }
 }
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Kokkos::Impl

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_IsSorted.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class IteratorType>
 bool is_sorted(const ExecutionSpace& ex, IteratorType first,
@@ -125,7 +124,6 @@ bool is_sorted(const std::string& label, const ExecutionSpace& ex,
                               std::move(comp));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

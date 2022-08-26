@@ -54,8 +54,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <typename... Is>
 struct always_true : std::true_type {};
@@ -243,7 +242,6 @@ using filter_type_list_t =
 // </editor-fold> end type_list }}}1
 //==============================================================================
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_CORE_IMPL_UTILITIES_HPP

@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace FindEnd {
+namespace Test::stdalgos::FindEnd {
 
 namespace KE = Kokkos::Experimental;
 
@@ -380,6 +378,4 @@ TEST(std_algorithms_non_mod_seq_ops, find_end) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
-}  // namespace FindEnd
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::FindEnd

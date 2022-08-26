@@ -57,8 +57,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class Derived, class VLAValueType, class EntryCountType = int32_t>
 struct ObjectWithVLAEmulation;
@@ -274,8 +273,7 @@ struct ObjectWithVLAEmulation {
   //----------------------------------------------------------------------------
 };
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_Transform.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class UnaryOperation>
@@ -160,7 +159,6 @@ auto transform(const std::string& label, const ExecutionSpace& ex,
                               std::move(binary_op));
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

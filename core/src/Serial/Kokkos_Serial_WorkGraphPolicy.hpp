@@ -45,8 +45,7 @@
 #ifndef KOKKOS_SERIAL_WORKGRAPHPOLICY_HPP
 #define KOKKOS_SERIAL_WORKGRAPHPOLICY_HPP
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
@@ -88,7 +87,6 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
       : m_policy(arg_policy), m_functor(arg_functor) {}
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif /* #define KOKKOS_SERIAL_WORKGRAPHPOLICY_HPP */

@@ -48,8 +48,7 @@
 #include "impl/Kokkos_TransformInclusiveScan.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 // overload set 1 (no init value)
 template <class ExecutionSpace, class InputIteratorType,
@@ -184,7 +183,6 @@ auto transform_inclusive_scan(
       KE::begin(view_dest), binary_op, unary_op, init_value);
 }
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental
 
 #endif

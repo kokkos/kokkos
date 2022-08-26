@@ -45,9 +45,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 
-namespace Test {
-namespace stdalgos {
-namespace TransformUnaryOp {
+namespace Test::stdalgos::TransformUnaryOp {
 
 namespace KE = Kokkos::Experimental;
 
@@ -167,6 +165,4 @@ TEST(std_algorithms_transform_ops_test, transform_unary_op) {
   run_all_scenarios<StridedThreeTag, double>();
 }
 
-}  // namespace TransformUnaryOp
-}  // namespace stdalgos
-}  // namespace Test
+}  // namespace Test::stdalgos::TransformUnaryOp

@@ -48,8 +48,7 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 thread_local int SharedAllocationRecord<void, void>::t_tracking_enabled = 1;
 
@@ -371,5 +370,4 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
 }
 #endif
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Kokkos::Impl
