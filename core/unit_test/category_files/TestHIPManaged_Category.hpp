@@ -49,6 +49,6 @@
 
 #define TEST_CATEGORY hip_managed
 #define TEST_CATEGORY_DEATH hip_managed_DeathTest
-#define TEST_EXECSPACE Kokkos::Experimental::HIPManagedSpace
+#define TEST_EXECSPACE Kokkos::HIPManagedSpace
 
 #endif

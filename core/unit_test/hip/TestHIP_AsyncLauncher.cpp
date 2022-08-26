@@ -69,7 +69,7 @@ TEST(hip, async_launcher) {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMalloc(&flag, sizeof(size_t)));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(flag, 0, sizeof(size_t)));
   // launch # of cycles * 1000 kernels w/ distinct values
-  auto space        = Kokkos::Experimental::HIP();
+  auto space        = Kokkos::HIP();
   auto instance     = space.impl_internal_space_instance();
   size_t max_cycles = instance->m_maxDriverCycles;
   size_t nkernels   = max_cycles * 1000;

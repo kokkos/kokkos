@@ -67,30 +67,27 @@
 #include <vector>
 
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
-    [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
-     sizeof(unsigned long)];
+__device__ __constant__ unsigned long
+    kokkos_impl_hip_constant_memory_buffer[HIPTraits::ConstantMemoryUsage /
+                                           sizeof(unsigned long)];
 #endif
 
 namespace Kokkos {
 namespace Impl {
-Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>
-hip_global_unique_token_locks(bool deallocate) {
-  static Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace> locks =
-      Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>();
+Kokkos::View<uint32_t *, HIPSpace> hip_global_unique_token_locks(
+    bool deallocate) {
+  static Kokkos::View<uint32_t *, HIPSpace> locks =
+      Kokkos::View<uint32_t *, HIPSpace>();
   if (!deallocate && locks.extent(0) == 0)
-    locks = Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>(
-        "Kokkos::UniqueToken<HIP>::m_locks",
-        Kokkos::Experimental::HIP().concurrency());
-  if (deallocate)
-    locks = Kokkos::View<uint32_t *, Kokkos::Experimental::HIPSpace>();
+    locks = Kokkos::View<uint32_t *, HIPSpace>(
+        "Kokkos::UniqueToken<HIP>::m_locks", HIP().concurrency());
+  if (deallocate) locks = Kokkos::View<uint32_t *, HIPSpace>();
   return locks;
 }
 }  // namespace Impl
 }  // namespace Kokkos
 
 namespace Kokkos {
-namespace Experimental {
 namespace {
 class HIPInternalDevices {
  public:
@@ -141,10 +138,9 @@ void HIPInternal::print_configuration(std::ostream &s) const {
 #endif
 
   for (int i = 0; i < dev_info.m_hipDevCount; ++i) {
-    s << "Kokkos::Experimental::HIP[ " << i << " ] "
-      << dev_info.m_hipProp[i].name << " version "
-      << (dev_info.m_hipProp[i].major) << "." << dev_info.m_hipProp[i].minor
-      << ", Total Global Memory: "
+    s << "Kokkos::HIP[ " << i << " ] " << dev_info.m_hipProp[i].name
+      << " version " << (dev_info.m_hipProp[i].major) << "."
+      << dev_info.m_hipProp[i].minor << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(dev_info.m_hipProp[i].totalGlobalMem)
       << ", Shared Memory per Block: "
       << ::Kokkos::Impl::human_memory_size(
@@ -158,8 +154,8 @@ void HIPInternal::print_configuration(std::ostream &s) const {
 
 HIPInternal::~HIPInternal() {
   if (m_scratchSpace || m_scratchFlags) {
-    std::cerr << "Kokkos::Experimental::HIP ERROR: Failed to call "
-                 "Kokkos::Experimental::HIP::finalize()"
+    std::cerr << "Kokkos::HIP ERROR: Failed to call "
+                 "Kokkos::HIP::finalize()"
               << std::endl;
     std::cerr.flush();
   }
@@ -179,7 +175,7 @@ HIPInternal::~HIPInternal() {
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
   if (m_hipDev < 0) {
-    Kokkos::abort((std::string("Kokkos::Experimental::HIP::") + label +
+    Kokkos::abort((std::string("Kokkos::HIP::") + label +
                    " : ERROR device not initialized\n")
                       .c_str());
   }
@@ -201,8 +197,7 @@ void HIPInternal::fence() const {
   fence("Kokkos::HIPInternal::fence: Unnamed Internal Fence");
 }
 void HIPInternal::fence(const std::string &name) const {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::HIP>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::HIP>(
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
@@ -295,8 +290,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
     }
   } else {
     std::ostringstream msg;
-    msg << "Kokkos::Experimental::HIP::initialize(" << hip_device_id
-        << ") FAILED";
+    msg << "Kokkos::HIP::initialize(" << hip_device_id << ") FAILED";
 
     if (!ok_init) {
       msg << " : Already initialized";
@@ -328,25 +322,21 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
 //----------------------------------------------------------------------------
 
-using ScratchGrain =
-    Kokkos::Experimental::HIP::size_type[Impl::HIPTraits::WarpSize];
+using ScratchGrain = Kokkos::HIP::size_type[Impl::HIPTraits::WarpSize];
 enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
-Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
-    const std::size_t size) {
+Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount * sizeScratchGrain < size) {
     m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    using Record =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                             void>;
+    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
     if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
-    Record *const r = Record::allocate(
-        Kokkos::Experimental::HIPSpace(), "Kokkos::InternalScratchSpace",
-        (sizeScratchGrain * m_scratchSpaceCount));
+    Record *const r =
+        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchSpace",
+                         (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
 
@@ -356,21 +346,18 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
   return m_scratchSpace;
 }
 
-Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
-    const std::size_t size) {
+Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount * sizeScratchGrain < size) {
     m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    using Record =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                             void>;
+    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
     if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
-    Record *const r = Record::allocate(
-        Kokkos::Experimental::HIPSpace(), "Kokkos::InternalScratchFlags",
-        (sizeScratchGrain * m_scratchFlagsCount));
+    Record *const r =
+        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchFlags",
+                         (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
 
@@ -387,13 +374,13 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
                                              bool force_shrink) {
   if (m_team_scratch_current_size == 0) {
     m_team_scratch_current_size = bytes;
-    m_team_scratch_ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
+    m_team_scratch_ptr          = Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
         "Kokkos::HIPSpace::TeamScratchMemory", m_team_scratch_current_size);
   }
   if ((bytes > m_team_scratch_current_size) ||
       ((bytes < m_team_scratch_current_size) && (force_shrink))) {
     m_team_scratch_current_size = bytes;
-    m_team_scratch_ptr = Kokkos::kokkos_realloc<Kokkos::Experimental::HIPSpace>(
+    m_team_scratch_ptr          = Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
         m_team_scratch_ptr, m_team_scratch_current_size);
   }
   return m_team_scratch_ptr;
@@ -412,14 +399,13 @@ void HIPInternal::finalize() {
   }
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    using RecordHIP =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;
+    using RecordHIP = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace>;
 
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
 
     if (m_team_scratch_current_size > 0)
-      Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
+      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr);
 
     if (m_manage_stream && m_stream != nullptr)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
@@ -484,31 +470,29 @@ char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
 
 //----------------------------------------------------------------------------
 
-Kokkos::Experimental::HIP::size_type hip_internal_multiprocessor_count() {
+Kokkos::HIP::size_type hip_internal_multiprocessor_count() {
   return HIPInternal::singleton().m_multiProcCount;
 }
 
-Kokkos::Experimental::HIP::size_type hip_internal_maximum_warp_count() {
+Kokkos::HIP::size_type hip_internal_maximum_warp_count() {
   return HIPInternal::singleton().m_maxWarpCount;
 }
 
-std::array<Kokkos::Experimental::HIP::size_type, 3>
-hip_internal_maximum_grid_count() {
+std::array<Kokkos::HIP::size_type, 3> hip_internal_maximum_grid_count() {
   return HIPInternal::singleton().m_maxBlock;
 }
 
-Kokkos::Experimental::HIP::size_type *hip_internal_scratch_space(
-    const HIP &instance, const std::size_t size) {
+Kokkos::HIP::size_type *hip_internal_scratch_space(const HIP &instance,
+                                                   const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);
 }
 
-Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
-    const HIP &instance, const std::size_t size) {
+Kokkos::HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
+                                                   const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_flags(size);
 }
 
 }  // namespace Impl
-}  // namespace Experimental
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -516,8 +500,7 @@ Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
 namespace Kokkos {
 namespace Impl {
 void hip_device_synchronize(const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::HIP>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::HIP>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
@@ -540,9 +523,7 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
 HIP::size_type HIP::detect_device_count() {
   return HIPInternalDevices::singleton().m_hipDevCount;
 }
-}  // namespace Experimental
 }  // namespace Kokkos
