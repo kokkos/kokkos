@@ -54,7 +54,6 @@
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 enum class BlockType { Max, Preferred };
@@ -296,7 +295,6 @@ unsigned hip_get_max_team_blocksize(HIPInternal const *hip_instance,
 }
 
 }  // namespace Impl
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif

@@ -242,6 +242,12 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
     GTEST_SKIP() << "skipping since the OpenMPTarget backend doesn't implement "
                     "ZeroMemset";
 #endif
+// FIXME_OPENACC: The OpenACC backend doesn't implement ZeroMemset
+#ifdef KOKKOS_ENABLE_OPENACC
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>::value)
+    GTEST_SKIP() << "skipping since the OpenACC backend doesn't implement "
+                    "ZeroMemset";
+#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -360,4 +366,14 @@ TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
       [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
+}
+
+struct NotDefaultConstructible {
+  NotDefaultConstructible() = delete;
+};
+
+TEST(TEST_CATEGORY, view_not_default_constructible) {
+  using Space = TEST_EXECSPACE;
+  Kokkos::View<NotDefaultConstructible, Space> my_view(Kokkos::view_alloc(
+      "not_default_constructible", Kokkos::WithoutInitializing));
 }

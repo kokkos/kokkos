@@ -311,12 +311,14 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream& s, const char* const space_name,
     const SharedAllocationRecord* const root, const bool detail) {
-  const SharedAllocationRecord<void, void>* r = root;
+  // Print every node except the root, which does not represent an actual
+  // allocation.
+  const SharedAllocationRecord<void, void>* r = root->m_next;
 
   char buffer[256];
 
   if (detail) {
-    do {
+    while (r != root) {
       // Formatting dependent on sizeof(uintptr_t)
       const char* format_string;
 
@@ -339,28 +341,24 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
                r->m_alloc_ptr->m_label);
       s << buffer;
       r = r->m_next;
-    } while (r != root);
+    }
   } else {
-    do {
-      if (r->m_alloc_ptr) {
-        // Formatting dependent on sizeof(uintptr_t)
-        const char* format_string;
+    while (r != root) {
+      // Formatting dependent on sizeof(uintptr_t)
+      const char* format_string;
 
-        if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-          format_string = "%s [ 0x%.12lx + %ld ] %s\n";
-        } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-          format_string = "%s [ 0x%.12llx + %ld ] %s\n";
-        }
-
-        snprintf(buffer, 256, format_string, space_name,
-                 reinterpret_cast<uintptr_t>(r->data()), r->size(),
-                 r->m_alloc_ptr->m_label);
-      } else {
-        snprintf(buffer, 256, "%s [ 0 + 0 ]\n", space_name);
+      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
+        format_string = "%s [ 0x%.12lx + %ld ] %s\n";
+      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
+        format_string = "%s [ 0x%.12llx + %ld ] %s\n";
       }
+
+      snprintf(buffer, 256, format_string, space_name,
+               reinterpret_cast<uintptr_t>(r->data()), r->size(),
+               r->m_alloc_ptr->m_label);
       s << buffer;
       r = r->m_next;
-    } while (r != root);
+    }
   }
 }
 #else

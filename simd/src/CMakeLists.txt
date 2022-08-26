@@ -17,10 +17,10 @@ INSTALL (
 
 # We have to pass the sources in here for Tribits
 # These will get ignored for standalone CMake and a true interface library made
-KOKKOS_ADD_INTERFACE_LIBRARY(
+KOKKOS_ADD_LIBRARY(
   kokkossimd
-  HEADERS ${SIMD_HEADERS}
   SOURCES ${SIMD_SOURCES}
+  HEADERS ${SIMD_HEADERS}
 )
 KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkossimd
   ${KOKKOS_TOP_BUILD_DIR}

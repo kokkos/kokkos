@@ -90,6 +90,11 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL)
   KOKKOS_EXPORT_CMAKE_TPL(desul REQUIRED COMPONENTS atomics)
 ENDIF()
 
+IF (Kokkos_ENABLE_OPENMP)
+  find_package(OpenMP REQUIRED)
+  KOKKOS_EXPORT_CMAKE_TPL(OpenMP REQUIRED)
+ENDIF()
+
 #Convert list to newlines (which CMake doesn't always like in cache variables)
 STRING(REPLACE ";" "\n" KOKKOS_TPL_EXPORT_TEMP "${KOKKOS_TPL_EXPORTS}")
 #Convert to a regular variable

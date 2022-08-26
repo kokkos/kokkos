@@ -195,16 +195,16 @@ struct DefaultContribution<Kokkos::Cuda,
 
 #ifdef KOKKOS_ENABLE_HIP
 template <>
-struct DefaultDuplication<Kokkos::Experimental::HIP> {
+struct DefaultDuplication<Kokkos::HIP> {
   using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
-struct DefaultContribution<Kokkos::Experimental::HIP,
+struct DefaultContribution<Kokkos::HIP,
                            Kokkos::Experimental::ScatterNonDuplicated> {
   using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
-struct DefaultContribution<Kokkos::Experimental::HIP,
+struct DefaultContribution<Kokkos::HIP,
                            Kokkos::Experimental::ScatterDuplicated> {
   using type = Kokkos::Experimental::ScatterAtomic;
 };

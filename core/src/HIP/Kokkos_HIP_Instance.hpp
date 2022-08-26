@@ -53,7 +53,6 @@
 #include <mutex>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 struct HIPTraits {
@@ -88,7 +87,7 @@ class HIPInternal {
   HIPInternal &operator=(const HIPInternal &);
 
  public:
-  using size_type = ::Kokkos::Experimental::HIP::size_type;
+  using size_type = ::Kokkos::HIP::size_type;
 
   int m_hipDev                        = -1;
   int m_hipArch                       = -1;
@@ -125,9 +124,10 @@ class HIPInternal {
 
   hipDeviceProp_t m_deviceProp;
 
-  hipStream_t m_stream   = nullptr;
-  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
-      Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this));
+  hipStream_t m_stream = nullptr;
+  uint32_t m_instance_id =
+      Kokkos::Tools::Experimental::Impl::idForInstance<HIP>(
+          reinterpret_cast<uintptr_t>(this));
   bool m_manage_stream = false;
 
   // Team Scratch Level 1 Space
@@ -177,6 +177,7 @@ class HIPInternal {
 
 }  // namespace Impl
 
+namespace Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
 //   Customization point for backends

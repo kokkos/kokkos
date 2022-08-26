@@ -49,6 +49,6 @@
 
 #define TEST_CATEGORY hip_hostpinned
 #define TEST_CATEGORY_DEATH hip_hostpinned_DeathTest
-#define TEST_EXECSPACE Kokkos::Experimental::HIPHostPinnedSpace
+#define TEST_EXECSPACE Kokkos::HIPHostPinnedSpace
 
 #endif
