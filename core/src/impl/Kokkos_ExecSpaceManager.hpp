@@ -52,6 +52,7 @@
 #include <iosfwd>
 #include <map>
 #include <string>
+#include <utility>
 
 namespace {
 
@@ -83,6 +84,39 @@ using fence_t = std::enable_if_t<
     std::is_void_v<decltype(std::declval<T const&>().fence("name"))> &&
     std::is_void_v<decltype(T::impl_static_fence("name"))>>;
 
+template <class T>
+constexpr bool check_is_semiregular() {
+  static_assert(std::is_default_constructible_v<T>);
+  static_assert(std::is_copy_constructible_v<T>);
+  static_assert(std::is_move_constructible_v<T>);
+  static_assert(std::is_copy_assignable_v<T>);
+  static_assert(std::is_move_assignable_v<T>);
+  static_assert(std::is_destructible_v<T>);
+  return true;
+}
+
+template <class T>
+using equal_to_t =
+    decltype(std::declval<T const&>() == std::declval<T const&>());
+
+template <class T>
+using not_equal_to_t =
+    decltype(std::declval<T const&>() != std::declval<T const&>());
+
+template <class T>
+constexpr bool check_is_equality_comparable() {
+  using Kokkos::is_detected_exact_v;
+  static_assert(is_detected_exact_v<bool, equal_to_t, T>);
+  static_assert(is_detected_exact_v<bool, not_equal_to_t, T>);
+  return true;
+}
+
+template <class T>
+constexpr bool check_is_regular() {
+  static_assert(check_is_semiregular<T>() && check_is_equality_comparable<T>());
+  return true;
+}
+
 template <class ExecutionSpace>
 constexpr bool check_valid_execution_space() {
   using Kokkos::is_detected_v;
@@ -113,6 +147,7 @@ struct ExecSpaceBase {
 template <class ExecutionSpace>
 struct ExecSpaceDerived : ExecSpaceBase {
   static_assert(check_valid_execution_space<ExecutionSpace>());
+  static_assert(check_is_regular<ExecutionSpace>());
   void initialize(InitializationSettings const& settings) final {
     ExecutionSpace::impl_initialize(settings);
   }
