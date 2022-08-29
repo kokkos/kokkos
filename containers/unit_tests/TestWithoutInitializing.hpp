@@ -735,7 +735,10 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview_view_ctor) {
       [&](BeginFenceEvent event) {
         if (event.descriptor().find("DynamicView::resize_serial: Fence after "
                                     "copying chunks to the device") !=
-            std::string::npos)
+                std::string::npos ||
+            event.descriptor().find("Kokkos::Tools::invoke_kokkosp_callback: "
+                                    "Kokkos Profile Tool Fence") !=
+                std::string::npos)
           return MatchDiagnostic{false};
         return MatchDiagnostic{true, {"Found fence event"}};
       },
