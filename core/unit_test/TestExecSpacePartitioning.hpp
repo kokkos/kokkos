@@ -47,18 +47,46 @@ void check_distinctive(Kokkos::Experimental::SYCL exec1,
             *exec2.impl_internal_space_instance()->m_queue);
 }
 #endif
+#ifdef KOKKOS_ENABLE_OPENMP
+void check_distinctive(Kokkos::OpenMP exec1, Kokkos::OpenMP exec2) {
+  ASSERT_NE(exec1.impl_internal_space_instance(),
+            exec2.impl_internal_space_instance());
+}
+#endif
 }  // namespace
+
+#ifdef KOKKOS_ENABLE_OPENMP
+template <class Lambda1, class Lambda2>
+void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+#pragma omp parallel num_threads(2)
+  {
+    if (omp_get_thread_num() == 0) l1();
+    if (omp_get_thread_num() == 1) l2();
+  }
+}
+#else
+template <class Lambda1, class Lambda2>
+void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+  std::thread(l1);
+  std::thread(l2);
+}
+#endif
 
 void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
   check_distinctive(instances[0], instances[1]);
   int sum1, sum2;
   int N = 3910;
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<TEST_EXECSPACE>(instances[0], 0, N), SumFunctor(),
-      sum1);
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<TEST_EXECSPACE>(instances[1], 0, N), SumFunctor(),
-      sum2);
+  run_threaded_test(
+      [&]() {
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<TEST_EXECSPACE>(instances[0], 0, N),
+            SumFunctor(), sum1);
+      },
+      [&]() {
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<TEST_EXECSPACE>(instances[1], 0, N),
+            SumFunctor(), sum2);
+      });
   ASSERT_EQ(sum1, sum2);
   ASSERT_EQ(sum1, N * (N - 1) / 2);
 
