@@ -65,8 +65,6 @@ struct TestFunctorA {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
-    using value_type = typename ViewType::value_type;
-    CustomLessThanComparator<value_type> comp;
     if (m_apiPick == 0) {
       const bool result =
           KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView));
@@ -79,12 +77,16 @@ struct TestFunctorA {
     }
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
     else if (m_apiPick == 2) {
-      const bool result = KE::is_sorted(member, KE::cbegin(myRowView),
-                                        KE::cend(myRowView), comp);
+      using value_type = typename ViewType::value_type;
+      const bool result =
+          KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView),
+                        CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member),
                      [=]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 3) {
-      const bool result = KE::is_sorted(member, myRowView, comp);
+      using value_type  = typename ViewType::value_type;
+      const bool result = KE::is_sorted(member, myRowView,
+                                        CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member),
                      [=]() { m_returnsView(myRowIndex) = result; });
     }
