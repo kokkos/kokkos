@@ -71,18 +71,19 @@ struct ViewDimension;
 
 template <class T, class Dim>
 struct ViewDataType;
-}
+}  // namespace Impl
 
 namespace Experimental::Impl {
 
 /*
  * A few things to note --
- * - mdspan allows for 0-rank extents similarly to View, so we don't need special handling of this case
- * - View dynamic dimensions must be appear before static dimensions. This isn't a requirement in mdspan but
- *   won't cause an issue here
+ * - mdspan allows for 0-rank extents similarly to View, so we don't need
+ * special handling of this case
+ * - View dynamic dimensions must be appear before static dimensions. This isn't
+ * a requirement in mdspan but won't cause an issue here
  */
 
-template<std::size_t N>
+template <std::size_t N>
 struct ExtentFromDimension {
   static constexpr inline std::size_t value = N;
 };
@@ -90,58 +91,65 @@ struct ExtentFromDimension {
 /*
  * Kokkos uses a dimension of '0' to denote a dynamic dimension.
  */
-template<>
+template <>
 struct ExtentFromDimension<std::size_t{0}> {
   static constexpr inline std::size_t value = std::experimental::dynamic_extent;
 };
 
-template<std::size_t N>
+template <std::size_t N>
 struct DimensionFromExtent {
   static constexpr inline std::size_t value = N;
 };
 
-template<>
+template <>
 struct DimensionFromExtent<std::experimental::dynamic_extent> {
   static constexpr inline std::size_t value = std::size_t{0};
 };
 
-template<class SizeType, class Dimension, class Indices>
+template <class SizeType, class Dimension, class Indices>
 struct ExtentsFromDimension;
 
-template<class SizeType, class Dimension, std::size_t... Indices>
-struct ExtentsFromDimension<SizeType, Dimension, std::index_sequence<Indices...>> {
+template <class SizeType, class Dimension, std::size_t... Indices>
+struct ExtentsFromDimension<SizeType, Dimension,
+                            std::index_sequence<Indices...>> {
   using dimension_type = Dimension;
-  using type = std::experimental::extents<SizeType, ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
+  using type           = std::experimental::extents<
+      SizeType,
+      ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
 };
 
-template<class Extents, class Indices>
+template <class Extents, class Indices>
 struct DimensionsFromExtent;
 
-template<class Extents, std::size_t... Indices>
+template <class Extents, std::size_t... Indices>
 struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
   using extents_type = Extents;
-  using type = ::Kokkos::Impl::ViewDimension<DimensionFromExtent<extents_type::static_extent(Indices)>::value...>;
+  using type         = ::Kokkos::Impl::ViewDimension<
+      DimensionFromExtent<extents_type::static_extent(Indices)>::value...>;
 };
 
-template<class DataType>
+template <class DataType>
 struct ExtentsFromDataType {
   using array_analysis = ::Kokkos::Impl::ViewArrayAnalysis<DataType>;
-  using size_type = std::size_t; // Mirrors Kokkos::View's size type
+  using size_type      = std::size_t;  // Mirrors Kokkos::View's size type
   using dimension_type = typename array_analysis::dimension;
 
-  using type = typename ExtentsFromDimension<size_type, dimension_type, std::make_index_sequence<dimension_type::rank>>::type;
+  using type = typename ExtentsFromDimension<
+      size_type, dimension_type,
+      std::make_index_sequence<dimension_type::rank>>::type;
 };
 
-template<class T, class Extents>
+template <class T, class Extents>
 struct DataTypeFromExtents {
-  using extents_type = Extents;
-  using dimension_type = typename DimensionsFromExtent<Extents, std::make_index_sequence<extents_type::rank()>>::type;
+  using extents_type   = Extents;
+  using dimension_type = typename DimensionsFromExtent<
+      Extents, std::make_index_sequence<extents_type::rank()>>::type;
 
   // Will cause a compile error if it is malformed (i.e. dynamic after static)
   using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
 };
-}
-}
+}  // namespace Experimental::Impl
+}  // namespace Kokkos
 
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 
