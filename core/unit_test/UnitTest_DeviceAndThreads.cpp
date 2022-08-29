@@ -43,7 +43,6 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <filesystem>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -131,8 +130,7 @@ int print_flag(std::string const& flag) {
 int main(int argc, char* argv[]) {
   Kokkos::ScopeGuard guard(argc, argv);
   if (argc != 2) {
-    auto const filename = std::filesystem::path(argv[0]).filename().string();
-    std::cerr << "Usage: " << filename << " NAME_OF_FLAG\n";
+    std::cerr << "Usage: <executable> NAME_OF_FLAG\n";
     return EXIT_FAILURE;
   }
   int exit_code = print_flag(argv[1]);
