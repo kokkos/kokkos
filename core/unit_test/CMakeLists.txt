@@ -1065,8 +1065,24 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 
 # This test is not properly set up to run within Trilinos
 if (NOT KOKKOS_HAS_TRILINOS)
+  include(CheckCXXSourceCompiles)
+  # older versions of the GNU Standard C++ Library need to link with stdc++fs
+  # for functionality in the <filesystem> header.
+  check_cxx_source_compiles("
+    #include <ciso646>
+
+    #if !defined (__GLIBCXX__) || __GLIBCXX__ >= 20210601 // godbolt gcc 9.4
+      static_assert(false, \"don't need lstdc++fs\");
+    #endif
+
+    int main() {}"
+    KOKKOS_NEED_STDCPPFS)
+
   add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
   target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
+  if(KOKKOS_NEED_STDCPPFS)
+    target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads stdc++fs)
+  endif()
   find_package(Python3 COMPONENTS Interpreter)
   if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)

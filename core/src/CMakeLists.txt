@@ -144,19 +144,4 @@ IF(Kokkos_ENABLE_OPENMP)
   target_link_libraries(kokkoscore PUBLIC OpenMP::OpenMP_CXX)
 ENDIF()
 
-INCLUDE(CheckCXXSourceCompiles)
-CHECK_CXX_SOURCE_COMPILES("
-  #include <ciso646>
-
-  #if !defined (__GLIBCXX__) || __GLIBCXX__ >= 20210601 // godbolt gcc 9.4
-    static_assert(false, \"don't need lstdc++fs\");
-  #endif
-
-  int main() {}"
-  KOKKOS_NEED_STDCPPFS)
-
-IF(KOKKOS_NEED_STDCPPFS)
-  target_link_libraries(kokkoscore PUBLIC stdc++fs)
-ENDIF()
-
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBQUADMATH)
