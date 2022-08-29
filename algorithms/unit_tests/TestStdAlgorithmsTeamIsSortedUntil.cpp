@@ -142,7 +142,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
 
-  if (sIn == "trivialEmpty" or sIn == "trivialOneElement") {
+  if (sIn == "trivialEmpty" || sIn == "trivialOneElement") {
     // do not do anything
   }
 
