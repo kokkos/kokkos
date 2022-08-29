@@ -49,7 +49,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Core.hpp>
-#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
 #include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>

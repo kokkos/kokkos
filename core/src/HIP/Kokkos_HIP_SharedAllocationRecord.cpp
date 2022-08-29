@@ -48,7 +48,7 @@
 
 #include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
-#include <Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP.hpp>
 
 namespace Kokkos {
 namespace Impl {

@@ -50,7 +50,7 @@
 
 #include <HIP/Kokkos_HIP_Locks.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
-#include <Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP.hpp>
 
 #include <hip/hip_runtime.h>
 

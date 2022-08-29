@@ -46,10 +46,8 @@
 #define KOKKOS_DECLARE_HIP_HPP
 
 #if defined(KOKKOS_ENABLE_HIP)
-#include <Kokkos_HIP.hpp>
-#include <Kokkos_HIP_Space.hpp>
-#include <Kokkos_Parallel.hpp>
-
+#include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
 #include <HIP/Kokkos_HIP_Half_Impl_Type.hpp>
 #include <HIP/Kokkos_HIP_Half_Conversion.hpp>

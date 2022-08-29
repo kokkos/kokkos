@@ -52,8 +52,6 @@ static_assert(false,
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined(KOKKOS_ENABLE_HIP)
-
 #include <iosfwd>
 #include <typeinfo>
 #include <string>
@@ -377,5 +375,4 @@ struct MemorySpaceAccess<HIPManagedSpace, HIPHostPinnedSpace> {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif /* #if defined( KOKKOS_ENABLE_HIP ) */
 #endif /* #define KOKKOS_HIPSPACE_HPP */

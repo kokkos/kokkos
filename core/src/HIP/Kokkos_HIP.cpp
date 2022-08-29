@@ -45,7 +45,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 
-#include <Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 
 #include <impl/Kokkos_DeviceManagement.hpp>

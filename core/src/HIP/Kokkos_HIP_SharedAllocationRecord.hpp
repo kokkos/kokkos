@@ -45,7 +45,7 @@
 #ifndef KOKKOS_HIP_SHARED_ALLOCATION_RECORD_HPP
 #define KOKKOS_HIP_SHARED_ALLOCATION_RECORD_HPP
 
-#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 
 namespace Kokkos {
 namespace Impl {

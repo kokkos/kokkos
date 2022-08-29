@@ -52,10 +52,8 @@ static_assert(false,
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined(KOKKOS_ENABLE_HIP)
-
 #include <Kokkos_Layout.hpp>
-#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 
 #include <hip/hip_runtime_api.h>
 
@@ -190,5 +188,4 @@ struct ZeroMemset<HIP, DT, DP...> {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif
 #endif

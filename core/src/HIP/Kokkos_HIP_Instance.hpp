@@ -47,7 +47,7 @@
 #ifndef KOKKOS_HIP_INSTANCE_HPP
 #define KOKKOS_HIP_INSTANCE_HPP
 
-#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 
 #include <mutex>
