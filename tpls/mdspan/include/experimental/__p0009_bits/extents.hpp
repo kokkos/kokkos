@@ -142,7 +142,7 @@ public:
   template <size_t... Idxs>
   MDSPAN_FORCE_INLINE_FUNCTION
   static constexpr
-  index_type _static_extent_impl(size_t n, std::integer_sequence<size_t, Idxs...>) noexcept {
+  std::size_t _static_extent_impl(size_t n, std::integer_sequence<size_t, Idxs...>) noexcept {
     return _MDSPAN_FOLD_PLUS_RIGHT(((Idxs == n) ? Extents : 0), /* + ... + */ 0);
   }
 

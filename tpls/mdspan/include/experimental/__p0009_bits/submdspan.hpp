@@ -295,7 +295,7 @@ struct __assign_op_slice_handler<
   template <size_t _OldStaticExtent, size_t _OldStaticStride, class IntegerType, IntegerType Value0>
   MDSPAN_FORCE_INLINE_FUNCTION // NOLINT (misc-unconventional-assign-operator)
   _MDSPAN_CONSTEXPR_14 auto
-  operator=(__slice_wrap<_OldStaticExtent, _OldStaticStride, std::integral_constant<IntegerType, Value0>>&& __slice) noexcept
+  operator=(__slice_wrap<_OldStaticExtent, _OldStaticStride, std::integral_constant<IntegerType, Value0>>&&) noexcept
     -> __assign_op_slice_handler<
          _IndexT,
          typename _PreserveLayoutAnalysis::encounter_scalar,
