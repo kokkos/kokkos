@@ -55,8 +55,9 @@ template <class IndexType, class Functor>
 void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
                                    IndexType begin, IndexType end,
                                    Functor afunctor, int async_arg) {
-  // Create a local copy of the functor to avoid errors due to incorect scope
-  // analysis.
+  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
+  // analysis)
+  // NVC++-S-1067-Cannot determine bounds for array - functor
   auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
@@ -79,8 +80,9 @@ template <class IndexType, class Functor>
 void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int chunk_size,
                                    IndexType begin, IndexType end,
                                    Functor afunctor, int async_arg) {
-  // Create a local copy of the functor to avoid errors due to incorect scope
-  // analysis.
+  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
+  // analysis)
+  // NVC++-S-1067-Cannot determine bounds for array - functor
   auto const functor(afunctor);
   if (chunk_size >= 1) {
 // clang-format off
