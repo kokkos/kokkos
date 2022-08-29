@@ -114,7 +114,7 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_IMPL_MDSPAN)
   MESSAGE(STATUS "Experimental mdspan support is enabled")
-  
+
   # Some compilers now include mdspan... we just flag on their version
   # for now until we can get some compiler detection support
   include(CheckIncludeFileCXX)
