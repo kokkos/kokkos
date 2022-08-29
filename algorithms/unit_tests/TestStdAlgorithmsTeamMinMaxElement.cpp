@@ -88,7 +88,7 @@ struct TestFunctorA {
             KE::distance(KE::begin(myRowView), itPair.second);
       });
     }
-
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
     else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
       auto itPair =
@@ -113,6 +113,7 @@ struct TestFunctorA {
             KE::distance(KE::begin(myRowView), itPair.second);
       });
     }
+#endif
   }
 };
 

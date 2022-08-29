@@ -96,7 +96,7 @@ struct TestFunctorA {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
-
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
     else if (m_apiPick == 2) {
       auto it = KE::is_sorted_until(member, KE::cbegin(myRowView),
                                     KE::cend(myRowView),
@@ -114,6 +114,7 @@ struct TestFunctorA {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
+#endif
   }
 };
 
