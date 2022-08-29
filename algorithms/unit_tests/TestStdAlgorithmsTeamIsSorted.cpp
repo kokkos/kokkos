@@ -76,7 +76,9 @@ struct TestFunctorA {
       const bool result = KE::is_sorted(member, myRowView);
       Kokkos::single(Kokkos::PerTeam(member),
                      [=]() { m_returnsView(myRowIndex) = result; });
-    } else if (m_apiPick == 2) {
+    }
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
+    else if (m_apiPick == 2) {
       const bool result = KE::is_sorted(member, KE::cbegin(myRowView),
                                         KE::cend(myRowView), comp);
       Kokkos::single(Kokkos::PerTeam(member),
@@ -86,6 +88,7 @@ struct TestFunctorA {
       Kokkos::single(Kokkos::PerTeam(member),
                      [=]() { m_returnsView(myRowIndex) = result; });
     }
+#endif
   }
 };
 
@@ -185,7 +188,11 @@ template <class LayoutTag, class ValueType>
 void run_all_scenarios(bool makeDataSortedOnPurpose) {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 5153}) {
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
       for (int apiId : {0, 1, 2, 3}) {
+#else
+      for (int apiId : {0, 1}) {
+#endif
         test_A<LayoutTag, ValueType>(numTeams, numCols, apiId,
                                      makeDataSortedOnPurpose);
       }
@@ -195,19 +202,15 @@ void run_all_scenarios(bool makeDataSortedOnPurpose) {
 
 TEST(std_algorithms_is_sorted_team_test,
      test_data_almost_certainly_not_sorted) {
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
   run_all_scenarios<DynamicTag, double>(false);
   run_all_scenarios<StridedTwoRowsTag, double>(false);
   run_all_scenarios<StridedThreeRowsTag, unsigned>(false);
-#endif
 }
 
 TEST(std_algorithms_is_sorted_team_test, test_data_certainly_sorted) {
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
   run_all_scenarios<DynamicTag, double>(true);
   run_all_scenarios<StridedTwoRowsTag, double>(true);
   run_all_scenarios<StridedThreeRowsTag, unsigned>(true);
-#endif
 }
 
 }  // namespace TeamIsSorted
