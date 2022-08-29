@@ -106,7 +106,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 
  public:
   inline void execute() const {
-    if (OpenMP::in_parallel()) {
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
       exec_range(m_functor, m_policy.begin(), m_policy.end());
       return;
     }
@@ -209,7 +210,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    if (OpenMP::in_parallel()) {
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
       ParallelFor::exec_range(m_mdr_policy, m_functor, m_policy.begin(),
                               m_policy.end());
       return;
