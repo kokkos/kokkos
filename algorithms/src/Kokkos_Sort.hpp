@@ -549,24 +549,6 @@ struct BinOp3D {
 
 namespace Impl {
 
-template <class ViewType, class ExecutionSpace>
-bool try_std_sort(ViewType view, const ExecutionSpace& exec) {
-  bool possible    = true;
-  size_t stride[8] = {view.stride_0(), view.stride_1(), view.stride_2(),
-                      view.stride_3(), view.stride_4(), view.stride_5(),
-                      view.stride_6(), view.stride_7()};
-  possible         = possible &&
-             SpaceAccessibility<HostSpace,
-                                typename ViewType::memory_space>::accessible;
-  possible = possible && (ViewType::Rank == 1);
-  possible = possible && (stride[0] == 1);
-  if (possible) {
-    exec.fence("Kokkos::sort: Fence before sorting on the host");
-    std::sort(view.data(), view.data() + view.extent(0));
-  }
-  return possible;
-}
-
 template <class ViewType>
 struct min_max_functor {
   using minmax_scalar =
@@ -586,11 +568,7 @@ struct min_max_functor {
 
 template <class ExecutionSpace, class ViewType>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType const& view,
-    bool const always_use_kokkos_sort = false) {
-  if (!always_use_kokkos_sort) {
-    if (Impl::try_std_sort(view, exec)) return;
-  }
+    const ExecutionSpace& exec, ViewType const& view) {
   using CompType = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
@@ -629,9 +607,9 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 }
 
 template <class ViewType>
-void sort(ViewType const& view, bool const always_use_kokkos_sort = false) {
+void sort(ViewType const& view) {
   typename ViewType::execution_space exec;
-  sort(exec, view, always_use_kokkos_sort);
+  sort(exec, view);
   exec.fence("Kokkos::Sort: fence after sorting");
 }
 
