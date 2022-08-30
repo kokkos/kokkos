@@ -86,25 +86,25 @@ struct TestFunctorA {
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const ReturnViewType returnsView,
-	       ValueType threshold, int apiPick)
-      : m_view(view), m_returnsView(returnsView),
-	m_threshold(threshold), m_apiPick(apiPick) {}
+               ValueType threshold, int apiPick)
+      : m_view(view),
+        m_returnsView(returnsView),
+        m_threshold(threshold),
+        m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
       const bool result = KE::is_partitioned(member, KE::cbegin(myRowView),
-					KE::cend(myRowView), predicate);
+                                             KE::cend(myRowView), predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
                      [=]() { m_returnsView(myRowIndex) = result; });
-    }
-    else if (m_apiPick == 1) {
+    } else if (m_apiPick == 1) {
       const bool result = KE::is_partitioned(member, myRowView, predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
@@ -115,15 +115,13 @@ struct TestFunctorA {
 
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
-            const std::string& sIn)
-{
-
+            const std::string& sIn) {
   /* description:
      use a rank-2 view randomly filled with values in a range (a,b)
      and run a team-level is_partitioned with predicate = IsGreaterThanValue
      where threshold is set to a number larger than b above
    */
-  const auto threshold = static_cast<ValueType>(1103);
+  const auto threshold           = static_cast<ValueType>(1103);
   const auto valueForSureGreater = static_cast<ValueType>(2103);
   const auto valueForSureSmaller = static_cast<ValueType>(111);
 
@@ -163,12 +161,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
     Kokkos::fill_random(dataView_dc_h, pool, ValueType(0), ValueType(101));
   }
 
-  else if (sIn == "random")
-  {
+  else if (sIn == "random") {
     // randomly select a location and make all values before that
     // larger than threshol and all values after to be smaller than threshold
     // so that this picked location does partition the range
-    UnifDist<int> indexProducer(0, numCols-1, 3432779);
+    UnifDist<int> indexProducer(0, numCols - 1, 3432779);
     for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
       const std::size_t a = indexProducer();
       for (std::size_t j = 0; j < a; ++j) {
@@ -208,9 +205,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
 
   for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
-    const bool stdResult = std::is_partitioned(KE::cbegin(myRow),
-					       KE::cend(myRow),
-					       predicate);
+    const bool stdResult =
+        std::is_partitioned(KE::cbegin(myRow), KE::cend(myRow), predicate);
     // our result must match std
     EXPECT_TRUE(stdResult == returnView_h(i));
   }
@@ -221,9 +217,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
 }
 
 template <class LayoutTag, class ValueType>
-void run_all_scenarios(const std::string& name,
-		       const std::vector<int>& cols)
-{
+void run_all_scenarios(const std::string& name, const std::vector<int>& cols) {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : cols) {
       for (int apiId : {0}) {
@@ -233,8 +227,7 @@ void run_all_scenarios(const std::string& name,
   }
 }
 
-TEST(std_algorithms_is_partitioned_team_test, empty)
-{
+TEST(std_algorithms_is_partitioned_team_test, empty) {
   const std::string name      = "trivialEmpty";
   const std::vector<int> cols = {0};
   run_all_scenarios<DynamicTag, double>(name, cols);
@@ -242,8 +235,7 @@ TEST(std_algorithms_is_partitioned_team_test, empty)
   run_all_scenarios<StridedThreeRowsTag, int>(name, cols);
 }
 
-TEST(std_algorithms_is_partitioned_team_test, all_true)
-{
+TEST(std_algorithms_is_partitioned_team_test, all_true) {
   const std::string name      = "allTrue";
   const std::vector<int> cols = {13, 101, 1444, 5153};
   run_all_scenarios<DynamicTag, double>(name, cols);
@@ -251,8 +243,7 @@ TEST(std_algorithms_is_partitioned_team_test, all_true)
   run_all_scenarios<StridedThreeRowsTag, int>(name, cols);
 }
 
-TEST(std_algorithms_is_partitioned_team_test, all_false)
-{
+TEST(std_algorithms_is_partitioned_team_test, all_false) {
   const std::string name      = "allFalse";
   const std::vector<int> cols = {13, 101, 1444, 5153};
   run_all_scenarios<DynamicTag, double>(name, cols);
@@ -260,8 +251,7 @@ TEST(std_algorithms_is_partitioned_team_test, all_false)
   run_all_scenarios<StridedThreeRowsTag, int>(name, cols);
 }
 
-TEST(std_algorithms_is_partitioned_team_test, random)
-{
+TEST(std_algorithms_is_partitioned_team_test, random) {
   const std::string name      = "random";
   const std::vector<int> cols = {13, 101, 1444, 5153};
   run_all_scenarios<DynamicTag, double>(name, cols);
