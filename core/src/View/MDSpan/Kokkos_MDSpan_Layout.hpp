@@ -87,17 +87,28 @@ class MDSpanLayoutLeft {
   constexpr const extents_type &extents() const noexcept { return m_extents; }
 
   template <class... Indices>
-  constexpr size_type operator()(Indices... idxs) const noexcept
-  {
-    // We don't define dimensions past 8 but hopefully this should
-    // give a better error rather than a huge list of overload candidates failing
-    static_assert(sizeof...(Indices) <= 8, "Kokkos dimensions are limited to <= 8");
-    return m_offset(idxs...);
+  constexpr size_type operator()(Indices... idxs) const noexcept {
+    // We don't define dimension counts past 8 but hopefully this should
+    // give a better error rather than a huge list of overload candidates
+    // failing
+    static_assert(sizeof...(Indices) <= 8,
+                  "Kokkos dimensions are limited to <= 8");
+    return m_offset(static_cast<size_type>(idxs)...);
+  }
+
+  constexpr size_type required_span_size() const noexcept {
+    return m_offset.span();
+  }
+
+  constexpr bool is_unique() const noexcept { return true; }
+
+  constexpr bool is_contiguous() const noexcept {
+    return m_offset.span_is_contiguous();
   }
 
  private:
-
-  using dimension_type = typename Impl::DimensionsFromExtents<extents_type>::type;
+  using dimension_type =
+      typename Impl::DimensionsFromExtents<extents_type>::type;
   using offset_type = ::Kokkos::Impl::ViewOffset<dimension_type, layout_type>;
 
   // This assumption should hold since we are using size_t everywhere in Kokkos
