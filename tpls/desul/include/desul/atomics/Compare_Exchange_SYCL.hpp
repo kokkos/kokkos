@@ -13,7 +13,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include "desul/atomics/SYCLConversions.hpp"
 #include "desul/atomics/Common.hpp"
 
-// FIXME_SYCL
+// FIXME_SYCL SYCL2020 dictates that <sycl/sycl.hpp> is the header to include
+// but icpx 2022.1.0 and earlier versions only provide <CL/sycl.hpp>
 #if __has_include(<sycl/sycl.hpp>)
 #include <sycl/sycl.hpp>
 #else
