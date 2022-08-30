@@ -56,6 +56,10 @@ static_assert(false,
 #include <cstddef>
 #include <impl/Kokkos_Traits.hpp>
 
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+#include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
+#endif
+
 namespace Kokkos {
 
 enum { ARRAY_LAYOUT_MAX_RANK = 8 };

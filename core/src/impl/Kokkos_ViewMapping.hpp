@@ -60,6 +60,7 @@
 #include <impl/Kokkos_Atomic_View.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_StringManipulation.hpp>
+#include <impl/Kokkos_ViewMapping_fwd.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -866,11 +867,6 @@ struct ViewDataAnalysis {
 
 namespace Kokkos {
 namespace Impl {
-
-template <class Dimension, class Layout, class Enable = void>
-struct ViewOffset {
-  using is_mapping_plugin = std::false_type;
-};
 
 //----------------------------------------------------------------------------
 // LayoutLeft AND ( 1 >= rank OR 0 == rank_dynamic ) : no padding / striding

@@ -111,12 +111,18 @@ struct ExtentsFromDimension<Dimension, std::index_sequence<Indices...>> {
 };
 
 template <class Extents, class Indices>
-struct DimensionsFromExtent;
+struct DimensionsFromExtentsImpl;
 
 template <class Extents, std::size_t... Indices>
-struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
+struct DimensionsFromExtentsImpl<Extents, std::index_sequence<Indices...>> {
   using type         = ::Kokkos::Impl::ViewDimension<
       DimensionFromExtent<Extents::static_extent(Indices)>::value...>;
+};
+
+template <class Extents>
+struct DimensionsFromExtents {
+  using extents_type   = Extents;
+  using type = typename DimensionsFromExtentsImpl<extents_type, std::make_index_sequence<extents_type::rank()>>::type;
 };
 
 template <class DataType>
@@ -131,8 +137,7 @@ struct ExtentsFromDataType {
 template <class T, class Extents>
 struct DataTypeFromExtents {
   using extents_type   = Extents;
-  using dimension_type = typename DimensionsFromExtent<
-      Extents, std::make_index_sequence<extents_type::rank()>>::type;
+  using dimension_type = typename DimensionsFromExtents<extents_type>::type;
 
   // Will cause a compile error if it is malformed (i.e. dynamic after static)
   using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
