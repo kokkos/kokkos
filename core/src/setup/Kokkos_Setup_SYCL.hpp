@@ -54,7 +54,12 @@
 #define SYCL_FALLBACK_ASSERT 1
 #endif
 
+// FIXME_SYCL
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
 #include <CL/sycl.hpp>
+#endif
 
 #ifdef __SYCL_DEVICE_ONLY__
 #define KOKKOS_IMPL_DO_NOT_USE_PRINTF(format, ...)                \
