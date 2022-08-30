@@ -124,7 +124,7 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
     // openmp backend does not have parallel_scan with TeamThreadRange,
     // so we solve for now serially in that case
 
-#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_OPENMP)
 
     const std::size_t num_elements =
         Kokkos::Experimental::distance(first, last);
