@@ -121,10 +121,20 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
   if (first == last) {
     return d_first;
   } else {
-    // openmp backend does not have parallel_scan with TeamThreadRange,
-    // so we solve for now serially in that case
+    // FIXME: some backends do not have parallel_scan with TeamThreadRange,
+    // so for now only use it for cuda to ensure things are ok
+    // but later on we have to revise all this to guard only
+    // what really needs to be guarded
 
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined(KOKKOS_ENABLE_CUDA)
+    const auto num_elements = Kokkos::Experimental::distance(first, last);
+    typename InputIterator::difference_type count = 0;
+    ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+                            // use CTAD
+                            StdCopyIfFunctor(first, d_first, pred), count);
+    teamHandle.team_barrier();
+
+#else
 
     const std::size_t num_elements =
         Kokkos::Experimental::distance(first, last);
@@ -139,14 +149,6 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
     }
     // no need for barrier because calling broadcast implicitly blocks
     teamHandle.team_broadcast(count, 0);
-
-#else
-    const auto num_elements = Kokkos::Experimental::distance(first, last);
-    typename InputIterator::difference_type count = 0;
-    ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
-                            // use CTAD
-                            StdCopyIfFunctor(first, d_first, pred), count);
-    teamHandle.team_barrier();
 #endif
 
     return d_first + count;
