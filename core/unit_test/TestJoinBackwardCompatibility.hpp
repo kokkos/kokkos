@@ -54,7 +54,7 @@ enum MyErrorCode {
   error_operator_plus_equal          = 0b001,
   error_operator_plus_equal_volatile = 0b010,
   error_join_volatile                = 0b100,
-  expected_join_volatile =            0b1000
+  expected_join_volatile             = 0b1000
 
 };
 
@@ -151,7 +151,8 @@ void test_join_backward_compatibility() {
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
   MyJoinBackCompatValueType result3;
-  Kokkos::parallel_reduce(policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result3);
+  Kokkos::parallel_reduce(
+      policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result3);
   ASSERT_EQ(result3.err, expected_join_volatile);
 #endif
 }
