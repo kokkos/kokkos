@@ -53,7 +53,8 @@ enum MyErrorCode {
   no_error                           = 0b000,
   error_operator_plus_equal          = 0b001,
   error_operator_plus_equal_volatile = 0b010,
-  error_join_volatile                = 0b100
+  error_join_volatile                = 0b100,
+  expected_join_volatile =            0b1000
 
 };
 
@@ -116,7 +117,7 @@ struct ReducerWithJoinThatTakesVolatileQualifiedArgs {
   using value_type = MyJoinBackCompatValueType;
   KOKKOS_FUNCTION void join(MyJoinBackCompatValueType volatile &x,
                             MyJoinBackCompatValueType const volatile &y) const {
-    x.err = x.err | y.err;
+    x.err = x.err | y.err | expected_join_volatile;
   }
   KOKKOS_FUNCTION void operator()(int, MyJoinBackCompatValueType &) const {}
   KOKKOS_FUNCTION ReducerWithJoinThatTakesVolatileQualifiedArgs() {}
@@ -141,6 +142,18 @@ void test_join_backward_compatibility() {
       static_cast<MyJoinBackCompatValueType const volatile &>(result);
   ASSERT_EQ(result.err,
             error_operator_plus_equal | error_operator_plus_equal_volatile);
+
+  MyJoinBackCompatValueType result2;
+  volatile MyJoinBackCompatValueType vol_result;
+  ReducerWithJoinThatTakesVolatileQualifiedArgs my_red;
+  my_red.join(vol_result, result2);
+  ASSERT_EQ(vol_result.err, expected_join_volatile);
+
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
+  MyJoinBackCompatValueType result3;
+  Kokkos::parallel_reduce(policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result3);
+  ASSERT_EQ(result3.err, expected_join_volatile);
+#endif
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
