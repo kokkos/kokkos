@@ -193,6 +193,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamMinMaxElement
 	StdAlgorithmsTeamIsSorted
 	StdAlgorithmsTeamIsSortedUntil
+	StdAlgorithmsTeamIsPartitioned
 	)
       list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
     endforeach()
