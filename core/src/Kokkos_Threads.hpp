@@ -161,6 +161,9 @@ class Threads {
   static const char* name();
   //@}
   //----------------------------------------
+ private:
+  friend bool operator==(Threads const&, Threads const&) { return true; }
+  friend bool operator!=(Threads const&, Threads const&) { return false; }
 };
 
 namespace Tools {
