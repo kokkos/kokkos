@@ -585,7 +585,7 @@ std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
                                     memory_space>::accessible)>
 sort(const ExecutionSpace& exec,
      const Kokkos::View<DataType, Properties...>& view) {
-  using ViewType = typename Kokkos::View<DataType, Properties...>;
+  using ViewType = Kokkos::View<DataType, Properties...>;
   using CompType = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
