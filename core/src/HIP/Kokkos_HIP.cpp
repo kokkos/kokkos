@@ -44,6 +44,7 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
 
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
@@ -136,4 +137,3 @@ int g_hip_space_factory_initialized = initialize_space_factory<HIP>("150_HIP");
 }  // namespace Impl
 
 }  // namespace Kokkos
-#endif
