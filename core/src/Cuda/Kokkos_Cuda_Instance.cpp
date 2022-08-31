@@ -470,7 +470,6 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
 
     m_shmemPerSM       = cudaProp.sharedMemPerMultiprocessor;
     m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
-    m_regsPerSM        = cudaProp.regsPerMultiprocessor;
     m_maxBlocksPerSM =
         m_cudaArch < 500
             ? 16

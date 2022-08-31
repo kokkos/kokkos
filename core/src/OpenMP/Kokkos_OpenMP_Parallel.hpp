@@ -793,13 +793,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
 
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
   OpenMPInternal* m_instance;
   const FunctorType m_functor;
   const Policy m_policy;
-  ReturnType& m_returnvalue;
+  const pointer_type m_result_ptr;
 
   template <class TagType>
   inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
@@ -877,20 +878,25 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           m_functor, range.begin(), range.end(), update_base, true);
 
       if (omp_get_thread_num() == omp_get_num_threads() - 1) {
-        m_returnvalue = update_base;
+        *m_result_ptr = update_base;
       }
     }
   }
 
   //----------------------------------------
 
-  inline ParallelScanWithTotal(const FunctorType& arg_functor,
-                               const Policy& arg_policy,
-                               ReturnType& arg_returnvalue)
+  template <class ViewType>
+  ParallelScanWithTotal(const FunctorType& arg_functor,
+                        const Policy& arg_policy,
+                        const ViewType& arg_result_view)
       : m_instance(nullptr),
         m_functor(arg_functor),
         m_policy(arg_policy),
-        m_returnvalue(arg_returnvalue) {
+        m_result_ptr(arg_result_view.data()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::OpenMP parallel_scan result must be host-accessible!");
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {

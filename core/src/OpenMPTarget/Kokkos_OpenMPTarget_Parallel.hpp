@@ -542,6 +542,9 @@ class ParallelScanOpenMPTargetBase {
   const FunctorType m_functor;
   const Policy m_policy;
 
+  value_type* m_result_ptr;
+  const bool m_result_ptr_device_accessible;
+
   template <class TagType>
   std::enable_if_t<std::is_void<TagType>::value> call_with_tag(
       const FunctorType& f, const idx_type& idx, value_type& val,
@@ -648,6 +651,8 @@ class ParallelScanOpenMPTargetBase {
             local_offset_value = offset_value;
           if (idx < N)
             call_with_tag<WorkTag>(a_functor, idx, local_offset_value, true);
+          if (idx == N - 1 && m_result_ptr_device_accessible)
+            *m_result_ptr = local_offset_value;
         }
       }
     }
@@ -677,8 +682,13 @@ class ParallelScanOpenMPTargetBase {
   //----------------------------------------
 
   ParallelScanOpenMPTargetBase(const FunctorType& arg_functor,
-                               const Policy& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+                               const Policy& arg_policy,
+                               pointer_type arg_result_ptr           = nullptr,
+                               bool arg_result_ptr_device_accessible = false)
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_result_ptr(arg_result_ptr),
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 
   //----------------------------------------
 };
@@ -726,7 +736,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using base_t =
       ParallelScanOpenMPTargetBase<FunctorType, ReturnType, Traits...>;
   using value_type = typename base_t::value_type;
-  value_type& m_returnvalue;
 
  public:
   void execute() const {
@@ -750,18 +759,24 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
       base_t::impl_execute(element_values, chunk_values, count);
 
-      const int size = base_t::Analysis::value_size(base_t::m_functor);
-      DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace>(
-          &m_returnvalue, chunk_values.data() + (n_chunks - 1), size);
-    } else {
-      m_returnvalue = 0;
+      if (!base_t::m_result_ptr_device_accessible) {
+        const int size = base_t::Analysis::value_size(base_t::m_functor);
+        DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace>(
+            base_t::m_result_ptr, chunk_values.data() + (n_chunks - 1), size);
+      }
+    } else if (!base_t::m_result_ptr_device_accessible) {
+      *base_t::m_result_ptr = 0;
     }
   }
 
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename base_t::Policy& arg_policy,
-                        ReturnType& arg_returnvalue)
-      : base_t(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+                        const ViewType& arg_result_view)
+      : base_t(arg_functor, arg_policy, arg_result_view.data(),
+               MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                                 typename ViewType::memory_space>::accessible) {
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos

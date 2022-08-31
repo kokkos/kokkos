@@ -694,6 +694,13 @@ class HIP {
   uint32_t impl_instance_id() const noexcept;
 
  private:
+  friend bool operator==(HIP const& lhs, HIP const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(HIP const& lhs, HIP const& rhs) {
+    return !(lhs == rhs);
+  }
   Kokkos::Impl::HostSharedPtr<Impl::HIPInternal> m_space_instance;
 };
 

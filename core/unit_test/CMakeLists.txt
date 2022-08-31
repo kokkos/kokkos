@@ -1063,23 +1063,26 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   ARGS "one 2 THREE"
 )
 
-add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
-target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
-find_package(Python3 COMPONENTS Interpreter)
-if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
-    set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
-  endif()
-  file(GENERATE
-    OUTPUT $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
-    INPUT TestDeviceAndThreads.py
-    ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
-  )
-  if(NOT Kokkos_ENABLE_OPENMPTARGET)  # FIXME_OPENMPTARGET does not select the right device
-    add_test(
-      NAME KokkosCore_UnitTest_DeviceAndThreads
-      COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+# This test is not properly set up to run within Trilinos
+if (NOT KOKKOS_HAS_TRILINOS)
+  add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
+  target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
+  find_package(Python3 COMPONENTS Interpreter)
+  if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
+      set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
+    endif()
+    file(GENERATE
+      OUTPUT $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+      INPUT TestDeviceAndThreads.py
+      ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
     )
+    if(NOT Kokkos_ENABLE_OPENMPTARGET)  # FIXME_OPENMPTARGET does not select the right device
+      add_test(
+        NAME KokkosCore_UnitTest_DeviceAndThreads
+        COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+      )
+    endif()
   endif()
 endif()
 

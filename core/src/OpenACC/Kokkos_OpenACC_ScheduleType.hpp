@@ -42,36 +42,28 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_PHYSICAL_LAYOUT_HPP
-#define KOKKOS_PHYSICAL_LAYOUT_HPP
+#ifndef KOKKOS_OPENACC_SCHEDULE_TYPE_HPP
+#define KOKKOS_OPENACC_SCHEDULE_TYPE_HPP
 
-#include <Kokkos_View.hpp>
+#include <Kokkos_Concepts.hpp>
+#include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
-struct PhysicalLayout {
-  enum LayoutType { Left, Right, Scalar, Error };
-  LayoutType layout_type;
-  int rank;
-  long long int stride[9];  // distance between two neighboring elements in a
-                            // given dimension
-
-  template <class T, class L, class D, class M>
-  PhysicalLayout(const View<T, L, D, M>& view)
-      : layout_type(
-            is_same<typename View<T, L, D, M>::array_layout, LayoutLeft>::value
-                ? Left
-                : (is_same<typename View<T, L, D, M>::array_layout,
-                           LayoutRight>::value
-                       ? Right
-                       : Error)),
-        rank(view.Rank) {
-    for (int i = 0; i < 9; i++) stride[i] = 0;
-    view.stride(stride);
-  }
+template <class Policy, class ScheduleType = typename Policy::schedule_type>
+struct OpenACCSchedule {
+  static_assert(is_execution_policy_v<Policy>);
+  static_assert(std::is_void_v<ScheduleType> ||
+                std::is_same_v<ScheduleType, Schedule<Static>> ||
+                std::is_same_v<ScheduleType, Schedule<Dynamic>>);
+  using type =
+      std::conditional_t<std::is_same_v<ScheduleType, Schedule<Static>>,
+                         Schedule<Static>, Schedule<Dynamic>>;
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+template <class Policy>
+using OpenACCScheduleType = typename OpenACCSchedule<Policy>::type;
+
+}  // namespace Kokkos::Experimental::Impl
+
 #endif

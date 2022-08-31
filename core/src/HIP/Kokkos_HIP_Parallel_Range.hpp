@@ -441,6 +441,7 @@ class ParallelScanHIPBase {
                                     FunctorType, ValueType>;
 
  public:
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
@@ -456,6 +457,8 @@ class ParallelScanHIPBase {
 
   const FunctorType m_functor;
   const Policy m_policy;
+  const pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
   size_type m_final          = false;
@@ -595,6 +598,9 @@ class ParallelScanHIPBase {
                 reinterpret_cast<pointer_type>(shared_prefix)),
             true);
       }
+      if (iwork + 1 == m_policy.end() && m_policy.end() == range.end() &&
+          m_result_ptr_device_accessible)
+        *m_result_ptr = *reinterpret_cast<pointer_type>(shared_prefix);
     }
   }
 
@@ -665,9 +671,13 @@ class ParallelScanHIPBase {
     }
   }
 
-  ParallelScanHIPBase(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelScanHIPBase(const FunctorType& arg_functor, const Policy& arg_policy,
+                      pointer_type arg_result_ptr,
+                      bool arg_result_ptr_device_accessible)
       : m_functor(arg_functor),
         m_policy(arg_policy),
+        m_result_ptr(arg_result_ptr),
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
         m_shared_memory_lock(m_policy.space()
                                  .impl_internal_space_instance()
                                  ->m_mutexSharedMemory) {}
@@ -684,7 +694,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP>
 
   ParallelScan(const FunctorType& arg_functor,
                const typename Base::Policy& arg_policy)
-      : Base(arg_functor, arg_policy) {}
+      : Base(arg_functor, arg_policy, nullptr, false) {}
 
   inline unsigned local_block_size(const FunctorType& f) {
     // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or
@@ -713,25 +723,26 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Base = ParallelScanHIPBase<FunctorType, ReturnType, Traits...>;
   using Base::operator();
 
-  ReturnType& m_returnvalue;
-
   inline void execute() {
     Base::impl_execute();
 
     const auto nwork = Base::m_policy.end() - Base::m_policy.begin();
-    if (nwork) {
+    if (nwork && !Base::m_result_ptr_device_accessible) {
       const int size = Base::Analysis::value_size(Base::m_functor);
       DeepCopy<HostSpace, HIPSpace, HIP>(
-          Base::m_policy.space(), &m_returnvalue,
+          Base::m_policy.space(), Base::m_result_ptr,
           Base::m_scratch_space + (Base::m_grid_x - 1) * size / sizeof(int),
           size);
     }
   }
 
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename Base::Policy& arg_policy,
-                        ReturnType& arg_returnvalue)
-      : Base(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+                        const ViewType& arg_result_view)
+      : Base(arg_functor, arg_policy, arg_result_view.data(),
+             MemorySpaceAccess<HIPSpace,
+                               typename ViewType::memory_space>::accessible) {}
 
   inline unsigned local_block_size(const FunctorType& f) {
     // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or
