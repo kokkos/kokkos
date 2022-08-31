@@ -78,13 +78,9 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <
-  class SourceViewType,
-  class DestViewType,
-  class DistancesViewType,
-  class ValueType>
-struct TestFunctorA
-{
+template <class SourceViewType, class DestViewType, class DistancesViewType,
+          class ValueType>
+struct TestFunctorA {
   SourceViewType m_sourceView;
 
   DestViewType m_destTrueView;
@@ -96,71 +92,63 @@ struct TestFunctorA
   ValueType m_threshold;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType sourceView,
-	       const DestViewType destTrueView,
-	       const DestViewType destFalseView,
-	       const DistancesViewType distancesTrueView,
-	       const DistancesViewType distancesFalseView,
-               ValueType threshold,
-	       int apiPick)
+  TestFunctorA(const SourceViewType sourceView, const DestViewType destTrueView,
+               const DestViewType destFalseView,
+               const DistancesViewType distancesTrueView,
+               const DistancesViewType distancesFalseView, ValueType threshold,
+               int apiPick)
       : m_sourceView(sourceView),
-	m_destTrueView(destTrueView),
-	m_destFalseView(destFalseView),
-	m_distancesTrueView(distancesTrueView),
-	m_distancesFalseView(distancesFalseView),
+        m_destTrueView(destTrueView),
+        m_destFalseView(destFalseView),
+        m_distancesTrueView(distancesTrueView),
+        m_distancesFalseView(distancesFalseView),
         m_threshold(threshold),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
-  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const
-  {
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom  = Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom =
+        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
 
-    auto myRowViewDestTrue = Kokkos::subview(m_destTrueView, myRowIndex, Kokkos::ALL());
-    auto myRowViewDestFalse = Kokkos::subview(m_destFalseView, myRowIndex, Kokkos::ALL());
+    auto myRowViewDestTrue =
+        Kokkos::subview(m_destTrueView, myRowIndex, Kokkos::ALL());
+    auto myRowViewDestFalse =
+        Kokkos::subview(m_destFalseView, myRowIndex, Kokkos::ALL());
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
-      const auto result = KE::partition_copy(member,
-					     KE::cbegin(myRowViewFrom),
-					     KE::cend(myRowViewFrom),
-					     KE::begin(myRowViewDestTrue),
-					     KE::begin(myRowViewDestFalse),
-					     predicate);
+      const auto result = KE::partition_copy(
+          member, KE::cbegin(myRowViewFrom), KE::cend(myRowViewFrom),
+          KE::begin(myRowViewDestTrue), KE::begin(myRowViewDestFalse),
+          predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() {
-		       m_distancesTrueView(myRowIndex) =
-			 KE::distance(KE::begin(myRowViewDestTrue), result.first);
-		       m_distancesFalseView(myRowIndex) =
-			 KE::distance(KE::begin(myRowViewDestFalse), result.second);
-		     });
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesTrueView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDestTrue), result.first);
+        m_distancesFalseView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDestFalse), result.second);
+      });
     }
 
     else if (m_apiPick == 1) {
-      const auto result = KE::partition_copy(member,
-					     myRowViewFrom,
-					     myRowViewDestTrue,
-					     myRowViewDestFalse,
-					     predicate);
+      const auto result =
+          KE::partition_copy(member, myRowViewFrom, myRowViewDestTrue,
+                             myRowViewDestFalse, predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() {
-		       m_distancesTrueView(myRowIndex) =
-			 KE::distance(KE::begin(myRowViewDestTrue), result.first);
-		       m_distancesFalseView(myRowIndex) =
-			 KE::distance(KE::begin(myRowViewDestFalse), result.second);
-		     });
+      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        m_distancesTrueView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDestTrue), result.first);
+        m_distancesFalseView(myRowIndex) =
+            KE::distance(KE::begin(myRowViewDestFalse), result.second);
+      });
     }
-
   }
 };
 
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
-            const std::string& sIn)
-{
+            const std::string& sIn) {
   /* description:
      use a rank-2 view randomly filled with values in a range (a,b)
      and run a team-level partition_copy with predicate = IsGreaterThanValue
@@ -195,7 +183,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
     // so this counts as being partitioned
     Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(
         452377);
-    Kokkos::fill_random(sourceView_dc_h, pool, ValueType(2001), ValueType(2501));
+    Kokkos::fill_random(sourceView_dc_h, pool, ValueType(2001),
+                        ValueType(2501));
   }
 
   else if (sIn == "allFalse") {
@@ -244,41 +233,39 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
   Kokkos::View<std::size_t*> distancesFalseView("distancesFalse", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, destTrueView, destFalseView,
-		   distancesTrueView, distancesFalseView,
-		   threshold, apiId);
+  TestFunctorA fnc(sourceView, destTrueView, destFalseView, distancesTrueView,
+                   distancesFalseView, threshold, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto distancesTrueView_h  = create_host_space_copy(distancesTrueView);
-  auto distancesFalseView_h = create_host_space_copy(distancesFalseView);
-  auto sourceViewAfterOp_h = create_host_space_copy(sourceView);
-  auto destTrueViewAfterOp_h = create_host_space_copy(destTrueView);
+  auto distancesTrueView_h    = create_host_space_copy(distancesTrueView);
+  auto distancesFalseView_h   = create_host_space_copy(distancesFalseView);
+  auto sourceViewAfterOp_h    = create_host_space_copy(sourceView);
+  auto destTrueViewAfterOp_h  = create_host_space_copy(destTrueView);
   auto destFalseViewAfterOp_h = create_host_space_copy(destFalseView);
 
-  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestTrueView("stdDestTrueView",
-							       numTeams, numCols);
-  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestFalseView("stdDestFalseView",
-								numTeams, numCols);
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestTrueView(
+      "stdDestTrueView", numTeams, numCols);
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestFalseView(
+      "stdDestFalseView", numTeams, numCols);
   GreaterThanValueFunctor predicate(threshold);
 
-  for (std::size_t i = 0; i < sourceView_dc_h.extent(0); ++i)
-  {
-    auto myRowSource = Kokkos::subview(sourceView_dc_h, i, Kokkos::ALL());
-    auto myRowDestTrue = Kokkos::subview(stdDestTrueView, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < sourceView_dc_h.extent(0); ++i) {
+    auto myRowSource    = Kokkos::subview(sourceView_dc_h, i, Kokkos::ALL());
+    auto myRowDestTrue  = Kokkos::subview(stdDestTrueView, i, Kokkos::ALL());
     auto myRowDestFalse = Kokkos::subview(stdDestFalseView, i, Kokkos::ALL());
 
-    const auto stdResult =
-      std::partition_copy(KE::cbegin(myRowSource), KE::cend(myRowSource),
-			  KE::begin(myRowDestTrue),
-			  KE::begin(myRowDestFalse),
-			  predicate);
+    const auto stdResult = std::partition_copy(
+        KE::cbegin(myRowSource), KE::cend(myRowSource),
+        KE::begin(myRowDestTrue), KE::begin(myRowDestFalse), predicate);
     // our result must match std
-    const std::size_t stdDistanceTrue = KE::distance(KE::begin(myRowDestTrue), stdResult.first);
-    const std::size_t stdDistanceFalse = KE::distance(KE::begin(myRowDestFalse), stdResult.second);
-    EXPECT_EQ(stdDistanceTrue,  distancesTrueView_h(i));
+    const std::size_t stdDistanceTrue =
+        KE::distance(KE::begin(myRowDestTrue), stdResult.first);
+    const std::size_t stdDistanceFalse =
+        KE::distance(KE::begin(myRowDestFalse), stdResult.second);
+    EXPECT_EQ(stdDistanceTrue, distancesTrueView_h(i));
     EXPECT_EQ(stdDistanceFalse, distancesFalseView_h(i));
   }
 
