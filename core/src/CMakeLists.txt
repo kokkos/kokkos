@@ -129,7 +129,7 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
 
 # FIXME: We need a proper solution to figure out whether to enable
 #        libatomic
-# Most compilers only require libatomic for 128bit CAS
+# Most compilers only require libatomic for 128-bit CAS
 # I (CT) had removed 128bit CAS from desul to not need libatomic.
 IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND KOKKOS_ENABLE_OPENMPTARGET)
   target_link_libraries(kokkoscore PUBLIC atomic)
