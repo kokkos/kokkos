@@ -96,7 +96,6 @@ class CudaInternal {
   uint32_t m_maxConcurrency;
   int m_shmemPerSM;
   int m_maxShmemPerBlock;
-  int m_regsPerSM;
   int m_maxBlocksPerSM;
   int m_maxThreadsPerSM;
   int m_maxThreadsPerBlock;
@@ -169,7 +168,6 @@ class CudaInternal {
         m_maxConcurrency(0),
         m_shmemPerSM(0),
         m_maxShmemPerBlock(0),
-        m_regsPerSM(0),
         m_maxBlocksPerSM(0),
         m_maxThreadsPerSM(0),
         m_maxThreadsPerBlock(0),

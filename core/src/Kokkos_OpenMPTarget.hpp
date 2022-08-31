@@ -125,6 +125,13 @@ class OpenMPTarget {
   uint32_t impl_instance_id() const noexcept;
 
  private:
+  friend bool operator==(OpenMPTarget const& lhs, OpenMPTarget const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(OpenMPTarget const& lhs, OpenMPTarget const& rhs) {
+    return !(lhs == rhs);
+  }
   Impl::OpenMPTargetInternal* m_space_instance;
 };
 }  // namespace Experimental

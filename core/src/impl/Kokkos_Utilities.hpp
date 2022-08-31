@@ -243,6 +243,15 @@ using filter_type_list_t =
 // </editor-fold> end type_list }}}1
 //==============================================================================
 
+//==============================================================================
+// The weird !sizeof(F*) to express false is to make the
+// expression dependent on the type of F, and thus only applicable
+// at instantiation and not first-pass semantic analysis of the
+// template definition.
+template <typename T>
+constexpr bool dependent_false_v = !sizeof(T*);
+//==============================================================================
+
 }  // namespace Impl
 }  // namespace Kokkos
 

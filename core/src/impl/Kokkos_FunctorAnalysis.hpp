@@ -580,7 +580,13 @@ struct FunctorAnalysis {
                         (!is_reducer<F>::value && std::is_void<Tag>::value)) &&
                        (!detected_join_no_tag<F>::value &&
                         detected_volatile_join_no_tag<F>::value)>>
-      : public has_volatile_join_no_tag_function<F>, std::true_type {};
+      : public has_volatile_join_no_tag_function<F>, std::true_type {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    static_assert(Impl::dependent_false_v<F>,
+                  "Reducer with a join() operator taking "
+                  "volatile-qualified parameters is no longer supported");
+#endif
+  };
 
   template <class F = Functor, typename = void>
   struct DeduceJoin : public DeduceJoinNoTag<F> {};
@@ -594,7 +600,13 @@ struct FunctorAnalysis {
   struct DeduceJoin<F, std::enable_if_t<!is_reducer<F>::value &&
                                         (!detected_join_tag<F>::value &&
                                          detected_volatile_join_tag<F>::value)>>
-      : public has_volatile_join_tag_function<F>, std::true_type {};
+      : public has_volatile_join_tag_function<F>, std::true_type {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    static_assert(Impl::dependent_false_v<F>,
+                  "Reducer with a join() operator taking "
+                  "volatile-qualified parameters is no longer supported");
+#endif
+  };
 
   //----------------------------------------
 

@@ -53,7 +53,12 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_SYCL
+// FIXME_SYCL
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
 #include <CL/sycl.hpp>
+#endif
 #include <Kokkos_SYCL_Space.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
@@ -143,6 +148,13 @@ class SYCL {
   static std::ostream& impl_sycl_info(std::ostream& os,
                                       const sycl::device& device);
 
+  friend bool operator==(SYCL const& lhs, SYCL const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(SYCL const& lhs, SYCL const& rhs) {
+    return !(lhs == rhs);
+  }
   Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
 };
 
