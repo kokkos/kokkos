@@ -220,7 +220,7 @@ template <class LayoutTag, class ValueType>
 void run_all_scenarios(const std::string& name, const std::vector<int>& cols) {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : cols) {
-      for (int apiId : {0}) {
+      for (int apiId : {0, 1}) {
         test_A<LayoutTag, ValueType>(numTeams, numCols, apiId, name);
       }
     }
