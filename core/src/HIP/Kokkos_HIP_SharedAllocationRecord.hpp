@@ -59,7 +59,7 @@ class SharedAllocationRecord<HIPSpace, void>
   using base_t     = HostInaccessibleSharedAllocationRecordCommon<HIPSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
-  SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
+  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
 #ifdef KOKKOS_ENABLE_DEBUG
@@ -98,7 +98,7 @@ class SharedAllocationRecord<HIPHostPinnedSpace, void>
   using base_t     = SharedAllocationRecordCommon<HIPHostPinnedSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
-  SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
+  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
 #ifdef KOKKOS_ENABLE_DEBUG
@@ -133,7 +133,7 @@ class SharedAllocationRecord<HIPManagedSpace, void>
   using base_t     = SharedAllocationRecordCommon<HIPManagedSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
-  SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
+  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
 #ifdef KOKKOS_ENABLE_DEBUG

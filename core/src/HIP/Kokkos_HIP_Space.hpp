@@ -91,9 +91,9 @@ class HIPSpace {
   /*--------------------------------*/
 
   HIPSpace();
-  HIPSpace(HIPSpace&& rhs)                 = default;
-  HIPSpace(const HIPSpace& rhs)            = default;
-  HIPSpace& operator=(HIPSpace&& rhs)      = default;
+  HIPSpace(HIPSpace&& rhs)      = default;
+  HIPSpace(const HIPSpace& rhs) = default;
+  HIPSpace& operator=(HIPSpace&& rhs) = default;
   HIPSpace& operator=(const HIPSpace& rhs) = default;
   ~HIPSpace()                              = default;
 
@@ -155,9 +155,9 @@ class HIPHostPinnedSpace {
   /*--------------------------------*/
 
   HIPHostPinnedSpace();
-  HIPHostPinnedSpace(HIPHostPinnedSpace&& rhs)                 = default;
-  HIPHostPinnedSpace(const HIPHostPinnedSpace& rhs)            = default;
-  HIPHostPinnedSpace& operator=(HIPHostPinnedSpace&& rhs)      = default;
+  HIPHostPinnedSpace(HIPHostPinnedSpace&& rhs)      = default;
+  HIPHostPinnedSpace(const HIPHostPinnedSpace& rhs) = default;
+  HIPHostPinnedSpace& operator=(HIPHostPinnedSpace&& rhs) = default;
   HIPHostPinnedSpace& operator=(const HIPHostPinnedSpace& rhs) = default;
   ~HIPHostPinnedSpace()                                        = default;
 
@@ -220,9 +220,9 @@ class HIPManagedSpace {
   /*--------------------------------*/
 
   HIPManagedSpace();
-  HIPManagedSpace(HIPManagedSpace&& rhs)                 = default;
-  HIPManagedSpace(const HIPManagedSpace& rhs)            = default;
-  HIPManagedSpace& operator=(HIPManagedSpace&& rhs)      = default;
+  HIPManagedSpace(HIPManagedSpace&& rhs)      = default;
+  HIPManagedSpace(const HIPManagedSpace& rhs) = default;
+  HIPManagedSpace& operator=(HIPManagedSpace&& rhs) = default;
   HIPManagedSpace& operator=(const HIPManagedSpace& rhs) = default;
   ~HIPManagedSpace()                                     = default;
 
