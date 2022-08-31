@@ -50,7 +50,7 @@
 #endif
 
 #include <Kokkos_Core.hpp>
-
+#include <Kokkos_NestedSort.hpp>
 #include <algorithm>
 
 namespace Kokkos {
