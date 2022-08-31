@@ -194,6 +194,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamIsSorted
 	StdAlgorithmsTeamIsSortedUntil
 	StdAlgorithmsTeamIsPartitioned
+	StdAlgorithmsTeamPartitionCopy
 	)
       list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
     endforeach()
