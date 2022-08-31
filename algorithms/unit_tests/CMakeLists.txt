@@ -137,12 +137,29 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   endif()
 endforeach()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_RandomAndSort
-  SOURCES
-    UnitTestMain.cpp
-    ${SOURCES_A}
-)
+# FIXME_OPENMPTARGET
+if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
+  list(REMOVE_ITEM STDALGO_SOURCES_D
+    TestStdAlgorithmsCopyIf.cpp
+    TestStdAlgorithmsRemoveCopy.cpp
+    TestStdAlgorithmsUnique.cpp
+    TestStdAlgorithmsUniqueCopy.cpp
+  )
+  list(REMOVE_ITEM STDALGO_SOURCES_E
+    TestStdAlgorithmsExclusiveScan.cpp
+    TestStdAlgorithmsInclusiveScan.cpp
+  )
+endif()
+
+# FIXME_OPENMPTARGET
+if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_RandomAndSort
+    SOURCES
+      UnitTestMain.cpp
+      ${SOURCES_A}
+  )
+endif()
 
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -153,7 +170,10 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-KOKKOS_ADD_EXECUTABLE(
-  UnitTest_StdAlgoCompileOnly
-  SOURCES TestStdAlgorithmsCompileOnly.cpp
-)
+# FIXME_OPENMPTARGET
+if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
+  KOKKOS_ADD_EXECUTABLE(
+    UnitTest_StdAlgoCompileOnly
+    SOURCES TestStdAlgorithmsCompileOnly.cpp
+  )
+endif()

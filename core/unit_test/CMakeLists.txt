@@ -377,6 +377,11 @@ IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKK
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_e.cpp
   )
 ENDIF()
+IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
+  LIST(REMOVE_ITEM OpenMPTarget_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamVectorRange.cpp
+  )
+ENDIF()
 
 # FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
@@ -882,13 +887,21 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       tools/TestLogicalSpaces.cpp
   )
   endif()
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_KokkosP
-    SOURCES
+  SET(KOKKOSP_SOURCES
     UnitTestMainInit.cpp
     tools/TestEventCorrectness.cpp
     tools/TestWithoutInitializing.cpp
     tools/TestProfilingSection.cpp
+    )
+
+  if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
+    list(REMOVE_ITEM KOKKOSP_SOURCES tools/TestEventCorrectness.cpp)
+  endif()
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_KokkosP
+    SOURCES
+    ${KOKKOSP_SOURCES}
   )
   if(KOKKOS_ENABLE_LIBDL)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
