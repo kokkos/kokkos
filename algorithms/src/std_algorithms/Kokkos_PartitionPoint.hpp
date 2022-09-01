@@ -17,44 +17,83 @@
 #ifndef KOKKOS_STD_ALGORITHMS_PARTITION_POINT_HPP
 #define KOKKOS_STD_ALGORITHMS_PARTITION_POINT_HPP
 
+#include "./impl/Kokkos_IsTeamHandle.hpp"
 #include "impl/Kokkos_PartitionPoint.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
+//
+// overload set accepting execution space
+//
 template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
-IteratorType partition_point(const ExecutionSpace& ex, IteratorType first,
-                             IteratorType last, UnaryPredicate p) {
-  return Impl::partition_point_impl(
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                  IteratorType>
+partition_point(const ExecutionSpace& ex, IteratorType first, IteratorType last,
+                UnaryPredicate p) {
+  return Impl::partition_point_exespace_impl(
       "Kokkos::partitioned_point_iterator_api_default", ex, first, last,
       std::move(p));
 }
 
 template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
-IteratorType partition_point(const std::string& label, const ExecutionSpace& ex,
-                             IteratorType first, IteratorType last,
-                             UnaryPredicate p) {
-  return Impl::partition_point_impl(label, ex, first, last, std::move(p));
+std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                  IteratorType>
+partition_point(const std::string& label, const ExecutionSpace& ex,
+                IteratorType first, IteratorType last, UnaryPredicate p) {
+  return Impl::partition_point_exespace_impl(label, ex, first, last,
+                                             std::move(p));
 }
 
 template <class ExecutionSpace, class UnaryPredicate, class DataType,
-          class... Properties>
+          class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto partition_point(const std::string& label, const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  return Impl::partition_point_impl(label, ex, begin(v), end(v), std::move(p));
+  return Impl::partition_point_exespace_impl(label, ex, begin(v), end(v),
+                                             std::move(p));
 }
 
 template <class ExecutionSpace, class UnaryPredicate, class DataType,
-          class... Properties>
+          class... Properties,
+          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                            int> = 0>
 auto partition_point(const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
-  return Impl::partition_point_impl("Kokkos::partition_point_view_api_default",
-                                    ex, begin(v), end(v), std::move(p));
+  return Impl::partition_point_exespace_impl(
+      "Kokkos::partition_point_view_api_default", ex, begin(v), end(v),
+      std::move(p));
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <class TeamHandleType, class IteratorType, class UnaryPredicate>
+KOKKOS_FUNCTION
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
+    partition_point(const TeamHandleType& teamHandle, IteratorType first,
+                    IteratorType last, UnaryPredicate p) {
+  return Impl::partition_point_team_impl(teamHandle, first, last, std::move(p));
+}
+
+template <
+    class TeamHandleType, class UnaryPredicate, class DataType,
+    class... Properties,
+    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto partition_point(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType, Properties...>& v, UnaryPredicate p) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
+  return Impl::partition_point_team_impl(teamHandle, begin(v), end(v),
+                                         std::move(p));
 }
 
 }  // namespace Experimental
