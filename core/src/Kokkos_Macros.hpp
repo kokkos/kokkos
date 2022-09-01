@@ -73,7 +73,6 @@
  *  KOKKOS_COMPILER_NVCC
  *  KOKKOS_COMPILER_GNU
  *  KOKKOS_COMPILER_INTEL
- *  KOKKOS_COMPILER_IBM
  *  KOKKOS_COMPILER_CRAYC
  *  KOKKOS_COMPILER_APPLECC
  *  KOKKOS_COMPILER_CLANG
@@ -149,21 +148,11 @@
 #define KOKKOS_COMPILER_CRAYC _CRAYC
 #endif
 
-#if defined(__IBMCPP__)
-// IBM C++
-#define KOKKOS_COMPILER_IBM __IBMCPP__
-#elif defined(__IBMC__)
-#define KOKKOS_COMPILER_IBM __IBMC__
-#elif defined(__ibmxl_vrm__)  // xlclang++
-#define KOKKOS_COMPILER_IBM __ibmxl_vrm__
-#endif
-
 #if defined(__APPLE_CC__)
 #define KOKKOS_COMPILER_APPLECC __APPLE_CC__
 #endif
 
-#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL) && \
-    !defined(KOKKOS_COMPILER_IBM)
+#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL)
 #define KOKKOS_COMPILER_CLANG \
   __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
 #endif
@@ -264,20 +253,6 @@
 // Cray compiler macros
 
 #if defined(KOKKOS_COMPILER_CRAYC)
-#endif
-
-//----------------------------------------------------------------------------
-// IBM Compiler macros
-
-#if defined(KOKKOS_COMPILER_IBM)
-#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
-//#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
-//#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
-//#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-
-#if !defined(KOKKOS_ENABLE_ASM)
-#define KOKKOS_ENABLE_ASM 1
-#endif
 #endif
 
 //----------------------------------------------------------------------------

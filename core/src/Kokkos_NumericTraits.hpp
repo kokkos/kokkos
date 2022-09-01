@@ -97,27 +97,10 @@ template <> struct finite_max_helper<float> { static constexpr float value = FLT
 template <> struct finite_max_helper<double> { static constexpr double value = DBL_MAX; };
 template <> struct finite_max_helper<long double> { static constexpr long double value = LDBL_MAX; };
 template <class> struct epsilon_helper {};
-namespace{
-  // FIXME workaround for LDL_EPSILON with XL
-  template<typename T>
-  constexpr T machineeps() {
-    T epsilon = 1, prev = 1, expression = 1;
-    do {
-      prev = epsilon;
-      epsilon /= 2;
-      expression = 1 + epsilon;
-    } while (expression > 1);
-    return prev;
-  }
-}
 template <> struct epsilon_helper<float> { static constexpr float value = FLT_EPSILON; };
 template <> struct epsilon_helper<double> { static constexpr double value = DBL_EPSILON; };
 template <> struct epsilon_helper<long double> {
-#ifdef KOKKOS_COMPILER_IBM
-  static constexpr long double value = machineeps<long double>();
-#else
   static constexpr long double value = LDBL_EPSILON;
-#endif
 };
 template <class> struct round_error_helper {};
 template <> struct round_error_helper<float> { static constexpr float value = 0.5F; };

@@ -524,11 +524,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_GNU));
   declare_configuration_metadata("tools_only", "compiler_family", "gnu");
 #endif
-#ifdef KOKKOS_COMPILER_IBM
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_IBM",
-                                 std::to_string(KOKKOS_COMPILER_IBM));
-  declare_configuration_metadata("tools_only", "compiler_family", "ibm");
-#endif
 #ifdef KOKKOS_COMPILER_INTEL
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_INTEL",
                                  std::to_string(KOKKOS_COMPILER_INTEL));
