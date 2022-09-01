@@ -46,7 +46,27 @@
 #define KOKKOS_DECLARE_HIP_HPP
 
 #if defined(KOKKOS_ENABLE_HIP)
-#include <Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_DeepCopy.hpp>
+#include <HIP/Kokkos_HIP_Half_Impl_Type.hpp>
+#include <HIP/Kokkos_HIP_Half_Conversion.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
+#include <HIP/Kokkos_HIP_MDRangePolicy.hpp>
+#include <HIP/Kokkos_HIP_Parallel_Range.hpp>
+#include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
+#include <HIP/Kokkos_HIP_Parallel_Team.hpp>
+#include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
+#include <HIP/Kokkos_HIP_UniqueToken.hpp>
+
+namespace Kokkos {
+namespace Experimental {
+using HIPSpace           = ::Kokkos::HIPSpace;
+using HIPHostPinnedSpace = ::Kokkos::HIPHostPinnedSpace;
+using HIPManagedSpace    = ::Kokkos::HIPManagedSpace;
+using HIP                = ::Kokkos::HIP;
+}  // namespace Experimental
+}  // namespace Kokkos
 #endif
 
 #endif
