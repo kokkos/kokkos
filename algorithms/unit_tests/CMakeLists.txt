@@ -28,17 +28,24 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	)
     endif()
 
-    set(file ${dir}/TestRandomAndSort.cpp)
-    # Write to a temporary intermediate file and call configure_file to avoid
-    # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-    file(WRITE ${dir}/dummy.cpp
-      "#include <Test${Tag}_Category.hpp>\n"
-      "#include <TestRandomCommon.hpp>\n"
-      "#include <TestSortCommon.hpp>\n"
-      "#include <TestNestedSort.hpp>\n"
-      )
-    configure_file(${dir}/dummy.cpp ${file})
-    list(APPEND SOURCES_A ${file})
+    # Each of these inputs is an .hpp file.
+    # Generate a .cpp file for each one that runs it on the current backend (Tag),
+    # and add this .cpp file to the sources for UnitTest_RandomAndSort.
+    foreach(SOURCES_A_Input
+        TestRandomCommon
+        TestSortCommon
+        TestNestedSort
+    )
+      set(file ${dir}/${SOURCES_A_Input}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+        "#include <Test${Tag}_Category.hpp>\n"
+        "#include <${SOURCES_A_Input}.hpp>\n"
+        )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND SOURCES_A ${file})
+    endforeach()
 
     # ------------------------------------------
     # std set A
