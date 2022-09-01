@@ -325,29 +325,9 @@ KOKKOS_FUNCTION const auto &get_property(
 
 template <typename Tag, typename... P>
 KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {
-  if constexpr (std::is_same_v<Tag, ExecutionSpaceTag>) {
-    static_assert(ViewCtorProp<P...>::has_execution_space);
-    using execution_space_type = typename ViewCtorProp<P...>::execution_space;
-    return static_cast<ViewCtorProp<void, execution_space_type> &>(
-               view_ctor_prop)
-        .value;
-  } else if constexpr (std::is_same_v<Tag, MemorySpaceTag>) {
-    static_assert(ViewCtorProp<P...>::has_memory_space);
-    using memory_space_type = typename ViewCtorProp<P...>::memory_space;
-    return static_cast<ViewCtorProp<void, memory_space_type> &>(view_ctor_prop)
-        .value;
-  } else if constexpr (std::is_same_v<Tag, LabelTag>) {
-    static_assert(ViewCtorProp<P...>::has_label);
-    return static_cast<ViewCtorProp<void, std::string> &>(view_ctor_prop).value;
-  } else if constexpr (std::is_same_v<Tag, PointerTag>) {
-    static_assert(ViewCtorProp<P...>::has_pointer);
-    using pointer_type = typename ViewCtorProp<P...>::pointer_type;
-    return static_cast<ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
-        .value;
-  } else {
-    static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
-    return view_ctor_prop;
-  }
+  const ViewCtorProp<P...> &tmp = view_ctor_prop;
+  const auto &tmp_return        = get_property<Tag>(tmp);
+  return const_cast<std::decay_t<decltype(tmp_return)> &>(tmp_return);
 }
 
 } /* namespace Impl */
