@@ -325,9 +325,11 @@ KOKKOS_FUNCTION const auto &get_property(
 
 template <typename Tag, typename... P>
 KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {
-  const ViewCtorProp<P...> &tmp = view_ctor_prop;
-  const auto &tmp_return        = get_property<Tag>(tmp);
-  return const_cast<std::decay_t<decltype(tmp_return)> &>(tmp_return);
+  // Avoid code duplication by deferring to the const-qualified overload and
+  // casting the const away from the return type
+  const auto &tmp = get_property<Tag>(
+      static_cast<const ViewCtorProp<P...> &>(view_ctor_prop));
+  return const_cast<std::decay_t<decltype(tmp)> &>(tmp);
 }
 
 } /* namespace Impl */
