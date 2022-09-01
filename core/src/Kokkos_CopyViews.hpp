@@ -3252,8 +3252,7 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
     v = view_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
   } else if (alloc_prop_input::initialize) {
     if constexpr (alloc_prop_input::has_execution_space) {
-      using execution_space_type = typename alloc_prop_input::execution_space;
-      const execution_space_type& exec_space =
+      const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
       Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
     } else

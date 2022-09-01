@@ -1403,7 +1403,7 @@ class View : public ViewTraits<DataType, Properties...> {
       check_input_args check_args = check_input_args::no)
       : m_track(), m_map() {
     // Copy the input allocation properties with possibly defaulted properties
-    // We need to split it into to avoid MSVC compiler errors
+    // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
         Impl::with_properties_if_unset(arg_prop, std::string{});
     auto prop_copy = Impl::with_properties_if_unset(
