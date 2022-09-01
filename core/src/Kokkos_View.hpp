@@ -1404,8 +1404,9 @@ class View : public ViewTraits<DataType, Properties...> {
       : m_track(), m_map() {
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it into to avoid MSVC compiler errors
-    auto prop_copy_tmp = Impl::add_properties(arg_prop, std::string{});
-    auto prop_copy     = Impl::add_properties(
+    auto prop_copy_tmp =
+        Impl::with_properties_if_unset(arg_prop, std::string{});
+    auto prop_copy = Impl::with_properties_if_unset(
         prop_copy_tmp, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{});
     using alloc_prop = decltype(prop_copy);

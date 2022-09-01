@@ -263,14 +263,14 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 };
 
 template <typename... P>
-auto add_properties(const ViewCtorProp<P...> &view_ctor_prop) {
+auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
   return view_ctor_prop;
 }
 
 template <typename... P, typename Property, typename... Properties>
-auto add_properties(const ViewCtorProp<P...> &view_ctor_prop,
-                    const Property &property,
-                    const Properties &... properties) {
+auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
+                              const Property &property,
+                              const Properties &... properties) {
   if constexpr ((is_execution_space<Property>::value &&
                  !ViewCtorProp<P...>::has_execution_space) ||
                 (is_memory_space<Property>::value &&
@@ -283,9 +283,9 @@ auto add_properties(const ViewCtorProp<P...> &view_ctor_prop,
     NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
     static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
         property;
-    return add_properties(new_view_ctor_prop, properties...);
+    return with_properties_if_unset(new_view_ctor_prop, properties...);
   } else
-    return add_properties(view_ctor_prop, properties...);
+    return with_properties_if_unset(view_ctor_prop, properties...);
 }
 
 struct ExecutionSpaceTag {};

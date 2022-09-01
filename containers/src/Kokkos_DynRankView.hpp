@@ -1100,7 +1100,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                    template computeRank<typename traits::array_layout, P...>(
                        arg_prop, arg_layout)) {
     // Copy the input allocation properties with possibly defaulted properties
-    auto prop_copy = Impl::add_properties(
+    auto prop_copy = Impl::with_properties_if_unset(
         arg_prop, std::string{}, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{});
     using alloc_prop = decltype(prop_copy);
@@ -1994,7 +1994,7 @@ inline typename DynRankView<T, P...>::HostMirror create_mirror(
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   return dst_type(prop_copy, Impl::reconstructLayout(src.layout(), src.rank()));
@@ -2025,7 +2025,7 @@ inline auto create_mirror(
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   return dst_type(prop_copy, Impl::reconstructLayout(src.layout(), src.rank()));
@@ -2143,7 +2143,7 @@ create_mirror_view(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using MemorySpace = typename Space::memory_space;
-  auto prop_copy    = Impl::add_properties(arg_prop, MemorySpace{});
+  auto prop_copy    = Impl::with_properties_if_unset(arg_prop, MemorySpace{});
 
   return Kokkos::Impl::create_mirror(src, prop_copy);
 }
@@ -2273,9 +2273,9 @@ auto create_mirror_view_and_copy(
   using Space  = typename alloc_prop_input::memory_space;
   using Mirror = typename Impl::MirrorDRViewType<Space, T, P...>::view_type;
 
-  auto arg_prop_copy =
-      Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
-                           typename Space::execution_space{});
+  auto arg_prop_copy = Impl::with_properties_if_unset(
+      arg_prop, std::string{}, WithoutInitializing,
+      typename Space::execution_space{});
 
   std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();
@@ -2326,7 +2326,7 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "The view constructor arguments passed to Kokkos::resize must "
                 "not include a memory space instance!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, v.label(), typename drview_type::execution_space{});
 
   drview_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
@@ -2404,7 +2404,7 @@ inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a memory space instance!");
 
-  auto arg_prop_copy = Impl::add_properties(arg_prop, v.label());
+  auto arg_prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
 
   v = drview_type();  // Deallocate first, if the only view to allocation
   v = drview_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);

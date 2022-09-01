@@ -552,7 +552,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
       using alloc_prop_input = Kokkos::Impl::ViewCtorProp<Prop...>;
 
-      auto arg_prop_copy = ::Kokkos::Impl::add_properties(
+      auto arg_prop_copy = ::Kokkos::Impl::with_properties_if_unset(
           arg_prop, typename device_space::execution_space{});
 
       const auto& exec =
@@ -636,7 +636,7 @@ inline auto create_mirror(
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   auto ret = typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
@@ -669,7 +669,7 @@ inline auto create_mirror(
       "not explicitly allow padding!");
 
   using MemorySpace = typename alloc_prop_input::memory_space;
-  auto prop_copy    = Impl::add_properties(
+  auto prop_copy    = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   auto ret = typename Kokkos::Impl::MirrorDynamicViewType<
@@ -1045,9 +1045,9 @@ auto create_mirror_view_and_copy(
   using Mirror =
       typename Impl::MirrorDynamicViewType<Space, T, P...>::view_type;
 
-  auto arg_prop_copy =
-      Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
-                           typename Space::execution_space{});
+  auto arg_prop_copy = Impl::with_properties_if_unset(
+      arg_prop, std::string{}, WithoutInitializing,
+      typename Space::execution_space{});
 
   std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();

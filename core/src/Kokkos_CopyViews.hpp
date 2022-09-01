@@ -3028,7 +3028,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    auto prop_copy = Impl::add_properties(
+    auto prop_copy = Impl::with_properties_if_unset(
         arg_prop, typename view_type::execution_space{}, v.label());
 
     view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
@@ -3128,7 +3128,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "not include a memory space instance!");
 
   if (v.layout() != layout) {
-    auto prop_copy = Impl::add_properties(arg_prop, v.label());
+    auto prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
 
     view_type v_resized(prop_copy, layout);
 
@@ -3174,7 +3174,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                 "The view constructor arguments passed to Kokkos::resize must "
                 "not include a memory space instance!");
 
-  auto prop_copy = Impl::add_properties(arg_prop, v.label());
+  auto prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
 
   view_type v_resized(prop_copy, layout);
 
@@ -3246,7 +3246,7 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    auto arg_prop_copy = Impl::add_properties(arg_prop, v.label());
+    auto arg_prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
     v = view_type();  // Best effort to deallocate in case no other view refers
                       // to the shared allocation
     v = view_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
@@ -3387,7 +3387,7 @@ impl_realloc(Kokkos::View<T, P...>& v,
                 "The view constructor arguments passed to Kokkos::realloc must "
                 "not include a memory space instance!");
 
-  auto arg_prop_copy = Impl::add_properties(arg_prop, v.label());
+  auto arg_prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
 
   v = view_type();  // Deallocate first, if the only view to allocation
   v = view_type(arg_prop_copy, layout);
@@ -3493,7 +3493,7 @@ create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   return dst_type(
@@ -3553,7 +3553,7 @@ create_mirror(const Kokkos::View<T, P...>& src,
   layout.stride[6] = src.stride_6();
   layout.stride[7] = src.stride_7();
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   return dst_type(prop_copy, layout);
@@ -3580,7 +3580,7 @@ auto create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
   using alloc_prop = decltype(prop_copy);
 
@@ -3686,7 +3686,7 @@ std::enable_if_t<!Impl::MirrorViewType<Space, T, P...>::is_same_memspace,
 create_mirror_view(const Space&, const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using MemorySpace = typename Space::memory_space;
-  auto prop_copy    = Impl::add_properties(arg_prop, MemorySpace{});
+  auto prop_copy    = Impl::with_properties_if_unset(arg_prop, MemorySpace{});
 
   return Kokkos::Impl::create_mirror(src, prop_copy);
 }
@@ -3813,9 +3813,9 @@ auto create_mirror_view_and_copy(
   using Space  = typename alloc_prop_input::memory_space;
   using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
 
-  auto arg_prop_copy =
-      Impl::add_properties(arg_prop, std::string{}, WithoutInitializing,
-                           typename Space::execution_space{});
+  auto arg_prop_copy = Impl::with_properties_if_unset(
+      arg_prop, std::string{}, WithoutInitializing,
+      typename Space::execution_space{});
 
   std::string& label = Impl::get_property<Impl::LabelTag>(arg_prop_copy);
   if (label.empty()) label = src.label();

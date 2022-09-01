@@ -1202,7 +1202,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     for (size_t i = 0; i < Rank; ++i) m_begins[i] = minIndices.begin()[i];
 
     // Copy the input allocation properties with possibly defaulted properties
-    auto prop_copy = Kokkos::Impl::add_properties(
+    auto prop_copy = Kokkos::Impl::with_properties_if_unset(
         arg_prop, std::string{}, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{});
     using alloc_prop = decltype(prop_copy);
@@ -1931,7 +1931,7 @@ create_mirror(const Space&,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  auto prop_copy = Impl::add_properties(
+  auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
   return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
