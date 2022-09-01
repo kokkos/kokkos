@@ -85,10 +85,8 @@ struct TestFunctorA {
   ValueType m_threshold;
   int m_apiPick;
 
-  TestFunctorA(const ViewType view,
-               const DistancesViewType distancesView,
-               ValueType threshold,
-               int apiPick)
+  TestFunctorA(const ViewType view, const DistancesViewType distancesView,
+               ValueType threshold, int apiPick)
       : m_view(view),
         m_distancesView(distancesView),
         m_threshold(threshold),
@@ -97,18 +95,15 @@ struct TestFunctorA {
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowView =
-        Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
-      const auto it = KE::partition_point(
-          member, KE::cbegin(myRowView), KE::cend(myRowView),
-          predicate);
+      const auto it = KE::partition_point(member, KE::cbegin(myRowView),
+                                          KE::cend(myRowView), predicate);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::cbegin(myRowView), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::cbegin(myRowView), it);
       });
     }
 
@@ -116,8 +111,7 @@ struct TestFunctorA {
       const auto it = KE::partition_point(member, myRowView, predicate);
 
       Kokkos::single(Kokkos::PerTeam(member), [=]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
   }
@@ -161,8 +155,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
     // so this counts as being partitioned
     Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(
         452377);
-    Kokkos::fill_random(dataView_dc_h, pool, ValueType(2001),
-                        ValueType(2501));
+    Kokkos::fill_random(dataView_dc_h, pool, ValueType(2001), ValueType(2501));
   }
 
   else if (sIn == "allFalse") {
@@ -212,14 +205,14 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h   = create_host_space_copy(distancesView);
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
   GreaterThanValueFunctor predicate(threshold);
 
   for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
-    const auto stdResult = std::partition_point(
-        KE::cbegin(myRow), KE::cend(myRow), predicate);
+    const auto stdResult =
+        std::partition_point(KE::cbegin(myRow), KE::cend(myRow), predicate);
 
     // our result must match std
     const std::size_t stdDistance = KE::distance(KE::cbegin(myRow), stdResult);
