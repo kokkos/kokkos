@@ -1,11 +1,11 @@
 #
-# Add test-only library for gtest to be reused by all the subpackages
+#Add test - only library for gtest to be reused by all the subpackages
 #
 
 IF(NOT GTest_FOUND)  # fallback to internal gtest
   SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
 
-  #need here for tribits
+#need here for tribits
   KOKKOS_INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
   KOKKOS_ADD_TEST_LIBRARY(
     kokkos_gtest
@@ -18,7 +18,7 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
     TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_14)
   ENDIF()
 
-  # Suppress clang-tidy diagnostics on code that we do not have control over
+#Suppress clang - tidy diagnostics on code that we do not have control over
   IF(CMAKE_CXX_CLANG_TIDY)
     SET_TARGET_PROPERTIES(kokkos_gtest PROPERTIES CXX_CLANG_TIDY "")
   ENDIF()
@@ -31,8 +31,8 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
 ENDIF()
 
 #
-# Define Incremental Testing Feature Levels
-# Define Device name mappings (i.e. what comes after Kokkos:: for the ExecSpace)
+#Define Incremental Testing Feature Levels
+#Define Device name mappings(i.e.what comes after Kokkos::for the ExecSpace)
 #
 
 SET(KOKKOS_CUDA_FEATURE_LEVEL 999)
@@ -44,7 +44,9 @@ SET(KOKKOS_HPX_NAME Experimental::HPX)
 SET(KOKKOS_OPENMP_FEATURE_LEVEL 999)
 SET(KOKKOS_OPENMP_NAME OpenMP)
 
-# FIXME_OPENMPTARGET - The NVIDIA HPC compiler nvc++ only compiles the first 8 incremental tests for the OpenMPTarget backend.
+#FIXME_OPENMPTARGET -                               \
+    The NVIDIA HPC compiler nvc++ only compiles the \
+        first 8 incremental tests for the OpenMPTarget backend.
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 10)
 ELSE()
@@ -61,9 +63,8 @@ SET(KOKKOS_THREADS_NAME Threads)
 SET(KOKKOS_OPENACC_FEATURE_LEVEL 8)
 SET(KOKKOS_OPENACC_NAME Experimental::OpenACC)
 
-
 #
-# Define the tests
+#Define the tests
 #
 
 #I will leave these alone for now because I don't need transitive dependencies on tests
@@ -79,7 +80,7 @@ SET(COMPILE_ONLY_SOURCES
   TestStringManipulation.cpp
   TestTypeList.cpp
 )
-# TestInterOp has a dependency on containers
+#TestInterOp has a dependency on containers
 IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
 ENDIF()
@@ -96,9 +97,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
   if(Kokkos_ENABLE_${DEVICE})
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
-    # Needed to split this for Windows NVCC, since it ends up putting everything on the
-    # command line in an intermediate compilation step even if CMake generated a response
-    # file. That then exceeded the shell command line max length.
+#Needed to split this for Windows NVCC, \
+    since it ends up putting everything on the
+#command line in an intermediate compilation step even if CMake generated a \
+    response
+#file.That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1A)
     foreach(Name
         AtomicOperations_int
@@ -137,8 +140,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MathematicalSpecialFunctions
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -170,8 +173,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ViewMapping_a
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -212,8 +215,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       WithoutInitializing
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -242,8 +245,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       SubView_c05
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${TagHostAccessible}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -260,8 +263,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       SubView_c09
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${TagHostAccessible}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -279,8 +282,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       SubView_c14
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${TagHostAccessible}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -319,8 +322,8 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
       ViewMapping_subview
       )
       set(file ${dir}/Test${DEVICE}${SPACE}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+#Write to a temporary intermediate file and call configure_file to avoid
+#updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${DEVICE}${SPACE}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
@@ -389,7 +392,8 @@ IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 ENDIF()
 
-# FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
+#FIXME_OPENMPTARGET - Comment non - \
+    passing tests with the NVIDIA HPC compiler nvc++
 IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   list(REMOVE_ITEM OpenMPTarget_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_int64_t_reduce.cpp
@@ -723,7 +727,7 @@ endif()
 
 if(Kokkos_ENABLE_SYCL)
   list(REMOVE_ITEM SYCL_SOURCES1A
-       # FIXME_SYCL atomic_fetch_oper for large types to be implemented
+#FIXME_SYCL atomic_fetch_oper for large types to be implemented
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexdouble.cpp
   )
 
@@ -777,7 +781,7 @@ if(Kokkos_ENABLE_SYCL)
     UnitTest_SYCL3
     SOURCES
       UnitTestMainInit.cpp
-      # FIXME_SYCL
+#FIXME_SYCL
       sycl/TestSYCL_Task.cpp
       sycl/TestSYCL_TeamScratchStreams.cpp
       ${SYCL_SOURCES3}
@@ -850,8 +854,8 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_PushFinalizeHook.cpp
 )
 
-# This test is intended for development and debugging by putting code
-# into TestDefaultDeviceDevelop.cpp. By default its empty.
+#This test is intended for development and debugging by putting code
+#into TestDefaultDeviceDevelop.cpp.By default its empty.
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Develop
   SOURCES
@@ -859,10 +863,10 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     default/TestDefaultDeviceDevelop.cpp
 )
 
-# This test is special, because it passes exactly when it prints the
-# message "PASSED: I am the custom std::terminate handler.", AND calls
-# std::terminate.  This means that we can't use
-# KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
+#This test is special, because it passes exactly when it prints the
+#message "PASSED: I am the custom std::terminate handler.", AND calls
+#std::terminate.This means that we can't use
+#KOKKOS_ADD_EXECUTABLE_AND_TEST.See GitHub issue #2147.
 
 KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
   SOURCES UnitTest_PushFinalizeHook_terminate.cpp
@@ -947,7 +951,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     set(SIZE_REGEX "[0-9]*")
     set(SKIP_SCRATCH_INITIALIZATION_REGEX ".*")
 
-    # check help works via environment variable
+#check help works via environment variable
     KOKKOS_ADD_TEST(
       SKIP_TRIBITS
       NAME ProfilingTestLibraryLoadHelp
@@ -957,7 +961,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       PASS_REGULAR_EXPRESSION
         "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::kokkosp_finalize_library::")
 
-    # check help works via direct library specification
+#check help works via direct library specification
     KOKKOS_ADD_TEST(
       SKIP_TRIBITS
       NAME ProfilingTestLibraryCmdLineHelp
@@ -976,14 +980,15 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_parse_args:4:KokkosCore_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
     )
 
-    # Above will test that leading/trailing quotes are stripped bc ctest cmd args is:
-    #       "--kokkos-tools-args="-c test delimit""
-    # The bracket argument syntax: [=[ and ]=] used below ensures it is treated as
-    # a single argument:
-    #       "--kokkos-tools-args=-c test delimit"
-    #
-    # https://cmake.org/cmake/help/latest/manual/cmake-language.7.html#bracket-argument
-    #
+#Above will test that leading / \
+    trailing quotes are stripped bc ctest cmd args is:
+#"--kokkos-tools-args=" - c test delimit ""
+#The bracket argument syntax : [=[and] = ] used below ensures it is treated as
+#a single argument:
+#"--kokkos-tools-args=-c test delimit"
+#
+#https:  // cmake.org/cmake/help/latest/manual/cmake-language.7.html#bracket-argument
+#
     KOKKOS_ADD_TEST(
       SKIP_TRIBITS
       NAME ProfilingTestLibraryCmdLine
@@ -1004,8 +1009,8 @@ KOKKOS_ADD_TEST_EXECUTABLE(
     TestStackTrace_f3.cpp
     TestStackTrace_f4.cpp
 )
-# We need -rdynamic on GNU platforms for the stacktrace functionality
-# to work correctly with shared libraries
+#We need - rdynamic on GNU platforms for the stacktrace functionality
+#to work correctly with shared libraries
 KOKKOS_SET_EXE_PROPERTY(StackTraceTestExec ENABLE_EXPORTS ON)
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
@@ -1032,10 +1037,10 @@ endif()
 
 FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
   KOKKOS_OPTION( ${DEVICE}_EXCLUDE_TESTS "" STRING "Incremental test exclude list" )
-  # Add unit test main
+#Add unit test main
   SET(${DEVICE}_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMainInit.cpp)
 
-  # Iterate over incremental tests in directory
+#Iterate over incremental tests in directory
 
   APPEND_GLOB(INCREMENTAL_FILE_LIST ${CMAKE_CURRENT_SOURCE_DIR}/incremental/*.hpp)
 

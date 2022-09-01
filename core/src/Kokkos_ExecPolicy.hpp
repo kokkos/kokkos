@@ -283,15 +283,15 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 RangePolicy()->RangePolicy<>;
 
 template <typename... Args>
-RangePolicy(int64_t, int64_t, Args...) -> RangePolicy<>;
+RangePolicy(int64_t, int64_t, Args...)->RangePolicy<>;
 
 template <typename... Args>
 RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t, Args...)
-    -> RangePolicy<>;
+    ->RangePolicy<>;
 
 template <typename ES, typename... Args,
           typename = std::enable_if_t<is_execution_space_v<ES>>>
-RangePolicy(ES const&, int64_t, int64_t, Args...) -> RangePolicy<ES>;
+RangePolicy(ES const&, int64_t, int64_t, Args...)->RangePolicy<ES>;
 
 }  // namespace Kokkos
 
@@ -693,28 +693,28 @@ TeamPolicy(DefaultExecutionSpace const&, int, int, Kokkos::AUTO_t const&)
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, int) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, int)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, int, int) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, int, int)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, Kokkos::AUTO_t const&) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, int) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, int)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
 TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&)
-    -> TeamPolicy<ES>;
+    ->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, int, Kokkos::AUTO_t const&) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
 
 namespace Impl {
 

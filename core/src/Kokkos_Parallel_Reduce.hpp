@@ -100,7 +100,7 @@ struct Sum {
 };
 
 template <typename Scalar, typename Space>
-Sum(View<Scalar, Space> const&) -> Sum<Scalar, Space>;
+Sum(View<Scalar, Space> const&)->Sum<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct Prod {
@@ -143,7 +143,7 @@ struct Prod {
 };
 
 template <typename Scalar, typename Space>
-Prod(View<Scalar, Space> const&) -> Prod<Scalar, Space>;
+Prod(View<Scalar, Space> const&)->Prod<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct Min {
@@ -188,7 +188,7 @@ struct Min {
 };
 
 template <typename Scalar, typename Space>
-Min(View<Scalar, Space> const&) -> Min<Scalar, Space>;
+Min(View<Scalar, Space> const&)->Min<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct Max {
@@ -234,7 +234,7 @@ struct Max {
 };
 
 template <typename Scalar, typename Space>
-Max(View<Scalar, Space> const&) -> Max<Scalar, Space>;
+Max(View<Scalar, Space> const&)->Max<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct LAnd {
@@ -278,7 +278,7 @@ struct LAnd {
 };
 
 template <typename Scalar, typename Space>
-LAnd(View<Scalar, Space> const&) -> LAnd<Scalar, Space>;
+LAnd(View<Scalar, Space> const&)->LAnd<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct LOr {
@@ -323,7 +323,7 @@ struct LOr {
 };
 
 template <typename Scalar, typename Space>
-LOr(View<Scalar, Space> const&) -> LOr<Scalar, Space>;
+LOr(View<Scalar, Space> const&)->LOr<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct BAnd {
@@ -368,7 +368,7 @@ struct BAnd {
 };
 
 template <typename Scalar, typename Space>
-BAnd(View<Scalar, Space> const&) -> BAnd<Scalar, Space>;
+BAnd(View<Scalar, Space> const&)->BAnd<Scalar, Space>;
 
 template <class Scalar, class Space>
 struct BOr {
@@ -413,7 +413,7 @@ struct BOr {
 };
 
 template <typename Scalar, typename Space>
-BOr(View<Scalar, Space> const&) -> BOr<Scalar, Space>;
+BOr(View<Scalar, Space> const&)->BOr<Scalar, Space>;
 
 template <class Scalar, class Index>
 struct ValLocScalar {
@@ -476,7 +476,7 @@ struct MinLoc {
 
 template <typename Scalar, typename Index, typename Space>
 MinLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
-    -> MinLoc<Scalar, Index, Space>;
+    ->MinLoc<Scalar, Index, Space>;
 
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
@@ -527,7 +527,7 @@ struct MaxLoc {
 
 template <typename Scalar, typename Index, typename Space>
 MaxLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
-    -> MaxLoc<Scalar, Index, Space>;
+    ->MaxLoc<Scalar, Index, Space>;
 
 template <class Scalar>
 struct MinMaxScalar {
@@ -592,7 +592,7 @@ struct MinMax {
 };
 
 template <typename Scalar, typename Space>
-MinMax(View<MinMaxScalar<Scalar>, Space> const&) -> MinMax<Scalar, Space>;
+MinMax(View<MinMaxScalar<Scalar>, Space> const&)->MinMax<Scalar, Space>;
 
 template <class Scalar, class Index>
 struct MinMaxLocScalar {
@@ -666,7 +666,7 @@ struct MinMaxLoc {
 
 template <typename Scalar, typename Index, typename Space>
 MinMaxLoc(View<MinMaxLocScalar<Scalar, Index>, Space> const&)
-    -> MinMaxLoc<Scalar, Index, Space>;
+    ->MinMaxLoc<Scalar, Index, Space>;
 
 // --------------------------------------------------
 // reducers added to support std algorithms
@@ -728,7 +728,7 @@ struct MaxFirstLoc {
 
 template <typename Scalar, typename Index, typename Space>
 MaxFirstLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
-    -> MaxFirstLoc<Scalar, Index, Space>;
+    ->MaxFirstLoc<Scalar, Index, Space>;
 
 //
 // MaxFirstLocCustomComparator
@@ -793,7 +793,7 @@ template <typename Scalar, typename Index, typename ComparatorType,
           typename Space>
 MaxFirstLocCustomComparator(View<ValLocScalar<Scalar, Index>, Space> const&,
                             ComparatorType)
-    -> MaxFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
+    ->MaxFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
 
 //
 // MinFirstLoc
@@ -851,7 +851,7 @@ struct MinFirstLoc {
 
 template <typename Scalar, typename Index, typename Space>
 MinFirstLoc(View<ValLocScalar<Scalar, Index>, Space> const&)
-    -> MinFirstLoc<Scalar, Index, Space>;
+    ->MinFirstLoc<Scalar, Index, Space>;
 
 //
 // MinFirstLocCustomComparator
@@ -916,7 +916,7 @@ template <typename Scalar, typename Index, typename ComparatorType,
           typename Space>
 MinFirstLocCustomComparator(View<ValLocScalar<Scalar, Index>, Space> const&,
                             ComparatorType)
-    -> MinFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
+    ->MinFirstLocCustomComparator<Scalar, Index, ComparatorType, Space>;
 
 //
 // MinMaxFirstLastLoc
@@ -985,7 +985,7 @@ struct MinMaxFirstLastLoc {
 
 template <typename Scalar, typename Index, typename Space>
 MinMaxFirstLastLoc(View<MinMaxLocScalar<Scalar, Index>, Space> const&)
-    -> MinMaxFirstLastLoc<Scalar, Index, Space>;
+    ->MinMaxFirstLastLoc<Scalar, Index, Space>;
 
 //
 // MinMaxFirstLastLocCustomComparator
@@ -1060,7 +1060,7 @@ template <typename Scalar, typename Index, typename ComparatorType,
           typename Space>
 MinMaxFirstLastLocCustomComparator(
     View<MinMaxLocScalar<Scalar, Index>, Space> const&, ComparatorType)
-    -> MinMaxFirstLastLocCustomComparator<Scalar, Index, ComparatorType, Space>;
+    ->MinMaxFirstLastLocCustomComparator<Scalar, Index, ComparatorType, Space>;
 
 //
 // FirstLoc
@@ -1121,7 +1121,7 @@ struct FirstLoc {
 };
 
 template <typename Index, typename Space>
-FirstLoc(View<FirstLocScalar<Index>, Space> const&) -> FirstLoc<Index, Space>;
+FirstLoc(View<FirstLocScalar<Index>, Space> const&)->FirstLoc<Index, Space>;
 
 //
 // LastLoc
@@ -1182,7 +1182,7 @@ struct LastLoc {
 };
 
 template <typename Index, typename Space>
-LastLoc(View<LastLocScalar<Index>, Space> const&) -> LastLoc<Index, Space>;
+LastLoc(View<LastLocScalar<Index>, Space> const&)->LastLoc<Index, Space>;
 
 template <class Index>
 struct StdIsPartScalar {
@@ -1253,7 +1253,7 @@ struct StdIsPartitioned {
 
 template <typename Index, typename Space>
 StdIsPartitioned(View<StdIsPartScalar<Index>, Space> const&)
-    -> StdIsPartitioned<Index, Space>;
+    ->StdIsPartitioned<Index, Space>;
 
 template <class Index>
 struct StdPartPointScalar {
@@ -1318,7 +1318,7 @@ struct StdPartitionPoint {
 
 template <typename Index, typename Space>
 StdPartitionPoint(View<StdPartPointScalar<Index>, Space> const&)
-    -> StdPartitionPoint<Index, Space>;
+    ->StdPartitionPoint<Index, Space>;
 
 }  // namespace Kokkos
 namespace Kokkos {

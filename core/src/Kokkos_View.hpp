@@ -1710,33 +1710,33 @@ class View : public ViewTraits<DataType, Properties...> {
 
 // These deduction guides result in an unmanaged View
 template <typename T>
-View(T*) -> View<T>;
+View(T*)->View<T>;
 
 template <typename T>
-View(T*, size_t) -> View<T*>;
+View(T*, size_t)->View<T*>;
 
 template <typename T>
-View(T*, size_t, size_t) -> View<T**>;
+View(T*, size_t, size_t)->View<T**>;
 
 template <typename T>
-View(T*, size_t, size_t, size_t) -> View<T***>;
+View(T*, size_t, size_t, size_t)->View<T***>;
 
 template <typename T>
-View(T*, size_t, size_t, size_t, size_t) -> View<T****>;
+View(T*, size_t, size_t, size_t, size_t)->View<T****>;
 
 template <typename T>
-View(T*, size_t, size_t, size_t, size_t, size_t) -> View<T*****>;
+View(T*, size_t, size_t, size_t, size_t, size_t)->View<T*****>;
 
 template <typename T>
-View(T*, size_t, size_t, size_t, size_t, size_t, size_t) -> View<T******>;
+View(T*, size_t, size_t, size_t, size_t, size_t, size_t)->View<T******>;
 
 template <typename T>
 View(T*, size_t, size_t, size_t, size_t, size_t, size_t, size_t)
-    -> View<T*******>;
+    ->View<T*******>;
 
 template <typename T>
 View(T*, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t)
-    -> View<T********>;
+    ->View<T********>;
 
 /** \brief Temporary free function rank()
  *         until rank() is implemented
