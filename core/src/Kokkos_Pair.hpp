@@ -111,6 +111,7 @@ struct pair {
       : first(p.first), second(p.second) {
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief Copy constructor.
   ///
   /// This calls the copy constructors of T1 and T2.  It won't compile
@@ -118,6 +119,7 @@ struct pair {
   template <class U, class V>
   KOKKOS_FORCEINLINE_FUNCTION constexpr pair(const volatile pair<U, V>& p)
       : first(p.first), second(p.second) {}
+#endif
 
   /// \brief Assignment operator.
   ///
@@ -130,6 +132,7 @@ struct pair {
     return *this;
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief Assignment operator, for volatile <tt>*this</tt>.
   ///
   /// \param p [in] Input; right-hand side of the assignment.
@@ -149,6 +152,7 @@ struct pair {
     // We deliberately do not return anything here.  See explanation
     // in public documentation above.
   }
+#endif
 
   // from std::pair<U,V>
   template <class U, class V>

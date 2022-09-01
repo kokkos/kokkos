@@ -279,11 +279,7 @@ class
     return *this;
   }
 
-  //---------------------------------------------------------------------------
-  // TODO: refactor Kokkos reductions to remove dependency on
-  // volatile member overloads since they are being deprecated in c++20
-  //---------------------------------------------------------------------------
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   //! Copy constructor from volatile.
   template <
       class RType,
@@ -436,8 +432,7 @@ class
     re_ *= src;
     im_ *= src;
   }
-
-  // TODO DSH 2019-10-7 why are there no volatile /= and friends?
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_4
 };
 
 //==============================================================================
