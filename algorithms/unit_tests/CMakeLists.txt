@@ -31,7 +31,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     # Each of these inputs is an .hpp file.
     # Generate a .cpp file for each one that runs it on the current backend (Tag),
     # and add this .cpp file to the sources for UnitTest_RandomAndSort.
-    foreach(SOURCES_A_Input TestRandomCommon;TestSortCommon;TestNestedSort)
+    foreach(SOURCES_A_Input
+        TestRandomCommon
+        TestSortCommon
+        TestNestedSort
+    )
       set(file ${dir}/${SOURCES_A_Input}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
