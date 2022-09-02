@@ -51,9 +51,27 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_NestedSort.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <algorithm>
 
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
+#if defined(KOKKOS_ENABLE_CUDA)
+
+// Workaround for `Instruction 'shfl' without '.sync' is not supported on
+// .target sm_70 and higher from PTX ISA version 6.4`.
+// Also see https://github.com/NVIDIA/cub/pull/170.
+#if !defined(CUB_USE_COOPERATIVE_GROUPS)
+#define CUB_USE_COOPERATIVE_GROUPS
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+
+#pragma GCC diagnostic pop
+
+#endif
 
 namespace Kokkos {
 
@@ -633,6 +651,17 @@ sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
   auto last  = Experimental::end(view);
   std::sort(first, last);
 }
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class DataType, class... Properties>
+void sort(const Cuda& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  const auto exec = thrust::cuda::par.on(space.cuda_stream());
+  auto first      = Experimental::begin(view);
+  auto last       = Experimental::end(view);
+  thrust::sort(exec, first, last);
+}
+#endif
 
 template <class ViewType>
 void sort(ViewType const& view) {
