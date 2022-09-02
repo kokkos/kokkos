@@ -649,8 +649,7 @@ sort(const ExecutionSpace& exec,
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
-          const Kokkos::View<DataType, Properties...>& view,
-          bool const = false) {
+          const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
       ViewType::rank == 1 &&
