@@ -53,6 +53,8 @@
 #include <Kokkos_NestedSort.hpp>
 #include <algorithm>
 
+#include "std_algorithms/Kokkos_BeginEnd.hpp"
+
 namespace Kokkos {
 
 namespace Impl {
@@ -576,9 +578,14 @@ struct min_max_functor {
 
 }  // namespace Impl
 
-template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType const& view) {
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (!SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace& exec,
+     const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
   using CompType = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
@@ -614,6 +621,17 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
       view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
+}
+
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
+  auto first = Experimental::begin(view);
+  auto last  = Experimental::end(view);
+  std::sort(first, last);
 }
 
 template <class ViewType>
