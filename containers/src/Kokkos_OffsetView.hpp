@@ -1201,21 +1201,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   {
     for (size_t i = 0; i < Rank; ++i) m_begins[i] = minIndices.begin()[i];
 
-    // Append layout and spaces if not input
-    using alloc_prop_input = Kokkos::Impl::ViewCtorProp<P...>;
-
-    // use 'std::integral_constant<unsigned,I>' for non-types
-    // to avoid duplicate class error.
-    using alloc_prop = Kokkos::Impl::ViewCtorProp<
-        P...,
-        std::conditional_t<alloc_prop_input::has_label,
-                           std::integral_constant<unsigned, 0>, std::string>,
-        std::conditional_t<alloc_prop_input::has_memory_space,
-                           std::integral_constant<unsigned, 1>,
-                           typename traits::device_type::memory_space>,
-        std::conditional_t<alloc_prop_input::has_execution_space,
-                           std::integral_constant<unsigned, 2>,
-                           typename traits::device_type::execution_space>>;
+    // Copy the input allocation properties with possibly defaulted properties
+    auto prop_copy = Kokkos::Impl::with_properties_if_unset(
+        arg_prop, std::string{}, typename traits::device_type::memory_space{},
+        typename traits::device_type::execution_space{});
+    using alloc_prop = decltype(prop_copy);
 
     static_assert(traits::is_managed,
                   "OffsetView allocation constructor requires managed memory");
@@ -1228,9 +1218,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           "Constructing OffsetView and initializing data with uninitialized "
           "execution space");
     }
-
-    // Copy the input allocation properties with possibly defaulted properties
-    alloc_prop prop_copy(arg_prop);
 
     //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -1944,10 +1931,8 @@ create_mirror(const Space&,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  using alloc_prop = Impl::ViewCtorProp<ViewCtorArgs..., std::string>;
-  alloc_prop prop_copy(arg_prop);
-  static_cast<Impl::ViewCtorProp<void, std::string>&>(prop_copy).value =
-      std::string(src.label()).append("_mirror");
+  auto prop_copy = Impl::with_properties_if_unset(
+      arg_prop, std::string(src.label()).append("_mirror"));
 
   return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
       prop_copy, src.layout(),
