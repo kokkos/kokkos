@@ -66,7 +66,7 @@
 
 #endif
 
-#if defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
 
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
@@ -652,7 +652,7 @@ void sort(const Cuda& space,
 }
 #endif
 
-#if defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
 template <class DataType, class... Properties>
 void sort(const Experimental::HIP& space,
           const Kokkos::View<DataType, Properties...>& view) {
