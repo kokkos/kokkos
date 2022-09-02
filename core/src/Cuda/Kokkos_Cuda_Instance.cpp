@@ -551,11 +551,11 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 
   // Init the array for used for arbitrarily sized atomics
-  if (stream == nullptr) Impl::initialize_host_cuda_lock_arrays();
+  if (this == &singleton()) Impl::initialize_host_cuda_lock_arrays();
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
-  if (stream == nullptr) {
+  if (this == &singleton()) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMallocHost(reinterpret_cast<void **>(&constantMemHostStaging),
                        CudaTraits::ConstantMemoryUsage));
@@ -835,7 +835,10 @@ int Cuda::impl_is_initialized() {
 }
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
-  Impl::CudaInternal::singleton().initialize(Impl::get_gpu(settings));
+  cudaStream_t singleton_stream;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
+  Impl::CudaInternal::singleton().initialize(Impl::get_gpu(settings),
+                                             singleton_stream, /*manage*/ true);
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {

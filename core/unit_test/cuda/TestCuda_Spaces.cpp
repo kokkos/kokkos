@@ -266,9 +266,9 @@ TEST(cuda, uvm) {
 
     *uvm_ptr = 42;
 
-    Kokkos::Cuda().fence();
+    Kokkos::fence();
     test_cuda_spaces_int_value<<<1, 1>>>(uvm_ptr);
-    Kokkos::Cuda().fence();
+    Kokkos::fence();
 
     EXPECT_EQ(*uvm_ptr, int(2 * 42));
 
