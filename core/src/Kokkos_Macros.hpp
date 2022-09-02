@@ -116,7 +116,11 @@
 // Code is parsed and separated into host and device code.
 // Host code is compiled again with another compiler.
 // Device code is compile to 'ptx'.
-#define KOKKOS_COMPILER_NVCC __NVCC__
+// NOTE: There is no __CUDACC_VER_PATCH__ officially, its __CUDACC_VER_BUILD__
+// which does have more than one digit (potentially undefined number of them).
+// This macro definition is in line with our other compiler defs
+#define KOKKOS_COMPILER_NVCC \
+  __CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10
 #endif  // #if defined( __NVCC__ )
 
 #if !defined(KOKKOS_LAMBDA)
