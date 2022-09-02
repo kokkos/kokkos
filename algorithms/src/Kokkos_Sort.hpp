@@ -63,8 +63,14 @@
 #define CUB_USE_COOPERATIVE_GROUPS
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
+
+#pragma GCC diagnostic pop
+
 #endif
 
 namespace Kokkos {
