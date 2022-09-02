@@ -51,9 +51,8 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_NestedSort.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <algorithm>
-
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -636,17 +635,6 @@ sort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
-#if defined(KOKKOS_ENABLE_CUDA)
-template <class DataType, class... Properties>
-void sort(const Cuda& space, const Kokkos::View<DataType, Properties...>& view,
-          bool const = false) {
-  const auto exec = thrust::cuda::par.on(space.cuda_stream());
-  auto first      = Experimental::begin(view);
-  auto last       = Experimental::end(view);
-  thrust::sort(exec, first, last);
-}
-#endif
-
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
                  (SpaceAccessibility<
@@ -657,6 +645,17 @@ sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
   auto last  = Experimental::end(view);
   std::sort(first, last);
 }
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class DataType, class... Properties>
+void sort(const Cuda& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  const auto exec = thrust::cuda::par.on(space.cuda_stream());
+  auto first      = Experimental::begin(view);
+  auto last       = Experimental::end(view);
+  thrust::sort(exec, first, last);
+}
+#endif
 
 template <class ViewType>
 void sort(ViewType const& view) {
