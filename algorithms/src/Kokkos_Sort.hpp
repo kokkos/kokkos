@@ -641,6 +641,17 @@ sort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
+  auto first = Experimental::begin(view);
+  auto last  = Experimental::end(view);
+  std::sort(first, last);
+}
+
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties>
 void sort(const Cuda& space,
@@ -662,17 +673,6 @@ void sort(const Experimental::HIP& space,
   thrust::sort(exec, first, last);
 }
 #endif
-
-template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
-                 (SpaceAccessibility<
-                     HostSpace, typename Kokkos::View<DataType, Properties...>::
-                                    memory_space>::accessible)>
-sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
-  auto first = Experimental::begin(view);
-  auto last  = Experimental::end(view);
-  std::sort(first, last);
-}
 
 template <class ViewType>
 void sort(ViewType const& view) {
