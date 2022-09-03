@@ -124,9 +124,9 @@ IF (KOKKOS_ENABLE_IMPL_MDSPAN)
   if (KOKKOS_ENABLE_MDSPAN_EXTERNAL)
     MESSAGE(STATUS "Using external mdspan")
     target_link_libraries(kokkoscore PUBLIC std::mdspan)
-  elseif(KOKKOS_COMPILER_SUPPORTS_MDSPAN)
+  elseif(KOKKOS_COMPILER_SUPPORTS_MDSPAN AND NOT KOKKOS_ENABLE_MDSPAN_INTERNAL)
     message(STATUS "Using compiler-supplied mdspan")
-  elseif(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN)
+  elseif(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN AND NOT KOKKOS_ENABLE_MDSPAN_INTERNAL)
     message(STATUS "Using compiler-supplied experimental/mdspan")
   else()
     KOKKOS_LIB_INCLUDE_DIRECTORIES(
@@ -135,15 +135,12 @@ IF (KOKKOS_ENABLE_IMPL_MDSPAN)
     )
 
     APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p1684_bits/*.hpp)
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdarray)
     APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdspan)
 
     INSTALL (DIRECTORY
       "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/"
       DESTINATION ${KOKKOS_HEADER_DIR}
       FILES_MATCHING
-      PATTERN "mdarray"
       PATTERN "mdspan"
       PATTERN "*.hpp"
     )

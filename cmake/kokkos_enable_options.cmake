@@ -67,8 +67,10 @@ KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desu
 
 KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
 KOKKOS_ENABLE_OPTION(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
+KOKKOS_ENABLE_OPTION(MDSPAN_INTERNAL OFF BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan")
 mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
+mark_as_advanced(Kokkos_ENABLE_MDSPAN_INTERNAL)
 
 IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
   SET(CUDA_LAMBDA_DEFAULT ON)
