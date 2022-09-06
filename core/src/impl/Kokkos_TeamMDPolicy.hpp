@@ -165,7 +165,7 @@ struct ThreadAndVectorNestLevel<Rank, Cuda, ThreadAndVector>
 
 #ifdef KOKKOS_ENABLE_HIP
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, Experimental::HIP, ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, HIP, ThreadAndVector>
     : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
 #endif
 
