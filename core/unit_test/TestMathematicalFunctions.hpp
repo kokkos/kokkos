@@ -424,7 +424,7 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
     template <typename T, typename U, typename V>                             \
     static KOKKOS_FUNCTION auto eval(T x, U y, V z) {                         \
       static_assert(                                                          \
-          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0), (V)0),              \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0, (V)0)),              \
                        math_ternary_function_return_type_t<T, U, V>>::value); \
       return Kokkos::FUNC(x, y, z);                                           \
     }                                                                         \
