@@ -956,10 +956,10 @@ ThreadVectorMDRange(TeamHandle const&, Args&&...)
     ->ThreadVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
-struct TeamMDVectorRange;
+struct TeamVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
-struct TeamMDVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
@@ -978,7 +978,7 @@ struct TeamMDVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
           : iter;
 
   template <class... Args>
-  KOKKOS_INLINE_FUNCTION TeamMDVectorRange(TeamHandleType const& team_,
+  KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,
                                            Args&&... args)
       : team(team_), boundaries{static_cast<BoundaryType>(args)...} {
     static_assert(sizeof...(Args) == total_nest_level);
@@ -989,8 +989,8 @@ struct TeamMDVectorRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 };
 
 template <typename TeamHandle, typename... Args>
-TeamMDVectorRange(TeamHandle const&, Args&&...)
-    ->TeamMDVectorRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+TeamVectorMDRange(TeamHandle const&, Args&&...)
+    ->TeamVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle, typename Lambda,
           typename ReducerValueType>
@@ -1023,14 +1023,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 template <typename Rank, typename TeamHandle, typename Lambda,
           typename ReducerValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    TeamMDVectorRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
+    TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
-    TeamMDVectorRange<Rank, TeamHandle> const& policy, Lambda const& lambda) {
+    TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda) {
   Impl::md_parallel_impl<Rank>(policy, lambda, Impl::no_reduction_tag);
 }
 
