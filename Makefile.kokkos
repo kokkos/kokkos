@@ -456,6 +456,9 @@ tmp := $(call kokkos_append_header,'$H''endif')
 
 tmp := $(call kokkos_append_header,"")
 tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION $(KOKKOS_VERSION)")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION_MAJOR $(KOKKOS_VERSION_MAJOR)")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION_MINOR $(KOKKOS_VERSION_MINOR)")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION_PATCH $(KOKKOS_VERSION_PATCH)")
 tmp := $(call kokkos_append_header,"")
 
 tmp := $(call kokkos_append_header,"/* Execution Spaces */")
