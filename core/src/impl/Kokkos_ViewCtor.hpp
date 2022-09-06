@@ -335,7 +335,7 @@ KOKKOS_FUNCTION const auto &get_property(
 #if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
 // pragma pop is getting a warning from the underlying GCC
 // for unknown pragma if -pedantic is used
-#ifdef __CUDAR_ARCH__
+#ifdef __CUDA_ARCH__
 #pragma pop
 #endif
 #endif
