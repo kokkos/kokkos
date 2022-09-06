@@ -447,6 +447,7 @@ inline long double hypot(T1 x, T2 y, T3 z) {
 #else
 KOKKOS_IMPL_MATH_TERNARY_FUNCTION(hypot)
 #endif
+KOKKOS_IMPL_MATH_TERNARY_FUNCTION(fma)
 // Trigonometric functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sin)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(cos)
