@@ -629,10 +629,10 @@ struct TestThreadVectorMDRangeParallelFor : public TestTeamMDParallelFor {
 };
 
 template <typename ExecSpace>
-struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
+struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
   using TeamType = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_3D_TeamMDVectorRange(DimsType const& dims) {
+  static void test_parallel_for_3D_TeamVectorMDRange(DimsType const& dims) {
     using ViewType     = typename Kokkos::View<DataType***, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
@@ -649,7 +649,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
           int leagueRank = team.league_rank();
 
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<2, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<2, Direction>, TeamType>(
                   team, n0, n1);
 
           Kokkos::parallel_for(teamRange, [=](int i, int j) {
@@ -664,7 +664,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_4D_TeamMDVectorRange(DimsType const& dims) {
+  static void test_parallel_for_4D_TeamVectorMDRange(DimsType const& dims) {
     using ViewType     = typename Kokkos::View<DataType****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
@@ -682,7 +682,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
           int leagueRank = team.league_rank();
 
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<3, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<3, Direction>, TeamType>(
                   team, n0, n1, n2);
 
           Kokkos::parallel_for(teamRange, [=](int i, int j, int k) {
@@ -697,7 +697,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_5D_TeamMDVectorRange(DimsType const& dims) {
+  static void test_parallel_for_5D_TeamVectorMDRange(DimsType const& dims) {
     using ViewType     = typename Kokkos::View<DataType*****, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
@@ -716,7 +716,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
           int leagueRank = team.league_rank();
 
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<4, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<4, Direction>, TeamType>(
                   team, n0, n1, n2, n3);
 
           Kokkos::parallel_for(teamRange, [=](int i, int j, int k, int l) {
@@ -732,7 +732,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_6D_TeamMDVectorRange(DimsType const& dims) {
+  static void test_parallel_for_6D_TeamVectorMDRange(DimsType const& dims) {
     using ViewType     = typename Kokkos::View<DataType******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
@@ -752,7 +752,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
           int leagueRank = team.league_rank();
 
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<5, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<5, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4);
 
           Kokkos::parallel_for(
@@ -769,7 +769,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_7D_TeamMDVectorRange(DimsType const& dims) {
+  static void test_parallel_for_7D_TeamVectorMDRange(DimsType const& dims) {
     using ViewType     = typename Kokkos::View<DataType*******, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
@@ -790,7 +790,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
           int leagueRank = team.league_rank();
 
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<6, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<6, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4, n5);
 
           Kokkos::parallel_for(
@@ -807,7 +807,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_for_8D_TeamMDVectorRange(DimsType const& dims) {
+  static void test_parallel_for_8D_TeamVectorMDRange(DimsType const& dims) {
     using ViewType     = typename Kokkos::View<DataType********, ExecSpace>;
     using HostViewType = typename ViewType::HostMirror;
 
@@ -830,7 +830,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
           int leagueRank = team.league_rank();
 
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<7, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<7, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4, n5, n6);
 
           Kokkos::parallel_for(
@@ -863,7 +863,7 @@ struct TestTeamMDVectorRangeParallelFor : public TestTeamMDParallelFor {
         Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO),
         KOKKOS_LAMBDA(const TeamType& team) {
           auto teamRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<4, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<4, Direction>, TeamType>(
                   team, n0, n1, n2, n3);
 
           Kokkos::parallel_for(teamRange, [=](int i, int j, int k, int l) {
@@ -947,9 +947,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -993,9 +991,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1040,9 +1036,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
               [=](const int& i, const int& j, const int& k, const int& l,
                   int& threadSum) { threadSum += v(leagueRank, i, j, k, l); },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1090,9 +1084,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l, m);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1147,9 +1139,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l, m, n);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1206,9 +1196,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l, m, n, o);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1521,10 +1509,10 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 };
 
 template <typename ExecSpace>
-struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
+struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
   using TeamType = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_reduce_for_4D_TeamMDVectorRange(
+  static void test_parallel_reduce_for_4D_TeamVectorMDRange(
       DimsType const& dims) {
     using ViewType = typename Kokkos::View<DataType****, ExecSpace>;
 
@@ -1552,7 +1540,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
           int teamSum     = 0;
 
           auto teamVectorRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<3, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<3, Direction>, TeamType>(
                   team, n0, n1, n2);
 
           Kokkos::parallel_reduce(
@@ -1561,9 +1549,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1573,7 +1559,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_reduce_for_5D_TeamMDVectorRange(
+  static void test_parallel_reduce_for_5D_TeamVectorMDRange(
       DimsType const& dims) {
     using ViewType = typename Kokkos::View<DataType*****, ExecSpace>;
 
@@ -1603,7 +1589,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
           int teamSum     = 0;
 
           auto teamVectorRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<4, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<4, Direction>, TeamType>(
                   team, n0, n1, n2, n3);
 
           Kokkos::parallel_reduce(
@@ -1611,9 +1597,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
               [=](const int& i, const int& j, const int& k, const int& l,
                   int& vectorSum) { vectorSum += v(leagueRank, i, j, k, l); },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1623,7 +1607,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_reduce_for_6D_TeamMDVectorRange(
+  static void test_parallel_reduce_for_6D_TeamVectorMDRange(
       DimsType const& dims) {
     using ViewType = typename Kokkos::View<DataType******, ExecSpace>;
 
@@ -1654,7 +1638,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
           int teamSum     = 0;
 
           auto teamVectorRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<5, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<5, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4);
 
           Kokkos::parallel_reduce(
@@ -1664,9 +1648,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l, m);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1676,7 +1658,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_reduce_for_7D_TeamMDVectorRange(
+  static void test_parallel_reduce_for_7D_TeamVectorMDRange(
       DimsType const& dims) {
     using ViewType = typename Kokkos::View<DataType*******, ExecSpace>;
 
@@ -1712,7 +1694,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
           int teamSum     = 0;
 
           auto teamVectorRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<6, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<6, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4, n5);
 
           Kokkos::parallel_reduce(
@@ -1722,9 +1704,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l, m, n);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1734,7 +1714,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
   }
 
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
-  static void test_parallel_reduce_for_8D_TeamMDVectorRange(
+  static void test_parallel_reduce_for_8D_TeamVectorMDRange(
       DimsType const& dims) {
     using ViewType = typename Kokkos::View<DataType********, ExecSpace>;
 
@@ -1774,7 +1754,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
           int teamSum     = 0;
 
           auto teamVectorRange =
-              Kokkos::TeamMDVectorRange<Kokkos::Rank<7, Direction>, TeamType>(
+              Kokkos::TeamVectorMDRange<Kokkos::Rank<7, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4, n5, n6);
 
           Kokkos::parallel_reduce(
@@ -1784,9 +1764,7 @@ struct TestTeamMDVectorRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l, m, n, o);
               },
               teamSum);
-
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&leagueSum, teamSum]() { leagueSum += teamSum; });
+          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1835,6 +1813,7 @@ TEST(TEST_CATEGORY, TeamThreadMDRangeParallelFor) {
       TEST_EXECSPACE>::test_parallel_for_8D_TeamThreadMDRange<Left>(smallDims);
   TestTeamThreadMDRangeParallelFor<
       TEST_EXECSPACE>::test_parallel_for_8D_TeamThreadMDRange<Right>(smallDims);
+
   TestTeamThreadMDRangeParallelFor<
       TEST_EXECSPACE>::test_parallel_single_direction_test<Left>(dims);
   TestTeamThreadMDRangeParallelFor<
@@ -1868,40 +1847,40 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelFor) {
       test_parallel_for_8D_ThreadVectorMDRange<Right>(smallDims);
 }
 
-TEST(TEST_CATEGORY, TeamMDVectorRangeParallelFor) {
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_3D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_3D_TeamMDVectorRange<Right>(dims);
+TEST(TEST_CATEGORY, TeamVectorMDRangeParallelFor) {
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_3D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_3D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_4D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_4D_TeamMDVectorRange<Right>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_4D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_4D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_5D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_5D_TeamMDVectorRange<Right>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_5D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_5D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_6D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_6D_TeamMDVectorRange<Right>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_6D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_6D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_7D_TeamMDVectorRange<Left>(smallDims);
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_7D_TeamMDVectorRange<Right>(smallDims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_7D_TeamVectorMDRange<Left>(smallDims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_7D_TeamVectorMDRange<Right>(smallDims);
 
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_8D_TeamMDVectorRange<Left>(smallDims);
-  TestTeamMDVectorRangeParallelFor<
-      TEST_EXECSPACE>::test_parallel_for_8D_TeamMDVectorRange<Right>(smallDims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_8D_TeamVectorMDRange<Left>(smallDims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_8D_TeamVectorMDRange<Right>(smallDims);
 
-  TestTeamMDVectorRangeParallelFor<
+  TestTeamVectorMDRangeParallelFor<
       TEST_EXECSPACE>::test_parallel_double_direction_test<Left>(dims);
-  TestTeamMDVectorRangeParallelFor<
+  TestTeamVectorMDRangeParallelFor<
       TEST_EXECSPACE>::test_parallel_double_direction_test<Right>(dims);
 }
 
@@ -1964,31 +1943,31 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
       test_parallel_reduce_for_8D_ThreadVectorMDRange<Right>(smallDims);
 }
 
-TEST(TEST_CATEGORY, TeamMDVectorRangeParallelReduce) {
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_4D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_4D_TeamMDVectorRange<Right>(dims);
+TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_4D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_4D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_5D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_5D_TeamMDVectorRange<Right>(dims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_5D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_5D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_6D_TeamMDVectorRange<Left>(dims);
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_6D_TeamMDVectorRange<Right>(dims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_6D_TeamVectorMDRange<Left>(dims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_6D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_7D_TeamMDVectorRange<Left>(smallDims);
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_7D_TeamMDVectorRange<Right>(smallDims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_7D_TeamVectorMDRange<Left>(smallDims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_7D_TeamVectorMDRange<Right>(smallDims);
 
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_8D_TeamMDVectorRange<Left>(smallDims);
-  TestTeamMDVectorRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_8D_TeamMDVectorRange<Right>(smallDims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_8D_TeamVectorMDRange<Left>(smallDims);
+  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+      test_parallel_reduce_for_8D_TeamVectorMDRange<Right>(smallDims);
 }
 
 }  // namespace TeamMDRange
