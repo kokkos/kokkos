@@ -696,10 +696,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
           return MatchDiagnostic{false};
         return MatchDiagnostic{true, {"Found fence event"}};
       },
-      [&](EndFenceEvent) { return MatchDiagnostic{false}; },
-      [&](BeginParallelForEvent) {
-        return MatchDiagnostic{true, {"Found parallel_for event"}};
-      });
+      [&](EndFenceEvent) { return MatchDiagnostic{false}; });
   ASSERT_TRUE(success);
 }
 #endif
