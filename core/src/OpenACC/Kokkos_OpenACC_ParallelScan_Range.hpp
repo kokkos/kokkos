@@ -74,6 +74,7 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
     for (auto j = i; j >= begin; --j){
       tmp += val[j];
     }
+    printf("TMP = %2.4f\n", tmp);
     functor(i, tmp, true);
   }
 
@@ -104,6 +105,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
 
     int const async_arg  = m_policy.space().acc_async_queue();
 
+    //printf("Helloooooo!\n");
     Kokkos::Experimental::Impl::OpenACCParallelScanRangePolicy(
         begin, end, m_functor, async_arg);
   }
