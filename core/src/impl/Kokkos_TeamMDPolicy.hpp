@@ -192,13 +192,19 @@ struct ThreadAndVectorNestLevel<Rank, Threads, ThreadAndVector>
 // TODO check par_rt and par_rv validity
 #ifdef KOKKOS_ENABLE_SYCL
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, SYCL, ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Experimental::SYCL, ThreadAndVector>
     : HostBasedNestLevel<Rank, ThreadAndVector> {};
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
 struct ThreadAndVectorNestLevel<Rank, Experimental::HPX, ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENACC
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Experimental::OpenACC, ThreadAndVector>
     : HostBasedNestLevel<Rank, ThreadAndVector> {};
 #endif
 
