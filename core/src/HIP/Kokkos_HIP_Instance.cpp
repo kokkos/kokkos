@@ -67,9 +67,8 @@
 #include <vector>
 
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-__device__ __constant__ unsigned long
-    kokkos_impl_hip_constant_memory_buffer[HIPTraits::ConstantMemoryUsage /
-                                           sizeof(unsigned long)];
+__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
+    [Kokkos::Impl::HIPTraits::ConstantMemoryUsage / sizeof(unsigned long)];
 #endif
 
 namespace Kokkos {
