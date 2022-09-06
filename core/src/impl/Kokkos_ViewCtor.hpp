@@ -267,6 +267,16 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
   return view_ctor_prop;
 }
 
+// Suppress faulty warning from NVCC see:
+// https://github.com/kokkos/kokkos/issues/5426
+#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
+// pragma pop is getting a warning from the underlying GCC
+// for unknown pragma if -pedantic is used
+#ifdef __CUDA_ARCH__
+#pragma push
+#pragma diag_suppress implicit_return_from_non_void_function
+#endif
+#endif
 template <typename... P, typename Property, typename... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                               const Property &property,
@@ -322,6 +332,13 @@ KOKKOS_FUNCTION const auto &get_property(
     return view_ctor_prop;
   }
 }
+#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
+// pragma pop is getting a warning from the underlying GCC
+// for unknown pragma if -pedantic is used
+#ifdef __CUDA_ARCH__
+#pragma pop
+#endif
+#endif
 
 template <typename Tag, typename... P>
 KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {
