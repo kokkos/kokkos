@@ -64,6 +64,13 @@ IF(Kokkos_ENABLE_OPENMPTARGET)
   )
 ENDIF()
 
+IF((KOKKOS_ENABLE_CUDA AND KOKKOS_ENABLE_CUDA_LAMBDA) OR KOKKOS_ENABLE_HIP OR KOKKOS_ENABLE_SYCL)
+  KOKKOS_ADD_EXECUTABLE (
+    PerformanceTest_SharedSpace
+    SOURCES test_sharedSpace.cpp
+  )
+ENDIF()
+
 # Per #374, we always want to build this test, but we only want to run
 # it as a PERFORMANCE test.  That's why we separate building the test
 # from running the test.
