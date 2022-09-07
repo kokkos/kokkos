@@ -200,11 +200,7 @@ void HIPInternal::fence(const std::string &name) const {
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
-      [&]() {
-        KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
-        // can reset our cycle id now as well
-        m_cycleId = 0;
-      });
+      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream)); });
 }
 
 void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
@@ -420,44 +416,6 @@ void HIPInternal::finalize() {
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
   m_scratch_locks = nullptr;
-
-  if (nullptr != d_driverWorkArray) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
-    d_driverWorkArray = nullptr;
-  }
-}
-
-char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
-  if (d_driverWorkArray == nullptr) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipHostMalloc(&d_driverWorkArray,
-                      m_maxDriverCycles * m_maxDriverTypeSize * sizeof(char),
-                      hipHostMallocNonCoherent));
-  }
-  if (driverTypeSize > m_maxDriverTypeSize) {
-    // fence handles the cycle id reset for us
-    fence(
-        "Kokkos::HIPInternal::get_next_driver: fence before reallocating "
-        "resources");
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(d_driverWorkArray));
-    m_maxDriverTypeSize = driverTypeSize;
-    if (m_maxDriverTypeSize % 128 != 0)
-      m_maxDriverTypeSize =
-          m_maxDriverTypeSize + 128 - m_maxDriverTypeSize % 128;
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipHostMalloc(&d_driverWorkArray,
-                      m_maxDriverCycles * m_maxDriverTypeSize * sizeof(char),
-                      hipHostMallocNonCoherent));
-  } else {
-    m_cycleId = (m_cycleId + 1) % m_maxDriverCycles;
-    if (m_cycleId == 0) {
-      // ensure any outstanding kernels are completed before we wrap around
-      fence(
-          "Kokkos::HIPInternal::get_next_driver: fence before reusing first "
-          "driver");
-    }
-  }
-  return &d_driverWorkArray[m_maxDriverTypeSize * m_cycleId];
 }
 
 //----------------------------------------------------------------------------

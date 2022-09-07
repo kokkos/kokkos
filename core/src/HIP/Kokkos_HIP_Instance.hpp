@@ -100,20 +100,6 @@ class HIPInternal {
   int m_maxShmemPerBlock              = 0;
   int m_maxThreadsPerSM               = 0;
 
-  // array of DriverTypes to be allocated in host-pinned memory for async
-  // kernel launches
-  mutable char *d_driverWorkArray = nullptr;
-  // number of kernel launches that can be in-flight w/o synchronization
-  const int m_maxDriverCycles = 100;
-  // max size of a DriverType [bytes]
-  mutable size_t m_maxDriverTypeSize = 1024 * 10;
-  // the current index in the driverWorkArray
-  mutable int m_cycleId = 0;
-  // mutex to access d_driverWorkArray
-  mutable std::mutex m_mutexWorkArray;
-  // mutex to access shared memory
-  mutable std::mutex m_mutexSharedMemory;
-
   // Scratch Spaces for Reductions
   std::size_t m_scratchSpaceCount = 0;
   std::size_t m_scratchFlagsCount = 0;
@@ -156,9 +142,6 @@ class HIPInternal {
 
   void fence() const;
   void fence(const std::string &) const;
-
-  // returns the next driver type pointer in our work array
-  char *get_next_driver(size_t driverTypeSize) const;
 
   ~HIPInternal();
 

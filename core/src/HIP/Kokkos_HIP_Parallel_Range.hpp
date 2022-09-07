@@ -172,9 +172,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const bool m_result_ptr_host_accessible;
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
-  // Only let one ParallelReduce/Scan modify the shared memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_shared_memory_lock;
 
   static bool constexpr UseShflReduction =
       static_cast<bool>(Analysis::StaticValueSize);
@@ -401,10 +398,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_host_accessible(
             MemorySpaceAccess<Kokkos::HostSpace,
-                              typename ViewType::memory_space>::accessible),
-        m_shared_memory_lock(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_mutexSharedMemory) {}
+                              typename ViewType::memory_space>::accessible) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -418,10 +412,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr_host_accessible(
             MemorySpaceAccess<Kokkos::HostSpace,
                               typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_shared_memory_lock(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_mutexSharedMemory) {}
+                                  memory_space>::accessible) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -461,9 +452,6 @@ class ParallelScanHIPBase {
   size_type* m_scratch_flags = nullptr;
   size_type m_final          = false;
   int m_grid_x               = 0;
-  // Only let one ParallelReduce/Scan modify the shared memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_shared_memory_lock;
 
  private:
   template <class TagType>
@@ -614,7 +602,10 @@ class ParallelScanHIPBase {
   }
 
   // Determine block size constrained by shared memory:
-  virtual inline unsigned local_block_size(const FunctorType& f) = 0;
+  virtual inline unsigned local_block_size(const FunctorType&) {
+    // Making this function pure virtual, trips the compiler.
+    return 0;
+  };
 
   inline void impl_execute() {
     const index_type nwork = m_policy.end() - m_policy.begin();
@@ -675,10 +666,7 @@ class ParallelScanHIPBase {
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
-        m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
-        m_shared_memory_lock(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_mutexSharedMemory) {}
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 };
 
 template <class FunctorType, class... Traits>

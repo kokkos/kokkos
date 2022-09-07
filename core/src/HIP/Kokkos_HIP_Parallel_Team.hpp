@@ -508,9 +508,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
   void* m_scratch_ptr[2];
   size_t m_scratch_size[2];
   int32_t* m_scratch_locks;
-  // Only let one ParallelFor/Reduce modify the team scratch memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <typename TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
@@ -566,10 +563,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
         m_policy(arg_policy),
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock_guard(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_team_scratch_mutex) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelForTag());
@@ -677,9 +671,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
-  // Only let one ParallelFor/Reduce modify the team scratch memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <class TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
@@ -884,10 +875,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock_guard(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_team_scratch_mutex) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelReduceTag());
@@ -980,10 +968,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock_guard(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_team_scratch_mutex) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     m_team_size = m_team_size >= 0
                       ? m_team_size
                       : arg_policy.team_size_recommended(arg_functor, reducer,
