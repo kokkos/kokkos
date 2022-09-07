@@ -203,13 +203,12 @@ using SharedSpace KOKKOS_IMPL_SHARED_SPACE_ANNOTATION = HostSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 #endif
 
-inline constexpr bool has_SharedSpace() {
+inline constexpr bool has_shared_space =
 #if defined KOKKOS_HAS_SHARED_SPACE
-  return true;
+    true;
 #else
-  return false;
+    false;
 #endif
-}
 
 }  // namespace Kokkos
 
