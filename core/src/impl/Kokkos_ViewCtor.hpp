@@ -277,6 +277,11 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
 #endif
+#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100)
+#define KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
+#pragma warning(push)
+#pragma warning(disable : 1011)
+#endif
 template <typename... P, typename Property, typename... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                               const Property &property,
@@ -338,6 +343,10 @@ KOKKOS_FUNCTION const auto &get_property(
 #ifdef __CUDA_ARCH__
 #pragma pop
 #endif
+#endif
+#ifdef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
+#pragma warning(pop)
+#undef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
 #endif
 
 template <typename Tag, typename... P>
