@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#if defined _WIN32  // windows system
+#if defined(_WIN32)  // windows system
 #include <windows.h>
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
