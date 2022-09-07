@@ -424,7 +424,7 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
     template <typename T, typename U, typename V>                             \
     static KOKKOS_FUNCTION auto eval(T x, U y, V z) {                         \
       static_assert(                                                          \
-          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0), (V)0),              \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0, (V)0)),              \
                        math_ternary_function_return_type_t<T, U, V>>::value); \
       return Kokkos::FUNC(x, y, z);                                           \
     }                                                                         \
@@ -446,6 +446,7 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 DEFINE_TERNARY_FUNCTION_EVAL(hypot, 2);
+DEFINE_TERNARY_FUNCTION_EVAL(fma, 2);
 #endif
 
 #undef DEFINE_TERNARY_FUNCTION_EVAL
@@ -713,6 +714,15 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2, 3.f, 4.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.l, 3.l, 4.l);
+#endif
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_fma) {
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.f, 3.f, 4.f);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2., 3., 4.);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2, 3.f, 4.);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.l, 3.l, 4.l);
 #endif
 }
 
