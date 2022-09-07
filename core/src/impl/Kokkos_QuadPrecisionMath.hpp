@@ -208,8 +208,7 @@ inline bool signbit(__float128 x) { return ::signbitq(x); }
 //</editor-fold>
 
 //<editor-fold desc="Mathematical constants __float128 specializations">
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::numbers {
 // clang-format off
 template <> constexpr __float128 e_v         <__float128> = 2.718281828459045235360287471352662498Q;
 template <> constexpr __float128 log2e_v     <__float128> = 1.442695040888963407359924681001892137Q;
@@ -225,8 +224,7 @@ template <> constexpr __float128 inv_sqrt3_v <__float128> = 0.577350269189625764
 template <> constexpr __float128 egamma_v    <__float128> = 0.577215664901532860606512090082402431Q;
 template <> constexpr __float128 phi_v       <__float128> = 1.618033988749894848204586834365638118Q;
 // clang-format on
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::numbers
 //</editor-fold>
 
 #endif
