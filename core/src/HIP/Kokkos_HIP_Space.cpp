@@ -180,32 +180,36 @@ void* HIPManagedSpace::impl_allocate(
   if (arg_alloc_size > 0) {
     if (is_first_hip_managed_allocation.exchange(false) &&
         Kokkos::show_warnings()) {
-      if (!hip_driver_check_page_migration(m_device)) {
-        std::cerr << R"warning(
+      do {  // hack to avoid spamming users with too many warnings
+        if (!hip_driver_check_page_migration(m_device)) {
+          std::cerr << R"warning(
 Kokkos::HIP::allocation WARNING: The combination of device and system configuration
                                  does not support page migration between device and host.
                                  HIPManagedSpace might not work as expected.
                                  Please refer to the ROCm documentation on unified/managed memory.)warning"
-                  << std::endl;
-      }
+                    << std::endl;
+          break;  // do not warn about HSA_XNACK environement variable
+        }
 
-      // check for correct runtime environment
-      const char* hsa_xnack = std::getenv("HSA_XNACK");
-      if (!hsa_xnack)
-        std::cerr << R"warning(
+        // check for correct runtime environment
+        const char* hsa_xnack = std::getenv("HSA_XNACK");
+        if (!hsa_xnack)
+          std::cerr << R"warning(
 Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_XNACK'
                               for the current process.
                               Nevertheless, xnack is enabled for all processes if
                               amdgpu.noretry=0 was set in the Linux kernel boot line.
                               Without xnack enabled, Kokkos::HIPManaged might not behave
                               as expected.)warning"
-                  << std::endl;
-      else if (Kokkos::Impl::strcmp(hsa_xnack, "1") != 0)
-        std::cerr << "Kokkos::HIP::runtime WARNING: Kokkos detected the "
-                     "environement variable "
-                  << "'HSA_XNACK=" << hsa_xnack << "\n"
-                  << "Kokkos advises to set it to '1' to enable it per process."
-                  << std::endl;
+                    << std::endl;
+        else if (Kokkos::Impl::strcmp(hsa_xnack, "1") != 0)
+          std::cerr
+              << "Kokkos::HIP::runtime WARNING: Kokkos detected the "
+                 "environement variable "
+              << "'HSA_XNACK=" << hsa_xnack << "\n"
+              << "Kokkos advises to set it to '1' to enable it per process."
+              << std::endl;
+      } while (false);
     }
     auto const error_code = hipMallocManaged(&ptr, arg_alloc_size);
     if (error_code != hipSuccess) {
