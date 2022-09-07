@@ -1,9 +1,0 @@
-mkdir build
-cd build
-# for CUDA backend
-cmake ../ -DKokkos_ROOT=${KOKKOS_INSTALL_ROOT} -DCMAKE_CXX_COMPILER=${kokkosopenacc}/bin/nvcc_wrapper
-# for OpenACC backend
-#cmake ../ -DKokkos_ROOT=${KOKKOS_INSTALL_ROOT} -DCMAKE_CXX_COMPILER=nvc++ -DCMAKE_CXX_FLAGS="-Minfo=acc -acc -O3"
-cmake ../ -DKokkos_ROOT=${KOKKOS_INSTALL_ROOT} -DCMAKE_CXX_COMPILER=nvc++
-# for OpenMPTarget backend
-cmake ../ -DKokkos_ROOT=${KOKKOS_INSTALL_ROOT} -DCMAKE_CXX_COMPILER=clang++
