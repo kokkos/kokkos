@@ -1399,8 +1399,6 @@ kokkos-clean:
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
 	ranlib libkokkos.a
-	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
-	ranlib libkokkos.a
 
 print-cxx-flags:
 	echo "$(KOKKOS_CXXFLAGS)"
