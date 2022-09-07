@@ -125,11 +125,13 @@ std::vector<uint64_t> incrementInLoop(ViewType& view,
   return results;
 }
 
-// Test is guarded for host device lamdas and thus needs
-// Kokkos_ENABLE_CUDA_LAMBDA=ON
 TEST(defaultdevicetype, shared_space) {
   ASSERT_TRUE(KOKKOS_HAS_SHARED_SPACE);
   ASSERT_TRUE(Kokkos::has_SharedSpace());
+
+  if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                               Kokkos::DefaultHostExecutionSpace>)
+    GTEST_SKIP() << "Skipping as host and device are the same space";
 
 #if defined(KOKKOS_ARCH_VEGA900) || defined(KOKKOS_ARCH_VEGA906) || \
     defined(KOKKOS_ARCH_VEGA908)
