@@ -85,10 +85,10 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
   using Policy      = Kokkos::RangePolicy<Traits...>;
   using WorkTag     = typename Policy::work_tag;
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<Functor, WorkTag>;
-  using ValueInit   = Kokkos::Impl::FunctorValueInit<Functor, WorkTag>;
-  using ValueType  = 		typename ValueTraits::value_type;
-  			Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
+  //using ValueTraits = Kokkos::Impl::FunctorValueTraits<Functor, WorkTag>;
+  //using ValueInit   = Kokkos::Impl::FunctorValueInit<Functor, WorkTag>;
+  //using ValueType   = typename ValueTraits::value_type;
+  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
   Policy m_policy;
 
  public:
@@ -105,9 +105,8 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
 
     int const async_arg  = m_policy.space().acc_async_queue();
 
-    //printf("Helloooooo!\n");
-    Kokkos::Experimental::Impl::OpenACCParallelScanRangePolicy(
-        begin, end, m_functor, async_arg);
+    //Kokkos::Experimental::Impl::OpenACCParallelScanRangePolicy(
+    //    begin, end, m_functor, async_arg);
   }
 };
 

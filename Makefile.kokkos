@@ -110,6 +110,7 @@ KOKKOS_INTERNAL_USE_CUDA := $(call kokkos_has_string,$(KOKKOS_DEVICES),Cuda)
 KOKKOS_INTERNAL_USE_HIP := $(call kokkos_has_string,$(KOKKOS_DEVICES),HIP)
 KOKKOS_INTERNAL_USE_SYCL := $(call kokkos_has_string,$(KOKKOS_DEVICES),SYCL)
 KOKKOS_INTERNAL_USE_OPENMPTARGET := $(call kokkos_has_string,$(KOKKOS_DEVICES),OpenMPTarget)
+KOKKOS_INTERNAL_USE_OPENACC := $(call kokkos_has_string,$(KOKKOS_DEVICES),OpenACC)
 
 KOKKOS_DEVICELIST =
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
@@ -136,6 +137,9 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   KOKKOS_DEVICELIST += OPENMPTARGET
 endif
+ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
+  KOKKOS_DEVICELIST += OpenACC
+endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
@@ -159,7 +163,9 @@ KOKKOS_CXX_VERSION                   := $(strip $(shell $(CXX) --version       2
 KOKKOS_INTERNAL_COMPILER_INTEL       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Intel Corporation)
 KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep -c XL))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "CC-"))
+KOKKOS_INTERNAL_COMPILER_PGI         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),PGI)
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell echo "$(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version 2>&1 | grep -c nvcc)>0" | bc))
+KOKKOS_INTERNAL_COMPILER_NVHPC       := $(strip $(shell $(CXX) --version 2>&1 | grep -c "nvc++"))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),clang)
 KOKKOS_INTERNAL_COMPILER_CRAY_CLANG  := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "clang++"))
 KOKKOS_INTERNAL_COMPILER_INTEL_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),oneAPI)
@@ -277,6 +283,18 @@ else ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL_CLANG), 1)
 else
   #Assume GCC
   KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fopenmp -foffload=nvptx-none
+endif
+
+# Set OpenACC flags.
+ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+  KOKKOS_INTERNAL_OPENACC_FLAG := -O3 -acc
+else
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
+      KOKKOS_INTERNAL_OPENACC_FLAG := -O3 -acc
+    else
+      #Assume GCC
+      KOKKOS_INTERNAL_OPENACC_FLAG := -fopenacc -foffload=nvptx-none
+    endif
 endif
 
 # Set C++ version flags.
@@ -488,6 +506,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_GCC), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_WORKAROUND_OPENMPTARGET_GCC")
   endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_OPENACC")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
@@ -1209,6 +1231,10 @@ ifneq ($(KOKKOS_INTERNAL_NEW_CONFIG), 0)
     tmp := $(call kokkos_append_config_header,"$H""include <fwd/Kokkos_Fwd_OPENMP.hpp>","KokkosCore_Config_FwdBackend.hpp")
     tmp := $(call kokkos_append_config_header,"$H""include <decl/Kokkos_Declare_OPENMP.hpp>","KokkosCore_Config_DeclareBackend.hpp")
   endif
+  ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
+    tmp := $(call kokkos_append_config_header,"\#include <fwd/Kokkos_Fwd_OPENACC.hpp>","KokkosCore_Config_FwdBackend.hpp")
+    tmp := $(call kokkos_append_config_header,"\#include <decl/Kokkos_Declare_OPENACC.hpp>","KokkosCore_Config_DeclareBackend.hpp")
+  endif
   ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
     tmp := $(call kokkos_append_config_header,"$H""include <fwd/Kokkos_Fwd_THREADS.hpp>","KokkosCore_Config_FwdBackend.hpp")
     tmp := $(call kokkos_append_config_header,"$H""include <decl/Kokkos_Declare_THREADS.hpp>","KokkosCore_Config_DeclareBackend.hpp")
@@ -1274,6 +1300,14 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   endif
   KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)
   KOKKOS_LIBS += $(KOKKOS_INTERNAL_OPENMPTARGET_LIB)
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/OpenACC/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/OpenACC/*.hpp)
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_OPENACC_FLAG)
+  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENACC_FLAG)
+  KOKKOS_LIBS += $(KOKKOS_INTERNAL_OPENACC_LIB)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
@@ -1363,6 +1397,8 @@ kokkos-clean:
         KokkosCore_Config_FwdBackend.tmp KokkosCore_Config_PostInclude.hpp KokkosCore_Config_PostInclude.tmp KokkosCore_Config_SetupBackend.tmp
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
+	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
+	ranlib libkokkos.a
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
 	ranlib libkokkos.a
 
