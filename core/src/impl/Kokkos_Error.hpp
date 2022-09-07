@@ -97,7 +97,11 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
-#ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+// FIXME_SYCL
+// Accomodate host pass for device functions that are not [[noreturn]]
+#if defined(KOKKOS_ENABLE_SYCL) ||  \
+    (defined(KOKKOS_ENABLE_CUDA) && \
+     (defined(__APPLE__) || defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)))
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE
 #else
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE KOKKOS_IMPL_ABORT_NORETURN
