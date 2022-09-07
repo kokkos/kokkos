@@ -199,7 +199,7 @@ pipeline {
                         }
                     }
                 }
-/*
+
                 stage('OPENMPTARGET-ROCm-5.2') {
                     agent {
                         dockerfile {
@@ -245,7 +245,7 @@ pipeline {
                         }
                     }
                 }
-*/
+
                 stage('OPENMPTARGET-Clang') {
                     agent {
                         dockerfile {
