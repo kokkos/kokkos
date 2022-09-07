@@ -54,10 +54,11 @@
 namespace Kokkos {
 namespace Experimental {
 
-#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
-  template <class T>                            \
-  inline constexpr auto TRAIT##_v =             \
-      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE)
+#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE)                \
+  template <class T>                                           \
+  inline constexpr auto TRAIT##_v =                            \
+      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE); \
+  inline constexpr auto TRAIT = TRAIT##_v<double>
 
 // clang-format off
 KOKKOS_IMPL_MATH_CONSTANT(e,          2.718281828459045235360287471352662498L);
