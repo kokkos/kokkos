@@ -44,8 +44,8 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-#if defined(_WIN32)  // windows system: do not include windows.h as it is
-                     // already included by Kokkos_Core
+#if defined(_WIN32)
+#include <sysinfoapi.h>
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
   GetSystemInfo(&si);

@@ -44,8 +44,8 @@
 */
 #include <Kokkos_Core.hpp>
 
-#if defined _WIN32  // windows system: do not include windows.h as it already
-                    // included in Kokkos_core
+#if defined _WIN32
+#include <sysinfoapi.h>
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
   GetSystemInfo(&si);
