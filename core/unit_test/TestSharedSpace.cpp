@@ -41,6 +41,8 @@
 // ************************************************************************
 //@HEADER
 */
+#include <gtest/gtest.h>
+#include <Kokkos_Core.hpp>
 
 #if defined(_WIN32)  // windows system
 #include <windows.h>
@@ -53,9 +55,6 @@ unsigned getBytesPerPage() {
 #include <unistd.h>
 unsigned getBytesPerPage() { return sysconf(_SC_PAGESIZE); }
 #endif
-
-#include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
 
 #include <algorithm>
 #include <numeric>
