@@ -304,7 +304,11 @@ int main(int argc, char* argv[]) {
   }
 
   Kokkos::initialize(argc, argv);
-  test_sharedSpace(args);
+  if constexpr (Kokkos::has_shared_space)
+    test_sharedSpace(args);
+  else
+    std::cout
+        << "The used Kokkos configuration does not support SharedSpace \n";
   Kokkos::finalize();
 
   return 0;

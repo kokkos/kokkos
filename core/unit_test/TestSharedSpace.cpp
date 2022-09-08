@@ -127,7 +127,7 @@ std::vector<uint64_t> incrementInLoop(ViewType& view,
 
 TEST(defaultdevicetype, shared_space) {
   ASSERT_TRUE(KOKKOS_HAS_SHARED_SPACE);
-  ASSERT_TRUE(Kokkos::has_SharedSpace());
+  ASSERT_TRUE(Kokkos::has_shared_space);
 
   if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
                                Kokkos::DefaultHostExecutionSpace>)
