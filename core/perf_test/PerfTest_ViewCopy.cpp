@@ -46,6 +46,11 @@
 
 namespace Test {
 
+/**
+ * \brief Mark the label as a figure of merit.
+ */
+std::string benchmark_fom(const std::string& label) { return "FOM: " + label; }
+
 void report_results(benchmark::State& state, double time) {
   state.SetIterationTime(time);
 
@@ -53,7 +58,7 @@ void report_results(benchmark::State& state, double time) {
   const auto size      = N8 * 8 / 1024 / 1024;
   state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
                                             benchmark::Counter::OneK::kIs1024);
-  state.counters["FOM: GB/s"] =
+  state.counters[benchmark_fom("GB/s")] =
       benchmark::Counter(2 * size / 1024 / time, benchmark::Counter::kDefaults,
                          benchmark::Counter::OneK::kIs1024);
 }
