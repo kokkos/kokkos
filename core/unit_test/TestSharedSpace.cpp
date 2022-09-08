@@ -44,13 +44,14 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-#if defined(_WIN32)  // windows system
-#include <windows.h>
+#if defined(_WIN32)  // windows system: do not include windows.h as it is
+                     // already included by Kokkos_Core
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
   GetSystemInfo(&si);
   return si.dwPageSize;
 }
+
 #else  // unix/posix system
 #include <unistd.h>
 unsigned getBytesPerPage() { return sysconf(_SC_PAGESIZE); }
