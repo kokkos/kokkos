@@ -45,7 +45,9 @@
 #include <Kokkos_Core.hpp>
 
 #if defined(_WIN32)
-#include <sysinfoapi.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
   GetSystemInfo(&si);
