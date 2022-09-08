@@ -179,71 +179,43 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES1B ${file})
     endforeach()
 
-    if(NOT KOKKOS_HAS_TRILINOS)
-      SET(SOURCES2A_NAME_LIST
+    SET(SOURCES2A_NAME_LIST
+      Abort
+      TeamBasic
+      TeamReductionScan
+      TeamScan
+      TeamScratch
+      TeamTeamSize
+      TeamVectorRange
+      UniqueToken
+      ViewAPI_a
+      ViewAPI_b
+      ViewAPI_c
+      ViewAPI_d
+      ViewAPI_e
+      ViewCopy_a
+      ViewCopy_b
+      ViewCtorDimMatch
+      ViewHooks
+      ViewLayoutStrideAssignment
+      ViewMapping_b
+      ViewMapping_subview
+      ViewMemoryAccessViolation
+      ViewOfClass
+      ViewResize
+      View_64bit
+      WorkGraph
+      WithoutInitializing
+    )
+    IF(KOKKOS_HAS_TRILINOS)
+      LIST(REMOVE_ITEM SOURCES2A_NAME_LIST
         Abort
-        TeamBasic
-        TeamReductionScan
-        TeamScan
-        TeamScratch
-        TeamTeamSize
-        TeamVectorRange
-        UniqueToken
-        ViewAPI_a
-        ViewAPI_b
-        ViewAPI_c
-        ViewAPI_d
-        ViewAPI_e
-        ViewCopy_a
-        ViewCopy_b
-        ViewCtorDimMatch
-        ViewHooks
-        ViewLayoutStrideAssignment
-        ViewMapping_b
-        ViewMapping_subview
         ViewMemoryAccessViolation
-        ViewOfClass
-        ViewResize
-        View_64bit
-        WorkGraph
-        WithoutInitializing
       )
-    else()
-      # Remove Abort and ViewMemoryAccessViolation tests in Trilinos
-      # due to issues with deathtest on Power9 systems in MPI builds
-      # when called with jsrun
-      SET(SOURCES2A_NAME_LIST
-        TeamBasic
-        TeamReductionScan
-        TeamScan
-        TeamScratch
-        TeamTeamSize
-        TeamVectorRange
-        UniqueToken
-        ViewAPI_a
-        ViewAPI_b
-        ViewAPI_c
-        ViewAPI_d
-        ViewAPI_e
-        ViewCopy_a
-        ViewCopy_b
-        ViewCtorDimMatch
-        ViewHooks
-        ViewLayoutStrideAssignment
-        ViewMapping_b
-        ViewMapping_subview
-        ViewOfClass
-        ViewResize
-        View_64bit
-        WorkGraph
-        WithoutInitializing
-      )
-    endif()
+    ENDIF()
 
     SET(${Tag}_SOURCES2A)
-    foreach(Name
-      ${SOURCES2A_NAME_LIST}
-      )
+    foreach(Name ${SOURCES2A_NAME_LIST})
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
