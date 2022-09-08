@@ -45,6 +45,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 
 #include <OpenACC/Kokkos_OpenACC_SharedAllocationRecord.hpp>
+#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 #include <Kokkos_HostSpace.hpp>
 

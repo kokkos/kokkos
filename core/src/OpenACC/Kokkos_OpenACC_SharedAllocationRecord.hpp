@@ -46,7 +46,6 @@
 #define KOKKOS_OPENACC_SHARED_ALLOCATION_RECORD_HPP
 
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
-#include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
 #include <openacc.h>
@@ -98,17 +97,6 @@ class Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::OpenACCSpace,
       const Kokkos::Experimental::OpenACCSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
-      const Kokkos::Experimental::OpenACCSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size) {
-    if (acc_on_device(acc_device_host)) {
-      return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
-    } else {
-      return nullptr;
-    }
-  }
 };
 
 #endif
