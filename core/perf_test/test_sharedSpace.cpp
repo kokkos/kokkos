@@ -90,6 +90,27 @@ T computeMean(std::vector<T> const& results) {
   return std::accumulate(results.begin(), results.end(), T{}) / results.size();
 }
 
+template <typename ViewType>
+class IncrementFunctor {
+ private:
+  using index_type = decltype(std::declval<ViewType>().size());
+  ViewType view_;
+
+ public:
+  IncrementFunctor() = delete;
+
+  explicit IncrementFunctor(ViewType view) : view_(view) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const index_type idx) const { ++view_(idx); }
+};
+
+// TIMING CAPTURED KERNEL
+// PREMISE: This kernel should always be memory bound, as we are measuring
+// memory access times. The compute load of an increment is small enough on
+// current hardware but this could be different for new hardware. As we count
+// the wall-clock time in the kernel, the core frequency of the device has to be
+// at the maximum to guarantee accurate masurements.
 template <typename ExecSpace, typename ViewType>
 std::vector<double> incrementInLoop(ViewType& view,
                                     unsigned int numRepetitions) {
@@ -99,12 +120,13 @@ std::vector<double> incrementInLoop(ViewType& view,
 
   Kokkos::fence();
   for (unsigned i = 0; i < numRepetitions; ++i) {
+    IncrementFunctor<ViewType> func(view);
     timer.reset();
     Kokkos::parallel_for(
         "increment",
         Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<index_type>>{
             0, view.size()},
-        KOKKOS_LAMBDA(index_type idx) { ++view(idx); });
+        func);
     Kokkos::fence();
     results.push_back(timer.seconds());
   }
