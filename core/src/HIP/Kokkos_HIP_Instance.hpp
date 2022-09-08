@@ -173,35 +173,6 @@ class HIPInternal {
                                   bool force_shrink = false);
 };
 
-class HIPInternalDevices {
- public:
-  enum { MAXIMUM_DEVICE_COUNT = 64 };
-  struct hipDeviceProp_t m_hipProp[MAXIMUM_DEVICE_COUNT];
-  int m_hipDevCount;
-
-  HIPInternalDevices();
-
-  static HIPInternalDevices const &singleton();
-};
-
-HIPInternalDevices::HIPInternalDevices() {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&m_hipDevCount));
-
-  if (m_hipDevCount > MAXIMUM_DEVICE_COUNT) {
-    Kokkos::abort(
-        "Sorry, you have more GPUs per node than we thought anybody would ever "
-        "have. Please report this to github.com/kokkos/kokkos.");
-  }
-  for (int i = 0; i < m_hipDevCount; ++i) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(m_hipProp + i, i));
-  }
-}
-
-const HIPInternalDevices &HIPInternalDevices::singleton() {
-  static HIPInternalDevices self;
-  return self;
-}
-
 }  // namespace Impl
 
 namespace Experimental {

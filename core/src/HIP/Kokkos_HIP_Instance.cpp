@@ -109,8 +109,6 @@ namespace Impl {
 //----------------------------------------------------------------------------
 
 void HIPInternal::print_configuration(std::ostream &s) const {
-  const HIPInternalDevices &dev_info = HIPInternalDevices::singleton();
-
   s << "macro  KOKKOS_ENABLE_HIP : defined" << '\n';
 #if defined(HIP_VERSION)
   s << "macro  HIP_VERSION = " << HIP_VERSION << " = version "
@@ -118,14 +116,18 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     << '\n';
 #endif
 
-  for (int i = 0; i < dev_info.m_hipDevCount; ++i) {
-    s << "Kokkos::HIP[ " << i << " ] " << dev_info.m_hipProp[i].name
-      << " version " << (dev_info.m_hipProp[i].major) << "."
-      << dev_info.m_hipProp[i].minor << ", Total Global Memory: "
-      << ::Kokkos::Impl::human_memory_size(dev_info.m_hipProp[i].totalGlobalMem)
+  int hipDevCount;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
+
+  for (int i = 0; i < hipDevCount; ++i) {
+    hipDeviceProp_t hipProp;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
+
+    s << "Kokkos::HIP[ " << i << " ] " << hipProp.name << " version "
+      << hipProp.major << "." << hipProp.minor << ", Total Global Memory: "
+      << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem)
       << ", Shared Memory per Block: "
-      << ::Kokkos::Impl::human_memory_size(
-             dev_info.m_hipProp[i].sharedMemPerBlock);
+      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock);
     if (m_hipDev == i) s << " : Selected";
     s << '\n';
   }
@@ -425,6 +427,8 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 
 namespace Kokkos {
 HIP::size_type HIP::detect_device_count() {
-  return Impl::HIPInternalDevices::singleton().m_hipDevCount;
+  int hipDevCount;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
+  return hipDevCount;
 }
 }  // namespace Kokkos

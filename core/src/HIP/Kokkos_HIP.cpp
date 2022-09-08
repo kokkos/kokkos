@@ -68,18 +68,16 @@ int HIP::impl_is_initialized() {
 void HIP::impl_initialize(InitializationSettings const& settings) {
   const int hip_device_id = ::Kokkos::Impl::get_gpu(settings);
 
-  const auto& dev_info = Impl::HIPInternalDevices::singleton();
-
   // Need at least a GPU device
-  const bool ok_id =
-      0 <= hip_device_id && hip_device_id < dev_info.m_hipDevCount;
+  int hipDevCount;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
+  const bool ok_id = 0 <= hip_device_id && hip_device_id < hipDevCount;
 
   if (ok_id) {
-    const struct hipDeviceProp_t& hipProp = dev_info.m_hipProp[hip_device_id];
-
-    Impl::HIPInternal::m_hipDev     = hip_device_id;
-    Impl::HIPInternal::m_deviceProp = hipProp;
-
+    Impl::HIPInternal::m_hipDev = hip_device_id;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(
+        &Impl::HIPInternal::m_deviceProp, hip_device_id));
+    const auto& hipProp = Impl::HIPInternal::m_deviceProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
     // number of multiprocessors
@@ -114,7 +112,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
     std::ostringstream msg;
     msg << "Kokkos::HIP::initialize(" << hip_device_id
         << ") FAILED : Device identifier out of range "
-        << "[0.." << dev_info.m_hipDevCount - 1 << "]";
+        << "[0.." << hipDevCount - 1 << "]";
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
