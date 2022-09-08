@@ -202,7 +202,7 @@ TEST(defaultdevicetype, shared_space) {
   for (unsigned cycle = 0; cycle < numDeviceHostCycles; ++cycle) {
     std::for_each(std::next(defaultExecSharedTimings[cycle].begin()),
                   defaultExecSharedTimings[cycle].end(),
-                  [&](const double timing) {
+                  [&](const uint64_t timing) {
                     (timing < threshold * defaultExecLocalMean)
                         ? fastAsLocalOnRepeatedAccess &= true
                         : fastAsLocalOnRepeatedAccess &= false;
@@ -210,7 +210,7 @@ TEST(defaultdevicetype, shared_space) {
 
     std::for_each(std::next(defaultHostExecSharedTimings[cycle].begin()),
                   defaultHostExecSharedTimings[cycle].end(),
-                  [&](const double timing) {
+                  [&](const uint64_t timing) {
                     (timing < threshold * defaultExecLocalMean)
                         ? fastAsLocalOnRepeatedAccess &= true
                         : fastAsLocalOnRepeatedAccess &= false;
