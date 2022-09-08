@@ -89,16 +89,16 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::HIP::size_type;
 
-  int m_hipDev                        = -1;
-  int m_hipArch                       = -1;
-  unsigned m_multiProcCount           = 0;
-  unsigned m_maxWarpCount             = 0;
-  std::array<size_type, 3> m_maxBlock = {0, 0, 0};
-  unsigned m_maxWavesPerCU            = 0;
-  unsigned m_maxSharedWords           = 0;
-  int m_shmemPerSM                    = 0;
-  int m_maxShmemPerBlock              = 0;
-  int m_maxThreadsPerSM               = 0;
+  static int m_hipDev;
+  static int m_hipArch;
+  static unsigned m_multiProcCount;
+  static unsigned m_maxWarpCount;
+  static std::array<size_type, 3> m_maxBlock;
+  static unsigned m_maxWavesPerCU;
+  static unsigned m_maxSharedWords;
+  static int m_shmemPerSM;
+  static int m_maxShmemPerBlock;
+  static int m_maxThreadsPerSM;
 
   // array of DriverTypes to be allocated in host-pinned memory for async
   // kernel launches
@@ -121,7 +121,7 @@ class HIPInternal {
   size_type *m_scratchSpace = nullptr;
   size_type *m_scratchFlags = nullptr;
 
-  hipDeviceProp_t m_deviceProp;
+  static hipDeviceProp_t m_deviceProp;
 
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
@@ -149,7 +149,7 @@ class HIPInternal {
 
   int is_initialized() const { return m_hipDev >= 0; }
 
-  void initialize(int hip_device_id, hipStream_t stream, bool manage_stream);
+  void initialize(hipStream_t stream, bool manage_stream);
   void finalize();
 
   void print_configuration(std::ostream &) const;
@@ -172,6 +172,35 @@ class HIPInternal {
   void *resize_team_scratch_space(std::int64_t bytes,
                                   bool force_shrink = false);
 };
+
+class HIPInternalDevices {
+ public:
+  enum { MAXIMUM_DEVICE_COUNT = 64 };
+  struct hipDeviceProp_t m_hipProp[MAXIMUM_DEVICE_COUNT];
+  int m_hipDevCount;
+
+  HIPInternalDevices();
+
+  static HIPInternalDevices const &singleton();
+};
+
+HIPInternalDevices::HIPInternalDevices() {
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&m_hipDevCount));
+
+  if (m_hipDevCount > MAXIMUM_DEVICE_COUNT) {
+    Kokkos::abort(
+        "Sorry, you have more GPUs per node than we thought anybody would ever "
+        "have. Please report this to github.com/kokkos/kokkos.");
+  }
+  for (int i = 0; i < m_hipDevCount; ++i) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(m_hipProp + i, i));
+  }
+}
+
+const HIPInternalDevices &HIPInternalDevices::singleton() {
+  static HIPInternalDevices self;
+  return self;
+}
 
 }  // namespace Impl
 
