@@ -722,7 +722,7 @@ class TestTeamPolicyConstruction {
         std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace>,
         Kokkos::TeamPolicy<>, Kokkos::TeamPolicy<ExecutionSpace>>;
 
-    int i{};
+    int i{1};
 
     // Copy/Move
 
