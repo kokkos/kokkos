@@ -235,10 +235,12 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
-    m_stream                    = stream;
-    m_manage_stream             = manage_stream;
-    m_team_scratch_current_size = 0;
-    m_team_scratch_ptr          = nullptr;
+    m_stream        = stream;
+    m_manage_stream = manage_stream;
+    for (int i = 0; i < m_n_team_scratch; ++i) {
+      m_team_scratch_current_size[i] = 0;
+      m_team_scratch_ptr[i]          = nullptr;
+    }
 
     // number of multiprocessors
     m_multiProcCount = hipProp.multiProcessorCount;
@@ -358,20 +360,37 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   return m_scratchFlags;
 }
 
-void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
-                                             bool force_shrink) {
-  if (m_team_scratch_current_size == 0) {
-    m_team_scratch_current_size = bytes;
-    m_team_scratch_ptr          = Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
-        "Kokkos::HIPSpace::TeamScratchMemory", m_team_scratch_current_size);
+std::pair<void *, int> HIPInternal::resize_team_scratch_space(
+    std::int64_t bytes, bool force_shrink) {
+  // Multiple ParallelFor/Reduce Teams can call this function at the same time
+  // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
+  // condition.
+
+  int current_team_scratch = 0;
+  int zero                 = 0;
+  int one                  = 1;
+  while (!m_team_scratch_pool[current_team_scratch].compare_exchange_weak(
+      zero, one, std::memory_order_release, std::memory_order_relaxed)) {
+    current_team_scratch = (current_team_scratch + 1) % m_n_team_scratch;
   }
-  if ((bytes > m_team_scratch_current_size) ||
-      ((bytes < m_team_scratch_current_size) && (force_shrink))) {
-    m_team_scratch_current_size = bytes;
-    m_team_scratch_ptr          = Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
-        m_team_scratch_ptr, m_team_scratch_current_size);
+  if (m_team_scratch_current_size[current_team_scratch] == 0) {
+    m_team_scratch_current_size[current_team_scratch] = bytes;
+    m_team_scratch_ptr[current_team_scratch] =
+        Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
+            "Kokkos::HIPSpace::TeamScratchMemory",
+            m_team_scratch_current_size[current_team_scratch]);
   }
-  return m_team_scratch_ptr;
+  if ((bytes > m_team_scratch_current_size[current_team_scratch]) ||
+      ((bytes < m_team_scratch_current_size[current_team_scratch]) &&
+       (force_shrink))) {
+    m_team_scratch_current_size[current_team_scratch] = bytes;
+    m_team_scratch_ptr[current_team_scratch] =
+        Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
+            m_team_scratch_ptr[current_team_scratch],
+            m_team_scratch_current_size[current_team_scratch]);
+  }
+  return std::make_pair(m_team_scratch_ptr[current_team_scratch],
+                        current_team_scratch);
 }
 
 //----------------------------------------------------------------------------
@@ -392,27 +411,31 @@ void HIPInternal::finalize() {
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
 
-    if (m_team_scratch_current_size > 0)
-      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr);
+    for (int i = 0; i < m_n_team_scratch; ++i) {
+      if (m_team_scratch_current_size[i] > 0)
+        Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
+    }
 
     if (m_manage_stream && m_stream != nullptr)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
   }
 
-  m_hipDev                    = -1;
-  m_hipArch                   = -1;
-  m_multiProcCount            = 0;
-  m_maxWarpCount              = 0;
-  m_maxBlock                  = {0, 0, 0};
-  m_maxSharedWords            = 0;
-  m_maxShmemPerBlock          = 0;
-  m_scratchSpaceCount         = 0;
-  m_scratchFlagsCount         = 0;
-  m_scratchSpace              = nullptr;
-  m_scratchFlags              = nullptr;
-  m_stream                    = nullptr;
-  m_team_scratch_current_size = 0;
-  m_team_scratch_ptr          = nullptr;
+  m_hipDev            = -1;
+  m_hipArch           = -1;
+  m_multiProcCount    = 0;
+  m_maxWarpCount      = 0;
+  m_maxBlock          = {0, 0, 0};
+  m_maxSharedWords    = 0;
+  m_maxShmemPerBlock  = 0;
+  m_scratchSpaceCount = 0;
+  m_scratchFlagsCount = 0;
+  m_scratchSpace      = nullptr;
+  m_scratchFlags      = nullptr;
+  m_stream            = nullptr;
+  for (int i = 0; i < m_n_team_scratch; ++i) {
+    m_team_scratch_current_size[i] = 0;
+    m_team_scratch_ptr[i]          = nullptr;
+  }
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
   m_scratch_locks = nullptr;
