@@ -206,9 +206,26 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
     set(STDALGO_TEAM_SOURCES_C)
     foreach(Name
 	StdAlgorithmsCommon
-	StdAlgorithmsTeamAdjacentDifference
+	StdAlgorithmsTeamAdjacentFind
+	StdAlgorithmsTeamAllOf
+	StdAlgorithmsTeamAnyOf
+	StdAlgorithmsTeamFind
+	StdAlgorithmsTeamFindIf
+	StdAlgorithmsTeamFindIfNot
+	StdAlgorithmsTeamNoneOf
 	)
       list(APPEND STDALGO_TEAM_SOURCES_C Test${Name}.cpp)
+	endforeach()
+
+	# ------------------------------------------
+    # std team D
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_D)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamAdjacentDifference
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_D Test${Name}.cpp)
     endforeach()
 
   endif()
@@ -240,16 +257,19 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
   )
 endif()
 
-foreach(ID A;B;C;D;E)
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_StdSet_${ID}
-    SOURCES
-    UnitTestMain.cpp
-    ${STDALGO_SOURCES_${ID}}
-    )
-endforeach()
+# Temporarily disable other algorithms' tests
+# foreach(ID A;B;C;D;E)
+#   KOKKOS_ADD_EXECUTABLE_AND_TEST(
+#     UnitTest_StdSet_${ID}
+#     SOURCES
+#     UnitTestMain.cpp
+#     ${STDALGO_SOURCES_${ID}}
+#     )
+# endforeach()
 
-foreach(ID A;B;C)
+# Temporarily disable A and B group
+# foreach(ID A;B;C)
+foreach(ID C;D)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_StdSet_Team_${ID}
     SOURCES
