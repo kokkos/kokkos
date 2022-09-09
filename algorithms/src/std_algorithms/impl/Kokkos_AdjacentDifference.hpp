@@ -100,7 +100,7 @@ OutputIteratorType adjacent_difference_exespace_impl(
 //
 template <class TeamHandleType, class InputIteratorType,
           class OutputIteratorType, class BinaryOp>
-OutputIteratorType adjacent_difference_team_impl(
+KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
     const TeamHandleType& teamHandle, InputIteratorType first_from,
     InputIteratorType last_from, OutputIteratorType first_dest,
     BinaryOp bin_op) {

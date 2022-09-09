@@ -63,17 +63,21 @@ struct PlusFunctor {
   }
 };
 
-template <class ViewType, class DiffsViewType, class BinaryOp>
+template <class SourceViewType, class DestViewType, class DistancesViewType,
+          class BinaryOp>
 struct TestFunctorA {
-  ViewType m_view;
-  DiffsViewType m_diffsView;
+  SourceViewType m_sourceView;
+  DestViewType m_destView;
+  DistancesViewType m_distancesView;
   int m_apiPick;
   BinaryOp m_binaryOp;
 
-  TestFunctorA(const ViewType view, const DiffsViewType diffsView, int apiPick,
+  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
+               const DistancesViewType distancesView, int apiPick,
                BinaryOp binaryOp)
-      : m_view(view),
-        m_diffsView(diffsView),
+      : m_sourceView(sourceView),
+        m_destView(destView),
+        m_distancesView(distancesView),
         m_apiPick(apiPick),
         m_binaryOp(std::move(binaryOp)) {}
 
@@ -81,30 +85,49 @@ struct TestFunctorA {
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
 
-    auto myRowView  = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
-    auto myDiffView = Kokkos::subview(m_diffsView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom =
+        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
     switch (m_apiPick) {
       case 0: {
-        KE::adjacent_difference(member, KE::begin(myRowView),
-                                KE::end(myRowView), KE::begin(myDiffView));
+        auto it = KE::adjacent_difference(member, KE::cbegin(myRowViewFrom),
+                                          KE::cend(myRowViewFrom),
+                                          KE::begin(myRowViewDest));
+        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+          m_distancesView(myRowIndex) =
+              KE::distance(KE::begin(myRowViewDest), it);
+        });
         break;
       }
 
       case 1: {
-        KE::adjacent_difference(member, KE::begin(myRowView),
-                                KE::end(myRowView), KE::begin(myDiffView),
-                                m_binaryOp);
+        auto it = KE::adjacent_difference(member, KE::cbegin(myRowViewFrom),
+                                          KE::cend(myRowViewFrom),
+                                          KE::begin(myRowViewDest), m_binaryOp);
+        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+          m_distancesView(myRowIndex) =
+              KE::distance(KE::begin(myRowViewDest), it);
+        });
         break;
       }
 
       case 2: {
-        KE::adjacent_difference(member, myRowView, myDiffView);
+        auto it = KE::adjacent_difference(member, myRowViewFrom, myRowViewDest);
+        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+          m_distancesView(myRowIndex) =
+              KE::distance(KE::begin(myRowViewDest), it);
+        });
         break;
       }
 
       case 3: {
-        KE::adjacent_difference(member, myRowView, myDiffView, m_binaryOp);
+        auto it = KE::adjacent_difference(member, myRowViewFrom, myRowViewDest,
+                                          m_binaryOp);
+        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+          m_distancesView(myRowIndex) =
+              KE::distance(KE::begin(myRowViewDest), it);
+        });
         break;
       }
     }
@@ -124,10 +147,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
-  auto [dataView, cloneOfDataViewBeforeOp_h] =
-      create_random_view_and_host_clone(
-          LayoutTag{}, numTeams, numCols,
-          Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
+  auto [sourceView, sourceViewBeforeOp_h] = create_random_view_and_host_clone(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair{ValueType(5), ValueType(523)}, "sourceView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -138,50 +160,55 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // to verify that things work, each team stores the result
   // of its adjacent_difference call, and then we check
   // that these match what we expect
-  Kokkos::View<ValueType**> diffsView("diffsView", numTeams, numCols);
+  Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
+
+  // adjacent_difference returns an iterator so to verify that it is correct
+  // each team stores the distance of the returned iterator from the beginning
+  // of the interval that team operates on and then we check that these
+  // distances match the std result
+  Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, diffsView, apiId, PlusFunctor<ValueType>{});
+  TestFunctorA fnc(sourceView, destView, distancesView, apiId,
+                   PlusFunctor<ValueType>{});
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
-  // check
+  // run cpp-std kernel and check
   // -----------------------------------------------
-  auto dataView_h = create_mirror_view(Kokkos::HostSpace(), dataView);
-  Kokkos::deep_copy(dataView_h, dataView);
-  auto diffsView_h = create_mirror_view(Kokkos::HostSpace(), diffsView);
-  Kokkos::deep_copy(diffsView_h, diffsView);
+  auto distancesView_h = create_host_space_copy(distancesView);
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
+                                                           numTeams, numCols);
 
-  Kokkos::View<ValueType**> diffsView_gold_h("diffsView_gold_h", numTeams,
-                                             numCols);
-
-  for (std::size_t i = 0; i < diffsView_h.extent(0); ++i) {
-    auto dataViewRow_h = Kokkos::subview(dataView_h, i, Kokkos::ALL());
-    auto diffsViewRow_gold_h =
-        Kokkos::subview(diffsView_gold_h, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
+    auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
+    auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
 
     switch (apiId) {
       case 0:
       case 2: {
-        std::adjacent_difference(KE::begin(dataViewRow_h),
-                                 KE::end(dataViewRow_h),
-                                 KE::begin(diffsViewRow_gold_h));
+        auto it = std::adjacent_difference(KE::begin(rowFrom), KE::end(rowFrom),
+                                           KE::begin(rowDest));
+
+        const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
+        EXPECT_EQ(stdDistance, distancesView_h(i));
         break;
       }
 
       case 1:
       case 3: {
-        std::adjacent_difference(
-            KE::begin(dataViewRow_h), KE::end(dataViewRow_h),
-            KE::begin(diffsViewRow_gold_h), PlusFunctor<ValueType>{});
+        auto it = std::adjacent_difference(KE::begin(rowFrom), KE::end(rowFrom),
+                                           KE::begin(rowDest),
+                                           PlusFunctor<ValueType>{});
+
+        const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
+        EXPECT_EQ(stdDistance, distancesView_h(i));
       }
     }
-
-    auto diffsViewRow_h = Kokkos::subview(diffsView_h, i, Kokkos::ALL());
-    for (std::size_t j = 0; j < diffsViewRow_gold_h.extent(0); ++j) {
-      EXPECT_FLOAT_EQ(diffsViewRow_gold_h(j), diffsViewRow_h(j));
-    }
   }
+
+  auto dataViewAfterOp_h = create_host_space_copy(destView);
+  expect_equal_host_views(stdDestView, dataViewAfterOp_h);
 }
 
 template <class LayoutTag, class ValueType>
