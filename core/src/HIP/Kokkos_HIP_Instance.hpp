@@ -116,10 +116,14 @@ class HIPInternal {
   bool m_manage_stream = false;
 
   // Team Scratch Level 1 Space
-  int m_n_team_scratch = 10;
-  mutable int64_t m_team_scratch_current_size[10];
-  mutable void *m_team_scratch_ptr[10];
-  mutable std::atomic_int m_team_scratch_pool[10];
+  int m_n_team_scratch                            = 10;
+  mutable int64_t m_team_scratch_current_size[10] = {0, 0, 0, 0, 0,
+                                                     0, 0, 0, 0, 0};
+  mutable void *m_team_scratch_ptr[10] = {nullptr, nullptr, nullptr, nullptr,
+                                          nullptr, nullptr, nullptr, nullptr,
+                                          nullptr, nullptr};
+  mutable std::atomic_int m_team_scratch_pool[10] = {0, 0, 0, 0, 0,
+                                                     0, 0, 0, 0, 0};
   std::int32_t *m_scratch_locks;
 
   bool was_finalized = false;
@@ -146,13 +150,7 @@ class HIPInternal {
 
   ~HIPInternal();
 
-  HIPInternal() {
-    for (int i = 0; i < m_n_team_scratch; ++i) {
-      m_team_scratch_current_size[i] = 0;
-      m_team_scratch_ptr[i]          = nullptr;
-      m_team_scratch_pool[i]         = 0;
-    }
-  }
+  HIPInternal() = default;
 
   // Resizing of reduction related scratch spaces
   size_type *scratch_space(const std::size_t size);

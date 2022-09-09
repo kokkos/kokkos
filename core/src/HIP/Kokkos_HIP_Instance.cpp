@@ -237,10 +237,6 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream,
 
     m_stream        = stream;
     m_manage_stream = manage_stream;
-    for (int i = 0; i < m_n_team_scratch; ++i) {
-      m_team_scratch_current_size[i] = 0;
-      m_team_scratch_ptr[i]          = nullptr;
-    }
 
     // number of multiprocessors
     m_multiProcCount = hipProp.multiProcessorCount;
