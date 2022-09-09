@@ -147,7 +147,9 @@ class HIPInternal {
 
   int verify_is_initialized(const char *const label) const;
 
-  int is_initialized() const { return m_hipDev >= 0; }
+  int is_initialized() const {
+    return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
+  }
 
   void initialize(hipStream_t stream, bool manage_stream);
   void finalize();
