@@ -179,8 +179,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES1B ${file})
     endforeach()
 
-    SET(${Tag}_SOURCES2A)
-    foreach(Name
+    SET(SOURCES2A_NAME_LIST
       Abort
       TeamBasic
       TeamReductionScan
@@ -207,7 +206,16 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       View_64bit
       WorkGraph
       WithoutInitializing
+    )
+    IF(KOKKOS_HAS_TRILINOS)
+      LIST(REMOVE_ITEM SOURCES2A_NAME_LIST
+        Abort
+        ViewMemoryAccessViolation
       )
+    ENDIF()
+
+    SET(${Tag}_SOURCES2A)
+    foreach(Name ${SOURCES2A_NAME_LIST})
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
