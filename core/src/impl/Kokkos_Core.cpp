@@ -651,6 +651,140 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #endif
   declare_configuration_metadata("architecture", "Default Device",
                                  typeid(Kokkos::DefaultExecutionSpace).name());
+
+#if defined(KOKKOS_ARCH_A64FX)
+  declare_configuration_metadata("architecture", "CPU architecture", "A64FX");
+#elif defined(KOKKOS_ARCH_AMDAVX)
+  declare_configuration_metadata("architecture", "CPU architecture", "AMDAVX");
+#elif defined(KOKKOS_ARCH_ARMV80)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV80");
+#elif defined(KOKKOS_ARCH_ARMV81)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV81");
+#elif defined(KOKKOS_ARCH_ARMV8_THUNDERX)
+  declare_configuration_metadata("architecture", "CPU architecture",
+                                 "ARMV8_THUNDERX");
+#elif defined(KOKKOS_ARCH_ARMV8_THUNDERX2)
+  declare_configuration_metadata("architecture", "CPU architecture",
+                                 "ARMV8_THUNDERX2");
+#elif defined(KOKKOS_ARCH_BDW)
+  declare_configuration_metadata("architecture", "CPU architecture", "BDW");
+#elif defined(KOKKOS_ARCH_BGQ)
+  declare_configuration_metadata("architecture", "CPU architecture", "BGQ");
+#elif defined(KOKKOS_ARCH_HSW)
+  declare_configuration_metadata("architecture", "CPU architecture", "HSW");
+#elif defined(KOKKOS_ARCH_ICL)
+  declare_configuration_metadata("architecture", "CPU architecture", "ICL");
+#elif defined(KOKKOS_ARCH_ICX)
+  declare_configuration_metadata("architecture", "CPU architecture", "ICX");
+#elif defined(KOKKOS_ARCH_KNC)
+  declare_configuration_metadata("architecture", "CPU architecture", "KNC");
+#elif defined(KOKKOS_ARCH_KNL)
+  declare_configuration_metadata("architecture", "CPU architecture", "KNL");
+#elif defined(KOKKOS_ARCH_NATIVE)
+  declare_configuration_metadata("architecture", "CPU architecture", "NATIVE");
+#elif defined(KOKKOS_ARCH_POWER7)
+  declare_configuration_metadata("architecture", "CPU architecture", "POWER7");
+#elif defined(KOKKOS_ARCH_POWER8)
+  declare_configuration_metadata("architecture", "CPU architecture", "POWER8");
+#elif defined(KOKKOS_ARCH_POWER9)
+  declare_configuration_metadata("architecture", "CPU architecture", "POWER9");
+#elif defined(KOKKOS_ARCH_SKL)
+  declare_configuration_metadata("architecture", "CPU architecture", "SKL");
+#elif defined(KOKKOS_ARCH_SKX)
+  declare_configuration_metadata("architecture", "CPU architecture", "SKX");
+#elif defined(KOKKOS_ARCH_SNB)
+  declare_configuration_metadata("architecture", "CPU architecture", "SNB");
+#elif defined(KOKKOS_ARCH_SPR)
+  declare_configuration_metadata("architecture", "CPU architecture", "SPR");
+#elif defined(KOKKOS_ARCH_WSM)
+  declare_configuration_metadata("architecture", "CPU architecture", "WSM");
+#elif defined(KOKKOS_ARCH_AMD_ZEN)
+  declare_configuration_metadata("architecture", "CPU architecture", "AMD_ZEN");
+#elif defined(KOKKOS_ARCH_AMD_ZEN2)
+  declare_configuration_metadata("architecture", "CPU architecture",
+                                 "AMD_ZEN2");
+#elif defined(KOKKOS_ARCH_AMD_ZEN3)
+  declare_configuration_metadata("architecture", "CPU architecture",
+                                 "AMD_ZEN3");
+#else
+  declare_configuration_metadata("architecture", "CPU architecture", "none");
+#endif
+
+#if defined(KOKKOS_ARCH_INTEL_GEN)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_GEN");
+#elif defined(KOKKOS_ARCH_INTEL_DG1)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_DG1");
+#elif defined(KOKKOS_ARCH_INTEL_GEN9)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_GEN9");
+#elif defined(KOKKOS_ARCH_INTEL_GEN11)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_GEN11");
+#elif defined(KOKKOS_ARCH_INTEL_GEN12LP)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_GEN12LP");
+#elif defined(KOKKOS_ARCH_INTEL_XEHP)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_XEHP");
+#elif defined(KOKKOS_ARCH_INTEL_PVC)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_PVC");
+
+#elif defined(KOKKOS_ARCH_KEPLER30)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "KEPLER30");
+#elif defined(KOKKOS_ARCH_KEPLER32)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "KEPLER32");
+#elif defined(KOKKOS_ARCH_KEPLER35)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "KEPLER35");
+#elif defined(KOKKOS_ARCH_KEPLER37)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "KELPER37");
+#elif defined(KOKKOS_ARCH_MAXWELL50)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "MAXWELL50");
+#elif defined(KOKKOS_ARCH_MAXWELL52)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "MAXWELL52");
+#elif defined(KOKKOS_ARCH_MAXWELL53)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "MAXWELL53");
+#elif defined(KOKKOS_ARCH_PASCAL60)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "PASCAL60");
+#elif defined(KOKKOS_ARCH_PASCAL61)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "PASCAL61");
+#elif defined(KOKKOS_ARCH_VOLTA70)
+  declare_configuration_metadata("architecture", "GPU architecture", "VOLTA70");
+#elif defined(KOKKOS_ARCH_VOLTA72)
+  declare_configuration_metadata("architecture", "GPU architecture", "VOLTA72");
+#elif defined(KOKKOS_ARCH_TURING75)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "TURING75");
+#elif defined(KOKKOS_ARCH_AMPERE80)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMPERE80");
+#elif defined(KOKKOS_ARCH_AMPERE86)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMPERE86");
+
+#elif defined(KOKKOS_ARCH_VEGA900)
+  declare_configuration_metadata("architecture", "GPU architecture", "VEGA900");
+#elif defined(KOKKOS_ARCH_VEGA906)
+  declare_configuration_metadata("architecture", "GPU architecture", "VEGA906");
+#elif defined(KOKKOS_ARCH_VEGA908)
+  declare_configuration_metadata("architecture", "GPU architecture", "VEGA908");
+#elif defined(KOKKOS_ARCH_VEGA90A)
+  declare_configuration_metadata("architecture", "GPU architecture", "VEGA90A");
+
+#else
+  declare_configuration_metadata("architecture", "GPU architecture", "none");
+#endif
 }
 
 void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
@@ -1114,7 +1248,7 @@ namespace {
 void print_helper(std::ostream& os,
                   const std::map<std::string, std::string>& print_me) {
   for (const auto& kv : print_me) {
-    os << kv.first << ": " << kv.second << '\n';
+    os << "  " << kv.first << ": " << kv.second << '\n';
   }
 }
 }  // namespace
