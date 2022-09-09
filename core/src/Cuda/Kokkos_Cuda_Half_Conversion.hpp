@@ -48,7 +48,7 @@
 #ifdef KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_NumericTraits.hpp>  // reduction_identity
+#include <Kokkos_ReductionIdentity.hpp>
 
 #if CUDA_VERSION >= 11000
 #include <cuda_bf16.h>

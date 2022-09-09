@@ -50,6 +50,7 @@
 #if defined(KOKKOS_ENABLE_LIBQUADMATH)
 
 #include <Kokkos_NumericTraits.hpp>
+#include <Kokkos_ReductionIdentity.hpp>
 #include <Kokkos_MathematicalConstants.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 
