@@ -722,13 +722,10 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   auto &cuda_singleton     = Impl::CudaInternal::singleton();
   const int cuda_device_id = Impl::get_gpu(settings);
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
-  const bool ok_id =
-      0 <= cuda_device_id && cuda_device_id < dev_info.m_cudaDevCount;
 
   // Need device capability 3.0 or better
-  const bool ok_dev =
-      ok_id && (3 <= dev_info.m_cudaProp[cuda_device_id].major &&
-                0 <= dev_info.m_cudaProp[cuda_device_id].minor);
+  const bool ok_dev = 3 <= dev_info.m_cudaProp[cuda_device_id].major &&
+                      0 <= dev_info.m_cudaProp[cuda_device_id].minor;
   if (ok_dev) {
     const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
@@ -824,18 +821,11 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
         Impl::CudaInternal::m_maxThreadsPerSM * cudaProp.multiProcessorCount;
   } else {
     std::ostringstream msg;
-    msg << "Kokkos::Cuda::initialize(" << cuda_device_id << ") FAILED";
-
-    if (!ok_id) {
-      msg << " : Device identifier out of range "
-          << "[0.." << dev_info.m_cudaDevCount << "]";
-    } else if (!ok_dev) {
-      msg << " : Device ";
-      msg << dev_info.m_cudaProp[cuda_device_id].major;
-      msg << ".";
-      msg << dev_info.m_cudaProp[cuda_device_id].minor;
-      msg << " has insufficient capability, required 3.0 or better";
-    }
+    msg << "Kokkos::Cuda::initialize(" << cuda_device_id << ") FAILED: Device ";
+    msg << dev_info.m_cudaProp[cuda_device_id].major;
+    msg << ".";
+    msg << dev_info.m_cudaProp[cuda_device_id].minor;
+    msg << " has insufficient capability, required 3.0 or better";
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
