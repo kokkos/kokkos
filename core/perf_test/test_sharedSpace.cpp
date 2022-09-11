@@ -198,7 +198,9 @@ void test_sharedSpace(Arguments args) {
     // WARMUP GPU
     incrementInLoop<Kokkos::DefaultExecutionSpace>(
         deviceData,
-        numWarmupRepetitions);  // warming up gpu
+        numWarmupRepetitions);  // warming up gpu without touching the
+                                // migratableData to get measurements of initial
+                                // position
     // GET RESULTS DEVICE
     deviceResults.push_back(incrementInLoop<Kokkos::DefaultExecutionSpace>(
         migratableData, numRepetitions));
@@ -206,7 +208,9 @@ void test_sharedSpace(Arguments args) {
     // WARMUP HOST
     incrementInLoop<Kokkos::DefaultHostExecutionSpace>(
         hostData,
-        numWarmupRepetitions);  // warming up host
+        numWarmupRepetitions);  // warming up host without touching the
+                                // migratableData to get measurements of initial
+                                // position
     // GET RESULTS HOST
     hostResults.push_back(incrementInLoop<Kokkos::DefaultHostExecutionSpace>(
         migratableData, numRepetitions));
