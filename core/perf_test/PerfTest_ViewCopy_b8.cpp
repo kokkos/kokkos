@@ -44,7 +44,6 @@
 
 #include <PerfTest_ViewCopy.hpp>
 
-// DeepCopy Performance for LayoutRight to LayoutRight
 namespace Test {
 
 BENCHMARK(ViewDeepCopy_Rank8<Kokkos::LayoutRight, Kokkos::LayoutRight>)
