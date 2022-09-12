@@ -70,7 +70,7 @@ void add_kokkos_configuration(bool verbose = false) {
     auto found = line.find_first_of(':');
     if (found != std::string::npos) {
       auto val = remove_unwanted_prefix(line.substr(found + 1));
-      if (val.length()) {
+      if (!val.empty()) {
         benchmark::AddCustomContext(
             remove_unwanted_prefix(line.substr(0, found)), val);
       }
