@@ -719,7 +719,6 @@ int Cuda::impl_is_initialized() {
 }
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
-  auto &cuda_singleton     = Impl::CudaInternal::singleton();
   const int cuda_device_id = Impl::get_gpu(settings);
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
@@ -832,6 +831,7 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
+  auto &cuda_singleton = Impl::CudaInternal::singleton();
   cuda_singleton.initialize(singleton_stream, /*manage*/ true);
 }
 
