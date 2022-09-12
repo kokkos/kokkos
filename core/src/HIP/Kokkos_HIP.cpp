@@ -98,8 +98,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   Impl::HIPInternal::m_maxBlock[1] = hipProp.maxGridSize[1];
   Impl::HIPInternal::m_maxBlock[2] = hipProp.maxGridSize[2];
 
-  // theoretically, we can get 40 WF's / CU, but only can sustain 32
-  // see
+  // theoretically, we can get 40 WF's / CU, but only can sustain 32 see
   // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
   Impl::HIPInternal::m_maxWavesPerCU = 32;
   Impl::HIPInternal::m_shmemPerSM    = hipProp.maxSharedMemoryPerMultiProcessor;
@@ -108,7 +107,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
       Impl::HIPInternal::m_maxWavesPerCU * Impl::HIPTraits::WarpSize;
 
   // Init the array for used for arbitrarily sized atomics
-  initialize_host_hip_lock_arrays();
+  Impl::initialize_host_hip_lock_arrays();
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
