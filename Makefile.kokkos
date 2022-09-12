@@ -163,7 +163,6 @@ KOKKOS_CXX_VERSION                   := $(strip $(shell $(CXX) --version       2
 KOKKOS_INTERNAL_COMPILER_INTEL       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Intel Corporation)
 KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep -c XL))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "CC-"))
-KOKKOS_INTERNAL_COMPILER_PGI         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),PGI)
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell echo "$(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version 2>&1 | grep -c nvcc)>0" | bc))
 KOKKOS_INTERNAL_COMPILER_NVHPC       := $(strip $(shell $(CXX) --version 2>&1 | grep -c "nvc++"))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),clang)
@@ -287,10 +286,10 @@ endif
 
 # Set OpenACC flags.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-  KOKKOS_INTERNAL_OPENACC_FLAG := -O3 -acc
+  KOKKOS_INTERNAL_OPENACC_FLAG := -acc
 else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
-      KOKKOS_INTERNAL_OPENACC_FLAG := -O3 -acc
+      KOKKOS_INTERNAL_OPENACC_FLAG := -acc
     else
       #Assume GCC
       KOKKOS_INTERNAL_OPENACC_FLAG := -fopenacc -foffload=nvptx-none
