@@ -100,6 +100,8 @@ class HIPInternal {
   static int m_maxShmemPerBlock;
   static int m_maxThreadsPerSM;
 
+  static hipDeviceProp_t m_deviceProp;
+
   // array of DriverTypes to be allocated in host-pinned memory for async
   // kernel launches
   mutable char *d_driverWorkArray = nullptr;
@@ -120,8 +122,6 @@ class HIPInternal {
 
   size_type *m_scratchSpace = nullptr;
   size_type *m_scratchFlags = nullptr;
-
-  static hipDeviceProp_t m_deviceProp;
 
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
