@@ -137,9 +137,9 @@ void HIPInternal::print_configuration(std::ostream &s) const {
 #endif
 
   for (int i = 0; i < dev_info.m_hipDevCount; ++i) {
-    s << "Kokkos::HIP[ " << i << " ] " << dev_info.m_hipProp[i].name
-      << " version " << (dev_info.m_hipProp[i].major) << "."
-      << dev_info.m_hipProp[i].minor << ", Total Global Memory: "
+    s << "Kokkos::HIP[ " << i << " ] "
+      << "gcnArch " << dev_info.m_hipProp[i].gcnArch
+      << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(dev_info.m_hipProp[i].totalGlobalMem)
       << ", Shared Memory per Block: "
       << ::Kokkos::Impl::human_memory_size(
