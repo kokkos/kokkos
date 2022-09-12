@@ -211,6 +211,9 @@ The following options control enabling TPLs:
 * Kokkos_ENABLE_LIBRT
     * Whether to enable the LIBRT library
     * BOOL Default: Off
+* Kokkos_ENABLE_ROCTHRUST
+    * Whether to enable the ROCm Thrust library
+    * BOOL Default: On, when Kokkos_ENABLE_HIP is On, Off otherwise
 
 The following options control finding and configuring non-CMake TPLs:
 * Kokkos_CUDA_DIR or CUDA_ROOT
