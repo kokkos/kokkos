@@ -66,7 +66,7 @@ int HIP::impl_is_initialized() {
 }
 
 void HIP::impl_initialize(InitializationSettings const& settings) {
-  const int hip_device_id = ::Kokkos::Impl::get_gpu(settings);
+  const int hip_device_id = Impl::get_gpu(settings);
 
   // Need at least a GPU device
   int hipDevCount;
@@ -117,7 +117,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 
   // Init the array for used for arbitrarily sized atomics
-  ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+  initialize_host_hip_lock_arrays();
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
