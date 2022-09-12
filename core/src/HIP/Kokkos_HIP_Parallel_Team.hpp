@@ -615,7 +615,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
     if (m_scratch_pool_id >= 0) {
       m_policy.space()
           .impl_internal_space_instance()
-          ->m_team_scratch_pool[m_scratch_pool_id] = 0;
+          ->release_team_scratch_pool(m_scratch_pool_id);
     }
   }
 };
@@ -1017,8 +1017,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                       static_cast<std::int64_t>(HIP::concurrency() /
                                                 (m_team_size * m_vector_size)),
                       static_cast<std::int64_t>(m_league_size))));
-      m_scratch_ptr[1]  = scratch_ptr_id.first;
-      m_scratch_pool_id = scratch_ptr_id.second;
+      std::tie(m_scratch_ptr[1], m_scratch_pool_id) = scratch_ptr_id;
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
@@ -1060,7 +1059,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_scratch_pool_id >= 0) {
       m_policy.space()
           .impl_internal_space_instance()
-          ->m_team_scratch_pool[m_scratch_pool_id] = 0;
+          ->release_team_scratch_pool(m_scratch_pool_id);
     }
   }
 };

@@ -601,25 +601,12 @@ class ParallelScanHIPBase {
     }
   }
 
-  // Determine block size constrained by shared memory:
-  virtual inline unsigned local_block_size(const FunctorType&) {
-    // Making this function pure virtual, trips the compiler.
-    return 0;
-  };
-
-  inline void impl_execute() {
+  inline void impl_execute(int block_size) {
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       // FIXME_HIP we cannot choose it larger for large work sizes to work
       // correctly, the unit tests fail with wrong results
       const int gridMaxComputeCapability_2x = 0x01fff;
-
-      const int block_size = static_cast<int>(local_block_size(m_functor));
-      if (block_size == 0) {
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
-                        "valid execution configuration."));
-      }
 
       const int grid_max =
           std::min(block_size * block_size, gridMaxComputeCapability_2x);
@@ -676,7 +663,16 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();
 
-  inline void execute() { Base::impl_execute(); }
+  inline void execute() {
+    const int block_size = static_cast<int>(local_block_size(Base::m_functor));
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
+                      "valid execution configuration."));
+    }
+
+    Base::impl_execute(block_size);
+  }
 
   ParallelScan(const FunctorType& arg_functor,
                const typename Base::Policy& arg_policy)
@@ -711,7 +707,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Base::operator();
 
   inline void execute() {
-    Base::impl_execute();
+    const int block_size = static_cast<int>(local_block_size(Base::m_functor));
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
+                      "valid execution configuration."));
+    }
+
+    Base::impl_execute(block_size);
 
     const auto nwork = Base::m_policy.end() - Base::m_policy.begin();
     if (nwork && !Base::m_result_ptr_device_accessible) {

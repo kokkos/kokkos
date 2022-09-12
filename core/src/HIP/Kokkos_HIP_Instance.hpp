@@ -117,13 +117,9 @@ class HIPInternal {
 
   // Team Scratch Level 1 Space
   int m_n_team_scratch                            = 10;
-  mutable int64_t m_team_scratch_current_size[10] = {0, 0, 0, 0, 0,
-                                                     0, 0, 0, 0, 0};
-  mutable void *m_team_scratch_ptr[10] = {nullptr, nullptr, nullptr, nullptr,
-                                          nullptr, nullptr, nullptr, nullptr,
-                                          nullptr, nullptr};
-  mutable std::atomic_int m_team_scratch_pool[10] = {0, 0, 0, 0, 0,
-                                                     0, 0, 0, 0, 0};
+  mutable int64_t m_team_scratch_current_size[10] = {};
+  mutable void *m_team_scratch_ptr[10]            = {};
+  mutable std::atomic_int m_team_scratch_pool[10] = {};
   std::int32_t *m_scratch_locks;
 
   bool was_finalized = false;
@@ -159,6 +155,7 @@ class HIPInternal {
   // Resizing of team level 1 scratch
   std::pair<void *, int> resize_team_scratch_space(std::int64_t bytes,
                                                    bool force_shrink = false);
+  void release_team_scratch_pool(int scratch_pool_id);
 };
 
 }  // namespace Impl
