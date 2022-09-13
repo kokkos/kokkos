@@ -221,7 +221,7 @@ find_end_team_impl(const TeamHandleType& teamHandle, IteratorType1 first,
         TeamThreadRange(teamHandle, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
 
-    // fence not needed because reducing into scalar
+    teamHandle.team_barrier();
 
     // decide and return
     if (red_result.max_loc_true ==
