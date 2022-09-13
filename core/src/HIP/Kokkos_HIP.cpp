@@ -68,10 +68,6 @@ int HIP::impl_is_initialized() {
 void HIP::impl_initialize(InitializationSettings const& settings) {
   const int hip_device_id = Impl::get_gpu(settings);
 
-  // Need at least a GPU device
-  int hipDevCount;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
-
   Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
