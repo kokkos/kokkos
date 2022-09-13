@@ -60,19 +60,14 @@ class AtomicDataElement {
   using value_type           = typename ViewTraits::value_type;
   using const_value_type     = typename ViewTraits::const_value_type;
   using non_const_value_type = typename ViewTraits::non_const_value_type;
-  volatile value_type* const ptr;
+  value_type* const ptr;
 
   KOKKOS_INLINE_FUNCTION
   AtomicDataElement(value_type* ptr_, AtomicViewConstTag) : ptr(ptr_) {}
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator=(const_value_type& val) const {
-    *ptr = val;
-    return val;
-  }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator=(volatile const_value_type& val) const {
-    *ptr = val;
+    Kokkos::Impl::atomic_store(ptr, val, Kokkos::Impl::memory_order_relaxed);
     return val;
   }
 
@@ -111,19 +106,9 @@ class AtomicDataElement {
     const_value_type tmp = Kokkos::atomic_fetch_add(ptr, val);
     return tmp + val;
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator+=(volatile const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_add(ptr, val);
-    return tmp + val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator-=(const_value_type& val) const {
-    const_value_type tmp = Kokkos::atomic_fetch_sub(ptr, val);
-    return tmp - val;
-  }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator-=(volatile const_value_type& val) const {
     const_value_type tmp = Kokkos::atomic_fetch_sub(ptr, val);
     return tmp - val;
   }
@@ -132,17 +117,9 @@ class AtomicDataElement {
   const_value_type operator*=(const_value_type& val) const {
     return Kokkos::atomic_mul_fetch(ptr, val);
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator*=(volatile const_value_type& val) const {
-    return Kokkos::atomic_mul_fetch(ptr, val);
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator/=(const_value_type& val) const {
-    return Kokkos::atomic_div_fetch(ptr, val);
-  }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator/=(volatile const_value_type& val) const {
     return Kokkos::atomic_div_fetch(ptr, val);
   }
 
@@ -150,17 +127,9 @@ class AtomicDataElement {
   const_value_type operator%=(const_value_type& val) const {
     return Kokkos::atomic_mod_fetch(ptr, val);
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator%=(volatile const_value_type& val) const {
-    return Kokkos::atomic_mod_fetch(ptr, val);
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator&=(const_value_type& val) const {
-    return Kokkos::atomic_and_fetch(ptr, val);
-  }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator&=(volatile const_value_type& val) const {
     return Kokkos::atomic_and_fetch(ptr, val);
   }
 
@@ -168,17 +137,9 @@ class AtomicDataElement {
   const_value_type operator^=(const_value_type& val) const {
     return Kokkos::atomic_xor_fetch(ptr, val);
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator^=(volatile const_value_type& val) const {
-    return Kokkos::atomic_xor_fetch(ptr, val);
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator|=(const_value_type& val) const {
-    return Kokkos::atomic_or_fetch(ptr, val);
-  }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator|=(volatile const_value_type& val) const {
     return Kokkos::atomic_or_fetch(ptr, val);
   }
 
@@ -186,54 +147,26 @@ class AtomicDataElement {
   const_value_type operator<<=(const_value_type& val) const {
     return Kokkos::atomic_lshift_fetch(ptr, val);
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator<<=(volatile const_value_type& val) const {
-    return Kokkos::atomic_lshift_fetch(ptr, val);
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator>>=(const_value_type& val) const {
     return Kokkos::atomic_rshift_fetch(ptr, val);
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator>>=(volatile const_value_type& val) const {
-    return Kokkos::atomic_rshift_fetch(ptr, val);
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator+(const_value_type& val) const { return *ptr + val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator+(volatile const_value_type& val) const {
-    return *ptr + val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator-(const_value_type& val) const { return *ptr - val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator-(volatile const_value_type& val) const {
-    return *ptr - val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator*(const_value_type& val) const { return *ptr * val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator*(volatile const_value_type& val) const {
-    return *ptr * val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator/(const_value_type& val) const { return *ptr / val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator/(volatile const_value_type& val) const {
-    return *ptr / val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator%(const_value_type& val) const { return *ptr ^ val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator%(volatile const_value_type& val) const {
-    return *ptr ^ val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator!() const { return !*ptr; }
@@ -242,40 +175,20 @@ class AtomicDataElement {
   const_value_type operator&&(const_value_type& val) const {
     return *ptr && val;
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator&&(volatile const_value_type& val) const {
-    return *ptr && val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator||(const_value_type& val) const {
     return *ptr | val;
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator||(volatile const_value_type& val) const {
-    return *ptr | val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator&(const_value_type& val) const { return *ptr & val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator&(volatile const_value_type& val) const {
-    return *ptr & val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator|(const_value_type& val) const { return *ptr | val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator|(volatile const_value_type& val) const {
-    return *ptr | val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator^(const_value_type& val) const { return *ptr ^ val; }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator^(volatile const_value_type& val) const {
-    return *ptr ^ val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator~() const { return ~*ptr; }
@@ -284,63 +197,33 @@ class AtomicDataElement {
   const_value_type operator<<(const unsigned int& val) const {
     return *ptr << val;
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator<<(volatile const unsigned int& val) const {
-    return *ptr << val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator>>(const unsigned int& val) const {
     return *ptr >> val;
   }
-  KOKKOS_INLINE_FUNCTION
-  const_value_type operator>>(volatile const unsigned int& val) const {
-    return *ptr >> val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   bool operator==(const AtomicDataElement& val) const { return *ptr == val; }
-  KOKKOS_INLINE_FUNCTION
-  bool operator==(volatile const AtomicDataElement& val) const {
-    return *ptr == val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   bool operator!=(const AtomicDataElement& val) const { return *ptr != val; }
-  KOKKOS_INLINE_FUNCTION
-  bool operator!=(volatile const AtomicDataElement& val) const {
-    return *ptr != val;
-  }
 
   KOKKOS_INLINE_FUNCTION
   bool operator>=(const_value_type& val) const { return *ptr >= val; }
-  KOKKOS_INLINE_FUNCTION
-  bool operator>=(volatile const_value_type& val) const { return *ptr >= val; }
 
   KOKKOS_INLINE_FUNCTION
   bool operator<=(const_value_type& val) const { return *ptr <= val; }
-  KOKKOS_INLINE_FUNCTION
-  bool operator<=(volatile const_value_type& val) const { return *ptr <= val; }
 
   KOKKOS_INLINE_FUNCTION
   bool operator<(const_value_type& val) const { return *ptr < val; }
-  KOKKOS_INLINE_FUNCTION
-  bool operator<(volatile const_value_type& val) const { return *ptr < val; }
 
   KOKKOS_INLINE_FUNCTION
   bool operator>(const_value_type& val) const { return *ptr > val; }
-  KOKKOS_INLINE_FUNCTION
-  bool operator>(volatile const_value_type& val) const { return *ptr > val; }
 
   KOKKOS_INLINE_FUNCTION
-  operator const_value_type() const {
-    // return Kokkos::atomic_load(ptr);
-    return *ptr;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  operator non_const_value_type() volatile const {
-    return Kokkos::Impl::atomic_load(ptr);
+  operator value_type() const {
+    return Kokkos::Impl::atomic_load(ptr, Kokkos::Impl::memory_order_relaxed);
   }
 };
 
