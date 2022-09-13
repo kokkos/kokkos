@@ -248,19 +248,6 @@ class AtomicViewDataHandle {
   operator typename ViewTraits::value_type*() const { return ptr; }
 };
 
-template <unsigned Size>
-struct Kokkos_Atomic_is_only_allowed_with_32bit_and_64bit_scalars;
-
-template <>
-struct Kokkos_Atomic_is_only_allowed_with_32bit_and_64bit_scalars<4> {
-  using type = int;
-};
-
-template <>
-struct Kokkos_Atomic_is_only_allowed_with_32bit_and_64bit_scalars<8> {
-  using type = int64_t;
-};
-
 }  // namespace Impl
 }  // namespace Kokkos
 
