@@ -121,8 +121,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
-  // create the destination view
-  Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
 
   // to verify that things work, each team stores the result
   // of its count_if call, and then we check
