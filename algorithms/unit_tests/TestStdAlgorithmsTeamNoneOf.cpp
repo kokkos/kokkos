@@ -67,17 +67,18 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class SourceViewType, class DestViewType, class UnaryOp>
+template <class SourceViewType, class NoneOfResultsViewType, class UnaryOp>
 struct TestFunctorA {
   SourceViewType m_sourceView;
-  DestViewType m_destView;
+  NoneOfResultsViewType m_noneOfResultsView;
   int m_apiPick;
   UnaryOp m_unaryOp;
 
-  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
-               int apiPick, UnaryOp unaryOp)
+  TestFunctorA(const SourceViewType sourceView,
+               const NoneOfResultsViewType noneOfResultsView, int apiPick,
+               UnaryOp unaryOp)
       : m_sourceView(sourceView),
-        m_destView(destView),
+        m_noneOfResultsView(noneOfResultsView),
         m_apiPick(apiPick),
         m_unaryOp(std::move(unaryOp)) {}
 
@@ -93,14 +94,14 @@ struct TestFunctorA {
         const bool result = KE::none_of(member, KE::cbegin(myRowViewFrom),
                                         KE::cend(myRowViewFrom), m_unaryOp);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_destView(myRowIndex) = result; });
+                       [=]() { m_noneOfResultsView(myRowIndex) = result; });
         break;
       }
 
       case 1: {
         const bool result = KE::none_of(member, myRowViewFrom, m_unaryOp);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_destView(myRowIndex) = result; });
+                       [=]() { m_noneOfResultsView(myRowIndex) = result; });
         break;
         break;
       }
@@ -133,25 +134,26 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // create the destination view
-  Kokkos::View<bool*> destView("destView", numTeams);
+  // to verify that things work, each team stores the result of its none_of
+  // call, and then we check that these match what we expect
+  Kokkos::View<bool*> noneOfResultsView("noneOfResultsView", numTeams);
 
   GreaterThanValueFunctor unaryPred{upperBound};
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, destView, apiId, unaryPred);
+  TestFunctorA fnc(sourceView, noneOfResultsView, apiId, unaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto destView_h = create_host_space_copy(destView);
+  auto noneOfResultsView_h = create_host_space_copy(noneOfResultsView);
 
   for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
     const bool result =
         std::none_of(KE::begin(rowFrom), KE::end(rowFrom), unaryPred);
-    EXPECT_EQ(result, destView_h(i));
+    EXPECT_EQ(result, noneOfResultsView_h(i));
     break;
   }
 }
