@@ -135,7 +135,7 @@ void test_A(const bool searchedValuesExist, std::size_t numTeams,
   // index from a range [0, numCols) is used to obtain a value from dataView.
   //
   // If searchedValuesExist == false we want to ensure the opposite, so every
-  // value is lesser than a lower bound of dataView.
+  // value is less than a lower bound of dataView.
   Kokkos::View<ValueType*> searchedValuesView("searchValuesView", numTeams);
   auto searchedValuesView_h =
       create_mirror_view(Kokkos::HostSpace(), searchedValuesView);
@@ -161,7 +161,6 @@ void test_A(const bool searchedValuesExist, std::size_t numTeams,
   Kokkos::deep_copy(searchedValuesView, searchedValuesView_h);
 
   // use CTAD for functor
-  // const ValueType value{dataViewBeforeOp_h(numTeams / 2, numCols / 2)};
   TestFunctorA fnc(dataView, searchedValuesView, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
@@ -169,7 +168,6 @@ void test_A(const bool searchedValuesExist, std::size_t numTeams,
   // run cpp-std kernel and check
   // -----------------------------------------------
   auto distancesView_h = create_host_space_copy(distancesView);
-  // auto searchedValuesView_h = create_host_space_copy(searchedValuesView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
@@ -209,7 +207,7 @@ TEST(std_algorithms_find_team_test, searched_value_exists) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>(searchedValuesExist);
 }
 
-TEST(std_algorithms_find_team_test, searched_value_doesnt_exist) {
+TEST(std_algorithms_find_team_test, searched_value_does_not_exist) {
   constexpr bool searchedValuesExist = false;
 
   run_all_scenarios<DynamicTag, double>(searchedValuesExist);
