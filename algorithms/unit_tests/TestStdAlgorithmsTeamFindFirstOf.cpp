@@ -58,20 +58,19 @@ struct EqualFunctor {
   }
 };
 
-template <class SourceViewType, class SearchedViewType, class DistancesViewType,
+template <class DataViewType, class SearchedViewType, class DistancesViewType,
           class BinaryOpType>
 struct TestFunctorA {
-  SourceViewType m_sourceView;
+  DataViewType m_dataView;
   SearchedViewType m_searchedView;
   DistancesViewType m_distancesView;
   BinaryOpType m_binaryOp;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType sourceView,
-               const SearchedViewType searchedView,
+  TestFunctorA(const DataViewType dataView, const SearchedViewType searchedView,
                const DistancesViewType distancesView, BinaryOpType binaryOp,
                int apiPick)
-      : m_sourceView(sourceView),
+      : m_dataView(dataView),
         m_searchedView(searchedView),
         m_distancesView(distancesView),
         m_binaryOp(std::move(binaryOp)),
@@ -80,8 +79,7 @@ struct TestFunctorA {
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom =
-        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
     auto myRowSearchedView =
         Kokkos::subview(m_searchedView, myRowIndex, Kokkos::ALL());
 
@@ -148,22 +146,22 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
-  auto [sourceView, sourceViewBeforeOp_h] = create_random_view_and_host_clone(
+  auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
       LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(5), ValueType(523)}, "sourceView");
+      Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
 
-  // create a view that stores a sequence to found in sourceView. It is filled
-  // base on sourceView context, to allow find_first_of to actually find
+  // create a view that stores a sequence to found in dataView. It is filled
+  // base on dataView context, to allow find_first_of to actually find
   // anything
   Kokkos::View<ValueType**> searchedView("destView", numTeams, numCols / 4);
   auto searchedView_h = create_host_space_copy(searchedView);
 
   for (std::size_t i = 0; i < searchedView_h.extent(0); ++i) {
     for (std::size_t j = 0; j < searchedView_h.extent(1); ++j) {
-      if (sourceViewBeforeOp_h.extent(1) >= searchedView_h.extent(1) + 4) {
-        searchedView_h(i, j) = sourceViewBeforeOp_h(i, j + 4);
+      if (dataViewBeforeOp_h.extent(1) >= searchedView_h.extent(1) + 4) {
+        searchedView_h(i, j) = dataViewBeforeOp_h(i, j + 4);
       } else {
-        searchedView_h(i, j) = sourceViewBeforeOp_h(i, j);
+        searchedView_h(i, j) = dataViewBeforeOp_h(i, j);
       }
     }
   }
@@ -185,7 +183,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   EqualFunctor<ValueType> binaryOp;
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, searchedView, distancesView, binaryOp, apiId);
+  TestFunctorA fnc(dataView, searchedView, distancesView, binaryOp, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -193,8 +191,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   auto distancesView_h = create_host_space_copy(distancesView);
 
-  for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
-    auto rowFrom     = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    auto rowFrom     = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     auto rowSearched = Kokkos::subview(searchedView_h, i, Kokkos::ALL());
 
     switch (apiId) {
