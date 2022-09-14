@@ -107,9 +107,7 @@ class OpenACCTeamMember {
   }
   KOKKOS_FUNCTION int vector_length() const { return m_vector_length; }
   KOKKOS_FUNCTION int team_size() const { return m_team_size; }
-  KOKKOS_FUNCTION void* impl_reduce_scratch() const {
-    return m_reduce_scratch;
-  }
+  KOKKOS_FUNCTION void* impl_reduce_scratch() const { return m_reduce_scratch; }
 
   // FIXME_OPENACC: OpenACC does not provide any explicit barrier constructs
   // for device kernels.
@@ -124,8 +122,7 @@ class OpenACCTeamMember {
 
   // FIXME_OPENACC: team_broadcast() is not implemented.
   template <class ValueType>
-  KOKKOS_FUNCTION void team_broadcast(ValueType& value,
-                                             int thread_id) const {
+  KOKKOS_FUNCTION void team_broadcast(ValueType& value, int thread_id) const {
     static_assert(std::is_void_v<ValueType>,
                   "Kokkos Error: team_broadcast() is not implemented for the "
                   "OpenACC backend");
@@ -134,7 +131,7 @@ class OpenACCTeamMember {
 
   template <class Closure, class ValueType>
   KOKKOS_FUNCTION void team_broadcast(const Closure& f, ValueType& value,
-                                             const int& thread_id) const {
+                                      const int& thread_id) const {
     f(value);
     team_broadcast(value, thread_id);
   }
@@ -142,7 +139,7 @@ class OpenACCTeamMember {
   // FIXME_OPENACC: team_reduce() is not implemented.
   template <class ValueType, class JoinOp>
   KOKKOS_FUNCTION ValueType team_reduce(const ValueType& value,
-                                               const JoinOp& op_in) const {
+                                        const JoinOp& op_in) const {
     static_assert(std::is_void_v<ValueType>,
                   "Kokkos Error: team_reduce() is not implemented for the "
                   "OpenACC backend");
@@ -151,8 +148,8 @@ class OpenACCTeamMember {
 
   // FIXME_OPENACC: team_scan() is not implemented.
   template <typename ArgType>
-  KOKKOS_FUNCTION ArgType
-  team_scan(const ArgType& /*value*/, ArgType* const /*global_accum*/) const {
+  KOKKOS_FUNCTION ArgType team_scan(const ArgType& /*value*/,
+                                    ArgType* const /*global_accum*/) const {
     static_assert(
         std::is_void_v<ArgType>,
         "Kokkos Error: team_scan() is not implemented for the OpenACC backend");
@@ -464,11 +461,10 @@ struct TeamThreadRangeBoundariesStruct<iType, OpenACCTeamMember> {
   const iType end;
   const OpenACCTeamMember& team;
 
-  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                         iType count)
+  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_, iType count)
       : start(0), end(count), team(thread_) {}
   TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                         iType begin_, iType end_)
+                                  iType begin_, iType end_)
       : start(begin_), end(end_), team(thread_) {}
 };
 
@@ -480,10 +476,10 @@ struct ThreadVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   const OpenACCTeamMember& team;
 
   ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                           index_type count)
+                                    index_type count)
       : start(0), end(count), team(thread_) {}
   ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                           index_type begin_, index_type end_)
+                                    index_type begin_, index_type end_)
       : start(begin_), end(end_), team(thread_) {}
 };
 
@@ -495,10 +491,10 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   const OpenACCTeamMember& team;
 
   TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                         index_type count)
+                                  index_type count)
       : start(0), end(count), team(thread_) {}
   TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                         index_type begin_, index_type end_)
+                                  index_type begin_, index_type end_)
       : start(begin_), end(end_), team(thread_) {}
 };
 
