@@ -285,15 +285,11 @@ else
 endif
 
 # Set OpenACC flags.
-ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
+ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
   KOKKOS_INTERNAL_OPENACC_FLAG := -acc
 else
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
-      KOKKOS_INTERNAL_OPENACC_FLAG := -acc
-    else
-      #Assume GCC
-      KOKKOS_INTERNAL_OPENACC_FLAG := -fopenacc -foffload=nvptx-none
-    endif
+  #Assume GCC
+  KOKKOS_INTERNAL_OPENACC_FLAG := -fopenacc -foffload=nvptx-none
 endif
 
 # Set C++ version flags.
