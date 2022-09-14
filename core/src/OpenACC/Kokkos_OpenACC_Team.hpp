@@ -58,7 +58,9 @@ namespace Impl {
 
 class OpenACCTeamMember {
  public:
-  constexpr static int TEAM_REDUCE_SIZE      = 512;
+  constexpr static int TEAM_REDUCE_SIZE = 512;
+  // FIXME_OPENACC: default-team-size macros are temporarily used for
+  // team_size_max and team_size_recommended APIs
   constexpr static int DEFAULT_TEAM_SIZE_MAX = 512;
   constexpr static int DEFAULT_TEAM_SIZE_REC = 128;
 
@@ -194,6 +196,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
 
   //----------------------------------------
 
+  // FIXME_OPENACC: update team_size_max() APIs with realistic
+  // implementations.
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelForTag&) {
     return DEFAULT_TEAM_SIZE_MAX;
@@ -210,6 +214,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
     return DEFAULT_TEAM_SIZE_MAX;
   }
 
+  // FIXME_OPENACC: update team_size_recommended() APIs with realistic
+  // implementations.
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&, const ParallelForTag&) {
     return DEFAULT_TEAM_SIZE_REC;
