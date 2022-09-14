@@ -67,17 +67,17 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class SourceViewType, class NoneOfResultsViewType, class UnaryOp>
+template <class DataViewType, class NoneOfResultsViewType, class UnaryOp>
 struct TestFunctorA {
-  SourceViewType m_sourceView;
+  DataViewType m_dataView;
   NoneOfResultsViewType m_noneOfResultsView;
   int m_apiPick;
   UnaryOp m_unaryOp;
 
-  TestFunctorA(const SourceViewType sourceView,
+  TestFunctorA(const DataViewType dataView,
                const NoneOfResultsViewType noneOfResultsView, int apiPick,
                UnaryOp unaryOp)
-      : m_sourceView(sourceView),
+      : m_dataView(dataView),
         m_noneOfResultsView(noneOfResultsView),
         m_apiPick(apiPick),
         m_unaryOp(std::move(unaryOp)) {}
@@ -86,8 +86,7 @@ struct TestFunctorA {
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
 
-    auto myRowViewFrom =
-        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
 
     switch (m_apiPick) {
       case 0: {
@@ -125,8 +124,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   constexpr auto lowerBound = ValueType{5};
   constexpr auto upperBound = ValueType{523};
   Kokkos::pair bounds{lowerBound, upperBound};
-  auto [sourceView, sourceViewBeforeOp_h] = create_random_view_and_host_clone(
-      LayoutTag{}, numTeams, numCols, bounds, "sourceView");
+  auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
+      LayoutTag{}, numTeams, numCols, bounds, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -141,7 +140,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   GreaterThanValueFunctor unaryPred{upperBound};
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, noneOfResultsView, apiId, unaryPred);
+  TestFunctorA fnc(dataView, noneOfResultsView, apiId, unaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -149,8 +148,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   auto noneOfResultsView_h = create_host_space_copy(noneOfResultsView);
 
-  for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     const bool result =
         std::none_of(KE::begin(rowFrom), KE::end(rowFrom), unaryPred);
     EXPECT_EQ(result, noneOfResultsView_h(i));
