@@ -80,40 +80,40 @@ class OpenACCTeamMember {
   void* m_reduce_scratch;
 
  public:
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   const execution_space::scratch_memory_space& team_shmem() const {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int level) const {
     return m_team_shared.set_team_thread_mode(level, 1,
                                               m_team_scratch_size[level]);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   const execution_space::scratch_memory_space& thread_scratch(int level) const {
     return m_team_shared.set_team_thread_mode(level, team_size(), team_rank());
   }
 
-  KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank; }
-  KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
-  KOKKOS_INLINE_FUNCTION int team_rank() const {
+  KOKKOS_FUNCTION int league_rank() const { return m_league_rank; }
+  KOKKOS_FUNCTION int league_size() const { return m_league_size; }
+  KOKKOS_FUNCTION int team_rank() const {
 #ifdef KOKKOS_COMPILER_NVHPC
     return __pgi_vectoridx();
 #else
     return m_team_rank;
 #endif
   }
-  KOKKOS_INLINE_FUNCTION int vector_length() const { return m_vector_length; }
-  KOKKOS_INLINE_FUNCTION int team_size() const { return m_team_size; }
-  KOKKOS_INLINE_FUNCTION void* impl_reduce_scratch() const {
+  KOKKOS_FUNCTION int vector_length() const { return m_vector_length; }
+  KOKKOS_FUNCTION int team_size() const { return m_team_size; }
+  KOKKOS_FUNCTION void* impl_reduce_scratch() const {
     return m_reduce_scratch;
   }
 
   // FIXME_OPENACC: OpenACC does not provide any explicit barrier constructs
   // for device kernels.
-  KOKKOS_INLINE_FUNCTION void team_barrier() const {
+  KOKKOS_FUNCTION void team_barrier() const {
     Kokkos::abort(
         std::string(
             "Kokkos::Experimental::OpenACC ERROR: OpenACC does not "
@@ -124,7 +124,7 @@ class OpenACCTeamMember {
 
   // FIXME_OPENACC: team_broadcast() is not implemented.
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
+  KOKKOS_FUNCTION void team_broadcast(ValueType& value,
                                              int thread_id) const {
     static_assert(std::is_void_v<ValueType>,
                   "Kokkos Error: team_broadcast() is not implemented for the "
@@ -133,7 +133,7 @@ class OpenACCTeamMember {
   }
 
   template <class Closure, class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure& f, ValueType& value,
+  KOKKOS_FUNCTION void team_broadcast(const Closure& f, ValueType& value,
                                              const int& thread_id) const {
     f(value);
     team_broadcast(value, thread_id);
@@ -141,7 +141,7 @@ class OpenACCTeamMember {
 
   // FIXME_OPENACC: team_reduce() is not implemented.
   template <class ValueType, class JoinOp>
-  KOKKOS_INLINE_FUNCTION ValueType team_reduce(const ValueType& value,
+  KOKKOS_FUNCTION ValueType team_reduce(const ValueType& value,
                                                const JoinOp& op_in) const {
     static_assert(std::is_void_v<ValueType>,
                   "Kokkos Error: team_reduce() is not implemented for the "
@@ -151,7 +151,7 @@ class OpenACCTeamMember {
 
   // FIXME_OPENACC: team_scan() is not implemented.
   template <typename ArgType>
-  KOKKOS_INLINE_FUNCTION ArgType
+  KOKKOS_FUNCTION ArgType
   team_scan(const ArgType& /*value*/, ArgType* const /*global_accum*/) const {
     static_assert(
         std::is_void_v<ArgType>,
@@ -160,7 +160,7 @@ class OpenACCTeamMember {
   }
 
   template <typename Type>
-  KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value) const {
+  KOKKOS_FUNCTION Type team_scan(const Type& value) const {
     return this->template team_scan<Type>(value, 0);
   }
 
@@ -464,10 +464,10 @@ struct TeamThreadRangeBoundariesStruct<iType, OpenACCTeamMember> {
   const iType end;
   const OpenACCTeamMember& team;
 
-  inline TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
+  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                          iType count)
       : start(0), end(count), team(thread_) {}
-  inline TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
+  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                          iType begin_, iType end_)
       : start(begin_), end(end_), team(thread_) {}
 };
@@ -479,10 +479,10 @@ struct ThreadVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   const index_type end;
   const OpenACCTeamMember& team;
 
-  inline ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
+  ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                            index_type count)
       : start(0), end(count), team(thread_) {}
-  inline ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
+  ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                            index_type begin_, index_type end_)
       : start(begin_), end(end_), team(thread_) {}
 };
@@ -494,10 +494,10 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   const index_type end;
   const OpenACCTeamMember& team;
 
-  inline TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
+  TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                          index_type count)
       : start(0), end(count), team(thread_) {}
-  inline TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
+  TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                          index_type begin_, index_type end_)
       : start(begin_), end(end_), team(thread_) {}
 };
