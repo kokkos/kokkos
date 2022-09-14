@@ -61,20 +61,17 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class SourceViewType, class DestViewType, class DistancesViewType,
-          class UnaryOpType>
+template <class DataViewType, class DistancesViewType, class UnaryOpType>
 struct TestFunctorA {
-  SourceViewType m_sourceView;
-  DestViewType m_destView;
+  DataViewType m_dataView;
   DistancesViewType m_distancesView;
   UnaryOpType m_unaryOp;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
+  TestFunctorA(const DataViewType dataView,
                const DistancesViewType distancesView, UnaryOpType unaryOp,
                int apiPick)
-      : m_sourceView(sourceView),
-        m_destView(destView),
+      : m_dataView(dataView),
         m_distancesView(distancesView),
         m_unaryOp(std::move(unaryOp)),
         m_apiPick(apiPick) {}
@@ -82,8 +79,7 @@ struct TestFunctorA {
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom =
-        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
 
     switch (m_apiPick) {
       case 0: {
@@ -91,10 +87,6 @@ struct TestFunctorA {
                                   KE::cend(myRowViewFrom), m_unaryOp);
 
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
-          if (it != KE::cend(myRowViewFrom)) {
-            m_destView(myRowIndex) = *it;
-          }
-
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
         });
@@ -106,10 +98,6 @@ struct TestFunctorA {
         auto it = KE::find_if_not(member, myRowViewFrom, m_unaryOp);
 
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
-          if (it != KE::end(myRowViewFrom)) {
-            m_destView(myRowIndex) = *it;
-          }
-
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
         });
@@ -133,19 +121,15 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
-  auto [sourceView, sourceViewBeforeOp_h] = create_random_view_and_host_clone(
+  auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
       LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(5), ValueType(523)}, "sourceView");
+      Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
   // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
-
-  // to verify that things work, each team stores the result of its find_if_not
-  // call, and then we check that these match what we expect
-  Kokkos::View<ValueType*> destView("destView", numTeams);
 
   // find_if_not returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
@@ -156,26 +140,17 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   GreaterThanValueFunctor<ValueType> unaryOp{0};
 
   // use CTAD for functor
-  const ValueType value{sourceViewBeforeOp_h(numTeams / 2, numCols / 2)};
-  TestFunctorA fnc(sourceView, destView, distancesView, unaryOp, apiId);
+  const ValueType value{dataViewBeforeOp_h(numTeams / 2, numCols / 2)};
+  TestFunctorA fnc(dataView, distancesView, unaryOp, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto destView_h      = create_host_space_copy(destView);
   auto distancesView_h = create_host_space_copy(distancesView);
-  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
-                                                           numTeams, numCols);
-  for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
-    auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
-
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     auto it = std::find_if_not(KE::begin(rowFrom), KE::end(rowFrom), unaryOp);
-    if (it != KE::end(rowFrom)) {
-      EXPECT_EQ(*it, destView_h(i));
-    }
-
     const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
