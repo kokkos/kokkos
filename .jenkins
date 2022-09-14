@@ -298,8 +298,9 @@ pipeline {
                                 -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_FLAGS="-Werror -fsanitize=undefined -fsanitize=address" \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=address" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
