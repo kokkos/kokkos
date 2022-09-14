@@ -53,31 +53,42 @@
 
 namespace Test {
 
-std::string remove_unwanted_prefix(std::string str) {
-  auto found = str.find_first_not_of(" :,");
-  if (found != std::string::npos) {
-    return str.substr(found);
+/// \brief Remove unwanted spaces and colon signs from input string. In case of
+/// invalid input it will return an empty string.
+std::string remove_unwanted_characters(std::string str) {
+  auto from = str.find_first_not_of(" :");
+  auto to   = str.find_last_not_of(" :");
+
+  if (from == std::string::npos || to == std::string::npos) {
+    return "";
   }
-  return str;
+
+  // return extracted part of string without unwanted spaces and colon signs
+  return str.substr(from, to + 1);
 }
 
-void add_kokkos_configuration(bool verbose = false) {
+/// \brief Extract all key:value pairs from kokkos configuration and add it to
+/// the benchmark context
+void add_kokkos_configuration(bool verbose) {
   std::ostringstream msg;
   Kokkos::print_configuration(msg, verbose);
 
+  // Iterate over lines returned from kokkos and extract key:value pairs
   std::stringstream ss{msg.str()};
   for (std::string line; std::getline(ss, line, '\n');) {
     auto found = line.find_first_of(':');
     if (found != std::string::npos) {
-      auto val = remove_unwanted_prefix(line.substr(found + 1));
+      auto val = remove_unwanted_characters(line.substr(found + 1));
+      // Ignore line without value, for example a category name
       if (!val.empty()) {
         benchmark::AddCustomContext(
-            remove_unwanted_prefix(line.substr(0, found)), val);
+            remove_unwanted_characters(line.substr(0, found)), val);
       }
     }
   }
 }
 
+/// \brief Gather all context information and add it to benchmark context data
 void add_benchmark_context(bool verbose = false) {
   // Add Kokkos configuration to benchmark context data
   add_kokkos_configuration(verbose);
