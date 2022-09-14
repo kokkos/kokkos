@@ -50,40 +50,34 @@ namespace TeamFind {
 
 namespace KE = Kokkos::Experimental;
 
-template <class SourceViewType, class DestViewType, class DistancesViewType,
-          class ValueType>
+template <class DataViewType, class SearchedValuesViewType,
+          class DistancesViewType>
 struct TestFunctorA {
-  SourceViewType m_sourceView;
-  DestViewType m_destView;
+  DataViewType m_dataView;
+  SearchedValuesViewType m_searchedValuesView;
   DistancesViewType m_distancesView;
-  ValueType m_value;
   int m_apiPick;
 
-  TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
-               const DistancesViewType distancesView, ValueType value,
-               int apiPick)
-      : m_sourceView(sourceView),
-        m_destView(destView),
+  TestFunctorA(const DataViewType dataView,
+               const SearchedValuesViewType searchedValuesView,
+               const DistancesViewType distancesView, int apiPick)
+      : m_dataView(dataView),
+        m_searchedValuesView(searchedValuesView),
         m_distancesView(distancesView),
-        m_value(value),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-    auto myRowViewFrom =
-        Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
+    auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
+    const auto searchedValue = m_searchedValuesView(myRowIndex);
 
     switch (m_apiPick) {
       case 0: {
         auto it = KE::find(member, KE::cbegin(myRowViewFrom),
-                           KE::cend(myRowViewFrom), m_value);
+                           KE::cend(myRowViewFrom), searchedValue);
 
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
-          if (it != KE::cend(myRowViewFrom)) {
-            m_destView(myRowIndex) = *it;
-          }
-
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
         });
@@ -92,13 +86,9 @@ struct TestFunctorA {
       }
 
       case 1: {
-        auto it = KE::find(member, myRowViewFrom, m_value);
+        auto it = KE::find(member, myRowViewFrom, searchedValue);
 
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
-          if (it != KE::end(myRowViewFrom)) {
-            m_destView(myRowIndex) = *it;
-          }
-
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
         });
@@ -110,7 +100,8 @@ struct TestFunctorA {
 };
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
+void test_A(const bool searchedValuesExist, std::size_t numTeams,
+            std::size_t numCols, int apiId) {
   /* description:
      use a rank-2 view randomly filled with values,
      and run a team-level find
@@ -122,9 +113,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
-  auto [sourceView, sourceViewBeforeOp_h] = create_random_view_and_host_clone(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(5), ValueType(523)}, "sourceView");
+  const ValueType lowerBound{5}, upperBound{523};
+  auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
+      LayoutTag{}, numTeams, numCols, Kokkos::pair{lowerBound, upperBound},
+      "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -132,57 +124,97 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // to verify that things work, each team stores the result of its find call,
-  // and then we check that these match what we expect
-  Kokkos::View<ValueType*> destView("destView", numTeams);
-
   // find returns an iterator so to verify that it is correct
   // each team stores the distance of the returned iterator from the
   // beginning of the interval that team operates on and then we check
   // that these distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
+  // If searchedValuesExist == true we want to ensure that each value we're
+  // looking for exists in dataView. To do that, for each numTeams, a random j
+  // index from a range [0, numCols) is used to obtain a value from dataView.
+  //
+  // If searchedValuesExist == false we want to ensure the opposite, so every
+  // value is lesser than a lower bound of dataView.
+  Kokkos::View<ValueType*> searchedValuesView("searchValuesView", numTeams);
+  auto searchedValuesView_h =
+      create_mirror_view(Kokkos::HostSpace(), searchedValuesView);
+
+  using rand_pool =
+      Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
+  rand_pool pool(lowerBound * upperBound);
+
+  if (searchedValuesExist) {
+    Kokkos::View<std::size_t*, Kokkos::DefaultHostExecutionSpace> randomIndices(
+        "randomIndices", numTeams);
+
+    Kokkos::fill_random(randomIndices, pool, 0, numCols);
+
+    for (std::size_t i = 0; i < numTeams; ++i) {
+      const std::size_t j     = randomIndices(i);
+      searchedValuesView_h(i) = dataViewBeforeOp_h(i, j);
+    }
+  } else {
+    Kokkos::fill_random(searchedValuesView_h, pool, 0, lowerBound);
+  }
+
+  Kokkos::deep_copy(searchedValuesView, searchedValuesView_h);
+
   // use CTAD for functor
-  const ValueType value{sourceViewBeforeOp_h(numTeams / 2, numCols / 2)};
-  TestFunctorA fnc(sourceView, destView, distancesView, value, apiId);
+  // const ValueType value{dataViewBeforeOp_h(numTeams / 2, numCols / 2)};
+  TestFunctorA fnc(dataView, searchedValuesView, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto destView_h      = create_host_space_copy(destView);
   auto distancesView_h = create_host_space_copy(distancesView);
-  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
-                                                           numTeams, numCols);
-  for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
-    auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
+  // auto searchedValuesView_h = create_host_space_copy(searchedValuesView);
 
-    auto it = std::find(KE::begin(rowFrom), KE::end(rowFrom), value);
-    if (it != KE::end(rowFrom)) {
-      EXPECT_EQ(*it, destView_h(i));
+  for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
+    auto it      = std::find(KE::begin(rowFrom), KE::end(rowFrom),
+                        searchedValuesView_h(i));
+    const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
+    const std::size_t beginEndDistance =
+        KE::distance(KE::begin(rowFrom), KE::end(rowFrom));
+
+    if (searchedValuesExist) {
+      EXPECT_LE(stdDistance, beginEndDistance);
+    } else {
+      EXPECT_EQ(stdDistance, beginEndDistance);
     }
 
-    const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 }
 
 template <class LayoutTag, class ValueType>
-void run_all_scenarios() {
+void run_all_scenarios(const bool searchedValuesExist) {
   for (int numTeams : teamSizesToTest) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
+    for (const auto& numCols : {1, 2, 13, 101, 1444, 8153}) {
       for (int apiId : {0, 1}) {
-        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(searchedValuesExist, numTeams, numCols,
+                                     apiId);
       }
     }
   }
 }
 
-TEST(std_algorithms_find_team_test, test) {
-  run_all_scenarios<DynamicTag, double>();
-  run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, unsigned>();
+TEST(std_algorithms_find_team_test, searched_value_exists) {
+  constexpr bool searchedValuesExist = true;
+
+  run_all_scenarios<DynamicTag, double>(searchedValuesExist);
+  run_all_scenarios<StridedTwoRowsTag, int>(searchedValuesExist);
+  run_all_scenarios<StridedThreeRowsTag, unsigned>(searchedValuesExist);
+}
+
+TEST(std_algorithms_find_team_test, searched_value_doesnt_exist) {
+  constexpr bool searchedValuesExist = false;
+
+  run_all_scenarios<DynamicTag, double>(searchedValuesExist);
+  run_all_scenarios<StridedTwoRowsTag, int>(searchedValuesExist);
+  run_all_scenarios<StridedThreeRowsTag, unsigned>(searchedValuesExist);
 }
 
 }  // namespace TeamFind
