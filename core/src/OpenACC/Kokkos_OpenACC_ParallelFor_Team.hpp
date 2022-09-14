@@ -46,9 +46,6 @@
 #define KOKKOS_OPENACC_PARALLEL_FOR_TEAM_HPP
 
 #include <openacc.h>
-#include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Spinwait.hpp>
-#include <Kokkos_Atomic.hpp>
 #include <OpenACC/Kokkos_OpenACC_Team.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 
@@ -124,7 +121,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     }
   }
 #else
-//#pragma acc loop seq
 #pragma acc loop worker
   for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
     lambda(j);
@@ -132,10 +128,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 #endif
 }
 
-}  // namespace Kokkos
-
 // Hierarchical Parallelism -> Thread vector level implementation
-namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 #pragma acc routine seq
@@ -159,7 +152,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     }
   }
 #else
-//#pragma acc loop seq
 #pragma acc loop vector
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i);
@@ -167,10 +159,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 #endif
 }
 
-}  // namespace Kokkos
-
 // Hierarchical Parallelism -> Team vector level implementation
-namespace Kokkos {
 #ifdef KOKKOS_ENABLE_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 #pragma acc routine seq
 #else
@@ -193,7 +182,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     }
   }
 #else
-//#pragma acc loop seq
 #pragma acc loop vector
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 #endif
