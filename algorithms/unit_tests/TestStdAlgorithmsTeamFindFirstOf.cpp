@@ -156,12 +156,12 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
       LayoutTag{}, numTeams, numCols, Kokkos::pair{lowerBound, upperBound},
       "dataView");
 
-  // create a view that stores a sequence to found in dataView. If
+  // create a view that stores a sequence to found a value from in dataView. If
   // sequencesExist == true it is filled base on dataView content, to allow
   // find_first_of to actually find anything. If sequencesExist == false it is
   // filled with random values greater than upperBound
-  const std::size_t halfCols = (numCols + 1) / 2;
-  const std::size_t seqSize  = std::log2(numCols);
+  const std::size_t halfCols = (numCols > 1) ? ((numCols + 1) / 2) : (1);
+  const std::size_t seqSize  = (numCols > 1) ? (std::log2(numCols)) : (1);
 
   Kokkos::View<ValueType**> searchedSequncesView("searchedSequncesView",
                                                  numTeams, seqSize);
@@ -213,13 +213,26 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
     auto rowSearchedSeq =
         Kokkos::subview(searchedSequncesView_h, i, Kokkos::ALL());
 
+    const auto rowFromBegin     = KE::begin(rowFrom);
+    const auto rowFromEnd       = KE::end(rowFrom);
+    const auto rowSearchedBegin = KE::begin(rowSearchedSeq);
+    const auto rowSearchedEnd   = KE::end(rowSearchedSeq);
+
+    const std::size_t beginEndDistance = KE::distance(rowFromBegin, rowFromEnd);
+
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::find_first_of(KE::begin(rowFrom), KE::end(rowFrom),
-                                     KE::begin(rowSearchedSeq),
-                                     KE::end(rowSearchedSeq));
-        const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
+        auto it = std::find_first_of(rowFromBegin, rowFromEnd, rowSearchedBegin,
+                                     rowSearchedEnd);
+        const std::size_t stdDistance = KE::distance(rowFromBegin, it);
+
+        if (sequencesExist) {
+          EXPECT_LT(distancesView_h(i), beginEndDistance);
+        } else {
+          EXPECT_EQ(distancesView_h(i), beginEndDistance);
+        }
+
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
         break;
@@ -227,10 +240,16 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
 
       case 2:
       case 3: {
-        auto it = std::find_first_of(KE::begin(rowFrom), KE::end(rowFrom),
-                                     KE::begin(rowSearchedSeq),
-                                     KE::end(rowSearchedSeq), binaryOp);
-        const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
+        auto it = std::find_first_of(rowFromBegin, rowFromEnd, rowSearchedBegin,
+                                     rowSearchedEnd, binaryOp);
+        const std::size_t stdDistance = KE::distance(rowFromBegin, it);
+
+        if (sequencesExist) {
+          EXPECT_LT(distancesView_h(i), beginEndDistance);
+        } else {
+          EXPECT_EQ(distancesView_h(i), beginEndDistance);
+        }
+
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
         break;
