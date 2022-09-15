@@ -113,7 +113,9 @@ Kokkos_OpenACC.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_O
 Kokkos_OpenACCSpace.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACCSpace.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACCSpace.cpp
 Kokkos_OpenACC_Instance.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACC_Instance.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACC_Instance.cpp
+ 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACC_Instance.cpp
+Kokkos_OpenACC_SharedAllocationRecord.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACC_SharedAllocationRecord.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenACC/Kokkos_OpenACC_SharedAllocationRecord.cpp
 endif
 
 Kokkos_HBWSpace.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp
