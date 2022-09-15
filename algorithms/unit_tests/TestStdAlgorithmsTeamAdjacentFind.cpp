@@ -56,10 +56,10 @@ namespace TestAdjacentFind {
 namespace KE = Kokkos::Experimental;
 
 template <class ValueType>
-struct GreaterFunctor {
-  KOKKOS_INLINE_FUNCTION constexpr ValueType operator()(
-      const ValueType& lhs, const ValueType& rhs) const {
-    return lhs > rhs;
+struct IsEqualFunctor {
+  KOKKOS_INLINE_FUNCTION constexpr bool operator()(const ValueType& lhs,
+                                                   const ValueType& rhs) const {
+    return lhs == rhs;
   }
 };
 
@@ -127,7 +127,8 @@ struct TestFunctorA {
 };
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
+void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
+            std::size_t numCols, int apiId) {
   /* description:
      use a rank-2 view randomly filled with values,
      and run a team-level adjacent_find
@@ -143,6 +144,30 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       LayoutTag{}, numTeams, numCols,
       Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
 
+  // If ensureAdjacentFindCanFind == true ensure there are two consecutive equal
+  // elemnts in each row
+
+  // dataView might not deep copyable (e.g. strided layout) so to prepare it
+  // correclty, we make a new view that is for sure deep copyable, modify it on
+  // the host, deep copy to device and then launch a kernel to copy to dataView
+  auto dataView_dc =
+      create_deep_copyable_compatible_view_with_same_extent(dataView);
+  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
+
+  if (ensureAdjacentFindCanFind && numCols > 1) {
+    for (std::size_t i = 0; i < numTeams; ++i) {
+      const auto j = numCols / 2;
+
+      dataView_dc_h(i, j - 1) = dataView_dc_h(i, j);
+    }
+  }
+
+  // copy to dataView_dc and then to dataView
+  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
+
+  CopyFunctorRank2 cpFun(dataView_dc, dataView);
+  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), cpFun);
+
   // -----------------------------------------------
   // launch kokkos kernel
   // -----------------------------------------------
@@ -156,7 +181,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, distancesView, apiId, GreaterFunctor<ValueType>{});
+  IsEqualFunctor<ValueType> binOp;
+  TestFunctorA fnc(dataView, distancesView, apiId, binOp);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -165,43 +191,72 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto distancesView_h = create_host_space_copy(distancesView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
+    auto rowFrom            = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
+    const auto rowFromBegin = KE::begin(rowFrom);
+    const auto rowFromEnd   = KE::end(rowFrom);
+    const std::size_t beginEndDist = KE::distance(rowFromBegin, rowFromEnd);
 
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::adjacent_find(KE::begin(rowFrom), KE::end(rowFrom));
-        const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
+        auto it = std::adjacent_find(rowFromBegin, rowFromEnd);
+        const std::size_t stdDistance = KE::distance(rowFromBegin, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
+
+        if (numCols == 1) {
+          EXPECT_EQ(distancesView_h(i), beginEndDist);
+        } else if (ensureAdjacentFindCanFind) {
+          EXPECT_NE(distancesView_h(i), beginEndDist);
+        }
+
         break;
       }
 
       case 2:
       case 3: {
-        auto it = std::adjacent_find(KE::begin(rowFrom), KE::end(rowFrom),
-                                     GreaterFunctor<ValueType>{});
+        auto it =
+            std::adjacent_find(KE::begin(rowFrom), KE::end(rowFrom), binOp);
         const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
+
+        if (numCols == 1) {
+          EXPECT_EQ(distancesView_h(i), beginEndDist);
+        } else if (ensureAdjacentFindCanFind) {
+          EXPECT_NE(distancesView_h(i), beginEndDist);
+        }
       }
     }
   }
 }
 
 template <class LayoutTag, class ValueType>
-void run_all_scenarios() {
+void run_all_scenarios(const bool ensureAdjacentFindCanFind) {
   for (int numTeams : teamSizesToTest) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
+    for (const auto& numCols : {1, 2, 13, 101, 1444, 8153}) {
       for (int apiId : {0, 1, 2, 3}) {
-        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(ensureAdjacentFindCanFind, numTeams,
+                                     numCols, apiId);
       }
     }
   }
 }
 
-TEST(std_algorithms_adjacent_find_team_test, test) {
-  run_all_scenarios<DynamicTag, double>();
-  run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, unsigned>();
+TEST(std_algorithms_adjacent_find_team_test,
+     two_consecutive_equal_elements_exist) {
+  constexpr bool ensureAdjacentFindCanFind = true;
+
+  run_all_scenarios<DynamicTag, double>(ensureAdjacentFindCanFind);
+  run_all_scenarios<StridedTwoRowsTag, int>(ensureAdjacentFindCanFind);
+  run_all_scenarios<StridedThreeRowsTag, unsigned>(ensureAdjacentFindCanFind);
+}
+
+TEST(std_algorithms_adjacent_find_team_test,
+     two_consecutive_equal_elements_might_exist) {
+  constexpr bool ensureAdjacentFindCanFind = false;
+
+  run_all_scenarios<DynamicTag, double>(ensureAdjacentFindCanFind);
+  run_all_scenarios<StridedTwoRowsTag, int>(ensureAdjacentFindCanFind);
+  run_all_scenarios<StridedThreeRowsTag, unsigned>(ensureAdjacentFindCanFind);
 }
 
 }  // namespace TestAdjacentFind
