@@ -96,18 +96,16 @@ __global__ __launch_bounds__(
 
 template <class DriverType>
 __global__ static void hip_parallel_launch_local_memory(
-    const DriverType *driver) {
-  // FIXME_HIP driver() pass by copy
-  driver->operator()();
+    const DriverType driver) {
+  driver();
 }
 
 template <class DriverType, unsigned int maxTperB, unsigned int minBperSM>
 __global__ __launch_bounds__(
     maxTperB,
     minBperSM) static void hip_parallel_launch_local_memory(const DriverType
-                                                                *driver) {
-  // FIXME_HIP driver() pass by copy
-  driver->operator()();
+                                                                driver) {
+  driver();
 }
 
 template <typename DriverType>
@@ -387,7 +385,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   using base_t = HIPParallelLaunchKernelFunc<DriverType, LaunchBounds,
                                              HIPLaunchMechanism::LocalMemory>;
 
-  static void invoke_kernel(DriverType const *driver, dim3 const &grid,
+  static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
@@ -404,9 +402,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   using base_t = HIPParallelLaunchKernelFunc<DriverType, LaunchBounds,
                                              HIPLaunchMechanism::GlobalMemory>;
 
-  // FIXME_HIP the code is different than cuda because driver cannot be passed
-  // by copy
-  static void invoke_kernel(DriverType const *driver, dim3 const &grid,
+  static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
@@ -427,7 +423,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                 "Kokkos Error: Requested HIPLaunchConstantMemory with a "
                 "Functor larger than 32kB.");
 
-  static void invoke_kernel(DriverType const *driver, dim3 const &grid,
+  static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
@@ -437,7 +433,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging;
-    std::memcpy((void *)staging, (void *)driver, sizeof(DriverType));
+    std::memcpy(staging, &driver, sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
@@ -486,13 +482,8 @@ struct HIPParallelLaunch<
 
       KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
 
-      std::lock_guard<std::mutex> const lock(hip_instance->m_mutexWorkArray);
-
       // Invoke the driver function on the device
-      DriverType *d_driver = reinterpret_cast<DriverType *>(
-          hip_instance->get_next_driver(sizeof(DriverType)));
-      std::memcpy((void *)d_driver, (void *)&driver, sizeof(DriverType));
-      base_t::invoke_kernel(d_driver, grid, block, shmem, hip_instance);
+      base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());

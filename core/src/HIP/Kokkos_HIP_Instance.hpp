@@ -102,20 +102,6 @@ class HIPInternal {
 
   static hipDeviceProp_t m_deviceProp;
 
-  // array of DriverTypes to be allocated in host-pinned memory for async
-  // kernel launches
-  mutable char *d_driverWorkArray = nullptr;
-  // number of kernel launches that can be in-flight w/o synchronization
-  const int m_maxDriverCycles = 100;
-  // max size of a DriverType [bytes]
-  mutable size_t m_maxDriverTypeSize = 1024 * 10;
-  // the current index in the driverWorkArray
-  mutable int m_cycleId = 0;
-  // mutex to access d_driverWorkArray
-  mutable std::mutex m_mutexWorkArray;
-  // mutex to access shared memory
-  mutable std::mutex m_mutexSharedMemory;
-
   // Scratch Spaces for Reductions
   std::size_t m_scratchSpaceCount = 0;
   std::size_t m_scratchFlagsCount = 0;
@@ -130,9 +116,10 @@ class HIPInternal {
   bool m_manage_stream = false;
 
   // Team Scratch Level 1 Space
-  mutable int64_t m_team_scratch_current_size = 0;
-  mutable void *m_team_scratch_ptr            = nullptr;
-  mutable std::mutex m_team_scratch_mutex;
+  int m_n_team_scratch                            = 10;
+  mutable int64_t m_team_scratch_current_size[10] = {};
+  mutable void *m_team_scratch_ptr[10]            = {};
+  mutable std::atomic_int m_team_scratch_pool[10] = {};
   std::int32_t *m_scratch_locks;
 
   bool was_finalized = false;
@@ -159,9 +146,6 @@ class HIPInternal {
   void fence() const;
   void fence(const std::string &) const;
 
-  // returns the next driver type pointer in our work array
-  char *get_next_driver(size_t driverTypeSize) const;
-
   ~HIPInternal();
 
   HIPInternal() = default;
@@ -171,8 +155,9 @@ class HIPInternal {
   size_type *scratch_flags(const std::size_t size);
   uint32_t impl_get_instance_id() const noexcept;
   // Resizing of team level 1 scratch
-  void *resize_team_scratch_space(std::int64_t bytes,
-                                  bool force_shrink = false);
+  std::pair<void *, int> resize_team_scratch_space(std::int64_t bytes,
+                                                   bool force_shrink = false);
+  void release_team_scratch_pool(int scratch_pool_id);
 };
 
 }  // namespace Impl
