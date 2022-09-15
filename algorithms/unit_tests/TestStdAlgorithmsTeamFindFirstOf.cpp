@@ -157,7 +157,7 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
       "dataView");
 
   // create a view that stores a sequence to found in dataView. If
-  // sequencesExist == true it is filled base on dataView context, to allow
+  // sequencesExist == true it is filled base on dataView content, to allow
   // find_first_of to actually find anything. If sequencesExist == false it is
   // filled with random values greater than upperBound
   const std::size_t halfCols = (numCols + 1) / 2;
