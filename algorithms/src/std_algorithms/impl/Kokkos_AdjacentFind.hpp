@@ -140,7 +140,8 @@ adjacent_find_team_impl(const TeamHandleType& teamHandle, IteratorType first,
                             StdAdjacentFindFunctor(first, reducer, pred),
                             reducer);
 
-  // fence not needed because reducing into scalar
+  teamHandle.team_barrier();
+
   if (red_result.min_loc_true ==
       ::Kokkos::reduction_identity<index_type>::min()) {
     return last;

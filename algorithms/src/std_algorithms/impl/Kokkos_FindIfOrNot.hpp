@@ -146,7 +146,7 @@ find_if_or_not_team_impl(const TeamHandleType& teamHandle, IteratorType first,
   ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, 0, num_elements),
                             func_t(first, reducer, pred), reducer);
 
-  // fence not needed because reducing into scalar
+  teamHandle.team_barrier();
 
   // decide and return
   if (red_result.min_loc_true ==

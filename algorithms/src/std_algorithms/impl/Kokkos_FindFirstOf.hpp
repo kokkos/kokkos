@@ -160,7 +160,7 @@ find_first_of_team_impl(const TeamHandleType& teamHandle, IteratorType1 first,
                             func_t(first, s_first, s_last, reducer, pred),
                             reducer);
 
-  // fence not needed because reducing into scalar
+  teamHandle.team_barrier();
 
   // decide and return
   if (red_result.min_loc_true ==
