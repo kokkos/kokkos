@@ -51,40 +51,43 @@ namespace TeamFindIf {
 namespace KE = Kokkos::Experimental;
 
 template <class ValueType>
-struct GreaterThanValueFunctor {
+struct GreaterEqualFunctor {
   ValueType m_val;
 
   KOKKOS_INLINE_FUNCTION
-  GreaterThanValueFunctor(ValueType val) : m_val(val) {}
+  GreaterEqualFunctor(ValueType val) : m_val(val) {}
 
   KOKKOS_INLINE_FUNCTION
-  bool operator()(ValueType val) const { return (val > m_val); }
+  bool operator()(ValueType val) const { return (val >= m_val); }
 };
 
-template <class DataViewType, class DistancesViewType, class UnaryOpType>
+template <class DataViewType, class GreaterThanValuesViewType,
+          class DistancesViewType>
 struct TestFunctorA {
   DataViewType m_dataView;
+  GreaterThanValuesViewType m_greaterThanValuesView;
   DistancesViewType m_distancesView;
-  UnaryOpType m_unaryOp;
   int m_apiPick;
 
   TestFunctorA(const DataViewType dataView,
-               const DistancesViewType distancesView, UnaryOpType unaryOp,
-               int apiPick)
+               const GreaterThanValuesViewType greaterThanValuesView,
+               const DistancesViewType distancesView, int apiPick)
       : m_dataView(dataView),
+        m_greaterThanValuesView(greaterThanValuesView),
         m_distancesView(distancesView),
-        m_unaryOp(std::move(unaryOp)),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
+    const auto val     = m_greaterThanValuesView(myRowIndex);
+    GreaterEqualFunctor unaryOp{val};
 
     switch (m_apiPick) {
       case 0: {
         auto it = KE::find_if(member, KE::cbegin(myRowViewFrom),
-                              KE::cend(myRowViewFrom), m_unaryOp);
+                              KE::cend(myRowViewFrom), unaryOp);
 
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
@@ -95,7 +98,7 @@ struct TestFunctorA {
       }
 
       case 1: {
-        auto it = KE::find_if(member, myRowViewFrom, m_unaryOp);
+        auto it = KE::find_if(member, myRowViewFrom, unaryOp);
 
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
@@ -109,7 +112,8 @@ struct TestFunctorA {
 };
 
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
+void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
+            std::size_t numCols, int apiId) {
   /* description:
      use a rank-2 view randomly filled with values,
      and run a team-level find_if
@@ -121,9 +125,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
+  const ValueType lowerBound{5}, upperBound{523};
   auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
-      LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(5), ValueType(523)}, "dataView");
+      LayoutTag{}, numTeams, numCols, Kokkos::pair{lowerBound, upperBound},
+      "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -137,11 +142,41 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // that these distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
-  GreaterThanValueFunctor<ValueType> unaryOp{0};
+  // If predicatesReturnTrue == true, we want to ensure that eventually, for
+  // some value from each of dataView's row, predicate GreaterEqualFunctor will
+  // return true. To do that, for each numTeams, a random j index from a range
+  // [0, numCols) is used to obtain a value from dataView, and later that value
+  // is used for creating concrete GreaterEqualFunctor predicate.
+  //
+  // If searchedValuesExist == false we want to ensure the opposite, so every
+  // value is randomly picked from range [upperBound, upperBound*2).
+  Kokkos::View<ValueType*> greaterEqualValuesView("greaterEqualValuesView",
+                                                  numTeams);
+  auto greaterEqualValuesView_h =
+      create_mirror_view(Kokkos::HostSpace(), greaterEqualValuesView);
+
+  using rand_pool =
+      Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
+  rand_pool pool(lowerBound * upperBound);
+
+  if (predicatesReturnTrue) {
+    Kokkos::View<std::size_t*, Kokkos::DefaultHostExecutionSpace> randomIndices(
+        "randomIndices", numTeams);
+    Kokkos::fill_random(randomIndices, pool, 0, numCols);
+
+    for (std::size_t i = 0; i < numTeams; ++i) {
+      const std::size_t j         = randomIndices(i);
+      greaterEqualValuesView_h(i) = dataViewBeforeOp_h(i, j);
+    }
+  } else {
+    Kokkos::fill_random(greaterEqualValuesView_h, pool, upperBound,
+                        upperBound * 2);
+  }
+
+  Kokkos::deep_copy(greaterEqualValuesView, greaterEqualValuesView_h);
 
   // use CTAD for functor
-  const ValueType value{dataViewBeforeOp_h(numTeams / 2, numCols / 2)};
-  TestFunctorA fnc(dataView, distancesView, unaryOp, apiId);
+  TestFunctorA fnc(dataView, greaterEqualValuesView, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -150,27 +185,52 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto distancesView_h = create_host_space_copy(distancesView);
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
-    auto it      = std::find_if(KE::begin(rowFrom), KE::end(rowFrom), unaryOp);
-    const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
+    const auto rowFromBegin = KE::begin(rowFrom);
+    const auto rowFromEnd   = KE::end(rowFrom);
+    const auto val          = greaterEqualValuesView_h(i);
+    const GreaterEqualFunctor unaryOp{val};
+
+    auto it = std::find_if(rowFromBegin, rowFromEnd, unaryOp);
+
+    const std::size_t stdDistance      = KE::distance(rowFromBegin, it);
+    const std::size_t beginEndDistance = KE::distance(rowFromBegin, rowFromEnd);
+
+    if (predicatesReturnTrue) {
+      EXPECT_LT(stdDistance, beginEndDistance);
+    } else {
+      EXPECT_EQ(stdDistance, beginEndDistance);
+    }
+
     EXPECT_EQ(stdDistance, distancesView_h(i));
   }
 }
 
 template <class LayoutTag, class ValueType>
-void run_all_scenarios() {
+void run_all_scenarios(const bool predicatesReturnTrue) {
   for (int numTeams : teamSizesToTest) {
-    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
+    for (const auto& numCols : {1, 2, 13, 101, 1444, 8153}) {
       for (int apiId : {0, 1}) {
-        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
+        test_A<LayoutTag, ValueType>(predicatesReturnTrue, numTeams, numCols,
+                                     apiId);
       }
     }
   }
 }
 
-TEST(std_algorithms_find_if_team_test, test) {
-  run_all_scenarios<DynamicTag, double>();
-  run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, unsigned>();
+TEST(std_algorithms_find_if_team_test, predicates_return_true) {
+  constexpr bool predicatesReturnTrue = true;
+
+  run_all_scenarios<DynamicTag, double>(predicatesReturnTrue);
+  run_all_scenarios<StridedTwoRowsTag, int>(predicatesReturnTrue);
+  run_all_scenarios<StridedThreeRowsTag, unsigned>(predicatesReturnTrue);
+}
+
+TEST(std_algorithms_find_if_team_test, predicates_return_false) {
+  constexpr bool predicatesReturnTrue = false;
+
+  run_all_scenarios<DynamicTag, double>(predicatesReturnTrue);
+  run_all_scenarios<StridedTwoRowsTag, int>(predicatesReturnTrue);
+  run_all_scenarios<StridedThreeRowsTag, unsigned>(predicatesReturnTrue);
 }
 
 }  // namespace TeamFindIf
