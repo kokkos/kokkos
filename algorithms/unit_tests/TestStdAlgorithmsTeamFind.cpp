@@ -171,14 +171,16 @@ void test_A(const bool searchedValuesExist, std::size_t numTeams,
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
-    auto it      = std::find(KE::begin(rowFrom), KE::end(rowFrom),
-                        searchedValuesView_h(i));
-    const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
-    const std::size_t beginEndDistance =
-        KE::distance(KE::begin(rowFrom), KE::end(rowFrom));
+    const auto rowFromBegin = KE::begin(rowFrom);
+    const auto rowFromEnd   = KE::end(rowFrom);
+
+    auto it = std::find(rowFromBegin, rowFromEnd, searchedValuesView_h(i));
+
+    const std::size_t stdDistance      = KE::distance(rowFromBegin, it);
+    const std::size_t beginEndDistance = KE::distance(rowFromBegin, rowFromEnd);
 
     if (searchedValuesExist) {
-      EXPECT_LE(stdDistance, beginEndDistance);
+      EXPECT_LT(stdDistance, beginEndDistance);
     } else {
       EXPECT_EQ(stdDistance, beginEndDistance);
     }
@@ -199,7 +201,7 @@ void run_all_scenarios(const bool searchedValuesExist) {
   }
 }
 
-TEST(std_algorithms_find_team_test, searched_value_exists) {
+TEST(std_algorithms_find_team_test, searched_values_exist) {
   constexpr bool searchedValuesExist = true;
 
   run_all_scenarios<DynamicTag, double>(searchedValuesExist);
@@ -207,7 +209,7 @@ TEST(std_algorithms_find_team_test, searched_value_exists) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>(searchedValuesExist);
 }
 
-TEST(std_algorithms_find_team_test, searched_value_does_not_exist) {
+TEST(std_algorithms_find_team_test, searched_values_do_not_exist) {
   constexpr bool searchedValuesExist = false;
 
   run_all_scenarios<DynamicTag, double>(searchedValuesExist);
