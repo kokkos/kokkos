@@ -34,6 +34,8 @@ int main( int argc, char* argv[] )
   });
 
   Kokkos::fence();
+ 
+  printf("Run scan_exclusive_comp kernel\n");
 
   // Warming
   Kokkos::parallel_scan( "scan_exclusive_comp", M, KOKKOS_LAMBDA ( int m, float& update, bool final )

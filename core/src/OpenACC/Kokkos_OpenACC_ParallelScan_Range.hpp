@@ -51,36 +51,37 @@
 
 namespace Kokkos::Experimental::Impl {
 //template <class IndexType, class ValueType, class Functor>
-template <class IndexType, class Functor>
+template <class IndexType, class Functor, class ValueType>
 void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
-                                   Functor afunctor, int async_arg) {
+                                   Functor afunctor, ValueType init_value, int async_arg) {
   auto const functor(afunctor);
   IndexType N = end - begin;
-  //ValueType tmp;
-  //ValueType val[N+1];
+  ValueType val[N+1];
 
-/*
-#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
-  for (auto i = begin; i < end+1; ++i) {
-    ValueInit::init(functor, &val[i]);
+#pragma acc enter data copyin(functor) create(val) async(async_arg)
+
+#pragma acc parallel loop gang vector present(functor, val) async(async_arg)
+  for (auto i = begin; i < end; ++i) {
+    val[i+1-begin] = init_value;
+    functor(i, val[i+1-begin], false);
+    if(i == begin) {
+      val[0] = init_value;
+    }
   }
 
-#pragma acc parallel loop gang vector present(functor) async(async_arg)
+#pragma acc parallel loop gang vector present(functor, val) async(async_arg)
   for (auto i = begin; i < end; ++i) {
-    functor(i, val[i+1], false);
-  }
-
-#pragma acc parallel loop gang vector present(functor) async(async_arg)
-  for (auto i = begin; i < end; ++i) {
-    ValueInit::init(functor, &tmp);
+    ValueType tmp;
+    tmp = init_value;
     #pragma acc loop reduction (+:tmp)
     for (auto j = i; j >= begin; --j){
-      tmp += val[j];
+      tmp += val[j-begin];
     }
-    printf("TMP = %2.4f\n", tmp);
+    //printf("TMP = %2.4f\n", tmp);
     functor(i, tmp, true);
   }
-*/
+
+#pragma acc exit data delete(functor, val) async(async_arg)
 }
 }  // namespace Kokkos::Experimental::Impl
 
@@ -88,15 +89,13 @@ template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
   using Policy      = Kokkos::RangePolicy<Traits...>;
-  //using WorkTag     = typename Policy::work_tag;
-  //using ValueTraits = Kokkos::Impl::FunctorValueTraits<Functor, WorkTag>;
-  //using ValueInit   = Kokkos::Impl::FunctorValueInit<Functor, WorkTag>;
-  //using ValueType   = typename ValueTraits::value_type;
   using Analysis    = Kokkos::Impl::FunctorAnalysis<Kokkos::Impl::FunctorPatternInterface::SCAN,
                                          Policy, Functor>;
+  using PointerType = typename Analysis::pointer_type;
   using ValueType   = typename Analysis::value_type;
-  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
+  Functor m_functor;
   Policy m_policy;
+  PointerType m_result_ptr;
 
  public:
   ParallelScan(Functor const& functor, Policy const& policy)
@@ -111,18 +110,12 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     int const async_arg  = m_policy.space().acc_async_queue();
-    ValueType tmp;
-    //auto const functor(m_functor);
+    ValueType init_value;
     typename Analysis::Reducer final_reducer(&m_functor);
+    final_reducer.init(&init_value);
       
-    //Functor a_functor(m_functor);
-    //typename Analysis::Reducer final_reducer(&m_functor);
-    //auto const functor(m_functor);
-    
-    //typename Analysis::Reducer reducer(&functor);
-
     Kokkos::Experimental::Impl::OpenACCParallelScanRangePolicy(
-        begin, end, m_functor, async_arg);
+        begin, end, Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy>(m_functor),init_value, async_arg);
   }
 };
 
