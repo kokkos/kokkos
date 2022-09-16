@@ -206,8 +206,8 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
-    const auto rowFromBegin = KE::begin(rowFrom);
-    const auto rowFromEnd   = KE::end(rowFrom);
+    const auto rowFromBegin = KE::cbegin(rowFrom);
+    const auto rowFromEnd   = KE::cend(rowFrom);
 
     auto rowSearchedSeq =
         Kokkos::subview(searchedSequncesView_h, i, Kokkos::ALL());
@@ -219,8 +219,8 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
       case 0:
       case 1: {
         auto it =
-            std::find_end(rowFromBegin, rowFromEnd, KE::begin(rowSearchedSeq),
-                          KE::end(rowSearchedSeq));
+            std::find_end(rowFromBegin, rowFromEnd, KE::cbegin(rowSearchedSeq),
+                          KE::cend(rowSearchedSeq));
         stdDistance = KE::distance(rowFromBegin, it);
 
         break;
@@ -229,8 +229,8 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
       case 2:
       case 3: {
         auto it =
-            std::find_end(rowFromBegin, rowFromEnd, KE::begin(rowSearchedSeq),
-                          KE::end(rowSearchedSeq), binaryOp);
+            std::find_end(rowFromBegin, rowFromEnd, KE::cbegin(rowSearchedSeq),
+                          KE::cend(rowSearchedSeq), binaryOp);
         stdDistance = KE::distance(rowFromBegin, it);
 
         break;

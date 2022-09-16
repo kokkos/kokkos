@@ -86,8 +86,8 @@ struct TestFunctorA {
 
     switch (m_apiPick) {
       case 0: {
-        auto it = KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
-                                    KE::cend(myRowViewFrom));
+        const auto it = KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
+                                          KE::cend(myRowViewFrom));
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
@@ -96,7 +96,7 @@ struct TestFunctorA {
       }
 
       case 1: {
-        auto it = KE::adjacent_find(member, myRowViewFrom);
+        const auto it = KE::adjacent_find(member, myRowViewFrom);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
@@ -105,8 +105,8 @@ struct TestFunctorA {
       }
 
       case 2: {
-        auto it = KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
-                                    KE::cend(myRowViewFrom), m_binaryOp);
+        const auto it = KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
+                                          KE::cend(myRowViewFrom), m_binaryOp);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
@@ -115,7 +115,7 @@ struct TestFunctorA {
       }
 
       case 3: {
-        auto it = KE::adjacent_find(member, myRowViewFrom, m_binaryOp);
+        const auto it = KE::adjacent_find(member, myRowViewFrom, m_binaryOp);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
@@ -192,14 +192,14 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom            = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
-    const auto rowFromBegin = KE::begin(rowFrom);
-    const auto rowFromEnd   = KE::end(rowFrom);
+    const auto rowFromBegin = KE::cbegin(rowFrom);
+    const auto rowFromEnd   = KE::cend(rowFrom);
     const std::size_t beginEndDist = KE::distance(rowFromBegin, rowFromEnd);
 
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::adjacent_find(rowFromBegin, rowFromEnd);
+        const auto it = std::adjacent_find(rowFromBegin, rowFromEnd);
         const std::size_t stdDistance = KE::distance(rowFromBegin, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -214,9 +214,9 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
 
       case 2:
       case 3: {
-        auto it =
-            std::adjacent_find(KE::begin(rowFrom), KE::end(rowFrom), binOp);
-        const std::size_t stdDistance = KE::distance(KE::begin(rowFrom), it);
+        const auto it =
+            std::adjacent_find(KE::cbegin(rowFrom), KE::cend(rowFrom), binOp);
+        const std::size_t stdDistance = KE::distance(KE::cbegin(rowFrom), it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
         if (numCols == 1) {
@@ -224,6 +224,8 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
         } else if (ensureAdjacentFindCanFind) {
           EXPECT_NE(distancesView_h(i), beginEndDist);
         }
+
+        break;
       }
     }
   }

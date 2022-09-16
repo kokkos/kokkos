@@ -148,7 +148,7 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
   // every value in that row, so it needs to compare each value with value
   // smaller than lowerBound.
   //
-  // If searchedValuesExist == false we want to ensure the opposite -
+  // If predicatesReturnTrue == false we want to ensure the opposite -
   // GreaterEqualFunctor needs to return false for every value of each
   // dataView's row, so the predicate is constructed with value randomly picked
   // from range [upperBound, upperBound*2).
@@ -180,8 +180,8 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
   auto distancesView_h = create_host_space_copy(distancesView);
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
-    const auto rowFromBegin = KE::begin(rowFrom);
-    const auto rowFromEnd   = KE::end(rowFrom);
+    const auto rowFromBegin = KE::cbegin(rowFrom);
+    const auto rowFromEnd   = KE::cend(rowFrom);
     const auto val          = greaterEqualValuesView_h(i);
     const GreaterEqualFunctor unaryOp{val};
 

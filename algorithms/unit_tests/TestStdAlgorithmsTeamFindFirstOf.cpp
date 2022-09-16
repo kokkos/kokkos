@@ -213,10 +213,10 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
     auto rowSearchedSeq =
         Kokkos::subview(searchedSequncesView_h, i, Kokkos::ALL());
 
-    const auto rowFromBegin     = KE::begin(rowFrom);
-    const auto rowFromEnd       = KE::end(rowFrom);
-    const auto rowSearchedBegin = KE::begin(rowSearchedSeq);
-    const auto rowSearchedEnd   = KE::end(rowSearchedSeq);
+    const auto rowFromBegin     = KE::cbegin(rowFrom);
+    const auto rowFromEnd       = KE::cend(rowFrom);
+    const auto rowSearchedBegin = KE::cbegin(rowSearchedSeq);
+    const auto rowSearchedEnd   = KE::cend(rowSearchedSeq);
 
     const std::size_t beginEndDistance = KE::distance(rowFromBegin, rowFromEnd);
 

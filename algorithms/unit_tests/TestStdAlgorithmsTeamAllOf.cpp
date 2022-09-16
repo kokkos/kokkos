@@ -102,7 +102,6 @@ struct TestFunctorA {
         Kokkos::single(Kokkos::PerTeam(member),
                        [=]() { m_allOfResultsView(myRowIndex) = result; });
         break;
-        break;
       }
     }
   }
@@ -151,9 +150,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     const bool result =
-        std::all_of(KE::begin(rowFrom), KE::end(rowFrom), unaryPred);
+        std::all_of(KE::cbegin(rowFrom), KE::cend(rowFrom), unaryPred);
     EXPECT_EQ(result, allOfResultsView_h(i));
-    break;
   }
 }
 

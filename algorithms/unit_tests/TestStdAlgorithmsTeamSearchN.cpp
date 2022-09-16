@@ -93,8 +93,8 @@ struct TestFunctorA {
 
     switch (m_apiPick) {
       case 0: {
-        auto it = KE::search_n(member, rowFromBegin, rowFromEnd, m_seqSize,
-                               searchedValue);
+        const auto it = KE::search_n(member, rowFromBegin, rowFromEnd,
+                                     m_seqSize, searchedValue);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) = KE::distance(rowFromBegin, it);
         });
@@ -103,7 +103,8 @@ struct TestFunctorA {
       }
 
       case 1: {
-        auto it = KE::search_n(member, myRowViewFrom, m_seqSize, searchedValue);
+        const auto it =
+            KE::search_n(member, myRowViewFrom, m_seqSize, searchedValue);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) = KE::distance(rowFromBegin, it);
         });
@@ -112,8 +113,8 @@ struct TestFunctorA {
       }
 
       case 2: {
-        auto it = KE::search_n(member, rowFromBegin, rowFromEnd, m_seqSize,
-                               searchedValue, m_binaryOp);
+        const auto it = KE::search_n(member, rowFromBegin, rowFromEnd,
+                                     m_seqSize, searchedValue, m_binaryOp);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) = KE::distance(rowFromBegin, it);
         });
@@ -122,8 +123,8 @@ struct TestFunctorA {
       }
 
       case 3: {
-        auto it = KE::search_n(member, myRowViewFrom, m_seqSize, searchedValue,
-                               m_binaryOp);
+        const auto it = KE::search_n(member, myRowViewFrom, m_seqSize,
+                                     searchedValue, m_binaryOp);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) = KE::distance(rowFromBegin, it);
         });
@@ -203,10 +204,10 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
   using space_t = Kokkos::DefaultExecutionSpace;
   Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
-  // search returns an iterator so to verify that it is correct each team stores
-  // the distance of the returned iterator from the beginning of the interval
-  // that team operates on and then we check that these distances match the std
-  // result
+  // search_n returns an iterator so to verify that it is correct each team
+  // stores the distance of the returned iterator from the beginning of the
+  // interval that team operates on and then we check that these distances match
+  // the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
   EqualFunctor<ValueType> binaryOp;
@@ -224,8 +225,8 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
 
-    const auto rowFromBegin = KE::begin(rowFrom);
-    const auto rowFromEnd   = KE::end(rowFrom);
+    const auto rowFromBegin = KE::cbegin(rowFrom);
+    const auto rowFromEnd   = KE::cend(rowFrom);
 
     const ValueType searchedVal = searchedValuesView_h(i);
 
@@ -234,7 +235,8 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::search_n(rowFromBegin, rowFromEnd, seqSize, searchedVal);
+        const auto it =
+            std::search_n(rowFromBegin, rowFromEnd, seqSize, searchedVal);
         const std::size_t stdDistance = KE::distance(rowFromBegin, it);
 
         if (sequencesExist) {
@@ -250,8 +252,8 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
 
       case 2:
       case 3: {
-        auto it = std::search_n(rowFromBegin, rowFromEnd, seqSize, searchedVal,
-                                binaryOp);
+        const auto it = std::search_n(rowFromBegin, rowFromEnd, seqSize,
+                                      searchedVal, binaryOp);
         const std::size_t stdDistance = KE::distance(rowFromBegin, it);
 
         if (sequencesExist) {
