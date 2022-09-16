@@ -44,9 +44,6 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 
-#include <algorithm>
-#include <cmath>
-
 namespace Test {
 namespace stdalgos {
 namespace TeamSearch {

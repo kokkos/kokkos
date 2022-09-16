@@ -43,11 +43,6 @@
 */
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <cstddef>
-#include <functional>
-#include <numeric>
-#include "gtest/gtest.h"
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
 
 namespace Test {
 namespace stdalgos {

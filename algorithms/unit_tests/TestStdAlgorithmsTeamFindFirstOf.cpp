@@ -44,8 +44,6 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 
-#include <cmath>
-
 namespace Test {
 namespace stdalgos {
 namespace TeamFindFirstOf {
