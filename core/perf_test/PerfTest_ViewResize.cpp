@@ -42,22 +42,23 @@
 //@HEADER
 */
 
-#include <PerfTest_ViewFill.hpp>
+#include <PerfTest_ViewResize.hpp>
 
 #include <Benchmark_Context.hpp>
 
 namespace Test {
 
-void report_results_fill(benchmark::State& state, double time) {
+void report_results_resize(benchmark::State& state, double time) {
   state.SetIterationTime(time);
-  const auto N8   = std::pow(state.range(0), 8);
-  const auto size = N8 * 8 / 1024 / 1024;
+  const auto N8 = std::pow(state.range(0), 8);
+  // data size in megabytes
+  const auto size = N8 * 8 / 1000 / 1000;
+  // data processed in gigabytes
+  const auto data_processed = 2.0 * size / 1000;
 
-  state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
-                                            benchmark::Counter::OneK::kIs1024);
-  state.counters[KokkosBenchmark::benchmark_fom("GB/s")] =
-      benchmark::Counter(size / 1024 / time, benchmark::Counter::kDefaults,
-                         benchmark::Counter::OneK::kIs1024);
+  state.counters["MB"] = benchmark::Counter(size);
+  state.counters[KokkosBenchmark::benchmark_fom("GB/s")] = benchmark::Counter(
+      data_processed, benchmark::Counter::kIsIterationInvariantRate);
 }
 
 }  // namespace Test

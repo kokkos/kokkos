@@ -18,19 +18,37 @@
 
 namespace Test {
 
-TEST(default_exec, ViewResize_Rank8) {
+static constexpr int R = 10;
+
 // FIXME_SYCL Avoid running out of resources on the CUDA GPU used in the CI
 #ifdef KOKKOS_ENABLE_SYCL
-  printf("Resize View Performance for LayoutLeft:\n");
-  run_resizeview_tests8<Kokkos::LayoutLeft>(9, 1);
-  printf("Resize View Performance for LayoutRight:\n");
-  run_resizeview_tests8<Kokkos::LayoutRight>(9, 1);
+static constexpr int N = 9;
 #else
-  printf("Resize View Performance for LayoutLeft:\n");
-  run_resizeview_tests8<Kokkos::LayoutLeft>(10, 1);
-  printf("Resize View Performance for LayoutRight:\n");
-  run_resizeview_tests8<Kokkos::LayoutRight>(10, 1);
+static constexpr int N = 10;
 #endif
-}
+
+BENCHMARK(ViewResize_Rank8<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_Rank8<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank8<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank8<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
 
 }  // namespace Test

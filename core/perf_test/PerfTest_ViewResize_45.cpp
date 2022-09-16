@@ -18,11 +18,55 @@
 
 namespace Test {
 
-TEST(default_exec, ViewResize_Rank_45) {
-  printf("Resize View Performance for LayoutLeft:\n");
-  run_resizeview_tests45<Kokkos::LayoutLeft>(10, 1);
-  printf("Resize View Performance for LayoutRight:\n");
-  run_resizeview_tests45<Kokkos::LayoutRight>(10, 1);
-}
+static constexpr int R = 10;
+static constexpr int N = 10;
+
+BENCHMARK(ViewResize_Rank4<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_Rank4<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_Rank5<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_Rank5<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank4<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank4<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank5<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank5<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
 
 }  // namespace Test

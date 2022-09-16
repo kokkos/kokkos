@@ -18,11 +18,31 @@
 
 namespace Test {
 
-TEST(default_exec, ViewResize_Rank7) {
-  printf("Resize View Performance for LayoutLeft:\n");
-  run_resizeview_tests7<Kokkos::LayoutLeft>(10, 1);
-  printf("Resize View Performance for LayoutRight:\n");
-  run_resizeview_tests7<Kokkos::LayoutRight>(10, 1);
-}
+static constexpr int R = 10;
+static constexpr int N = 10;
+
+BENCHMARK(ViewResize_Rank7<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_Rank7<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank7<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
+
+BENCHMARK(ViewResize_NoInit_Rank7<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime()
+    ->Iterations(R);
 
 }  // namespace Test
