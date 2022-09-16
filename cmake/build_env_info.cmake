@@ -1,4 +1,3 @@
-
 find_package(Git QUIET)
 
 if(Git_FOUND)
@@ -44,5 +43,3 @@ if(Git_FOUND)
 
     configure_file(cmake/Environment_Info.h.in Environment_Info.hpp @ONLY)
 endif()
-
-
