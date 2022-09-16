@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   Kokkos::initialize(argc, argv);
   benchmark::Initialize(&argc, argv);
   benchmark::SetDefaultTimeUnit(benchmark::kSecond);
-  Test::add_benchmark_context(true);
+  KokkosBenchmark::add_benchmark_context(true);
 
   benchmark::RunSpecifiedBenchmarks();
 

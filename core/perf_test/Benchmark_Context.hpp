@@ -51,7 +51,7 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace Test {
+namespace KokkosBenchmark {
 
 /// \brief Remove unwanted spaces and colon signs from input string. In case of
 /// invalid input it will return an empty string.
@@ -94,6 +94,6 @@ void add_benchmark_context(bool verbose = false) {
   add_kokkos_configuration(verbose);
 }
 
-}  // namespace Test
+}  // namespace KokkosBenchmark
 
 #endif
