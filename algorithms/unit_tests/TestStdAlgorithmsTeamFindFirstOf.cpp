@@ -59,22 +59,22 @@ struct EqualFunctor {
 };
 
 template <class DataViewType, class SearchedSequencesViewType,
-          class DistancesViewType, class BinaryOpType>
+          class DistancesViewType, class BinaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   SearchedSequencesViewType m_searchedSequencesView;
   DistancesViewType m_distancesView;
-  BinaryOpType m_binaryOp;
+  BinaryPredType m_binaryPred;
   int m_apiPick;
 
   TestFunctorA(const DataViewType dataView,
                const SearchedSequencesViewType searchedSequencesView,
-               const DistancesViewType distancesView, BinaryOpType binaryOp,
+               const DistancesViewType distancesView, BinaryPredType binaryPred,
                int apiPick)
       : m_dataView(dataView),
         m_searchedSequencesView(searchedSequencesView),
         m_distancesView(distancesView),
-        m_binaryOp(std::move(binaryOp)),
+        m_binaryPred(binaryPred),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
@@ -109,10 +109,10 @@ struct TestFunctorA {
       }
 
       case 2: {
-        auto it = KE::find_first_of(member, KE::cbegin(myRowViewFrom),
-                                    KE::cend(myRowViewFrom),
-                                    KE::cbegin(myRowSearchedSeqView),
-                                    KE::cend(myRowSearchedSeqView), m_binaryOp);
+        auto it = KE::find_first_of(
+            member, KE::cbegin(myRowViewFrom), KE::cend(myRowViewFrom),
+            KE::cbegin(myRowSearchedSeqView), KE::cend(myRowSearchedSeqView),
+            m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
@@ -123,7 +123,7 @@ struct TestFunctorA {
 
       case 3: {
         auto it = KE::find_first_of(member, myRowViewFrom, myRowSearchedSeqView,
-                                    m_binaryOp);
+                                    m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
@@ -194,10 +194,10 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
   // that these distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
-  EqualFunctor<ValueType> binaryOp;
+  EqualFunctor<ValueType> binaryPred;
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, searchedSequncesView, distancesView, binaryOp,
+  TestFunctorA fnc(dataView, searchedSequncesView, distancesView, binaryPred,
                    apiId);
   Kokkos::parallel_for(policy, fnc);
 
@@ -239,7 +239,7 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
       case 2:
       case 3: {
         auto it = std::find_first_of(rowFromBegin, rowFromEnd, rowSearchedBegin,
-                                     rowSearchedEnd, binaryOp);
+                                     rowSearchedEnd, binaryPred);
         const std::size_t stdDistance = KE::distance(rowFromBegin, it);
 
         if (sequencesExist) {

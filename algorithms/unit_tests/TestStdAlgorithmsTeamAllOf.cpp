@@ -61,20 +61,20 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class DataViewType, class AlllOfResultsViewType, class UnaryOp>
+template <class DataViewType, class AlllOfResultsViewType, class UnaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   AlllOfResultsViewType m_allOfResultsView;
   int m_apiPick;
-  UnaryOp m_unaryOp;
+  UnaryPredType m_unaryPred;
 
   TestFunctorA(const DataViewType dataView,
                const AlllOfResultsViewType allOfResultsView, int apiPick,
-               UnaryOp unaryOp)
+               UnaryPredType unaryPred)
       : m_dataView(dataView),
         m_allOfResultsView(allOfResultsView),
         m_apiPick(apiPick),
-        m_unaryOp(std::move(unaryOp)) {}
+        m_unaryPred(unaryPred) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
@@ -85,14 +85,14 @@ struct TestFunctorA {
     switch (m_apiPick) {
       case 0: {
         const bool result = KE::all_of(member, KE::cbegin(myRowViewFrom),
-                                       KE::cend(myRowViewFrom), m_unaryOp);
+                                       KE::cend(myRowViewFrom), m_unaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=]() { m_allOfResultsView(myRowIndex) = result; });
         break;
       }
 
       case 1: {
-        const bool result = KE::all_of(member, myRowViewFrom, m_unaryOp);
+        const bool result = KE::all_of(member, myRowViewFrom, m_unaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=]() { m_allOfResultsView(myRowIndex) = result; });
         break;

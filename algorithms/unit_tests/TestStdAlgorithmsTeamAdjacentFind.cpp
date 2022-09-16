@@ -58,20 +58,20 @@ struct IsEqualFunctor {
   }
 };
 
-template <class DataViewType, class DistancesViewType, class BinaryOp>
+template <class DataViewType, class DistancesViewType, class BinaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   DistancesViewType m_distancesView;
   int m_apiPick;
-  BinaryOp m_binaryOp;
+  BinaryPredType m_binaryPred;
 
   TestFunctorA(const DataViewType dataView,
                const DistancesViewType distancesView, int apiPick,
-               BinaryOp binaryOp)
+               BinaryPredType binaryPred)
       : m_dataView(dataView),
         m_distancesView(distancesView),
         m_apiPick(apiPick),
-        m_binaryOp(std::move(binaryOp)) {}
+        m_binaryPred(binaryPred) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
@@ -100,8 +100,9 @@ struct TestFunctorA {
       }
 
       case 2: {
-        const auto it = KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
-                                          KE::cend(myRowViewFrom), m_binaryOp);
+        const auto it =
+            KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
+                              KE::cend(myRowViewFrom), m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
@@ -110,7 +111,7 @@ struct TestFunctorA {
       }
 
       case 3: {
-        const auto it = KE::adjacent_find(member, myRowViewFrom, m_binaryOp);
+        const auto it = KE::adjacent_find(member, myRowViewFrom, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
@@ -176,8 +177,8 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
 
   // use CTAD for functor
-  IsEqualFunctor<ValueType> binOp;
-  TestFunctorA fnc(dataView, distancesView, apiId, binOp);
+  IsEqualFunctor<ValueType> binaryPred;
+  TestFunctorA fnc(dataView, distancesView, apiId, binaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -210,8 +211,9 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
       case 2:
       case 3: {
         const auto it =
-            std::adjacent_find(KE::cbegin(rowFrom), KE::cend(rowFrom), binOp);
-        const std::size_t stdDistance = KE::distance(KE::cbegin(rowFrom), it);
+            std::adjacent_find(rowFromBegin, rowFromEnd, binaryPred);
+        const std::size_t stdDistance = KE::distance(rowFromBegin, it);
+
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
         if (numCols == 1) {
