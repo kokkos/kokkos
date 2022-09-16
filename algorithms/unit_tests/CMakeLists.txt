@@ -214,6 +214,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamFindFirstOf
 	StdAlgorithmsTeamFindIf
 	StdAlgorithmsTeamFindIfNot
+	StdAlgorithmsTeamSearch
 	StdAlgorithmsTeamNoneOf
 	)
       list(APPEND STDALGO_TEAM_SOURCES_C Test${Name}.cpp)
