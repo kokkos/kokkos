@@ -49,22 +49,144 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
+#define USE_PARALLEL_SCAN_ALGORITHM
+
 namespace Kokkos::Experimental::Impl {
-//template <class IndexType, class ValueType, class Functor>
 template <class IndexType, class Functor, class ValueType>
 void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
-                                   Functor afunctor, ValueType init_value, int async_arg) {
+                                    Functor afunctor, ValueType init_value,
+                                    int async_arg) {
   auto const functor(afunctor);
-  IndexType N = end - begin;
-  ValueType val[N+1];
+  const IndexType N = end - begin;
+#ifdef USE_PARALLEL_SCAN_ALGORITHM
+  constexpr IndexType chunk_size     = 128;
+  constexpr IndexType log_chunk_size = 7;
+  const IndexType n_chunks           = (N + chunk_size - 1) / chunk_size;
+  const IndexType nteams             = n_chunks > 512 ? 512 : n_chunks;
+  Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> chunk_values(
+      "chunk_values", n_chunks);
+  Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> offset_values(
+      "offset_values", n_chunks);
+  ValueType element_values[2][chunk_size];
+
+#pragma acc enter data copyin(functor) copyin(chunk_values, offset_values) \
+    async(async_arg)
+
+#pragma acc parallel loop gang num_gangs(nteams)      \
+    vector_length(chunk_size) private(element_values) \
+        present(functor, chunk_values)
+  for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
+#pragma acc loop vector
+    for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
+      const IndexType local_offset = team_id * chunk_size;
+      const IndexType idx          = local_offset + thread_id;
+      ValueType update             = init_value;
+      if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
+      element_values[0][thread_id] = update;
+    }
+    IndexType step_size    = 1;
+    IndexType current_step = 0;
+    IndexType next_step    = 1;
+    IndexType temp;
+    for (IndexType i = 0; i < log_chunk_size; ++i) {
+      if (i == 0) {
+        step_size = 1;
+      } else {
+        step_size *= 2;
+      }
+#pragma acc loop vector
+      for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
+        if (thread_id < step_size) {
+          element_values[next_step][thread_id] =
+              element_values[current_step][thread_id];
+        } else {
+          element_values[next_step][thread_id] =
+              element_values[current_step][thread_id] +
+              element_values[current_step][thread_id - step_size];
+        }
+      }
+      temp         = current_step;
+      current_step = next_step;
+      next_step    = temp;
+    }
+    chunk_values(team_id) = element_values[current_step][chunk_size - 1];
+  }
+
+  ValueType tempValue;
+#pragma acc serial loop present(chunk_values, offset_values)
+  for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
+    if (team_id == 0) {
+      offset_values(0) = 0;
+      tempValue        = 0;
+    } else {
+      tempValue += chunk_values(team_id - 1);
+      offset_values(team_id) = tempValue;
+    }
+  }
+
+#pragma acc parallel loop gang num_gangs(nteams)      \
+    vector_length(chunk_size) private(element_values) \
+        present(functor, offset_values)
+  for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
+#pragma acc loop vector
+    for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
+      const IndexType local_offset = team_id * chunk_size;
+      const IndexType idx          = local_offset + thread_id;
+      ValueType update             = init_value;
+      if (thread_id == 0) {
+        update += offset_values(team_id);
+      }
+      if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
+      element_values[0][thread_id] = update;
+    }
+    IndexType step_size    = 1;
+    IndexType current_step = 0;
+    IndexType next_step    = 1;
+    IndexType temp;
+    for (IndexType i = 0; i < log_chunk_size; ++i) {
+      if (i == 0) {
+        step_size = 1;
+      } else {
+        step_size *= 2;
+      }
+#pragma acc loop vector
+      for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
+        if (thread_id < step_size) {
+          element_values[next_step][thread_id] =
+              element_values[current_step][thread_id];
+        } else {
+          element_values[next_step][thread_id] =
+              element_values[current_step][thread_id] +
+              element_values[current_step][thread_id - step_size];
+        }
+      }
+      temp         = current_step;
+      current_step = next_step;
+      next_step    = temp;
+    }
+#pragma acc loop vector
+    for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
+      const IndexType local_offset = team_id * chunk_size;
+      const IndexType idx          = local_offset + thread_id;
+      ValueType update             = element_values[current_step][thread_id];
+      if (idx < N) functor(idx, update, true);
+    }
+  }
+
+#pragma acc exit data delete (functor, chunk_values, \
+                              offset_values)async(async_arg)
+
+#else
+
+  ValueType val[N + 1];
 
 #pragma acc enter data copyin(functor) create(val) async(async_arg)
 
 #pragma acc parallel loop gang vector present(functor, val) async(async_arg)
   for (auto i = begin; i < end; ++i) {
-    val[i+1-begin] = init_value;
-    functor(i, val[i+1-begin], false);
-    if(i == begin) {
+    val[i + 1 - begin] = init_value;
+    functor(i, val[i + 1 - begin], false);
+    if (i == begin) {
       val[0] = init_value;
     }
   }
@@ -73,24 +195,25 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
   for (auto i = begin; i < end; ++i) {
     ValueType tmp;
     tmp = init_value;
-    #pragma acc loop reduction (+:tmp)
-    for (auto j = i; j >= begin; --j){
-      tmp += val[j-begin];
+#pragma acc loop reduction(+ : tmp)
+    for (auto j = i; j >= begin; --j) {
+      tmp += val[j - begin];
     }
-    //printf("TMP = %2.4f\n", tmp);
     functor(i, tmp, true);
   }
+#pragma acc exit data delete (functor, val)async(async_arg)
 
-#pragma acc exit data delete(functor, val) async(async_arg)
+#endif
 }
 }  // namespace Kokkos::Experimental::Impl
 
 template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
-                                Kokkos::Experimental::OpenACC> {
-  using Policy      = Kokkos::RangePolicy<Traits...>;
-  using Analysis    = Kokkos::Impl::FunctorAnalysis<Kokkos::Impl::FunctorPatternInterface::SCAN,
-                                         Policy, Functor>;
+                                 Kokkos::Experimental::OpenACC> {
+  using Policy = Kokkos::RangePolicy<Traits...>;
+  using Analysis =
+      Kokkos::Impl::FunctorAnalysis<Kokkos::Impl::FunctorPatternInterface::SCAN,
+                                    Policy, Functor>;
   using PointerType = typename Analysis::pointer_type;
   using ValueType   = typename Analysis::value_type;
   Functor m_functor;
@@ -109,13 +232,15 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
       return;
     }
 
-    int const async_arg  = m_policy.space().acc_async_queue();
+    int const async_arg = m_policy.space().acc_async_queue();
     ValueType init_value;
     typename Analysis::Reducer final_reducer(&m_functor);
     final_reducer.init(&init_value);
-      
+
     Kokkos::Experimental::Impl::OpenACCParallelScanRangePolicy(
-        begin, end, Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy>(m_functor),init_value, async_arg);
+        begin, end,
+        Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy>(m_functor),
+        init_value, async_arg);
   }
 };
 
