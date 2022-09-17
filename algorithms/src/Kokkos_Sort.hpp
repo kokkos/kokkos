@@ -50,8 +50,28 @@
 #endif
 
 #include <Kokkos_Core.hpp>
-
+#include <Kokkos_NestedSort.hpp>
+#include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <algorithm>
+
+#if defined(KOKKOS_ENABLE_CUDA)
+
+// Workaround for `Instruction 'shfl' without '.sync' is not supported on
+// .target sm_70 and higher from PTX ISA version 6.4`.
+// Also see https://github.com/NVIDIA/cub/pull/170.
+#if !defined(CUB_USE_COOPERATIVE_GROUPS)
+#define CUB_USE_COOPERATIVE_GROUPS
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+
+#pragma GCC diagnostic pop
+
+#endif
 
 namespace Kokkos {
 
@@ -576,9 +596,14 @@ struct min_max_functor {
 
 }  // namespace Impl
 
-template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType const& view) {
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (!SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace& exec,
+     const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
   using CompType = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
@@ -615,6 +640,28 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
+
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
+                 (SpaceAccessibility<
+                     HostSpace, typename Kokkos::View<DataType, Properties...>::
+                                    memory_space>::accessible)>
+sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
+  auto first = Experimental::begin(view);
+  auto last  = Experimental::end(view);
+  std::sort(first, last);
+}
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class DataType, class... Properties>
+void sort(const Cuda& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  const auto exec = thrust::cuda::par.on(space.cuda_stream());
+  auto first      = Experimental::begin(view);
+  auto last       = Experimental::end(view);
+  thrust::sort(exec, first, last);
+}
+#endif
 
 template <class ViewType>
 void sort(ViewType const& view) {

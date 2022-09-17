@@ -51,13 +51,13 @@
 #include <Kokkos_Macros.hpp>
 #include <type_traits>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::numbers {
 
-#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE) \
-  template <class T>                            \
-  inline constexpr auto TRAIT##_v =             \
-      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE)
+#define KOKKOS_IMPL_MATH_CONSTANT(TRAIT, VALUE)                \
+  template <class T>                                           \
+  inline constexpr auto TRAIT##_v =                            \
+      std::enable_if_t<std::is_floating_point_v<T>, T>(VALUE); \
+  inline constexpr auto TRAIT = TRAIT##_v<double>
 
 // clang-format off
 KOKKOS_IMPL_MATH_CONSTANT(e,          2.718281828459045235360287471352662498L);
@@ -77,8 +77,26 @@ KOKKOS_IMPL_MATH_CONSTANT(phi,        1.618033988749894848204586834365638118L);
 
 #undef KOKKOS_IMPL_MATH_CONSTANT
 
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::numbers
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+namespace Kokkos::Experimental {
+using Kokkos::numbers::e_v;
+using Kokkos::numbers::egamma_v;
+using Kokkos::numbers::inv_pi_v;
+using Kokkos::numbers::inv_sqrt3_v;
+using Kokkos::numbers::inv_sqrtpi_v;
+using Kokkos::numbers::ln10_v;
+using Kokkos::numbers::ln2_v;
+using Kokkos::numbers::log10e_v;
+using Kokkos::numbers::log2e_v;
+using Kokkos::numbers::phi_v;
+using Kokkos::numbers::pi_v;
+using Kokkos::numbers::sqrt2_v;
+using Kokkos::numbers::sqrt3_v;
+}  // namespace Kokkos::Experimental
+#endif
+
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS

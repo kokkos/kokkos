@@ -168,7 +168,7 @@ KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
 #define KOKKOS_ENABLE_SERIAL_ATOMICS
 
 #elif defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || \
-    (defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_IBM))
+    defined(KOKKOS_COMPILER_NVCC)
 
 #define KOKKOS_ENABLE_GNU_ATOMICS
 

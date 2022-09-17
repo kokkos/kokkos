@@ -85,22 +85,22 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  int m_cudaDev;
+  static int m_cudaDev;
 
   // Device Properties
-  int m_cudaArch;
-  unsigned m_multiProcCount;
-  unsigned m_maxWarpCount;
-  std::array<size_type, 3> m_maxBlock;
-  unsigned m_maxSharedWords;
-  uint32_t m_maxConcurrency;
-  int m_shmemPerSM;
-  int m_maxShmemPerBlock;
-  int m_maxBlocksPerSM;
-  int m_maxThreadsPerSM;
-  int m_maxThreadsPerBlock;
+  static int m_cudaArch;
+  static unsigned m_multiProcCount;
+  static unsigned m_maxWarpCount;
+  static std::array<size_type, 3> m_maxBlock;
+  static unsigned m_maxSharedWords;
+  static uint32_t m_maxConcurrency;
+  static int m_shmemPerSM;
+  static int m_maxShmemPerBlock;
+  static int m_maxBlocksPerSM;
+  static int m_maxThreadsPerSM;
+  static int m_maxThreadsPerBlock;
 
-  cudaDeviceProp m_deviceProp;
+  static cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
   mutable std::size_t m_scratchSpaceCount;
@@ -108,8 +108,7 @@ class CudaInternal {
   mutable std::size_t m_scratchUnifiedCount;
   mutable std::size_t m_scratchFunctorSize;
 
-  size_type m_scratchUnifiedSupported;
-  size_type m_streamCount;
+  static size_type m_scratchUnifiedSupported;
   mutable size_type* m_scratchSpace;
   mutable size_type* m_scratchFlags;
   mutable size_type* m_scratchUnified;
@@ -142,8 +141,7 @@ class CudaInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(int cuda_device_id, cudaStream_t stream = nullptr,
-                  bool manage_stream = false);
+  void initialize(cudaStream_t stream, bool manage_stream);
   void finalize();
 
   void print_configuration(std::ostream&) const;
@@ -159,24 +157,10 @@ class CudaInternal {
   ~CudaInternal();
 
   CudaInternal()
-      : m_cudaDev(-1),
-        m_cudaArch(-1),
-        m_multiProcCount(0),
-        m_maxWarpCount(0),
-        m_maxBlock({0, 0, 0}),
-        m_maxSharedWords(0),
-        m_maxConcurrency(0),
-        m_shmemPerSM(0),
-        m_maxShmemPerBlock(0),
-        m_maxBlocksPerSM(0),
-        m_maxThreadsPerSM(0),
-        m_maxThreadsPerBlock(0),
-        m_scratchSpaceCount(0),
+      : m_scratchSpaceCount(0),
         m_scratchFlagsCount(0),
         m_scratchUnifiedCount(0),
         m_scratchFunctorSize(0),
-        m_scratchUnifiedSupported(0),
-        m_streamCount(0),
         m_scratchSpace(nullptr),
         m_scratchFlags(nullptr),
         m_scratchUnified(nullptr),
