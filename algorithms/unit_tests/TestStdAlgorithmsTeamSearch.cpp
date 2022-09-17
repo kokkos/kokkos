@@ -160,26 +160,26 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
   const std::size_t halfCols = (numCols > 1) ? ((numCols + 1) / 2) : (1);
   const std::size_t seqSize  = (numCols > 1) ? (std::log2(numCols)) : (1);
 
-  Kokkos::View<ValueType**> searchedSequncesView("searchedSequncesView",
-                                                 numTeams, seqSize);
-  auto searchedSequncesView_h = create_host_space_copy(searchedSequncesView);
+  Kokkos::View<ValueType**> searchedSequencesView("searchedSequencesView",
+                                                  numTeams, seqSize);
+  auto searchedSequencesView_h = create_host_space_copy(searchedSequencesView);
 
   if (sequencesExist) {
     const std::size_t dataBegin = halfCols - seqSize;
-    for (std::size_t i = 0; i < searchedSequncesView_h.extent(0); ++i) {
+    for (std::size_t i = 0; i < searchedSequencesView_h.extent(0); ++i) {
       for (std::size_t js = 0, jd = dataBegin; js < seqSize; ++js, ++jd) {
-        searchedSequncesView_h(i, js) = dataViewBeforeOp_h(i, jd);
+        searchedSequencesView_h(i, js) = dataViewBeforeOp_h(i, jd);
       }
     }
   } else {
     using rand_pool =
         Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
     rand_pool pool(lowerBound * upperBound);
-    Kokkos::fill_random(searchedSequncesView_h, pool, upperBound,
+    Kokkos::fill_random(searchedSequencesView_h, pool, upperBound,
                         upperBound * 2);
   }
 
-  Kokkos::deep_copy(searchedSequncesView, searchedSequncesView_h);
+  Kokkos::deep_copy(searchedSequencesView, searchedSequencesView_h);
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -196,7 +196,7 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
   EqualFunctor<ValueType> binaryPred;
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, searchedSequncesView, distancesView, binaryPred,
+  TestFunctorA fnc(dataView, searchedSequencesView, distancesView, binaryPred,
                    apiId);
   Kokkos::parallel_for(policy, fnc);
 
@@ -208,7 +208,7 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     auto rowSearchedSeq =
-        Kokkos::subview(searchedSequncesView_h, i, Kokkos::ALL());
+        Kokkos::subview(searchedSequencesView_h, i, Kokkos::ALL());
 
     const auto rowFromBegin     = KE::cbegin(rowFrom);
     const auto rowFromEnd       = KE::cend(rowFrom);
