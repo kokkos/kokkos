@@ -47,13 +47,12 @@
 #ifndef KOKKOS_HIP_INSTANCE_HPP
 #define KOKKOS_HIP_INSTANCE_HPP
 
-#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 
 #include <mutex>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 struct HIPTraits {
@@ -88,7 +87,7 @@ class HIPInternal {
   HIPInternal &operator=(const HIPInternal &);
 
  public:
-  using size_type = ::Kokkos::Experimental::HIP::size_type;
+  using size_type = ::Kokkos::HIP::size_type;
 
   int m_hipDev                        = -1;
   int m_hipArch                       = -1;
@@ -97,24 +96,9 @@ class HIPInternal {
   std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   unsigned m_maxWavesPerCU            = 0;
   unsigned m_maxSharedWords           = 0;
-  int m_regsPerSM;
-  int m_shmemPerSM       = 0;
-  int m_maxShmemPerBlock = 0;
-  int m_maxThreadsPerSM  = 0;
-
-  // array of DriverTypes to be allocated in host-pinned memory for async
-  // kernel launches
-  mutable char *d_driverWorkArray = nullptr;
-  // number of kernel launches that can be in-flight w/o synchronization
-  const int m_maxDriverCycles = 100;
-  // max size of a DriverType [bytes]
-  mutable size_t m_maxDriverTypeSize = 1024 * 10;
-  // the current index in the driverWorkArray
-  mutable int m_cycleId = 0;
-  // mutex to access d_driverWorkArray
-  mutable std::mutex m_mutexWorkArray;
-  // mutex to access shared memory
-  mutable std::mutex m_mutexSharedMemory;
+  int m_shmemPerSM                    = 0;
+  int m_maxShmemPerBlock              = 0;
+  int m_maxThreadsPerSM               = 0;
 
   // Scratch Spaces for Reductions
   std::size_t m_scratchSpaceCount = 0;
@@ -125,15 +109,17 @@ class HIPInternal {
 
   hipDeviceProp_t m_deviceProp;
 
-  hipStream_t m_stream   = nullptr;
-  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
-      Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this));
+  hipStream_t m_stream = nullptr;
+  uint32_t m_instance_id =
+      Kokkos::Tools::Experimental::Impl::idForInstance<HIP>(
+          reinterpret_cast<uintptr_t>(this));
   bool m_manage_stream = false;
 
   // Team Scratch Level 1 Space
-  mutable int64_t m_team_scratch_current_size = 0;
-  mutable void *m_team_scratch_ptr            = nullptr;
-  mutable std::mutex m_team_scratch_mutex;
+  int m_n_team_scratch                            = 10;
+  mutable int64_t m_team_scratch_current_size[10] = {};
+  mutable void *m_team_scratch_ptr[10]            = {};
+  mutable std::atomic_int m_team_scratch_pool[10] = {};
   std::int32_t *m_scratch_locks;
 
   bool was_finalized = false;
@@ -150,17 +136,13 @@ class HIPInternal {
 
   bool is_initialized() const { return m_hipDev >= 0; }
 
-  void initialize(int hip_device_id, hipStream_t stream = nullptr,
-                  bool manage_stream = false);
+  void initialize(int hip_device_id, hipStream_t stream, bool manage_stream);
   void finalize();
 
   void print_configuration(std::ostream &) const;
 
   void fence() const;
   void fence(const std::string &) const;
-
-  // returns the next driver type pointer in our work array
-  char *get_next_driver(size_t driverTypeSize) const;
 
   ~HIPInternal();
 
@@ -171,12 +153,14 @@ class HIPInternal {
   size_type *scratch_flags(const std::size_t size);
   uint32_t impl_get_instance_id() const noexcept;
   // Resizing of team level 1 scratch
-  void *resize_team_scratch_space(std::int64_t bytes,
-                                  bool force_shrink = false);
+  std::pair<void *, int> resize_team_scratch_space(std::int64_t bytes,
+                                                   bool force_shrink = false);
+  void release_team_scratch_pool(int scratch_pool_id);
 };
 
 }  // namespace Impl
 
+namespace Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
 //   Customization point for backends

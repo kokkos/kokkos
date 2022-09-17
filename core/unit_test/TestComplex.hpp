@@ -425,15 +425,11 @@ TEST(TEST_CATEGORY, complex_io) { testComplexIO(); }
 TEST(TEST_CATEGORY, complex_trivially_copyable) {
   // Kokkos::complex<RealType> is trivially copyable when RealType is
   // trivially copyable
-  // Simply disable the check for IBM's XL compiler since we can't reliably
-  // check for a version that defines relevant functions.
-#if !defined(__ibmxl__)
   using RealType = double;
   // clang claims compatibility with gcc 4.2.1 but all versions tested know
   // about std::is_trivially_copyable.
   ASSERT_TRUE(std::is_trivially_copyable<Kokkos::complex<RealType>>::value ||
               !std::is_trivially_copyable<RealType>::value);
-#endif
 }
 
 template <class ExecSpace>
@@ -527,26 +523,24 @@ TEST(TEST_CATEGORY, complex_issue_3867) {
 #endif
 
 TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
-#define STATIC_ASSERT(cond) static_assert(cond, "")
-
-  STATIC_ASSERT(Kokkos::real(1) == 1.);
-  STATIC_ASSERT(Kokkos::real(2.f) == 2.f);
-  STATIC_ASSERT(Kokkos::real(3.) == 3.);
-  STATIC_ASSERT(Kokkos::real(4.l) == 4.l);
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::real(1)), double>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::real(2.f)), float>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::real(3.)), double>::value));
-  STATIC_ASSERT(
+  static_assert(Kokkos::real(1) == 1.);
+  static_assert(Kokkos::real(2.f) == 2.f);
+  static_assert(Kokkos::real(3.) == 3.);
+  static_assert(Kokkos::real(4.l) == 4.l);
+  static_assert((std::is_same<decltype(Kokkos::real(1)), double>::value));
+  static_assert((std::is_same<decltype(Kokkos::real(2.f)), float>::value));
+  static_assert((std::is_same<decltype(Kokkos::real(3.)), double>::value));
+  static_assert(
       (std::is_same<decltype(Kokkos::real(4.l)), long double>::value));
 
-  STATIC_ASSERT(Kokkos::imag(1) == 0.);
-  STATIC_ASSERT(Kokkos::imag(2.f) == 0.f);
-  STATIC_ASSERT(Kokkos::imag(3.) == 0.);
-  STATIC_ASSERT(Kokkos::imag(4.l) == 0.l);
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::imag(1)), double>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::imag(2.f)), float>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::imag(3.)), double>::value));
-  STATIC_ASSERT(
+  static_assert(Kokkos::imag(1) == 0.);
+  static_assert(Kokkos::imag(2.f) == 0.f);
+  static_assert(Kokkos::imag(3.) == 0.);
+  static_assert(Kokkos::imag(4.l) == 0.l);
+  static_assert((std::is_same<decltype(Kokkos::imag(1)), double>::value));
+  static_assert((std::is_same<decltype(Kokkos::imag(2.f)), float>::value));
+  static_assert((std::is_same<decltype(Kokkos::imag(3.)), double>::value));
+  static_assert(
       (std::is_same<decltype(Kokkos::real(4.l)), long double>::value));
 
   // FIXME in principle could be checked at compile time too
@@ -554,16 +548,14 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
   ASSERT_EQ(Kokkos::conj(2.f), Kokkos::complex<float>(2.f));
   ASSERT_EQ(Kokkos::conj(3.), Kokkos::complex<double>(3.));
   ASSERT_EQ(Kokkos::conj(4.l), Kokkos::complex<long double>(4.l));
-  STATIC_ASSERT((
+  static_assert((
       std::is_same<decltype(Kokkos::conj(1)), Kokkos::complex<double>>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::conj(2.f)),
+  static_assert((std::is_same<decltype(Kokkos::conj(2.f)),
                               Kokkos::complex<float>>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::conj(3.)),
+  static_assert((std::is_same<decltype(Kokkos::conj(3.)),
                               Kokkos::complex<double>>::value));
-  STATIC_ASSERT((std::is_same<decltype(Kokkos::conj(4.l)),
+  static_assert((std::is_same<decltype(Kokkos::conj(4.l)),
                               Kokkos::complex<long double>>::value));
-
-#undef STATIC_ASSERT
 }
 
 }  // namespace Test

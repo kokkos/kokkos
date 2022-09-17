@@ -71,7 +71,7 @@ jobs:
             -DHPX_ROOT=$PWD/../../hpx/install \
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_HPX=ON \
             -DKokkos_ENABLE_HPX_ASYNC_DISPATCH=ON \

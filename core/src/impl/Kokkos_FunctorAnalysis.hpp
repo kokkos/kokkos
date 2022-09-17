@@ -655,6 +655,11 @@ struct FunctorAnalysis {
                         detected_volatile_join_no_tag<F>::value)>>
       : public has_volatile_join_no_tag_function<F> {
     enum : bool { value = true };
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    static_assert(Impl::dependent_false_v<F>,
+                  "Reducer with a join() operator taking "
+                  "volatile-qualified parameters is no longer supported");
+#endif
   };
 
   template <class F = Functor, typename = void>
@@ -673,6 +678,11 @@ struct FunctorAnalysis {
                                          detected_volatile_join_tag<F>::value)>>
       : public has_volatile_join_tag_function<F> {
     enum : bool { value = true };
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+    static_assert(Impl::dependent_false_v<F>,
+                  "Reducer with a join() operator taking "
+                  "volatile-qualified parameters is no longer supported");
+#endif
   };
 
   //----------------------------------------
@@ -745,8 +755,9 @@ struct FunctorAnalysis {
   struct DeduceInitNoTag {
     enum : bool { value = false };
 
-    KOKKOS_INLINE_FUNCTION static void init(F const* const, ValueType* dst) {
-      new (dst) ValueType();
+    KOKKOS_INLINE_FUNCTION static void init(F const* const f, ValueType* dst) {
+      const int n = FunctorAnalysis::value_count(*f);
+      for (int i = 0; i < n; ++i) new (&dst[i]) ValueType();
     }
   };
 

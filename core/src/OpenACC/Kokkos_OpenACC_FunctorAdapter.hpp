@@ -42,36 +42,31 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_PHYSICAL_LAYOUT_HPP
-#define KOKKOS_PHYSICAL_LAYOUT_HPP
+#ifndef KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
+#define KOKKOS_OPENACC_FUNCTOR_ADAPTER_HPP
 
-#include <Kokkos_View.hpp>
+#include <type_traits>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
-struct PhysicalLayout {
-  enum LayoutType { Left, Right, Scalar, Error };
-  LayoutType layout_type;
-  int rank;
-  long long int stride[9];  // distance between two neighboring elements in a
-                            // given dimension
+template <class Functor, class Policy>
+class FunctorAdapter {
+  Functor m_functor;
+  using WorkTag = typename Policy::work_tag;
 
-  template <class T, class L, class D, class M>
-  PhysicalLayout(const View<T, L, D, M>& view)
-      : layout_type(
-            is_same<typename View<T, L, D, M>::array_layout, LayoutLeft>::value
-                ? Left
-                : (is_same<typename View<T, L, D, M>::array_layout,
-                           LayoutRight>::value
-                       ? Right
-                       : Error)),
-        rank(view.Rank) {
-    for (int i = 0; i < 9; i++) stride[i] = 0;
-    view.stride(stride);
+ public:
+  FunctorAdapter(Functor const &functor) : m_functor(functor) {}
+
+  template <class... Args>
+  KOKKOS_FUNCTION void operator()(Args &&... args) const {
+    if constexpr (std::is_void_v<WorkTag>) {
+      m_functor(static_cast<Args &&>(args)...);
+    } else {
+      m_functor(WorkTag(), static_cast<Args &&>(args)...);
+    }
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
+
 #endif

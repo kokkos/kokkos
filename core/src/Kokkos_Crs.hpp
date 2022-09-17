@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_CRS_HPP
 #define KOKKOS_CRS_HPP
@@ -359,7 +355,7 @@ struct CountAndFillBase {
 #if defined(KOKKOS_ENABLE_CUDA)
 #define EXEC_SPACE Kokkos::Cuda
 #elif defined(KOKKOS_ENABLE_HIP)
-#define EXEC_SPACE Kokkos::Experimental::HIP
+#define EXEC_SPACE Kokkos::HIP
 #endif
 template <class CrsType, class Functor>
 struct CountAndFillBase<CrsType, Functor, EXEC_SPACE> {

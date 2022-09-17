@@ -370,18 +370,11 @@ class ViewMapping<Traits, Kokkos::Array<>> {
     const size_t alloc_size =
         (m_impl_offset.span() * Array_N * MemorySpanSize + MemorySpanMask) &
         ~size_t(MemorySpanMask);
-    const auto &alloc_name =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const &>(
-            arg_prop)
-            .value;
+    const auto &alloc_name = Impl::get_property<Impl::LabelTag>(arg_prop);
     const execution_space &exec_space =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const &>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
     const memory_space &mem_space =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const &>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::MemorySpaceTag>(arg_prop);
 
     // Allocate memory from the memory space and create tracking record.
     record_type *const record =
@@ -390,22 +383,36 @@ class ViewMapping<Traits, Kokkos::Array<>> {
                                     alloc_size)
             : record_type::allocate(mem_space, alloc_name, alloc_size);
 
-    if (alloc_size) {
-      m_impl_handle =
-          handle_type(reinterpret_cast<pointer_type>(record->data()));
+    m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
-      if (alloc_prop::initialize) {
-        // The functor constructs and destroys
-        record->m_destroy =
-            execution_space_specified
-                ? functor_type(exec_space, (pointer_type)m_impl_handle,
-                               m_impl_offset.span() * Array_N, alloc_name)
-                : functor_type((pointer_type)m_impl_handle,
-                               m_impl_offset.span() * Array_N, alloc_name);
+    functor_type functor =
+        execution_space_specified
+            ? functor_type(exec_space, (pointer_type)m_impl_handle,
+                           m_impl_offset.span() * Array_N, alloc_name)
+            : functor_type((pointer_type)m_impl_handle,
+                           m_impl_offset.span() * Array_N, alloc_name);
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    if (false) {
+      // Make sure the destroy functor gets instantiated.
+      // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
+      functor.destroy_shared_allocation();
+    }
+#endif
+
+    //  Only initialize if the allocation is non-zero.
+    //  May be zero if one of the dimensions is zero.
+    if constexpr (alloc_prop::initialize)
+      if (alloc_size) {
+        // Assume destruction is only required when construction is requested.
+        // The ViewValueFunctor has both value construction and destruction
+        // operators.
+        record->m_destroy = std::move(functor);
+
+        // Construct values
         record->m_destroy.construct_shared_allocation();
       }
-    }
 
     return record;
   }

@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_KOKKOS_GRAPHNODE_HPP
 #define KOKKOS_KOKKOS_GRAPHNODE_HPP
@@ -79,13 +75,10 @@ class GraphNodeRef {
   // Note: because of these assertions, instantiating this class template is not
   //       intended to be SFINAE-safe, so do validation before you instantiate.
 
-// WORKAROUND Could not get it to compile with IBM XL V16.1.1
-#ifndef KOKKOS_COMPILER_IBM
   static_assert(
       std::is_same<Predecessor, TypeErasedTag>::value ||
           Kokkos::Impl::is_specialization_of<Predecessor, GraphNodeRef>::value,
       "Invalid predecessor template parameter given to GraphNodeRef");
-#endif
 
   static_assert(
       Kokkos::is_execution_space<ExecutionSpace>::value,

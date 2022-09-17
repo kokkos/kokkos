@@ -164,9 +164,6 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   inline void impl_set_vector_length(size_t size) { m_vector_length = size; }
   inline void impl_set_team_size(size_t size) { m_team_size = size; }
   int impl_vector_length() const { return m_vector_length; }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED int vector_length() const { return impl_vector_length(); }
-#endif
 
   int team_size() const { return m_team_size; }
 
@@ -690,7 +687,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             [&](sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                                sycl::access::target::local>
                     local_mem,
-                sycl::device_ptr<value_type> results_ptr) mutable {
+                sycl::device_ptr<value_type> results_ptr) {
               sycl::global_ptr<value_type> device_accessible_result_ptr =
                   m_result_ptr_device_accessible ? m_result_ptr : nullptr;
               auto lambda = [=](sycl::nd_item<2> item) {

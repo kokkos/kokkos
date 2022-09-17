@@ -160,7 +160,7 @@ int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
   return Kokkos::Cuda::detect_device_count();
 #elif defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::Experimental::HIP::detect_device_count();
+  return Kokkos::HIP::detect_device_count();
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
@@ -524,11 +524,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_GNU));
   declare_configuration_metadata("tools_only", "compiler_family", "gnu");
 #endif
-#ifdef KOKKOS_COMPILER_IBM
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_IBM",
-                                 std::to_string(KOKKOS_COMPILER_IBM));
-  declare_configuration_metadata("tools_only", "compiler_family", "ibm");
-#endif
 #ifdef KOKKOS_COMPILER_INTEL
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_INTEL",
                                  std::to_string(KOKKOS_COMPILER_INTEL));
@@ -583,13 +578,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("vectorization",
                                  "KOKKOS_ENABLE_PRAGMA_LOOPCOUNT", "no");
-#endif
-#ifdef KOKKOS_ENABLE_PRAGMA_SIMD
-  declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_SIMD",
-                                 "yes");
-#else
-  declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_SIMD",
-                                 "no");
 #endif
 #ifdef KOKKOS_ENABLE_PRAGMA_UNROLL
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_UNROLL",
@@ -1062,8 +1050,19 @@ void Kokkos::Impl::parse_environment_variables(
 }
 
 //----------------------------------------------------------------------------
+namespace {
+bool kokkos_initialize_was_called() {
+  return Kokkos::is_initialized() || Kokkos::is_finalized();
+}
+bool kokkos_finalize_was_called() { return Kokkos::is_finalized(); }
+}  // namespace
 
 void Kokkos::initialize(int& argc, char* argv[]) {
+  if (kokkos_initialize_was_called()) {
+    Kokkos::abort(
+        "Error: Kokkos::initialize() has already been called."
+        " Kokkos can be initialized at most once.\n");
+  }
   InitializationSettings settings;
   Impl::parse_environment_variables(settings);
   Impl::parse_command_line_arguments(argc, argv, settings);
@@ -1071,6 +1070,11 @@ void Kokkos::initialize(int& argc, char* argv[]) {
 }
 
 void Kokkos::initialize(InitializationSettings const& settings) {
+  if (kokkos_initialize_was_called()) {
+    Kokkos::abort(
+        "Error: Kokkos::initialize() has already been called."
+        " Kokkos can be initialized at most once.\n");
+  }
   InitializationSettings tmp;
   Impl::parse_environment_variables(tmp);
   combine(tmp, settings);
@@ -1089,11 +1093,17 @@ void Kokkos::push_finalize_hook(std::function<void()> f) {
   finalize_hooks.push(f);
 }
 
-void Kokkos::finalize() { finalize_internal(); }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-KOKKOS_DEPRECATED void Kokkos::finalize_all() { finalize_internal(); }
-#endif
+void Kokkos::finalize() {
+  if (!kokkos_initialize_was_called()) {
+    Kokkos::abort(
+        "Error: Kokkos::finalize() may only be called after Kokkos has been "
+        "initialized.\n");
+  }
+  if (kokkos_finalize_was_called()) {
+    Kokkos::abort("Error: Kokkos::finalize() has already been called.\n");
+  }
+  finalize_internal();
+}
 
 #ifdef KOKKOS_COMPILER_INTEL
 void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
@@ -1133,13 +1143,11 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
   Impl::ExecSpaceManager::get_instance().print_configuration(os, verbose);
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_initialized() noexcept {
+[[nodiscard]] bool Kokkos::is_initialized() noexcept {
   return g_is_initialized;
 }
 
-KOKKOS_ATTRIBUTE_NODISCARD bool Kokkos::is_finalized() noexcept {
-  return g_is_finalized;
-}
+[[nodiscard]] bool Kokkos::is_finalized() noexcept { return g_is_finalized; }
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 
@@ -1156,7 +1164,3 @@ void _kokkos_pgi_compiler_bug_workaround() {}
 }  // end namespace Impl
 #endif
 }  // namespace Kokkos
-
-Kokkos::Impl::InitializationSettingsHelper<std::string>::storage_type const
-    Kokkos::Impl::InitializationSettingsHelper<std::string>::unspecified =
-        "some string we don't expect user would ever provide";

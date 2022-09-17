@@ -42,10 +42,14 @@
 //@HEADER
 */
 
-// For backward compatibility:
-#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_TEST_OACC_HPP
+#define KOKKOS_TEST_OACC_HPP
 
-KOKKOS_IMPL_WARNING(
-    "This file is deprecated. Use <Kokkos_TaskScheduler.hpp> instead.")
+#include <gtest/gtest.h>
 
-#include <Kokkos_TaskScheduler.hpp>
+#define TEST_CATEGORY openacc
+#define TEST_CATEGORY_NUMBER 8
+#define TEST_CATEGORY_DEATH openacc_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::OpenACC
+
+#endif

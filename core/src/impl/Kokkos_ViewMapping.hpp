@@ -2894,25 +2894,27 @@ struct ViewValueFunctor;
 
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
-  using ExecSpace  = typename DeviceType::execution_space;
-  using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
+  using ExecSpace = typename DeviceType::execution_space;
+
+  struct DestroyTag {};
+  struct ConstructTag {};
 
   ExecSpace space;
   ValueType* ptr;
   size_t n;
-  bool destroy;
   std::string name;
   bool default_exec_space;
 
+  template <class _ValueType = ValueType>
   KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const {
-    if (destroy) {
-      (ptr + i)->~ValueType();
-    }  // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line causes ptax error
-       // __cxa_begin_catch in nested_view unit-test
-    else {
-      new (ptr + i) ValueType();
-    }
+      std::enable_if_t<std::is_default_constructible<_ValueType>::value>
+      operator()(ConstructTag const&, const size_t i) const {
+    new (ptr + i) ValueType();
+  }
+
+  KOKKOS_INLINE_FUNCTION void operator()(DestroyTag const&,
+                                         const size_t i) const {
+    (ptr + i)->~ValueType();
   }
 
   ViewValueFunctor()                        = default;
@@ -2924,7 +2926,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       : space(arg_space),
         ptr(arg_ptr),
         n(arg_n),
-        destroy(false),
         name(std::move(arg_name)),
         default_exec_space(false) {}
 
@@ -2933,7 +2934,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       : space(ExecSpace{}),
         ptr(arg_ptr),
         n(arg_n),
-        destroy(false),
         name(std::move(arg_name)),
         default_exec_space(true) {}
 
@@ -2970,7 +2970,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     } else {
 #endif
-      parallel_for_implementation(false);
+      parallel_for_implementation<ConstructTag>();
 #ifndef KOKKOS_ARCH_A64FX
     }
 #endif
@@ -2980,22 +2980,24 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   std::enable_if_t<!(std::is_trivial<Dummy>::value &&
                      std::is_trivially_copy_assignable<ValueType>::value)>
   construct_dispatch() {
-    parallel_for_implementation(false);
+    parallel_for_implementation<ConstructTag>();
   }
 
-  void parallel_for_implementation(bool arg) {
-    destroy = arg;
+  template <typename Tag>
+  void parallel_for_implementation() {
     if (!space.in_parallel()) {
-      PolicyType policy(0, n);
-      std::string functor_name;
+      using PolicyType =
+          Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
+      PolicyType policy(space, 0, n);
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        functor_name =
-            (destroy ? "Kokkos::View::destruction [" + functor_name + "]"
-                     : "Kokkos::View::initialization [" + functor_name + "]");
+        const std::string functor_name =
+            (std::is_same_v<Tag, DestroyTag>
+                 ? "Kokkos::View::destruction [" + name + "]"
+                 : "Kokkos::View::initialization [" + name + "]");
         Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + functor_name + "]",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
+            functor_name, Kokkos::Profiling::Experimental::device_id(space),
+            &kpID);
       }
 
 #ifdef KOKKOS_ENABLE_CUDA
@@ -3007,19 +3009,21 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, policy);
       closure.execute();
-      if (default_exec_space || destroy)
+      if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
         space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
     } else {
-      for (size_t i = 0; i < n; ++i) operator()(i);
+      for (size_t i = 0; i < n; ++i) operator()(Tag{}, i);
     }
   }
 
   void construct_shared_allocation() { construct_dispatch(); }
 
-  void destroy_shared_allocation() { parallel_for_implementation(true); }
+  void destroy_shared_allocation() {
+    parallel_for_implementation<DestroyTag>();
+  }
 };
 
 template <class DeviceType, class ValueType>
@@ -3107,8 +3111,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   void parallel_for_implementation() {
     if (!space.in_parallel()) {
       PolicyType policy(0, n);
-      std::string functor_name = "Kokkos::View::initialization [" + name + "]";
-      uint64_t kpID            = 0;
+      uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor(
             "Kokkos::View::initialization [" + name + "]",
@@ -3396,9 +3399,7 @@ class ViewMapping<
   KOKKOS_INLINE_FUNCTION ViewMapping(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
       typename Traits::array_layout const& arg_layout)
-      : m_impl_handle(
-            ((Kokkos::Impl::ViewCtorProp<void, pointer_type> const&)arg_prop)
-                .value),
+      : m_impl_handle(Impl::get_property<Impl::PointerTag>(arg_prop)),
         m_impl_offset(std::integral_constant<unsigned, 0>(), arg_layout) {}
 
   /**\brief  Assign data */
@@ -3440,17 +3441,11 @@ class ViewMapping<
         (m_impl_offset.span() * MemorySpanSize + MemorySpanMask) &
         ~size_t(MemorySpanMask);
     const std::string& alloc_name =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::LabelTag>(arg_prop);
     const execution_space& exec_space =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
     const memory_space& mem_space =
-        static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const&>(
-            arg_prop)
-            .value;
+        Impl::get_property<Impl::MemorySpaceTag>(arg_prop);
 
     // Create shared memory tracking record with allocate memory from the memory
     // space
@@ -3462,22 +3457,34 @@ class ViewMapping<
 
     m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
+    functor_type functor =
+        execution_space_specified
+            ? functor_type(exec_space, (value_type*)m_impl_handle,
+                           m_impl_offset.span(), alloc_name)
+            : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
+                           alloc_name);
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    if (false) {
+      // Make sure the destroy functor gets instantiated.
+      // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
+      functor.destroy_shared_allocation();
+    }
+#endif
+
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.
-    if (alloc_size && alloc_prop::initialize) {
-      // Assume destruction is only required when construction is requested.
-      // The ViewValueFunctor has both value construction and destruction
-      // operators.
-      record->m_destroy =
-          execution_space_specified
-              ? functor_type(exec_space, (value_type*)m_impl_handle,
-                             m_impl_offset.span(), alloc_name)
-              : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
-                             alloc_name);
+    if constexpr (alloc_prop::initialize)
+      if (alloc_size) {
+        // Assume destruction is only required when construction is requested.
+        // The ViewValueFunctor has both value construction and destruction
+        // operators.
+        record->m_destroy = std::move(functor);
 
-      // Construct values
-      record->m_destroy.construct_shared_allocation();
-    }
+        // Construct values
+        record->m_destroy.construct_shared_allocation();
+      }
 
     return record;
   }

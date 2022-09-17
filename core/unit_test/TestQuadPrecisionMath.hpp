@@ -108,33 +108,31 @@ TEST(TEST_CATEGORY, quad_precision_common_math_functions) {
       });
 }
 
-#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, "")  // FIXME C++17
-
 constexpr bool test_quad_precision_promotion_traits() {
-  STATIC_ASSERT(
+  static_assert(
       std::is_same<__float128, decltype(Kokkos::pow(__float128(1), 2))>::value);
-  STATIC_ASSERT(std::is_same<__float128,
+  static_assert(std::is_same<__float128,
                              decltype(Kokkos::hypot(3, __float128(4)))>::value);
   return true;
 }
 
-STATIC_ASSERT(test_quad_precision_promotion_traits());
+static_assert(test_quad_precision_promotion_traits());
 
 constexpr bool test_quad_precision_math_constants() {
   // compare to mathematical constants defined in libquadmath when available
   // clang-format off
-  STATIC_ASSERT(Kokkos::Experimental::e_v     <__float128> == M_Eq);
-  STATIC_ASSERT(Kokkos::Experimental::log2e_v <__float128> == M_LOG2Eq);
-  STATIC_ASSERT(Kokkos::Experimental::log10e_v<__float128> == M_LOG10Eq);
-  STATIC_ASSERT(Kokkos::Experimental::pi_v    <__float128> == M_PIq);
+  static_assert(Kokkos::numbers::e_v     <__float128> == M_Eq);
+  static_assert(Kokkos::numbers::log2e_v <__float128> == M_LOG2Eq);
+  static_assert(Kokkos::numbers::log10e_v<__float128> == M_LOG10Eq);
+  static_assert(Kokkos::numbers::pi_v    <__float128> == M_PIq);
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 930)
-  STATIC_ASSERT(Kokkos::Experimental::inv_pi_v<__float128> == M_1_PIq);
+  static_assert(Kokkos::::inv_pi_v<__float128> == M_1_PIq);
 #endif
   // inv_sqrtpi_v
-  STATIC_ASSERT(Kokkos::Experimental::ln2_v   <__float128> == M_LN2q);
-  STATIC_ASSERT(Kokkos::Experimental::ln10_v  <__float128> == M_LN10q);
+  static_assert(Kokkos::numbers::ln2_v   <__float128> == M_LN2q);
+  static_assert(Kokkos::numbers::ln10_v  <__float128> == M_LN10q);
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 930)
-  STATIC_ASSERT(Kokkos::Experimental::sqrt2_v <__float128> == M_SQRT2q);
+  static_assert(Kokkos::numbers::sqrt2_v <__float128> == M_SQRT2q);
 #endif
   // sqrt3_v
   // inv_sqrt3_v
@@ -144,7 +142,7 @@ constexpr bool test_quad_precision_math_constants() {
   return true;
 }
 
-STATIC_ASSERT(test_quad_precision_math_constants());
+static_assert(test_quad_precision_math_constants());
 
 }  // namespace
 

@@ -106,51 +106,11 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
       scatter_access(k, 3)++;
       scatter_access(k, 4)--;
       scatter_access(k, 5) -= 5;
-// Workaround Intel 17 compiler bug which sometimes add random
-// instruction alignment which makes the lock instruction
-// illegal. Seems to be mostly just for unsigned int atomics.
-// Looking at the assembly the compiler
-// appears to insert cache line alignment for the instruction.
-// Isn't restricted to specific archs. Seen it on SNB and SKX, but for
-// different code. Another occurrence was with Desul atomics in
-// a different unit test. This one here happens without desul atomics.
-// Inserting an assembly nop instruction changes the alignment and
-// works round this.
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       scatter_access_atomic(k, 6) += 2;
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       scatter_access_atomic(k, 7)++;
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       scatter_access_atomic(k, 8)--;
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       --scatter_access_atomic(k, 9);
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       ++scatter_access_atomic(k, 10);
-#ifdef KOKKOS_COMPILER_INTEL
-#if (KOKKOS_COMPILER_INTEL < 1800)
-      asm volatile("nop\n");
-#endif
-#endif
       scatter_access(k, 11) -= 3;
     }
   }
@@ -872,9 +832,9 @@ TEST(TEST_CATEGORY, scatterview_devicetype) {
   using device_memory_space    = Kokkos::CudaSpace;
   using host_accessible_space  = Kokkos::CudaUVMSpace;
 #else
-  using device_execution_space = Kokkos::Experimental::HIP;
-  using device_memory_space    = Kokkos::Experimental::HIPSpace;
-  using host_accessible_space  = Kokkos::Experimental::HIPManagedSpace;
+  using device_execution_space = Kokkos::HIP;
+  using device_memory_space    = Kokkos::HIPSpace;
+  using host_accessible_space  = Kokkos::HIPManagedSpace;
 #endif
   if (std::is_same<TEST_EXECSPACE, device_execution_space>::value) {
     using device_device_type =

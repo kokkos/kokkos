@@ -107,11 +107,6 @@ class OpenMPInternal {
   void clear_thread_data();
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_DEPRECATED static void validate_partition(const int nthreads,
-                                                   int& num_partitions,
-                                                   int& partition_size) {
-    validate_partition_impl(nthreads, num_partitions, partition_size);
-  }
   static void validate_partition_impl(const int nthreads, int& num_partitions,
                                       int& partition_size);
 #endif

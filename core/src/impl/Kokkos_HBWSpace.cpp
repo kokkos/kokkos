@@ -219,13 +219,7 @@ void SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::deallocate(
 }
 
 SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
-                       void>::~SharedAllocationRecord()
-#if defined( \
-    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
-    noexcept
-#endif
-{
-
+                       void>::~SharedAllocationRecord() {
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size,

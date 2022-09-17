@@ -45,15 +45,15 @@
 #ifndef KOKKOS_HIP_UNIQUE_TOKEN_HPP
 #define KOKKOS_HIP_UNIQUE_TOKEN_HPP
 
-#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Space.hpp>
 #include <Kokkos_UniqueToken.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
 namespace Kokkos {
 
 namespace Impl {
-Kokkos::View<uint32_t*, Kokkos::Experimental::HIPSpace>
-hip_global_unique_token_locks(bool deallocate = false);
+Kokkos::View<uint32_t*, HIPSpace> hip_global_unique_token_locks(
+    bool deallocate = false);
 }
 
 namespace Experimental {
@@ -164,11 +164,9 @@ class UniqueToken<HIP, UniqueTokenScope::Instance>
   // The instance version will forward to protected constructor which creates
   // a lock array per instance
   UniqueToken()
-      : UniqueToken<HIP, UniqueTokenScope::Global>(
-            Kokkos::Experimental::HIP().concurrency()) {}
+      : UniqueToken<HIP, UniqueTokenScope::Global>(HIP().concurrency()) {}
   explicit UniqueToken(execution_space const& arg)
-      : UniqueToken<HIP, UniqueTokenScope::Global>(
-            Kokkos::Experimental::HIP().concurrency(), arg) {}
+      : UniqueToken<HIP, UniqueTokenScope::Global>(HIP().concurrency(), arg) {}
   explicit UniqueToken(size_type max_size)
       : UniqueToken<HIP, UniqueTokenScope::Global>(max_size) {}
   UniqueToken(size_type max_size, execution_space const& arg)

@@ -85,14 +85,14 @@ TEST(hip, preferred_blocksize_deduction) {
 
   {
     using DriverType = Kokkos::Impl::ParallelFor<TestNone, policy>;
-    ASSERT_TRUE(Kokkos::Experimental::Impl::HIPParallelLaunch<
-                    DriverType>::get_scratch_size() == 0);
+    ASSERT_TRUE(
+        Kokkos::Impl::HIPParallelLaunch<DriverType>::get_scratch_size() == 0);
   }
 
   {
     using DriverType = Kokkos::Impl::ParallelFor<TestSpiller, policy>;
-    ASSERT_TRUE(Kokkos::Experimental::Impl::HIPParallelLaunch<
-                    DriverType>::get_scratch_size() > 0);
+    ASSERT_TRUE(
+        Kokkos::Impl::HIPParallelLaunch<DriverType>::get_scratch_size() > 0);
   }
 }
 

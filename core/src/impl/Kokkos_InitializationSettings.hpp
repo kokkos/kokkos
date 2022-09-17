@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <climits>
+#include <optional>
 #include <string>
 
 namespace Kokkos {
@@ -78,63 +78,18 @@ struct InitArguments {
 };
 #endif
 
-namespace Impl {
-// FIXME_CXX17 replace with std::optional
-template <class>
-struct InitializationSettingsHelper;
-template <>
-struct InitializationSettingsHelper<int> {
-  using value_type   = int;
-  using storage_type = int;
-
-  static constexpr storage_type unspecified = INT_MIN;
-};
-template <>
-struct InitializationSettingsHelper<bool> {
-  using value_type   = bool;
-  using storage_type = char;
-
-  static constexpr storage_type unspecified = CHAR_MAX;
-  static_assert(static_cast<storage_type>(true) != unspecified &&
-                    static_cast<storage_type>(false) != unspecified,
-                "");
-};
-template <>
-struct InitializationSettingsHelper<std::string> {
-  using value_type   = std::string;
-  using storage_type = std::string;
-
-  static storage_type const unspecified;
-};
-}  // namespace Impl
-
 class InitializationSettings {
-#define KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) \
-  impl_do_not_use_i_really_mean_it_##NAME##_
-
-#define KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME) impl_##NAME##_type
-
-#define KOKKOS_IMPL_DECLARE(TYPE, NAME)                                      \
- private:                                                                    \
-  using KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME) = TYPE;                 \
-  Impl::InitializationSettingsHelper<TYPE>::storage_type                     \
-      KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) =                              \
-          Impl::InitializationSettingsHelper<TYPE>::unspecified;             \
-                                                                             \
- public:                                                                     \
-  InitializationSettings& set_##NAME(                                        \
-      Impl::InitializationSettingsHelper<TYPE>::value_type NAME) {           \
-    KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) = NAME;                          \
-    return *this;                                                            \
-  }                                                                          \
-  bool has_##NAME() const noexcept {                                         \
-    return KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME) !=                        \
-           Impl::InitializationSettingsHelper<                               \
-               KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME)>::unspecified;   \
-  }                                                                          \
-  KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER_TYPE(NAME) get_##NAME() const noexcept { \
-    return KOKKOS_IMPL_INIT_ARGS_DATA_MEMBER(NAME);                          \
-  }                                                                          \
+#define KOKKOS_IMPL_DECLARE(TYPE, NAME)                                    \
+ private:                                                                  \
+  std::optional<TYPE> m_##NAME;                                            \
+                                                                           \
+ public:                                                                   \
+  InitializationSettings& set_##NAME(TYPE NAME) {                          \
+    m_##NAME = NAME;                                                       \
+    return *this;                                                          \
+  }                                                                        \
+  bool has_##NAME() const noexcept { return static_cast<bool>(m_##NAME); } \
+  TYPE get_##NAME() const noexcept { return *m_##NAME; }                   \
   static_assert(true, "no-op to require trailing semicolon")
 
  public:

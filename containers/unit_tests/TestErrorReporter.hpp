@@ -170,16 +170,14 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const int work_idx) const {
     if (driver_base::error_condition(work_idx)) {
-      double val =
-          Kokkos::Experimental::pi_v<double> * static_cast<double>(work_idx);
+      double val = Kokkos::numbers::pi * static_cast<double>(work_idx);
       typename driver_base::report_type report = {work_idx, -2 * work_idx, val};
       driver_base::m_errorReporter.add_report(work_idx, report);
     }
   }
 };
 
-#if defined(KOKKOS_CLASS_LAMBDA) && \
-    (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA))
+#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 template <typename DeviceType>
 struct ErrorReporterDriverUseLambda
     : public ErrorReporterDriverBase<DeviceType> {
@@ -198,8 +196,7 @@ struct ErrorReporterDriverUseLambda
         // NOLINTNEXTLINE(kokkos-implicit-this-capture)
         KOKKOS_CLASS_LAMBDA(const int work_idx) {
           if (driver_base::error_condition(work_idx)) {
-            double val = Kokkos::Experimental::pi_v<double> *
-                         static_cast<double>(work_idx);
+            double val = Kokkos::numbers::pi * static_cast<double>(work_idx);
             typename driver_base::report_type report = {work_idx, -2 * work_idx,
                                                         val};
             driver_base::m_errorReporter.add_report(work_idx, report);
@@ -223,8 +220,7 @@ struct ErrorReporterDriverNativeOpenMP
 #pragma omp parallel for
     for (int work_idx = 0; work_idx < test_size; ++work_idx) {
       if (driver_base::error_condition(work_idx)) {
-        double val =
-            Kokkos::Experimental::pi_v<double> * static_cast<double>(work_idx);
+        double val = Kokkos::numbers::pi * static_cast<double>(work_idx);
         typename driver_base::report_type report = {work_idx, -2 * work_idx,
                                                     val};
         driver_base::m_errorReporter.add_report(work_idx, report);
@@ -237,7 +233,7 @@ struct ErrorReporterDriverNativeOpenMP
 
 // FIXME_MSVC MSVC just gets confused when using the base class in the
 // KOKKOS_CLASS_LAMBDA
-#if !defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_CLASS_LAMBDA) && \
+#if !defined(KOKKOS_COMPILER_MSVC) && \
     (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA))
 TEST(TEST_CATEGORY, ErrorReporterViaLambda) {
   TestErrorReporter<ErrorReporterDriverUseLambda<TEST_EXECSPACE>>();

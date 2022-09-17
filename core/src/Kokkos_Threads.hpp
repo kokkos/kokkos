@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_THREADS_HPP
 #define KOKKOS_THREADS_HPP
@@ -165,6 +161,9 @@ class Threads {
   static const char* name();
   //@}
   //----------------------------------------
+ private:
+  friend bool operator==(Threads const&, Threads const&) { return true; }
+  friend bool operator!=(Threads const&, Threads const&) { return false; }
 };
 
 namespace Tools {

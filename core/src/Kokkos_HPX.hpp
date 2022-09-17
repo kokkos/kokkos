@@ -44,12 +44,8 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
-#else
-KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
-#endif
 #endif
 #ifndef KOKKOS_HPX_HPP
 #define KOKKOS_HPX_HPP
@@ -371,13 +367,6 @@ class HPX {
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static std::vector<HPX> partition(...) {
-    Kokkos::abort(
-        "Kokkos::Experimental::HPX::partition_master: can't partition an HPX "
-        "instance\n");
-    return std::vector<HPX>();
-  }
-
   template <typename F>
   KOKKOS_DEPRECATED static void partition_master(
       F const &, int requested_num_partitions = 0, int = 0) {
@@ -455,7 +444,7 @@ class HPX {
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_on_exit_parallel {
+  struct [[nodiscard]] reset_on_exit_parallel {
     HPX const &m_space;
     reset_on_exit_parallel(HPX const &space) : m_space(space) {}
     ~reset_on_exit_parallel() {
@@ -471,25 +460,33 @@ class HPX {
   // data. It does, however, still decrement the parallel region count. It is
   // meant for use in parallel regions which do not capture the execution space
   // instance.
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_count_on_exit_parallel {
-    reset_count_on_exit_parallel() {}
+  struct [[nodiscard]] reset_count_on_exit_parallel {
+    reset_count_on_exit_parallel() = default;
     ~reset_count_on_exit_parallel() {
       HPX::impl_decrement_active_parallel_region_count();
     }
   };
 #else
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_on_exit_parallel {
-    reset_on_exit_parallel(HPX const &) {}
-    ~reset_on_exit_parallel() {}
+  struct [[nodiscard]] reset_on_exit_parallel {
+    reset_on_exit_parallel(HPX const &) = default;
+    ~reset_on_exit_parallel()           = default;
   };
 
-  struct KOKKOS_ATTRIBUTE_NODISCARD reset_count_on_exit_parallel {
-    reset_count_on_exit_parallel() {}
-    ~reset_count_on_exit_parallel() {}
+  struct [[nodiscard]] reset_count_on_exit_parallel {
+    reset_count_on_exit_parallel()  = default;
+    ~reset_count_on_exit_parallel() = default;
   };
 #endif
 
   static constexpr const char *name() noexcept { return "HPX"; }
+
+ private:
+  friend bool operator==(HPX const &lhs, HPX const &rhs) {
+    return lhs.m_instance_id == rhs.m_instance_id;
+  }
+  friend bool operator!=(HPX const &lhs, HPX const &rhs) {
+    return !(lhs == rhs);
+  }
 };
 }  // namespace Experimental
 
@@ -1693,7 +1690,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   const FunctorType m_functor;
   const Policy m_policy;
-  ReturnType &m_returnvalue;
+  pointer_type m_result_ptr;
 
   template <class TagType>
   inline static std::enable_if_t<std::is_void<TagType>::value>
@@ -1783,17 +1780,23 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                          update_base, true);
 
           if (t == num_worker_threads - 1) {
-            m_returnvalue = update_base;
+            *m_result_ptr = update_base;
           }
         });
   }
 
-  inline ParallelScanWithTotal(const FunctorType &arg_functor,
-                               const Policy &arg_policy,
-                               ReturnType &arg_returnvalue)
+  template <class ViewType>
+  ParallelScanWithTotal(const FunctorType &arg_functor,
+                        const Policy &arg_policy,
+                        const ViewType &arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_returnvalue(arg_returnvalue) {}
+        m_result_ptr(arg_result_view.data()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::HPX parallel_scan result must be host-accessible!");
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos

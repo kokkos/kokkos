@@ -54,16 +54,10 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
   Kokkos::DefaultHostExecutionSpace host;
 
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    auto copy = *this;
     // not actually doing anything useful, mostly checking that
     // ExecutionSpace::in_parallel() is callable
-    if (!copy.device.in_parallel()
-#ifdef KOKKOS_ENABLE_SERIAL
-        && !std::is_same<ExecutionSpace, Kokkos::Serial>::value
-#endif
-    ) {
-      ++e;
-    }
+    KOKKOS_IMPL_DO_NOT_USE_PRINTF("in_parallel: %d\n",
+                                  static_cast<int>(device.in_parallel()));
   }
 
   CheckClassWithExecutionSpaceAsDataMemberIsCopyable() {

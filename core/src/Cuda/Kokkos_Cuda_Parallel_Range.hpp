@@ -256,11 +256,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
 
-    // Doing code duplication here to fix issue #3428
-    // Suspect optimizer bug??
     // Reduce with final value at blockDim.y - 1 location.
     // Shortcut for length zero reduction
-    if (m_policy.begin() == m_policy.end()) {
+    bool zero_length        = m_policy.begin() == m_policy.end();
+    bool do_final_reduction = true;
+    if (!zero_length)
+      do_final_reduction = cuda_single_inter_block_reduce_scan<false>(
+          final_reducer, blockIdx.x, gridDim.x,
+          kokkos_impl_cuda_shared_memory<word_size_type>(), m_scratch_space,
+          m_scratch_flags);
+
+    if (do_final_reduction) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -282,39 +288,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
-      }
-    }
-
-    if (m_policy.begin() != m_policy.end()) {
-      {
-        if (cuda_single_inter_block_reduce_scan<false>(
-                final_reducer, blockIdx.x, gridDim.x,
-                kokkos_impl_cuda_shared_memory<word_size_type>(),
-                m_scratch_space, m_scratch_flags)) {
-          // This is the final block with the final result at the final threads'
-          // location
-
-          word_size_type* const shared =
-              kokkos_impl_cuda_shared_memory<word_size_type>() +
-              (blockDim.y - 1) * word_count.value;
-          word_size_type* const global =
-              m_result_ptr_device_accessible
-                  ? reinterpret_cast<word_size_type*>(m_result_ptr)
-                  : (m_unified_space ? m_unified_space : m_scratch_space);
-
-          if (threadIdx.y == 0) {
-            final_reducer.final(reinterpret_cast<value_type*>(shared));
-          }
-
-          if (CudaTraits::WarpSize < word_count.value) {
-            __syncthreads();
-          }
-
-          for (unsigned i = threadIdx.y; i < word_count.value;
-               i += blockDim.y) {
-            global[i] = shared[i];
-          }
-        }
       }
     }
   }
@@ -353,9 +326,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const bool need_device_set = Analysis::has_init_member_function ||
                                  Analysis::has_final_member_function ||
                                  !m_result_ptr_host_accessible ||
-#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
                                  Policy::is_graph_kernel::value ||
-#endif
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
@@ -779,6 +750,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                                  Policy, FunctorType>;
 
  public:
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
@@ -796,7 +768,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   bool m_final;
-  ReturnType& m_returnvalue;
+  const pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
+
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
   bool m_run_serial;
 #endif
@@ -936,6 +910,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                 reinterpret_cast<pointer_type>(shared_prefix)),
             true);
       }
+      if (iwork + 1 == m_policy.end() && m_policy.end() == range.end() &&
+          m_result_ptr_device_accessible)
+        *m_result_ptr = *reinterpret_cast<pointer_type>(shared_prefix);
     }
   }
 
@@ -1023,17 +1000,15 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       if (m_run_serial) {
         block = dim3(1, 1, 1);
         grid  = dim3(1, 1, 1);
-      } else {
+      } else
 #endif
-
+      {
         m_final = false;
         CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
             *this, grid, block, shmem,
             m_policy.space().impl_internal_space_instance(),
             false);  // copy to device and execute
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       }
-#endif
       m_final = true;
       CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
           *this, grid, block, shmem,
@@ -1047,20 +1022,28 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                              m_scratch_space, size);
       else
 #endif
-        DeepCopy<HostSpace, CudaSpace, Cuda>(
-            m_policy.space(), &m_returnvalue,
-            m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
+      {
+        if (!m_result_ptr_device_accessible)
+          DeepCopy<HostSpace, CudaSpace, Cuda>(
+              m_policy.space(), m_result_ptr,
+              m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
+      }
     }
   }
 
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
-                        const Policy& arg_policy, ReturnType& arg_returnvalue)
+                        const Policy& arg_policy,
+                        const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_final(false),
-        m_returnvalue(arg_returnvalue)
+        m_result_ptr(arg_result_view.data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::CudaSpace,
+                              typename ViewType::memory_space>::accessible)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
         ,
         m_run_serial(Kokkos::Impl::CudaInternal::cuda_use_serial_execution())
