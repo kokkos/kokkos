@@ -122,14 +122,7 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
-bool CudaUVMSpace::available() {
-#if defined(CUDA_VERSION) && !defined(__APPLE__)
-  enum : bool { UVM_available = true };
-#else
-  enum : bool { UVM_available = false };
-#endif
-  return UVM_available;
-}
+bool CudaUVMSpace::available() { return true; }
 
 /*--------------------------------------------------------------------------*/
 

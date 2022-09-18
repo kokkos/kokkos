@@ -64,7 +64,6 @@ extern __device__ void __assertfail(const void *message, const void *file,
 namespace Kokkos {
 namespace Impl {
 
-#if !defined(__APPLE__)
 // required to workaround failures in random number generator unit tests with
 // pre-volta architectures
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
@@ -87,11 +86,6 @@ __device__ inline void cuda_abort(const char *const message) {
     ;
 #endif
 }
-#else
-__device__ inline void cuda_abort(const char *const message) {
-  // __assertfail is not supported on MAC
-}
-#endif
 
 }  // namespace Impl
 }  // namespace Kokkos
