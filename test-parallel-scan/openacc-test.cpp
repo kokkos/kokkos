@@ -5,6 +5,8 @@
 #include <sys/time.h>
 #include <Kokkos_Core.hpp>
 
+//#define PRINT_RESULTS
+
 int main( int argc, char* argv[] )
 {
 
@@ -16,9 +18,11 @@ int main( int argc, char* argv[] )
   Kokkos::initialize( argc, argv );
   {
 
-  //for (int i = 200; i <= 200; i += 200 )
-  for (int i = 300; i <= 300; i += 300 )
-  //for (int i = 100000; i <= 100000; i += 100000 )
+#ifdef PRINT_RESULTS
+  for (int i = 10; i <= 100; i *= 10 )
+#else
+  for (int i = 10; i <= 1000000; i *= 10 )
+#endif
   {
 
   M = i;
@@ -30,7 +34,9 @@ int main( int argc, char* argv[] )
   {
     X[m] = (double)m;
     X[m] += 1.0;
+#ifdef PRINT_RESULTS
     printf("Input X[%d] = %e\n", m, X[m]);
+#endif
   });
 
   Kokkos::fence();
@@ -52,14 +58,15 @@ int main( int argc, char* argv[] )
   
   Kokkos::fence();
 
+#ifdef PRINT_RESULTS
   Kokkos::parallel_for( "scan_exclusive_output", M, KOKKOS_LAMBDA ( int m )
   {
     printf("Output X[%d] = %e\n", m, X[m]);
   });
+#endif
 
   Kokkos::fence();
 
-  /*
   //Time
   gettimeofday( &start, NULL );
   for ( int i = 0; i < 10; i++ )
@@ -89,12 +96,13 @@ int main( int argc, char* argv[] )
                                  - (start.tv_sec * 1e6 + start.tv_usec)) / 1e6) / 10.0;
 
   printf( "SCAN EXCLUSIVE = %d Time ( %e s )\n", M, time );
-  */
 
-  /*
   Kokkos::parallel_for( "scan_inclusive_init", M, KOKKOS_LAMBDA ( int m )
   {
     Y[m] = 2.0;
+#ifdef PRINT_RESULTS
+    printf("Input Y[%d] = %e\n", m, Y[m]);
+#endif
   });
 
   float result;
@@ -108,8 +116,14 @@ int main( int argc, char* argv[] )
     {
       Y[m] = update1; 
     }
-    //printf("X[%d] = %2.f\n", m, Y[m]);
   });
+
+#ifdef PRINT_RESULTS
+  Kokkos::parallel_for( "scan_inclusive_output", M, KOKKOS_LAMBDA ( int m )
+  {
+    printf("Output Y[%d] = %e\n", m, Y[m]);
+  });
+#endif
 
   //Time
   gettimeofday( &start, NULL );
@@ -136,7 +150,6 @@ int main( int argc, char* argv[] )
                                  - (start.tv_sec * 1e6 + start.tv_usec)) / 1e6) / 10.0;
 
   printf( "SCAN INCLUSIVE = %d Time ( %e s )\n", M, time );
-  */
 
   Kokkos::kokkos_free<>(X);
   Kokkos::kokkos_free<>(Y);
