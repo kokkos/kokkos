@@ -123,8 +123,8 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     hipDeviceProp_t hipProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
 
-    s << "Kokkos::HIP[ " << i << " ] " << hipProp.name << " version "
-      << hipProp.major << "." << hipProp.minor << ", Total Global Memory: "
+    s << "Kokkos::HIP[ " << i << " ] "
+      << "gcnArch " << hipProp.gcnArch << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem)
       << ", Shared Memory per Block: "
       << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock);

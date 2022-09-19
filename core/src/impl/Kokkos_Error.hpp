@@ -58,10 +58,6 @@
 #include <SYCL/Kokkos_SYCL_Abort.hpp>
 #endif
 
-#ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-#define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
-#endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-
 namespace Kokkos {
 namespace Impl {
 
