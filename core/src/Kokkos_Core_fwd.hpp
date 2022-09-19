@@ -121,11 +121,9 @@ class InitializationSettings;
   [[clang::annotate("DefaultExecutionSpace")]]
 #define KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION \
   [[clang::annotate("DefaultHostExecutionSpace")]]
-#define KOKKOS_IMPL_SHARED_SPACE_ANNOTATION [[clang::annotate("SharedSpace")]]
 #else
 #define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION
 #define KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION
-#define KOKKOS_IMPL_SHARED_SPACE_ANNOTATION
 #endif
 
 namespace Kokkos {
@@ -188,18 +186,17 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 
 // check for devices that support sharedSpace
 #if defined(KOKKOS_ENABLE_CUDA)
-using SharedSpace KOKKOS_IMPL_SHARED_SPACE_ANNOTATION = CudaUVMSpace;
+using SharedSpace = CudaUVMSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 #elif defined(KOKKOS_ENABLE_HIP)
-using SharedSpace KOKKOS_IMPL_SHARED_SPACE_ANNOTATION = HIPManagedSpace;
+using SharedSpace = HIPManagedSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 #elif defined(KOKKOS_ENABLE_SYCL)
-using SharedSpace KOKKOS_IMPL_SHARED_SPACE_ANNOTATION =
-    Experimental::SYCLSharedUSMSpace;
+using SharedSpace = Experimental::SYCLSharedUSMSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 // if only host compile point to HostSpace
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
-using SharedSpace KOKKOS_IMPL_SHARED_SPACE_ANNOTATION = HostSpace;
+using SharedSpace = HostSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 #endif
 
