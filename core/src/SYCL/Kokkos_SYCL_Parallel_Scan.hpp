@@ -260,8 +260,7 @@ class ParallelScanSYCLBase {
       auto result_ptr_device_accessible = m_result_ptr_device_accessible;
       // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
       // directly.
-      auto device_accessible_result_ptr =
-          m_result_ptr_device_accessible ? m_result_ptr : nullptr;
+      auto result_ptr = m_result_ptr_device_accessible ? m_result_ptr : nullptr;
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         auto global_id = item.get_id(0);
 
@@ -272,7 +271,7 @@ class ParallelScanSYCLBase {
           functor_wrapper.get_functor()(WorkTag(), global_id, update, true);
         global_mem[global_id] = update;
         if (global_id == len - 1 && result_ptr_device_accessible)
-          *device_accessible_result_ptr = update;
+          *result_ptr = update;
       });
     });
     q.ext_oneapi_submit_barrier(
