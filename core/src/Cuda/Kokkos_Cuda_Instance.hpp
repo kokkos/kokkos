@@ -182,9 +182,11 @@ class CudaInternal {
   size_type* scratch_unified(const std::size_t size) const;
   size_type* scratch_functor(const std::size_t size) const;
   uint32_t impl_get_instance_id() const;
+  int acquire_team_scratch_space();
   // Resizing of team level 1 scratch
-  std::pair<void*, int> resize_team_scratch_space(std::int64_t bytes,
-                                                  bool force_shrink = false);
+  void* resize_team_scratch_space(int scratch_pool_id, std::int64_t bytes,
+                                  bool force_shrink = false);
+  void release_team_scratch_space(int scratch_pool_id);
 };
 
 }  // Namespace Impl
