@@ -58,7 +58,6 @@ void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::deep_copy(a, b);
-    Kokkos::fence();
     report_results(state, timer.seconds());
   }
 }
