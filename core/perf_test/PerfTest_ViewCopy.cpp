@@ -51,13 +51,12 @@ namespace Test {
  */
 std::string benchmark_fom(const std::string& label) { return "FOM: " + label; }
 
-void report_results(benchmark::State& state, double time) {
+void report_results(benchmark::State& state, std::size_t num_elems,
+                    double time) {
   state.SetIterationTime(time);
 
-  // number of elements in the view
-  const auto N8 = std::pow(state.range(0), 8);
   // data size in megabytes
-  const auto size = N8 * sizeof(double) / 1024 / 1024;
+  const auto size = 1.0 * num_elems * sizeof(double) / 1024 / 1024;
   // throughput in gigabytes per second
   const auto throughput = 2 * size / 1024 / time;
 
