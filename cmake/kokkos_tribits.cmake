@@ -345,7 +345,6 @@ MACRO(KOKKOS_INSTALL_ADDITIONAL_FILES)
   INSTALL(PROGRAMS
           "${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper"
           "${CMAKE_CURRENT_SOURCE_DIR}/bin/hpcbind"
-          "${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler"
           "${PROJECT_BINARY_DIR}/temp/kokkos_launch_compiler"
           DESTINATION ${CMAKE_INSTALL_BINDIR})
   INSTALL(FILES
