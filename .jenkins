@@ -25,25 +25,57 @@ pipeline {
                 sh './scripts/docker/check_format_cpp.sh'
             }
         }
-
         stage('Build') {
             parallel {
-                stage('CUDA-11.4-NVHPC') {
+                stage('OPENACC-NVHPC-CUDA-11.6') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
-                            label 'nvidia-docker && volta && large_images'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            label 'nvidia-docker && large_images'
+                            args '--env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               /opt/cmake/bin/cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
+                                -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_OPENACC=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --verbose'''
+                    }
+                }
+                stage('CUDA-11.6-NVHPC') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvhpc'
+                            dir 'scripts/docker'
+                            label 'nvidia-docker && large_images'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                        }
+                    }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        // Nested OpenMP does not work for this configuration,
+                        // so disabling it
+                        OMP_MAX_ACTIVE_LEVELS = 1
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                        NVCC_WRAPPER_DEFAULT_COMPILER = 'nvc++'
+                    }
+                    steps {
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              /opt/cmake/bin/cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -70,7 +102,8 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
@@ -101,6 +134,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                     }
@@ -113,6 +147,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG" \
                                 -DCMAKE_CXX_STANDARD=14 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -146,6 +181,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -160,6 +196,7 @@ pipeline {
                         }
                     }
                 }
+/*
                 stage('OPENMPTARGET-ROCm-4.5') {
                     agent {
                         dockerfile {
@@ -172,6 +209,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         LC_ALL = 'C'
@@ -185,6 +223,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=amdclang++ \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -202,6 +241,7 @@ pipeline {
                         }
                     }
                 }
+*/
                 stage('OPENMPTARGET-Clang') {
                     agent {
                         dockerfile {
@@ -218,6 +258,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror -Wno-undefined-internal -Wno-pass-failed" \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -254,6 +295,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=14 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -306,12 +348,15 @@ pipeline {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.0-devel --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran clang" --build-arg CMAKE_VERSION=3.17.3'
-                            label 'nvidia-docker && volta'
+                            label 'nvidia-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        // Nested OpenMP does not work for this configuration,
+                        // so disabling it
+                        OMP_MAX_ACTIVE_LEVELS = 1
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
@@ -325,6 +370,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -343,7 +389,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
-                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_FLAGS=-Werror --Werror=all-warnings -Xcudafe --diag_suppress=3159 \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
@@ -367,13 +413,13 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-10.1-NVCC-DEBUG') {
+                stage('CUDA-11.6-NVCC-DEBUG') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
-                            label 'nvidia-docker && volta'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.6.0-devel-ubuntu20.04'
+                            label 'nvidia-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
@@ -386,6 +432,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=14 \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
@@ -416,6 +463,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
+                        OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PROC_BIND = 'true'
                     }
                     steps {
@@ -424,6 +472,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_STANDARD=14 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -431,6 +480,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                                 -DKokkos_ENABLE_LIBQUADMATH=ON \
+                                -DKokkos_ENABLE_SERIAL=ON \
                                 -DCMAKE_PREFIX_PATH=/usr/lib/gcc/x86_64-linux-gnu/5.3.1 \
                               .. && \
                               make -j8 && ctest --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''

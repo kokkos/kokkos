@@ -13,6 +13,8 @@ print_help() {
   echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
   echo "    Defaults to root repo containing this script"
   echo "--debug: Run tests in debug. Defaults to False"
+  echo "--deprecated-code: Enable deprecated code (disabled by default)"
+  echo "--deprecated-code-warnings    Enable deprecated code warnings (disabled by default)"
   echo "--boundscheck: Enable Kokkos_ENABLE_DEBUG_BOUNDS_CHECK to check View accesses within bounds."
   echo "--test-script: Test this script, not Kokkos"
   echo "--skip-hwloc: Do not do hwloc tests"
@@ -167,6 +169,9 @@ CXX_STANDARD="14"
 
 CTESTTIMEOUT=2000
 
+KOKKOS_DEPRECATED_CODE=""
+KOKKOS_DEPRECATED_CODE_WARNINGS=""
+
 #
 # Handle arguments.
 #
@@ -187,6 +192,12 @@ do
       ;;
     --boundscheck*)
       KOKKOS_BOUNDS_CHECK="--boundscheck"
+      ;;
+    --deprecated-code)
+      KOKKOS_DEPRECATED_CODE="--deprecated-code"
+      ;;
+    --deprecated-code-warnings)
+      KOKKOS_DEPRECATED_CODE_WARNINGS="--deprecated-code-warnings"
       ;;
     --build-only*)
       BUILD_ONLY=True
@@ -441,6 +452,8 @@ elif [ "$MACHINE" = "weaver" ]; then
   IBM_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
   CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,ibm/xl/16.1.1,gcc/7.2.0"
   CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,ibm/xl/16.1.1,gcc/7.4.0"
+  # Cuda/11 modules available only on the dev queue (rhel8 OS); gcc/8.3.1 loaded by default
+  CUDA11_MODULE_LIST="cmake/3.21.2,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   # Don't do pthread with Power
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -465,6 +478,8 @@ elif [ "$MACHINE" = "weaver" ]; then
                "cuda/10.1.105 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/10.1.243 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/10.2.089 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/10.2.2 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/11.2.2 $CUDA11_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
 
@@ -507,6 +522,8 @@ elif [ "$MACHINE" = "caraway" ]; then
   SKIP_HWLOC=True
 
   BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  # Cuda11 usage available on the V100 queue
+  CUDA11_MODULE_LIST="cmake/3.22.2,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/8.2.0"
 
   HIPCLANG_BUILD_LIST="Hip_Serial,Hip_OpenMP"
   HIPCLANG_WARNING_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG"
@@ -514,6 +531,12 @@ elif [ "$MACHINE" = "caraway" ]; then
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("rocm/4.3.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
              "rocm/4.5.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
+             "cuda/11.4 $CUDA11_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+             "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/8.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/9.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/10.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/11.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
   )
 
   if [ -z "$ARCH_FLAG" ]; then
@@ -636,6 +659,7 @@ fi
 export OMP_NUM_THREADS=8
 export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
+export OMP_MAX_ACTIVE_LEVELS=1
 
 declare -i NUM_RESULTS_TO_KEEP=7
 
@@ -869,12 +893,12 @@ single_build_and_test() {
 
     # KOKKOS_OPTIONS and KOKKOS_CUDA_OPTIONS are exported and detected by kokkos' generate_makefile.sh during install of kokkos; we pass them to the reproducer script instructions
     echo "  #   Use generate_makefile line below to call cmake which generates makefile for this build:" &> call_generate_makefile.sh
-    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples ${KOKKOS_BOUNDS_CHECK} $extra_args" &>> call_generate_makefile.sh
+    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples ${KOKKOS_BOUNDS_CHECK} ${KOKKOS_DEPRECATED_CODE} ${KOKKOS_DEPRECATED_CODE_WARNINGS} $extra_args" &>> call_generate_makefile.sh
 
     # store script command with generic path for faster copy/paste of reproducer into issues
-    echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args" &> call_generate_makefile_genericpath.sh
+    echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} ${KOKKOS_BOUNDS_CHECK} --no-examples ${KOKKOS_DEPRECATED_CODE} ${KOKKOS_DEPRECATED_CODE_WARNINGS} $extra_args" &> call_generate_makefile_genericpath.sh
 
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} ${KOKKOS_BOUNDS_CHECK} --no-examples ${KOKKOS_DEPRECATED_CODE} ${KOKKOS_DEPRECATED_CODE_WARNINGS} $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local make_par_lvl=12
     if [[ "$MACHINE" = white* ]]; then
       make_par_lvl=48
