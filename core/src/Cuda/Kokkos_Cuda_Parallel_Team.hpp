@@ -587,12 +587,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-           m_scratch_pool_id,
-           static_cast<std::int64_t>(m_scratch_size[1]) *
-               (std::min(
-                   static_cast<std::int64_t>(Cuda::concurrency() /
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(
+                  static_cast<std::int64_t>(Cuda::concurrency() /
                                             (m_team_size * m_vector_size)),
-                   static_cast<std::int64_t>(m_league_size))));
+                  static_cast<std::int64_t>(m_league_size))));
     }
 
     const int shmem_size_total = m_shmem_begin + m_shmem_size;
@@ -953,12 +953,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-           m_scratch_pool_id,
-           static_cast<std::int64_t>(m_scratch_size[1]) *
-               (std::min(
-                   static_cast<std::int64_t>(Cuda::concurrency() /
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(
+                  static_cast<std::int64_t>(Cuda::concurrency() /
                                             (m_team_size * m_vector_size)),
-                   static_cast<std::int64_t>(m_league_size))));
+                  static_cast<std::int64_t>(m_league_size))));
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
@@ -1058,12 +1058,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-           m_scratch_pool_id,
-           static_cast<std::int64_t>(m_scratch_size[1]) *
-               (std::min(
-                   static_cast<std::int64_t>(Cuda::concurrency() /
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(
+                  static_cast<std::int64_t>(Cuda::concurrency() /
                                             (m_team_size * m_vector_size)),
-                   static_cast<std::int64_t>(m_league_size))));
+                  static_cast<std::int64_t>(m_league_size))));
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
