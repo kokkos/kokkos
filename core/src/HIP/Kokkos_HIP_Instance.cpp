@@ -88,22 +88,6 @@ Kokkos::View<uint32_t *, HIPSpace> hip_global_unique_token_locks(
 
 namespace Kokkos {
 
-int Impl::HIPInternal::m_hipDev                                           = -1;
-int Impl::HIPInternal::m_hipArch                                          = -1;
-unsigned Impl::HIPInternal::m_multiProcCount                              = 0;
-unsigned Impl::HIPInternal::m_maxWarpCount                                = 0;
-std::array<Impl::HIPInternal::size_type, 3> Impl::HIPInternal::m_maxBlock = {
-    0, 0, 0};
-unsigned Impl::HIPInternal::m_maxWavesPerCU  = 0;
-unsigned Impl::HIPInternal::m_maxSharedWords = 0;
-int Impl::HIPInternal::m_shmemPerSM          = 0;
-int Impl::HIPInternal::m_maxShmemPerBlock    = 0;
-int Impl::HIPInternal::m_maxThreadsPerSM     = 0;
-hipDeviceProp_t Impl::HIPInternal::m_deviceProp;
-unsigned long *Impl::HIPInternal::constantMemHostStaging = nullptr;
-hipEvent_t Impl::HIPInternal::constantMemReusable        = nullptr;
-std::mutex Impl::HIPInternal::constantMemMutex;
-
 namespace Impl {
 
 //----------------------------------------------------------------------------

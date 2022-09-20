@@ -89,18 +89,18 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::HIP::size_type;
 
-  static int m_hipDev;
-  static int m_hipArch;
-  static unsigned m_multiProcCount;
-  static unsigned m_maxWarpCount;
-  static std::array<size_type, 3> m_maxBlock;
-  static unsigned m_maxWavesPerCU;
-  static unsigned m_maxSharedWords;
-  static int m_shmemPerSM;
-  static int m_maxShmemPerBlock;
-  static int m_maxThreadsPerSM;
+  inline static int m_hipDev                        = -1;
+  inline static int m_hipArch                       = -1;
+  inline static unsigned m_multiProcCount           = 0;
+  inline static unsigned m_maxWarpCount             = 0;
+  inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
+  inline static unsigned m_maxWavesPerCU            = 0;
+  inline static unsigned m_maxSharedWords           = 0;
+  inline static int m_shmemPerSM                    = 0;
+  inline static int m_maxShmemPerBlock              = 0;
+  inline static int m_maxThreadsPerSM               = 0;
 
-  static hipDeviceProp_t m_deviceProp;
+  inline static hipDeviceProp_t m_deviceProp;
 
   // Scratch Spaces for Reductions
   std::size_t m_scratchSpaceCount = 0;
@@ -126,9 +126,9 @@ class HIPInternal {
 
   // FIXME_HIP: these want to be per-device, not per-stream...  use of 'static'
   // here will break once there are multiple devices though
-  static unsigned long *constantMemHostStaging;
-  static hipEvent_t constantMemReusable;
-  static std::mutex constantMemMutex;
+  inline static unsigned long *constantMemHostStaging = nullptr;
+  inline static hipEvent_t constantMemReusable        = nullptr;
+  inline static std::mutex constantMemMutex;
 
   static HIPInternal &singleton();
 
