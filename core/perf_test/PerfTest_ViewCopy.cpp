@@ -54,12 +54,17 @@ std::string benchmark_fom(const std::string& label) { return "FOM: " + label; }
 void report_results(benchmark::State& state, double time) {
   state.SetIterationTime(time);
 
-  const auto N8        = std::pow(state.range(0), 8);
-  const auto size      = N8 * 8 / 1024 / 1024;
+  // number of elements in the view
+  const auto N8 = std::pow(state.range(0), 8);
+  // data size in megabytes
+  const auto size = N8 * sizeof(double) / 1024 / 1024;
+  // throughput in gigabytes per second
+  const auto throughput = 2 * size / 1024 / time;
+
   state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
                                             benchmark::Counter::OneK::kIs1024);
   state.counters[benchmark_fom("GB/s")] =
-      benchmark::Counter(2 * size / 1024 / time, benchmark::Counter::kDefaults,
+      benchmark::Counter(throughput, benchmark::Counter::kDefaults,
                          benchmark::Counter::OneK::kIs1024);
 }
 
