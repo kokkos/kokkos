@@ -17,8 +17,6 @@
 #ifndef KOKKOS_TEST_PERFTEST_CAT_HPP
 #define KOKKOS_TEST_PERFTEST_CAT_HPP
 
-#include <gtest/gtest.h>
-
 namespace Test {
 
 extern int command_line_num_args(int n = 0);
