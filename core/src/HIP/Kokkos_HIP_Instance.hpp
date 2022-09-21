@@ -154,10 +154,11 @@ class HIPInternal {
   size_type *scratch_space(const std::size_t size);
   size_type *scratch_flags(const std::size_t size);
   uint32_t impl_get_instance_id() const noexcept;
+  int acquire_team_scratch_space();
   // Resizing of team level 1 scratch
-  std::pair<void *, int> resize_team_scratch_space(std::int64_t bytes,
-                                                   bool force_shrink = false);
-  void release_team_scratch_pool(int scratch_pool_id);
+  void *resize_team_scratch_space(int scratch_pool_id, std::int64_t bytes,
+                                  bool force_shrink = false);
+  void release_team_scratch_space(int scratch_pool_id);
 };
 
 }  // namespace Impl

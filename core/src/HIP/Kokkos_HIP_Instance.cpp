@@ -258,39 +258,43 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   return m_scratchFlags;
 }
 
-std::pair<void *, int> HIPInternal::resize_team_scratch_space(
-    std::int64_t bytes, bool force_shrink) {
-  // Multiple ParallelFor/Reduce Teams can call this function at the same time
-  // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
-  // condition.
-
+int HIPInternal::acquire_team_scratch_space() {
   int current_team_scratch = 0;
   int zero                 = 0;
   while (!m_team_scratch_pool[current_team_scratch].compare_exchange_weak(
       zero, 1, std::memory_order_release, std::memory_order_relaxed)) {
     current_team_scratch = (current_team_scratch + 1) % m_n_team_scratch;
   }
-  if (m_team_scratch_current_size[current_team_scratch] == 0) {
-    m_team_scratch_current_size[current_team_scratch] = bytes;
-    m_team_scratch_ptr[current_team_scratch] =
-        Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
-            "Kokkos::HIPSpace::TeamScratchMemory",
-            m_team_scratch_current_size[current_team_scratch]);
-  }
-  if ((bytes > m_team_scratch_current_size[current_team_scratch]) ||
-      ((bytes < m_team_scratch_current_size[current_team_scratch]) &&
-       (force_shrink))) {
-    m_team_scratch_current_size[current_team_scratch] = bytes;
-    m_team_scratch_ptr[current_team_scratch] =
-        Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
-            m_team_scratch_ptr[current_team_scratch],
-            m_team_scratch_current_size[current_team_scratch]);
-  }
-  return std::make_pair(m_team_scratch_ptr[current_team_scratch],
-                        current_team_scratch);
+
+  return current_team_scratch;
 }
 
-void HIPInternal::release_team_scratch_pool(int scratch_pool_id) {
+void *HIPInternal::resize_team_scratch_space(int scratch_pool_id,
+                                             std::int64_t bytes,
+                                             bool force_shrink) {
+  // Multiple ParallelFor/Reduce Teams can call this function at the same time
+  // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
+  // condition.
+  if (m_team_scratch_current_size[scratch_pool_id] == 0) {
+    m_team_scratch_current_size[scratch_pool_id] = bytes;
+    m_team_scratch_ptr[scratch_pool_id] =
+        Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
+            "Kokkos::HIPSpace::TeamScratchMemory",
+            m_team_scratch_current_size[scratch_pool_id]);
+  }
+  if ((bytes > m_team_scratch_current_size[scratch_pool_id]) ||
+      ((bytes < m_team_scratch_current_size[scratch_pool_id]) &&
+       (force_shrink))) {
+    m_team_scratch_current_size[scratch_pool_id] = bytes;
+    m_team_scratch_ptr[scratch_pool_id] =
+        Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
+            m_team_scratch_ptr[scratch_pool_id],
+            m_team_scratch_current_size[scratch_pool_id]);
+  }
+  return m_team_scratch_ptr[scratch_pool_id];
+}
+
+void HIPInternal::release_team_scratch_space(int scratch_pool_id) {
   m_team_scratch_pool[scratch_pool_id] = 0;
 }
 
