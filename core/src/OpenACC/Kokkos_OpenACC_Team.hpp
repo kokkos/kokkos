@@ -113,10 +113,8 @@ class OpenACCTeamMember {
   // for device kernels.
   KOKKOS_FUNCTION void team_barrier() const {
     Kokkos::abort(
-        std::string(
-            "Kokkos::Experimental::OpenACC ERROR: OpenACC does not "
-            "provide any explicit barrier constructs for device kernels; exit!")
-            .c_str());
+        "Kokkos::Experimental::OpenACC ERROR: OpenACC does not provide any "
+        "explicit barrier constructs for device kernels; exit!");
   }
 
   // FIXME_OPENACC: team_broadcast() is not implemented.

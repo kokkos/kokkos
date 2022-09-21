@@ -96,20 +96,17 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 
-// Hierarchical Parallelism -> Team thread level implementation
 namespace Kokkos {
 
+// Hierarchical Parallelism -> Team thread level implementation
 #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+
 #pragma acc routine seq
-#else
-#pragma acc routine worker
-#endif
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
-#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
   iType j_start =
       loop_boundaries.team.team_rank() / loop_boundaries.team.vector_length();
   iType j_end  = loop_boundaries.end;
@@ -120,27 +117,33 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       lambda(j);
     }
   }
+}
+
 #else
+
+#pragma acc routine worker
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda) {
 #pragma acc loop worker
   for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
     lambda(j);
   }
-#endif
 }
 
-// Hierarchical Parallelism -> Thread vector level implementation
-
-#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
-#pragma acc routine seq
-#else
-#pragma acc routine vector
 #endif
+
+// Hierarchical Parallelism -> Thread vector level implementation
+#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+
+#pragma acc routine seq
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenACCTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
   iType j_start =
       loop_boundaries.team.team_rank() % loop_boundaries.team.vector_length();
   iType j_end  = loop_boundaries.end;
@@ -151,26 +154,33 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       lambda(j);
     }
   }
+}
+
 #else
+
+#pragma acc routine vector
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::ThreadVectorRangeBoundariesStruct<
+        iType, Impl::OpenACCTeamMember>& loop_boundaries,
+    const Lambda& lambda) {
 #pragma acc loop vector
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i);
   }
-#endif
 }
+
+#endif
 
 // Hierarchical Parallelism -> Team vector level implementation
 #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+
 #pragma acc routine seq
-#else
-#pragma acc routine vector
-#endif
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
-#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
   iType j_start =
       loop_boundaries.team.team_rank() % loop_boundaries.team.vector_length();
   iType j_end  = loop_boundaries.end;
@@ -181,11 +191,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       lambda(j);
     }
   }
+}
+
 #else
+
+#pragma acc routine vector
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda) {
 #pragma acc loop vector
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
-#endif
 }
+
+#endif
 
 }  // namespace Kokkos
 
