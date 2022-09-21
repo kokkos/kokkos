@@ -207,7 +207,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_3D(h_view, fillFlattenedIndex);
   }
@@ -240,7 +240,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_4D(h_view, fillFlattenedIndex);
   }
@@ -275,7 +275,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_5D(h_view, fillFlattenedIndex);
   }
@@ -312,7 +312,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_6D(h_view, fillFlattenedIndex);
   }
@@ -350,7 +350,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_7D(h_view, fillFlattenedIndex);
   }
@@ -390,7 +390,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_8D(h_view, fillFlattenedIndex);
   }
@@ -420,7 +420,7 @@ struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_3D(h_view, fillFlattenedIndex);
   }
@@ -461,7 +461,7 @@ struct TestThreadVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_4D(h_view, fillFlattenedIndex);
   }
@@ -499,7 +499,7 @@ struct TestThreadVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_5D(h_view, fillFlattenedIndex);
   }
@@ -538,7 +538,7 @@ struct TestThreadVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_6D(h_view, fillFlattenedIndex);
   }
@@ -579,7 +579,7 @@ struct TestThreadVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_7D(h_view, fillFlattenedIndex);
   }
@@ -622,7 +622,7 @@ struct TestThreadVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_8D(h_view, fillFlattenedIndex);
   }
@@ -658,7 +658,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_3D(h_view, fillFlattenedIndex);
   }
@@ -691,7 +691,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_4D(h_view, fillFlattenedIndex);
   }
@@ -726,7 +726,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_5D(h_view, fillFlattenedIndex);
   }
@@ -763,7 +763,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_6D(h_view, fillFlattenedIndex);
   }
@@ -801,7 +801,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_7D(h_view, fillFlattenedIndex);
   }
@@ -841,7 +841,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_8D(h_view, fillFlattenedIndex);
   }
@@ -872,7 +872,7 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
         });
 
     HostViewType h_view = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace(), v);
+        Kokkos::Serial(), v);
 
     check_result_4D(h_view, fillFlattenedIndex);
   }
