@@ -79,7 +79,7 @@ void printTimings(std::ostream& out, std::vector<double> const& tr,
       out << " Marked as page migation.";
     }
     out << " The transfer rate is "
-        << (double)numBytes / pow(1000.0, 3) / (*it) *
+        << (double)numBytes / std::pow(1000.0, 3) / (*it) *
                2.0  // as we read and write
         << " GB/s \n";
   }
