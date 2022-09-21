@@ -89,16 +89,18 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::HIP::size_type;
 
-  int m_hipDev                        = -1;
-  int m_hipArch                       = -1;
-  unsigned m_multiProcCount           = 0;
-  unsigned m_maxWarpCount             = 0;
-  std::array<size_type, 3> m_maxBlock = {0, 0, 0};
-  unsigned m_maxWavesPerCU            = 0;
-  unsigned m_maxSharedWords           = 0;
-  int m_shmemPerSM                    = 0;
-  int m_maxShmemPerBlock              = 0;
-  int m_maxThreadsPerSM               = 0;
+  inline static int m_hipDev                        = -1;
+  inline static int m_hipArch                       = -1;
+  inline static unsigned m_multiProcCount           = 0;
+  inline static unsigned m_maxWarpCount             = 0;
+  inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
+  inline static unsigned m_maxWavesPerCU            = 0;
+  inline static unsigned m_maxSharedWords           = 0;
+  inline static int m_shmemPerSM                    = 0;
+  inline static int m_maxShmemPerBlock              = 0;
+  inline static int m_maxThreadsPerSM               = 0;
+
+  inline static hipDeviceProp_t m_deviceProp;
 
   // Scratch Spaces for Reductions
   std::size_t m_scratchSpaceCount = 0;
@@ -106,8 +108,6 @@ class HIPInternal {
 
   size_type *m_scratchSpace = nullptr;
   size_type *m_scratchFlags = nullptr;
-
-  hipDeviceProp_t m_deviceProp;
 
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
@@ -126,17 +126,19 @@ class HIPInternal {
 
   // FIXME_HIP: these want to be per-device, not per-stream...  use of 'static'
   // here will break once there are multiple devices though
-  static unsigned long *constantMemHostStaging;
-  static hipEvent_t constantMemReusable;
-  static std::mutex constantMemMutex;
+  inline static unsigned long *constantMemHostStaging = nullptr;
+  inline static hipEvent_t constantMemReusable        = nullptr;
+  inline static std::mutex constantMemMutex;
 
   static HIPInternal &singleton();
 
   int verify_is_initialized(const char *const label) const;
 
-  int is_initialized() const { return m_hipDev >= 0; }
+  int is_initialized() const {
+    return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
+  }
 
-  void initialize(int hip_device_id, hipStream_t stream, bool manage_stream);
+  void initialize(hipStream_t stream, bool manage_stream);
   void finalize();
 
   void print_configuration(std::ostream &) const;
