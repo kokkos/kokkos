@@ -108,7 +108,7 @@ class CudaInternal {
   mutable std::size_t m_scratchUnifiedCount;
   mutable std::size_t m_scratchFunctorSize;
 
-  static size_type m_scratchUnifiedSupported;
+  inline static size_type m_scratchUnifiedSupported = 0;
   mutable size_type* m_scratchSpace;
   mutable size_type* m_scratchFlags;
   mutable size_type* m_scratchUnified;
