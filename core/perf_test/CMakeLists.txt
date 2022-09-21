@@ -14,17 +14,6 @@ IF(KOKKOS_ENABLE_TESTS)
     PerfTestHexGrad.cpp
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
-    PerfTest_ViewAllocate.cpp
-    PerfTest_ViewFill_123.cpp
-    PerfTest_ViewFill_45.cpp
-    PerfTest_ViewFill_6.cpp
-    PerfTest_ViewFill_7.cpp
-    PerfTest_ViewFill_8.cpp
-    PerfTest_ViewResize_123.cpp
-    PerfTest_ViewResize_45.cpp
-    PerfTest_ViewResize_6.cpp
-    PerfTest_ViewResize_7.cpp
-    PerfTest_ViewResize_8.cpp
     )
 
   IF(Kokkos_ENABLE_OPENMPTARGET)
@@ -179,6 +168,8 @@ ENDFUNCTION()
 SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
+  Benchmark_Context.cpp
+  PerfTest_ViewAllocate.cpp
   PerfTest_ViewCopy_a123.cpp
   PerfTest_ViewCopy_b123.cpp
   PerfTest_ViewCopy_c123.cpp
