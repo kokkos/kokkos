@@ -11,7 +11,6 @@ IF(KOKKOS_ENABLE_TESTS)
   SET(SOURCES
     PerfTestMain.cpp
     PerfTestGramSchmidt.cpp
-    PerfTestHexGrad.cpp
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
     )
@@ -169,6 +168,7 @@ SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
   Benchmark_Context.cpp
+  PerfTestHexGrad.cpp
   PerfTest_ViewAllocate.cpp
   PerfTest_ViewCopy_a123.cpp
   PerfTest_ViewCopy_b123.cpp
