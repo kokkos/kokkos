@@ -291,24 +291,6 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 }  // namespace
 
-int CudaInternal::m_cudaDev;
-int CudaInternal::m_cudaArch;
-unsigned CudaInternal::m_multiProcCount;
-unsigned CudaInternal::m_maxWarpCount;
-std::array<CudaInternal::size_type, 3> CudaInternal::m_maxBlock;
-unsigned CudaInternal::m_maxSharedWords;
-uint32_t CudaInternal::m_maxConcurrency;
-int CudaInternal::m_shmemPerSM;
-int CudaInternal::m_maxShmemPerBlock;
-int CudaInternal::m_maxBlocksPerSM;
-int CudaInternal::m_maxThreadsPerSM;
-int CudaInternal::m_maxThreadsPerBlock;
-cudaDeviceProp CudaInternal::m_deviceProp;
-CudaInternal::size_type CudaInternal::m_scratchUnifiedSupported;
-unsigned long *CudaInternal::constantMemHostStaging = nullptr;
-cudaEvent_t CudaInternal::constantMemReusable       = nullptr;
-std::mutex CudaInternal::constantMemMutex;
-
 //----------------------------------------------------------------------------
 
 void CudaInternal::print_configuration(std::ostream &s) const {
