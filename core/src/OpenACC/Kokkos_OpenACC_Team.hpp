@@ -130,7 +130,7 @@ class OpenACCTeamMember {
 
   template <class Closure, class ValueType>
   KOKKOS_FUNCTION void team_broadcast(const Closure& f, ValueType& value,
-                                      const int& thread_id) const {
+                                      int thread_id) const {
     f(value);
     team_broadcast(value, thread_id);
   }
