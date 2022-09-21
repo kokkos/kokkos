@@ -137,7 +137,7 @@ size_t getDeviceMemorySize() {
 #if defined KOKKOS_ENABLE_CUDA
   return Kokkos::Cuda{}.cuda_device_prop().totalGlobalMem;
 #elif defined KOKKOS_ENABLE_HIP
-  return Kokkos::Experimental::HIP::hip_device_prop().totalGlobalMem;
+  return Kokkos::HIP{}.hip_device_prop().totalGlobalMem;
 #elif defined KOKKOS_ENABLE_SYCL
   auto device = Kokkos::Experimental::SYCL{}.sycl_queue().get_device();
   return device.get_info<sycl::info::device::global_mem_size>();
