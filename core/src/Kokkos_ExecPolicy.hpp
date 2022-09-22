@@ -290,8 +290,7 @@ RangePolicy(int64_t, int64_t, Args...)->RangePolicy<>;
 template <typename ES, typename... Args,
           typename = std::enable_if_t<
               std::is_convertible_v<ES, DefaultExecutionSpace>>>
-RangePolicy(ES const&, int64_t, int64_t, Args...)
-    ->RangePolicy<>;
+RangePolicy(ES const&, int64_t, int64_t, Args...)->RangePolicy<>;
 
 template <typename ES, typename... Args,
           typename = std::enable_if_t<
