@@ -103,7 +103,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
 
-    return internal_team_size_common<BlockType::Max, closure_type, FunctorType,
+    return internal_team_size_common<BlockType::Max, closure_type,
                                      ParallelForTag>(f);
   }
 
@@ -119,7 +119,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
-    return internal_team_size_common<BlockType::Max, closure_type, FunctorType,
+    return internal_team_size_common<BlockType::Max, closure_type,
                                      ParallelReduceTag>(f);
   }
 
@@ -129,7 +129,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
-    return internal_team_size_common<BlockType::Max, closure_type, FunctorType,
+    return internal_team_size_common<BlockType::Max, closure_type,
                                      ParallelReduceTag>(f);
   }
 
@@ -139,7 +139,7 @@ class TeamPolicyInternal<HIP, Properties...>
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
 
     return internal_team_size_common<BlockType::Preferred, closure_type,
-                                     FunctorType, ParallelForTag>(f);
+                                     ParallelForTag>(f);
   }
 
   template <typename FunctorType>
@@ -155,7 +155,7 @@ class TeamPolicyInternal<HIP, Properties...>
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
     return internal_team_size_common<BlockType::Preferred, closure_type,
-                                     FunctorType, ParallelReduceTag>(f);
+                                     ParallelReduceTag>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -165,7 +165,7 @@ class TeamPolicyInternal<HIP, Properties...>
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
     return internal_team_size_common<BlockType::Preferred, closure_type,
-                                     FunctorType, ParallelReduceTag>(f);
+                                     ParallelReduceTag>(f);
   }
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
@@ -351,8 +351,8 @@ class TeamPolicyInternal<HIP, Properties...>
   using member_type = Kokkos::Impl::HIPTeamMember;
 
  protected:
-  template <BlockType BlockSize, class ClosureType, class FunctorType,
-            class Tag>
+  template <BlockType BlockSize, class ClosureType, class Tag,
+            class FunctorType>
   int internal_team_size_common(FunctorType const& f) const {
     const unsigned shmem_block = team_scratch_size(0) + 2 * sizeof(double);
     unsigned shmem_thread      = thread_scratch_size(0) + sizeof(double);
@@ -547,11 +547,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-          m_scratch_pool_id,
-          static_cast<std::int64_t>(m_scratch_size[1]) *
-              (std::min(static_cast<std::int64_t>(
+           m_scratch_pool_id,
+           static_cast<std::int64_t>(m_scratch_size[1]) *
+               (std::min(static_cast<std::int64_t>(
                             HIP::concurrency() / (m_team_size * m_vector_size)),
-                        static_cast<std::int64_t>(m_league_size))));
+                         static_cast<std::int64_t>(m_league_size))));
     }
 
     int const shmem_size_total = m_shmem_begin + m_shmem_size;
@@ -870,11 +870,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-          m_scratch_pool_id,
-          static_cast<std::int64_t>(m_scratch_size[1]) *
-              (std::min(static_cast<std::int64_t>(
+           m_scratch_pool_id,
+           static_cast<std::int64_t>(m_scratch_size[1]) *
+               (std::min(static_cast<std::int64_t>(
                             HIP::concurrency() / (m_team_size * m_vector_size)),
-                        static_cast<std::int64_t>(m_league_size))));
+                         static_cast<std::int64_t>(m_league_size))));
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
@@ -963,11 +963,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-          m_scratch_pool_id,
-          static_cast<std::int64_t>(m_scratch_size[1]) *
-              (std::min(static_cast<std::int64_t>(
+           m_scratch_pool_id,
+           static_cast<std::int64_t>(m_scratch_size[1]) *
+               (std::min(static_cast<std::int64_t>(
                             HIP::concurrency() / (m_team_size * m_vector_size)),
-                        static_cast<std::int64_t>(m_league_size))));
+                         static_cast<std::int64_t>(m_league_size))));
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
