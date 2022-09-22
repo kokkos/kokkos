@@ -285,12 +285,17 @@ RangePolicy()->RangePolicy<>;
 template <typename... Args>
 RangePolicy(int64_t, int64_t, Args...)->RangePolicy<>;
 
-template <typename... Args>
-RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t, Args...)
+// enable_if is used in these deduction guides in order
+// to get around a gcc8 deduction guide overload set bug
+template <typename ES, typename... Args,
+          typename = std::enable_if_t<
+              std::is_convertible_v<ES, DefaultExecutionSpace>>>
+RangePolicy(ES const&, int64_t, int64_t, Args...)
     ->RangePolicy<>;
 
 template <typename ES, typename... Args,
-          typename = std::enable_if_t<is_execution_space_v<ES>>>
+          typename = std::enable_if_t<
+              !std::is_convertible_v<ES, DefaultExecutionSpace>>>
 RangePolicy(ES const&, int64_t, int64_t, Args...)->RangePolicy<ES>;
 
 }  // namespace Kokkos
