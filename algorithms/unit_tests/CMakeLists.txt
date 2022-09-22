@@ -162,7 +162,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamTransformBinaryOp
 	StdAlgorithmsTeamGenerate
 	StdAlgorithmsTeamGenerate_n
-	StdAlgorithmsTeamCountIf
 	StdAlgorithmsTeamSwapRanges
 	StdAlgorithmsTeamReverse
 	StdAlgorithmsTeamReverseCopy
@@ -209,6 +208,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamAdjacentFind
 	StdAlgorithmsTeamAllOf
 	StdAlgorithmsTeamAnyOf
+	StdAlgorithmsTeamCount
+	StdAlgorithmsTeamCountIf
 	StdAlgorithmsTeamFind
 	StdAlgorithmsTeamFindEnd
 	StdAlgorithmsTeamFindFirstOf

@@ -66,8 +66,9 @@ typename IteratorType::difference_type count_if_exespace_impl(
 }
 
 template <class ExecutionSpace, class IteratorType, class T>
-auto count_impl(const std::string& label, const ExecutionSpace& ex,
-                IteratorType first, IteratorType last, const T& value) {
+auto count_exespace_impl(const std::string& label, const ExecutionSpace& ex,
+                         IteratorType first, IteratorType last,
+                         const T& value) {
   return count_if_exespace_impl(
       label, ex, first, last,
       ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
@@ -93,6 +94,15 @@ KOKKOS_FUNCTION typename IteratorType::difference_type count_if_team_impl(
   teamHandle.team_barrier();
 
   return count;
+}
+
+template <class TeamHandleType, class IteratorType, class T>
+KOKKOS_FUNCTION auto count_team_impl(const TeamHandleType& teamHandle,
+                                     IteratorType first, IteratorType last,
+                                     const T& value) {
+  return count_if_team_impl(
+      teamHandle, first, last,
+      ::Kokkos::Experimental::Impl::StdAlgoEqualsValUnaryPredicate<T>(value));
 }
 
 }  // namespace Impl
