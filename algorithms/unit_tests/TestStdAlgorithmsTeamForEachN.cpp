@@ -107,8 +107,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   constexpr auto lowerBound = ValueType{5};
   constexpr auto upperBound = ValueType{523};
   Kokkos::pair bounds{lowerBound, upperBound};
-  auto [dataView, dataView_h] = create_random_view_and_host_clone(
+  auto [dataView, _] = create_random_view_and_host_clone(
       LayoutTag{}, numTeams, numCols, bounds, "dataView");
+
+  // for_each modifies dataView, so make a separated host copy of if
+  auto dataViewBeforeOp_h = create_host_space_copy(dataView);
 
   Kokkos::View<std::size_t*> nView("nView", numTeams);
   auto nView_h = create_host_space_copy(nView);
@@ -134,14 +137,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  for (std::size_t i = 0; i < dataView_h.extent(0); ++i) {
-    auto rowFrom = Kokkos::subview(dataView_h, i, Kokkos::ALL());
-    const auto n = nView_h(i);
-    std::for_each_n(KE::begin(rowFrom), n, unaryPred);
-  }
-
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
-  expect_equal_host_views(dataView_h, dataViewAfterOp_h);
+  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
+    for (std::size_t j = 0, n = 0; j < dataViewAfterOp_h.extent(1); ++j, ++n) {
+      if (n < nView_h(i)) {
+        EXPECT_EQ(dataViewBeforeOp_h(i, j) + 1, dataViewAfterOp_h(i, j));
+      } else {
+        EXPECT_EQ(dataViewBeforeOp_h(i, j), dataViewAfterOp_h(i, j));
+      }
+    }
+  }
 }
 
 template <class LayoutTag, class ValueType>
