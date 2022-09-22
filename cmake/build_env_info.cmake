@@ -40,6 +40,6 @@ if(Git_FOUND)
     else()
         set(GIT_CLEAN_STATUS "DIRTY")
     endif()
-
-    configure_file(cmake/Environment_Info.h.in Environment_Info.hpp @ONLY)
 endif()
+
+configure_file(cmake/Kokkos_Environment_Info.h.in Kokkos_Environment_Info.hpp @ONLY)

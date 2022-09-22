@@ -22,7 +22,7 @@
 #include <benchmark/benchmark.h>
 
 #include <Kokkos_Core.hpp>
-#include <Environment_Info.hpp>
+#include <Kokkos_Environment_Info.hpp>
 
 namespace KokkosBenchmark {
 
