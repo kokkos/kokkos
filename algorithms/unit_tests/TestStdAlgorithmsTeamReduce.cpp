@@ -46,14 +46,14 @@
 
 namespace Test {
 namespace stdalgos {
-namespace TestReduce {
+namespace TeamReduce {
 
 namespace KE = Kokkos::Experimental;
 
 template <class ValueType>
 struct PlusFunctor {
   KOKKOS_INLINE_FUNCTION
-  bool operator()(const ValueType& lhs, const ValueType& rhs) const {
+  ValueType operator()(const ValueType& lhs, const ValueType& rhs) const {
     return lhs + rhs;
   }
 };
@@ -253,6 +253,6 @@ TEST(std_algorithms_reduce_team_test, test) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-}  // namespace TestReduce
+}  // namespace TeamReduce
 }  // namespace stdalgos
 }  // namespace Test
