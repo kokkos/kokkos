@@ -89,6 +89,14 @@ IF(KOKKOS_ENABLE_TESTS)
 ENDIF()
 
 # Find or download google/benchmark library
+IF(NOT Kokkos_ENABLE_BENCHMARKS)
+  RETURN()
+ENDIF()
+
+IF (KOKKOS_HAS_TRILINOS)
+  message(FATAL_ERROR "Benchmarks are not supported when building as part of Trilinos")
+ENDIF()
+
 find_package(benchmark QUIET)
 IF(benchmark_FOUND)
   MESSAGE(STATUS "Using google benchmark found in ${benchmark_DIR}")
@@ -209,3 +217,12 @@ KOKKOS_ADD_BENCHMARK(
   PerformanceTest_Benchmark
   SOURCES ${BENCHMARK_SOURCES}
 )
+
+IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
+  KOKKOS_ADD_BENCHMARK(
+    Benchmark_Atomic_MinMax
+    SOURCES
+      Benchmark_Context.cpp
+      test_atomic_minmax_simple.cpp
+  )
+ENDIF()
