@@ -62,9 +62,8 @@ template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
           HIPLaunchMechanism LaunchMechanism =
               DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
 unsigned get_preferred_blocksize_impl() {
-  // FIXME_HIP - could be if constexpr for c++17
-  if (!HIPParallelLaunch<DriverType, LaunchBounds,
-                         LaunchMechanism>::default_launchbounds()) {
+  if constexpr (!HIPParallelLaunch<DriverType, LaunchBounds,
+                                   LaunchMechanism>::default_launchbounds()) {
     // use the user specified value
     return LaunchBounds::maxTperB;
   } else {
@@ -76,14 +75,12 @@ unsigned get_preferred_blocksize_impl() {
   }
 }
 
-// FIXME_HIP - entire function could be constexpr for c++17
 template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
           HIPLaunchMechanism LaunchMechanism =
               DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
-unsigned get_max_blocksize_impl() {
-  // FIXME_HIP - could be if constexpr for c++17
-  if (!HIPParallelLaunch<DriverType, LaunchBounds,
-                         LaunchMechanism>::default_launchbounds()) {
+constexpr unsigned get_max_blocksize_impl() {
+  if constexpr (!HIPParallelLaunch<DriverType, LaunchBounds,
+                                   LaunchMechanism>::default_launchbounds()) {
     // use the user specified value
     return LaunchBounds::maxTperB;
   } else {
@@ -104,15 +101,13 @@ hipFuncAttributes get_hip_func_attributes_impl() {
   return HIPParallelLaunch<DriverType, LaunchBounds,
                            LaunchMechanism>::get_hip_func_attributes();
 #else
-  // FIXME_HIP - could be if constexpr for c++17
-  if (!HIPParallelLaunch<DriverType, LaunchBounds,
-                         LaunchMechanism>::default_launchbounds()) {
+  if constexpr (!HIPParallelLaunch<DriverType, LaunchBounds,
+                                   LaunchMechanism>::default_launchbounds()) {
     // for user defined, we *always* honor the request
     return HIPParallelLaunch<DriverType, LaunchBounds,
                              LaunchMechanism>::get_hip_func_attributes();
   } else {
-    // FIXME_HIP - could be if constexpr for c++17
-    if (BlockSize == BlockType::Max) {
+    if constexpr (BlockSize == BlockType::Max) {
       return HIPParallelLaunch<
           DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
           LaunchMechanism>::get_hip_func_attributes();
@@ -153,8 +148,7 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
     // find how many threads we can fit with this blocksize based on LDS usage
     unsigned tperb_shmem = total_shmem > shmem_per_sm ? 0 : block_size;
 
-    // FIXME_HIP - could be if constexpr for c++17
-    if (BlockSize == BlockType::Max) {
+    if constexpr (BlockSize == BlockType::Max) {
       // we want the maximum blocksize possible
       // just wait until we get a case where we can fit the LDS per SM
       if (tperb_shmem) return block_size;

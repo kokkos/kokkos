@@ -508,9 +508,8 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
   HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
       driver, grid, block, shmem, hip_instance, prefer_shmem);
 #else
-  // FIXME_HIP - could be if constexpr for c++17
-  if (!HIPParallelLaunch<DriverType, LaunchBounds,
-                         LaunchMechanism>::default_launchbounds()) {
+  if constexpr (!HIPParallelLaunch<DriverType, LaunchBounds,
+                                   LaunchMechanism>::default_launchbounds()) {
     // for user defined, we *always* honor the request
     HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
         driver, grid, block, shmem, hip_instance, prefer_shmem);

@@ -118,7 +118,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_common<BlockType::Max, closure_type>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -127,7 +127,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_common<BlockType::Max, closure_type>(f);
   }
 
   template <typename FunctorType>
@@ -150,7 +150,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
-    return internal_team_size_recommended<closure_type>(f);
+    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -159,7 +159,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
-    return internal_team_size_recommended<closure_type>(f);
+    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
   }
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
@@ -346,57 +346,19 @@ class TeamPolicyInternal<HIP, Properties...>
 
  protected:
   template <BlockType BlockSize, class ClosureType, class FunctorType>
-  int internal_team_size_common(const FunctorType& f) const {
-    // FIXME_HIP: this could be unified with the
-    // internal_team_size_common_reduce
-    //            once we can turn c++17 constexpr on by default.
-    //            The problem right now is that we can't turn off the evaluation
-    //            of the Analysis' valuesize / StaticValueSize
-
-    const unsigned shmem_block  = team_scratch_size(0) + 2 * sizeof(double);
-    const unsigned shmem_thread = thread_scratch_size(0) + sizeof(double);
-    const int vector_length     = impl_vector_length();
-
-    const auto functor = [&f, shmem_block, shmem_thread, vector_length](
-                             const hipFuncAttributes& attr, int block_size) {
-      int functor_shmem =
-          ::Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
-              f, block_size / vector_length);
-      return shmem_block + shmem_thread * (block_size / vector_length) +
-             functor_shmem + attr.sharedSizeBytes;
-    };
-    int block_size;
-    // FIXME_HIP - could be if constexpr for c++17
-    if (BlockSize == BlockType::Max) {
-      block_size = hip_get_max_team_blocksize<ClosureType,
-                                              typename traits::launch_bounds>(
-          space().impl_internal_space_instance(), functor);
-    } else {
-      block_size =
-          hip_get_preferred_team_blocksize<ClosureType,
-                                           typename traits::launch_bounds>(
-              space().impl_internal_space_instance(), functor);
-    }
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a valid "
-                      "team size."));
-    }
-    return block_size / impl_vector_length();
-  }
-
-  template <BlockType BlockSize, class ClosureType, class FunctorType>
-  int internal_team_size_common_reduce(const FunctorType& f) const {
-    using Interface =
-        typename Impl::DeduceFunctorPatternInterface<ClosureType>::type;
-    using Analysis =
-        Impl::FunctorAnalysis<Interface, typename ClosureType::Policy,
-                              FunctorType>;
-
+  int internal_team_size_common(FunctorType const& f) const {
     const unsigned shmem_block = team_scratch_size(0) + 2 * sizeof(double);
-    const unsigned shmem_thread =
-        thread_scratch_size(0) + sizeof(double) +
-        ((Analysis::StaticValueSize != 0) ? 0 : Analysis::value_size(f));
+    unsigned shmem_thread      = thread_scratch_size(0) + sizeof(double);
+    using Tag = typename PatternTagFromImplSpecialization<ClosureType>::type;
+    if constexpr (std::is_same_v<Tag, ParallelReduceTag>) {
+      using Interface =
+          typename Impl::DeduceFunctorPatternInterface<ClosureType>::type;
+      using Analysis =
+          Impl::FunctorAnalysis<Interface, typename ClosureType::Policy,
+                                FunctorType>;
+      shmem_thread +=
+          ((Analysis::StaticValueSize != 0) ? 0 : Analysis::value_size(f));
+    }
     const int vector_length = impl_vector_length();
 
     const auto functor = [&f, shmem_block, shmem_thread, vector_length](
@@ -408,8 +370,7 @@ class TeamPolicyInternal<HIP, Properties...>
              functor_shmem + attr.sharedSizeBytes;
     };
     int block_size;
-    // FIXME_HIP - could be if constexpr for c++17
-    if (BlockSize == BlockType::Max) {
+    if constexpr (BlockSize == BlockType::Max) {
       block_size = hip_get_max_team_blocksize<ClosureType,
                                               typename traits::launch_bounds>(
           space().impl_internal_space_instance(), functor);
@@ -421,26 +382,19 @@ class TeamPolicyInternal<HIP, Properties...>
     }
 
     if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
-                      "valid team size."));
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor/Reduce< HIP > could not find a valid "
+          "team size."));
     }
-    // Currently we require Power-of-2 team size for reductions.
-    int p2 = 1;
-    while (p2 <= block_size) p2 *= 2;
-    p2 /= 2;
-    return p2 / impl_vector_length();
-  }
-
-  template <class ClosureType, class FunctorType>
-  int internal_team_size_max(const FunctorType& f) const {
-    return internal_team_size_common_reduce<BlockType::Max, ClosureType>(f);
-  }
-
-  template <class ClosureType, class FunctorType>
-  int internal_team_size_recommended(const FunctorType& f) const {
-    return internal_team_size_common_reduce<BlockType::Preferred, ClosureType>(
-        f);
+    if constexpr (std::is_same_v<Tag, ParallelForTag>) {
+      return block_size / impl_vector_length();
+    } else {
+      // Currently we require Power-of-2 team size for reductions.
+      int p2 = 1;
+      while (p2 <= block_size) p2 *= 2;
+      p2 /= 2;
+      return p2 / impl_vector_length();
+    }
   }
 };
 
