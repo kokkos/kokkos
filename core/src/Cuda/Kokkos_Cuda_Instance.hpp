@@ -85,22 +85,22 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  static int m_cudaDev;
+  inline static int m_cudaDev = -1;
 
   // Device Properties
-  static int m_cudaArch;
-  static unsigned m_multiProcCount;
-  static unsigned m_maxWarpCount;
-  static std::array<size_type, 3> m_maxBlock;
-  static unsigned m_maxSharedWords;
-  static uint32_t m_maxConcurrency;
-  static int m_shmemPerSM;
-  static int m_maxShmemPerBlock;
-  static int m_maxBlocksPerSM;
-  static int m_maxThreadsPerSM;
-  static int m_maxThreadsPerBlock;
+  inline static int m_cudaArch                      = -1;
+  inline static unsigned m_multiProcCount           = 0;
+  inline static unsigned m_maxWarpCount             = 0;
+  inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
+  inline static unsigned m_maxSharedWords           = 0;
+  inline static uint32_t m_maxConcurrency           = 0;
+  inline static int m_shmemPerSM                    = 0;
+  inline static int m_maxShmemPerBlock              = 0;
+  inline static int m_maxBlocksPerSM                = 0;
+  inline static int m_maxThreadsPerSM               = 0;
+  inline static int m_maxThreadsPerBlock            = 0;
 
-  static cudaDeviceProp m_deviceProp;
+  inline static cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
   mutable std::size_t m_scratchSpaceCount;
@@ -108,7 +108,7 @@ class CudaInternal {
   mutable std::size_t m_scratchUnifiedCount;
   mutable std::size_t m_scratchFunctorSize;
 
-  static size_type m_scratchUnifiedSupported;
+  inline static size_type m_scratchUnifiedSupported = 0;
   mutable size_type* m_scratchSpace;
   mutable size_type* m_scratchFlags;
   mutable size_type* m_scratchUnified;
@@ -129,9 +129,9 @@ class CudaInternal {
 
   // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
   //  here will break once there are multiple devices though
-  static unsigned long* constantMemHostStaging;
-  static cudaEvent_t constantMemReusable;
-  static std::mutex constantMemMutex;
+  inline static unsigned long* constantMemHostStaging = nullptr;
+  inline static cudaEvent_t constantMemReusable       = nullptr;
+  inline static std::mutex constantMemMutex;
 
   static CudaInternal& singleton();
 
@@ -182,9 +182,11 @@ class CudaInternal {
   size_type* scratch_unified(const std::size_t size) const;
   size_type* scratch_functor(const std::size_t size) const;
   uint32_t impl_get_instance_id() const;
+  int acquire_team_scratch_space();
   // Resizing of team level 1 scratch
-  std::pair<void*, int> resize_team_scratch_space(std::int64_t bytes,
-                                                  bool force_shrink = false);
+  void* resize_team_scratch_space(int scratch_pool_id, std::int64_t bytes,
+                                  bool force_shrink = false);
+  void release_team_scratch_space(int scratch_pool_id);
 };
 
 }  // Namespace Impl

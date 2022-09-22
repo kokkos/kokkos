@@ -257,8 +257,10 @@ class ParallelScanSYCLBase {
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
       auto global_mem                   = m_scratch_space;
-      auto result_ptr                   = m_result_ptr;
       auto result_ptr_device_accessible = m_result_ptr_device_accessible;
+      // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
+      // directly.
+      auto result_ptr = m_result_ptr_device_accessible ? m_result_ptr : nullptr;
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         auto global_id = item.get_id(0);
 

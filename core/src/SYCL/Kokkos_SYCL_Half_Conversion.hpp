@@ -48,7 +48,7 @@
 #ifdef KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_NumericTraits.hpp>  // reduction_identity
+#include <Kokkos_ReductionIdentity.hpp>
 
 namespace Kokkos {
 namespace Experimental {
