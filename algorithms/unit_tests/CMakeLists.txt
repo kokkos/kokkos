@@ -210,6 +210,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamAnyOf
 	StdAlgorithmsTeamCount
 	StdAlgorithmsTeamCountIf
+	StdAlgorithmsTeamEqual
 	StdAlgorithmsTeamFind
 	StdAlgorithmsTeamFindEnd
 	StdAlgorithmsTeamFindFirstOf
