@@ -46,7 +46,7 @@
 
 namespace Test {
 namespace stdalgos {
-namespace TestAllOf {
+namespace TeamAllOf {
 
 namespace KE = Kokkos::Experimental;
 
@@ -166,6 +166,6 @@ TEST(std_algorithms_all_of_team_test, test) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-}  // namespace TestAllOf
+}  // namespace TeamAllOf
 }  // namespace stdalgos
 }  // namespace Test

@@ -46,7 +46,7 @@
 
 namespace Test {
 namespace stdalgos {
-namespace TestAdjacentDifference {
+namespace TeamAdjacentDifference {
 
 namespace KE = Kokkos::Experimental;
 
@@ -223,6 +223,6 @@ TEST(std_algorithms_adjacent_difference_team_test, test) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-}  // namespace TestAdjacentDifference
+}  // namespace TeamAdjacentDifference
 }  // namespace stdalgos
 }  // namespace Test

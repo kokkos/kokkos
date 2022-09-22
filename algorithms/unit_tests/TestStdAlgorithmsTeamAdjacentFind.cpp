@@ -46,7 +46,7 @@
 
 namespace Test {
 namespace stdalgos {
-namespace TestAdjacentFind {
+namespace TeamAdjacentFind {
 
 namespace KE = Kokkos::Experimental;
 
@@ -258,6 +258,6 @@ TEST(std_algorithms_adjacent_find_team_test,
   run_all_scenarios<StridedThreeRowsTag, unsigned>(ensureAdjacentFindCanFind);
 }
 
-}  // namespace TestAdjacentFind
+}  // namespace TeamAdjacentFind
 }  // namespace stdalgos
 }  // namespace Test
