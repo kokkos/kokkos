@@ -181,7 +181,8 @@ struct TestTeamForAggregate {
         Kokkos::parallel_for(team_policy_t(leagueSize, teamSize), test);
         int numErrs = 0;
         Kokkos::parallel_reduce(range_policy_t(0, problemSize), test, numErrs);
-        EXPECT_EQ(numErrs, 0);
+        EXPECT_EQ(numErrs, 0)
+            << " teamSize=" << teamSize << " problemSize=" << problemSize;
       }
     }
   }
