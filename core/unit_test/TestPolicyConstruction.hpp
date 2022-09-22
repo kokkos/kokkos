@@ -86,6 +86,7 @@ class TestRangePolicyConstruction {
  public:
   TestRangePolicyConstruction() {
     test_compile_time_parameters();
+    test_compile_time_implicit_deduction_guides();
     test_compile_time_deduction_guides();
     test_runtime_parameters();
   }
@@ -317,6 +318,24 @@ class TestRangePolicyConstruction {
     }
   }
 
+  void test_compile_time_implicit_deduction_guides() {
+    // icpc generates an ICE on implicit deduction guides for copy/move
+    //
+    // internal error: assertion failed: find_placeholder_arg_for_pack: symbol
+    // not found (scope_stk.c, line 11248 in find_placeholder_arg_for_pack)
+#if not defined(__INTEL_COMPILER)
+    // Copy
+    Kokkos::RangePolicy<SomeExecutionSpace> rptc;
+    Kokkos::RangePolicy rpdc(rptc);
+    ASSERT_TRUE((std::is_same_v<decltype(rptc), decltype(rpdc)>));
+
+    // Move
+    Kokkos::RangePolicy<SomeExecutionSpace> rptm;
+    Kokkos::RangePolicy rpdm(std::move(rptm));
+    ASSERT_TRUE((std::is_same_v<decltype(rptm), decltype(rpdm)>));
+#endif  // not defined(__INTEL_COMPILER)
+  }
+
   void test_compile_time_deduction_guides() {
     Kokkos::DefaultExecutionSpace des{};
     ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
@@ -330,15 +349,6 @@ class TestRangePolicyConstruction {
     int64_t i64{};
     int32_t i32{};
     Kokkos::ChunkSize cs{0};
-
-    // Copy/move
-    Kokkos::RangePolicy<SomeExecutionSpace> rptc;
-    Kokkos::RangePolicy rpdc(rptc);
-    ASSERT_TRUE((std::is_same_v<decltype(rptc), decltype(rpdc)>));
-
-    Kokkos::RangePolicy<SomeExecutionSpace> rptm;
-    Kokkos::RangePolicy rpdm(std::move(rptm));
-    ASSERT_TRUE((std::is_same_v<decltype(rptm), decltype(rpdm)>));
 
     // RangePolicy()
 
@@ -481,6 +491,7 @@ class TestTeamPolicyConstruction {
  public:
   TestTeamPolicyConstruction() {
     test_compile_time_parameters();
+    test_compile_time_implicit_deduction_guides();
     test_compile_time_deduction_guides();
     test_run_time_parameters();
   }
@@ -712,6 +723,24 @@ class TestTeamPolicyConstruction {
     }
   }
 
+  void test_compile_time_implicit_deduction_guides() {
+    // icpc generates an ICE on implicit deduction guides for copy/move:
+    //
+    // internal error: assertion failed: find_placeholder_arg_for_pack: symbol
+    // not found (scope_stk.c, line 11248 in find_placeholder_arg_for_pack)
+#if not defined(__INTEL_COMPILER)
+    // Copy
+    Kokkos::TeamPolicy<SomeExecutionSpace> ptc;
+    Kokkos::TeamPolicy pdc(ptc);
+    ASSERT_TRUE((std::is_same_v<decltype(pdc), decltype(ptc)>));
+
+    // Move
+    Kokkos::TeamPolicy<SomeExecutionSpace> ptm;
+    Kokkos::TeamPolicy pdm(std::move(ptm));
+    ASSERT_TRUE((std::is_same_v<decltype(pdm), decltype(ptm)>));
+#endif  // not defined(__INTEL_COMPILER)
+  }
+
   void test_compile_time_deduction_guides() {
     Kokkos::DefaultExecutionSpace des{};
     ImplicitlyConvertibleToDefaultExecutionSpace notEs{};
@@ -723,16 +752,6 @@ class TestTeamPolicyConstruction {
         Kokkos::TeamPolicy<>, Kokkos::TeamPolicy<ExecutionSpace>>;
 
     int i{1};
-
-    // Copy/Move
-
-    Kokkos::TeamPolicy<SomeExecutionSpace> ptc;
-    Kokkos::TeamPolicy pdc(ptc);
-    ASSERT_TRUE((std::is_same_v<decltype(pdc), decltype(ptc)>));
-
-    Kokkos::TeamPolicy<SomeExecutionSpace> ptm;
-    Kokkos::TeamPolicy pdm(std::move(ptm));
-    ASSERT_TRUE((std::is_same_v<decltype(pdm), decltype(ptm)>));
 
     // Execution space not provided deduces to TeamPolicy<>
 
