@@ -56,12 +56,6 @@ struct PrefixIncrementFunctor {
   void operator()(ValueType& val) const { ++val; }
 };
 
-template <class ValueType>
-struct PlusTwoIncrementFunctor {
-  KOKKOS_INLINE_FUNCTION
-  void operator()(ValueType& val) const { val += 2; }
-};
-
 template <class DataViewType, class UnaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
