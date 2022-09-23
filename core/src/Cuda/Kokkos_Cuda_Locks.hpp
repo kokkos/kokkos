@@ -54,7 +54,7 @@
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
-#include <desul/atomics/Lock_Array_Cuda.hpp>
+#include <desul/atomics/Lock_Array_CUDA.hpp>
 #endif
 
 namespace Kokkos {
