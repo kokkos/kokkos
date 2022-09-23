@@ -47,6 +47,7 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(_OPENMP)
 
@@ -109,7 +110,8 @@ void OpenMPTargetInternal::impl_finalize() {
     Kokkos::kokkos_free<Kokkos::Experimental::OpenMPTargetSpace>(
         space.m_uniquetoken_ptr);
 }
-void OpenMPTargetInternal::impl_initialize() {
+void OpenMPTargetInternal::impl_initialize(
+    InitializationSettings const& settings) {
   m_is_initialized = true;
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
@@ -120,6 +122,10 @@ void OpenMPTargetInternal::impl_initialize() {
   omp_set_num_teams(512);
 #endif
 #endif
+
+  using Kokkos::Impl::get_gpu;
+  const int device_num = get_gpu(settings);
+  omp_set_default_device(device_num);
 }
 int OpenMPTargetInternal::impl_is_initialized() {
   return m_is_initialized ? 1 : 0;
@@ -164,8 +170,8 @@ void OpenMPTarget::impl_static_fence(const std::string& name) {
       name, Kokkos::Experimental::Impl::openmp_fence_is_static::yes);
 }
 
-void OpenMPTarget::impl_initialize(InitializationSettings const&) {
-  Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize();
+void OpenMPTarget::impl_initialize(InitializationSettings const& settings) {
+  Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize(settings);
 }
 void OpenMPTarget::impl_finalize() {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
