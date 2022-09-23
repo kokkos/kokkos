@@ -176,6 +176,10 @@ struct TestTeamMDParallelFor {
   }
 };
 
+// If KOKKOS_ENABLE_CUDA_LAMBDA is off, extended lambdas used in parallel_for
+// and parallel_reduce in these tests will not compile correctly
+#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+
 template <typename ExecSpace>
 struct TestTeamThreadMDRangeParallelFor : public TestTeamMDParallelFor {
   using TeamType = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -1969,6 +1973,8 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_8D_TeamVectorMDRange<Right>(smallDims);
 }
+
+#endif
 
 }  // namespace TeamMDRange
 }  // namespace Test
