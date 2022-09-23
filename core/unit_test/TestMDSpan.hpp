@@ -96,6 +96,6 @@ TEST(TEST_CATEGORY, mdspan_minimal_functional) {
 #endif
 }
 
-}  // namespace Test
+}  // namespace
 
 #endif
