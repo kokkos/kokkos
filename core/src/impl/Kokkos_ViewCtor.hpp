@@ -267,21 +267,6 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
   return view_ctor_prop;
 }
 
-// Suppress faulty warning from NVCC see:
-// https://github.com/kokkos/kokkos/issues/5426
-#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
-// pragma pop is getting a warning from the underlying GCC
-// for unknown pragma if -pedantic is used
-#ifdef __CUDA_ARCH__
-#pragma push
-#pragma diag_suppress implicit_return_from_non_void_function
-#endif
-#endif
-#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100)
-#define KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
-#pragma warning(push)
-#pragma warning(disable : 1011)
-#endif
 template <typename... P, typename Property, typename... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                               const Property &property,
@@ -301,6 +286,9 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
     return with_properties_if_unset(new_view_ctor_prop, properties...);
   } else
     return with_properties_if_unset(view_ctor_prop, properties...);
+  Kokkos::abort(
+      "Prevents an incorrect warning: missing return statement at end of "
+      "non-void function");
 }
 
 struct ExecutionSpaceTag {};
@@ -336,6 +324,9 @@ KOKKOS_FUNCTION const auto &get_property(
     static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
     return view_ctor_prop;
   }
+  Kokkos::abort(
+      "Prevents an incorrect warning: missing return statement at end of "
+      "non-void function");
 }
 #if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
 // pragma pop is getting a warning from the underlying GCC
