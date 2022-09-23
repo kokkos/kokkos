@@ -112,7 +112,7 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   )
 ENDIF()
 
-IF (KOKKOS_ENABLE_IMPL_MDSPAN)
+IF (Kokkos_ENABLE_IMPL_MDSPAN)
   MESSAGE(STATUS "Experimental mdspan support is enabled")
 
   # Some compilers now include mdspan... we just flag on their version
@@ -121,12 +121,12 @@ IF (KOKKOS_ENABLE_IMPL_MDSPAN)
   check_include_file_cxx(experimental/mdspan KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN)
   check_include_file_cxx(mdspan KOKKOS_COMPILER_SUPPORTS_MDSPAN)
 
-  if (KOKKOS_ENABLE_MDSPAN_EXTERNAL)
+  if (Kokkos_ENABLE_MDSPAN_EXTERNAL)
     MESSAGE(STATUS "Using external mdspan")
     target_link_libraries(kokkoscore PUBLIC std::mdspan)
-  elseif(KOKKOS_COMPILER_SUPPORTS_MDSPAN AND NOT KOKKOS_ENABLE_MDSPAN_INTERNAL)
+  elseif(KOKKOS_COMPILER_SUPPORTS_MDSPAN AND NOT Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
     message(STATUS "Using compiler-supplied mdspan")
-  elseif(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN AND NOT KOKKOS_ENABLE_MDSPAN_INTERNAL)
+  elseif(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN AND NOT Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
     message(STATUS "Using compiler-supplied experimental/mdspan")
   else()
     KOKKOS_LIB_INCLUDE_DIRECTORIES(
