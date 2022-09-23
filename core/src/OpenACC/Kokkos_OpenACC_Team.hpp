@@ -50,10 +50,6 @@
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
-// Below macro is temporarily enabled to avoid issues on existing OpenACC
-// compilers not supporting lambda with parallel loops.
-#define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
-
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
