@@ -148,7 +148,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 }  // namespace Kokkos
 
-#else // KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+#else  // KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -60,9 +60,6 @@ namespace Impl {
 template <typename... Is>
 struct always_true : std::true_type {};
 
-template <typename... Is>
-struct always_false : std::false_type {};
-
 //==============================================================================
 
 #if defined(__cpp_lib_type_identity)
