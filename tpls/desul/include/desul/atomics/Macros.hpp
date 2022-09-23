@@ -76,7 +76,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 
 // FIXME OpenMP Offload differentiate between device and host, but do we need this?
-#if defined(DESUL_HAVE_OPENMP_ATOMICS) || defined(DESUL_HAVE_SYCL_ATOMICS)
+#if defined(DESUL_HAVE_OPENMP_ATOMICS)
 #if 0
 // Base function.
 static constexpr bool desul_impl_omp_on_host() { return true; }
