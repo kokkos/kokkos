@@ -50,11 +50,12 @@ pipeline {
                               make -j8 && ctest --verbose'''
                     }
                 }
-                stage('CUDA-11.6-NVHPC') {
+                stage('CUDA-11.7-NVHPC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/nvhpc:22.7-devel-cuda11.7-ubuntu20.04'
                             label 'nvidia-docker && large_images'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -66,14 +67,12 @@ pipeline {
                         OMP_MAX_ACTIVE_LEVELS = 1
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
-                        NVCC_WRAPPER_DEFAULT_COMPILER = 'nvc++'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               /opt/cmake/bin/cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
-                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
-                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
