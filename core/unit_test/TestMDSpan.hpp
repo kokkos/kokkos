@@ -54,10 +54,8 @@
 #include <mdspan>
 namespace mdspan_ns = std;
 #else
-#if __has_include(<experimental/mdspan>)
 #include <experimental/mdspan>
 namespace mdspan_ns = std::experimental;
-#endif
 #endif
 
 namespace {
@@ -65,7 +63,8 @@ void test_mdspan_minimal_functional() {
   int N = 100;
   Kokkos::View<int*, TEST_EXECSPACE> a("A", N);
   Kokkos::parallel_for(
-      "FillSequence", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N), KOKKOS_LAMBDA(int i) { a(i) = i; });
+      "FillSequence", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+      KOKKOS_LAMBDA(int i) { a(i) = i; });
 
   mdspan_ns::mdspan<int, mdspan_ns::dextents<int, 1>> a_mds(a.data(), N);
   int errors;
@@ -87,13 +86,13 @@ void test_mdspan_minimal_functional() {
 }  // namespace
 #endif
 
-namespace Test {
+namespace {
 
 TEST(TEST_CATEGORY, mdspan_minimal_functional) {
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-  test_mdspan_minimal_functional();
+#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
+  GTEST_SKIP() << "mdspan not enabled";
 #else
-  printf("mdspan not enabled\n");
+  test_mdspan_minimal_functional();
 #endif
 }
 
