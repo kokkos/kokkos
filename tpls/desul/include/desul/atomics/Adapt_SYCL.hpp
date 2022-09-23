@@ -6,12 +6,10 @@ Source: https://github.com/desul/desul
 SPDX-License-Identifier: (BSD-3-Clause)
 */
 
-#ifndef DESUL_ATOMICS_SYCL_CONVERSIONS_HPP_
-#define DESUL_ATOMICS_SYCL_CONVERSIONS_HPP_
-#ifdef DESUL_HAVE_SYCL_ATOMICS
+#ifndef DESUL_ATOMICS_ADAPT_SYCL_HPP_
+#define DESUL_ATOMICS_ADAPT_SYCL_HPP_
 
-// clang-format off
-#include "desul/atomics/Common.hpp"
+#include <desul/atomics/Common.hpp>
 
 // FIXME_SYCL SYCL2020 dictates that <sycl/sycl.hpp> is the header to include
 // but icpx 2022.1.0 and earlier versions only provide <CL/sycl.hpp>
@@ -20,7 +18,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #else
 #include <CL/sycl.hpp>
 #endif
-// clang-format on
 
 namespace desul {
 namespace Impl {
@@ -40,68 +37,76 @@ using sycl_memory_scope = std::conditional_t<extended_namespace,
                                              sycl_sync_and_atomics::memory_scope,
                                              sycl::memory_scope>;
 
+//<editor-fold desc="SYCL memory order">
 template <class MemoryOrder, bool extended_namespace = true>
-struct DesulToSYCLMemoryOrder;
+struct SYCLMemoryOrder;
+
 template <bool extended_namespace>
-struct DesulToSYCLMemoryOrder<MemoryOrderSeqCst, extended_namespace> {
+struct SYCLMemoryOrder<MemoryOrderSeqCst, extended_namespace> {
   static constexpr sycl_memory_order<extended_namespace> value =
       sycl_memory_order<extended_namespace>::seq_cst;
 };
 template <bool extended_namespace>
-struct DesulToSYCLMemoryOrder<MemoryOrderAcquire, extended_namespace> {
+struct SYCLMemoryOrder<MemoryOrderAcquire, extended_namespace> {
   static constexpr sycl_memory_order<extended_namespace> value =
       sycl_memory_order<extended_namespace>::acquire;
 };
 template <bool extended_namespace>
-struct DesulToSYCLMemoryOrder<MemoryOrderRelease, extended_namespace> {
+struct SYCLMemoryOrder<MemoryOrderRelease, extended_namespace> {
   static constexpr sycl_memory_order<extended_namespace> value =
       sycl_memory_order<extended_namespace>::release;
 };
 template <bool extended_namespace>
-struct DesulToSYCLMemoryOrder<MemoryOrderAcqRel, extended_namespace> {
+struct SYCLMemoryOrder<MemoryOrderAcqRel, extended_namespace> {
   static constexpr sycl_memory_order<extended_namespace> value =
       sycl_memory_order<extended_namespace>::acq_rel;
 };
 template <bool extended_namespace>
-struct DesulToSYCLMemoryOrder<MemoryOrderRelaxed, extended_namespace> {
+struct SYCLMemoryOrder<MemoryOrderRelaxed, extended_namespace> {
   static constexpr sycl_memory_order<extended_namespace> value =
       sycl_memory_order<extended_namespace>::relaxed;
 };
+//</editor-fold>
 
+//<editor-fold desc="SYCL memory scope">
 template <class MemoryScope, bool extended_namespace = true>
-struct DesulToSYCLMemoryScope;
+struct SYCLMemoryScope;
+
 template <bool extended_namespace>
-struct DesulToSYCLMemoryScope<MemoryScopeCore, extended_namespace> {
+struct SYCLMemoryScope<MemoryScopeCore, extended_namespace> {
   static constexpr sycl_memory_scope<extended_namespace> value =
       sycl_memory_scope<extended_namespace>::work_group;
 };
+
 template <bool extended_namespace>
-struct DesulToSYCLMemoryScope<MemoryScopeDevice, extended_namespace> {
+struct SYCLMemoryScope<MemoryScopeDevice, extended_namespace> {
   static constexpr sycl_memory_scope<extended_namespace> value =
       sycl_memory_scope<extended_namespace>::device;
 };
+
 template <bool extended_namespace>
-struct DesulToSYCLMemoryScope<MemoryScopeSystem, extended_namespace> {
+struct SYCLMemoryScope<MemoryScopeSystem, extended_namespace> {
   static constexpr sycl_memory_scope<extended_namespace> value =
       sycl_memory_scope<extended_namespace>::system;
 };
+//</editor-fold>
 
 // FIXME_SYCL generic_space isn't available yet for CUDA.
 #ifdef __NVPTX__
 template <class T, class MemoryOrder, class MemoryScope>
 using sycl_atomic_ref = sycl::atomic_ref<T,
-                                         DesulToSYCLMemoryOrder<MemoryOrder>::value,
-                                         DesulToSYCLMemoryScope<MemoryScope>::value,
+                                         SYCLMemoryOrder<MemoryOrder>::value,
+                                         SYCLMemoryScope<MemoryScope>::value,
                                          sycl::access::address_space::global_space>;
 #else
 template <class T, class MemoryOrder, class MemoryScope>
 using sycl_atomic_ref = sycl::atomic_ref<T,
-                                         DesulToSYCLMemoryOrder<MemoryOrder>::value,
-                                         DesulToSYCLMemoryScope<MemoryScope>::value,
+                                         SYCLMemoryOrder<MemoryOrder>::value,
+                                         SYCLMemoryScope<MemoryScope>::value,
                                          sycl::access::address_space::generic_space>;
 #endif
+
 }  // namespace Impl
 }  // namespace desul
 
-#endif
 #endif

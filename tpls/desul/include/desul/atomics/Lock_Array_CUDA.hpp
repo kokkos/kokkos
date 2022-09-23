@@ -19,14 +19,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-#ifdef __CUDA_ARCH__
-#define DESUL_IMPL_BALLOT_MASK(m, x) __ballot_sync(m, x)
-#define DESUL_IMPL_ACTIVEMASK __activemask()
-#else
-#define DESUL_IMPL_BALLOT_MASK(m, x) m == 0 ? 0 : 1
-#define DESUL_IMPL_ACTIVEMASK 0
-#endif
-
 /// \brief This global variable in Host space is the central definition
 ///        of these arrays.
 extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h;

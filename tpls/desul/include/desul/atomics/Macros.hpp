@@ -63,4 +63,61 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_FORWARD_PROGRESS
 #endif
 
+#define DESUL_IMPL_STRIP_PARENS(X) DESUL_IMPL_ESC(DESUL_IMPL_ISH X)
+#define DESUL_IMPL_ISH(...) DESUL_IMPL_ISH __VA_ARGS__
+#define DESUL_IMPL_ESC(...) DESUL_IMPL_ESC_(__VA_ARGS__)
+#define DESUL_IMPL_ESC_(...) DESUL_IMPL_VAN_##__VA_ARGS__
+#define DESUL_IMPL_VAN_DESUL_IMPL_ISH
+
+#if defined(__CUDACC__) && defined(__NVCOMPILER)
+#include <nv/target>
+#define DESUL_IF_ON_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
+#define DESUL_IF_ON_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
+#endif
+
+// FIXME OpenMP Offload differentiate between device and host, but do we need this?
+#if defined(DESUL_HAVE_OPENMP_ATOMICS)
+#if 0
+// Base function.
+static constexpr bool desul_impl_omp_on_host() { return true; }
+
+#pragma omp begin declare variant match(device = {kind(host)})
+static constexpr bool desul_impl_omp_on_host() { return true; }
+#pragma omp end declare variant
+
+#pragma omp begin declare variant match(device = {kind(nohost)})
+static constexpr bool desul_impl_omp_on_host() { return false; }
+#pragma omp end declare variant
+
+#define DESUL_IF_ON_DEVICE(CODE)             \
+  if constexpr (!desul_impl_omp_on_host()) { \
+    DESUL_IMPL_STRIP_PARENS(CODE)            \
+  }
+#define DESUL_IF_ON_HOST(CODE)              \
+  if constexpr (desul_impl_omp_on_host()) { \
+    DESUL_IMPL_STRIP_PARENS(CODE)           \
+  }
+#else
+#define DESUL_IF_ON_DEVICE(CODE) \
+  {}
+#define DESUL_IF_ON_HOST(CODE) \
+  { DESUL_IMPL_STRIP_PARENS(CODE) }
+#endif
+#endif
+
+#if !defined(DESUL_IF_ON_HOST) && !defined(DESUL_IF_ON_DEVICE)
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
+    defined(__SYCL_DEVICE_ONLY__)
+#define DESUL_IF_ON_DEVICE(CODE) \
+  { DESUL_IMPL_STRIP_PARENS(CODE) }
+#define DESUL_IF_ON_HOST(CODE) \
+  {}
+#else
+#define DESUL_IF_ON_DEVICE(CODE) \
+  {}
+#define DESUL_IF_ON_HOST(CODE) \
+  { DESUL_IMPL_STRIP_PARENS(CODE) }
+#endif
+#endif
+
 #endif  // DESUL_ATOMICS_MACROS_HPP_
