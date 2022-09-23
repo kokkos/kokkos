@@ -50,6 +50,10 @@
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
+// Below macro is temporarily enabled to avoid issues on existing OpenACC
+// compilers not supporting lambda with parallel loops.
+#define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -74,9 +78,6 @@ class OpenACCTeamMember {
   int m_league_rank;
   int m_league_size;
   int m_vector_length;
-  int m_vector_lane;
-  int m_shmem_block_index;
-  void* m_glb_scratch;
   void* m_reduce_scratch;
 
  public:
@@ -176,8 +177,7 @@ class OpenACCTeamMember {
         m_league_rank(league_rank),
         m_league_size(league_size),
         m_vector_length(vector_length) {
-    m_team_rank   = 0;
-    m_vector_lane = 0;
+    m_team_rank = 0;
   }
 
   static int team_reduce_size() { return TEAM_REDUCE_SIZE; }
