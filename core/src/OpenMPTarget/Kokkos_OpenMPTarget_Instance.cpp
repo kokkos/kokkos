@@ -110,8 +110,7 @@ void OpenMPTargetInternal::impl_finalize() {
     Kokkos::kokkos_free<Kokkos::Experimental::OpenMPTargetSpace>(
         space.m_uniquetoken_ptr);
 }
-void OpenMPTargetInternal::impl_initialize(
-    InitializationSettings const& settings) {
+void OpenMPTargetInternal::impl_initialize() {
   m_is_initialized = true;
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
@@ -167,11 +166,11 @@ void OpenMPTarget::impl_static_fence(const std::string& name) {
 }
 
 void OpenMPTarget::impl_initialize(InitializationSettings const& settings) {
-  Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize(settings);
-
   using Kokkos::Impl::get_gpu;
   const int device_num = get_gpu(settings);
   omp_set_default_device(device_num);
+
+  Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize();
 }
 void OpenMPTarget::impl_finalize() {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
