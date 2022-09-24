@@ -74,7 +74,6 @@ class OpenACCTeamMember {
   int m_league_rank;
   int m_league_size;
   int m_vector_length;
-  void* m_reduce_scratch;
 
  public:
   KOKKOS_FUNCTION
@@ -104,7 +103,6 @@ class OpenACCTeamMember {
   }
   KOKKOS_FUNCTION int vector_length() const { return m_vector_length; }
   KOKKOS_FUNCTION int team_size() const { return m_team_size; }
-  KOKKOS_FUNCTION void* impl_reduce_scratch() const { return m_reduce_scratch; }
 
   // FIXME_OPENACC: OpenACC does not provide any explicit barrier constructs
   // for device kernels.
