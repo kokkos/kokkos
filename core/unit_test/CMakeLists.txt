@@ -329,6 +329,7 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
   endif()
 endforeach()
 
+
 if(Kokkos_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM OpenMPTarget_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexfloat.cpp
@@ -659,7 +660,8 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCuda_TeamScratchStreams.cpp
       ${Cuda_SOURCES3}
       cuda/TestCuda_Spaces.cpp
-  )
+      ${Cuda_SOURCES_SHAREDSPACE}
+    )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_CudaTimingBased
@@ -799,6 +801,31 @@ if(Kokkos_ENABLE_SYCL)
   )
 endif()
 
+SET(DEFAULT_DEVICE_SOURCES
+  UnitTestMainInit.cpp
+  TestInitializationSettings.cpp
+  TestParseCmdLineArgsAndEnvVars.cpp
+  TestSharedSpace.cpp
+  default/TestDefaultDeviceType.cpp
+  default/TestDefaultDeviceType_a1.cpp
+  default/TestDefaultDeviceType_b1.cpp
+  default/TestDefaultDeviceType_c1.cpp
+  default/TestDefaultDeviceType_a2.cpp
+  default/TestDefaultDeviceType_b2.cpp
+  default/TestDefaultDeviceType_c2.cpp
+  default/TestDefaultDeviceType_a3.cpp
+  default/TestDefaultDeviceType_b3.cpp
+  default/TestDefaultDeviceType_c3.cpp
+  default/TestDefaultDeviceType_d.cpp
+  default/TestDefaultDeviceTypeResize.cpp
+  default/TestDefaultDeviceTypeViewAPI.cpp
+)
+# FIXME_OPENMPTARGET and FIXME_OPENACC do not provide a MemorySpace that can be accessed from all ExecSpaces
+# FIXME_SYCL clock_tic does not give the correct timings for cloc_tic
+if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET) OR (KOKKOS_ENABLE_SYCL))
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
+endif()
+
 # FIXME_OPENMPTARGET, FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(DEFAULT_DEVICE_SOURCES
@@ -806,25 +833,6 @@ if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
     TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
     default/TestDefaultDeviceType.cpp
-  )
-else()
-  SET(DEFAULT_DEVICE_SOURCES
-    UnitTestMainInit.cpp
-    TestInitializationSettings.cpp
-    TestParseCmdLineArgsAndEnvVars.cpp
-    default/TestDefaultDeviceType.cpp
-    default/TestDefaultDeviceType_a1.cpp
-    default/TestDefaultDeviceType_b1.cpp
-    default/TestDefaultDeviceType_c1.cpp
-    default/TestDefaultDeviceType_a2.cpp
-    default/TestDefaultDeviceType_b2.cpp
-    default/TestDefaultDeviceType_c2.cpp
-    default/TestDefaultDeviceType_a3.cpp
-    default/TestDefaultDeviceType_b3.cpp
-    default/TestDefaultDeviceType_c3.cpp
-    default/TestDefaultDeviceType_d.cpp
-    default/TestDefaultDeviceTypeResize.cpp
-    default/TestDefaultDeviceTypeViewAPI.cpp
   )
 endif()
 
