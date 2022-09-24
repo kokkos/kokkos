@@ -121,8 +121,6 @@ class OpenMPTarget {
     return m_space_instance;
   }
 
-  inline static int detect_device_count() { return omp_get_num_devices(); }
-
   OpenMPTarget();
   uint32_t impl_instance_id() const noexcept;
 
