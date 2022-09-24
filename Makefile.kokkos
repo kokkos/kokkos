@@ -506,7 +506,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_OPENACC")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
