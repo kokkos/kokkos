@@ -122,10 +122,6 @@ void OpenMPTargetInternal::impl_initialize(
   omp_set_num_teams(512);
 #endif
 #endif
-
-  using Kokkos::Impl::get_gpu;
-  const int device_num = get_gpu(settings);
-  omp_set_default_device(device_num);
 }
 int OpenMPTargetInternal::impl_is_initialized() {
   return m_is_initialized ? 1 : 0;
@@ -172,6 +168,10 @@ void OpenMPTarget::impl_static_fence(const std::string& name) {
 
 void OpenMPTarget::impl_initialize(InitializationSettings const& settings) {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize(settings);
+
+  using Kokkos::Impl::get_gpu;
+  const int device_num = get_gpu(settings);
+  omp_set_default_device(device_num);
 }
 void OpenMPTarget::impl_finalize() {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
