@@ -30,6 +30,9 @@ IF(NOT GTest_FOUND)  # fallback to internal gtest
   ENDIF()
 ENDIF()
 
+find_package(Threads REQUIRED)
+target_link_libraries(kokkos_gtest Threads::Threads)
+
 #
 # Define Incremental Testing Feature Levels
 # Define Device name mappings (i.e. what comes after Kokkos:: for the ExecSpace)
@@ -130,6 +133,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDRange_a
         MDRange_b
         MDRange_c
+        MultiThreadsRange
+        MultiThreadsMDRange
+        MultiThreadsTeam
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         QuadPrecisionMath
@@ -336,6 +342,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MultiThreadsTeam.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
@@ -560,6 +567,14 @@ if(Kokkos_ENABLE_SERIAL)
 endif()
 
 if(Kokkos_ENABLE_THREADS)
+  # FIXME_THREAD doesn't work because kernels can only be launch from the master
+  # thread
+  list(REMOVE_ITEM Threads_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/threads/TestThreads_MultiThreadsRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/threads/TestThreads_MultiThreadsMDRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/threads/TestThreads_MultiThreadsTeam.cpp
+  )
+
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES ${Threads_SOURCES}
@@ -568,6 +583,14 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if (Kokkos_ENABLE_OPENMP)
+  # FIXME_OPENMP doesn't work because kernels can only be launch from the master
+  # thread
+  list(REMOVE_ITEM OpenMP_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_MultiThreadsRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_MultiThreadsMDRange.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_MultiThreadsTeam.cpp
+  )
+
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
     openmp/TestOpenMP_PartitionMaster.cpp
