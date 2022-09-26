@@ -46,93 +46,44 @@
 #include <gtest/gtest.h>
 
 namespace {
+
+struct ReductionFunctor {
+  Kokkos::View<int*> d;
+
+  KOKKOS_FUNCTION void operator()(int i, int& sum) const { sum += d(i); }
+};
+
 // The purpose of this test is to mimic Legion's use case of initializing and
 // finalizing individual backends
 TEST(initialization, legion_initialization) {
   Kokkos::InitializationSettings kokkos_init_settings;
-  Kokkos::Impl::pre_initialize(kokkos_init_settings);
-#ifdef KOKKOS_ENABLE_HPX
-  EXPECT_FALSE(Kokkos::Experimental::HPX::impl_is_initialized());
-  Kokkos::Experimental::HPX::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Experimental::HPX::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-  EXPECT_FALSE(Kokkos::Threads::impl_is_initialized());
-  Kokkos::Threads::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Threads::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-  EXPECT_FALSE(Kokkos::OpenMP::impl_is_initialized());
-  Kokkos::OpenMP::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::OpenMP::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_SERIAL
-  EXPECT_FALSE(Kokkos::Serial::impl_is_initialized());
-  Kokkos::Serial::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Serial::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-  EXPECT_FALSE(Kokkos::Experimental::SYCL::impl_is_initialized());
-  Kokkos::Experimental::SYCL::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Experimental::SYCL::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  EXPECT_FALSE(Kokkos::Experimental::OpenMPTarget::impl_is_initialized());
-  Kokkos::Experimental::OpenMPTarget::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Experimental::OpenMPTarget::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-  EXPECT_FALSE(Kokkos::HIP::impl_is_initialized());
-  Kokkos::HIP::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::HIP::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-  EXPECT_FALSE(Kokkos::Cuda::impl_is_initialized());
-  Kokkos::Cuda::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Cuda::impl_is_initialized());
-#endif
-  EXPECT_FALSE(Kokkos::is_initialized());
-  Kokkos::Impl::post_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::is_initialized());
 
-#ifdef KOKKOS_ENABLE_HPX
-  Kokkos::Experimental::HPX::impl_finalize();
-  EXPECT_FALSE(Kokkos::Experimental::HPX::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-  Kokkos::Threads::impl_finalize();
-  EXPECT_FALSE(Kokkos::Threads::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-  Kokkos::OpenMP::impl_finalize();
-  EXPECT_FALSE(Kokkos::OpenMP::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_SERIAL
-  Kokkos::Serial::impl_finalize();
-  EXPECT_FALSE(Kokkos::Serial::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-  Kokkos::Experimental::SYCL::impl_finalize();
-  EXPECT_FALSE(Kokkos::Experimental::SYCL::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  Kokkos::Experimental::OpenMPTarget::impl_finalize();
-  EXPECT_FALSE(Kokkos::Experimental::OpenMPTarget::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-  Kokkos::HIP::impl_finalize();
-  EXPECT_FALSE(Kokkos::HIP::impl_is_initialized());
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-  Kokkos::Cuda::impl_finalize();
-  EXPECT_FALSE(Kokkos::Cuda::impl_is_initialized());
-#endif
+  Kokkos::Impl::pre_initialize(kokkos_init_settings);
+
+  // We need to have a host execution space initialized first.
+  Kokkos::HostSpace::execution_space::impl_initialize(kokkos_init_settings);
+
+  if (!std::is_same_v<Kokkos::DefaultExecutionSpace,
+                      Kokkos::HostSpace::execution_space>)
+    Kokkos::DefaultExecutionSpace::impl_initialize(kokkos_init_settings);
+
+  Kokkos::Impl::post_initialize(kokkos_init_settings);
+
+  {
+    Kokkos::View<int*> d("d", 1000);
+    Kokkos::deep_copy(d, 1);
+    int result;
+    Kokkos::parallel_reduce("TestRed", d.extent(0), ReductionFunctor{d},
+                            result);
+    EXPECT_EQ(result, d.extent(0));
+  }
+
+  Kokkos::DefaultExecutionSpace::impl_finalize();
   Kokkos::finalize();
-  EXPECT_FALSE(Kokkos::is_initialized());
 }
 }  // namespace
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
