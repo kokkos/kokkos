@@ -125,10 +125,12 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
-  const ValueType lowerBound{5}, upperBound{523};
+  constexpr ValueType lowerBound = 5;
+  constexpr ValueType upperBound = 523;
+  const auto bounds              = make_bounds(lowerBound, upperBound);
+
   auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
-      LayoutTag{}, numTeams, numCols, Kokkos::pair{lowerBound, upperBound},
-      "dataView");
+      LayoutTag{}, numTeams, numCols, bounds, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel

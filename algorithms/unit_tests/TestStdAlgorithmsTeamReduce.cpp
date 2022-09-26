@@ -149,9 +149,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
   // values from an arbitrary range.
-  constexpr auto lowerBound = ValueType{5};
-  constexpr auto upperBound = ValueType{523};
-  Kokkos::pair bounds{lowerBound, upperBound};
+  constexpr ValueType lowerBound = 5;
+  constexpr ValueType upperBound = 523;
+  const auto bounds              = make_bounds(lowerBound, upperBound);
+
   auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
       LayoutTag{}, numTeams, numCols, bounds, "dataView");
 
@@ -252,6 +253,10 @@ TEST(std_algorithms_reduce_team_test, test) {
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
+
+// TODO (STRZ) - jak poprawnie użyć tego defina?
+// #ifndef KOKKOS_ENABLE_OPENMPTARGET
+// zobacz - algorithms/unit_tests/TestStdAlgorithmsTeamIsSorted.cpp
 
 }  // namespace TeamReduce
 }  // namespace stdalgos

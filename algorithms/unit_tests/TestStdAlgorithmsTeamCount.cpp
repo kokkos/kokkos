@@ -108,11 +108,12 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
 
   // Boundaries choosen so that every drawn number is at least once in the given
   // row
-  const ValueType lowerBound          = numCols / 4;
-  const ValueType upperBound          = 1 + numCols * 3 / 4;
+  const ValueType lowerBound = numCols / 4;
+  const ValueType upperBound = 1 + numCols * 3 / 4;
+  const auto bounds          = make_bounds(lowerBound, upperBound);
+
   auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
-      LayoutTag{}, numTeams, numCols, Kokkos::pair{lowerBound, upperBound},
-      "dataView");
+      LayoutTag{}, numTeams, numCols, bounds, "dataView");
 
   // If searched_value_exist == true, we want to ensure that count result is >
   // 0, so we randomly pick a value to look for from a given row.

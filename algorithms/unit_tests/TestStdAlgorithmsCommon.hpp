@@ -177,6 +177,11 @@ auto create_deep_copyable_compatible_clone(ViewType view) {
 // others
 //
 
+template <class ValueType1, class ValueType2>
+auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
+  return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
+}
+
 template <class LayoutTagType, class ValueType>
 auto create_random_view_and_host_clone(
     LayoutTagType LayoutTag, std::size_t numRows, std::size_t numCols,
