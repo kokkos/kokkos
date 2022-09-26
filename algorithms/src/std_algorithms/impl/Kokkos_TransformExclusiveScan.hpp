@@ -85,10 +85,13 @@ struct TransformExclusiveScanFunctor {
   }
 };
 
+//
+// exespace impl
+//
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
-OutputIteratorType transform_exclusive_scan_impl(
+OutputIteratorType transform_exclusive_scan_exespace_impl(
     const std::string& label, const ExecutionSpace& ex,
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop,
@@ -116,6 +119,61 @@ OutputIteratorType transform_exclusive_scan_impl(
 
   // return
   return first_dest + num_elements;
+}
+
+//
+// team impl
+//
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class ValueType, class BinaryOpType,
+          class UnaryOpType>
+KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan_team_impl(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest,
+    ValueType init_value, BinaryOpType bop, UnaryOpType uop) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
+
+#if defined(KOKKOS_ENABLE_CUDA)
+
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
+  using func_type =
+      TransformExclusiveScanFunctor<TeamHandleType, index_type, ValueType,
+                                    InputIteratorType, OutputIteratorType,
+                                    BinaryOpType, UnaryOpType>;
+
+  // run
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+  ::Kokkos::parallel_scan(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      func_type(init_value, first_from, first_dest, bop, uop));
+  teamHandle.team_barrier();
+
+  // return
+  return first_dest + num_elements;
+
+#else
+
+  std::size_t count = 0;
+  if (teamHandle.team_rank() == 0) {
+    while (first_from != last_from) {
+      auto val   = init_value;
+      init_value = bop(init_value, uop(*first_from));
+      ++first_from;
+      first_dest[count++] = val;
+    }
+  }
+
+  teamHandle.team_broadcast(count, 0);
+  return first_dest + count;
+
+#endif
 }
 
 }  // namespace Impl
