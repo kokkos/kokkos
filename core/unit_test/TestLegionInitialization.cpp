@@ -82,9 +82,9 @@ TEST(initialization, legion_initialization) {
   EXPECT_TRUE(Kokkos::Experimental::OpenMPTarget::impl_is_initialized());
 #endif
 #ifdef KOKKOS_ENABLE_HIP
-  EXPECT_FALSE(Kokkos::Experimental::HIP::impl_is_initialized());
-  Kokkos::Experimental::HIP::impl_initialize(kokkos_init_settings);
-  EXPECT_TRUE(Kokkos::Experimental::HIP::impl_is_initialized());
+  EXPECT_FALSE(Kokkos::HIP::impl_is_initialized());
+  Kokkos::HIP::impl_initialize(kokkos_init_settings);
+  EXPECT_TRUE(Kokkos::HIP::impl_is_initialized());
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
   EXPECT_FALSE(Kokkos::Cuda::impl_is_initialized());
@@ -120,8 +120,8 @@ TEST(initialization, legion_initialization) {
   EXPECT_FALSE(Kokkos::Experimental::OpenMPTarget::impl_is_initialized());
 #endif
 #ifdef KOKKOS_ENABLE_HIP
-  Kokkos::Experimental::HIP::impl_finalize();
-  EXPECT_FALSE(Kokkos::Experimental::HIP::impl_is_initialized());
+  Kokkos::HIP::impl_finalize();
+  EXPECT_FALSE(Kokkos::HIP::impl_is_initialized());
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
   Kokkos::Cuda::impl_finalize();
