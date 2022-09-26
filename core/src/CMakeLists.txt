@@ -9,7 +9,6 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   )
 ENDIF()
 
-
 INSTALL (DIRECTORY
   "${CMAKE_CURRENT_SOURCE_DIR}/"
   DESTINATION ${KOKKOS_HEADER_DIR}
@@ -111,6 +110,42 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
+ENDIF()
+
+IF (Kokkos_ENABLE_IMPL_MDSPAN)
+  MESSAGE(STATUS "Experimental mdspan support is enabled")
+
+  # Some compilers now include mdspan... we just flag on their version
+  # for now until we can get some compiler detection support
+  include(CheckIncludeFileCXX)
+  check_include_file_cxx(experimental/mdspan KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN)
+  check_include_file_cxx(mdspan KOKKOS_COMPILER_SUPPORTS_MDSPAN)
+
+  if (Kokkos_ENABLE_MDSPAN_EXTERNAL)
+    MESSAGE(STATUS "Using external mdspan")
+    target_link_libraries(kokkoscore PUBLIC std::mdspan)
+  elseif(KOKKOS_COMPILER_SUPPORTS_MDSPAN AND NOT Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
+    message(STATUS "Using compiler-supplied mdspan")
+  elseif(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN AND NOT Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
+    message(STATUS "Using compiler-supplied experimental/mdspan")
+  else()
+    KOKKOS_LIB_INCLUDE_DIRECTORIES(
+      kokkoscore
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include
+    )
+
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdspan)
+
+    INSTALL (DIRECTORY
+      "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/"
+      DESTINATION ${KOKKOS_HEADER_DIR}
+      FILES_MATCHING
+      PATTERN "mdspan"
+      PATTERN "*.hpp"
+    )
+    MESSAGE(STATUS "Using internal mdspan directory ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include")
+  endif()
 ENDIF()
 
 KOKKOS_LINK_TPL(kokkoscore PUBLIC HWLOC)
