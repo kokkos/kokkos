@@ -222,7 +222,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Lambda& lambda) {
 #pragma acc loop vector
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++){
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i);
   }
 }
