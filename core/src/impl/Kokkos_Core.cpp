@@ -166,6 +166,8 @@ int get_device_count() {
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(
       Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return omp_get_num_devices();
 #else
   Kokkos::abort("implementation bug");
   return -1;
