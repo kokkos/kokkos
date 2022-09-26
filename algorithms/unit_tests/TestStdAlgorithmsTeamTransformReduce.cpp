@@ -44,6 +44,8 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
+
 namespace Test {
 namespace stdalgos {
 namespace TeamTransformReduce {
@@ -313,3 +315,5 @@ TEST(std_algorithms_transform_reduce_team_test, test) {
 }  // namespace TeamTransformReduce
 }  // namespace stdalgos
 }  // namespace Test
+
+#endif

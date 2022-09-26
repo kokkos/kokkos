@@ -44,6 +44,8 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 
+#if not defined KOKKOS_ENABLE_OPENMPTARGET
+
 namespace Test {
 namespace stdalgos {
 namespace TeamReduce {
@@ -255,10 +257,8 @@ TEST(std_algorithms_reduce_team_test, test) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-// TODO (STRZ) - jak poprawnie użyć tego defina?
-// #ifndef KOKKOS_ENABLE_OPENMPTARGET
-// zobacz - algorithms/unit_tests/TestStdAlgorithmsTeamIsSorted.cpp
-
 }  // namespace TeamReduce
 }  // namespace stdalgos
 }  // namespace Test
+
+#endif
