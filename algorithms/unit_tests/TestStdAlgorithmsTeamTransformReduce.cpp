@@ -247,8 +247,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     switch (apiId) {
       case 0:
       case 1: {
-        const auto result_h = resultsView_h(i);
-        const auto result   = std::transform_reduce(
+        const auto result = std::transform_reduce(
             firstDataRowBegin, firstDataRowEnd, secondDataRowBegin, initVal);
 
         if constexpr (std::is_floating_point_v<ValueType>) {
