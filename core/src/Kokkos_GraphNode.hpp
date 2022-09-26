@@ -75,13 +75,10 @@ class GraphNodeRef {
   // Note: because of these assertions, instantiating this class template is not
   //       intended to be SFINAE-safe, so do validation before you instantiate.
 
-// WORKAROUND Could not get it to compile with IBM XL V16.1.1
-#ifndef KOKKOS_COMPILER_IBM
   static_assert(
       std::is_same<Predecessor, TypeErasedTag>::value ||
           Kokkos::Impl::is_specialization_of<Predecessor, GraphNodeRef>::value,
       "Invalid predecessor template parameter given to GraphNodeRef");
-#endif
 
   static_assert(
       Kokkos::is_execution_space<ExecutionSpace>::value,

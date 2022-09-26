@@ -42,36 +42,58 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_PHYSICAL_LAYOUT_HPP
-#define KOKKOS_PHYSICAL_LAYOUT_HPP
+#ifndef KOKKOS_CORE_PERFTEST_BENCHMARK_CONTEXT_HPP
+#define KOKKOS_CORE_PERFTEST_BENCHMARK_CONTEXT_HPP
 
-#include <Kokkos_View.hpp>
+#include <string>
 
-namespace Kokkos {
-namespace Impl {
+#include <benchmark/benchmark.h>
 
-struct PhysicalLayout {
-  enum LayoutType { Left, Right, Scalar, Error };
-  LayoutType layout_type;
-  int rank;
-  long long int stride[9];  // distance between two neighboring elements in a
-                            // given dimension
+#include <Kokkos_Core.hpp>
 
-  template <class T, class L, class D, class M>
-  PhysicalLayout(const View<T, L, D, M>& view)
-      : layout_type(
-            is_same<typename View<T, L, D, M>::array_layout, LayoutLeft>::value
-                ? Left
-                : (is_same<typename View<T, L, D, M>::array_layout,
-                           LayoutRight>::value
-                       ? Right
-                       : Error)),
-        rank(view.Rank) {
-    for (int i = 0; i < 9; i++) stride[i] = 0;
-    view.stride(stride);
+namespace KokkosBenchmark {
+
+/// \brief Remove unwanted spaces and colon signs from input string. In case of
+/// invalid input it will return an empty string.
+std::string remove_unwanted_characters(std::string str) {
+  auto from = str.find_first_not_of(" :");
+  auto to   = str.find_last_not_of(" :");
+
+  if (from == std::string::npos || to == std::string::npos) {
+    return "";
   }
-};
 
-}  // namespace Impl
-}  // namespace Kokkos
+  // return extracted part of string without unwanted spaces and colon signs
+  return str.substr(from, to + 1);
+}
+
+/// \brief Extract all key:value pairs from kokkos configuration and add it to
+/// the benchmark context
+void add_kokkos_configuration(bool verbose) {
+  std::ostringstream msg;
+  Kokkos::print_configuration(msg, verbose);
+
+  // Iterate over lines returned from kokkos and extract key:value pairs
+  std::stringstream ss{msg.str()};
+  for (std::string line; std::getline(ss, line, '\n');) {
+    auto found = line.find_first_of(':');
+    if (found != std::string::npos) {
+      auto val = remove_unwanted_characters(line.substr(found + 1));
+      // Ignore line without value, for example a category name
+      if (!val.empty()) {
+        benchmark::AddCustomContext(
+            remove_unwanted_characters(line.substr(0, found)), val);
+      }
+    }
+  }
+}
+
+/// \brief Gather all context information and add it to benchmark context data
+void add_benchmark_context(bool verbose = false) {
+  // Add Kokkos configuration to benchmark context data
+  add_kokkos_configuration(verbose);
+}
+
+}  // namespace KokkosBenchmark
+
 #endif

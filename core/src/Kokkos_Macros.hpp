@@ -61,6 +61,26 @@
  *  KOKKOS_ENABLE_CUDA_UVM            Use CUDA UVM for Cuda memory space.
  */
 
+#define KOKKOS_VERSION_LESS(MAJOR, MINOR, PATCH) \
+  (KOKKOS_VERSION < ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+#define KOKKOS_VERSION_LESS_EQUAL(MAJOR, MINOR, PATCH) \
+  (KOKKOS_VERSION <= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+#define KOKKOS_VERSION_GREATER(MAJOR, MINOR, PATCH) \
+  (KOKKOS_VERSION > ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+#define KOKKOS_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
+  (KOKKOS_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+#define KOKKOS_VERSION_EQUAL(MAJOR, MINOR, PATCH) \
+  (KOKKOS_VERSION == ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+#if !KOKKOS_VERSION_EQUAL(KOKKOS_VERSION_MAJOR, KOKKOS_VERSION_MINOR, \
+                          KOKKOS_VERSION_PATCH)
+#error implementation bug
+#endif
+
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
 #include <KokkosCore_config.h>
 #endif
@@ -73,7 +93,6 @@
  *  KOKKOS_COMPILER_NVCC
  *  KOKKOS_COMPILER_GNU
  *  KOKKOS_COMPILER_INTEL
- *  KOKKOS_COMPILER_IBM
  *  KOKKOS_COMPILER_CRAYC
  *  KOKKOS_COMPILER_APPLECC
  *  KOKKOS_COMPILER_CLANG
@@ -117,7 +136,11 @@
 // Code is parsed and separated into host and device code.
 // Host code is compiled again with another compiler.
 // Device code is compile to 'ptx'.
-#define KOKKOS_COMPILER_NVCC __NVCC__
+// NOTE: There is no __CUDACC_VER_PATCH__ officially, its __CUDACC_VER_BUILD__
+// which does have more than one digit (potentially undefined number of them).
+// This macro definition is in line with our other compiler defs
+#define KOKKOS_COMPILER_NVCC \
+  __CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10
 #endif  // #if defined( __NVCC__ )
 
 #if !defined(KOKKOS_LAMBDA)
@@ -149,21 +172,11 @@
 #define KOKKOS_COMPILER_CRAYC _CRAYC
 #endif
 
-#if defined(__IBMCPP__)
-// IBM C++
-#define KOKKOS_COMPILER_IBM __IBMCPP__
-#elif defined(__IBMC__)
-#define KOKKOS_COMPILER_IBM __IBMC__
-#elif defined(__ibmxl_vrm__)  // xlclang++
-#define KOKKOS_COMPILER_IBM __ibmxl_vrm__
-#endif
-
 #if defined(__APPLE_CC__)
 #define KOKKOS_COMPILER_APPLECC __APPLE_CC__
 #endif
 
-#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL) && \
-    !defined(KOKKOS_COMPILER_IBM)
+#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL)
 #define KOKKOS_COMPILER_CLANG \
   __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
 #endif
@@ -267,20 +280,6 @@
 #endif
 
 //----------------------------------------------------------------------------
-// IBM Compiler macros
-
-#if defined(KOKKOS_COMPILER_IBM)
-#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
-//#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
-//#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
-//#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-
-#if !defined(KOKKOS_ENABLE_ASM)
-#define KOKKOS_ENABLE_ASM 1
-#endif
-#endif
-
-//----------------------------------------------------------------------------
 // CLANG compiler macros
 
 #if defined(KOKKOS_COMPILER_CLANG)
@@ -374,11 +373,11 @@
 #endif
 
 #if !defined(KOKKOS_INLINE_FUNCTION_DELETED)
-#define KOKKOS_INLINE_FUNCTION_DELETED inline
+#define KOKKOS_INLINE_FUNCTION_DELETED
 #endif
 
 #if !defined(KOKKOS_DEFAULTED_FUNCTION)
-#define KOKKOS_DEFAULTED_FUNCTION inline
+#define KOKKOS_DEFAULTED_FUNCTION
 #endif
 
 #if !defined(KOKKOS_IMPL_HOST_FUNCTION)
@@ -637,7 +636,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
-    !defined(_WIN32)
+    !defined(_WIN32) && !defined(__ANDROID__)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif

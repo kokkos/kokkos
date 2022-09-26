@@ -157,7 +157,6 @@ KOKKOS_INTERNAL_OS_DARWIN      := $(call kokkos_has_string,$(KOKKOS_OS),Darwin)
 # Check compiler.
 KOKKOS_CXX_VERSION                   := $(strip $(shell $(CXX) --version       2>&1))
 KOKKOS_INTERNAL_COMPILER_INTEL       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Intel Corporation)
-KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2>&1 | grep -c XL))
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep -c "CC-"))
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell echo "$(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version 2>&1 | grep -c nvcc)>0" | bc))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),clang)
@@ -182,9 +181,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 2)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
-endif
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 2)
-  KOKKOS_INTERNAL_COMPILER_XL = 1
 endif
 
 # Apple Clang passes both clang and apple clang tests, so turn off clang.
@@ -229,8 +225,6 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
     KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
   else ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
     KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
-  else ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-    KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
   else ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
     # TODO check if cray accepts GNU style warnings
     KOKKOS_INTERNAL_COMPILER_WARNINGS =
@@ -255,8 +249,6 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp=libomp
-  else ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-    KOKKOS_INTERNAL_OPENMP_FLAG := -qsmp=omp
   else ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
     # OpenMP is turned on by default in Cray compiler environment.
     KOKKOS_INTERNAL_OPENMP_FLAG :=
@@ -266,9 +258,7 @@ else
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
   endif
 endif
-ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-  KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_IBM_XL_OMP45_WORKAROUND -qsmp=omp -qoffload -qnoeh
-else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
   #KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -fopenmp-implicit-declare-target -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
   KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_WORKAROUND_OPENMPTARGET_CLANG -fopenmp -fopenmp=libomp -Wno-openmp-mapping
   KOKKOS_INTERNAL_OPENMPTARGET_LIB := -lomptarget
@@ -466,13 +456,15 @@ tmp := $(call kokkos_append_header,'$H''endif')
 
 tmp := $(call kokkos_append_header,"")
 tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION $(KOKKOS_VERSION)")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION_MAJOR $(KOKKOS_VERSION_MAJOR)")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION_MINOR $(KOKKOS_VERSION_MINOR)")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_VERSION_PATCH $(KOKKOS_VERSION_PATCH)")
 tmp := $(call kokkos_append_header,"")
 
 tmp := $(call kokkos_append_header,"/* Execution Spaces */")
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_COMPILER_CUDA_VERSION $(KOKKOS_INTERNAL_COMPILER_NVCC_VERSION)")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
@@ -824,7 +816,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_POWER7), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_POWER7")
 
-  # Assume that this is a really a GNU compiler or it could be XL on P8.
+  # Assume that this is a really a GNU compiler.
   KOKKOS_CXXFLAGS += -mcpu=power7 -mtune=power7
   KOKKOS_LDFLAGS  += -mcpu=power7 -mtune=power7
 endif

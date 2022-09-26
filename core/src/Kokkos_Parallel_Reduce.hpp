@@ -50,7 +50,7 @@ static_assert(false,
 #ifndef KOKKOS_PARALLEL_REDUCE_HPP
 #define KOKKOS_PARALLEL_REDUCE_HPP
 
-#include <Kokkos_NumericTraits.hpp>
+#include <Kokkos_ReductionIdentity.hpp>
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>

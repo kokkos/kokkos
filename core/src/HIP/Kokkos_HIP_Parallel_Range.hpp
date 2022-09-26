@@ -172,9 +172,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const bool m_result_ptr_host_accessible;
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
-  // Only let one ParallelReduce/Scan modify the shared memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_shared_memory_lock;
 
   static bool constexpr UseShflReduction =
       static_cast<bool>(Analysis::StaticValueSize);
@@ -401,10 +398,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_host_accessible(
             MemorySpaceAccess<Kokkos::HostSpace,
-                              typename ViewType::memory_space>::accessible),
-        m_shared_memory_lock(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_mutexSharedMemory) {}
+                              typename ViewType::memory_space>::accessible) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -418,10 +412,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr_host_accessible(
             MemorySpaceAccess<Kokkos::HostSpace,
                               typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_shared_memory_lock(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_mutexSharedMemory) {}
+                                  memory_space>::accessible) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -439,6 +430,7 @@ class ParallelScanHIPBase {
                                                  Policy, FunctorType>;
 
  public:
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
@@ -454,13 +446,12 @@ class ParallelScanHIPBase {
 
   const FunctorType m_functor;
   const Policy m_policy;
+  const pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
   size_type m_final          = false;
   int m_grid_x               = 0;
-  // Only let one ParallelReduce/Scan modify the shared memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_shared_memory_lock;
 
  private:
   template <class TagType>
@@ -593,6 +584,9 @@ class ParallelScanHIPBase {
                 reinterpret_cast<pointer_type>(shared_prefix)),
             true);
       }
+      if (iwork + 1 == m_policy.end() && m_policy.end() == range.end() &&
+          m_result_ptr_device_accessible)
+        *m_result_ptr = *reinterpret_cast<pointer_type>(shared_prefix);
     }
   }
 
@@ -607,22 +601,12 @@ class ParallelScanHIPBase {
     }
   }
 
-  // Determine block size constrained by shared memory:
-  virtual inline unsigned local_block_size(const FunctorType& f) = 0;
-
-  inline void impl_execute() {
+  inline void impl_execute(int block_size) {
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       // FIXME_HIP we cannot choose it larger for large work sizes to work
       // correctly, the unit tests fail with wrong results
       const int gridMaxComputeCapability_2x = 0x01fff;
-
-      const int block_size = static_cast<int>(local_block_size(m_functor));
-      if (block_size == 0) {
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
-                        "valid execution configuration."));
-      }
 
       const int grid_max =
           std::min(block_size * block_size, gridMaxComputeCapability_2x);
@@ -663,12 +647,13 @@ class ParallelScanHIPBase {
     }
   }
 
-  ParallelScanHIPBase(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelScanHIPBase(const FunctorType& arg_functor, const Policy& arg_policy,
+                      pointer_type arg_result_ptr,
+                      bool arg_result_ptr_device_accessible)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_shared_memory_lock(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_mutexSharedMemory) {}
+        m_result_ptr(arg_result_ptr),
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -678,11 +663,20 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();
 
-  inline void execute() { Base::impl_execute(); }
+  inline void execute() {
+    const int block_size = static_cast<int>(local_block_size(Base::m_functor));
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
+                      "valid execution configuration."));
+    }
+
+    Base::impl_execute(block_size);
+  }
 
   ParallelScan(const FunctorType& arg_functor,
                const typename Base::Policy& arg_policy)
-      : Base(arg_functor, arg_policy) {}
+      : Base(arg_functor, arg_policy, nullptr, false) {}
 
   inline unsigned local_block_size(const FunctorType& f) {
     // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or
@@ -712,25 +706,33 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();
 
-  ReturnType& m_returnvalue;
-
   inline void execute() {
-    Base::impl_execute();
+    const int block_size = static_cast<int>(local_block_size(Base::m_functor));
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
+                      "valid execution configuration."));
+    }
+
+    Base::impl_execute(block_size);
 
     const auto nwork = Base::m_policy.end() - Base::m_policy.begin();
-    if (nwork) {
+    if (nwork && !Base::m_result_ptr_device_accessible) {
       const int size = Base::Analysis::value_size(Base::m_functor);
       DeepCopy<HostSpace, HIPSpace, HIP>(
-          Base::m_policy.space(), &m_returnvalue,
+          Base::m_policy.space(), Base::m_result_ptr,
           Base::m_scratch_space + (Base::m_grid_x - 1) * size / sizeof(int),
           size);
     }
   }
 
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename Base::Policy& arg_policy,
-                        ReturnType& arg_returnvalue)
-      : Base(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+                        const ViewType& arg_result_view)
+      : Base(arg_functor, arg_policy, arg_result_view.data(),
+             MemorySpaceAccess<HIPSpace,
+                               typename ViewType::memory_space>::accessible) {}
 
   inline unsigned local_block_size(const FunctorType& f) {
     // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or

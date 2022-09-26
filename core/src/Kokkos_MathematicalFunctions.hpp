@@ -55,7 +55,12 @@
 #include <type_traits>
 
 #ifdef KOKKOS_ENABLE_SYCL
+// FIXME_SYCL
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
 #include <CL/sycl.hpp>
+#endif
 #endif
 
 namespace Kokkos {
@@ -343,7 +348,7 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
 // remquo
-// fma
+KOKKOS_IMPL_MATH_TERNARY_FUNCTION(fma)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmax)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fdim)

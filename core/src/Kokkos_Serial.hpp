@@ -212,6 +212,13 @@ class Serial {
 #else
   Kokkos::Impl::HostSharedPtr<Impl::SerialInternal> m_space_instance;
 #endif
+  friend bool operator==(Serial const& lhs, Serial const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(Serial const& lhs, Serial const& rhs) {
+    return !(lhs == rhs);
+  }
   //--------------------------------------------------------------------------
 };
 

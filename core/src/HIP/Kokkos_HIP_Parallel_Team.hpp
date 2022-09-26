@@ -118,7 +118,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_common<BlockType::Max, closure_type>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -127,7 +127,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_common<BlockType::Max, closure_type>(f);
   }
 
   template <typename FunctorType>
@@ -150,7 +150,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
-    return internal_team_size_recommended<closure_type>(f);
+    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -159,7 +159,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
-    return internal_team_size_recommended<closure_type>(f);
+    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
   }
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
@@ -346,57 +346,19 @@ class TeamPolicyInternal<HIP, Properties...>
 
  protected:
   template <BlockType BlockSize, class ClosureType, class FunctorType>
-  int internal_team_size_common(const FunctorType& f) const {
-    // FIXME_HIP: this could be unified with the
-    // internal_team_size_common_reduce
-    //            once we can turn c++17 constexpr on by default.
-    //            The problem right now is that we can't turn off the evaluation
-    //            of the Analysis' valuesize / StaticValueSize
-
-    const unsigned shmem_block  = team_scratch_size(0) + 2 * sizeof(double);
-    const unsigned shmem_thread = thread_scratch_size(0) + sizeof(double);
-    const int vector_length     = impl_vector_length();
-
-    const auto functor = [&f, shmem_block, shmem_thread, vector_length](
-                             const hipFuncAttributes& attr, int block_size) {
-      int functor_shmem =
-          ::Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
-              f, block_size / vector_length);
-      return shmem_block + shmem_thread * (block_size / vector_length) +
-             functor_shmem + attr.sharedSizeBytes;
-    };
-    int block_size;
-    // FIXME_HIP - could be if constexpr for c++17
-    if (BlockSize == BlockType::Max) {
-      block_size = hip_get_max_team_blocksize<ClosureType,
-                                              typename traits::launch_bounds>(
-          space().impl_internal_space_instance(), functor);
-    } else {
-      block_size =
-          hip_get_preferred_team_blocksize<ClosureType,
-                                           typename traits::launch_bounds>(
-              space().impl_internal_space_instance(), functor);
-    }
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a valid "
-                      "team size."));
-    }
-    return block_size / impl_vector_length();
-  }
-
-  template <BlockType BlockSize, class ClosureType, class FunctorType>
-  int internal_team_size_common_reduce(const FunctorType& f) const {
-    using Interface =
-        typename Impl::DeduceFunctorPatternInterface<ClosureType>::type;
-    using Analysis =
-        Impl::FunctorAnalysis<Interface, typename ClosureType::Policy,
-                              FunctorType>;
-
+  int internal_team_size_common(FunctorType const& f) const {
     const unsigned shmem_block = team_scratch_size(0) + 2 * sizeof(double);
-    const unsigned shmem_thread =
-        thread_scratch_size(0) + sizeof(double) +
-        ((Analysis::StaticValueSize != 0) ? 0 : Analysis::value_size(f));
+    unsigned shmem_thread      = thread_scratch_size(0) + sizeof(double);
+    using Tag = typename PatternTagFromImplSpecialization<ClosureType>::type;
+    if constexpr (std::is_same_v<Tag, ParallelReduceTag>) {
+      using Interface =
+          typename Impl::DeduceFunctorPatternInterface<ClosureType>::type;
+      using Analysis =
+          Impl::FunctorAnalysis<Interface, typename ClosureType::Policy,
+                                FunctorType>;
+      shmem_thread +=
+          ((Analysis::StaticValueSize != 0) ? 0 : Analysis::value_size(f));
+    }
     const int vector_length = impl_vector_length();
 
     const auto functor = [&f, shmem_block, shmem_thread, vector_length](
@@ -408,8 +370,7 @@ class TeamPolicyInternal<HIP, Properties...>
              functor_shmem + attr.sharedSizeBytes;
     };
     int block_size;
-    // FIXME_HIP - could be if constexpr for c++17
-    if (BlockSize == BlockType::Max) {
+    if constexpr (BlockSize == BlockType::Max) {
       block_size = hip_get_max_team_blocksize<ClosureType,
                                               typename traits::launch_bounds>(
           space().impl_internal_space_instance(), functor);
@@ -421,26 +382,19 @@ class TeamPolicyInternal<HIP, Properties...>
     }
 
     if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
-                      "valid team size."));
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor/Reduce< HIP > could not find a valid "
+          "team size."));
     }
-    // Currently we require Power-of-2 team size for reductions.
-    int p2 = 1;
-    while (p2 <= block_size) p2 *= 2;
-    p2 /= 2;
-    return p2 / impl_vector_length();
-  }
-
-  template <class ClosureType, class FunctorType>
-  int internal_team_size_max(const FunctorType& f) const {
-    return internal_team_size_common_reduce<BlockType::Max, ClosureType>(f);
-  }
-
-  template <class ClosureType, class FunctorType>
-  int internal_team_size_recommended(const FunctorType& f) const {
-    return internal_team_size_common_reduce<BlockType::Preferred, ClosureType>(
-        f);
+    if constexpr (std::is_same_v<Tag, ParallelForTag>) {
+      return block_size / impl_vector_length();
+    } else {
+      // Currently we require Power-of-2 team size for reductions.
+      int p2 = 1;
+      while (p2 <= block_size) p2 *= 2;
+      p2 /= 2;
+      return p2 / impl_vector_length();
+    }
   }
 };
 
@@ -507,10 +461,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
   int m_shmem_size;
   void* m_scratch_ptr[2];
   size_t m_scratch_size[2];
+  int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
-  // Only let one ParallelFor/Reduce modify the team scratch memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <typename TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
@@ -566,10 +518,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
         m_policy(arg_policy),
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock_guard(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_team_scratch_mutex) {
+        m_vector_size(arg_policy.impl_vector_length()) {
+    auto internal_space_instance =
+        m_policy.space().impl_internal_space_instance();
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelForTag());
@@ -580,27 +531,25 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
          FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
     m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks =
-        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
+    m_scratch_locks   = internal_space_instance->m_scratch_locks;
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     m_scratch_ptr[0] = nullptr;
-    m_scratch_ptr[1] =
-        m_team_size <= 0
-            ? nullptr
-            : m_policy.space()
-                  .impl_internal_space_instance()
-                  ->resize_team_scratch_space(
-                      static_cast<std::int64_t>(m_scratch_size[1]) *
-                      (std::min(static_cast<std::int64_t>(
-                                    HIP::concurrency() /
-                                    (m_team_size * m_vector_size)),
-                                static_cast<std::int64_t>(m_league_size))));
+    if (m_team_size <= 0) {
+      m_scratch_ptr[1] = nullptr;
+    } else {
+      m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
+      m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(static_cast<std::int64_t>(
+                            HIP::concurrency() / (m_team_size * m_vector_size)),
+                        static_cast<std::int64_t>(m_league_size))));
+    }
 
     int const shmem_size_total = m_shmem_begin + m_shmem_size;
-    if (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-        shmem_size_total) {
+    if (internal_space_instance->m_maxShmemPerBlock < shmem_size_total) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< HIP > insufficient shared memory"));
     }
@@ -609,6 +558,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
     if (static_cast<int>(m_team_size) > static_cast<int>(max_size)) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< HIP > requested too large team size."));
+    }
+  }
+
+  ~ParallelFor() {
+    if (m_scratch_pool_id >= 0) {
+      m_policy.space()
+          .impl_internal_space_instance()
+          ->release_team_scratch_space(m_scratch_pool_id);
     }
   }
 };
@@ -673,13 +630,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type m_shmem_size;
   void* m_scratch_ptr[2];
   size_t m_scratch_size[2];
+  int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
-  // Only let one ParallelFor/Reduce modify the team scratch memory. The
-  // constructor acquires the mutex which is released in the destructor.
-  std::lock_guard<std::mutex> m_scratch_lock_guard;
 
   template <class TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
@@ -884,10 +839,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock_guard(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_team_scratch_mutex) {
+        m_vector_size(arg_policy.impl_vector_length()) {
+    auto internal_space_instance =
+        m_policy.space().impl_internal_space_instance();
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelReduceTag());
@@ -904,19 +858,18 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks =
-        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
-    m_scratch_ptr[1] =
-        m_team_size <= 0
-            ? nullptr
-            : m_policy.space()
-                  .impl_internal_space_instance()
-                  ->resize_team_scratch_space(
-                      static_cast<std::int64_t>(m_scratch_size[1]) *
-                      (std::min(static_cast<std::int64_t>(
-                                    HIP::concurrency() /
-                                    (m_team_size * m_vector_size)),
-                                static_cast<std::int64_t>(m_league_size))));
+    m_scratch_locks   = internal_space_instance->m_scratch_locks;
+    if (m_team_size <= 0) {
+      m_scratch_ptr[1] = nullptr;
+    } else {
+      m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
+      m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(static_cast<std::int64_t>(
+                            HIP::concurrency() / (m_team_size * m_vector_size)),
+                        static_cast<std::int64_t>(m_league_size))));
+    }
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
@@ -943,8 +896,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           std::string("Kokkos::Impl::ParallelReduce< HIP > bad team size"));
     }
 
-    if (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-        shmem_size_total) {
+    if (internal_space_instance->m_maxShmemPerBlock < shmem_size_total) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > requested too much "
                       "L0 scratch memory"));
@@ -980,10 +932,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock_guard(m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->m_team_scratch_mutex) {
+        m_vector_size(arg_policy.impl_vector_length()) {
+    auto internal_space_instance =
+        m_policy.space().impl_internal_space_instance();
     m_team_size = m_team_size >= 0
                       ? m_team_size
                       : arg_policy.team_size_recommended(arg_functor, reducer,
@@ -1000,19 +951,18 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks =
-        m_policy.space().impl_internal_space_instance()->m_scratch_locks;
-    m_scratch_ptr[1] =
-        m_team_size <= 0
-            ? nullptr
-            : m_policy.space()
-                  .impl_internal_space_instance()
-                  ->resize_team_scratch_space(
-                      static_cast<std::int64_t>(m_scratch_size[1]) *
-                      (std::min(static_cast<std::int64_t>(
-                                    HIP::concurrency() /
-                                    (m_team_size * m_vector_size)),
-                                static_cast<std::int64_t>(m_league_size))));
+    m_scratch_locks   = internal_space_instance->m_scratch_locks;
+    if (m_team_size <= 0) {
+      m_scratch_ptr[1] = nullptr;
+    } else {
+      m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
+      m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(static_cast<std::int64_t>(
+                            HIP::concurrency() / (m_team_size * m_vector_size)),
+                        static_cast<std::int64_t>(m_league_size))));
+    }
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
@@ -1034,8 +984,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
     if ((!Kokkos::Impl::is_integral_power_of_two(m_team_size) &&
          !UseShflReduction) ||
-        m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-            shmem_size_total) {
+        internal_space_instance->m_maxShmemPerBlock < shmem_size_total) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > bad team size"));
     }
@@ -1046,6 +995,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > requested too "
                       "large team size."));
+    }
+  }
+
+  ~ParallelReduce() {
+    if (m_scratch_pool_id >= 0) {
+      m_policy.space()
+          .impl_internal_space_instance()
+          ->release_team_scratch_space(m_scratch_pool_id);
     }
   }
 };
