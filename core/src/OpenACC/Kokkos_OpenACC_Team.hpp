@@ -94,13 +94,7 @@ class OpenACCTeamMember {
 
   KOKKOS_FUNCTION int league_rank() const { return m_league_rank; }
   KOKKOS_FUNCTION int league_size() const { return m_league_size; }
-  KOKKOS_FUNCTION int team_rank() const {
-#ifdef KOKKOS_COMPILER_NVHPC
-    return __pgi_vectoridx();
-#else
-    return m_team_rank;
-#endif
-  }
+  KOKKOS_FUNCTION int team_rank() const { return m_team_rank; }
   KOKKOS_FUNCTION int vector_length() const { return m_vector_length; }
   KOKKOS_FUNCTION int team_size() const { return m_team_size; }
 
@@ -171,7 +165,11 @@ class OpenACCTeamMember {
         m_league_rank(league_rank),
         m_league_size(league_size),
         m_vector_length(vector_length) {
+#ifdef KOKKOS_COMPILER_NVHPC
+    m_team_rank = __pgi_vectoridx();
+#else
     m_team_rank = 0;
+#endif
   }
 
   static int team_reduce_size() { return TEAM_REDUCE_SIZE; }
