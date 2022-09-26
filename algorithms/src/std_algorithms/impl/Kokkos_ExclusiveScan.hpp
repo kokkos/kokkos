@@ -105,9 +105,12 @@ struct ExclusiveScanDefaultFunctor {
   }
 };
 
+//
+// exespace impl
+//
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType>
-OutputIteratorType exclusive_scan_custom_op_impl(
+OutputIteratorType exclusive_scan_custom_op_exespace_impl(
     const std::string& label, const ExecutionSpace& ex,
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType bop) {
@@ -143,12 +146,10 @@ using ex_scan_has_reduction_identity_sum_t =
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
-OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
-                                                  const ExecutionSpace& ex,
-                                                  InputIteratorType first_from,
-                                                  InputIteratorType last_from,
-                                                  OutputIteratorType first_dest,
-                                                  ValueType init_value) {
+OutputIteratorType exclusive_scan_default_op_exespace_impl(
+    const std::string& label, const ExecutionSpace& ex,
+    InputIteratorType first_from, InputIteratorType last_from,
+    OutputIteratorType first_dest, ValueType init_value) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
@@ -195,6 +196,106 @@ OutputIteratorType exclusive_scan_default_op_impl(const std::string& label,
   ex.fence("Kokkos::exclusive_scan_default_op: fence after operation");
 
   return first_dest + num_elements;
+}
+
+//
+// team impl
+//
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class ValueType, class BinaryOpType>
+KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest,
+    ValueType init_value, BinaryOpType bop) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
+
+#if defined(KOKKOS_ENABLE_CUDA)
+
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+
+  // aliases
+  using index_type    = typename InputIteratorType::difference_type;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
+  using func_type =
+      TransformExclusiveScanFunctor<TeamHandleType, index_type, ValueType,
+                                    InputIteratorType, OutputIteratorType,
+                                    BinaryOpType, unary_op_type>;
+
+  ::Kokkos::parallel_scan(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      func_type(init_value, first_from, first_dest, bop, unary_op_type()));
+  teamHandle.team_barrier();
+
+  return first_dest + num_elements;
+
+#else
+
+  std::size_t count = 0;
+  if (teamHandle.team_rank() == 0) {
+    while (first_from != last_from) {
+      const auto val = init_value;
+      init_value     = bop(init_value, *first_from);
+      ++first_from;
+      first_dest[count++] = val;
+    }
+  }
+
+  teamHandle.team_broadcast(count, 0);
+  return first_dest + count;
+
+#endif
+}
+
+template <typename ValueType>
+using ex_scan_has_reduction_identity_sum_t =
+    decltype(Kokkos::reduction_identity<ValueType>::sum());
+
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class ValueType>
+KOKKOS_FUNCTION OutputIteratorType exclusive_scan_default_op_team_impl(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest,
+    ValueType init_value) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
+
+#if defined(KOKKOS_ENABLE_CUDA)
+
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
+  using func_type  = std::conditional_t<
+      ::Kokkos::is_detected_v<ex_scan_has_reduction_identity_sum_t, ValueType>,
+      ExclusiveScanDefaultFunctorForKnownNeutralElement<
+          TeamHandleType, index_type, ValueType, InputIteratorType,
+          OutputIteratorType>,
+      ExclusiveScanDefaultFunctor<TeamHandleType, index_type, ValueType,
+                                  InputIteratorType, OutputIteratorType>>;
+
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+
+  ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+                          func_type(init_value, first_from, first_dest));
+  teamHandle.team_barrier();
+  return first_dest + num_elements;
+
+#else
+
+  return exclusive_scan_custom_op_team_impl(
+      teamHandle, first_from, last_from, first_dest, init_value,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+
+#endif
 }
 
 }  // namespace Impl
