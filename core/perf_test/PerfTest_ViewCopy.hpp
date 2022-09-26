@@ -51,8 +51,28 @@
 
 namespace Test {
 
-void report_results(benchmark::State& state, std::size_t num_elems,
-                    double time);
+/**
+ * \brief Mark the label as a figure of merit.
+ */
+inline std::string benchmark_fom(const std::string& label) {
+  return "FOM: " + label;
+}
+
+inline void report_results(benchmark::State& state, std::size_t num_elems,
+                           double time) {
+  state.SetIterationTime(time);
+
+  // data size in megabytes
+  const auto size = 1.0 * num_elems * sizeof(double) / 1024 / 1024;
+  // data processed in gigabytes
+  const auto data_processed = 2 * size / 1024;
+
+  state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
+                                            benchmark::Counter::OneK::kIs1024);
+  state.counters[benchmark_fom("GB/s")] = benchmark::Counter(
+      data_processed, benchmark::Counter::kIsIterationInvariantRate,
+      benchmark::Counter::OneK::kIs1024);
+}
 
 template <class ViewTypeA, class ViewTypeB>
 void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {

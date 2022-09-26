@@ -182,7 +182,6 @@ ENDFUNCTION()
 SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
-  PerfTest_ViewCopy.cpp
   PerfTest_ViewCopy_a123.cpp
   PerfTest_ViewCopy_b123.cpp
   PerfTest_ViewCopy_c123.cpp
