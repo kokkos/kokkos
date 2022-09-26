@@ -806,6 +806,7 @@ SET(DEFAULT_DEVICE_SOURCES
   TestInitializationSettings.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestSharedSpace.cpp
+  TestSharedHostPinnedSpace.cpp
   default/TestDefaultDeviceType.cpp
   default/TestDefaultDeviceType_a1.cpp
   default/TestDefaultDeviceType_b1.cpp
@@ -824,6 +825,10 @@ SET(DEFAULT_DEVICE_SOURCES
 # FIXME_SYCL clock_tic does not give the correct timings for cloc_tic
 if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET) OR (KOKKOS_ENABLE_SYCL))
   LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
+endif()
+# FIXME_OPENMPTARGET and FIXME_OPENACC do not provide a HostPinnedMemorySpace that can be accessed from all ExecSpaces
+if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedHostPinnedSpace.cpp)
 endif()
 
 # FIXME_OPENMPTARGET, FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
