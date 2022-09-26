@@ -196,12 +196,33 @@ using SharedSpace = Experimental::SYCLSharedUSMSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 // if only host compile point to HostSpace
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
-using SharedSpace = HostSpace;
+using SharedSpace               = HostSpace;
 #define KOKKOS_HAS_SHARED_SPACE 1
 #endif
 
 inline constexpr bool has_shared_space =
 #if defined KOKKOS_HAS_SHARED_SPACE
+    true;
+#else
+    false;
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA)
+using SharedHostPinnedSpace = CudaHostPinnedSpace;
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#elif defined(KOKKOS_ENABLE_HIP)
+using SharedHostPinnedSpace = HIPHostPinnedSpace;
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#elif defined(KOKKOS_ENABLE_SYCL)
+    using SharedHostPinnedSpace = Experimental::SYCLHostUSMSpace;
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+    using SharedHostPinnedSpace = HostSpace;
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#endif
+
+inline constexpr bool has_shared_host_pinned_space =
+#if defined KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
     true;
 #else
     false;
