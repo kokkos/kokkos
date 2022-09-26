@@ -172,6 +172,13 @@ class OpenMP {
   uint32_t impl_instance_id() const noexcept { return 1; }
 
  private:
+  friend bool operator==(OpenMP const& lhs, OpenMP const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(OpenMP const& lhs, OpenMP const& rhs) {
+    return !(lhs == rhs);
+  }
   Kokkos::Impl::HostSharedPtr<Impl::OpenMPInternal> m_space_instance;
 };
 

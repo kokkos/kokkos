@@ -5,19 +5,17 @@ Source: https://github.com/desul/desul
 
 SPDX-License-Identifier: (BSD-3-Clause)
 */
+
 #ifndef DESUL_ATOMICS_COMPARE_EXCHANGE_SERIAL_HPP_
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_SERIAL_HPP_
 
-#ifdef DESUL_HAVE_SERIAL_ATOMICS
+#include <desul/atomics/Common.hpp>
+
 namespace desul {
-template <class MemoryScope>
-void atomic_thread_fence(MemoryOrderAcquire, MemoryScope) {}
+namespace Impl {
 
-template <class MemoryScope>
-void atomic_thread_fence(MemoryOrderRelease, MemoryScope) {}
-
-template <typename T, class MemoryScope>
-T atomic_compare_exchange(
+template <class T, class MemoryScope>
+T host_atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrderRelaxed, MemoryScope) {
   T old = *dest;
   if (old == compare) {
@@ -27,8 +25,8 @@ T atomic_compare_exchange(
   }
   return compare;
 }
-template <typename T, class MemoryScope>
-T atomic_compare_exchange(
+template <class T, class MemoryScope>
+T host_atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrderSeqCst, MemoryScope) {
   T old = *dest;
   if (old == compare) {
@@ -38,6 +36,8 @@ T atomic_compare_exchange(
   }
   return compare;
 }
+
+}  // namespace Impl
 }  // namespace desul
-#endif
+
 #endif

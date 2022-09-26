@@ -52,12 +52,10 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   COMPILER_SPECIFIC_FLAGS(
     Clang      ${ClangOpenMPFlag} -Wno-openmp-mapping
     IntelLLVM  -fiopenmp -Wno-openmp-mapping
-    XL         -qsmp=omp -qoffload -qnoeh
     NVHPC      -mp=gpu
     DEFAULT    -fopenmp
   )
   COMPILER_SPECIFIC_DEFS(
-    XL    KOKKOS_IBM_XL_OMP45_WORKAROUND
     Clang KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
   )
 # Are there compilers which identify as Clang and need this library?

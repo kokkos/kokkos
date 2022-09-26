@@ -425,15 +425,11 @@ TEST(TEST_CATEGORY, complex_io) { testComplexIO(); }
 TEST(TEST_CATEGORY, complex_trivially_copyable) {
   // Kokkos::complex<RealType> is trivially copyable when RealType is
   // trivially copyable
-  // Simply disable the check for IBM's XL compiler since we can't reliably
-  // check for a version that defines relevant functions.
-#if !defined(__ibmxl__)
   using RealType = double;
   // clang claims compatibility with gcc 4.2.1 but all versions tested know
   // about std::is_trivially_copyable.
   ASSERT_TRUE(std::is_trivially_copyable<Kokkos::complex<RealType>>::value ||
               !std::is_trivially_copyable<RealType>::value);
-#endif
 }
 
 template <class ExecSpace>

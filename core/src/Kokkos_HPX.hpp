@@ -479,6 +479,14 @@ class HPX {
 #endif
 
   static constexpr const char *name() noexcept { return "HPX"; }
+
+ private:
+  friend bool operator==(HPX const &lhs, HPX const &rhs) {
+    return lhs.m_instance_id == rhs.m_instance_id;
+  }
+  friend bool operator!=(HPX const &lhs, HPX const &rhs) {
+    return !(lhs == rhs);
+  }
 };
 }  // namespace Experimental
 
@@ -1682,7 +1690,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   const FunctorType m_functor;
   const Policy m_policy;
-  ReturnType &m_returnvalue;
+  pointer_type m_result_ptr;
 
   template <class TagType>
   inline static std::enable_if_t<std::is_void<TagType>::value>
@@ -1772,17 +1780,23 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                          update_base, true);
 
           if (t == num_worker_threads - 1) {
-            m_returnvalue = update_base;
+            *m_result_ptr = update_base;
           }
         });
   }
 
-  inline ParallelScanWithTotal(const FunctorType &arg_functor,
-                               const Policy &arg_policy,
-                               ReturnType &arg_returnvalue)
+  template <class ViewType>
+  ParallelScanWithTotal(const FunctorType &arg_functor,
+                        const Policy &arg_policy,
+                        const ViewType &arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_returnvalue(arg_returnvalue) {}
+        m_result_ptr(arg_result_view.data()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::HPX parallel_scan result must be host-accessible!");
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos

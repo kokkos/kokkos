@@ -750,6 +750,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                                  Policy, FunctorType>;
 
  public:
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
@@ -767,7 +768,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_final;
-  ReturnType& m_returnvalue;
+  const pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
+
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
   bool m_run_serial;
 #endif
@@ -907,6 +910,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                 reinterpret_cast<pointer_type>(shared_prefix)),
             true);
       }
+      if (iwork + 1 == m_policy.end() && m_policy.end() == range.end() &&
+          m_result_ptr_device_accessible)
+        *m_result_ptr = *reinterpret_cast<pointer_type>(shared_prefix);
     }
   }
 
@@ -994,17 +1000,15 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       if (m_run_serial) {
         block = dim3(1, 1, 1);
         grid  = dim3(1, 1, 1);
-      } else {
+      } else
 #endif
-
+      {
         m_final = false;
         CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
             *this, grid, block, shmem,
             m_policy.space().impl_internal_space_instance(),
             false);  // copy to device and execute
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       }
-#endif
       m_final = true;
       CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
           *this, grid, block, shmem,
@@ -1018,20 +1022,28 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                              m_scratch_space, size);
       else
 #endif
-        DeepCopy<HostSpace, CudaSpace, Cuda>(
-            m_policy.space(), &m_returnvalue,
-            m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
+      {
+        if (!m_result_ptr_device_accessible)
+          DeepCopy<HostSpace, CudaSpace, Cuda>(
+              m_policy.space(), m_result_ptr,
+              m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
+      }
     }
   }
 
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
-                        const Policy& arg_policy, ReturnType& arg_returnvalue)
+                        const Policy& arg_policy,
+                        const ViewType& arg_result_view)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_final(false),
-        m_returnvalue(arg_returnvalue)
+        m_result_ptr(arg_result_view.data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::CudaSpace,
+                              typename ViewType::memory_space>::accessible)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
         ,
         m_run_serial(Kokkos::Impl::CudaInternal::cuda_use_serial_execution())

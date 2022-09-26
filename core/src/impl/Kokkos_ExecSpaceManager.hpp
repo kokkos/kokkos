@@ -52,45 +52,79 @@
 #include <iosfwd>
 #include <map>
 #include <string>
+#include <utility>
 
 namespace {
 
 template <class T>
 using public_member_types_t = std::enable_if_t<
-    Kokkos::is_execution_space<typename T::execution_space>::value &&
-    Kokkos::is_memory_space<typename T::memory_space>::value &&
-    Kokkos::is_device<typename T::device_type>::value &&
-    Kokkos::is_array_layout<typename T::array_layout>::value &&
-    std::is_integral<typename T::size_type>::value &&
-    Kokkos::is_memory_space<typename T::scratch_memory_space>::value>;
+    Kokkos::is_execution_space_v<typename T::execution_space> &&
+    Kokkos::is_memory_space_v<typename T::memory_space> &&
+    Kokkos::is_device_v<typename T::device_type> &&
+    Kokkos::is_array_layout_v<typename T::array_layout> &&
+    std::is_integral_v<typename T::size_type> &&
+    Kokkos::is_memory_space_v<typename T::scratch_memory_space>>;
 
 template <class T>
 using print_configuration_t = std::enable_if_t<
-    std::is_void<decltype(std::declval<T const&>().print_configuration(
-        std::declval<std::ostream&>()))>::value &&
-    std::is_void<decltype(std::declval<T const&>().print_configuration(
-        std::declval<std::ostream&>(), false))>::value>;
+    std::is_void_v<decltype(std::declval<T const&>().print_configuration(
+        std::declval<std::ostream&>()))> &&
+    std::is_void_v<decltype(std::declval<T const&>().print_configuration(
+        std::declval<std::ostream&>(), false))>>;
 
 template <class T>
 using initialize_finalize_t = std::enable_if_t<
-    std::is_void<decltype(T::impl_initialize(
-        std::declval<Kokkos::InitializationSettings const&>()))>::value &&
-    std::is_void<decltype(T::impl_finalize())>::value>;
+    std::is_void_v<decltype(T::impl_initialize(
+        std::declval<Kokkos::InitializationSettings const&>()))> &&
+    std::is_void_v<decltype(T::impl_finalize())>>;
 
 template <class T>
 using fence_t = std::enable_if_t<
-    std::is_void<decltype(std::declval<T const&>().fence())>::value &&
-    std::is_void<decltype(std::declval<T const&>().fence("name"))>::value &&
-    std::is_void<decltype(T::impl_static_fence("name"))>::value>;
+    std::is_void_v<decltype(std::declval<T const&>().fence())> &&
+    std::is_void_v<decltype(std::declval<T const&>().fence("name"))> &&
+    std::is_void_v<decltype(T::impl_static_fence("name"))>>;
+
+template <class T>
+constexpr bool check_is_semiregular() {
+  static_assert(std::is_default_constructible_v<T>);
+  static_assert(std::is_copy_constructible_v<T>);
+  static_assert(std::is_move_constructible_v<T>);
+  static_assert(std::is_copy_assignable_v<T>);
+  static_assert(std::is_move_assignable_v<T>);
+  static_assert(std::is_destructible_v<T>);
+  return true;
+}
+
+template <class T>
+using equal_to_t =
+    decltype(std::declval<T const&>() == std::declval<T const&>());
+
+template <class T>
+using not_equal_to_t =
+    decltype(std::declval<T const&>() != std::declval<T const&>());
+
+template <class T>
+constexpr bool check_is_equality_comparable() {
+  using Kokkos::is_detected_exact_v;
+  static_assert(is_detected_exact_v<bool, equal_to_t, T>);
+  static_assert(is_detected_exact_v<bool, not_equal_to_t, T>);
+  return true;
+}
+
+template <class T>
+constexpr bool check_is_regular() {
+  static_assert(check_is_semiregular<T>() && check_is_equality_comparable<T>());
+  return true;
+}
 
 template <class ExecutionSpace>
 constexpr bool check_valid_execution_space() {
-  using Kokkos::is_detected;
-  static_assert(std::is_default_constructible<ExecutionSpace>::value);
-  static_assert(is_detected<public_member_types_t, ExecutionSpace>::value);
-  static_assert(is_detected<print_configuration_t, ExecutionSpace>::value);
-  static_assert(is_detected<initialize_finalize_t, ExecutionSpace>::value);
-  static_assert(is_detected<fence_t, ExecutionSpace>::value);
+  using Kokkos::is_detected_v;
+  static_assert(std::is_default_constructible_v<ExecutionSpace>);
+  static_assert(is_detected_v<public_member_types_t, ExecutionSpace>);
+  static_assert(is_detected_v<print_configuration_t, ExecutionSpace>);
+  static_assert(is_detected_v<initialize_finalize_t, ExecutionSpace>);
+  static_assert(is_detected_v<fence_t, ExecutionSpace>);
 #ifndef KOKKOS_ENABLE_HPX  // FIXME_HPX
   static_assert(sizeof(ExecutionSpace) <= 2 * sizeof(void*));
 #endif
@@ -112,7 +146,8 @@ struct ExecSpaceBase {
 
 template <class ExecutionSpace>
 struct ExecSpaceDerived : ExecSpaceBase {
-  static_assert(check_valid_execution_space<ExecutionSpace>(), "");
+  static_assert(check_valid_execution_space<ExecutionSpace>());
+  static_assert(check_is_regular<ExecutionSpace>());
   void initialize(InitializationSettings const& settings) final {
     ExecutionSpace::impl_initialize(settings);
   }

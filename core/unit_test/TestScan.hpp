@@ -97,15 +97,51 @@ struct TestScan {
     Kokkos::deep_copy(errors_a, 0);
     errors = errors_a;
 
-    Kokkos::parallel_scan(N, *this);
+    {
+      Kokkos::parallel_scan(N, *this);
+      check_error();
+    }
 
-    value_type total = 0;
-    Kokkos::parallel_scan(N, *this, total);
+    {
+      Kokkos::deep_copy(errors_a, 0);
+      value_type total = 0;
+      Kokkos::parallel_scan(N, *this, total);
 
-    // We can't return a value in a constructor so use a lambda as wrapper to
-    // ignore it.
-    [&] { ASSERT_EQ(size_t((N + 1) * N / 2), size_t(total)); }();
-    check_error();
+      // We can't return a value in a constructor so use a lambda as wrapper to
+      // ignore it.
+      [&] { ASSERT_EQ(size_t((N + 1) * N / 2), size_t(total)); }();
+      check_error();
+    }
+
+    {
+      Kokkos::deep_copy(errors_a, 0);
+      Kokkos::View<value_type, Kokkos::HostSpace> total_view("total");
+      Kokkos::parallel_scan(N, *this, total_view);
+      Kokkos::fence();
+
+      // We can't return a value in a constructor so use a lambda as wrapper to
+      // ignore it.
+      [&] { ASSERT_EQ(size_t((N + 1) * N / 2), size_t(total_view())); }();
+      check_error();
+    }
+
+    {
+      Kokkos::deep_copy(errors_a, 0);
+      Kokkos::View<value_type, typename Device::memory_space> total_view(
+          "total");
+      typename Device::execution_space exec;
+      Kokkos::parallel_scan(
+          Kokkos::RangePolicy<typename Device::execution_space>(exec, 0, N),
+          *this, total_view);
+      value_type total;
+      Kokkos::deep_copy(exec, total, total_view);
+      exec.fence();
+
+      // We can't return a value in a constructor so use a lambda as wrapper to
+      // ignore it.
+      [&] { ASSERT_EQ(size_t((N + 1) * N / 2), size_t(total)); }();
+      check_error();
+    }
   }
 
   TestScan(const size_t Start, const size_t N) {
