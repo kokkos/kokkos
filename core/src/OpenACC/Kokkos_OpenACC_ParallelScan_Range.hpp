@@ -49,43 +49,13 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
-//#define USE_BASE_SCAN_ALGORITHM
-
 namespace Kokkos::Experimental::Impl {
 template <class IndexType, class Functor, class ValueType>
 void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
                                     Functor afunctor, ValueType init_value,
                                     int async_arg) {
   auto const functor(afunctor);
-  const IndexType N = end - begin;
-#ifdef USE_BASE_SCAN_ALGORITHM
-  ValueType val[N + 1];
-
-#pragma acc enter data copyin(functor) create(val) async(async_arg)
-
-#pragma acc parallel loop gang vector present(functor, val) async(async_arg)
-  for (auto i = begin; i < end; ++i) {
-    val[i + 1 - begin] = init_value;
-    functor(i, val[i + 1 - begin], false);
-    if (i == begin) {
-      val[0] = init_value;
-    }
-  }
-
-#pragma acc parallel loop gang vector present(functor, val) async(async_arg)
-  for (auto i = begin; i < end; ++i) {
-    ValueType tmp;
-    tmp = init_value;
-#pragma acc loop reduction(+ : tmp)
-    for (auto j = i; j >= begin; --j) {
-      tmp += val[j - begin];
-    }
-    functor(i, tmp, true);
-  }
-#pragma acc exit data delete (functor, val)async(async_arg)
-
-#else
-
+  const IndexType N                  = end - begin;
   constexpr IndexType chunk_size     = 128;
   constexpr IndexType log_chunk_size = 7;
   const IndexType n_chunks           = (N + chunk_size - 1) / chunk_size;
@@ -202,8 +172,6 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
 
 #pragma acc exit data delete (functor, chunk_values, \
                               offset_values)async(async_arg)
-
-#endif
 }
 }  // namespace Kokkos::Experimental::Impl
 
