@@ -57,14 +57,14 @@ void report_results(benchmark::State& state, std::size_t num_elems,
 
   // data size in megabytes
   const auto size = 1.0 * num_elems * sizeof(double) / 1024 / 1024;
-  // throughput in gigabytes per second
-  const auto throughput = 2 * size / 1024 / time;
+  // data processed in gigabytes
+  const auto data_processed = 2 * size / 1024;
 
   state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
                                             benchmark::Counter::OneK::kIs1024);
-  state.counters[benchmark_fom("GB/s")] =
-      benchmark::Counter(throughput, benchmark::Counter::kDefaults,
-                         benchmark::Counter::OneK::kIs1024);
+  state.counters[benchmark_fom("GB/s")] = benchmark::Counter(
+      data_processed, benchmark::Counter::kIsIterationInvariantRate,
+      benchmark::Counter::OneK::kIs1024);
 }
 
 }  // namespace Test
