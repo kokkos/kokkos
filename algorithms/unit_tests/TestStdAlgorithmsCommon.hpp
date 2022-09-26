@@ -182,6 +182,101 @@ auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
   return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
 }
 
+// GCC 8 doesn't come with reduce and transform_reduce implementations, so here
+// are simplified versions of them, only for testing purpose
+
+template <class InputIterator, class ValueType, class BinaryOp>
+ValueType testing_reduce(InputIterator first, InputIterator last,
+                         ValueType init, BinaryOp binOp) {
+  while (last - first >= 4) {
+    ValueType v1 = binOp(first[0], first[1]);
+    ValueType v2 = binOp(first[2], first[3]);
+    ValueType v3 = binOp(v1, v2);
+    init         = binOp(init, v3);
+    first += 4;
+  }
+
+  for (; first != last; ++first) {
+    init = binOp(init, *first);
+  }
+
+  return init;
+}
+
+template <class InputIterator, class ValueType>
+ValueType testing_reduce(InputIterator first, InputIterator last,
+                         ValueType init) {
+  return testing_reduce(
+      first, last, init,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+}
+
+template <class InputIterator>
+auto testing_reduce(InputIterator first, InputIterator last) {
+  using ValueType = typename InputIterator::value_type;
+  return testing_reduce(
+      first, last, ValueType{},
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+}
+
+template <class InputIterator1, class InputIterator2, class ValueType,
+          class BinaryJoiner, class BinaryTransform>
+ValueType testing_transform_reduce(InputIterator1 first1, InputIterator1 last1,
+                                   InputIterator2 first2, ValueType init,
+                                   BinaryJoiner binJoiner,
+                                   BinaryTransform binTransform) {
+  while (last1 - first1 >= 4) {
+    ValueType v1 = binJoiner(binTransform(first1[0], first2[0]),
+                             binTransform(first1[1], first2[1]));
+
+    ValueType v2 = binJoiner(binTransform(first1[2], first2[2]),
+                             binTransform(first1[3], first2[3]));
+
+    ValueType v3 = binJoiner(v1, v2);
+    init         = binJoiner(init, v3);
+
+    first1 += 4;
+    first2 += 4;
+  }
+
+  for (; first1 != last1; ++first1, ++first2) {
+    init = binJoiner(init, binTransform(*first1, *first2));
+  }
+
+  return init;
+}
+
+template <class InputIterator1, class InputIterator2, class ValueType>
+ValueType testing_transform_reduce(InputIterator1 first1, InputIterator1 last1,
+                                   InputIterator2 first2, ValueType init) {
+  return testing_transform_reduce(
+      first1, last1, first2, init,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; },
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs * rhs; });
+}
+
+template <class InputIterator, class ValueType, class BinaryJoiner,
+          class UnaryTransform>
+ValueType testing_transform_reduce(InputIterator first, InputIterator last,
+                                   ValueType init, BinaryJoiner binJoiner,
+                                   UnaryTransform unaryTransform) {
+  while (last - first >= 4) {
+    ValueType v1 =
+        binJoiner(unaryTransform(first[0]), unaryTransform(first[1]));
+    ValueType v2 =
+        binJoiner(unaryTransform(first[2]), unaryTransform(first[3]));
+    ValueType v3 = binJoiner(v1, v2);
+    init         = binJoiner(init, v3);
+    first += 4;
+  }
+
+  for (; first != last; ++first) {
+    init = binJoiner(init, unaryTransform(*first));
+  }
+
+  return init;
+}
+
 template <class LayoutTagType, class ValueType>
 auto create_random_view_and_host_clone(
     LayoutTagType LayoutTag, std::size_t numRows, std::size_t numCols,

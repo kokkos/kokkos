@@ -248,7 +248,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     switch (apiId) {
       case 0:
       case 1: {
-        const auto result = std::transform_reduce(
+        const auto result = testing_transform_reduce(
             firstDataRowBegin, firstDataRowEnd, secondDataRowBegin, initVal);
 
         if constexpr (std::is_floating_point_v<ValueType>) {
@@ -262,7 +262,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        const ValueType result = std::transform_reduce(
+        const ValueType result = testing_transform_reduce(
             firstDataRowBegin, firstDataRowEnd, secondDataRowBegin, initVal,
             binaryJoiner, binaryTransform);
 
@@ -278,8 +278,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       case 4:
       case 5: {
         const ValueType result =
-            std::transform_reduce(firstDataRowBegin, firstDataRowEnd, initVal,
-                                  binaryJoiner, unaryTransform);
+            testing_transform_reduce(firstDataRowBegin, firstDataRowEnd,
+                                     initVal, binaryJoiner, unaryTransform);
 
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, resultsView_h(i));

@@ -199,7 +199,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     switch (apiId) {
       case 0:
       case 1: {
-        const ValueType result = std::reduce(rowFromBegin, rowFromEnd);
+        const ValueType result = testing_reduce(rowFromBegin, rowFromEnd);
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, reduceResultsView_h(i));
         } else {
@@ -211,7 +211,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        const ValueType result = std::reduce(rowFromBegin, rowFromEnd, initVal);
+        const ValueType result =
+            testing_reduce(rowFromBegin, rowFromEnd, initVal);
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, reduceResultsView_h(i));
         } else {
@@ -224,7 +225,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       case 4:
       case 5: {
         const ValueType result =
-            std::reduce(rowFromBegin, rowFromEnd, initVal, binaryPred);
+            testing_reduce(rowFromBegin, rowFromEnd, initVal, binaryPred);
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, reduceResultsView_h(i));
         } else {
