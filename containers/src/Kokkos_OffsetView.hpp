@@ -2014,7 +2014,7 @@ create_mirror_view(const Kokkos::Experimental::OffsetView<T, P...>& src,
 }
 
 template <class T, class... P, class... ViewCtorArgs,
-          typename = std::enable_if_t<
+          class = std::enable_if_t<
               Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>>
 std::enable_if_t<Impl::MirrorOffsetViewType<
                      typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space,
@@ -2028,7 +2028,7 @@ create_mirror_view(const Kokkos::Experimental::OffsetView<T, P...>& src,
 }
 
 template <class T, class... P, class... ViewCtorArgs,
-          typename = std::enable_if_t<
+          class = std::enable_if_t<
               Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>>
 std::enable_if_t<!Impl::MirrorOffsetViewType<
                      typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space,
