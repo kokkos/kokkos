@@ -245,7 +245,7 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                     TeamMDRangeParVector::NotParVector> const,
     TeamMDRangeNestingTracker<Rank, ParThreadNestLevel, ParVectorNestLevel,
                               CurrentNestLevel>,
-    Policy const&, Lambda const& lambda, Impl::NoReductionTag, Args... args) {
+    Policy const&, Lambda const& lambda, Impl::NoReductionTag&&, Args... args) {
   lambda(args...);
 }
 
@@ -272,7 +272,7 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                     TeamMDRangeParVector::NotParVector> const,
     TeamMDRangeNestingTracker<Rank, ParThreadNestLevel, ParVectorNestLevel,
                               CurrentNestLevel>,
-    Policy const& policy, Lambda const& lambda, ReducerValueType& val,
+    Policy const& policy, Lambda const& lambda, ReducerValueType&& val,
     Args... args) {
   constexpr int next_nest_level =
       CurrentNestLevel + (Rank::outer_direction == Iterate::Right ? 1 : -1);
@@ -283,11 +283,11 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
 
   for (int i = 0; i != policy.boundaries[CurrentNestLevel]; ++i) {
     if constexpr (Rank::outer_direction == Iterate::Right) {
-      nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda, val,
-                  args..., i);
+      nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda,
+                  std::forward<ReducerValueType>(val), args..., i);
     } else {
-      nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda, val,
-                  i, args...);
+      nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda,
+                  std::forward<ReducerValueType>(val), i, args...);
     }
   }
 }
@@ -301,7 +301,7 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                     ParVector> const mode,
     TeamMDRangeNestingTracker<Rank, ParThreadNestLevel, ParVectorNestLevel,
                               CurrentNestLevel>,
-    Policy const& policy, Lambda const& lambda, ReducerValueType& val,
+    Policy const& policy, Lambda const& lambda, ReducerValueType&& val,
     Args... args) {
   constexpr int next_nest_level =
       CurrentNestLevel + (Rank::outer_direction == Iterate::Right ? 1 : -1);
@@ -317,10 +317,10 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
       [&](int const& i) {
         if constexpr (Rank::outer_direction == Iterate::Right) {
           nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda,
-                      val, args..., i);
+                      std::forward<ReducerValueType>(val), args..., i);
         } else {
           nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda,
-                      val, i, args...);
+                      std::forward<ReducerValueType>(val), i, args...);
         }
       });
 }
@@ -329,7 +329,7 @@ template <typename Rank, typename TeamMDPolicy, typename Lambda,
           typename ReductionValueType>
 KOKKOS_INLINE_FUNCTION void md_parallel_impl(TeamMDPolicy const& policy,
                                              Lambda const& lambda,
-                                             ReductionValueType& val) {
+                                             ReductionValueType&& val) {
   static_assert(TeamMDPolicy::total_nest_level >= 2 &&
                 TeamMDPolicy::total_nest_level <= 8);
 
@@ -364,7 +364,8 @@ KOKKOS_INLINE_FUNCTION void md_parallel_impl(TeamMDPolicy const& policy,
 
   using InitTeamMDMode = typename InitNestingTracker::RangeMode;
 
-  nested_loop(InitTeamMDMode(), InitNestingTracker(), policy, lambda, val);
+  nested_loop(InitTeamMDMode(), InitNestingTracker(), policy, lambda,
+              std::forward<ReductionValueType>(val));
 }
 
 }  // namespace Impl

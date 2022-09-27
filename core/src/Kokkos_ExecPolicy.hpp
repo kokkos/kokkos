@@ -869,17 +869,13 @@ enum class TeamMDRangeParThread : bool { NotParThread, ParThread };
 enum class TeamMDRangeParVector : bool { NotParVector, ParVector };
 enum class TeamMDRangeThreadAndVector : bool { NotBoth, Both };
 
-struct NoReductionTag {
-  explicit NoReductionTag() = default;
-};
-
-static KOKKOS_IMPL_DEVICE_FUNCTION NoReductionTag no_reduction_tag{};
+struct NoReductionTag {};
 
 template <typename Rank, typename TeamMDPolicy, typename Lambda,
           typename ReductionValueType>
 KOKKOS_INLINE_FUNCTION void md_parallel_impl(TeamMDPolicy const& policy,
                                              Lambda const& lambda,
-                                             ReductionValueType& val);
+                                             ReductionValueType&& val);
 }  // namespace Impl
 
 template <typename Rank, typename TeamHandle>
@@ -1003,7 +999,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 template <typename Rank, typename TeamHandle, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     TeamThreadMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda) {
-  Impl::md_parallel_impl<Rank>(policy, lambda, Impl::no_reduction_tag);
+  Impl::md_parallel_impl<Rank>(policy, lambda, Impl::NoReductionTag());
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda,
@@ -1017,7 +1013,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 template <typename Rank, typename TeamHandle, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     ThreadVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda) {
-  Impl::md_parallel_impl<Rank>(policy, lambda, Impl::no_reduction_tag);
+  Impl::md_parallel_impl<Rank>(policy, lambda, Impl::NoReductionTag());
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda,
@@ -1031,7 +1027,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 template <typename Rank, typename TeamHandle, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda) {
-  Impl::md_parallel_impl<Rank>(policy, lambda, Impl::no_reduction_tag);
+  Impl::md_parallel_impl<Rank>(policy, lambda, Impl::NoReductionTag());
 }
 
 namespace Impl {
