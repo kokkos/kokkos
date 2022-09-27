@@ -1187,7 +1187,7 @@ void Kokkos::Impl::post_initialize(const InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
-void Kokkos::Impl::finalize_without_execution_spaces() {
+void Kokkos::Impl::pre_finalize() {
   typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
   while (!finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
@@ -1216,7 +1216,9 @@ void Kokkos::Impl::finalize_without_execution_spaces() {
   }
 
   Kokkos::Profiling::finalize();
+}
 
+void Kokkos::Impl::post_finalize() {
   g_is_initialized = false;
   g_is_finalized   = true;
   g_show_warnings  = true;
@@ -1236,8 +1238,9 @@ void Kokkos::finalize() {
   if (kokkos_finalize_was_called()) {
     Kokkos::abort("Error: Kokkos::finalize() has already been called.\n");
   }
-  Kokkos::Impl::finalize_without_execution_spaces();
+  Kokkos::Impl::pre_finalize();
   Kokkos::Impl::ExecSpaceManager::get_instance().finalize_spaces();
+  Kokkos::Impl::post_finalize();
 }
 
 #ifdef KOKKOS_COMPILER_INTEL
