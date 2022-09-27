@@ -806,6 +806,44 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
+void pre_finalize_internal() {
+  typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
+  while (!finalize_hooks.empty()) {
+    auto f = finalize_hooks.top();
+    try {
+      f();
+    } catch (...) {
+      std::cerr << "Kokkos::finalize: A finalize hook (set via "
+                   "Kokkos::push_finalize_hook) threw an exception that it did "
+                   "not catch."
+                   "  Per std::atexit rules, this results in std::terminate.  "
+                   "This is "
+                   "finalize hook number "
+                << numSuccessfulCalls
+                << " (1-based indexing) "
+                   "out of "
+                << finalize_hooks.size()
+                << " to call.  Remember that "
+                   "Kokkos::finalize calls finalize hooks in reverse order "
+                   "from how they "
+                   "were pushed."
+                << std::endl;
+      std::terminate();
+    }
+    finalize_hooks.pop();
+    ++numSuccessfulCalls;
+  }
+
+  Kokkos::Profiling::finalize();
+}
+
+void post_finalize_internal() {
+  g_is_initialized = false;
+  g_is_finalized   = true;
+  g_show_warnings  = true;
+  g_tune_internals = false;
+}
+
 void fence_internal(const std::string& name) {
   Kokkos::Impl::ExecSpaceManager::get_instance().static_fence(name);
 }
@@ -1187,43 +1225,9 @@ void Kokkos::Impl::post_initialize(const InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
-void Kokkos::Impl::pre_finalize() {
-  typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
-  while (!finalize_hooks.empty()) {
-    auto f = finalize_hooks.top();
-    try {
-      f();
-    } catch (...) {
-      std::cerr << "Kokkos::finalize: A finalize hook (set via "
-                   "Kokkos::push_finalize_hook) threw an exception that it did "
-                   "not catch."
-                   "  Per std::atexit rules, this results in std::terminate.  "
-                   "This is "
-                   "finalize hook number "
-                << numSuccessfulCalls
-                << " (1-based indexing) "
-                   "out of "
-                << finalize_hooks.size()
-                << " to call.  Remember that "
-                   "Kokkos::finalize calls finalize hooks in reverse order "
-                   "from how they "
-                   "were pushed."
-                << std::endl;
-      std::terminate();
-    }
-    finalize_hooks.pop();
-    ++numSuccessfulCalls;
-  }
+void Kokkos::Impl::pre_finalize() { pre_finalize_internal(); }
 
-  Kokkos::Profiling::finalize();
-}
-
-void Kokkos::Impl::post_finalize() {
-  g_is_initialized = false;
-  g_is_finalized   = true;
-  g_show_warnings  = true;
-  g_tune_internals = false;
-}
+void Kokkos::Impl::post_finalize() { post_finalize_internal(); }
 
 void Kokkos::push_finalize_hook(std::function<void()> f) {
   finalize_hooks.push(f);
@@ -1238,9 +1242,9 @@ void Kokkos::finalize() {
   if (kokkos_finalize_was_called()) {
     Kokkos::abort("Error: Kokkos::finalize() has already been called.\n");
   }
-  Kokkos::Impl::pre_finalize();
-  Kokkos::Impl::ExecSpaceManager::get_instance().finalize_spaces();
-  Kokkos::Impl::post_finalize();
+  pre_finalize_internal();
+  Impl::ExecSpaceManager::get_instance().finalize_spaces();
+  post_finalize_internal();
 }
 
 #ifdef KOKKOS_COMPILER_INTEL
