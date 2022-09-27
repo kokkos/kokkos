@@ -7,7 +7,7 @@
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 
-namespace Test {
+namespace {
 // Conversion from DataType to extents
 // 0-rank view
 static_assert(
