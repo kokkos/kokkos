@@ -77,7 +77,7 @@ TEST(initialization, legion_initialization) {
     int result;
     Kokkos::parallel_reduce("TestRed", d.extent(0), ReductionFunctor{d},
                             result);
-    EXPECT_EQ(result, d.extent(0));
+    EXPECT_EQ(result, d.extent_int(0));
   }
 
   Kokkos::Impl::pre_finalize();
