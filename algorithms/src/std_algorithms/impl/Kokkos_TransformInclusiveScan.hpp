@@ -127,18 +127,20 @@ struct TransformInclusiveScanWithInitValueFunctor {
   }
 };
 
+//
+// exespace impl
+//
+
 // -------------------------------------------------------------
-// transform_inclusive_scan_impl without init_value
+// transform_inclusive_scan_exespace_impl without init_value
 // -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType>
-OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
-                                                 const ExecutionSpace& ex,
-                                                 InputIteratorType first_from,
-                                                 InputIteratorType last_from,
-                                                 OutputIteratorType first_dest,
-                                                 BinaryOpType binary_op,
-                                                 UnaryOpType unary_op) {
+OutputIteratorType transform_inclusive_scan_exespace_impl(
+    const std::string& label, const ExecutionSpace& ex,
+    InputIteratorType first_from, InputIteratorType last_from,
+    OutputIteratorType first_dest, BinaryOpType binary_op,
+    UnaryOpType unary_op) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first_from, first_dest);
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
@@ -166,12 +168,12 @@ OutputIteratorType transform_inclusive_scan_impl(const std::string& label,
 }
 
 // -------------------------------------------------------------
-// transform_inclusive_scan_impl with init_value
+// transform_inclusive_scan_exespace_impl with init_value
 // -------------------------------------------------------------
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType,
           class ValueType>
-OutputIteratorType transform_inclusive_scan_impl(
+OutputIteratorType transform_inclusive_scan_exespace_impl(
     const std::string& label, const ExecutionSpace& ex,
     InputIteratorType first_from, InputIteratorType last_from,
     OutputIteratorType first_dest, BinaryOpType binary_op, UnaryOpType unary_op,
@@ -198,6 +200,123 @@ OutputIteratorType transform_inclusive_scan_impl(
 
   // return
   return first_dest + num_elements;
+}
+
+//
+// team impl
+//
+
+// -------------------------------------------------------------
+// transform_inclusive_scan_team_impl without init_value
+// -------------------------------------------------------------
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class BinaryOpType, class UnaryOpType>
+OutputIteratorType transform_inclusive_scan_team_impl(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest,
+    BinaryOpType binary_op, UnaryOpType unary_op) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
+
+#if defined(KOKKOS_ENABLE_CUDA)
+
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
+  using value_type =
+      std::remove_const_t<typename InputIteratorType::value_type>;
+  using func_type = TransformInclusiveScanNoInitValueFunctor<
+      TeamHandleType, index_type, value_type, InputIteratorType,
+      OutputIteratorType, BinaryOpType, UnaryOpType>;
+
+  // run
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+  ::Kokkos::parallel_scan(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      func_type(first_from, first_dest, binary_op, unary_op));
+  teamHandle.team_barrier();
+
+  // return
+  return first_dest + num_elements;
+
+#else
+
+  std::size_t count = 0;
+  if (teamHandle.team_rank() == 0 && first_from != last_from) {
+    auto new_dest   = first_dest;
+    const auto init = unary_op(*first_from);
+    *new_dest++     = init;
+    ++first_from;
+
+    if (first_from != last_from) {
+      new_dest = transform_inclusive_scan_team_impl(teamHandle, first_from,
+                                                    last_from, new_dest,
+                                                    binary_op, unary_op, init);
+    }
+
+    count = Kokkos::Experimental::distance(first_dest, new_dest);
+  }
+
+  teamHandle.team_broadcast(count, 0);
+  return first_dest + count;
+
+#endif
+}
+
+// -------------------------------------------------------------
+// transform_inclusive_scan_team_impl with init_value
+// -------------------------------------------------------------
+template <class TeamHandleType, class InputIteratorType,
+          class OutputIteratorType, class BinaryOpType, class UnaryOpType,
+          class ValueType>
+OutputIteratorType transform_inclusive_scan_team_impl(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest,
+    BinaryOpType binary_op, UnaryOpType unary_op, ValueType init_value) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first_from,
+                                                   first_dest);
+  Impl::static_assert_iterators_have_matching_difference_type(first_from,
+                                                              first_dest);
+  Impl::expect_valid_range(first_from, last_from);
+
+#if defined(KOKKOS_ENABLE_CUDA)
+
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
+  using func_type  = TransformInclusiveScanWithInitValueFunctor<
+      TeamHandleType, index_type, ValueType, InputIteratorType,
+      OutputIteratorType, BinaryOpType, UnaryOpType>;
+
+  // run
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+  ::Kokkos::parallel_scan(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      func_type(first_from, first_dest, binary_op, unary_op, init_value));
+  teamHandle.team_barrier();
+
+  // return
+  return first_dest + num_elements;
+
+#else
+
+  std::size_t count = 0;
+  if (teamHandle.team_rank() == 0) {
+    for (; first_from != last_from; ++first_from) {
+      init_value          = binary_op(init_value, unary_op(*first_from));
+      first_dest[count++] = init_value;
+    }
+  }
+
+  teamHandle.team_broadcast(count, 0);
+  return first_dest + count;
+
+#endif
 }
 
 }  // namespace Impl
