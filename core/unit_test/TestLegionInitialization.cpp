@@ -80,8 +80,11 @@ TEST(initialization, legion_initialization) {
     EXPECT_EQ(result, d.extent(0));
   }
 
-  Kokkos::DefaultExecutionSpace::impl_finalize();
-  Kokkos::finalize();
+  if (!std::is_same_v<Kokkos::DefaultExecutionSpace,
+                      Kokkos::DefaultHostExecutionSpace>)
+    Kokkos::DefaultExecutionSpace::impl_finalize();
+  Kokkos::DefaultHostExecutionSpace::impl_finalize();
+  Kokkos::Impl::finalize_without_execution_spaces();
 
   EXPECT_FALSE(Kokkos::is_initialized());
   EXPECT_TRUE(Kokkos::is_finalized());

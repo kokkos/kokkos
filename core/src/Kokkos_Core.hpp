@@ -97,6 +97,8 @@ void pre_initialize(const InitializationSettings& settings);
 
 void post_initialize(const InitializationSettings& settings);
 
+void finalize_without_execution_spaces();
+
 void declare_configuration_metadata(const std::string& category,
                                     const std::string& key,
                                     const std::string& value);
