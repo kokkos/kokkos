@@ -102,10 +102,8 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
   // ALLOCATION
   Kokkos::View<int*, Kokkos::SharedHostPinnedSpace> sharedData("sharedData",
                                                                numInts);
-
-  // ASSESS RESULTS
-  bool readWriteAccessible = true;
-  unsigned incrementCount  = 0;
+  // MAIN LOOP
+  unsigned incrementCount = 0;
 
   for (unsigned i = 0; i < numDeviceHostCycles; ++i) {
     // INCREMENT DEVICE
@@ -114,7 +112,10 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
     // CHECK RESULTS HOST
     CheckResult checkHost(Kokkos::DefaultHostExecutionSpace{}, sharedData,
                           incrementCount);
-    if (checkHost.error != 0) readWriteAccessible = false;
+    ASSERT_TRUE(checkHost.error == 0)
+        << "Changes to SharedHostPinnedSpace made on device not visible to "
+           "host. Iteration "
+        << i << " of " << numDeviceHostCycles;
 
     // INCREMENT HOST
     Increment incrementHost(Kokkos::DefaultHostExecutionSpace{}, sharedData);
@@ -122,22 +123,10 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
     // CHECK RESULTS Device
     CheckResult checkDevice(Kokkos::DefaultExecutionSpace{}, sharedData,
                             incrementCount);
-    if (checkDevice.error != 0) readWriteAccessible = false;
+    ASSERT_TRUE(checkDevice.error == 0)
+        << "Changes to SharedHostPinnedSpace made on host not visible to "
+           "device. Iteration "
+        << i << " of " << numDeviceHostCycles;
   }
-
-  // CHECK IF PASSED
-  bool passed = (readWriteAccessible);
-
-  // PRINT IF NOT PASSED
-  if (!passed) {
-    std::cout << "Allocating " << numInts
-              << " ints in SharedHostPinnedSpace.\n";
-
-    std::cout << "Behavior found: \n";
-    std::cout
-        << "SharedHostPinnedSpace is read/write accessible by host and device: "
-        << readWriteAccessible << ", we expect true \n\n";
-  }
-  ASSERT_TRUE(passed);
 }
 }  // namespace
