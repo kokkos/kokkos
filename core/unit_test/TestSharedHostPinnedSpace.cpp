@@ -46,10 +46,11 @@
 
 namespace {
 
-template <typename ExecutionSpace, typename ViewType>
+template <typename ViewType>
 struct Increment {
   ViewType view_;
 
+  template <typename ExecutionSpace>
   explicit Increment(ExecutionSpace, ViewType view) : view_(view) {
     Kokkos::fence();
     Kokkos::parallel_for(
@@ -64,12 +65,13 @@ struct Increment {
   void operator()(const size_t idx) const { ++view_(idx); }
 };
 
-template <typename ExecutionSpace, typename ViewType>
+template <typename ViewType>
 struct CheckResult {
   ViewType view_;
   const int targetVal_;
   unsigned error = 0;
 
+  template <typename ExecutionSpace>
   CheckResult(ExecutionSpace, ViewType view, int targetVal)
       : view_(view), targetVal_(targetVal) {
     Kokkos::parallel_reduce(
