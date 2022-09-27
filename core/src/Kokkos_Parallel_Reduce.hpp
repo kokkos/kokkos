@@ -1366,8 +1366,6 @@ struct ParallelReduceAdaptor {
     Kokkos::Tools::Impl::begin_parallel_reduce<PassedReducerType>(
         inner_policy, functor, label, kpID);
 
-    Kokkos::Impl::shared_allocation_tracking_disable();
-
     using ReducerType =
         std::conditional_t<std::is_same_v<InvalidType, PassedReducerType>,
                            FunctorType, PassedReducerType>;
@@ -1381,6 +1379,7 @@ struct ParallelReduceAdaptor {
                                  FunctorType, PolicyType>::execution_space>;
 
     if constexpr (std::is_same_v<InvalidType, PassedReducerType>) {
+      Kokkos::Impl::shared_allocation_tracking_disable();
       typename Analysis::Reducer final_reducer(functor);
       ParallelReduceType closure(
           functor, inner_policy, final_reducer,
@@ -1388,6 +1387,7 @@ struct ParallelReduceAdaptor {
       Kokkos::Impl::shared_allocation_tracking_enable();
       closure.execute();
     } else {
+      Kokkos::Impl::shared_allocation_tracking_disable();
       auto reducer = return_value_adapter::return_value(return_value, functor);
       typename Analysis::Reducer final_reducer(reducer);
       ParallelReduceType closure(functor, inner_policy, final_reducer,
