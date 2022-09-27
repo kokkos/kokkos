@@ -46,6 +46,24 @@ inline std::string benchmark_fom(const std::string& label) {
   return "FOM: " + label;
 }
 
+/**
+ * \brief Report throughput and amount of data processed for simple View
+ * operations
+ */
+template <class ViewType>
+void report_results(benchmark::State& state, ViewType view, int data_ratio,
+                    double time) {
+  // data processed in megabytes
+  const double data_processed = data_ratio * view.size() *
+                                sizeof(typename ViewType::value_type) /
+                                1'000'000;
+
+  state.SetIterationTime(time);
+  state.counters["MB"] = benchmark::Counter(data_processed);
+  state.counters[KokkosBenchmark::benchmark_fom("GB/s")] = benchmark::Counter(
+      data_processed / 1'000, benchmark::Counter::kIsIterationInvariantRate);
+}
+
 }  // namespace KokkosBenchmark
 
 #endif

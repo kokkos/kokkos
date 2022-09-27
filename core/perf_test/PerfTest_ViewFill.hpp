@@ -14,13 +14,11 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
-#include <benchmark/benchmark.h>
+#include <Benchmark_Context.hpp>
+
 #include <cmath>
 
 namespace Test {
-
-void report_results_fill(benchmark::State& state, double time);
 
 template <class ViewType>
 void fill_view(ViewType& a, typename ViewType::const_value_type& val,
@@ -29,7 +27,7 @@ void fill_view(ViewType& a, typename ViewType::const_value_type& val,
     Kokkos::fence();
     Kokkos::Timer timer;
     Kokkos::deep_copy(a, val);
-    report_results_fill(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -121,7 +119,7 @@ static void ViewFill_Raw(benchmark::State& state) {
         N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = 1.1; });
     Kokkos::fence();
 
-    report_results_fill(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 

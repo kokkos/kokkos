@@ -21,8 +21,6 @@
 
 namespace Test {
 
-void report_results_resize(benchmark::State& state, double time);
-
 template <class Layout>
 static void ViewResize_Rank1(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
@@ -34,7 +32,7 @@ static void ViewResize_Rank1(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N8 * 1.1));
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -49,7 +47,7 @@ static void ViewResize_Rank2(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N4 * 1.1), N4);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -65,7 +63,7 @@ static void ViewResize_Rank3(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N3 * 1.1), N3, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -80,7 +78,7 @@ static void ViewResize_Rank4(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N2 * 1.1), N2, N2, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -97,7 +95,7 @@ static void ViewResize_Rank5(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N2 * 1.1), N2, N1, N1, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -114,7 +112,7 @@ static void ViewResize_Rank6(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N2 * 1.1), N1, N1, N1, N1, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -131,7 +129,7 @@ static void ViewResize_Rank7(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N2 * 1.1), N1, N1, N1, N1, N1, N1);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -147,7 +145,7 @@ static void ViewResize_Rank8(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(a_, int(N1 * 1.1), N1, N1, N1, N1, N1, N1, N1);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -162,7 +160,7 @@ static void ViewResize_NoInit_Rank1(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N8 * 1.1));
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -177,7 +175,7 @@ static void ViewResize_NoInit_Rank2(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N4 * 1.1), N4);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -193,7 +191,7 @@ static void ViewResize_NoInit_Rank3(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N3 * 1.1), N3, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -208,7 +206,7 @@ static void ViewResize_NoInit_Rank4(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N2, N2, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -226,7 +224,7 @@ static void ViewResize_NoInit_Rank5(benchmark::State& state) {
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N2, N1, N1,
                    N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -244,7 +242,7 @@ static void ViewResize_NoInit_Rank6(benchmark::State& state) {
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N1, N1, N1,
                    N1, N2);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -262,7 +260,7 @@ static void ViewResize_NoInit_Rank7(benchmark::State& state) {
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N1, N1, N1,
                    N1, N1, N1);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -279,7 +277,7 @@ static void ViewResize_NoInit_Rank8(benchmark::State& state) {
     Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N1 * 1.1), N1, N1, N1,
                    N1, N1, N1, N1);
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 
@@ -297,7 +295,7 @@ static void ViewResize_NoInit_Raw(benchmark::State& state) {
     Kokkos::parallel_for(
         N8, KOKKOS_LAMBDA(const int& i) { a1_ptr[i] = a_ptr[i]; });
     Kokkos::fence();
-    report_results_resize(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 2, timer.seconds());
   }
 }
 

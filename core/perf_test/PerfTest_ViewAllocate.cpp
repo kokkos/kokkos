@@ -22,18 +22,6 @@ namespace Test {
 
 static constexpr int N = 10;
 
-void report_results_allocate(benchmark::State& state, double time) {
-  state.SetIterationTime(time);
-  const auto N8   = std::pow(state.range(0), 8);
-  const auto size = 1.0 * N8 * 8 / 1024 / 1024;
-
-  state.counters["MB"] = benchmark::Counter(size, benchmark::Counter::kDefaults,
-                                            benchmark::Counter::OneK::kIs1024);
-  state.counters[KokkosBenchmark::benchmark_fom("GB/s")] =
-      benchmark::Counter(size / 1024 / time, benchmark::Counter::kDefaults,
-                         benchmark::Counter::OneK::kIs1024);
-}
-
 template <class Layout>
 static void ViewAllocate_Rank1(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
@@ -41,7 +29,7 @@ static void ViewAllocate_Rank1(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double*, Layout> a("A1", N8);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -52,7 +40,7 @@ static void ViewAllocate_Rank2(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double**, Layout> a("A2", N4, N4);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -64,7 +52,7 @@ static void ViewAllocate_Rank3(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double***, Layout> a("A3", N3, N3, N2);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -75,7 +63,7 @@ static void ViewAllocate_Rank4(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double****, Layout> a("A4", N2, N2, N2, N2);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -87,7 +75,7 @@ static void ViewAllocate_Rank5(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double*****, Layout> a("A5", N2, N2, N1, N1, N2);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -99,7 +87,7 @@ static void ViewAllocate_Rank6(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double******, Layout> a("A6", N2, N1, N1, N1, N1, N2);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -111,7 +99,7 @@ static void ViewAllocate_Rank7(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::View<double*******, Layout> a("A7", N2, N1, N1, N1, N1, N1, N1);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -123,7 +111,7 @@ static void ViewAllocate_Rank8(benchmark::State& state) {
     Kokkos::Timer timer;
     Kokkos::View<double********, Layout> a("A8", N1, N1, N1, N1, N1, N1, N1,
                                            N1);
-    report_results_allocate(state, timer.seconds());
+    KokkosBenchmark::report_results(state, a, 1, timer.seconds());
   }
 }
 
@@ -138,7 +126,14 @@ static void ViewAllocate_Raw(benchmark::State& state) {
         N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = 0.0; });
     Kokkos::fence();
     Kokkos::kokkos_free(a_ptr);
-    report_results_allocate(state, timer.seconds());
+
+    state.SetIterationTime(timer.seconds());
+    // data processed in megabytes
+    const double data_processed = 1 * N8 * sizeof(double) / 1'000'000;
+
+    state.counters["MB"] = benchmark::Counter(data_processed);
+    state.counters[KokkosBenchmark::benchmark_fom("GB/s")] = benchmark::Counter(
+        data_processed / 1'000, benchmark::Counter::kIsIterationInvariantRate);
   }
 }
 
