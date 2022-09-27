@@ -189,10 +189,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initValue = initValuesView_h(i);
 
+#if defined(__GNUC__) && __GNUC__ == 8
+#define transform_exclusive_scan testing_transform_exclusive_scan
+#else
+#define transform_exclusive_scan std::transform_exclusive_scan
+#endif
+
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::transform_exclusive_scan(
+        auto it = transform_exclusive_scan(
             KE::cbegin(rowFrom), KE::cend(rowFrom), KE::begin(rowDest),
             initValue, binaryOp, unaryOp);
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
@@ -200,6 +206,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         break;
       }
     }
+
+#undef transform_exclusive_scan
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);

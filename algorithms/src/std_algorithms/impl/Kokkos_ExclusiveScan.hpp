@@ -220,10 +220,11 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
       Kokkos::Experimental::distance(first_from, last_from);
 
   // aliases
+  using exe_space     = typename TeamHandleType::execution_space;
   using index_type    = typename InputIteratorType::difference_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
   using func_type =
-      TransformExclusiveScanFunctor<TeamHandleType, index_type, ValueType,
+      TransformExclusiveScanFunctor<exe_space, index_type, ValueType,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, unary_op_type>;
 
@@ -272,13 +273,14 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_default_op_team_impl(
 #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
+  using exe_space  = typename TeamHandleType::execution_space;
   using index_type = typename InputIteratorType::difference_type;
   using func_type  = std::conditional_t<
       ::Kokkos::is_detected_v<ex_scan_has_reduction_identity_sum_t, ValueType>,
       ExclusiveScanDefaultFunctorForKnownNeutralElement<
-          TeamHandleType, index_type, ValueType, InputIteratorType,
+          exe_space, index_type, ValueType, InputIteratorType,
           OutputIteratorType>,
-      ExclusiveScanDefaultFunctor<TeamHandleType, index_type, ValueType,
+      ExclusiveScanDefaultFunctor<exe_space, index_type, ValueType,
                                   InputIteratorType, OutputIteratorType>>;
 
   const auto num_elements =

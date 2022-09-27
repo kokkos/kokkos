@@ -216,11 +216,17 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initValue = initValuesView_h(i);
 
+#if defined(__GNUC__) && __GNUC__ == 8
+#define transform_inclusive_scan testing_transform_inclusive_scan
+#else
+#define transform_inclusive_scan std::transform_inclusive_scan
+#endif
+
     switch (apiId) {
       case 0:
       case 1: {
-        const auto it = std::transform_inclusive_scan(first, last, firstDest,
-                                                      binaryOp, unaryOp);
+        const auto it =
+            transform_inclusive_scan(first, last, firstDest, binaryOp, unaryOp);
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -229,8 +235,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        const auto it = std::transform_inclusive_scan(
-            first, last, firstDest, binaryOp, unaryOp, initValue);
+        const auto it = transform_inclusive_scan(first, last, firstDest,
+                                                 binaryOp, unaryOp, initValue);
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 

@@ -184,8 +184,9 @@ auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
 
 #if defined(__GNUC__) && __GNUC__ == 8
 
-// GCC 8 doesn't come with reduce and transform_reduce, so here are simplified
-// versions of them, only for testing purpose
+// GCC 8 doesn't come with reduce, transform_reduce, exclusive_scan,
+// inclusive_scan, transform_exclusive_scan and transform_inclusive_scan so here
+// are simplified versions of them, only for testing purpose
 
 template <class InputIterator, class ValueType, class BinaryOp>
 ValueType testing_reduce(InputIterator first, InputIterator last,
@@ -278,6 +279,121 @@ ValueType testing_transform_reduce(InputIterator first, InputIterator last,
 
   return init;
 }
+
+template <class InputIterator, class OutputIterator, class ValueType,
+          class BinaryOp>
+OutputIterator testing_exclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, ValueType init,
+                                      BinaryOp binOp) {
+  while (first != last) {
+    auto v = init;
+    init   = binOp(init, *first);
+    ++first;
+    *result++ = v;
+  }
+
+  return result;
+}
+
+template <class InputIterator, class OutputIterator, class ValueType>
+OutputIterator testing_exclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, ValueType init) {
+  return testing_exclusive_scan(
+      first, last, result, init,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+}
+
+template <class InputIterator, class OutputIterator, class BinaryOp,
+          class ValueType>
+OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, BinaryOp binOp,
+                                      ValueType init) {
+  for (; first != last; ++first) {
+    init      = binOp(init, *first);
+    *result++ = init;
+  }
+
+  return result;
+}
+
+template <class InputIterator, class OutputIterator, class BinaryOp>
+OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, BinaryOp binOp) {
+  if (first != last) {
+    auto init = *first;
+    *result++ = init;
+    ++first;
+
+    if (first != last) {
+      result = testing_inclusive_scan(first, last, result, binOp, init);
+    }
+  }
+
+  return result;
+}
+
+template <class InputIterator, class OutputIterator>
+OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result) {
+  using ValueType = typename InputIterator::value_type;
+  return testing_inclusive_scan(
+      first, last, result,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+}
+
+template <class InputIterator, class OutputIterator, class ValueType,
+          class BinaryOp, class UnaryOp>
+OutputIterator testing_transform_exclusive_scan(InputIterator first,
+                                                InputIterator last,
+                                                OutputIterator result,
+                                                ValueType init, BinaryOp binOp,
+                                                UnaryOp unaryOp) {
+  while (first != last) {
+    auto v = init;
+    init   = binOp(init, unaryOp(*first));
+    ++first;
+    *result++ = v;
+  }
+
+  return result;
+}
+
+template <class InputIterator, class OutputIterator, class BinaryOp,
+          class UnaryOp, class ValueType>
+OutputIterator testing_transform_inclusive_scan(InputIterator first,
+                                                InputIterator last,
+                                                OutputIterator result,
+                                                BinaryOp binOp, UnaryOp unaryOp,
+                                                ValueType init) {
+  for (; first != last; ++first) {
+    init      = binOp(init, unaryOp(*first));
+    *result++ = init;
+  }
+
+  return result;
+}
+
+template <class InputIterator, class OutputIterator, class BinaryOp,
+          class UnaryOp>
+OutputIterator testing_transform_inclusive_scan(InputIterator first,
+                                                InputIterator last,
+                                                OutputIterator result,
+                                                BinaryOp binOp,
+                                                UnaryOp unaryOp) {
+  if (first != last) {
+    auto init = unaryOp(*first);
+    *result++ = init;
+    ++first;
+    if (first != last) {
+      result = testing_transform_inclusive_scan(first, last, result, binOp,
+                                                unaryOp, init);
+    }
+  }
+
+  return result;
+}
+
+#endif
 
 template <class LayoutTagType, class ValueType>
 auto create_random_view_and_host_clone(

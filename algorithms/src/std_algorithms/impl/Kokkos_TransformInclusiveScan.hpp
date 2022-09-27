@@ -225,12 +225,13 @@ OutputIteratorType transform_inclusive_scan_team_impl(
 #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
+  using exe_space  = typename TeamHandleType::execution_space;
   using index_type = typename InputIteratorType::difference_type;
   using value_type =
       std::remove_const_t<typename InputIteratorType::value_type>;
   using func_type = TransformInclusiveScanNoInitValueFunctor<
-      TeamHandleType, index_type, value_type, InputIteratorType,
-      OutputIteratorType, BinaryOpType, UnaryOpType>;
+      exe_space, index_type, value_type, InputIteratorType, OutputIteratorType,
+      BinaryOpType, UnaryOpType>;
 
   // run
   const auto num_elements =
@@ -287,10 +288,11 @@ OutputIteratorType transform_inclusive_scan_team_impl(
 #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
+  using exe_space  = typename TeamHandleType::execution_space;
   using index_type = typename InputIteratorType::difference_type;
   using func_type  = TransformInclusiveScanWithInitValueFunctor<
-      TeamHandleType, index_type, ValueType, InputIteratorType,
-      OutputIteratorType, BinaryOpType, UnaryOpType>;
+      exe_space, index_type, ValueType, InputIteratorType, OutputIteratorType,
+      BinaryOpType, UnaryOpType>;
 
   // run
   const auto num_elements =

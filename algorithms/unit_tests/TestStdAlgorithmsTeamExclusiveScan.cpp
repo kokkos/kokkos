@@ -202,11 +202,17 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initValue = initValuesView_h(i);
 
+#if defined(__GNUC__) && __GNUC__ == 8
+#define exclusive_scan testing_exclusive_scan
+#else
+#define exclusive_scan std::exclusive_scan
+#endif
+
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::exclusive_scan(KE::begin(rowFrom), KE::end(rowFrom),
-                                      KE::begin(rowDest), initValue);
+        auto it = exclusive_scan(KE::begin(rowFrom), KE::end(rowFrom),
+                                 KE::begin(rowDest), initValue);
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
         break;
@@ -214,14 +220,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        auto it = std::exclusive_scan(KE::begin(rowFrom), KE::end(rowFrom),
-                                      KE::begin(rowDest), initValue, binaryOp);
+        auto it = exclusive_scan(KE::begin(rowFrom), KE::end(rowFrom),
+                                 KE::begin(rowDest), initValue, binaryOp);
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }
     }
+
+#undef exclusive_scan
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);

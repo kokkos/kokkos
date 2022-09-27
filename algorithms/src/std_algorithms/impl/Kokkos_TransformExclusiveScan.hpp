@@ -141,9 +141,10 @@ KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan_team_impl(
 #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
+  using exe_space  = typename TeamHandleType::execution_space;
   using index_type = typename InputIteratorType::difference_type;
   using func_type =
-      TransformExclusiveScanFunctor<TeamHandleType, index_type, ValueType,
+      TransformExclusiveScanFunctor<exe_space, index_type, ValueType,
                                     InputIteratorType, OutputIteratorType,
                                     BinaryOpType, UnaryOpType>;
 

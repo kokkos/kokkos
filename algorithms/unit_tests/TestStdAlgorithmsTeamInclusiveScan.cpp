@@ -223,10 +223,17 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initValue = initValuesView_h(i);
 
+#if defined(__GNUC__) && __GNUC__ == 8
+#define inclusive_scan testing_inclusive_scan
+#else
+#define inclusive_scan std::inclusive_scan
+#endif
+
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::inclusive_scan(first, last, firstDest);
+        auto it = inclusive_scan(first, last, firstDest);
+
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -235,7 +242,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        auto it = std::inclusive_scan(first, last, firstDest, binaryOp);
+        auto it = inclusive_scan(first, last, firstDest, binaryOp);
+
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -244,14 +252,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 4:
       case 5: {
-        auto it =
-            std::inclusive_scan(first, last, firstDest, binaryOp, initValue);
+        auto it = inclusive_scan(first, last, firstDest, binaryOp, initValue);
+
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }
     }
+
+#undef inclusive_scan
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);
