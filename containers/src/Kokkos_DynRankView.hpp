@@ -2219,9 +2219,10 @@ create_mirror_view(
 
 template <class Space, class T, class... P>
 inline auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
-                               const Space& space,
+                               const Space&,
                                const Kokkos::DynRankView<T, P...>& src) {
-  return Impl::create_mirror_view(src, Kokkos::view_alloc(space, wi));
+  return Impl::create_mirror_view(
+      src, Kokkos::view_alloc(typename Space::memory_space{}, wi));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
