@@ -116,6 +116,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         BlockSizeDeduction
         Concepts
         Complex
+        CreateMirror
         Crs
         DeepCopyAlignment
         ExecutionSpace

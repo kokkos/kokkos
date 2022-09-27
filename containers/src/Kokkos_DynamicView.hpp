@@ -701,7 +701,7 @@ template <class Space, class T, class... P>
 inline auto create_mirror(
     const Space&, const Kokkos::Experimental::DynamicView<T, P...>& src) {
   return Impl::create_mirror(
-      src, Impl::ViewCtorProp<>{typename Space::memory_space{}});
+      src, Kokkos::view_alloc(typename Space::memory_space{}));
 }
 
 template <class Space, class T, class... P>

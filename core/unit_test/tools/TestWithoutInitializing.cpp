@@ -47,43 +47,25 @@
 
 #include "include/ToolTestingUtilities.hpp"
 
-template <typename InputView, typename OutputView>
-void check_host_mirror(const InputView&, const OutputView&) {
-  using InputSpace  = typename InputView::memory_space;
-  using OutputSpace = typename OutputView::memory_space;
-  if constexpr (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
-                                           InputSpace>::accessible)
-    static_assert(std::is_same_v<OutputSpace, InputSpace>);
-  else
-    static_assert(std::is_same_v<OutputSpace, Kokkos::HostSpace>);
-}
-
 TEST(kokkosp, create_mirror_no_init) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::View<int*, Kokkos::DefaultExecutionSpace> device_view("device view",
                                                                 10);
   Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
-  using MemorySpace = typename Kokkos::DefaultExecutionSpace::memory_space;
 
   auto success = validate_absence(
       [&]() {
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
-        check_host_mirror(device_view, mirror_device);
         auto mirror_host =
             Kokkos::create_mirror(Kokkos::WithoutInitializing,
                                   Kokkos::DefaultExecutionSpace{}, host_view);
-        static_assert(
-            std::is_same_v<decltype(mirror_host)::memory_space, MemorySpace>);
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, device_view);
-        check_host_mirror(device_view, mirror_device_view);
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, Kokkos::DefaultExecutionSpace{},
             host_view);
-        static_assert(std::is_same_v<decltype(mirror_host_view)::memory_space,
-                                     MemorySpace>);
       },
       [&](BeginParallelForEvent) {
         return MatchDiagnostic{true, {"Found begin event"}};
@@ -100,8 +82,6 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
   Kokkos::View<int*, Kokkos::DefaultExecutionSpace> device_view("device view",
                                                                 10);
   Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
-  using MemorySpace = typename Kokkos::DefaultExecutionSpace::memory_space;
-  MemorySpace device_memory_space;
 
   auto success = validate_absence(
       [&]() {
@@ -109,27 +89,19 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
             Kokkos::view_alloc(Kokkos::HostSpace{},
                                Kokkos::WithoutInitializing),
             device_view);
-        static_assert(std::is_same_v<decltype(mirror_device)::memory_space,
-                                     Kokkos::HostSpace>);
         auto mirror_host = Kokkos::create_mirror(
-            Kokkos::view_alloc(device_memory_space, Kokkos::WithoutInitializing,
+            Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
-        static_assert(
-            std::is_same_v<decltype(mirror_host)::memory_space, MemorySpace>);
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::HostSpace{},
                                Kokkos::WithoutInitializing),
             device_view);
-        static_assert(std::is_same_v<decltype(mirror_device_view)::memory_space,
-                                     Kokkos::HostSpace>);
         auto mirror_host_view = Kokkos::create_mirror_view(
-            Kokkos::view_alloc(device_memory_space, Kokkos::WithoutInitializing,
+            Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing,
                                Kokkos::DefaultExecutionSpace{}),
             host_view);
-        static_assert(std::is_same_v<decltype(mirror_host_view)::memory_space,
-                                     MemorySpace>);
-        auto mirror_host_view_host = Kokkos::create_mirror_view(
+        mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), host_view);
       },
       [&](BeginParallelForEvent) {
@@ -160,17 +132,14 @@ TEST(kokkosp, create_mirror_view_and_copy) {
                      Config::EnableFences());
   Kokkos::View<int*, Kokkos::DefaultExecutionSpace> device_view;
   Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
-  using MemorySpace = typename Kokkos::DefaultExecutionSpace::memory_space;
-  MemorySpace device_memory_space;
 
   auto success = validate_absence(
       [&]() {
         auto mirror_device = Kokkos::create_mirror_view_and_copy(
-            Kokkos::view_alloc(Kokkos::DefaultExecutionSpace{},
-                               device_memory_space),
+            Kokkos::view_alloc(
+                Kokkos::DefaultExecutionSpace{},
+                typename Kokkos::DefaultExecutionSpace::memory_space{}),
             host_view);
-        static_assert(
-            std::is_same_v<decltype(mirror_device)::memory_space, MemorySpace>);
         // Avoid fences for deallocation when mirror_device goes out of scope.
         device_view = mirror_device;
       },
