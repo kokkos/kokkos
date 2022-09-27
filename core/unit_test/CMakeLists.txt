@@ -843,7 +843,9 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_LegionInitialization
-  SOURCES TestLegionInitialization.cpp
+  SOURCES
+    UnitTestMain.cpp
+    TestLegionInitialization.cpp
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
