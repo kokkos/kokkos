@@ -55,6 +55,10 @@ static_assert(false,
 #define DESUL_HAVE_OPENMP_ATOMICS
 #endif
 
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL)
+#define DESUL_CUDA_ARCH_IS_PRE_PASCAL
+#endif
+
 #if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
     defined(KOKKOS_ARCH_PASCAL)
 #define DESUL_CUDA_ARCH_IS_PRE_VOLTA

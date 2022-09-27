@@ -163,6 +163,11 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
     // Round team size up to a multiple of 'team_gain'
     const int team_size_grain =
         team_grain * ((m_team_size + team_grain - 1) / team_grain);
+
+    // more helpful than "floating point exception occured"
+    if (0 == team_size_grain) {
+      Kokkos::abort("Kokkos::abort: Requested Team Size rounded up to 0!");
+    }
     const int team_count = pool_size / team_size_grain;
 
     // Constraint : pool_size = m_team_alloc * team_count
