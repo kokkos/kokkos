@@ -81,36 +81,33 @@ namespace Experimental::Impl {
 
 template <std::size_t N>
 struct ExtentFromDimension {
-  static constexpr inline std::size_t value = N;
+  static constexpr std::size_t value = N;
 };
 
-/*
- * Kokkos uses a dimension of '0' to denote a dynamic dimension.
- */
+// Kokkos uses a dimension of '0' to denote a dynamic dimension.
 template <>
 struct ExtentFromDimension<std::size_t{0}> {
-  static constexpr inline std::size_t value = std::experimental::dynamic_extent;
+  static constexpr std::size_t value = std::experimental::dynamic_extent;
 };
 
 template <std::size_t N>
 struct DimensionFromExtent {
-  static constexpr inline std::size_t value = N;
+  static constexpr std::size_t value = N;
 };
 
 template <>
 struct DimensionFromExtent<std::experimental::dynamic_extent> {
-  static constexpr inline std::size_t value = std::size_t{0};
+  static constexpr std::size_t value = std::size_t{0};
 };
 
-template <class SizeType, class Dimension, class Indices>
+template <class Dimension, class Indices>
 struct ExtentsFromDimension;
 
-template <class SizeType, class Dimension, std::size_t... Indices>
-struct ExtentsFromDimension<SizeType, Dimension,
-                            std::index_sequence<Indices...>> {
+template <class Dimension, std::size_t... Indices>
+struct ExtentsFromDimension<Dimension, std::index_sequence<Indices...>> {
   using dimension_type = Dimension;
   using type           = std::experimental::extents<
-      SizeType,
+      std::size_t,  // Mirrors Kokkos::View's size type
       ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
 };
 
@@ -127,12 +124,10 @@ struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
 template <class DataType>
 struct ExtentsFromDataType {
   using array_analysis = ::Kokkos::Impl::ViewArrayAnalysis<DataType>;
-  using size_type      = std::size_t;  // Mirrors Kokkos::View's size type
   using dimension_type = typename array_analysis::dimension;
 
   using type = typename ExtentsFromDimension<
-      size_type, dimension_type,
-      std::make_index_sequence<dimension_type::rank>>::type;
+      dimension_type, std::make_index_sequence<dimension_type::rank>>::type;
 };
 
 template <class T, class Extents>
