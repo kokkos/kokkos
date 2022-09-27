@@ -61,10 +61,10 @@ TEST(initialization, legion_initialization) {
   Kokkos::Impl::pre_initialize(kokkos_init_settings);
 
   // We need to have a host execution space initialized first.
-  Kokkos::HostSpace::execution_space::impl_initialize(kokkos_init_settings);
+  Kokkos::DefaultHostExecutionSpace::impl_initialize(kokkos_init_settings);
 
   if (!std::is_same_v<Kokkos::DefaultExecutionSpace,
-                      Kokkos::HostSpace::execution_space>)
+                      Kokkos::DefaultHostExecutionSpace>)
     Kokkos::DefaultExecutionSpace::impl_initialize(kokkos_init_settings);
 
   Kokkos::Impl::post_initialize(kokkos_init_settings);
