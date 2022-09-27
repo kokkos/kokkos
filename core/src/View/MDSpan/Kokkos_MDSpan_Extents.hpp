@@ -105,7 +105,6 @@ struct ExtentsFromDimension;
 
 template <class Dimension, std::size_t... Indices>
 struct ExtentsFromDimension<Dimension, std::index_sequence<Indices...>> {
-  using dimension_type = Dimension;
   using type           = std::experimental::extents<
       std::size_t,  // Mirrors Kokkos::View's size type
       ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
@@ -116,9 +115,8 @@ struct DimensionsFromExtent;
 
 template <class Extents, std::size_t... Indices>
 struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
-  using extents_type = Extents;
   using type         = ::Kokkos::Impl::ViewDimension<
-      DimensionFromExtent<extents_type::static_extent(Indices)>::value...>;
+      DimensionFromExtent<Extents::static_extent(Indices)>::value...>;
 };
 
 template <class DataType>
