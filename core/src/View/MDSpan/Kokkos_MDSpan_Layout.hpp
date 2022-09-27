@@ -69,7 +69,7 @@ namespace Kokkos::Experimental {
 template <class Extents>
 class MDSpanLayoutLeft {
   using extents_type = Extents;
-  using size_type    = typename extents_type::size_type;
+  using index_type    = typename extents_type::index_type;
   using rank_type    = typename extents_type::rank_type;
   using layout_type  = LayoutLeft;
 
@@ -87,24 +87,24 @@ class MDSpanLayoutLeft {
   constexpr const extents_type &extents() const noexcept { return m_extents; }
 
   template <class... Indices>
-  constexpr size_type operator()(Indices... idxs) const noexcept {
+  constexpr index_type operator()(Indices... idxs) const noexcept {
     // We don't define dimension counts past 8 but hopefully this should
     // give a better error rather than a huge list of overload candidates
     // failing
     static_assert(sizeof...(Indices) <= 8,
                   "Kokkos dimensions are limited to <= 8");
-    return m_offset(static_cast<size_type>(idxs)...);
+    return m_offset(static_cast<index_type>(idxs)...);
   }
 
-  constexpr size_type required_span_size() const noexcept {
+  constexpr index_type required_span_size() const noexcept {
     return m_offset.span();
   }
 
   constexpr bool is_unique() const noexcept { return true; }
-
-  constexpr bool is_contiguous() const noexcept {
+  constexpr bool is_exhaustive() const noexcept {
     return m_offset.span_is_contiguous();
   }
+
 
  private:
   using dimension_type =
@@ -113,7 +113,7 @@ class MDSpanLayoutLeft {
 
   // This assumption should hold since we are using size_t everywhere in Kokkos
   // but if we ever change this the assert should fail
-  static_assert(std::is_same_v<typename offset_type::size_type, size_type>);
+  static_assert(std::is_same_v<typename offset_type::size_type, index_type>);
 
   extents_type m_extents;
   offset_type m_offset;
