@@ -69,6 +69,8 @@ TEST(initialization, legion_initialization) {
 
   Kokkos::Impl::post_initialize(kokkos_init_settings);
 
+  EXPECT_TRUE(Kokkos::is_initialized());
+
   {
     Kokkos::View<int*> d("d", 1000);
     Kokkos::deep_copy(d, 1);
