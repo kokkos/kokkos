@@ -69,7 +69,6 @@ namespace Kokkos {
 namespace Experimental {
 
 bool HPX::m_hpx_initialized = false;
-bool HPX::m_hpx_finalized   = false;
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 std::atomic<uint32_t> HPX::m_next_instance_id{HPX::impl_default_instance_id() +
                                               1};
@@ -122,7 +121,7 @@ bool HPX::impl_is_initialized() noexcept {
 }
 
 void HPX::impl_finalize() {
-  if (m_hpx_initialized && !m_hpx_finalized) {
+  if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
       hpx::apply([]() { hpx::local::finalize(); });
@@ -132,7 +131,6 @@ void HPX::impl_finalize() {
           "Kokkos::Experimental::HPX::impl_finalize: Kokkos started "
           "HPX but something else already stopped HPX\n");
     }
-    m_hpx_finalized = true;
   }
 }
 

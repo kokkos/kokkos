@@ -301,8 +301,6 @@ void HIPInternal::release_team_scratch_space(int scratch_pool_id) {
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
-  if (was_finalized) return;
-
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 

@@ -204,8 +204,6 @@ class HPX {
 
  private:
   static bool m_hpx_initialized;
-  static bool m_hpx_finalized;
-
   uint32_t m_instance_id = impl_default_instance_id();
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
