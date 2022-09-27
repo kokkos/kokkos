@@ -1179,10 +1179,10 @@ TEST(TEST_CATEGORY, md_range_policy_compile_time_deduction_guides) {
   SomeExecutionSpace ses{};
   TEST_EXECSPACE es{};
 
-  constexpr int t[5]       = {};
-  constexpr int64_t tt[5]  = {};
-  Kokkos::Array<int, 3> a  = {};
-  Kokkos::Array<int, 2> aa = {};
+  constexpr int t[5]           = {};
+  constexpr int64_t tt[5]      = {};
+  Kokkos::Array<int64_t, 3> a  = {};
+  Kokkos::Array<int64_t, 2> aa = {};
 
   Kokkos::MDRangePolicy<Kokkos::Rank<2>> ptc;
   Kokkos::MDRangePolicy pdc(ptc);
