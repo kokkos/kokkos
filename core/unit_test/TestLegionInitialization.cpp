@@ -82,5 +82,8 @@ TEST(initialization, legion_initialization) {
 
   Kokkos::DefaultExecutionSpace::impl_finalize();
   Kokkos::finalize();
+
+  EXPECT_FALSE(Kokkos::is_initialized());
+  EXPECT_TRUE(Kokkos::is_finalized());
 }
 }  // namespace
