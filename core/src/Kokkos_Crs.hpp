@@ -51,7 +51,7 @@ static_assert(false,
 #define KOKKOS_CRS_HPP
 
 #include <Kokkos_View.hpp>
-#include <Kokkos_CopyViews.hpp>
+#include <View/Kokkos_CreateMirror.hpp>
 
 namespace Kokkos {
 
