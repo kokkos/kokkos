@@ -68,7 +68,7 @@ struct Increment {
 template <typename ViewType>
 struct CheckResult {
   ViewType view_;
-  const int targetVal_;
+  int targetVal_;
   unsigned error = 0;
 
   template <typename ExecutionSpace>
