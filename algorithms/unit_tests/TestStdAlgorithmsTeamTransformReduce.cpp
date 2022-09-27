@@ -247,11 +247,17 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initVal = initValuesView_h(i);
 
+#if defined(__GNUC__) && __GNUC__ == 8
+#define transform_reduce testing_transform_reduce
+#else
+#define transform_reduce std::transform_reduce
+#endif
+
     switch (apiId) {
       case 0:
       case 1: {
-        const auto result = testing_transform_reduce(
-            firstDataRowBegin, firstDataRowEnd, secondDataRowBegin, initVal);
+        const auto result = transform_reduce(firstDataRowBegin, firstDataRowEnd,
+                                             secondDataRowBegin, initVal);
 
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, resultsView_h(i));
@@ -264,7 +270,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        const ValueType result = testing_transform_reduce(
+        const ValueType result = transform_reduce(
             firstDataRowBegin, firstDataRowEnd, secondDataRowBegin, initVal,
             binaryJoiner, binaryTransform);
 
@@ -280,8 +286,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       case 4:
       case 5: {
         const ValueType result =
-            testing_transform_reduce(firstDataRowBegin, firstDataRowEnd,
-                                     initVal, binaryJoiner, unaryTransform);
+            transform_reduce(firstDataRowBegin, firstDataRowEnd, initVal,
+                             binaryJoiner, unaryTransform);
 
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, resultsView_h(i));
@@ -292,6 +298,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         break;
       }
     }
+
+#undef transform_reduce
   }
 }
 

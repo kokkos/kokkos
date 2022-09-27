@@ -182,8 +182,10 @@ auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
   return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
 }
 
-// GCC 8 doesn't come with reduce and transform_reduce implementations, so here
-// are simplified versions of them, only for testing purpose
+#if defined(__GNUC__) && __GNUC__ == 8
+
+// GCC 8 doesn't come with reduce and transform_reduce, so here are simplified
+// versions of them, only for testing purpose
 
 template <class InputIterator, class ValueType, class BinaryOp>
 ValueType testing_reduce(InputIterator first, InputIterator last,
