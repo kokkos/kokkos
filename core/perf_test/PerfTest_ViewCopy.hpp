@@ -76,6 +76,7 @@ inline void report_results(benchmark::State& state, std::size_t num_elems,
 template <class ViewTypeA, class ViewTypeB>
 void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {
   for (auto _ : state) {
+    Kokkos::fence();
     Kokkos::Timer timer;
     Kokkos::deep_copy(a, b);
     report_results(state, a.size(), timer.seconds());
@@ -180,6 +181,7 @@ static void ViewDeepCopy_Raw(benchmark::State& state) {
   const double* const b_ptr = b.data();
 
   for (auto _ : state) {
+    Kokkos::fence();
     Kokkos::Timer timer;
     Kokkos::parallel_for(
         N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = b_ptr[i]; });
