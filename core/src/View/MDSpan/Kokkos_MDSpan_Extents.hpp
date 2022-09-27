@@ -55,10 +55,6 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #ifndef KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
-#include <Kokkos_Core_fwd.hpp>
-
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
 #include <experimental/mdspan>
 
 namespace Kokkos {
@@ -150,7 +146,5 @@ struct DataTypeFromExtents {
 };
 }  // namespace Experimental::Impl
 }  // namespace Kokkos
-
-#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
