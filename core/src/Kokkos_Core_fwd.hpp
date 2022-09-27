@@ -332,9 +332,10 @@ class ParallelFor;
 ///
 /// This is an implementation detail of parallel_reduce.  Users should
 /// skip this and go directly to the nonmember function parallel_reduce.
-template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
+template <class CombinedFunctorReducerType, class ExecPolicy,
           class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
-              FunctorType, ExecPolicy>::execution_space>
+              typename CombinedFunctorReducerType::functor_type,
+              ExecPolicy>::execution_space>
 class ParallelReduce;
 
 /// \class ParallelScan
@@ -352,6 +353,49 @@ template <class FunctorType, class ExecPolicy, class ReturnType = InvalidType,
           class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
               FunctorType, ExecPolicy>::execution_space>
 class ParallelScanWithTotal;
+
+template <typename FunctorType, typename FunctorAnalysisReducerType,
+          typename Enable = void>
+class CombinedFunctorReducer {
+ public:
+  using functor_type = FunctorType;
+  using reducer_type = FunctorAnalysisReducerType;
+
+  CombinedFunctorReducer(const FunctorType& functor,
+                         const FunctorAnalysisReducerType& reducer)
+      : m_functor(functor), m_reducer(reducer) {}
+
+  KOKKOS_FUNCTION const FunctorType& get_functor() const { return m_functor; }
+  KOKKOS_FUNCTION const FunctorAnalysisReducerType& get_reducer() const {
+    return m_reducer;
+  }
+
+ private:
+  FunctorType m_functor;
+  FunctorAnalysisReducerType m_reducer;
+};
+
+template <typename FunctorType, typename FunctorAnalysisReducerType>
+class CombinedFunctorReducer<
+    FunctorType, FunctorAnalysisReducerType,
+    std::enable_if_t<std::is_same_v<
+        FunctorType, typename FunctorAnalysisReducerType::functor_type>>> {
+ public:
+  using functor_type = FunctorType;
+  using reducer_type = FunctorAnalysisReducerType;
+
+  CombinedFunctorReducer(const FunctorType& functor) : m_reducer(functor) {}
+
+  KOKKOS_FUNCTION const FunctorType& get_functor() const {
+    return m_reducer.get_functor();
+  }
+  KOKKOS_FUNCTION const FunctorAnalysisReducerType& get_reducer() const {
+    return m_reducer;
+  }
+
+ private:
+  FunctorAnalysisReducerType m_reducer;
+};
 
 }  // namespace Impl
 

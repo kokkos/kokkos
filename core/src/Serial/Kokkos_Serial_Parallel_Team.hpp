@@ -296,13 +296,15 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 /*--------------------------------------------------------------------------*/
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Serial> {
+template <class CombinedFunctorReducerType, class... Properties>
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::TeamPolicy<Properties...>, Kokkos::Serial> {
  private:
   enum { TEAM_REDUCE_SIZE = 512 };
 
-  using Policy = TeamPolicyInternal<Kokkos::Serial, Properties...>;
+  using Policy      = TeamPolicyInternal<Kokkos::Serial, Properties...>;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
   using Member  = typename Policy::member_type;
   using WorkTag = typename Policy::work_tag;
@@ -314,10 +316,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
   const int m_league;
-  const ReducerType m_reducer;
   pointer_type m_result_ptr;
   size_t m_shared;
 
@@ -325,7 +326,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline std::enable_if_t<std::is_void<TagType>::value> exec(
       HostThreadTeamData& data, reference_type update) const {
     for (int ileague = 0; ileague < m_league; ++ileague) {
-      m_functor(Member(data, ileague, m_league), update);
+      m_functor_reducer.get_functor()(Member(data, ileague, m_league), update);
     }
   }
 
@@ -335,13 +336,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const TagType t{};
 
     for (int ileague = 0; ileague < m_league; ++ileague) {
-      m_functor(t, Member(data, ileague, m_league), update);
+      m_functor_reducer.get_functor()(t, Member(data, ileague, m_league),
+                                      update);
     }
   }
 
  public:
   inline void execute() const {
-    const size_t pool_reduce_size = m_reducer.value_size();
+    const size_t pool_reduce_size =
+        m_functor_reducer.get_reducer().value_size();
 
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE;
     const size_t team_shared_size  = m_shared;
@@ -361,24 +364,23 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             : pointer_type(
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
-    reference_type update = m_reducer.init(ptr);
+    reference_type update = m_functor_reducer.get_reducer().init(ptr);
 
     this->template exec<WorkTag>(internal_instance->m_thread_team_data, update);
 
-    m_reducer.final(ptr);
+    m_functor_reducer.get_reducer().final(ptr);
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer,
-                 const ViewType& arg_result_view)
-      : m_functor(arg_functor),
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result_view)
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_league(arg_policy.league_size()),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
-                 FunctorTeamShmemSize<FunctorType>::value(m_functor, 1)) {
+                 FunctorTeamShmemSize<FunctorType>::value(
+                     m_functor_reducer.get_functor(), 1)) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
 

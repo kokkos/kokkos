@@ -70,10 +70,10 @@ struct DeduceFunctorPatternInterface<
   using type = FunctorPatternInterface::FOR;
 };
 
-template <class FunctorType, class ExecPolicy, class ReducerType,
+template <class CombinedFunctorReducerType, class ExecPolicy,
           class ExecutionSpace>
 struct DeduceFunctorPatternInterface<
-    ParallelReduce<FunctorType, ExecPolicy, ReducerType, ExecutionSpace>> {
+    ParallelReduce<CombinedFunctorReducerType, ExecPolicy, ExecutionSpace>> {
   using type = FunctorPatternInterface::REDUCE;
 };
 
@@ -873,6 +873,9 @@ struct FunctorAnalysis {
     void final(ValueType* dst) const noexcept {
       DeduceFinal<>::final(&m_functor, dst);
     }
+
+    KOKKOS_INLINE_FUNCTION
+    const Functor& get_functor() const { return m_functor; }
 
     Reducer(Reducer const&) = default;
     Reducer(Reducer&&)      = default;

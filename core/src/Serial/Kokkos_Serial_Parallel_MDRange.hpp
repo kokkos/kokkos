@@ -90,12 +90,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
 };
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
-                     Kokkos::Serial> {
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::MDRangePolicy<Traits...>, Kokkos::Serial> {
  private:
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
+  using FunctorType   = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType   = typename CombinedFunctorReducerType::reducer_type;
 
   using WorkTag = typename MDRangePolicy::work_tag;
 
@@ -111,16 +113,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
                                              WorkTag, reference_type>;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   inline void exec(reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
-      iterate_type(m_mdr_policy, m_functor, update)(i);
+      iterate_type(m_mdr_policy, m_functor_reducer.get_functor(), update)(i);
     }
   }
 
@@ -135,7 +136,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     return 1024;
   }
   inline void execute() const {
-    const size_t pool_reduce_size  = m_reducer.value_size();
+    const size_t pool_reduce_size =
+        m_functor_reducer.get_reducer().value_size();
     const size_t team_reduce_size  = 0;  // Never shrinks
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
@@ -154,22 +156,20 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             : pointer_type(
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
-    reference_type update = m_reducer.init(ptr);
+    reference_type update = m_functor_reducer.get_reducer().init(ptr);
 
     this->exec(update);
 
-    m_reducer.final(ptr);
+    m_functor_reducer.get_reducer().final(ptr);
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor,
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
                  const MDRangePolicy& arg_policy,
-                 const ReducerType& arg_reducer,
                  const ViewType& arg_result_view)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor_reducer),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
