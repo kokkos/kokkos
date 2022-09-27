@@ -75,10 +75,7 @@
 #include <Kokkos_Tuners.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Complex.hpp>
-#include <View/Kokkos_DeepCopy.hpp>
-#include <View/Kokkos_CreateMirror.hpp>
-#include <View/Kokkos_ResizeRealloc.hpp>
-#include <View/Kokkos_LocalDeepCopy.hpp>
+#include <Kokkos_CopyViews.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <functional>
 #include <iosfwd>
