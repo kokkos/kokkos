@@ -31,9 +31,54 @@ struct ValueWrapperForNoNeutralElement {
   bool is_initial = true;
 
   KOKKOS_FUNCTION
-  void operator=(const ValueWrapperForNoNeutralElement& rhs) {
+  ValueWrapperForNoNeutralElement() = default;
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement(const ValueWrapperForNoNeutralElement&) =
+      default;
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement(ValueWrapperForNoNeutralElement&&) = default;
+
+  KOKKOS_FUNCTION
+  ~ValueWrapperForNoNeutralElement() = default;
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement& operator=(
+      const ValueWrapperForNoNeutralElement& rhs) {
     val        = rhs.val;
     is_initial = rhs.is_initial;
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement& operator=(
+      ValueWrapperForNoNeutralElement&& rhs) {
+    val        = std::move(rhs.val);
+    is_initial = rhs.is_initial;
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement(int) {}
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement(Scalar v, bool is_init)
+      : val{v}, is_initial{is_init} {}
+
+  KOKKOS_FUNCTION
+  ValueWrapperForNoNeutralElement& operator+=(
+      const ValueWrapperForNoNeutralElement& rhs) {
+    val += rhs.val;
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  friend ValueWrapperForNoNeutralElement operator+(
+      ValueWrapperForNoNeutralElement lhs,
+      const ValueWrapperForNoNeutralElement& rhs) {
+    lhs += rhs;
+    return lhs;
   }
 };
 
