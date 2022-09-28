@@ -187,10 +187,6 @@ class CudaInternal {
                                                   bool force_shrink = false);
 };
 
-template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, Cuda, ThreadAndVector>
-    : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
-
 }  // Namespace Impl
 
 namespace Experimental {

@@ -47,6 +47,7 @@
 
 #if defined(KOKKOS_ENABLE_OPENMP)
 #include <Kokkos_OpenMP.hpp>
+#include <OpenMP/Kokkos_OpenMP_MDRangePolicy.hpp>
 #endif
 
 #endif

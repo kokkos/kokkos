@@ -195,16 +195,6 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 
 /*--------------------------------------------------------------------------*/
 
-namespace Kokkos {
-namespace Impl {
-template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, Threads, ThreadAndVector>
-    : HostBasedNestLevel<Rank, ThreadAndVector> {};
-}  // namespace Impl
-}  // namespace Kokkos
-
-/*--------------------------------------------------------------------------*/
-
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Threads/Kokkos_ThreadsExec.hpp>

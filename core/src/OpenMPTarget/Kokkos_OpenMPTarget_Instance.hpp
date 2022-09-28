@@ -89,10 +89,6 @@ class OpenMPTargetInternal {
       Kokkos::Experimental::OpenMPTarget>(reinterpret_cast<uintptr_t>(this));
 };
 
-template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, OpenMPTarget, ThreadAndVector>
-    : HostBasedNestLevel<Rank, ThreadAndVector> {};
-
 }  // Namespace Impl
 }  // Namespace Experimental
 }  // Namespace Kokkos

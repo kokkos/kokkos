@@ -342,10 +342,6 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
   return SYCLFunctionWrapper<Functor, Storage>(functor, storage);
 }
 
-template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, SYCL, ThreadAndVector>
-    : HostBasedNestLevel<Rank, ThreadAndVector> {};
-
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

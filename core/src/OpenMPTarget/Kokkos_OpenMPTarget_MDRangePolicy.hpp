@@ -42,33 +42,20 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_OPENACC_MDRANGE_POLICY_HPP_
-#define KOKKOS_OPENACC_MDRANGE_POLICY_HPP_
+#ifndef KOKKOS_OPENMPTARGET_MDRANGEPOLICY_HPP_
+#define KOKKOS_OPENMPTARGET_MDRANGEPOLICY_HPP_
 
 #include <KokkosExp_MDRangePolicy.hpp>
-
-template <>
-struct Kokkos::default_outer_direction<Kokkos::Experimental::OpenACC> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-
-template <>
-struct Kokkos::default_inner_direction<Kokkos::Experimental::OpenACC> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
 
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, OpenACC, ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, OpenMPTarget, ThreadAndVector>
     : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
 
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
-
 #endif
