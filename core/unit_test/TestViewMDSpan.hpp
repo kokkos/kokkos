@@ -10,30 +10,30 @@
 namespace {
 // Conversion from DataType to extents
 // 0-rank view
-static_assert(
-    std::is_same_v<
-        typename Kokkos::Experimental::Impl::ExtentsFromDataType<double>::type,
-        std::experimental::extents<std::size_t>>);
-// Only dynamic
 static_assert(std::is_same_v<typename Kokkos::Experimental::Impl::
-                                 ExtentsFromDataType<double***>::type,
-                             std::experimental::extents<
-                                 std::size_t, std::experimental::dynamic_extent,
-                                 std::experimental::dynamic_extent,
-                                 std::experimental::dynamic_extent>>);
+                                 ExtentsFromDataType<std::size_t, double>::type,
+                             std::experimental::extents<std::size_t>>);
+// Only dynamic
+static_assert(
+    std::is_same_v<typename Kokkos::Experimental::Impl::ExtentsFromDataType<
+                       std::size_t, double***>::type,
+                   std::experimental::extents<
+                       std::size_t, std::experimental::dynamic_extent,
+                       std::experimental::dynamic_extent,
+                       std::experimental::dynamic_extent>>);
 // Only static
 static_assert(std::is_same_v<
               typename Kokkos::Experimental::Impl::ExtentsFromDataType<
-                  double[2][3][17]>::type,
+                  std::size_t, double[2][3][17]>::type,
               std::experimental::extents<std::size_t, std::size_t{2},
                                          std::size_t{3}, std::size_t{17}>>);
 // Both dynamic and static
 static_assert(
     std::is_same_v<typename Kokkos::Experimental::Impl::ExtentsFromDataType<
-                       double* * [3][2][8]>::type,
+                       std::size_t, double** [3][2][8]>::type,
                    std::experimental::extents<
                        std::size_t, std::experimental::dynamic_extent,
-                       std::experimental::dynamic_extent, std::size_t{3},
+                       std::experimental::dynamic_extent, std::size_t { 3 },
                        std::size_t{2}, std::size_t{8}>>);
 
 // Conversion from extents to DataType
@@ -63,13 +63,13 @@ static_assert(
 // both dynamic and static
 static_assert(
     std::is_same_v<
-        double** * [20][45],
+        double*** [20][45],
         typename Kokkos::Experimental::Impl::DataTypeFromExtents<
             double, std::experimental::extents<
                         std::size_t, std::experimental::dynamic_extent,
                         std::experimental::dynamic_extent,
                         std::experimental::dynamic_extent, 20, 45>>::type>);
-}  // namespace Test
+}  // namespace
 
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 

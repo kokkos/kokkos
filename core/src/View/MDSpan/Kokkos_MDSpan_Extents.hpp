@@ -100,13 +100,14 @@ struct DimensionFromExtent<std::experimental::dynamic_extent> {
   static constexpr std::size_t value = std::size_t{0};
 };
 
-template <class Dimension, class Indices>
+template <class IndexType, class Dimension, class Indices>
 struct ExtentsFromDimension;
 
-template <class Dimension, std::size_t... Indices>
-struct ExtentsFromDimension<Dimension, std::index_sequence<Indices...>> {
-  using type           = std::experimental::extents<
-      std::size_t,  // Mirrors Kokkos::View's size type
+template <class IndexType, class Dimension, std::size_t... Indices>
+struct ExtentsFromDimension<IndexType, Dimension,
+                            std::index_sequence<Indices...>> {
+  using type = std::experimental::extents<
+      IndexType,
       ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
 };
 
@@ -115,17 +116,18 @@ struct DimensionsFromExtent;
 
 template <class Extents, std::size_t... Indices>
 struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
-  using type         = ::Kokkos::Impl::ViewDimension<
+  using type = ::Kokkos::Impl::ViewDimension<
       DimensionFromExtent<Extents::static_extent(Indices)>::value...>;
 };
 
-template <class DataType>
+template <class IndexType, class DataType>
 struct ExtentsFromDataType {
   using array_analysis = ::Kokkos::Impl::ViewArrayAnalysis<DataType>;
   using dimension_type = typename array_analysis::dimension;
 
   using type = typename ExtentsFromDimension<
-      dimension_type, std::make_index_sequence<dimension_type::rank>>::type;
+      IndexType, dimension_type,
+      std::make_index_sequence<dimension_type::rank>>::type;
 };
 
 template <class T, class Extents>
