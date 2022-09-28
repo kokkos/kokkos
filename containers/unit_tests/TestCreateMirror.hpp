@@ -70,13 +70,13 @@ void test_create_mirror_properties(const DeviceView& device_view,
   using HostExecutionSpace   = typename HostView::execution_space;
 
   // create_mirror
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror =
         Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
     check_host_mirror(device_view, mirror);
   }
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror(device_view);
     check_host_mirror(device_view, mirror);
@@ -113,13 +113,13 @@ void test_create_mirror_properties(const DeviceView& device_view,
   }
 
   // create_mirror_view
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, device_view);
     check_host_mirror(device_view, mirror);
   }
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror_view(device_view);
     check_host_mirror(device_view, mirror);
@@ -158,13 +158,13 @@ void test_create_mirror_properties(const DeviceView& device_view,
   }
 
   // create_mirror view_alloc
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror(
         Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
     check_host_mirror(device_view, mirror);
   }
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror(Kokkos::view_alloc(), device_view);
     check_host_mirror(device_view, mirror);
@@ -206,13 +206,13 @@ void test_create_mirror_properties(const DeviceView& device_view,
   }
 
   // create_mirror_view view_alloc
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror_view(
         Kokkos::view_alloc(Kokkos::WithoutInitializing), device_view);
     check_host_mirror(device_view, mirror);
   }
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror_view(Kokkos::view_alloc(), device_view);
     check_host_mirror(device_view, mirror);
@@ -254,14 +254,14 @@ void test_create_mirror_properties(const DeviceView& device_view,
   }
 
   // create_mirror view_alloc + execution space
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror(
         Kokkos::view_alloc(DeviceExecutionSpace{}, Kokkos::WithoutInitializing),
         device_view);
     check_host_mirror(device_view, mirror);
   }
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror(
         Kokkos::view_alloc(HostExecutionSpace{}), device_view);
@@ -310,14 +310,14 @@ void test_create_mirror_properties(const DeviceView& device_view,
   }
 
   // create_mirror_view view_alloc + execution space
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror_view(
         Kokkos::view_alloc(DeviceExecutionSpace{}, Kokkos::WithoutInitializing),
         device_view);
     check_host_mirror(device_view, mirror);
   }
-  // FIXME DynamicView
+  // FIXME DynamicView: HostMirror is the same type
   if constexpr (!Kokkos::is_dynamic_view<DeviceView>::value) {
     auto mirror = Kokkos::create_mirror_view(
         Kokkos::view_alloc(HostExecutionSpace{}), device_view);
