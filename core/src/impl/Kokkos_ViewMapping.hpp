@@ -3063,10 +3063,10 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
                    std::is_trivially_copy_assignable<Dummy>::value>
   construct_shared_allocation() {
     // Shortcut for zero initialization
-    ValueType value{};
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
+    ValueType value{};
     if (Impl::is_zero_byte(value)) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
