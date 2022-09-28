@@ -75,7 +75,6 @@ SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestDetectionIdiom.cpp
   TestInterOp.cpp
-  TestLegionInteroperability.cpp
   TestStringManipulation.cpp
   TestTypeList.cpp
 )
@@ -830,6 +829,13 @@ endif()
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
   SOURCES ${DEFAULT_DEVICE_SOURCES}
+)
+
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_LegionInitialization
+  SOURCES
+    UnitTestMain.cpp
+    TestLegionInitialization.cpp
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
