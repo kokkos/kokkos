@@ -129,6 +129,10 @@ class OpenMPInternal {
   void print_configuration(std::ostream& s) const;
 };
 
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, OpenMP, ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
+
 }  // namespace Impl
 inline bool OpenMP::impl_is_initialized() noexcept {
   return Impl::OpenMPInternal::singleton().is_initialized();

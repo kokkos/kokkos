@@ -869,6 +869,24 @@ enum class TeamMDRangeParThread : bool { NotParThread, ParThread };
 enum class TeamMDRangeParVector : bool { NotParVector, ParVector };
 enum class TeamMDRangeThreadAndVector : bool { NotBoth, Both };
 
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct HostBasedNestLevel;
+
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct AcceleratorBasedNestLevel;
+
+// ThreadAndVectorNestLevel determines on which nested level parallelization
+// happens.
+//   - Rank is Kokkos::Rank<TotalNestLevel, Iter>
+//     - TotalNestLevel is the total number of loop nests
+//     - Iter is whether to go forward or backward through ranks (i.e. the
+//       iteration order for MDRangePolicy)
+//   - ThreadAndVector determines whether both vector and thread parallelism is
+//   in use
+template <typename Rank, typename ExecSpace,
+          TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel;
+
 struct NoReductionTag {};
 
 template <typename Rank, typename TeamMDPolicy, typename Lambda,

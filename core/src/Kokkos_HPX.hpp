@@ -977,6 +977,11 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     return *this;
   }
 };
+
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Experimental::HPX, ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
+
 }  // namespace Impl
 }  // namespace Kokkos
 

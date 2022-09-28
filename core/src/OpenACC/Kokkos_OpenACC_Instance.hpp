@@ -82,6 +82,10 @@ class OpenACCInternal {
   uint32_t instance_id() const noexcept;
 };
 
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, OpenACC, ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
+
 }  // namespace Kokkos::Experimental::Impl
 
 #endif

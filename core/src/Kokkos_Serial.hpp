@@ -264,6 +264,10 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
   enum : bool { deepcopy = false };
 };
 
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Serial, ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
+
 }  // namespace Impl
 }  // namespace Kokkos
 

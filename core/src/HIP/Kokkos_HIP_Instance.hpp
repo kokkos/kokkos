@@ -158,6 +158,10 @@ class HIPInternal {
   void release_team_scratch_pool(int scratch_pool_id);
 };
 
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, HIP, ThreadAndVector>
+    : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
+
 }  // namespace Impl
 
 namespace Experimental {
