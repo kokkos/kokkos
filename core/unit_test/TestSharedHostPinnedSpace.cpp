@@ -69,7 +69,7 @@ template <typename ViewType>
 struct CheckResult {
   ViewType view_;
   int targetVal_;
-  unsigned error = 0;
+  unsigned numErrors = 0;
 
   template <typename ExecutionSpace>
   CheckResult(ExecutionSpace, ViewType view, int targetVal)
@@ -78,13 +78,13 @@ struct CheckResult {
         "check",
         Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>{
             0, view_.size()},
-        *this, Kokkos::Sum<unsigned>(error));
+        *this, Kokkos::Sum(numErrors));
     Kokkos::fence();
   }
 
   KOKKOS_FUNCTION
-  void operator()(const size_t idx, unsigned& error_val) const {
-    if (view_(idx) != targetVal_) ++error_val;
+  void operator()(const size_t idx, unsigned& errors) const {
+    if (view_(idx) != targetVal_) ++errors;
   }
 };
 
@@ -112,7 +112,7 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
     // CHECK RESULTS HOST
     CheckResult checkHost(Kokkos::DefaultHostExecutionSpace{}, sharedData,
                           incrementCount);
-    ASSERT_TRUE(checkHost.error == 0)
+    ASSERT_TRUE(checkHost.numErrors == 0)
         << "Changes to SharedHostPinnedSpace made on device not visible to "
            "host. Iteration "
         << i << " of " << numDeviceHostCycles;
@@ -123,7 +123,7 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
     // CHECK RESULTS Device
     CheckResult checkDevice(Kokkos::DefaultExecutionSpace{}, sharedData,
                             incrementCount);
-    ASSERT_TRUE(checkDevice.error == 0)
+    ASSERT_TRUE(checkDevice.numErrors == 0)
         << "Changes to SharedHostPinnedSpace made on host not visible to "
            "device. Iteration "
         << i << " of " << numDeviceHostCycles;
