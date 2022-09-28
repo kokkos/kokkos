@@ -78,7 +78,7 @@ struct CheckResult {
         "check",
         Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>{
             0, view_.size()},
-        *this, Kokkos::Sum(numErrors));
+        *this, Kokkos::Sum<unsigned>(numErrors));
     Kokkos::fence();
   }
 
@@ -99,6 +99,9 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
   const unsigned int numDeviceHostCycles = 3;
   size_t numInts                         = 1024;
 
+  using DeviceExecutionSpace = Kokkos::DefaultExecutionSpace;
+  using HostExecutionSpace   = Kokkos::DefaultHostExecutionSpace;
+
   // ALLOCATION
   Kokkos::View<int*, Kokkos::SharedHostPinnedSpace> sharedData("sharedData",
                                                                numInts);
@@ -107,23 +110,23 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
 
   for (unsigned i = 0; i < numDeviceHostCycles; ++i) {
     // INCREMENT DEVICE
-    Increment incrementDevice(Kokkos::DefaultExecutionSpace{}, sharedData);
+    Increment(DeviceExecutionSpace{}, sharedData);
     ++incrementCount;
     // CHECK RESULTS HOST
-    CheckResult checkHost(Kokkos::DefaultHostExecutionSpace{}, sharedData,
-                          incrementCount);
-    ASSERT_TRUE(checkHost.numErrors == 0)
+    ASSERT_EQ(
+        CheckResult(HostExecutionSpace{}, sharedData, incrementCount).numErrors,
+        0u)
         << "Changes to SharedHostPinnedSpace made on device not visible to "
            "host. Iteration "
         << i << " of " << numDeviceHostCycles;
 
     // INCREMENT HOST
-    Increment incrementHost(Kokkos::DefaultHostExecutionSpace{}, sharedData);
+    Increment(HostExecutionSpace{}, sharedData);
     ++incrementCount;
     // CHECK RESULTS Device
-    CheckResult checkDevice(Kokkos::DefaultExecutionSpace{}, sharedData,
-                            incrementCount);
-    ASSERT_TRUE(checkDevice.numErrors == 0)
+    ASSERT_EQ(CheckResult(DeviceExecutionSpace{}, sharedData, incrementCount)
+                  .numErrors,
+              0u)
         << "Changes to SharedHostPinnedSpace made on host not visible to "
            "device. Iteration "
         << i << " of " << numDeviceHostCycles;
