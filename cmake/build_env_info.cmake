@@ -42,4 +42,4 @@ if(Git_FOUND)
     endif()
 endif()
 
-configure_file(cmake/Kokkos_Environment_Info.h.in Kokkos_Environment_Info.hpp @ONLY)
+configure_file(cmake/Kokkos_Environment_Info.cpp.in core/src/impl/Kokkos_Environment_Info.cpp @ONLY)

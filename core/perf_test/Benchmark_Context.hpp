@@ -22,7 +22,7 @@
 #include <benchmark/benchmark.h>
 
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Environment_Info.hpp>
+#include <impl/Kokkos_Environment_Info.hpp>
 
 namespace KokkosBenchmark {
 
@@ -63,13 +63,13 @@ void add_kokkos_configuration(bool verbose) {
 
 /// \brief Add all data related to git to benchmark context
 void add_git_info() {
-  if (!KOKKOS_GIT_BRANCH.empty()) {
-    benchmark::AddCustomContext("GIT_BRANCH", KOKKOS_GIT_BRANCH);
-    benchmark::AddCustomContext("GIT_COMMIT_HASH", KOKKOS_GIT_COMMIT_HASH);
-    benchmark::AddCustomContext("GIT_CLEAN_STATUS", KOKKOS_GIT_CLEAN_STATUS);
+  if (!Kokkos::Env::GIT_BRANCH.empty()) {
+    benchmark::AddCustomContext("GIT_BRANCH", Kokkos::Env::GIT_BRANCH);
+    benchmark::AddCustomContext("GIT_COMMIT_HASH", Kokkos::Env::GIT_COMMIT_HASH);
+    benchmark::AddCustomContext("GIT_CLEAN_STATUS", Kokkos::Env::GIT_CLEAN_STATUS);
     benchmark::AddCustomContext("GIT_COMMIT_DESCRIPTION",
-                                KOKKOS_GIT_COMMIT_DESCRIPTION);
-    benchmark::AddCustomContext("GIT_COMMIT_DATE", KOKKOS_GIT_COMMIT_DATE);
+                                Kokkos::Env::GIT_COMMIT_DESCRIPTION);
+    benchmark::AddCustomContext("GIT_COMMIT_DATE", Kokkos::Env::GIT_COMMIT_DATE);
   }
 }
 
