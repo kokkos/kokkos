@@ -52,8 +52,8 @@ namespace Experimental {
 namespace Impl {
 
 // Settings for TeamMDRangePolicy
-template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, HPX, ThreadAndVector>
+template <typename Rank, ::Kokkos::Impl::TeamMDRangeThreadAndVector ThreadAndVector>
+struct ::Kokkos::Impl::ThreadAndVectorNestLevel<Rank, HPX, ThreadAndVector>
     : HostBasedNestLevel<Rank, ThreadAndVector> {};
 
 }  // namespace Impl

@@ -51,8 +51,10 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, OpenMPTarget, ThreadAndVector>
+template <typename Rank,
+          ::Kokkos::Impl::TeamMDRangeThreadAndVector ThreadAndVector>
+struct ::Kokkos::Impl::ThreadAndVectorNestLevel<Rank, OpenMPTarget,
+                                                ThreadAndVector>
     : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
 
 }  // namespace Impl
