@@ -211,7 +211,7 @@ OutputIteratorType transform_inclusive_scan_exespace_impl(
 // -------------------------------------------------------------
 template <class TeamHandleType, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType>
-OutputIteratorType transform_inclusive_scan_team_impl(
+KOKKOS_FUNCTION OutputIteratorType transform_inclusive_scan_team_impl(
     const TeamHandleType& teamHandle, InputIteratorType first_from,
     InputIteratorType last_from, OutputIteratorType first_dest,
     BinaryOpType binary_op, UnaryOpType unary_op) {
@@ -274,7 +274,7 @@ OutputIteratorType transform_inclusive_scan_team_impl(
 template <class TeamHandleType, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType, class UnaryOpType,
           class ValueType>
-OutputIteratorType transform_inclusive_scan_team_impl(
+KOKKOS_FUNCTION OutputIteratorType transform_inclusive_scan_team_impl(
     const TeamHandleType& teamHandle, InputIteratorType first_from,
     InputIteratorType last_from, OutputIteratorType first_dest,
     BinaryOpType binary_op, UnaryOpType unary_op, ValueType init_value) {
