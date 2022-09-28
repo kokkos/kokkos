@@ -896,7 +896,7 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   static constexpr auto par_vector = Impl::TeamMDRangeParVector::NotParVector;
 
   static constexpr Iterate direction =
-      iter == Iterate::Default
+      OuterDir == Iterate::Default
           ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
           : iter;
 
@@ -932,7 +932,7 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   static constexpr auto par_vector = Impl::TeamMDRangeParVector::ParVector;
 
   static constexpr Iterate direction =
-      iter == Iterate::Default
+      OuterDir == Iterate::Default
           ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
           : iter;
 
