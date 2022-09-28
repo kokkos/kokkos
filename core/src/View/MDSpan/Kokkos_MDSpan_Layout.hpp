@@ -69,7 +69,7 @@ namespace Kokkos::Experimental {
 template <class Extents>
 class MDSpanLayoutLeft {
   using extents_type = Extents;
-  using index_type    = typename extents_type::index_type;
+  using index_type   = typename extents_type::index_type;
   using rank_type    = typename extents_type::rank_type;
   using layout_type  = LayoutLeft;
 
@@ -105,6 +105,24 @@ class MDSpanLayoutLeft {
     return m_offset.span_is_contiguous();
   }
 
+  constexpr bool is_strided() const noexcept {
+    // Note: LayoutLeft with >= 0 rank and no dynamic ranks has the comment that it has no padding/striding
+    // However according to mdspan's definition of is_strided it still counts as strided
+    return true;
+  }
+
+  constexpr index_type stride( rank_type r ) const noexcept {
+    if ( r == 0 )
+      return m_offset.stride_0();
+    index_type ret = m_offset.stride_1();
+    for ( rank_type i = 1; i < r; ++i )
+      ret *= m_extents.extent( i );
+    return ret;
+  }
+
+  static constexpr bool is_always_unique() noexcept { return true; }
+  static constexpr bool is_always_exhaustive() noexcept { return true; }
+  static constexpr bool is_always_strided() noexcept { return true; }
 
  private:
   using dimension_type =
