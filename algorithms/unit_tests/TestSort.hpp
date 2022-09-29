@@ -22,6 +22,7 @@
 #include <Kokkos_DynamicView.hpp>
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
+#include <Kokkos_RadixSort.hpp>
 
 namespace Test {
 
@@ -362,6 +363,42 @@ void test_issue_4978_impl() {
   ASSERT_EQ(h_element(8), 6);
 }
 
+template <class ExecutionSpace>
+void test_radix_sort() {
+  Kokkos::View<long long*, ExecutionSpace> element_("element", 9);
+
+  auto h_element = Kokkos::create_mirror_view(element_);
+
+  h_element(0) = LLONG_MIN;
+  h_element(1) = 0;
+  h_element(2) = 3;
+  h_element(3) = 2;
+  h_element(4) = 1;
+  h_element(5) = 3;
+  h_element(6) = 6;
+  h_element(7) = 4;
+  h_element(8) = 3;
+
+  ExecutionSpace exec;
+  Kokkos::deep_copy(exec, element_, h_element);
+
+  Kokkos::Experimental::RadixSorter<long long> radix(element_.extent(0));
+  radix.create_indirection_vector(exec, element_);
+  
+  Kokkos::deep_copy(exec, h_element, element_);
+  exec.fence();
+
+  EXPECT_EQ(h_element(0), LLONG_MIN);
+  EXPECT_EQ(h_element(1), 0);
+  EXPECT_EQ(h_element(2), 1);
+  EXPECT_EQ(h_element(3), 2);
+  EXPECT_EQ(h_element(4), 3);
+  EXPECT_EQ(h_element(5), 3);
+  EXPECT_EQ(h_element(6), 3);
+  EXPECT_EQ(h_element(7), 4);
+  EXPECT_EQ(h_element(8), 6);
+}
+
 template <class ExecutionSpace, class T>
 void test_sort_integer_overflow() {
   // array with two extrema in reverse order to expose integer overflow bug in
@@ -405,6 +442,8 @@ void test_issue_4978_sort() {
 
 template <class ExecutionSpace, typename KeyType>
 void test_sort(unsigned int N) {
+  test_radix_sort<ExecutionSpace>();
+
   test_1D_sort<ExecutionSpace, KeyType>(N);
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
