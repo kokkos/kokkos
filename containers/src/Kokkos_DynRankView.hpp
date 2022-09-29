@@ -1691,7 +1691,8 @@ template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION auto as_view_of_rank_n(
     DynRankView<T, Args...> v,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<T, Args...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<T, Args...>::specialize, void>::value>::type* =
+        nullptr) {
   if (v.rank() != N) {
     KOKKOS_IF_ON_HOST(
         const std::string message =
