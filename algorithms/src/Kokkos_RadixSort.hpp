@@ -93,9 +93,8 @@ class RadixSorter {
         m_index_old("radix_sort_index", n),
         m_index_new("radix_sort_index_scratch", n),
         m_scan("radix_sort_scan", n),
-        m_bits("radix_sort_bits", n) {
-    Kokkos::parallel_for(n, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
-  }
+        m_bits("radix_sort_bits", n)
+  {  }
 
   template <class ExecutionSpace>
   void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
@@ -109,6 +108,10 @@ class RadixSorter {
   void create_indirection_vector(ExecutionSpace const& exec, KeyFunctor key_functor, size_t n) {
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
     using std::swap;
+
+    // Initialize m_index_old, since it will be read from in the first
+    // iteration's call to step()
+    Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
     
     for (int i = 0; i < num_bits; ++i) {
       step<false>(policy, key_functor, i, m_index_new, m_index_old);
