@@ -309,10 +309,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::OpenMP> {
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using Policy = Kokkos::RangePolicy<Traits...>;
 
   using WorkTag   = typename Policy::work_tag;
@@ -323,9 +326,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using reference_type = typename ReducerType::reference_type;
 
   OpenMPInternal* m_instance;
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   template <class TagType>
@@ -351,8 +353,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   inline void execute() const {
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
-        m_reducer.init(m_result_ptr);
-        m_reducer.final(m_result_ptr);
+        m_functor_reducer.get_reducer().init(m_result_ptr);
+        m_functor_reducer.get_reducer().final(m_result_ptr);
       }
       return;
     }
@@ -361,7 +363,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    const size_t pool_reduce_bytes = m_reducer.value_size();
+    const size_t pool_reduce_bytes = m_functor_reducer.get_reducer().value_size();
 
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
@@ -383,7 +385,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
-      reference_type update = m_reducer.init(
+      reference_type update = m_functor_reducer.get_reducer().init(
           reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       std::pair<int64_t, int64_t> range(0, 0);
@@ -393,7 +395,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                            : data.get_work_partition();
 
         ParallelReduce::template exec_range<WorkTag>(
-            m_functor, range.first + m_policy.begin(),
+            m_functor_reducer.get_functor(), range.first + m_policy.begin(),
             range.second + m_policy.begin(), update);
 
       } while (is_dynamic && 0 <= range.first);
@@ -405,15 +407,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      m_reducer.join(ptr,
+      m_functor_reducer.get_reducer().join(ptr,
                      reinterpret_cast<pointer_type>(
                          m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    m_reducer.final(ptr);
+    m_functor_reducer.get_reducer().final(ptr);
 
     if (m_result_ptr) {
-      const int n = m_reducer.value_count();
+      const int n = m_functor_reducer.get_reducer().value_count();
 
       for (int j = 0; j < n; ++j) {
         m_result_ptr[j] = ptr[j];
@@ -424,13 +426,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   //----------------------------------------
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer,
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
                  const ViewType& arg_result_view)
       : m_instance(nullptr),
-        m_functor(arg_functor),
+        m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()) {
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
@@ -448,10 +448,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 };
 
 // MDRangePolicy impl
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
                      Kokkos::OpenMP> {
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
 
@@ -468,11 +471,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                              WorkTag, reference_type>;
 
   OpenMPInternal* m_instance;
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const MDRangePolicy m_mdr_policy;
   const Policy m_policy;  // construct as RangePolicy( 0, num_tiles
                           // ).set_chunk_size(1) in ctor
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   inline static void exec_range(const MDRangePolicy& mdr_policy,
@@ -490,7 +492,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                 Kokkos::Dynamic>::value
     };
 
-    const size_t pool_reduce_bytes = m_reducer.value_size();
+    const size_t pool_reduce_bytes = m_functor_reducer.get_reducer().value_size();
 
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
@@ -512,7 +514,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
-      reference_type update = m_reducer.init(
+      reference_type update = m_functor_reducer.get_reducer().init(
           reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       std::pair<int64_t, int64_t> range(0, 0);
@@ -521,7 +523,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         range = is_dynamic ? data.get_work_stealing_chunk()
                            : data.get_work_partition();
 
-        ParallelReduce::exec_range(m_mdr_policy, m_functor,
+        ParallelReduce::exec_range(m_mdr_policy, m_functor_reducer.get_functor(),
                                    range.first + m_policy.begin(),
                                    range.second + m_policy.begin(), update);
 
@@ -535,15 +537,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      m_reducer.join(ptr,
+      m_functor_reducer.get_reducer().join(ptr,
                      reinterpret_cast<pointer_type>(
                          m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    m_reducer.final(ptr);
+    m_functor_reducer.get_reducer().final(ptr);
 
     if (m_result_ptr) {
-      const int n = m_reducer.value_count();
+      const int n = m_functor_reducer.get_reducer().value_count();
 
       for (int j = 0; j < n; ++j) {
         m_result_ptr[j] = ptr[j];
@@ -554,15 +556,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   //----------------------------------------
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor,
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
                  const MDRangePolicy& arg_policy,
-                 const ReducerType& arg_reducer,
                  const ViewType& arg_result_view)
       : m_instance(nullptr),
-        m_functor(arg_functor),
+        m_functor_reducer(arg_functor_reducer),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()) {
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
@@ -968,10 +968,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::OpenMP> {
+template <class CombinedFunctorReducerType, class... Properties>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
+                     Kokkos::OpenMP> {
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   enum { TEAM_REDUCE_SIZE = 512 };
 
   using Policy =
@@ -985,9 +988,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using reference_type = typename ReducerType::reference_type;
 
   OpenMPInternal* m_instance;
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const int m_shmem_size;
 
@@ -1035,13 +1037,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     if (m_policy.league_size() == 0 || m_policy.team_size() == 0) {
       if (m_result_ptr) {
-        m_reducer.init(m_result_ptr);
-        m_reducer.final(m_result_ptr);
+        m_functor_reducer.get_reducer().init(m_result_ptr);
+        m_functor_reducer.get_reducer().final(m_result_ptr);
       }
       return;
     }
 
-    const size_t pool_reduce_size = m_reducer.value_size();
+    const size_t pool_reduce_size = m_functor_reducer.get_reducer().value_size();
 
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE * m_policy.team_size();
     const size_t team_shared_size  = m_shmem_size + m_policy.scratch_size(1);
@@ -1071,7 +1073,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
 
       if (active) {
-        reference_type update = m_reducer.init(
+        reference_type update = m_functor_reducer.get_reducer().init(
             reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
         std::pair<int64_t, int64_t> range(0, 0);
@@ -1080,13 +1082,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           range = is_dynamic ? data.get_work_stealing_chunk()
                              : data.get_work_partition();
 
-          ParallelReduce::template exec_team<WorkTag>(m_functor, data, update,
+          ParallelReduce::template exec_team<WorkTag>(m_functor_reducer.get_functor(), data, update,
                                                       range.first, range.second,
                                                       m_policy.league_size());
 
         } while (is_dynamic && 0 <= range.first);
       } else {
-        m_reducer.init(
+        m_functor_reducer.get_reducer().init(
             reinterpret_cast<pointer_type>(data.pool_reduce_local()));
       }
 
@@ -1109,15 +1111,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      m_reducer.join(ptr,
+      m_functor_reducer.get_reducer().join(ptr,
                      reinterpret_cast<pointer_type>(
                          m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    m_reducer.final(ptr);
+    m_functor_reducer.get_reducer().final(ptr);
 
     if (m_result_ptr) {
-      const int n = m_reducer.value_count();
+      const int n = m_functor_reducer.get_reducer().value_count();
 
       for (int j = 0; j < n; ++j) {
         m_result_ptr[j] = ptr[j];
@@ -1128,17 +1130,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   //----------------------------------------
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer,
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
                  const ViewType& arg_result_view)
       : m_instance(nullptr),
-        m_functor(arg_functor),
+        m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())) {
+                         arg_functor_reducer.get_functor(), arg_policy.team_size())) {
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
