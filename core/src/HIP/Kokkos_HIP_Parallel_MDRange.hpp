@@ -193,13 +193,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
 };
 
 // ParallelReduce
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
                      HIP> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using array_index_type = typename Policy::array_index_type;
   using index_type       = typename Policy::index_type;
 
@@ -217,9 +220,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;  // used for workrange and nwork
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   size_type* m_scratch_space;
@@ -230,16 +232,16 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   inline __device__ void exec_range(reference_type update) const {
-    DeviceIteratePattern(m_policy, m_functor, update).exec_range();
+    DeviceIteratePattern(m_policy, m_functor_reducer.get_functor(), update).exec_range();
   }
 
   inline __device__ void operator()() const {
     const integral_nonzero_constant<
         size_type, ReducerType::static_value_size() / sizeof(size_type)>
-        word_count(m_reducer.value_size() / sizeof(size_type));
+        word_count(m_functor_reducer.get_reducer().value_size() / sizeof(size_type));
 
     {
-      reference_type value = m_reducer.init(reinterpret_cast<pointer_type>(
+      reference_type value = m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
           kokkos_impl_hip_shared_memory<size_type>() +
           threadIdx.y * word_count.value));
 
@@ -255,7 +257,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // Reduce with final value at blockDim.y - 1 location.
     // Problem: non power-of-two blockDim
     if (::Kokkos::Impl::hip_single_inter_block_reduce_scan<false>(
-            m_reducer, blockIdx.x, gridDim.x,
+            m_functor_reducer.get_reducer(), blockIdx.x, gridDim.x,
             kokkos_impl_hip_shared_memory<size_type>(), m_scratch_space,
             m_scratch_flags)) {
       // This is the final block with the final result at the final threads'
@@ -267,7 +269,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                     : m_scratch_space;
 
       if (threadIdx.y == 0) {
-        m_reducer.final(reinterpret_cast<value_type*>(shared));
+        m_functor_reducer.get_reducer().final(reinterpret_cast<value_type*>(shared));
       }
 
       if (Impl::HIPTraits::WarpSize < word_count.value) {
@@ -289,7 +291,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                                       WorkTag, value_type>(f,
                                                                            n);
     };
-    using closure_type = ParallelReduce<FunctorType, Policy, ReducerType, HIP>;
+    using closure_type = ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy, HIP>;
 
     unsigned block_size =
         Kokkos::Impl::hip_get_preferred_blocksize<closure_type, LaunchBounds>(
@@ -304,7 +306,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   inline void execute() {
     using ClosureType =
-        ParallelReduce<FunctorType, Policy, ReducerType, Kokkos::HIP>;
+        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy, Kokkos::HIP>;
     const auto nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
@@ -312,7 +314,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       // Nearest power of two
       int exponent_pow_two    = std::ceil(std::log2(block_size));
       block_size              = std::pow(2, exponent_pow_two);
-      int suggested_blocksize = local_block_size(m_functor);
+      int suggested_blocksize = local_block_size(m_functor_reducer.get_functor());
 
       block_size = (block_size > suggested_blocksize)
                        ? block_size
@@ -320,7 +322,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                                // than or equal to 512
 
       m_scratch_space = hip_internal_scratch_space(
-          m_policy.space(), m_reducer.value_size() *
+          m_policy.space(), m_functor_reducer.get_reducer().value_size() *
                                 block_size /* block_size == max block_count */);
       m_scratch_flags =
           hip_internal_scratch_flags(m_policy.space(), sizeof(size_type));
@@ -334,7 +336,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       const int shmem =
           ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-              false, FunctorType, WorkTag, value_type>(m_functor, block.y);
+              false, FunctorType, WorkTag, value_type>(m_functor_reducer.get_functor(), block.y);
 
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, shmem,
@@ -342,23 +344,22 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible && m_result_ptr) {
-        const int size = m_reducer.value_size();
+        const int size = m_functor_reducer.get_reducer().value_size();
         DeepCopy<HostSpace, HIPSpace, HIP>(m_policy.space(), m_result_ptr,
                                            m_scratch_space, size);
       }
     } else {
       if (m_result_ptr) {
-        m_reducer.init(m_result_ptr);
+        m_functor_reducer.get_reducer().init(m_result_ptr);
       }
     }
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer, const ViewType& arg_result)
-      : m_functor(arg_functor),
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
+                 const ViewType& arg_result)
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<HIPSpace,
@@ -369,8 +370,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
     using closure_type =
-        ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                       ReducerType, HIP>;
+        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Kokkos::MDRangePolicy<Traits...>,
+                       HIP>;
     unsigned block_size = hip_get_max_blocksize<closure_type, LaunchBounds>();
     if (block_size == 0) {
       Kokkos::Impl::throw_runtime_exception(
