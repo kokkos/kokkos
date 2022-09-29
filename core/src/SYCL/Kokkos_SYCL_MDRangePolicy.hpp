@@ -76,18 +76,11 @@ inline TileSizeProperties get_tile_size_properties<Kokkos::Experimental::SYCL>(
   return properties;
 }
 
-}  // Namespace Impl
-
-namespace Experimental {
-namespace Impl {
-
 // Settings for TeamMDRangePolicy
-template <typename Rank,
-          ::Kokkos::Impl::TeamMDRangeThreadAndVector ThreadAndVector>
-struct ::Kokkos::Impl::ThreadAndVectorNestLevel<Rank, SYCL, ThreadAndVector>
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Kokkos::Experimental::SYCL, ThreadAndVector>
     : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
 
 }  // namespace Impl
-}  // namespace Experimental
 }  // Namespace Kokkos
 #endif

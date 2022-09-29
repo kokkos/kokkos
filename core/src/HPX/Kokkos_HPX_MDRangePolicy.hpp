@@ -48,16 +48,14 @@
 #include <KokkosExp_MDRangePolicy.hpp>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 
 // Settings for TeamMDRangePolicy
-template <typename Rank,
-          ::Kokkos::Impl::TeamMDRangeThreadAndVector ThreadAndVector>
-struct ::Kokkos::Impl::ThreadAndVectorNestLevel<Rank, HPX, ThreadAndVector>
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Kokkos::Experimental::HPX,
+                                ThreadAndVector>
     : HostBasedNestLevel<Rank, ThreadAndVector> {};
 
 }  // namespace Impl
-}  // namespace Experimental
 }  // namespace Kokkos
 #endif
