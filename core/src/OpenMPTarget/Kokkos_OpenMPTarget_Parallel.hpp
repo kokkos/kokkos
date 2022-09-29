@@ -409,10 +409,13 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::Experimental::OpenMPTarget> {
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using Policy = Kokkos::RangePolicy<Traits...>;
 
   using WorkTag   = typename Policy::work_tag;
@@ -433,9 +436,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
                                value_type>;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   bool m_result_ptr_on_device;
   const int m_result_ptr_num_elems;
@@ -445,47 +447,45 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   void execute() const {
     if constexpr (FunctorHasJoin) {
       // Enter this loop if the Functor has a init-join.
-      ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
+      ParReduceSpecialize::execute_init_join(m_functor_reducer.get_functor(), m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
     } else if constexpr (UseReducer) {
       // Enter this loop if the Functor is a reducer type.
-      ParReduceSpecialize::execute_reducer(m_functor, m_policy, m_result_ptr,
+      ParReduceSpecialize::execute_reducer(m_functor_reducer.get_functor(), m_policy, m_result_ptr,
                                            m_result_ptr_on_device);
     } else if constexpr (IsArray) {
       // Enter this loop if the reduction is on an array and the routine is
       // templated over the size of the array.
       if (m_result_ptr_num_elems <= 2) {
         ParReduceSpecialize::template execute_array<TagType, 2>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 4) {
         ParReduceSpecialize::template execute_array<TagType, 4>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 8) {
         ParReduceSpecialize::template execute_array<TagType, 8>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 16) {
         ParReduceSpecialize::template execute_array<TagType, 16>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 32) {
         ParReduceSpecialize::template execute_array<TagType, 32>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else {
         Kokkos::abort("array reduction length must be <= 32");
       }
     } else {
       // This loop handles the basic scalar reduction.
       ParReduceSpecialize::template execute_array<TagType, 1>(
-          m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+          m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
     }
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer,
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
                  const ViewType& arg_result_view)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()),
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
@@ -1197,10 +1197,13 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 };
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::OpenMPTarget> {
+template <class CombinedFunctorReducerType, class... Properties>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
+                     Kokkos::Experimental::OpenMPTarget> {
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
                                        Properties...>;
@@ -1226,59 +1229,57 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
                                value_type>;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const size_t m_shmem_size;
 
  public:
   void execute() const {
     if constexpr (HasJoin) {
-      ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
+      ParReduceSpecialize::execute_init_join(m_functor_reducer.get_functor(), m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
     } else if constexpr (UseReducer) {
-      ParReduceSpecialize::execute_reducer(m_functor, m_policy, m_result_ptr,
+      ParReduceSpecialize::execute_reducer(m_functor_reducer.get_functor(), m_policy, m_result_ptr,
                                            m_result_ptr_on_device);
     } else if constexpr (IsArray) {
       if (m_result_ptr_num_elems <= 2) {
         ParReduceSpecialize::template execute_array<2>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 4) {
         ParReduceSpecialize::template execute_array<4>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 8) {
         ParReduceSpecialize::template execute_array<8>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 16) {
         ParReduceSpecialize::template execute_array<16>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 32) {
         ParReduceSpecialize::template execute_array<32>(
-            m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+            m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
       } else {
         Kokkos::abort("array reduction length must be <= 32");
       }
     } else {
       ParReduceSpecialize::template execute_array<1>(
-          m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
+          m_functor_reducer.get_functor(), m_policy, m_result_ptr, m_result_ptr_on_device);
     }
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer, const ViewType& arg_result)
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
+                 const ViewType& arg_result)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result.size()),
-        m_functor(arg_functor),
+        m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result.data()),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())) {}
+                         arg_functor_reducer.get_functor(), arg_policy.team_size())) {}
 };
 
 }  // namespace Impl

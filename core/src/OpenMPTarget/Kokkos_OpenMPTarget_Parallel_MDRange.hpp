@@ -438,10 +438,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
                      Kokkos::Experimental::OpenMPTarget> {
  private:
+	 using FunctorType = typename CombinedFunctorReducerType::functor_type;
+	 using ReducerType = typename CombinedFunctorReducerType::reducer_type;
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
   using WorkTag = typename Policy::work_tag;
@@ -456,9 +458,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       !std::is_same<typename ReducerType::functor_type, FunctorType>::value;
 
   const pointer_type m_result_ptr;
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
 
   using ParReduceCommon = ParallelReduceCommon<pointer_type>;
 
@@ -466,17 +467,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    execute_tile<Policy::rank>(m_functor, m_policy, m_result_ptr);
+    execute_tile<Policy::rank>(m_functor_reducer.get_functor(), m_policy, m_result_ptr);
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& arg_reducer,
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
                  const ViewType& arg_result_view)
       : m_result_ptr(arg_result_view.data()),
-        m_functor(arg_functor),
+        m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible) {}
