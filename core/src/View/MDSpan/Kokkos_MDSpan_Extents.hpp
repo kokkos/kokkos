@@ -58,6 +58,11 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #include <experimental/mdspan>
 
 namespace Kokkos::Impl {
+/*
+ * Forward declarations from impl/Kokkos_ViewMapping.hpp
+ * We cannot include directly since ViewMapping is used elsewhere in View.
+ * After View is fully moved to mdspan we can include it only from here.
+ */
 template <class DataType>
 struct ViewArrayAnalysis;
 
