@@ -103,8 +103,6 @@ struct TestFunctorA {
     const auto initVal = m_initValuesView(rowIndex);
 
     switch (m_apiPick) {
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
-
       case 0: {
         auto it = KE::transform_inclusive_scan(member, first, last, firstDest,
                                                m_binaryOp, m_unaryOp);
@@ -144,8 +142,6 @@ struct TestFunctorA {
 
         break;
       }
-
-#endif
     }
   }
 };
@@ -227,8 +223,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 #endif
 
     switch (apiId) {
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
-
       case 0:
       case 1: {
         const auto it =
@@ -248,8 +242,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
         break;
       }
-
-#endif
     }
   }
 

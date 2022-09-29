@@ -28,9 +28,10 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
-          class FirstDest, class BinaryOpType, class UnaryOpType>
-struct TransformExclusiveScanFunctor {
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest,
+          class BinaryOpType, class UnaryOpType>
+struct ExeSpaceTransformExclusiveScanFunctor {
+  using index_type      = typename FirstFrom::difference_type;
   using execution_space = ExeSpace;
   using value_type =
       ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
@@ -42,9 +43,9 @@ struct TransformExclusiveScanFunctor {
   UnaryOpType m_unary_op;
 
   KOKKOS_FUNCTION
-  TransformExclusiveScanFunctor(ValueType init, FirstFrom first_from,
-                                FirstDest first_dest, BinaryOpType bop,
-                                UnaryOpType uop)
+  ExeSpaceTransformExclusiveScanFunctor(ValueType init, FirstFrom first_from,
+                                        FirstDest first_dest, BinaryOpType bop,
+                                        UnaryOpType uop)
       : m_init_value(std::move(init)),
         m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)),
@@ -52,7 +53,7 @@ struct TransformExclusiveScanFunctor {
         m_unary_op(std::move(uop)) {}
 
   KOKKOS_FUNCTION
-  void operator()(const IndexType i, value_type& update,
+  void operator()(const index_type i, value_type& update,
                   const bool final_pass) const {
     if (final_pass) {
       if (i == 0) {
@@ -103,11 +104,9 @@ OutputIteratorType transform_exclusive_scan_exespace_impl(
   Impl::expect_valid_range(first_from, last_from);
 
   // aliases
-  using index_type = typename InputIteratorType::difference_type;
-  using func_type =
-      TransformExclusiveScanFunctor<ExecutionSpace, index_type, ValueType,
-                                    InputIteratorType, OutputIteratorType,
-                                    BinaryOpType, UnaryOpType>;
+  using func_type = ExeSpaceTransformExclusiveScanFunctor<
+      ExecutionSpace, ValueType, InputIteratorType, OutputIteratorType,
+      BinaryOpType, UnaryOpType>;
 
   // run
   const auto num_elements =
@@ -124,6 +123,55 @@ OutputIteratorType transform_exclusive_scan_exespace_impl(
 //
 // team impl
 //
+
+template <class ExeSpace, class ValueType, class FirstFrom, class FirstDest,
+          class BinaryOpType, class UnaryOpType>
+struct TeamTransformExclusiveScanFunctor {
+  using execution_space = ExeSpace;
+  using index_type      = typename FirstFrom::difference_type;
+
+  ValueType m_init_value;
+  FirstFrom m_first_from;
+  FirstDest m_first_dest;
+  BinaryOpType m_binary_op;
+  UnaryOpType m_unary_op;
+
+  KOKKOS_FUNCTION
+  TeamTransformExclusiveScanFunctor(ValueType init, FirstFrom first_from,
+                                    FirstDest first_dest, BinaryOpType bop,
+                                    UnaryOpType uop)
+      : m_init_value(std::move(init)),
+        m_first_from(std::move(first_from)),
+        m_first_dest(std::move(first_dest)),
+        m_binary_op(std::move(bop)),
+        m_unary_op(std::move(uop)) {}
+
+  KOKKOS_FUNCTION
+  void operator()(const index_type i, ValueType& update,
+                  const bool final_pass) const {
+    if (final_pass) {
+      if (i == 0) {
+        // for both ExclusiveScan and TransformExclusiveScan,
+        // init is unmodified
+        m_first_dest[i] = m_init_value;
+      } else {
+        m_first_dest[i] = m_binary_op(update, m_init_value);
+      }
+    }
+
+    const auto tmp = ValueType{m_unary_op(m_first_from[i])};
+    this->join(update, tmp);
+  }
+
+  KOKKOS_FUNCTION
+  void init(ValueType& update) const { update = {}; }
+
+  KOKKOS_FUNCTION
+  void join(ValueType& update, const ValueType& input) const {
+    update = m_binary_op(update, input);
+  }
+};
+
 template <class TeamHandleType, class InputIteratorType,
           class OutputIteratorType, class ValueType, class BinaryOpType,
           class UnaryOpType>
@@ -141,12 +189,11 @@ KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan_team_impl(
 #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
-  using exe_space  = typename TeamHandleType::execution_space;
-  using index_type = typename InputIteratorType::difference_type;
+  using exe_space = typename TeamHandleType::execution_space;
   using func_type =
-      TransformExclusiveScanFunctor<exe_space, index_type, ValueType,
-                                    InputIteratorType, OutputIteratorType,
-                                    BinaryOpType, UnaryOpType>;
+      TeamTransformExclusiveScanFunctor<exe_space, ValueType, InputIteratorType,
+                                        OutputIteratorType, BinaryOpType,
+                                        UnaryOpType>;
 
   // run
   const auto num_elements =

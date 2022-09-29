@@ -109,7 +109,6 @@ struct TestFunctorA {
         break;
       }
 
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
 
       case 2: {
@@ -133,7 +132,6 @@ struct TestFunctorA {
         break;
       }
 
-#endif
 #endif
     }
   }
@@ -220,7 +218,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         break;
       }
 
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
       case 2:
       case 3: {
@@ -231,7 +228,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
         break;
       }
-#endif
 #endif
     }
 

@@ -121,12 +121,10 @@ OutputIteratorType exclusive_scan_custom_op_exespace_impl(
   Impl::expect_valid_range(first_from, last_from);
 
   // aliases
-  using index_type    = typename InputIteratorType::difference_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
-  using func_type =
-      TransformExclusiveScanFunctor<ExecutionSpace, index_type, ValueType,
-                                    InputIteratorType, OutputIteratorType,
-                                    BinaryOpType, unary_op_type>;
+  using func_type     = ExeSpaceTransformExclusiveScanFunctor<
+      ExecutionSpace, ValueType, InputIteratorType, OutputIteratorType,
+      BinaryOpType, unary_op_type>;
 
   // run
   const auto num_elements =
@@ -214,6 +212,11 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
+  static_assert(
+      ::Kokkos::is_detected_v<ex_scan_has_reduction_identity_sum_t, ValueType>,
+      "At the moment exclusive_scan doesn't support types without reduction "
+      "identity");
+
 #if defined(KOKKOS_ENABLE_CUDA)
 
   const auto num_elements =
@@ -221,12 +224,11 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
 
   // aliases
   using exe_space     = typename TeamHandleType::execution_space;
-  using index_type    = typename InputIteratorType::difference_type;
   using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
   using func_type =
-      TransformExclusiveScanFunctor<exe_space, index_type, ValueType,
-                                    InputIteratorType, OutputIteratorType,
-                                    BinaryOpType, unary_op_type>;
+      TeamTransformExclusiveScanFunctor<exe_space, ValueType, InputIteratorType,
+                                        OutputIteratorType, BinaryOpType,
+                                        unary_op_type>;
 
   ::Kokkos::parallel_scan(
       TeamThreadRange(teamHandle, 0, num_elements),

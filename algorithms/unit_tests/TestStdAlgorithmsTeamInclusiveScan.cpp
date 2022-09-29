@@ -112,8 +112,6 @@ struct TestFunctorA {
         break;
       }
 
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
-
       case 2: {
         auto it =
             KE::inclusive_scan(member, first, last, firstDest, m_binaryOp);
@@ -152,8 +150,6 @@ struct TestFunctorA {
 
         break;
       }
-
-#endif
     }
   }
 };
@@ -244,7 +240,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         break;
       }
 
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
       case 2:
       case 3: {
         auto it = inclusive_scan(first, last, firstDest, binaryOp);
@@ -264,7 +259,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
         break;
       }
-#endif
     }
 
 #undef inclusive_scan

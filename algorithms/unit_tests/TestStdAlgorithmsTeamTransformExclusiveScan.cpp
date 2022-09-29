@@ -99,8 +99,6 @@ struct TestFunctorA {
     const auto initVal = m_initValuesView(rowIndex);
 
     switch (m_apiPick) {
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
-
       case 0: {
         auto it = KE::transform_exclusive_scan(
             member, KE::cbegin(rowViewSrc), KE::cend(rowViewSrc),
@@ -121,8 +119,6 @@ struct TestFunctorA {
 
         break;
       }
-
-#endif
     }
   }
 };
@@ -200,8 +196,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 #endif
 
     switch (apiId) {
-#if 0  // FIXME: for whatever reason custom operator doesn't work on CUDA
-
       case 0:
       case 1: {
         auto it = transform_exclusive_scan(
@@ -211,8 +205,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         EXPECT_EQ(stdDistance, distancesView_h(i));
         break;
       }
-
-#endif
     }
 
 #undef transform_exclusive_scan
