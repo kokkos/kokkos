@@ -197,7 +197,7 @@ class RadixSorter {
   View<T*> m_key_scratch;
   View<IndexType*> m_index_old;
   View<IndexType*> m_index_new;
-  View<T*> m_scan;
+  View<size_t*> m_scan;
   View<unsigned char*> m_bits;
 };
 
