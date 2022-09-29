@@ -111,7 +111,7 @@ class RadixSorter {
     using std::swap;
     
     for (int i = 0; i < num_bits; ++i) {
-      step<false>(policy, key_functor, m_index_new, m_index_old, i);
+      step<false>(policy, key_functor, i, m_index_new, m_index_old);
 
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
@@ -142,7 +142,7 @@ class RadixSorter {
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
     
-      step<true>(policy, key_functor, m_index_new, m_index_old, i);
+      step<true>(policy, key_functor, i, m_index_new, m_index_old);
       permute_by_scan(policy, m_key_scratch, keys);
 
       // Number of bits is always even, and we know on odd numbered
@@ -173,8 +173,8 @@ class RadixSorter {
   }
 
   template <bool permute_input, class Policy, class KeyFunctor>
-  void step(Policy policy, KeyFunctor getKeyBit,
-            View<IndexType*>& indices_new, View<IndexType*>& indices_old, std::uint32_t shift) {
+  void step(Policy policy, KeyFunctor getKeyBit, std::uint32_t shift,
+            View<IndexType*>& indices_new, View<IndexType*>& indices_old) {
     parallel_for(policy, KOKKOS_LAMBDA(int i) {
       auto key_bit = getKeyBit(permute_input ? i : indices_old(i), shift);
 
