@@ -67,44 +67,47 @@ class RadixSorter {
   RadixSorter() = default;
   explicit RadixSorter(std::size_t n)
       : m_key_scratch("radix_sort_key_scratch", n),
-        m_index("radix_sort_index", n),
-        m_index_scratch("radix_sort_index_scratch", n),
+        m_index_old("radix_sort_index", n),
+        m_index_new("radix_sort_index_scratch", n),
         m_scan("radix_sort_scan", n),
         m_bits("radix_sort_bits", n) {
-    Kokkos::parallel_for(n, KOKKOS_LAMBDA(int i) { m_index(i) = i; });
+    Kokkos::parallel_for(n, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
   }
 
   template <class ExecutionSpace>
-  void create_indirection_vector(const ExecutionSpace& exec, View<T*> keys) {
+  void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
     using std::swap;
-    
-    for (int i = 0; i < num_bits; ++i) {
-      step(exec, keys, m_index, i);
 
-      swap(m_key_scratch, keys);
-      swap(m_index_scratch, m_index);
+    for (int i = 0; i < num_bits; ++i) {
+      step(exec, keys, m_index_old, i);
+
+      swap(m_index_new, m_index_old);
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
-      // So when this loop ends, keys and m_index will contain the results
+      // So when this loop ends, keys and m_index_old will contain the results
     }
 
     // Prepare to lift restriction that num_bits must be even
     if (num_bits % 2 == 1) {
-      swap(m_key_scratch, keys);
-      swap(m_index_scratch, m_index);
+      swap(m_index_new, m_index_old);
     }
-
-    exec.fence();
   }
 
+  template <class ExecutionSpace>
+  void apply_permutation(ExecutionSpace const& exec, View<T*> v) {
+    parallel_for(RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
+                 KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
+    deep_copy(exec, v, m_key_scratch);
+  }
+  
   //private:
   template <class ExecutionSpace>
   void step(const ExecutionSpace& exec, View<T*> keys, View<IndexType*> indices, std::uint32_t shift) {
     const auto n = keys.extent(0);
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
 
-    parallel_for(policy, [this, keys, shift] KOKKOS_FUNCTION(int i) {
-      auto h    = keys(i) >> shift;
+    parallel_for(policy, KOKKOS_LAMBDA(int i) {
+      auto h    = keys(indices(i)) >> shift;
 
       // Handle signed 2's-complement
       if constexpr(std::is_signed_v<T>) {
@@ -126,20 +129,18 @@ class RadixSorter {
       _x += val;
     } );
 
-    parallel_for(policy,
-                         [this, keys, indices, n] KOKKOS_FUNCTION(int i) {
+    parallel_for(policy, KOKKOS_LAMBDA(int i) {
                            const auto total = m_scan(n - 1) + m_bits(n - 1);
 
                            auto t                   = i - m_scan(i) + total;
                            auto new_idx             = m_bits(i) ? m_scan(i) : t;
-                           m_index_scratch(new_idx) = indices(i);
-                           m_key_scratch(new_idx)   = keys(i);
+                           m_index_new(new_idx) = indices(i);
                          });
   }
 
   View<T*> m_key_scratch;
-  View<IndexType*> m_index;
-  View<IndexType*> m_index_scratch;
+  View<IndexType*> m_index_old;
+  View<IndexType*> m_index_new;
   View<T*> m_scan;
   View<T*> m_bits;
 };
