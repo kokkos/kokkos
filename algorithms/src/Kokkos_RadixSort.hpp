@@ -115,6 +115,7 @@ class RadixSorter {
     
     for (int i = 0; i < num_bits; ++i) {
       step<false>(policy, key_functor, i, m_index_new, m_index_old);
+      permute_by_scan<IndexType>(policy, {m_index_new, m_index_old});
 
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
@@ -134,7 +135,7 @@ class RadixSorter {
     deep_copy(exec, v, m_key_scratch);
   }
 
-  // 
+  // Directly re-arrange the entries of keys, without storing the permutation
   template <class ExecutionSpace>
   void sort(ExecutionSpace const& exec, View<T*> keys) {
     // Almost identical to create_indirection_array, except actually permute the input
@@ -193,8 +194,6 @@ class RadixSorter {
 
       _x += val;
     } );
-
-    permute_by_scan<IndexType>(policy, {indices_new, indices_old});
   }
 
   View<T*> m_key_scratch;
