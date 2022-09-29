@@ -544,13 +544,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::SYCL> {
+template <class CombinedFunctorReducerType, class... Properties>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
+                     Kokkos::Experimental::SYCL> {
  public:
   using Policy = TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>;
 
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using member_type   = typename Policy::member_type;
   using WorkTag       = typename Policy::work_tag;
   using launch_bounds = typename Policy::launch_bounds;
@@ -564,9 +567,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using size_type    = Kokkos::Experimental::SYCL::size_type;
 
  private:
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   size_type m_shmem_begin;
@@ -592,7 +594,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    const unsigned int value_count = m_reducer.value_count();
+    const unsigned int value_count = m_functor_reducer.get_reducer().value_count();
     std::size_t size = std::size_t(m_league_size) * m_team_size * m_vector_size;
     value_type* results_ptr = nullptr;
 
@@ -861,9 +863,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
+        m_functor_reducer.get_functor(), indirectKernelMem);
     auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_reducer, indirectReducerMem);
+        m_functor_reducer.get_reducer(), indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper, reducer_wrapper,
@@ -877,7 +879,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL optimize
     if (m_team_size < 0)
       m_team_size =
-          m_policy.team_size_recommended(m_functor, ParallelReduceTag{});
+          m_policy.team_size_recommended(m_functor_reducer.get_functor(), ParallelReduceTag{});
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {
@@ -889,7 +891,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
         (m_policy.scratch_size(0, m_team_size) +
-         FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
+         FunctorTeamShmemSize<FunctorType>::value(m_functor_reducer.get_functor(), m_team_size));
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
@@ -910,18 +912,17 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
-    if (m_team_size > m_policy.team_size_max(m_functor, ParallelReduceTag{}))
+    if (m_team_size > m_policy.team_size_max(m_functor_reducer.get_functor(), ParallelReduceTag{}))
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
   }
 
  public:
   template <class ViewType>
-  ParallelReduce(FunctorType const& arg_functor, Policy const& arg_policy,
-                 ReducerType const& arg_reducer, ViewType const& arg_result)
-      : m_functor(arg_functor),
+  ParallelReduce(CombinedFunctorReducerType const& arg_functor_reducer, Policy const& arg_policy,
+                 ViewType const& arg_result)
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,

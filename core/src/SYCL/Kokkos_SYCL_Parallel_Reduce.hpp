@@ -207,13 +207,16 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
 }  // namespace SYCLReduction
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::Experimental::SYCL> {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
  private:
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using value_type     = typename ReducerType::value_type;
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -222,11 +225,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   template <class V>
-  ParallelReduce(const FunctorType& f, const Policy& p, const ReducerType& r,
+  ParallelReduce(const CombinedFunctorReducerType& f_r, const Policy& p,
                  const V& v)
-      : m_functor(f),
+      : m_functor_reducer(f_r),
         m_policy(p),
-        m_reducer(r),
         m_result_ptr(v.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
@@ -249,7 +251,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     constexpr size_t values_per_thread       = 2;
     std::size_t size                         = policy.end() - policy.begin();
-    const unsigned int value_count           = m_reducer.value_count();
+    const unsigned int value_count           = m_functor_reducer.get_reducer().value_count();
     sycl::device_ptr<value_type> results_ptr = nullptr;
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
@@ -493,9 +495,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
+        m_functor_reducer.get_functor(), indirectKernelMem);
     auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_reducer, indirectReducerMem);
+        m_functor_reducer.get_reducer(), indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper, reducer_wrapper,
@@ -505,9 +507,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
  private:
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
@@ -516,13 +517,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   std::scoped_lock<std::mutex> m_shared_memory_lock;
 };
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
                      Kokkos::Experimental::SYCL> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
  private:
+ using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using value_type     = typename ReducerType::value_type;
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -554,12 +558,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   template <typename V>
-  ParallelReduce(const FunctorType& f, const Policy& p, const ReducerType& r,
+  ParallelReduce(const CombinedFunctorReducerType& f_r, const Policy& p,
                  const V& v)
-      : m_functor(f),
+      : m_functor_reducer(f_r),
         m_policy(p),
         m_space(p.space()),
-        m_reducer(r),
         m_result_ptr(v.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
@@ -592,7 +595,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     size_t size              = range.get_global_range().size();
     const auto init_size =
         std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
-    const unsigned int value_count = m_reducer.value_count();
+    const unsigned int value_count = m_functor_reducer.get_reducer().value_count();
     const auto results_ptr =
         static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
             sizeof(value_type) * std::max(value_count, 1u) * init_size));
@@ -792,9 +795,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
+        m_functor_reducer.get_functor(), indirectKernelMem);
     auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_reducer, indirectReducerMem);
+        m_functor_reducer.get_reducer(), indirectReducerMem);
 
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper, reducer_wrapper,
@@ -804,10 +807,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
  private:
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const BarePolicy m_policy;
   const Kokkos::Experimental::SYCL& m_space;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
