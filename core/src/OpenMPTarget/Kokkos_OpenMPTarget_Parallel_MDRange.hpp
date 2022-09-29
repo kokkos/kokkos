@@ -439,12 +439,13 @@ namespace Kokkos {
 namespace Impl {
 
 template <class CombinedFunctorReducerType, class... Traits>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::MDRangePolicy<Traits...>,
                      Kokkos::Experimental::OpenMPTarget> {
  private:
-	 using FunctorType = typename CombinedFunctorReducerType::functor_type;
-	 using ReducerType = typename CombinedFunctorReducerType::reducer_type;
-  using Policy = Kokkos::MDRangePolicy<Traits...>;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+  using Policy      = Kokkos::MDRangePolicy<Traits...>;
 
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
@@ -467,12 +468,13 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
 
  public:
   inline void execute() const {
-    execute_tile<Policy::rank>(m_functor_reducer.get_functor(), m_policy, m_result_ptr);
+    execute_tile<Policy::rank>(m_functor_reducer.get_functor(), m_policy,
+                               m_result_ptr);
   }
 
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
-                 const ViewType& arg_result_view)
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result_view)
       : m_result_ptr(arg_result_view.data()),
         m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),

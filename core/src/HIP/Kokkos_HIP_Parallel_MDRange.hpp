@@ -194,8 +194,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
 
 // ParallelReduce
 template <class CombinedFunctorReducerType, class... Traits>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
-                     HIP> {
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::MDRangePolicy<Traits...>, HIP> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
@@ -232,18 +232,21 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
 
  public:
   inline __device__ void exec_range(reference_type update) const {
-    DeviceIteratePattern(m_policy, m_functor_reducer.get_functor(), update).exec_range();
+    DeviceIteratePattern(m_policy, m_functor_reducer.get_functor(), update)
+        .exec_range();
   }
 
   inline __device__ void operator()() const {
     const integral_nonzero_constant<
         size_type, ReducerType::static_value_size() / sizeof(size_type)>
-        word_count(m_functor_reducer.get_reducer().value_size() / sizeof(size_type));
+        word_count(m_functor_reducer.get_reducer().value_size() /
+                   sizeof(size_type));
 
     {
-      reference_type value = m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
-          kokkos_impl_hip_shared_memory<size_type>() +
-          threadIdx.y * word_count.value));
+      reference_type value =
+          m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
+              kokkos_impl_hip_shared_memory<size_type>() +
+              threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
@@ -269,7 +272,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
                                     : m_scratch_space;
 
       if (threadIdx.y == 0) {
-        m_functor_reducer.get_reducer().final(reinterpret_cast<value_type*>(shared));
+        m_functor_reducer.get_reducer().final(
+            reinterpret_cast<value_type*>(shared));
       }
 
       if (Impl::HIPTraits::WarpSize < word_count.value) {
@@ -291,7 +295,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
                                                       WorkTag, value_type>(f,
                                                                            n);
     };
-    using closure_type = ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy, HIP>;
+    using closure_type =
+        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy,
+                       HIP>;
 
     unsigned block_size =
         Kokkos::Impl::hip_get_preferred_blocksize<closure_type, LaunchBounds>(
@@ -306,15 +312,17 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
 
   inline void execute() {
     using ClosureType =
-        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy, Kokkos::HIP>;
+        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy,
+                       Kokkos::HIP>;
     const auto nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
-      int exponent_pow_two    = std::ceil(std::log2(block_size));
-      block_size              = std::pow(2, exponent_pow_two);
-      int suggested_blocksize = local_block_size(m_functor_reducer.get_functor());
+      int exponent_pow_two = std::ceil(std::log2(block_size));
+      block_size           = std::pow(2, exponent_pow_two);
+      int suggested_blocksize =
+          local_block_size(m_functor_reducer.get_functor());
 
       block_size = (block_size > suggested_blocksize)
                        ? block_size
@@ -336,7 +344,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
 
       const int shmem =
           ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-              false, FunctorType, WorkTag, value_type>(m_functor_reducer.get_functor(), block.y);
+              false, FunctorType, WorkTag, value_type>(
+              m_functor_reducer.get_functor(), block.y);
 
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, shmem,
@@ -356,8 +365,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
   }
 
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
-                 const ViewType& arg_result)
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_result.data()),
@@ -370,8 +379,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
     using closure_type =
-        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Kokkos::MDRangePolicy<Traits...>,
-                       HIP>;
+        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                       Kokkos::MDRangePolicy<Traits...>, HIP>;
     unsigned block_size = hip_get_max_blocksize<closure_type, LaunchBounds>();
     if (block_size == 0) {
       Kokkos::Impl::throw_runtime_exception(

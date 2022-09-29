@@ -193,12 +193,14 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   __device__ inline void run(SHMEMReductionTag) const {
     const integral_nonzero_constant<
         size_type, ReducerType::static_value_size() / sizeof(size_type)>
-        word_count(m_functor_reducer.get_reducer().value_size() / sizeof(size_type));
+        word_count(m_functor_reducer.get_reducer().value_size() /
+                   sizeof(size_type));
 
     {
-      reference_type value = m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
-          ::Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
-          threadIdx.y * word_count.value));
+      reference_type value =
+          m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
+              ::Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
+              threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
@@ -234,7 +236,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                                     : m_scratch_space;
 
       if (threadIdx.y == 0) {
-        m_functor_reducer.get_reducer().final(reinterpret_cast<value_type*>(shared));
+        m_functor_reducer.get_reducer().final(
+            reinterpret_cast<value_type*>(shared));
       }
 
       if (::Kokkos::Impl::HIPTraits::WarpSize < word_count.value) {
@@ -280,8 +283,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           m_result_ptr_device_accessible ? m_result_ptr : result;
       *final_result = value;
     } else if (Impl::hip_inter_block_shuffle_reduction<>(
-                   value, init, m_functor_reducer.get_reducer(), m_scratch_space, result,
-                   m_scratch_flags, max_active_thread)) {
+                   value, init, m_functor_reducer.get_reducer(),
+                   m_scratch_space, result, m_scratch_flags,
+                   max_active_thread)) {
       unsigned int const id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
         m_functor_reducer.get_reducer().final(&value);
@@ -301,7 +305,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                                                                            n);
     };
     using DriverType =
-        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy, Kokkos::HIP>;
+        ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy,
+                       Kokkos::HIP>;
     return Kokkos::Impl::hip_get_preferred_blocksize<DriverType, LaunchBounds>(
         instance, shmem_functor);
   }
@@ -345,7 +350,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                     m_functor_reducer.get_functor(), block.y);
 
       using DriverType =
-          ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy, Kokkos::HIP>;
+          ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                         Policy, Kokkos::HIP>;
       Kokkos::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
@@ -364,8 +370,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
-                 const ViewType& arg_result)
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_result.data()),

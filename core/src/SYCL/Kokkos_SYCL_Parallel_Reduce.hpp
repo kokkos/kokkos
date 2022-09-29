@@ -249,9 +249,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    constexpr size_t values_per_thread       = 2;
-    std::size_t size                         = policy.end() - policy.begin();
-    const unsigned int value_count           = m_functor_reducer.get_reducer().value_count();
+    constexpr size_t values_per_thread = 2;
+    std::size_t size                   = policy.end() - policy.begin();
+    const unsigned int value_count =
+        m_functor_reducer.get_reducer().value_count();
     sycl::device_ptr<value_type> results_ptr = nullptr;
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
@@ -518,13 +519,14 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 };
 
 template <class CombinedFunctorReducerType, class... Traits>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::MDRangePolicy<Traits...>,
                      Kokkos::Experimental::SYCL> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
  private:
- using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
   using value_type     = typename ReducerType::value_type;
@@ -595,7 +597,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
     size_t size              = range.get_global_range().size();
     const auto init_size =
         std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
-    const unsigned int value_count = m_functor_reducer.get_reducer().value_count();
+    const unsigned int value_count =
+        m_functor_reducer.get_reducer().value_count();
     const auto results_ptr =
         static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
             sizeof(value_type) * std::max(value_count, 1u) * init_size));

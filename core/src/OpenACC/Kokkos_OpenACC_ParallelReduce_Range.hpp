@@ -65,7 +65,8 @@ struct OpenACCParallelReduceHelper {
 }  // namespace Kokkos::Experimental::Impl
 
 template <class CombinedFunctorReducerType, class... Traits>
-class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
+class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
+                                   Kokkos::RangePolicy<Traits...>,
                                    Kokkos::Experimental::OpenACC> {
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
@@ -81,8 +82,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePoli
 
  public:
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType& functor_reducer, const Policy& policy,
-                 const ViewType& result)
+  ParallelReduce(const CombinedFunctorReducerType& functor_reducer,
+                 const Policy& policy, const ViewType& result)
       : m_functor_reducer(functor_reducer),
         m_policy(policy),
         m_result_ptr(result.data()) {}
@@ -99,7 +100,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePoli
     m_functor_reducer.get_reducer().init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
-        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(m_functor_reducer.get_functor()),
+        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(
+            m_functor_reducer.get_functor()),
         std::conditional_t<
             std::is_same_v<typename ReducerType::functor_type, FunctorType>,
             Sum<ValueType>, typename ReducerType::functor_type>(val),

@@ -151,9 +151,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 };
 
-template <class CombinedFunctorReducerType,class... Traits>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
-                     Kokkos::Threads> {
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::MDRangePolicy<Traits...>, Kokkos::Threads> {
  private:
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
@@ -202,8 +202,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
     ParallelReduce::exec_range(
-        self.m_mdr_policy, self.m_functor_reducer.get_functor(), range.begin(), range.end(),
-        self.m_functor_reducer.get_reducer().init(static_cast<pointer_type>(exec.reduce_memory())));
+        self.m_mdr_policy, self.m_functor_reducer.get_functor(), range.begin(),
+        range.end(),
+        self.m_functor_reducer.get_reducer().init(
+            static_cast<pointer_type>(exec.reduce_memory())));
 
     exec.fan_in_reduce(self.m_functor_reducer.get_reducer());
   }
@@ -220,8 +222,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
 
     long work_index = exec.get_work_index();
 
-    reference_type update =
-        self.m_functor_reducer.get_reducer().init(static_cast<pointer_type>(exec.reduce_memory()));
+    reference_type update = self.m_functor_reducer.get_reducer().init(
+        static_cast<pointer_type>(exec.reduce_memory()));
     while (work_index != -1) {
       const Member begin =
           static_cast<Member>(work_index) * self.m_policy.chunk_size();
@@ -239,7 +241,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
 
  public:
   inline void execute() const {
-    ThreadsExec::resize_scratch(m_functor_reducer.get_reducer().value_size(), 0);
+    ThreadsExec::resize_scratch(m_functor_reducer.get_reducer().value_size(),
+                                0);
 
     ThreadsExec::start(&ParallelReduce::exec, this);
 

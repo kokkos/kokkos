@@ -221,12 +221,14 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     const integral_nonzero_constant<word_size_type,
                                     ReducerType::static_value_size() /
                                         sizeof(word_size_type)>
-        word_count(m_functor_reducer.get_reducer().value_size() / sizeof(word_size_type));
+        word_count(m_functor_reducer.get_reducer().value_size() /
+                   sizeof(word_size_type));
 
     {
-      reference_type value = m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
-          kokkos_impl_cuda_shared_memory<word_size_type>() +
-          threadIdx.y * word_count.value));
+      reference_type value =
+          m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
+              kokkos_impl_cuda_shared_memory<word_size_type>() +
+              threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
@@ -265,7 +267,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
               : (m_unified_space ? m_unified_space : m_scratch_space);
 
       if (threadIdx.y == 0) {
-        m_functor_reducer.get_reducer().final(reinterpret_cast<value_type*>(shared));
+        m_functor_reducer.get_reducer().final(
+            reinterpret_cast<value_type*>(shared));
       }
 
       if (CudaTraits::WarpSize < word_count.value) {
@@ -284,7 +287,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
                                                   value_type>(f, n);
-    using closure_type = Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy>;
+    using closure_type =
+        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                             Policy>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -385,8 +390,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
-                 const ViewType& arg_result_view)
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result_view)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()),
@@ -399,7 +404,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<value_type, WorkTag>(m_policy, m_functor_reducer.get_functor());
+    check_reduced_view_shmem_size<value_type, WorkTag>(
+        m_policy, m_functor_reducer.get_functor());
   }
 };
 

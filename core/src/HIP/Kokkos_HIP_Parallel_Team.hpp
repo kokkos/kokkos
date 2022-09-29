@@ -112,8 +112,10 @@ class TeamPolicyInternal<HIP, Properties...>
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                               TeamPolicyInternal, FunctorType>;
-    using closure_type =
-        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, typename functor_analysis_type::Reducer>, TeamPolicy<Properties...>>;
+    using closure_type = Impl::ParallelReduce<
+        CombinedFunctorReducer<FunctorType,
+                               typename functor_analysis_type::Reducer>,
+        TeamPolicy<Properties...>>;
     return internal_team_size_common<BlockType::Max, closure_type>(f);
   }
 
@@ -121,7 +123,8 @@ class TeamPolicyInternal<HIP, Properties...>
   inline int team_size_max(const FunctorType& f, const ReducerType&,
                            const ParallelReduceTag&) const {
     using closure_type =
-        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, TeamPolicy<Properties...>>;
+        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                             TeamPolicy<Properties...>>;
     return internal_team_size_common<BlockType::Max, closure_type>(f);
   }
 
@@ -139,8 +142,10 @@ class TeamPolicyInternal<HIP, Properties...>
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                               TeamPolicyInternal, FunctorType>;
-    using closure_type =
-        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, typename functor_analysis_type::Reducer>, TeamPolicy<Properties...>>;
+    using closure_type = Impl::ParallelReduce<
+        CombinedFunctorReducer<FunctorType,
+                               typename functor_analysis_type::Reducer>,
+        TeamPolicy<Properties...>>;
     return internal_team_size_common<BlockType::Preferred, closure_type>(f);
   }
 
@@ -148,7 +153,8 @@ class TeamPolicyInternal<HIP, Properties...>
   int team_size_recommended(FunctorType const& f, ReducerType const&,
                             ParallelReduceTag const&) const {
     using closure_type =
-        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, TeamPolicy<Properties...>>;
+        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                             TeamPolicy<Properties...>>;
     return internal_team_size_common<BlockType::Preferred, closure_type>(f);
   }
 
@@ -564,8 +570,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
 //----------------------------------------------------------------------------
 
 template <class CombinedFunctorReducerType, class... Properties>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
-                     HIP> {
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::TeamPolicy<Properties...>, HIP> {
  public:
   using Policy = TeamPolicyInternal<HIP, Properties...>;
 
@@ -667,11 +673,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
   __device__ inline void run(SHMEMReductionTag, int const threadid) const {
     integral_nonzero_constant<size_type, ReducerType::static_value_size() /
                                              sizeof(size_type)> const
-        word_count(m_functor_reducer.get_reducer().value_size() / sizeof(size_type));
+        word_count(m_functor_reducer.get_reducer().value_size() /
+                   sizeof(size_type));
 
-    reference_type value =
-        m_functor_reducer.get_reducer().init(Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
-                       threadIdx.y * word_count.value);
+    reference_type value = m_functor_reducer.get_reducer().init(
+        Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
+        threadIdx.y * word_count.value);
 
     // Iterate this block through the league
     iterate_through_league(threadid, value);
@@ -695,7 +702,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
                                     : m_scratch_space;
 
       if (threadIdx.y == 0) {
-        m_functor_reducer.get_reducer().final(reinterpret_cast<value_type*>(shared));
+        m_functor_reducer.get_reducer().final(
+            reinterpret_cast<value_type*>(shared));
       }
 
       if (HIPTraits::WarpSize < word_count.value) {
@@ -726,8 +734,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
       m_functor_reducer.get_reducer().final(&value);
       *result = value;
     } else if (Impl::hip_inter_block_shuffle_reduction(
-                   value, init, m_functor_reducer.get_reducer(), m_scratch_space, result,
-                   m_scratch_flags, blockDim.y)) {
+                   value, init, m_functor_reducer.get_reducer(),
+                   m_scratch_space, result, m_scratch_flags, blockDim.y)) {
       unsigned int const id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
         m_functor_reducer.get_reducer().final(&value);
@@ -750,7 +758,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
               : std::min(static_cast<int>(m_league_size), m_team_size);
 
       m_scratch_space = Kokkos::Impl::hip_internal_scratch_space(
-          m_policy.space(), m_functor_reducer.get_reducer().value_size() * block_count);
+          m_policy.space(),
+          m_functor_reducer.get_reducer().value_size() * block_count);
       m_scratch_flags = Kokkos::Impl::hip_internal_scratch_flags(
           m_policy.space(), sizeof(size_type));
 
@@ -763,8 +772,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
       const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
       using closure_type =
-          ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Kokkos::TeamPolicy<Properties...>,
-                         HIP>;
+          ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                         Kokkos::TeamPolicy<Properties...>, HIP>;
       Impl::hip_parallel_launch<closure_type, launch_bounds>(
           *this, grid, block, shmem_size_total,
           m_policy.space().impl_internal_space_instance(),
@@ -788,8 +797,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
 
   template <class ViewType>
   ParallelReduce(
-      CombinedFunctorReducerType const& arg_functor_reducer, Policy const& arg_policy,
-      ViewType const& arg_result,
+      CombinedFunctorReducerType const& arg_functor_reducer,
+      Policy const& arg_policy, ViewType const& arg_result,
       std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
@@ -811,10 +820,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    m_team_size = m_team_size >= 0
-                      ? m_team_size
-                      : arg_policy.team_size_recommended(
-                            arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(), ParallelReduceTag());
+    m_team_size = m_team_size >= 0 ? m_team_size
+                                   : arg_policy.team_size_recommended(
+                                         arg_functor_reducer.get_functor(),
+                                         arg_functor_reducer.get_reducer(),
+                                         ParallelReduceTag());
 
     m_team_begin =
         UseShflReduction
@@ -823,9 +833,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
                                                        work_tag, value_type>(
                   arg_functor_reducer.get_functor(), m_team_size);
     m_shmem_begin = sizeof(double) * (m_team_size + 2);
-    m_shmem_size =
-        m_policy.scratch_size(0, m_team_size) +
-        FunctorTeamShmemSize<FunctorType>::value(arg_functor_reducer.get_functor(), m_team_size);
+    m_shmem_size  = m_policy.scratch_size(0, m_team_size) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       arg_functor_reducer.get_functor(), m_team_size);
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
     m_scratch_locks   = internal_space_instance->m_scratch_locks;
@@ -872,8 +882,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
                       "L0 scratch memory"));
     }
 
-    size_t max_size =
-        arg_policy.team_size_max(arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(), ParallelReduceTag());
+    size_t max_size = arg_policy.team_size_max(
+        arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
+        ParallelReduceTag());
     if (static_cast<int>(m_team_size) > static_cast<int>(max_size)) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > requested too "

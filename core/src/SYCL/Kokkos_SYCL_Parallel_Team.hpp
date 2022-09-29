@@ -545,7 +545,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 //----------------------------------------------------------------------------
 
 template <class CombinedFunctorReducerType, class... Properties>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::TeamPolicy<Properties...>,
                      Kokkos::Experimental::SYCL> {
  public:
   using Policy = TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>;
@@ -594,7 +595,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    const unsigned int value_count = m_functor_reducer.get_reducer().value_count();
+    const unsigned int value_count =
+        m_functor_reducer.get_reducer().value_count();
     std::size_t size = std::size_t(m_league_size) * m_team_size * m_vector_size;
     value_type* results_ptr = nullptr;
 
@@ -878,8 +880,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
   void initialize() {
     // FIXME_SYCL optimize
     if (m_team_size < 0)
-      m_team_size =
-          m_policy.team_size_recommended(m_functor_reducer.get_functor(), ParallelReduceTag{});
+      m_team_size = m_policy.team_size_recommended(
+          m_functor_reducer.get_functor(), ParallelReduceTag{});
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {
@@ -888,10 +890,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
       m_team_size = temp_team_size;
     }
 
-    m_shmem_begin = (sizeof(double) * (m_team_size + 2));
-    m_shmem_size =
-        (m_policy.scratch_size(0, m_team_size) +
-         FunctorTeamShmemSize<FunctorType>::value(m_functor_reducer.get_functor(), m_team_size));
+    m_shmem_begin     = (sizeof(double) * (m_team_size + 2));
+    m_shmem_size      = (m_policy.scratch_size(0, m_team_size) +
+                    FunctorTeamShmemSize<FunctorType>::value(
+                        m_functor_reducer.get_functor(), m_team_size));
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
@@ -912,15 +914,16 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
-    if (m_team_size > m_policy.team_size_max(m_functor_reducer.get_functor(), ParallelReduceTag{}))
+    if (m_team_size > m_policy.team_size_max(m_functor_reducer.get_functor(),
+                                             ParallelReduceTag{}))
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
   }
 
  public:
   template <class ViewType>
-  ParallelReduce(CombinedFunctorReducerType const& arg_functor_reducer, Policy const& arg_policy,
-                 ViewType const& arg_result)
+  ParallelReduce(CombinedFunctorReducerType const& arg_functor_reducer,
+                 Policy const& arg_policy, ViewType const& arg_result)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_result.data()),

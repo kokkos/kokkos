@@ -141,8 +141,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 };
 
 template <class CombinedFunctorReducerType, class... Properties>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
-                     Kokkos::Threads> {
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::TeamPolicy<Properties...>, Kokkos::Threads> {
  private:
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Threads, Properties...>;
@@ -150,7 +150,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
   using Member  = typename Policy::member_type;
 
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
-  using ReducerType = typename CombinedFunctorReducerType::reducer_type; 
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -181,8 +181,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
     ParallelReduce::template exec_team<WorkTag>(
-        self.m_functor_reducer.get_functor(), Member(&exec, self.m_policy, self.m_shared),
-        self.m_functor_reducer.get_reducer().init(static_cast<pointer_type>(exec.reduce_memory())));
+        self.m_functor_reducer.get_functor(),
+        Member(&exec, self.m_policy, self.m_shared),
+        self.m_functor_reducer.get_reducer().init(
+            static_cast<pointer_type>(exec.reduce_memory())));
 
     exec.fan_in_reduce(self.m_functor_reducer.get_reducer());
   }
@@ -222,14 +224,15 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties..
     }
     if (policy.team_size() < 0) {
       policy.impl_set_team_size(policy.team_size_recommended(
-          m_functor_reducer.get_functor(), m_functor_reducer.get_reducer(), ParallelReduceTag{}));
+          m_functor_reducer.get_functor(), m_functor_reducer.get_reducer(),
+          ParallelReduceTag{}));
     }
     return policy;
   }
 
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer, const Policy &arg_policy,
-                 const ViewType &arg_result)
+  ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer,
+                 const Policy &arg_policy, const ViewType &arg_result)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(fix_policy(arg_policy)),
         m_result_ptr(arg_result.data()),

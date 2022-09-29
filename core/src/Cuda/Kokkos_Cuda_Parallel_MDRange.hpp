@@ -205,8 +205,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 };
 
 template <class CombinedFunctorReducerType, class... Traits>
-class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...>,
-                     Kokkos::Cuda> {
+class ParallelReduce<CombinedFunctorReducerType,
+                     Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
@@ -218,8 +218,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
   using Member       = typename Policy::member_type;
   using LaunchBounds = typename Policy::launch_bounds;
 
-  using FunctorType   = typename CombinedFunctorReducerType::functor_type;
-  using ReducerType   = typename CombinedFunctorReducerType::reducer_type;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using value_type     = typename ReducerType::value_type;
@@ -266,20 +266,22 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
   inline __device__ void exec_range(reference_type update) const {
     Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                             typename Policy::work_tag,
-                                            reference_type>(m_policy, m_functor_reducer.get_functor(),
-                                                            update)
+                                            reference_type>(
+        m_policy, m_functor_reducer.get_functor(), update)
         .exec_range();
   }
 
   inline __device__ void operator()() const {
     const integral_nonzero_constant<
         size_type, ReducerType::static_value_size() / sizeof(size_type)>
-        word_count(m_functor_reducer.get_reducer().value_size() / sizeof(size_type));
+        word_count(m_functor_reducer.get_reducer().value_size() /
+                   sizeof(size_type));
 
     {
-      reference_type value = m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
-          kokkos_impl_cuda_shared_memory<size_type>() +
-          threadIdx.y * word_count.value));
+      reference_type value =
+          m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
+              kokkos_impl_cuda_shared_memory<size_type>() +
+              threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
@@ -306,7 +308,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
               : (m_unified_space ? m_unified_space : m_scratch_space);
 
       if (threadIdx.y == 0) {
-        m_functor_reducer.get_reducer().final(reinterpret_cast<value_type*>(shared));
+        m_functor_reducer.get_reducer().final(
+            reinterpret_cast<value_type*>(shared));
       }
 
       if (CudaTraits::WarpSize < word_count.value) {
@@ -325,7 +328,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
                                                   value_type>(f, n);
-    using closure_type = Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>, Policy>;
+    using closure_type =
+        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                             Policy>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -352,9 +357,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
-      int exponent_pow_two    = std::ceil(std::log2(block_size));
-      block_size              = std::pow(2, exponent_pow_two);
-      int suggested_blocksize = local_block_size(m_functor_reducer.get_functor());
+      int exponent_pow_two = std::ceil(std::log2(block_size));
+      block_size           = std::pow(2, exponent_pow_two);
+      int suggested_blocksize =
+          local_block_size(m_functor_reducer.get_functor());
 
       block_size = (block_size > suggested_blocksize)
                        ? block_size
@@ -366,8 +372,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
                                 block_size /* block_size == max block_count */);
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = cuda_internal_scratch_unified(m_policy.space(),
-                                                      m_functor_reducer.get_reducer().value_size());
+      m_unified_space = cuda_internal_scratch_unified(
+          m_policy.space(), m_functor_reducer.get_reducer().value_size());
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
@@ -414,8 +420,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
   }
 
   template <class ViewType>
-  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer, const Policy& arg_policy,
-                 const ViewType& arg_result_view)
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result_view)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()),
@@ -425,7 +431,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::MDRangePolicy<Traits...
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<value_type, WorkTag>(m_policy, m_functor_reducer.get_functor());
+    check_reduced_view_shmem_size<value_type, WorkTag>(
+        m_policy, m_functor_reducer.get_functor());
   }
 };
 }  // namespace Impl

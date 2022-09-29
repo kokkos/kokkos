@@ -64,7 +64,7 @@
 //----------------------------------------------------------------------------
 // Have assumed a 64bit build (8byte pointers) throughout the code base.
 
-static_assert(sizeof(void *) == 8,
+static_assert(sizeof(void*) == 8,
               "Kokkos assumes 64-bit build; i.e., 8-byte pointers");
 
 //----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ namespace Kokkos {
 
 struct AUTO_t {
   KOKKOS_INLINE_FUNCTION
-  constexpr const AUTO_t &operator()() const { return *this; }
+  constexpr const AUTO_t& operator()() const { return *this; }
 };
 
 namespace {
@@ -225,14 +225,14 @@ namespace Impl {
 template <class MemorySpace, class AccessSpace,
           bool = SpaceAccessibility<AccessSpace, MemorySpace>::accessible>
 struct RuntimeCheckMemoryAccessViolation {
-  KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const *const) {}
+  KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const* const) {}
 };
 
 // explicit specialization: memory access violation will occur, call abort with
 // the specified error message.
 template <class MemorySpace, class AccessSpace>
 struct RuntimeCheckMemoryAccessViolation<MemorySpace, AccessSpace, false> {
-  KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const *const msg) {
+  KOKKOS_FUNCTION RuntimeCheckMemoryAccessViolation(char const* const msg) {
     Kokkos::abort(msg);
   }
 };
@@ -253,7 +253,7 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation() {
 // violation will occur
 template <class MemorySpace>
 KOKKOS_FUNCTION void runtime_check_memory_access_violation(
-    char const *const msg) {
+    char const* const msg) {
   KOKKOS_IF_ON_HOST((
       (void)RuntimeCheckMemoryAccessViolation<MemorySpace,
                                               DefaultHostExecutionSpace>(msg);))
@@ -280,9 +280,9 @@ namespace Kokkos {
 // Simply taking string by value did not resolve the issue
 #ifdef KOKKOS_COMPILER_INTEL
 void fence();
-void fence(const std::string &name);
+void fence(const std::string& name);
 #else
-void fence(const std::string &name = "Kokkos::fence: Unnamed Global Fence");
+void fence(const std::string& name = "Kokkos::fence: Unnamed Global Fence");
 #endif
 }  // namespace Kokkos
 
