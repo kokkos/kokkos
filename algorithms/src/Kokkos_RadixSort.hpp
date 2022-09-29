@@ -56,6 +56,29 @@ namespace Experimental {
 
 // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda
 
+template <typename KeyView>
+struct KeyFromView {
+  using key_value_type = typename KeyView::value_type;
+  static constexpr std::uint32_t num_bits = sizeof(key_value_type) * 8;
+  
+  KeyView keys;
+  KeyFromView(KeyView k) : keys(k) {}
+
+  // i: index of the key to get
+  // bit: which bit, with 0 indicating the least-significant
+  auto operator()(int i, std::uint32_t bit) const {
+    auto h    = keys(i) >> bit;
+
+    // Handle signed 2's-complement
+    if constexpr(std::is_signed_v<key_value_type>) {
+      if (bit == num_bits - 1) {
+        h = ~h;
+      }
+    }
+    return ~h & 0x1;
+  }
+};
+  
 template <typename T, typename IndexType = ::std::uint32_t>
 class RadixSorter {
  public:
@@ -76,10 +99,13 @@ class RadixSorter {
 
   template <class ExecutionSpace>
   void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
+    const auto n = keys.extent(0);
     using std::swap;
 
+    auto key_functor = KeyFromView{keys};
+    
     for (int i = 0; i < num_bits; ++i) {
-      step(exec, keys, m_index_old, i);
+      step<false>(exec, n, key_functor, m_index_old, i);
 
       swap(m_index_new, m_index_old);
       // Number of bits is always even, and we know on odd numbered
@@ -99,24 +125,56 @@ class RadixSorter {
                  KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
     deep_copy(exec, v, m_key_scratch);
   }
-  
-  //private:
+
+  // 
   template <class ExecutionSpace>
-  void step(const ExecutionSpace& exec, View<T*> keys, View<IndexType*> indices, std::uint32_t shift) {
+  void sort(ExecutionSpace const& exec, View<T*> keys) {
+    // Almost identical to create_indirection_array, except actually permute the input
     const auto n = keys.extent(0);
+    using std::swap;
+
+    for (int i = 0; i < num_bits; ++i) {
+      auto key_functor = KeyFromView{keys};
+    
+      step<true>(exec, n, key_functor, m_index_old, i);
+      permute_by_scan(exec, n, m_key_scratch, keys);
+
+      swap(m_index_new, m_index_old);
+      swap(m_key_scratch, keys);
+      // Number of bits is always even, and we know on odd numbered
+      // iterations we are reading from m_key_scratch and writing to keys
+      // So when this loop ends, keys and m_index_old will contain the results
+    }
+
+    // Prepare to lift restriction that num_bits must be even
+    if (num_bits % 2 == 1) {
+      swap(m_index_new, m_index_old);
+    }    
+  }
+  
+  private:
+
+  template <class ExecutionSpace, class U>
+  void permute_by_scan(ExecutionSpace const& exec, size_t n, View<U*> out, View<U*> in) {
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
 
     parallel_for(policy, KOKKOS_LAMBDA(int i) {
-      auto h    = keys(indices(i)) >> shift;
+        const auto total = m_scan(n - 1) + m_bits(n - 1);
+        auto t                   = i - m_scan(i) + total;
+        auto new_idx             = m_bits(i) ? m_scan(i) : t;
+        out(new_idx) = in(i);
+      });
+  }
 
-      // Handle signed 2's-complement
-      if constexpr(std::is_signed_v<T>) {
-        if (shift == num_bits - 1) {
-          h = ~h;
-        }
-      }
-      
-      m_bits(i) = ~h & 0x1;
+  template <bool permute_input, class ExecutionSpace, class KeyFunctor>
+  void step(ExecutionSpace const& exec, size_t n, KeyFunctor getKeyBit,
+            View<IndexType*> indices, std::uint32_t shift) {
+    RangePolicy<ExecutionSpace> policy(exec, 0, n);
+
+    parallel_for(policy, KOKKOS_LAMBDA(int i) {
+      auto key_bit = getKeyBit(permute_input ? i : indices(i), shift);
+
+      m_bits(i) = key_bit;
       m_scan(i) = m_bits(i);
     });
 
@@ -129,13 +187,7 @@ class RadixSorter {
       _x += val;
     } );
 
-    parallel_for(policy, KOKKOS_LAMBDA(int i) {
-                           const auto total = m_scan(n - 1) + m_bits(n - 1);
-
-                           auto t                   = i - m_scan(i) + total;
-                           auto new_idx             = m_bits(i) ? m_scan(i) : t;
-                           m_index_new(new_idx) = indices(i);
-                         });
+    permute_by_scan(exec, n, m_index_new, indices);
   }
 
   View<T*> m_key_scratch;

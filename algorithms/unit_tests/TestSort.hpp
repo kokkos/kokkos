@@ -383,8 +383,14 @@ void test_radix_sort() {
   Kokkos::deep_copy(exec, element_, h_element);
 
   Kokkos::Experimental::RadixSorter<long long> radix(element_.extent(0));
+
+#if 0
   radix.create_indirection_vector(exec, element_);
-  
+  radix.apply_permutation(exec, element_);
+#else
+  radix.sort(exec, element_);
+#endif
+
   Kokkos::deep_copy(exec, h_element, element_);
   exec.fence();
 
