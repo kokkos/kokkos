@@ -523,9 +523,17 @@ expect_equal_host_views(ViewType1 A, const ViewType2 B) {
   EXPECT_EQ(A.extent(0), B.extent(0));
   EXPECT_EQ(A.extent(1), B.extent(1));
 
+  constexpr bool values_are_floast =
+      std::is_floating_point_v<typename ViewType1::value_type> ||
+      std::is_floating_point_v<typename ViewType2::value_type>;
+
   for (std::size_t i = 0; i < A.extent(0); i++) {
     for (std::size_t j = 0; j < A.extent(1); j++) {
-      EXPECT_EQ(A(i, j), B(i, j));
+      if constexpr (values_are_floast) {
+        EXPECT_FLOAT_EQ(A(i, j), B(i, j));
+      } else {
+        EXPECT_EQ(A(i, j), B(i, j));
+      }
     }
   }
 }
