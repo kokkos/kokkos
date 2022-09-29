@@ -99,16 +99,20 @@ class RadixSorter {
 
   template <class ExecutionSpace>
   void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
+    auto key_functor = KeyFromView{keys};
     const auto n = keys.extent(0);
+
+    create_indirection_vector(exec, key_functor, n);
+  }
+
+  template <class ExecutionSpace, class KeyFunctor>
+  void create_indirection_vector(ExecutionSpace const& exec, KeyFunctor key_functor, size_t n) {
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
     using std::swap;
-
-    auto key_functor = KeyFromView{keys};
     
     for (int i = 0; i < num_bits; ++i) {
-      step<false>(policy, key_functor, m_index_old, i);
+      step<false>(policy, key_functor, m_index_new, m_index_old, i);
 
-      swap(m_index_new, m_index_old);
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
       // So when this loop ends, keys and m_index_old will contain the results
@@ -138,11 +142,9 @@ class RadixSorter {
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
     
-      step<true>(policy, key_functor, m_index_old, i);
+      step<true>(policy, key_functor, m_index_new, m_index_old, i);
       permute_by_scan(policy, m_key_scratch, keys);
 
-      swap(m_index_new, m_index_old);
-      swap(m_key_scratch, keys);
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
       // So when this loop ends, keys and m_index_old will contain the results
@@ -157,7 +159,7 @@ class RadixSorter {
   private:
 
   template <class Policy, class U>
-  void permute_by_scan(Policy policy, View<U*> out, View<U*> in) {
+  void permute_by_scan(Policy policy, View<U*>& out, View<U*>& in) {
     auto n = out.extent(0);
     parallel_for(policy, KOKKOS_LAMBDA(int i) {
         const auto total = m_scan(n - 1) + m_bits(n - 1);
@@ -165,13 +167,15 @@ class RadixSorter {
         auto new_idx             = m_bits(i) ? m_scan(i) : t;
         out(new_idx) = in(i);
       });
+    using std::swap;
+    swap(out, in);
   }
 
   template <bool permute_input, class Policy, class KeyFunctor>
   void step(Policy policy, KeyFunctor getKeyBit,
-            View<IndexType*> indices, std::uint32_t shift) {
+            View<IndexType*>& indices_new, View<IndexType*>& indices_old, std::uint32_t shift) {
     parallel_for(policy, KOKKOS_LAMBDA(int i) {
-      auto key_bit = getKeyBit(permute_input ? i : indices(i), shift);
+      auto key_bit = getKeyBit(permute_input ? i : indices_old(i), shift);
 
       m_bits(i) = key_bit;
       m_scan(i) = m_bits(i);
@@ -186,7 +190,7 @@ class RadixSorter {
       _x += val;
     } );
 
-    permute_by_scan(policy, m_index_new, indices);
+    permute_by_scan(policy, indices_new, indices_old);
   }
 
   View<T*> m_key_scratch;
