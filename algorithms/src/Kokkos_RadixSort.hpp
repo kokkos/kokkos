@@ -153,7 +153,8 @@ class RadixSorter {
     // Prepare to lift restriction that num_bits must be even
     if (num_bits % 2 == 1) {
       swap(m_index_new, m_index_old);
-    }    
+      swap(m_key_scratch, keys);
+    }
   }
   
   private:
