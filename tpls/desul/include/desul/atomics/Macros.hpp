@@ -52,10 +52,14 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_FORCEINLINE_FUNCTION inline __host__ __device__
 #define DESUL_INLINE_FUNCTION inline __host__ __device__
 #define DESUL_FUNCTION __host__ __device__
+#define DESUL_IMPL_HOST_FUNCTION __host__
+#define DESUL_IMPL_DEVICE_FUNCTION __device__
 #else
 #define DESUL_FORCEINLINE_FUNCTION inline
 #define DESUL_INLINE_FUNCTION inline
 #define DESUL_FUNCTION
+#define DESUL_IMPL_HOST_FUNCTION
+#define DESUL_IMPL_DEVICE_FUNCTION
 #endif
 
 #if !defined(DESUL_HAVE_GPU_LIKE_PROGRESS)
