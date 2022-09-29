@@ -64,26 +64,27 @@ struct OpenACCParallelReduceHelper {
 
 }  // namespace Kokkos::Experimental::Impl
 
-template <class Functor, class ReducerType, class... Traits>
-class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
-                                   ReducerType, Kokkos::Experimental::OpenACC> {
+template <class CombinedFunctorReducerType, class... Traits>
+class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
+                                   Kokkos::Experimental::OpenACC> {
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+
   using Policy = RangePolicy<Traits...>;
 
   using Pointer   = typename ReducerType::pointer_type;
   using ValueType = typename ReducerType::value_type;
 
-  Functor m_functor;
+  CombinedFunctorReducerType m_functor_reducer;
   Policy m_policy;
-  ReducerType m_reducer;
   Pointer m_result_ptr;
 
  public:
   template <class ViewType>
-  ParallelReduce(const Functor& functor, const Policy& policy,
-                 const ReducerType& reducer, const ViewType& result)
-      : m_functor(functor),
+  ParallelReduce(const CombinedFunctorReducerType& functor_reducer, const Policy& policy,
+                 const ViewType& result)
+      : m_functor_reducer(functor_reducer),
         m_policy(policy),
-        m_reducer(reducer),
         m_result_ptr(result.data()) {}
 
   void execute() {
@@ -95,16 +96,16 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     ValueType val;
-    m_reducer.init(&val);
+    m_functor_reducer.get_reducer().init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
-        Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy>(m_functor),
+        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(m_functor_reducer.get_functor()),
         std::conditional_t<
-            std::is_same_v<typename ReducerType::functor_type, Functor>,
+            std::is_same_v<typename ReducerType::functor_type, FunctorType>,
             Sum<ValueType>, typename ReducerType::functor_type>(val),
         m_policy);
 
-    m_reducer.final(&val);
+    m_functor_reducer.get_reducer().final(&val);
     *m_result_ptr = val;
   }
 };
