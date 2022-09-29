@@ -57,8 +57,7 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 
 #include <experimental/mdspan>
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 template <class DataType>
 struct ViewArrayAnalysis;
 
@@ -67,9 +66,9 @@ struct ViewDimension;
 
 template <class T, class Dim>
 struct ViewDataType;
-}  // namespace Impl
+}  // namespace Kokkos::Impl
 
-namespace Experimental::Impl {
+namespace Kokkos::Experimental::Impl {
 
 /*
  * A few things to note --
@@ -139,7 +138,6 @@ struct DataTypeFromExtents {
   // Will cause a compile error if it is malformed (i.e. dynamic after static)
   using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
 };
-}  // namespace Experimental::Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
