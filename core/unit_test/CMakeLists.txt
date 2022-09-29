@@ -79,6 +79,7 @@ SET(COMPILE_ONLY_SOURCES
   TestStringManipulation.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
+  view/TestExtentsDatatypeConversion.cpp
 )
 
 #testing if windows.h and Kokkos_Core.hpp can be included
@@ -211,7 +212,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewLayoutStrideAssignment
       ViewMapping_b
       ViewMapping_subview
-      ViewMDSpan
       ViewMemoryAccessViolation
       ViewOfClass
       ViewResize
