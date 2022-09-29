@@ -93,6 +93,8 @@ class RadixSorter {
       swap(m_key_scratch, keys);
       swap(m_index_scratch, m_index);
     }
+
+    exec.fence();
   }
 
   //private:
@@ -100,6 +102,7 @@ class RadixSorter {
   void step(const ExecutionSpace& exec, View<T*> keys, View<IndexType*> indices, std::uint32_t shift) {
     const auto n = keys.extent(0);
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
+
     parallel_for(policy, [this, keys, shift] KOKKOS_FUNCTION(int i) {
       auto h    = keys(i) >> shift;
 
@@ -114,8 +117,6 @@ class RadixSorter {
       m_scan(i) = m_bits(i);
     });
 
-    exec.fence();
-
     parallel_scan(policy, KOKKOS_LAMBDA ( const int &i, T &_x, const bool &_final ){
       auto val = m_scan( i );
 
@@ -124,7 +125,6 @@ class RadixSorter {
 
       _x += val;
     } );
-    exec.fence();
 
     parallel_for(policy,
                          [this, keys, indices, n] KOKKOS_FUNCTION(int i) {
@@ -135,7 +135,6 @@ class RadixSorter {
                            m_index_scratch(new_idx) = indices(i);
                            m_key_scratch(new_idx)   = keys(i);
                          });
-    exec.fence();
   }
 
   View<T*> m_key_scratch;
