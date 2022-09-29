@@ -198,7 +198,7 @@ class RadixSorter {
   View<IndexType*> m_index_old;
   View<IndexType*> m_index_new;
   View<T*> m_scan;
-  View<T*> m_bits;
+  View<unsigned char*> m_bits;
 };
 
 }  // namespace Experimental
