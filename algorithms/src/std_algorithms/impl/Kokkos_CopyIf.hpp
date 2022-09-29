@@ -126,30 +126,42 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
     // but later on we have to revise all this to guard only
     // what really needs to be guarded
 
-#if defined(KOKKOS_ENABLE_CUDA)
+    // !!!
+    // TODO (STRZ) - commented out for testing purpose
+    // !!!
+    //
+    // #if defined(KOKKOS_ENABLE_CUDA)
+    //     const auto num_elements = Kokkos::Experimental::distance(first,
+    //     last); typename InputIterator::difference_type count = 0;
+    //     ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+    //                             // use CTAD
+    //                             StdCopyIfFunctor(first, d_first, pred),
+    //                             count);
+    //     teamHandle.team_barrier();
+
+    // #else
+
+    //     const std::size_t num_elements =
+    //         Kokkos::Experimental::distance(first, last);
+    //     std::size_t count = {};
+    //     if (teamHandle.team_rank() == 0) {
+    //       for (std::size_t i = 0; i < num_elements; ++i) {
+    //         const auto& myval = first[i];
+    //         if (pred(myval)) {
+    //           d_first[count++] = myval;
+    //         }
+    //       }
+    //     }
+    //     // no need for barrier because calling broadcast implicitly blocks
+    //     teamHandle.team_broadcast(count, 0);
+    // #endif
+
     const auto num_elements = Kokkos::Experimental::distance(first, last);
     typename InputIterator::difference_type count = 0;
     ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
                             // use CTAD
                             StdCopyIfFunctor(first, d_first, pred), count);
     teamHandle.team_barrier();
-
-#else
-
-    const std::size_t num_elements =
-        Kokkos::Experimental::distance(first, last);
-    std::size_t count = {};
-    if (teamHandle.team_rank() == 0) {
-      for (std::size_t i = 0; i < num_elements; ++i) {
-        const auto& myval = first[i];
-        if (pred(myval)) {
-          d_first[count++] = myval;
-        }
-      }
-    }
-    // no need for barrier because calling broadcast implicitly blocks
-    teamHandle.team_broadcast(count, 0);
-#endif
 
     return d_first + count;
   }

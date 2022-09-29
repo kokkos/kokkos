@@ -234,10 +234,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
     foreach(Name
 	StdAlgorithmsCommon
 	StdAlgorithmsTeamAdjacentDifference
-	StdAlgorithmsTeamExclusiveScan
-	StdAlgorithmsTeamInclusiveScan
-	StdAlgorithmsTeamTransformExclusiveScan
-	StdAlgorithmsTeamTransformInclusiveScan
+	# StdAlgorithmsTeamExclusiveScan
+	# StdAlgorithmsTeamInclusiveScan
+	# StdAlgorithmsTeamTransformExclusiveScan
+	# StdAlgorithmsTeamTransformInclusiveScan
 	StdAlgorithmsTeamReduce
 	StdAlgorithmsTeamTransformReduce
 	)
@@ -285,7 +285,7 @@ endif()
 
 # Temporarily disable A and B group
 # foreach(ID A;B;C;D)
-foreach(ID C;D)
+foreach(ID A;C;D)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_StdSet_Team_${ID}
     SOURCES
