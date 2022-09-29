@@ -140,21 +140,23 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      arg_functor, m_policy.team_size())) {}
 };
 
-template <class FunctorType, class ReducerType, class... Properties>
-class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Threads> {
+template <class CombinedFunctorReducerType, class... Properties>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::TeamPolicy<Properties...>,
+                     Kokkos::Threads> {
  private:
   using Policy =
       Kokkos::Impl::TeamPolicyInternal<Kokkos::Threads, Properties...>;
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
 
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type; 
+
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const size_t m_shared;
 
@@ -179,22 +181,22 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
     ParallelReduce::template exec_team<WorkTag>(
-        self.m_functor, Member(&exec, self.m_policy, self.m_shared),
-        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
+        self.m_functor_reducer.get_functor(), Member(&exec, self.m_policy, self.m_shared),
+        self.m_functor_reducer.get_reducer().init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.fan_in_reduce(self.m_reducer);
+    exec.fan_in_reduce(self.m_functor_reducer.get_reducer());
   }
 
  public:
   inline void execute() const {
     if (m_policy.league_size() * m_policy.team_size() == 0) {
       if (m_result_ptr) {
-        m_reducer.init(m_result_ptr);
-        m_reducer.final(m_result_ptr);
+        m_functor_reducer.get_reducer().init(m_result_ptr);
+        m_functor_reducer.get_reducer().final(m_result_ptr);
       }
     } else {
       ThreadsExec::resize_scratch(
-          m_reducer.value_size(),
+          m_functor_reducer.get_reducer().value_size(),
           Policy::member_type::team_reduce_size() + m_shared);
 
       ThreadsExec::start(&ParallelReduce::exec, this);
@@ -205,7 +207,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const pointer_type data =
             (pointer_type)ThreadsExec::root_reduce_scratch();
 
-        const unsigned n = m_reducer.value_count();
+        const unsigned n = m_functor_reducer.get_reducer().value_count();
         for (unsigned i = 0; i < n; ++i) {
           m_result_ptr[i] = data[i];
         }
@@ -220,21 +222,20 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
     if (policy.team_size() < 0) {
       policy.impl_set_team_size(policy.team_size_recommended(
-          m_functor, m_reducer, ParallelReduceTag{}));
+          m_functor_reducer.get_functor(), m_functor_reducer.get_reducer(), ParallelReduceTag{}));
     }
     return policy;
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType &arg_functor, const Policy &arg_policy,
-                 const ReducerType &arg_reducer, const ViewType &arg_result)
-      : m_functor(arg_functor),
+  ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer, const Policy &arg_policy,
+                 const ViewType &arg_result)
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(fix_policy(arg_policy)),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result.data()),
         m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, m_policy.team_size())) {
+                     arg_functor_reducer.get_functor(), m_policy.team_size())) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
 

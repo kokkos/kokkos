@@ -144,11 +144,13 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 
-template <class FunctorType, class ReducerType, class... Traits>
-class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
+template <class CombinedFunctorReducerType, class... Traits>
+class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::Threads> {
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
@@ -157,9 +159,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   template <class TagType>
@@ -200,10 +201,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
     ParallelReduce::template exec_range<WorkTag>(
-        self.m_functor, range.begin(), range.end(),
-        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
+        self.m_functor_reducer.get_functor(), range.begin(), range.end(),
+        self.m_functor_reducer.get_reducer().init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.fan_in_reduce(self.m_reducer);
+    exec.fan_in_reduce(self.m_functor_reducer.get_reducer());
   }
 
   template <class Schedule>
@@ -221,7 +222,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     long work_index = exec.get_work_index();
 
     reference_type update =
-        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
+        self.m_functor_reducer.get_reducer().init(static_cast<pointer_type>(exec.reduce_memory()));
     while (work_index != -1) {
       const Member begin =
           static_cast<Member>(work_index) * self.m_policy.chunk_size() +
@@ -230,23 +231,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           begin + self.m_policy.chunk_size() < self.m_policy.end()
               ? begin + self.m_policy.chunk_size()
               : self.m_policy.end();
-      ParallelReduce::template exec_range<WorkTag>(self.m_functor, begin, end,
+      ParallelReduce::template exec_range<WorkTag>(self.m_functor_reducer.get_functor(), begin, end,
                                                    update);
       work_index = exec.get_work_index();
     }
 
-    exec.fan_in_reduce(self.m_reducer);
+    exec.fan_in_reduce(self.m_functor_reducer.get_reducer());
   }
 
  public:
   inline void execute() const {
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
-        m_reducer.init(m_result_ptr);
-        m_reducer.final(m_result_ptr);
+        m_functor_reducer.get_reducer().init(m_result_ptr);
+        m_functor_reducer.get_reducer().final(m_result_ptr);
       }
     } else {
-      ThreadsExec::resize_scratch(m_reducer.value_size(), 0);
+      ThreadsExec::resize_scratch(m_functor_reducer.get_reducer().value_size(), 0);
 
       ThreadsExec::start(&ParallelReduce::exec, this);
 
@@ -256,7 +257,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         const pointer_type data =
             (pointer_type)ThreadsExec::root_reduce_scratch();
 
-        const unsigned n = m_reducer.value_count();
+        const unsigned n = m_functor_reducer.get_reducer().value_count();
         for (unsigned i = 0; i < n; ++i) {
           m_result_ptr[i] = data[i];
         }
@@ -265,12 +266,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType &arg_functor, const Policy &arg_policy,
-                 const ReducerType &arg_reducer,
+  ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer, const Policy &arg_policy,
                  const ViewType &arg_result_view)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(arg_reducer),
         m_result_ptr(arg_result_view.data()) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
