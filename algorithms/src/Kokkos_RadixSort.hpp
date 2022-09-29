@@ -143,7 +143,7 @@ class RadixSorter {
       auto key_functor = KeyFromView{keys};
     
       step<true>(policy, key_functor, i, m_index_new, m_index_old);
-      permute_by_scan<decltype(policy), T>(policy, {m_key_scratch, keys});
+      permute_by_scan<T>(policy, {m_key_scratch, keys});
 
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
@@ -159,7 +159,7 @@ class RadixSorter {
   
   private:
 
-  template <class Policy, class... U>
+  template <class... U, class Policy>
   void permute_by_scan(Policy policy, Kokkos::pair<View<U*>&, View<U*>&>... views) {
     parallel_for(policy, KOKKOS_LAMBDA(int i) {
         auto n = m_scan.extent(0);
@@ -191,7 +191,7 @@ class RadixSorter {
       _x += val;
     } );
 
-    permute_by_scan<decltype(policy), IndexType>(policy, {indices_new, indices_old});
+    permute_by_scan<IndexType>(policy, {indices_new, indices_old});
   }
 
   View<T*> m_key_scratch;
