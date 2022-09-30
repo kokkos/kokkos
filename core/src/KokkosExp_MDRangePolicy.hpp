@@ -155,9 +155,20 @@ TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
 
 // multi-dimensional iteration pattern
 template <typename... Properties>
-struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
-  using traits       = Kokkos::Impl::PolicyTraits<Properties...>;
-  using range_policy = RangePolicy<Properties...>;
+struct MDRangePolicy;
+
+// Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
+// guides) are generated -> MDRangePolicy<> by some compilers, which is
+// incorrect.  By making it a template specialization instead, no implicit CTAD
+// is generated.  This works because there has to be at least one property
+// specified (which is Rank<...>); otherwise, we'd get the static_assert
+// "Kokkos::Error: MD iteration pattern not defined".  This template
+// specialization uses <P, Properties...> in all places for correctness.
+template <typename P, typename... Properties>
+struct MDRangePolicy<P, Properties...>
+    : public Kokkos::Impl::PolicyTraits<P, Properties...> {
+  using traits       = Kokkos::Impl::PolicyTraits<P, Properties...>;
+  using range_policy = RangePolicy<P, Properties...>;
 
   typename traits::execution_space m_space;
 
@@ -166,8 +177,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                   typename traits::schedule_type, typename traits::index_type>;
 
   using execution_policy =
-      MDRangePolicy<Properties...>;  // needed for is_execution_space
-                                     // interrogation
+      MDRangePolicy<P, Properties...>;  // needed for is_execution_space
+                                        // interrogation
 
   template <class... OtherProperties>
   friend struct MDRangePolicy;
@@ -376,6 +387,60 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     }
   }
 };
+
+template <typename LT, size_t N, typename UT>
+MDRangePolicy(const LT (&)[N], const UT (&)[N])->MDRangePolicy<Rank<N>>;
+
+template <typename LT, size_t N, typename UT, typename TT, size_t TN>
+MDRangePolicy(const LT (&)[N], const UT (&)[N], const TT (&)[TN])
+    ->MDRangePolicy<Rank<N>>;
+
+template <typename LT, size_t N, typename UT>
+MDRangePolicy(DefaultExecutionSpace const&, const LT (&)[N], const UT (&)[N])
+    ->MDRangePolicy<Rank<N>>;
+
+template <typename LT, size_t N, typename UT, typename TT, size_t TN>
+MDRangePolicy(DefaultExecutionSpace const&, const LT (&)[N], const UT (&)[N],
+              const TT (&)[TN])
+    ->MDRangePolicy<Rank<N>>;
+
+template <typename ES, typename LT, size_t N, typename UT,
+          typename = std::enable_if_t<is_execution_space_v<ES>>>
+MDRangePolicy(ES const&, const LT (&)[N], const UT (&)[N])
+    ->MDRangePolicy<ES, Rank<N>>;
+
+template <typename ES, typename LT, size_t N, typename UT, typename TT,
+          size_t TN, typename = std::enable_if_t<is_execution_space_v<ES>>>
+MDRangePolicy(ES const&, const LT (&)[N], const UT (&)[N], const TT (&)[TN])
+    ->MDRangePolicy<ES, Rank<N>>;
+
+template <typename T, size_t N>
+MDRangePolicy(Array<T, N> const&, Array<T, N> const&)->MDRangePolicy<Rank<N>>;
+
+template <typename T, size_t N, size_t NT>
+MDRangePolicy(Array<T, N> const&, Array<T, N> const&, Array<T, NT> const&)
+    ->MDRangePolicy<Rank<N>>;
+
+template <typename T, size_t N>
+MDRangePolicy(DefaultExecutionSpace const&, Array<T, N> const&,
+              Array<T, N> const&)
+    ->MDRangePolicy<Rank<N>>;
+
+template <typename T, size_t N, size_t NT>
+MDRangePolicy(DefaultExecutionSpace const&, Array<T, N> const&,
+              Array<T, N> const&, Array<T, NT> const&)
+    ->MDRangePolicy<Rank<N>>;
+
+template <typename ES, typename T, size_t N,
+          typename = std::enable_if_t<is_execution_space_v<ES>>>
+MDRangePolicy(ES const&, Array<T, N> const&, Array<T, N> const&)
+    ->MDRangePolicy<ES, Rank<N>>;
+
+template <typename ES, typename T, size_t N, size_t NT,
+          typename = std::enable_if_t<is_execution_space_v<ES>>>
+MDRangePolicy(ES const&, Array<T, N> const&, Array<T, N> const&,
+              Array<T, NT> const&)
+    ->MDRangePolicy<ES, Rank<N>>;
 
 }  // namespace Kokkos
 
