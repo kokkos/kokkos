@@ -52,13 +52,11 @@ struct Increment {
 
   template <typename ExecutionSpace>
   explicit Increment(ExecutionSpace, ViewType view) : view_(view) {
-    Kokkos::fence();
     Kokkos::parallel_for(
         "increment",
         Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>{
             0, view_.size()},
         *this);
-    Kokkos::fence();
   }
 
   KOKKOS_FUNCTION
@@ -79,7 +77,6 @@ struct CheckResult {
         Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>{
             0, view_.size()},
         *this, Kokkos::Sum<unsigned>(numErrors));
-    Kokkos::fence();
   }
 
   KOKKOS_FUNCTION
