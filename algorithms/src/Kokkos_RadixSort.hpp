@@ -115,7 +115,7 @@ class RadixSorter {
         policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
 
     for (int i = 0; i < num_bits; ++i) {
-      step<false>(policy, key_functor, i, m_index_new, m_index_old);
+      step<false>(policy, key_functor, i, m_index_old);
       permute_by_scan<IndexType>(policy, {m_index_new, m_index_old});
     }
   }
@@ -136,7 +136,7 @@ class RadixSorter {
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
 
-      step<true>(policy, key_functor, i, m_index_new, m_index_old);
+      step<true>(policy, key_functor, i, m_index_old);
       if constexpr (store_permutation) {
         permute_by_scan<T, IndexType>(policy, {m_key_scratch, keys},
                                       {m_index_new, m_index_old});
@@ -171,7 +171,7 @@ class RadixSorter {
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
 
-      step<true>(policy, key_functor, i, m_index_new, m_index_old);
+      step<true>(policy, key_functor, i, m_index_old);
       if constexpr (store_permutation) {
         permute_by_scan<T, U, IndexType>(policy, {m_key_scratch, keys},
                                          {values_scratch, values},
@@ -215,7 +215,7 @@ class RadixSorter {
 
   template <bool permute_input, class Policy, class KeyFunctor>
   void step(Policy policy, KeyFunctor getKeyBit, std::uint32_t shift,
-            View<IndexType*>& indices_new, View<IndexType*>& indices_old) {
+            View<IndexType*>& indices_old) {
     parallel_for(
         policy, KOKKOS_LAMBDA(int i) {
           auto key_bit = getKeyBit(permute_input ? i : indices_old(i), shift);
