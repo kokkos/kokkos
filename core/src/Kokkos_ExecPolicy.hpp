@@ -714,6 +714,58 @@ class TeamPolicy
   }
 };
 
+// Execution space not provided deduces to TeamPolicy<>
+
+TeamPolicy()->TeamPolicy<>;
+
+TeamPolicy(int, int)->TeamPolicy<>;
+TeamPolicy(int, int, int)->TeamPolicy<>;
+TeamPolicy(int, Kokkos::AUTO_t const&)->TeamPolicy<>;
+TeamPolicy(int, Kokkos::AUTO_t const&, int)->TeamPolicy<>;
+TeamPolicy(int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&)->TeamPolicy<>;
+TeamPolicy(int, int, Kokkos::AUTO_t const&)->TeamPolicy<>;
+
+// DefaultExecutionSpace deduces to TeamPolicy<>
+
+TeamPolicy(DefaultExecutionSpace const&, int, int)->TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, int, int)->TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, Kokkos::AUTO_t const&)
+    ->TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, Kokkos::AUTO_t const&, int)
+    ->TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, Kokkos::AUTO_t const&,
+           Kokkos::AUTO_t const&)
+    ->TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, int, Kokkos::AUTO_t const&)
+    ->TeamPolicy<>;
+
+// ES != DefaultExecutionSpace deduces to TeamPolicy<ES>
+
+template <typename ES,
+          typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
+TeamPolicy(ES const&, int, int)->TeamPolicy<ES>;
+
+template <typename ES,
+          typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
+TeamPolicy(ES const&, int, int, int)->TeamPolicy<ES>;
+
+template <typename ES,
+          typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
+
+template <typename ES,
+          typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, int)->TeamPolicy<ES>;
+
+template <typename ES,
+          typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&)
+    ->TeamPolicy<ES>;
+
+template <typename ES,
+          typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
+TeamPolicy(ES const&, int, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
+
 namespace Impl {
 
 template <typename iType, class TeamMemberType>
