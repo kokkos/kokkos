@@ -96,6 +96,8 @@ class RadixSorter {
         m_bits("radix_sort_bits", n)
   {  }
 
+  // Generate and store the permutation induced by the keys, without
+  // modifying their initial order
   template <class ExecutionSpace>
   void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
     auto key_functor = KeyFromView{keys};
@@ -107,7 +109,6 @@ class RadixSorter {
   template <class ExecutionSpace, class KeyFunctor>
   void create_indirection_vector(ExecutionSpace const& exec, KeyFunctor key_functor, size_t n) {
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
-    using std::swap;
 
     // Initialize m_index_old, since it will be read from in the first
     // iteration's call to step()
@@ -119,12 +120,7 @@ class RadixSorter {
 
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
-      // So when this loop ends, keys and m_index_old will contain the results
-    }
-
-    // Prepare to lift restriction that num_bits must be even
-    if (num_bits % 2 == 1) {
-      swap(m_index_new, m_index_old);
+      // So when this loop ends, m_index_old will contain the results
     }
   }
 
@@ -135,29 +131,30 @@ class RadixSorter {
     deep_copy(exec, v, m_key_scratch);
   }
 
-  // Directly re-arrange the entries of keys, without storing the permutation
-  template <class ExecutionSpace>
+  // Directly re-arrange the entries of keys, optionally storing the permutation
+  template <bool store_permutation = false, class ExecutionSpace>
   void sort(ExecutionSpace const& exec, View<T*> keys) {
     // Almost identical to create_indirection_array, except actually permute the input
     const auto n = keys.extent(0);
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
-    using std::swap;
 
+    if constexpr(store_permutation) {
+      Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+    }
+    
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
     
       step<true>(policy, key_functor, i, m_index_new, m_index_old);
-      permute_by_scan<T>(policy, {m_key_scratch, keys});
+      if constexpr(store_permutation) {
+        permute_by_scan<T, IndexType>(policy, {m_key_scratch, keys}, {m_index_new, m_index_old});
+      } else {
+        permute_by_scan<T>(policy, {m_key_scratch, keys});
+      }
 
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
-      // So when this loop ends, keys and m_index_old will contain the results
-    }
-
-    // Prepare to lift restriction that num_bits must be even
-    if (num_bits % 2 == 1) {
-      swap(m_index_new, m_index_old);
-      swap(m_key_scratch, keys);
+      // So when this loop ends, keys and (optionally) m_index_old will contain the results
     }
   }
   
