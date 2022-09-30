@@ -390,7 +390,7 @@ void test_radix_sort() {
 
   constexpr int num_bits = 8 * sizeof(long long) - 2;
 
-#if 1
+#if 0
   radix.create_indirection_vector(exec, element_);
 #else
   radix.create_indirection_vector(
