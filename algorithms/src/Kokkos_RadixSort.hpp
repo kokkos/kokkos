@@ -56,13 +56,15 @@ namespace Experimental {
 
 // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda
 
-template <typename KeyView, int BitWidth = sizeof(typename KeyView::value_type) * 8>
+// Template parameters in this order so that users can explicitly
+// specify BitWidth and still let implicit CTAD infer KeyView
+template <int BitWidth = -1, typename KeyView = void>
 struct KeyFromView {
   using key_value_type = typename KeyView::value_type;
-  static constexpr int num_bits = BitWidth;
+  static constexpr int num_bits = BitWidth > 0 ? BitWidth : sizeof(key_value_type) * 8;
 
-  KeyView keys;
-  KeyFromView(KeyView k) : keys(k) {}
+  KeyView const& keys;
+  KeyFromView(KeyView const& k) : keys(k) {}
 
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
