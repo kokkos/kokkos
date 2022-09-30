@@ -56,22 +56,22 @@ namespace Experimental {
 
 // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda
 
-template <typename KeyView>
+template <typename KeyView, int BitWidth = sizeof(typename KeyView::value_type) * 8>
 struct KeyFromView {
-  using key_value_type                    = typename KeyView::value_type;
-  static constexpr std::uint32_t num_bits = sizeof(key_value_type) * 8;
+  using key_value_type = typename KeyView::value_type;
+  static constexpr int num_bits = BitWidth;
 
   KeyView keys;
   KeyFromView(KeyView k) : keys(k) {}
 
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
-  auto operator()(int i, std::uint32_t bit) const {
+  auto operator()(int i, int bit) const {
     auto h = keys(i) >> bit;
 
-    // Handle signed 2's-complement
+    // Handle the sign bit of signed 2's-complement indicating low values
     if constexpr (std::is_signed_v<key_value_type>) {
-      if (bit == num_bits - 1) {
+      if (bit == 8*sizeof(key_value_type) - 1) {
         h = ~h;
       }
     }
