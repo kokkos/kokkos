@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_SIMD_AVX512_HPP
-#define KOKKOS_SIMD_AVX512_HPP
+#ifndef KOKKOS_SIMD_AVX2_HPP
+#define KOKKOS_SIMD_AVX2_HPP
 
 #include <functional>
 #include <type_traits>
@@ -58,17 +58,17 @@ namespace Experimental {
 namespace simd_abi {
 
 template <int N>
-class avx512_fixed_size {};
+class avx2_fixed_size {};
 
 }  // namespace simd_abi
 
-template <class T>
-class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
-  __mmask8 m_value;
+template <>
+class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
+  __m256d m_value;
 
  public:
   class reference {
-    __mmask8& m_mask;
+    __m256d& m_mask;
     int m_lane;
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION __mmask8 bit_mask() const {
       return __mmask8(std::int16_t(1 << m_lane));
