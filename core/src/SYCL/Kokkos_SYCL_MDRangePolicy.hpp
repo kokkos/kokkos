@@ -78,7 +78,8 @@ inline TileSizeProperties get_tile_size_properties<Kokkos::Experimental::SYCL>(
 
 // Settings for TeamMDRangePolicy
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, Kokkos::Experimental::SYCL, ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Kokkos::Experimental::SYCL,
+                                ThreadAndVector>
     : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
 
 }  // namespace Impl
