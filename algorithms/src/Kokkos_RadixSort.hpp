@@ -147,6 +147,35 @@ class RadixSorter {
     }
   }
   
+  // Directly re-arrange the entries of keys, optionally storing the permutation
+  template <bool store_permutation = false, class U, class ExecutionSpace>
+  void sortByKeys(ExecutionSpace const& exec, View<T*> keys, View<U*> values) {
+    // Almost identical to create_indirection_array, except actually permute the input
+    const auto n = keys.extent(0);
+    RangePolicy<ExecutionSpace> policy(exec, 0, n);
+
+    if constexpr(store_permutation) {
+      Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+    }
+
+    auto values_scratch = View<U*>(view_alloc(exec, "radix_sorter_values_scratch", Kokkos::WithoutInitializing), n);
+    
+    for (int i = 0; i < num_bits; ++i) {
+      auto key_functor = KeyFromView{keys};
+    
+      step<true>(policy, key_functor, i, m_index_new, m_index_old);
+      if constexpr(store_permutation) {
+        permute_by_scan<T, U, IndexType>(policy, {m_key_scratch, keys}, {values_scratch, values}, {m_index_new, m_index_old});
+      } else {
+        permute_by_scan<T, U>(policy, {m_key_scratch, keys}, {values_scratch, values});
+      }
+
+      // Number of bits is always even, and we know on odd numbered
+      // iterations we are reading from m_key_scratch/values_scratch and writing to keys/values
+      // So when this loop ends, keys/values will contain the results
+    }
+  }
+  
   template <class ExecutionSpace>
   void apply_permutation(ExecutionSpace const& exec, View<T*> v) {
     parallel_for(RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
