@@ -388,13 +388,13 @@ void test_radix_sort() {
 
 #if 1
 
-  constexpr int num_bits = 8 * sizeof(long long) - 2;
+  constexpr int num_bits = 8 * sizeof(long long);
 
 #if 0
   radix.create_indirection_vector(exec, element_);
 #else
   radix.create_indirection_vector(
-      exec, Kokkos::Experimental::KeyFromView<num_bits>{element_},
+      exec, Kokkos::Experimental::keyFromView<num_bits>(element_),
       element_.extent(0));
 #endif
   radix.apply_permutation(exec, element_);

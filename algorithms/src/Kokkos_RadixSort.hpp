@@ -56,9 +56,7 @@ namespace Experimental {
 
 // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda
 
-// Template parameters in this order so that users can explicitly
-// specify BitWidth and still let implicit CTAD infer KeyView
-template <int BitWidth = -1, typename KeyView = void>
+template <int BitWidth, typename KeyView>
 struct KeyFromView {
   using key_value_type          = typename KeyView::value_type;
   static constexpr int num_bits = BitWidth > 0 ? BitWidth
@@ -83,6 +81,14 @@ struct KeyFromView {
 
   int getNumBits() { return num_bits; }
 };
+
+// I'd like to use CTAD for this, and skip the builder function, but
+// haven't figured out whether the syntax is possible for the user to
+// specify BitWidth, and the compiler to deduce KeyView
+template <int BitWidth = -1, typename KeyView>
+auto keyFromView(KeyView const& keys) -> KeyFromView<BitWidth, KeyView> {
+  return KeyFromView<BitWidth, KeyView>(keys);
+}
 
 template <typename T, typename IndexType = ::std::uint32_t>
 class RadixSorter {
