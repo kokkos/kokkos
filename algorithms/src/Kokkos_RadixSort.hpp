@@ -58,19 +58,19 @@ namespace Experimental {
 
 template <typename KeyView>
 struct KeyFromView {
-  using key_value_type = typename KeyView::value_type;
+  using key_value_type                    = typename KeyView::value_type;
   static constexpr std::uint32_t num_bits = sizeof(key_value_type) * 8;
-  
+
   KeyView keys;
   KeyFromView(KeyView k) : keys(k) {}
 
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
   auto operator()(int i, std::uint32_t bit) const {
-    auto h    = keys(i) >> bit;
+    auto h = keys(i) >> bit;
 
     // Handle signed 2's-complement
-    if constexpr(std::is_signed_v<key_value_type>) {
+    if constexpr (std::is_signed_v<key_value_type>) {
       if (bit == num_bits - 1) {
         h = ~h;
       }
@@ -78,13 +78,12 @@ struct KeyFromView {
     return ~h & 0x1;
   }
 };
-  
+
 template <typename T, typename IndexType = ::std::uint32_t>
 class RadixSorter {
  public:
-
   static_assert(std::is_integral_v<T>, "Keys must be integral for now");
-  
+
   static constexpr std::uint32_t num_bits = sizeof(T) * 8;
 
   RadixSorter() = default;
@@ -93,27 +92,28 @@ class RadixSorter {
         m_index_old("radix_sort_index", n),
         m_index_new("radix_sort_index_scratch", n),
         m_scan("radix_sort_scan", n),
-        m_bits("radix_sort_bits", n)
-  {  }
+        m_bits("radix_sort_bits", n) {}
 
   // Generate and store the permutation induced by the keys, without
   // modifying their initial order
   template <class ExecutionSpace>
   void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
     auto key_functor = KeyFromView{keys};
-    const auto n = keys.extent(0);
+    const auto n     = keys.extent(0);
 
     create_indirection_vector(exec, key_functor, n);
   }
 
   template <class ExecutionSpace, class KeyFunctor>
-  void create_indirection_vector(ExecutionSpace const& exec, KeyFunctor key_functor, size_t n) {
+  void create_indirection_vector(ExecutionSpace const& exec,
+                                 KeyFunctor key_functor, size_t n) {
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
 
     // Initialize m_index_old, since it will be read from in the first
     // iteration's call to step()
-    Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
-    
+    Kokkos::parallel_for(
+        policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+
     for (int i = 0; i < num_bits; ++i) {
       step<false>(policy, key_functor, i, m_index_new, m_index_old);
       permute_by_scan<IndexType>(policy, {m_index_new, m_index_old});
@@ -123,20 +123,23 @@ class RadixSorter {
   // Directly re-arrange the entries of keys, optionally storing the permutation
   template <bool store_permutation = false, class ExecutionSpace>
   void sort(ExecutionSpace const& exec, View<T*> keys) {
-    // Almost identical to create_indirection_array, except actually permute the input
+    // Almost identical to create_indirection_array, except actually permute the
+    // input
     const auto n = keys.extent(0);
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
 
-    if constexpr(store_permutation) {
-      Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+    if constexpr (store_permutation) {
+      Kokkos::parallel_for(
+          policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
     }
-    
+
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
-    
+
       step<true>(policy, key_functor, i, m_index_new, m_index_old);
-      if constexpr(store_permutation) {
-        permute_by_scan<T, IndexType>(policy, {m_key_scratch, keys}, {m_index_new, m_index_old});
+      if constexpr (store_permutation) {
+        permute_by_scan<T, IndexType>(policy, {m_key_scratch, keys},
+                                      {m_index_new, m_index_old});
       } else {
         permute_by_scan<T>(policy, {m_key_scratch, keys});
       }
@@ -146,54 +149,66 @@ class RadixSorter {
       // So when this loop ends, keys will contain the results
     }
   }
-  
+
   // Directly re-arrange the entries of keys, optionally storing the permutation
   template <bool store_permutation = false, class U, class ExecutionSpace>
   void sortByKeys(ExecutionSpace const& exec, View<T*> keys, View<U*> values) {
-    // Almost identical to create_indirection_array, except actually permute the input
+    // Almost identical to create_indirection_array, except actually permute the
+    // input
     const auto n = keys.extent(0);
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
 
-    if constexpr(store_permutation) {
-      Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+    if constexpr (store_permutation) {
+      Kokkos::parallel_for(
+          policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
     }
 
-    auto values_scratch = View<U*>(view_alloc(exec, "radix_sorter_values_scratch", Kokkos::WithoutInitializing), n);
-    
+    auto values_scratch =
+        View<U*>(view_alloc(exec, "radix_sorter_values_scratch",
+                            Kokkos::WithoutInitializing),
+                 n);
+
     for (int i = 0; i < num_bits; ++i) {
       auto key_functor = KeyFromView{keys};
-    
+
       step<true>(policy, key_functor, i, m_index_new, m_index_old);
-      if constexpr(store_permutation) {
-        permute_by_scan<T, U, IndexType>(policy, {m_key_scratch, keys}, {values_scratch, values}, {m_index_new, m_index_old});
+      if constexpr (store_permutation) {
+        permute_by_scan<T, U, IndexType>(policy, {m_key_scratch, keys},
+                                         {values_scratch, values},
+                                         {m_index_new, m_index_old});
       } else {
-        permute_by_scan<T, U>(policy, {m_key_scratch, keys}, {values_scratch, values});
+        permute_by_scan<T, U>(policy, {m_key_scratch, keys},
+                              {values_scratch, values});
       }
 
       // Number of bits is always even, and we know on odd numbered
-      // iterations we are reading from m_key_scratch/values_scratch and writing to keys/values
-      // So when this loop ends, keys/values will contain the results
+      // iterations we are reading from m_key_scratch/values_scratch and writing
+      // to keys/values. So, when this loop ends, keys/values will contain the
+      // results
     }
   }
-  
+
   template <class ExecutionSpace>
   void apply_permutation(ExecutionSpace const& exec, View<T*> v) {
-    parallel_for(RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
-                 KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
+    parallel_for(
+        RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
+        KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
     deep_copy(exec, v, m_key_scratch);
   }
 
-private:
-
+ private:
   template <class... U, class Policy>
-  void permute_by_scan(Policy policy, Kokkos::pair<View<U*>&, View<U*>&>... views) {
-    parallel_for(policy, KOKKOS_LAMBDA(int i) {
-        auto n = m_scan.extent(0);
-        const auto total = m_scan(n - 1) + m_bits(n - 1);
-        auto t                   = i - m_scan(i) + total;
-        auto new_idx             = m_bits(i) ? m_scan(i) : t;
-        int dummy[sizeof...(U)] = {(views.first(new_idx) = views.second(i), 0)...};
-      });
+  void permute_by_scan(Policy policy,
+                       Kokkos::pair<View<U*>&, View<U*>&>... views) {
+    parallel_for(
+        policy, KOKKOS_LAMBDA(int i) {
+          auto n                  = m_scan.extent(0);
+          const auto total        = m_scan(n - 1) + m_bits(n - 1);
+          auto t                  = i - m_scan(i) + total;
+          auto new_idx            = m_bits(i) ? m_scan(i) : t;
+          int dummy[sizeof...(U)] = {
+              (views.first(new_idx) = views.second(i), 0)...};
+        });
     using std::swap;
     int dummy[sizeof...(U)] = {(swap(views.first, views.second), 0)...};
   }
@@ -201,21 +216,22 @@ private:
   template <bool permute_input, class Policy, class KeyFunctor>
   void step(Policy policy, KeyFunctor getKeyBit, std::uint32_t shift,
             View<IndexType*>& indices_new, View<IndexType*>& indices_old) {
-    parallel_for(policy, KOKKOS_LAMBDA(int i) {
-      auto key_bit = getKeyBit(permute_input ? i : indices_old(i), shift);
+    parallel_for(
+        policy, KOKKOS_LAMBDA(int i) {
+          auto key_bit = getKeyBit(permute_input ? i : indices_old(i), shift);
 
-      m_bits(i) = key_bit;
-      m_scan(i) = m_bits(i);
-    });
+          m_bits(i) = key_bit;
+          m_scan(i) = m_bits(i);
+        });
 
-    parallel_scan(policy, KOKKOS_LAMBDA ( const int &i, T &_x, const bool &_final ){
-      auto val = m_scan( i );
+    parallel_scan(
+        policy, KOKKOS_LAMBDA(const int& i, T& _x, const bool& _final) {
+          auto val = m_scan(i);
 
-      if ( _final )
-        m_scan( i ) = _x;
+          if (_final) m_scan(i) = _x;
 
-      _x += val;
-    } );
+          _x += val;
+        });
   }
 
   View<T*> m_key_scratch;
