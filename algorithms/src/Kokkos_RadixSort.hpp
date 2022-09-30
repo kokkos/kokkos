@@ -149,7 +149,7 @@ class RadixSorter {
       KeyFunctor key_functor = KeyFromView{keys};
 
       step(
-          policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
+          policy, key_functor, i, KOKKOS_LAMBDA(size_t id) { return id; });
       if constexpr (store_permutation) {
         permute_by_scan<T, IndexType>(policy, {m_key_scratch, keys},
                                       {m_index_new, m_index_old});
@@ -187,7 +187,7 @@ class RadixSorter {
       KeyFunctor key_functor = KeyFromView{keys};
 
       step(
-          policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
+          policy, key_functor, i, KOKKOS_LAMBDA(size_t id) { return id; });
       if constexpr (store_permutation) {
         permute_by_scan<T, U, IndexType>(policy, {m_key_scratch, keys},
                                          {values_scratch, values},
