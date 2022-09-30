@@ -117,18 +117,7 @@ class RadixSorter {
     for (int i = 0; i < num_bits; ++i) {
       step<false>(policy, key_functor, i, m_index_new, m_index_old);
       permute_by_scan<IndexType>(policy, {m_index_new, m_index_old});
-
-      // Number of bits is always even, and we know on odd numbered
-      // iterations we are reading from m_key_scratch and writing to keys
-      // So when this loop ends, m_index_old will contain the results
     }
-  }
-
-  template <class ExecutionSpace>
-  void apply_permutation(ExecutionSpace const& exec, View<T*> v) {
-    parallel_for(RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
-                 KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
-    deep_copy(exec, v, m_key_scratch);
   }
 
   // Directly re-arrange the entries of keys, optionally storing the permutation
@@ -154,11 +143,18 @@ class RadixSorter {
 
       // Number of bits is always even, and we know on odd numbered
       // iterations we are reading from m_key_scratch and writing to keys
-      // So when this loop ends, keys and (optionally) m_index_old will contain the results
+      // So when this loop ends, keys will contain the results
     }
   }
   
-  private:
+  template <class ExecutionSpace>
+  void apply_permutation(ExecutionSpace const& exec, View<T*> v) {
+    parallel_for(RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
+                 KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
+    deep_copy(exec, v, m_key_scratch);
+  }
+
+private:
 
   template <class... U, class Policy>
   void permute_by_scan(Policy policy, Kokkos::pair<View<U*>&, View<U*>&>... views) {
