@@ -79,6 +79,8 @@ struct KeyFromView {
     }
     return ~h & 0x1;
   }
+
+  int getNumBits() { return num_bits; }
 };
 
 template <typename T, typename IndexType = ::std::uint32_t>
@@ -114,7 +116,8 @@ class RadixSorter {
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
 
-    for (int i = 0; i < KeyFunctor::num_bits; ++i) {
+    int num_bits = key_functor.getNumBits();
+    for (int i = 0; i < num_bits; ++i) {
       step(policy, key_functor, i, m_index_old);
       permute_by_scan<IndexType>(policy, {m_index_new, m_index_old});
     }
