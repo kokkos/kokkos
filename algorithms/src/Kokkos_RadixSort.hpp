@@ -60,8 +60,9 @@ namespace Experimental {
 // specify BitWidth and still let implicit CTAD infer KeyView
 template <int BitWidth = -1, typename KeyView = void>
 struct KeyFromView {
-  using key_value_type = typename KeyView::value_type;
-  static constexpr int num_bits = BitWidth > 0 ? BitWidth : sizeof(key_value_type) * 8;
+  using key_value_type          = typename KeyView::value_type;
+  static constexpr int num_bits = BitWidth > 0 ? BitWidth
+                                               : sizeof(key_value_type) * 8;
 
   KeyView const& keys;
   KeyFromView(KeyView const& k) : keys(k) {}
@@ -73,7 +74,7 @@ struct KeyFromView {
 
     // Handle the sign bit of signed 2's-complement indicating low values
     if constexpr (std::is_signed_v<key_value_type>) {
-      if (bit == 8*sizeof(key_value_type) - 1) {
+      if (bit == 8 * sizeof(key_value_type) - 1) {
         h = ~h;
       }
     }
@@ -141,7 +142,8 @@ class RadixSorter {
     for (int i = 0; i < KeyFunctor::num_bits; ++i) {
       KeyFunctor key_functor = KeyFromView{keys};
 
-      step(policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
+      step(
+          policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
       if constexpr (store_permutation) {
         permute_by_scan<T, IndexType>(policy, {m_key_scratch, keys},
                                       {m_index_new, m_index_old});
@@ -178,7 +180,8 @@ class RadixSorter {
     for (int i = 0; i < KeyFunctor::num_bits; ++i) {
       KeyFunctor key_functor = KeyFromView{keys};
 
-      step(policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
+      step(
+          policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
       if constexpr (store_permutation) {
         permute_by_scan<T, U, IndexType>(policy, {m_key_scratch, keys},
                                          {values_scratch, values},
@@ -209,15 +212,16 @@ class RadixSorter {
                        Kokkos::pair<View<U*>&, View<U*>&>... views) {
     parallel_for(
         policy, KOKKOS_LAMBDA(int i) {
-          auto n                  = m_scan.extent(0);
-          const auto total        = m_scan(n - 1) + m_bits(n - 1);
-          auto t                  = i - m_scan(i) + total;
-          auto new_idx            = m_bits(i) ? m_scan(i) : t;
+          auto n           = m_scan.extent(0);
+          const auto total = m_scan(n - 1) + m_bits(n - 1);
+          auto t           = i - m_scan(i) + total;
+          auto new_idx     = m_bits(i) ? m_scan(i) : t;
           [[maybe_unused]] int dummy[sizeof...(U)] = {
               (views.first(new_idx) = views.second(i), 0)...};
         });
     using std::swap;
-    [[maybe_unused]] int dummy[sizeof...(U)] = {(swap(views.first, views.second), 0)...};
+    [[maybe_unused]] int dummy[sizeof...(U)] = {
+        (swap(views.first, views.second), 0)...};
   }
 
   template <class Policy, class KeyFunctor, class Permutation>
