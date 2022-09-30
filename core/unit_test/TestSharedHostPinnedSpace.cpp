@@ -109,6 +109,7 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
     // INCREMENT DEVICE
     Increment(DeviceExecutionSpace{}, sharedData);
     ++incrementCount;
+    Kokkos::fence();
     // CHECK RESULTS HOST
     ASSERT_EQ(
         CheckResult(HostExecutionSpace{}, sharedData, incrementCount).numErrors,
@@ -120,6 +121,7 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
     // INCREMENT HOST
     Increment(HostExecutionSpace{}, sharedData);
     ++incrementCount;
+    Kokkos::fence();
     // CHECK RESULTS Device
     ASSERT_EQ(CheckResult(DeviceExecutionSpace{}, sharedData, incrementCount)
                   .numErrors,
