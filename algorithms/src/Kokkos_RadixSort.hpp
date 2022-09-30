@@ -84,8 +84,6 @@ class RadixSorter {
  public:
   static_assert(std::is_integral_v<T>, "Keys must be integral for now");
 
-  static constexpr std::uint32_t num_bits = sizeof(T) * 8;
-
   RadixSorter() = default;
   explicit RadixSorter(std::size_t n)
       : m_key_scratch("radix_sort_key_scratch", n),
@@ -114,7 +112,7 @@ class RadixSorter {
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
 
-    for (int i = 0; i < num_bits; ++i) {
+    for (int i = 0; i < KeyFunctor::num_bits; ++i) {
       step(policy, key_functor, i, m_index_old);
       permute_by_scan<IndexType>(policy, {m_index_new, m_index_old});
     }
@@ -133,8 +131,10 @@ class RadixSorter {
           policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
     }
 
-    for (int i = 0; i < num_bits; ++i) {
-      auto key_functor = KeyFromView{keys};
+    using KeyFunctor = decltype(KeyFromView{keys});
+
+    for (int i = 0; i < KeyFunctor::num_bits; ++i) {
+      KeyFunctor key_functor = KeyFromView{keys};
 
       step(policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
       if constexpr (store_permutation) {
@@ -168,8 +168,10 @@ class RadixSorter {
                             Kokkos::WithoutInitializing),
                  n);
 
-    for (int i = 0; i < num_bits; ++i) {
-      auto key_functor = KeyFromView{keys};
+    using KeyFunctor = decltype(KeyFromView{keys});
+
+    for (int i = 0; i < KeyFunctor::num_bits; ++i) {
+      KeyFunctor key_functor = KeyFromView{keys};
 
       step(policy, key_functor, i, KOKKOS_LAMBDA(size_t i) { return i; });
       if constexpr (store_permutation) {
