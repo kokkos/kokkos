@@ -70,20 +70,25 @@ class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
   class reference {
     __m256d& m_mask;
     int m_lane;
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION __mmask8 bit_mask() const {
-      return __mmask8(std::int16_t(1 << m_lane));
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION __m256d bit_mask() const {
+      return _mm256_castsi256_pd(
+          _mm256_setr_epi64x(
+            -std::int64_t(m_lane == 0),
+            -std::int64_t(m_lane == 1),
+            -std::int64_t(m_lane == 2),
+            -std::int64_t(m_lane == 3)));
     }
 
    public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(__mmask8& mask_arg,
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(__m256d& mask_arg,
                                                     int lane_arg)
         : m_mask(mask_arg), m_lane(lane_arg) {}
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
     operator=(bool value) const {
       if (value) {
-        m_mask |= bit_mask();
+        m_mask = _mm256_or_pd(bit_mask(), m_mask);
       } else {
-        m_mask &= ~bit_mask();
+        m_mask = _mm256_andnot_pd(bit_mask(), m_mask);
       }
       return *this;
     }
