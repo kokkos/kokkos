@@ -366,6 +366,7 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_JoinBackwardCompatibility.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_PolicyConstruction.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamMDRange.cpp
     )
 endif()
 
