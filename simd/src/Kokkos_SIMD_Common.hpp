@@ -328,10 +328,26 @@ template <class T, class Abi>
     const_where_expression<simd_mask<T, Abi>,
                            simd<T, Abi>> const&
         x) {
-  auto const v = x.value();
-  auto result = v[0];
-  for (std::size_t i = 1; i < v.size(); ++i) {
-    result = Kokkos::min(result, v[1]);
+  auto const& v = x.value();
+  auto const& m = x.mask();
+  auto result = Kokkos::reduction_identity<T>::min();
+  for (std::size_t i = 0; i < v.size(); ++i) {
+    if (m[i]) result = Kokkos::min(result, v[i]);
+  }
+  return result;
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
+    const_where_expression<simd_mask<T, Abi>,
+                           simd<T, Abi>> const&
+        x,
+    double, std::plus<>) {
+  auto const& v = x.value();
+  auto const& m = x.mask();
+  auto result = Kokkos::reduction_identity<T>::sum();
+  for (std::size_t i = 0; i < v.size(); ++i) {
+    if (m[i]) result += v[i];
   }
   return result;
 }

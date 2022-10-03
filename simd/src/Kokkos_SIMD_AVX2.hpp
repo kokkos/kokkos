@@ -53,6 +53,7 @@
 #include <immintrin.h>
 
 namespace Kokkos {
+
 namespace Experimental {
 
 namespace simd_abi {
@@ -102,7 +103,7 @@ class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(_mm256_castsi256_pd(
           _mm256_set1_epi64x(
-            -std::int64_t(value)))
+            -std::int64_t(value))))
   {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
@@ -120,7 +121,7 @@ class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return static_cast<value_type>(reference(m_value, int(i)));
+    return static_cast<value_type>(reference(const_cast<__m256d&>(m_value), int(i)));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
   operator||(simd_mask const& other) const {
@@ -131,8 +132,8 @@ class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
     return simd_mask(_mm256_and_pd(m_value, other.m_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask operator!() const {
-    auto const __m256d true_value(static_cast<__m256d>(simd_mask(true)));
-    return simd_mask(_mm256_andnot(m_value, true_value));
+    auto const true_value = static_cast<__m256d>(simd_mask(true));
+    return simd_mask(_mm256_andnot_pd(m_value, true_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
       simd_mask const& other) const {
@@ -265,7 +266,7 @@ simd<double, simd_abi::avx2_fixed_size<4>> copysign(
           _mm256_andnot_pd(
               sign_mask, static_cast<__m256d>(a)),
           _mm256_and_pd(
-              sign_mask, static_cast<__m256d>(b)));
+              sign_mask, static_cast<__m256d>(b))));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
@@ -420,16 +421,6 @@ class where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
         static_cast<__m256d>(m_mask)));
   }
 };
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
-    const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
-                           simd<double, simd_abi::avx2_fixed_size<4>>> const&
-        x,
-    double, std::plus<>) {
-  simd<double, simd_abi::avx2_fixed_size<4>> masked(0.0);
-  where(x.mask(), masked) = x.value();
-  return _mm256_hadd_pd(static_cast<__m256d>(masked));
-}
 
 }  // namespace Experimental
 }  // namespace Kokkos
