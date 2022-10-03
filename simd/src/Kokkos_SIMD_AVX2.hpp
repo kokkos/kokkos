@@ -106,6 +106,8 @@ class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
             -std::int64_t(value))))
   {
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(
+      simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> const& i32_mask);
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 4;
   }
@@ -223,6 +225,13 @@ class simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> {
     return !operator==(other);
   }
 };
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd_mask<double, simd_abi::avx2_fixed_size<4>>::simd_mask(
+    simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> const& i32_mask)
+  :m_value(_mm256_castsi256_pd(_mm256_cvtepi32_epi64(static_cast<__m128i>(i32_mask))))
+{
+}
 
 template <>
 class simd<double, simd_abi::avx2_fixed_size<4>> {
