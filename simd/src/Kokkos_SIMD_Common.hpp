@@ -324,7 +324,7 @@ template <class T, class Abi>
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double hmin(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T hmin(
     const_where_expression<simd_mask<T, Abi>,
                            simd<T, Abi>> const&
         x) {
@@ -338,7 +338,7 @@ template <class T, class Abi>
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce(
     const_where_expression<simd_mask<T, Abi>,
                            simd<T, Abi>> const&
         x,
