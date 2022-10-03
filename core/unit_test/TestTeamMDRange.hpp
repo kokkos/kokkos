@@ -1921,6 +1921,12 @@ TEST(TEST_CATEGORY, TeamThreadMDRangeParallelReduce) {
 }
 
 TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
+// FIXME_SYCL sycl::group_barrier doesn't work correctly for non-Intel GPUs
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+    GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
+#endif
+
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_4D_ThreadVectorMDRange<Left>(dims);
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -1948,6 +1954,12 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
 }
 
 TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
+// FIXME_SYCL sycl::group_barrier doesn't work correctly for non-Intel GPUs
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+    GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
+#endif
+
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_4D_TeamVectorMDRange<Left>(dims);
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
