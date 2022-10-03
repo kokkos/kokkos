@@ -711,6 +711,8 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256i const& value_in)
       : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(
+      simd<std::uint64_t, abi_type> const& other);
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -756,6 +758,20 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
     return !((*this) == other);
   }
 };
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
+    operator-(simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
+              simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& rhs) {
+  return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
+      _mm256_sub_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
+    operator-(simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& a) {
+  return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(0) - a;
+}
 
 template <>
 class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
@@ -830,6 +846,12 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
     return !((*this) == other);
   }
 };
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::simd(
+      simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& other)
+  :m_value(static_cast<__m256i>(other))
+{
+}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> condition(
