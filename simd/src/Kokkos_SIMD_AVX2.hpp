@@ -966,6 +966,44 @@ class where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
   }
 };
 
+template <>
+class const_where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
+                             simd<std::int32_t, simd_abi::avx2_fixed_size<4>>> {
+ public:
+  using abi_type   = simd_abi::avx2_fixed_size<4>;
+  using value_type = simd<std::int32_t, abi_type>;
+  using mask_type  = simd_mask<std::int32_t, abi_type>;
+
+ protected:
+  value_type& m_value;
+  mask_type const& m_mask;
+
+ public:
+  const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
+      : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
+  mask() const {
+    return m_mask;
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
+  value() const {
+    return m_value;
+  }
+};
+
+template <>
+class where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
+                       simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
+    : public const_where_expression<
+          simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
+          simd<std::int32_t, simd_abi::avx2_fixed_size<4>>> {
+ public:
+  where_expression(
+      simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> const& mask_arg,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>>& value_arg)
+      : const_where_expression(mask_arg, value_arg) {}
+};
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
