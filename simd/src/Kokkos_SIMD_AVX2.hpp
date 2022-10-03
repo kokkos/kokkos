@@ -275,6 +275,10 @@ class simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       __m256i const& value_in)
       : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
+      simd_mask<std::int32_t, abi_type> const& other)
+      : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other)))
+  {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256i()
       const {
     return m_value;
@@ -771,6 +775,18 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
     simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
     operator-(simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& a) {
   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(0) - a;
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<std::int64_t, simd_abi::avx2_fixed_size<4>> condition(
+    simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>> const& a,
+    simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& b,
+    simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& c) {
+  return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
+      _mm256_castpd_si256(_mm256_blendv_pd(
+        _mm256_castsi256_pd(static_cast<__m256i>(c)),
+        _mm256_castsi256_pd(static_cast<__m256i>(b)),
+        _mm256_castsi256_pd(static_cast<__m256i>(a)))));
 }
 
 template <>
