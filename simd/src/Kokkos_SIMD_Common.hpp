@@ -323,6 +323,19 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(false);
 }
 
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double hmin(
+    const_where_expression<simd_mask<T, Abi>,
+                           simd<T, Abi>> const&
+        x) {
+  auto const v = x.value();
+  auto result = v[0];
+  for (std::size_t i = 1; i < v.size(); ++i) {
+    result = Kokkos::min(result, v[1]);
+  }
+  return result;
+}
+
 }  // namespace Experimental
 
 template <class T, class Abi>

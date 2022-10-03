@@ -414,120 +414,21 @@ class where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
     auto const x_as_value_type =
         static_cast<simd<double, simd_abi::avx2_fixed_size<4>>>(
             std::forward<U>(x));
-    m_value = simd<double, simd_abi::avx2_fixed_size<4>>(_mm256_mask_blend_pd(
-        static_cast<__mmask8>(m_mask), static_cast<__m256d>(m_value),
-        static_cast<__m256d>(x_as_value_type)));
+    m_value = simd<double, simd_abi::avx2_fixed_size<4>>(_mm256_blendv_pd(
+        static_cast<__m256d>(m_value),
+        static_cast<__m256d>(x_as_value_type),
+        static_cast<__m256d>(m_mask)));
   }
 };
-
-template <>
-class const_where_expression<
-    simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
-    simd<std::int32_t, simd_abi::avx2_fixed_size<4>>> {
- public:
-  using abi_type   = simd_abi::avx2_fixed_size<4>;
-  using value_type = simd<std::int32_t, abi_type>;
-  using mask_type  = simd_mask<std::int32_t, abi_type>;
-
- protected:
-  value_type& m_value;
-  mask_type const& m_mask;
-
- public:
-  const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
-      : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-  void copy_to(std::int32_t* mem, element_aligned_tag) const {
-    _mm256_mask_storeu_epi32(mem, static_cast<__mmask8>(m_mask),
-                             static_cast<__m256i>(m_value));
-  }
-};
-
-template <>
-class where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
-                       simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-    : public const_where_expression<
-          simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
-          simd<std::int32_t, simd_abi::avx2_fixed_size<4>>> {
- public:
-  where_expression(
-      simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> const& mask_arg,
-      simd<std::int32_t, simd_abi::avx2_fixed_size<4>>& value_arg)
-      : const_where_expression(mask_arg, value_arg) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-  void copy_from(std::int32_t const* mem, element_aligned_tag) {
-    m_value = value_type(_mm256_mask_loadu_epi32(
-        _mm256_set1_epi32(0), static_cast<__mmask8>(m_mask), mem));
-  }
-};
-
-template <>
-class const_where_expression<
-    simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>,
-    simd<std::int64_t, simd_abi::avx2_fixed_size<4>>> {
- public:
-  using abi_type   = simd_abi::avx2_fixed_size<4>;
-  using value_type = simd<std::int64_t, abi_type>;
-  using mask_type  = simd_mask<std::int64_t, abi_type>;
-
- protected:
-  value_type& m_value;
-  mask_type const& m_mask;
-
- public:
-  const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
-      : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
-};
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t hmax(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
-        simd<std::int32_t, simd_abi::avx2_fixed_size<4>>> const& x) {
-  return _mm256_mask_reduce_max_epi32(
-      static_cast<__mmask8>(x.mask()),
-      _mm256_castsi256_si512(static_cast<__m256i>(x.value())));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double hmin(
-    const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
-                           simd<double, simd_abi::avx2_fixed_size<4>>> const&
-        x) {
-  return _mm256_mask_reduce_min_pd(static_cast<__mmask8>(x.mask()),
-                                   static_cast<__m256d>(x.value()));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce(
-    const_where_expression<
-        simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>,
-        simd<std::int64_t, simd_abi::avx2_fixed_size<4>>> const& x,
-    std::int64_t, std::plus<>) {
-  return _mm256_mask_reduce_add_epi64(static_cast<__mmask8>(x.mask()),
-                                      static_cast<__m512i>(x.value()));
-}
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
     const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
                            simd<double, simd_abi::avx2_fixed_size<4>>> const&
         x,
     double, std::plus<>) {
-  return _mm256_mask_reduce_add_pd(static_cast<__mmask8>(x.mask()),
-                                   static_cast<__m256d>(x.value()));
+  simd<double, simd_abi::avx2_fixed_size<4>> masked(0.0);
+  where(x.mask(), masked) = x.value();
+  return _mm256_hadd_pd(static_cast<__m256d>(masked));
 }
 
 }  // namespace Experimental
