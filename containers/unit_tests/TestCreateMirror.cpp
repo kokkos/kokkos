@@ -170,25 +170,26 @@ void test_create_mirror_properties(const DeviceView& device_view,
   // clang-format on
 }
 
-TEST(TEST_CATEGORY, create_mirror_dynrankview) {
-  Kokkos::DynRankView<int, TEST_EXECSPACE> device_view("device view", 10);
+void test_create_mirror_dynrankview() {
+  Kokkos::DynRankView<int, Kokkos::DefaultExecutionSpace> device_view(
+      "device view", 10);
   Kokkos::DynRankView<int, Kokkos::HostSpace> host_view("host view", 10);
 
   test_create_mirror_properties(device_view, host_view);
 }
 
-TEST(TEST_CATEGORY, create_mirror_offsetview) {
-  Kokkos::Experimental::OffsetView<int*, TEST_EXECSPACE> device_view(
-      "device view", {0, 10});
+void test_reate_mirror_offsetview() {
+  Kokkos::Experimental::OffsetView<int*, Kokkos::DefaultExecutionSpace>
+      device_view("device view", {0, 10});
   Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
       "host view", {0, 10});
 
   test_create_mirror_properties(device_view, host_view);
 }
 
-TEST(TEST_CATEGORY, create_mirror_dynamicview) {
-  Kokkos::Experimental::DynamicView<int*, TEST_EXECSPACE> device_view(
-      "device view", 2, 10);
+void test_create_mirror_dynamicview() {
+  Kokkos::Experimental::DynamicView<int*, Kokkos::DefaultExecutionSpace>
+      device_view("device view", 2, 10);
   Kokkos::Experimental::DynamicView<int*, Kokkos::HostSpace> host_view(
       "host view", 2, 10);
 

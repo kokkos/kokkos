@@ -14,7 +14,6 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
     file(MAKE_DIRECTORY ${dir})
     foreach(Name
         Bitset
-        CreateMirror
         DualView
         DynamicView
         DynViewAPI_generic
@@ -47,3 +46,13 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
   endif()
 endforeach()
+
+SET(COMPILE_ONLY_SOURCES
+  TestCreateMirror.cpp
+)
+KOKKOS_ADD_EXECUTABLE(
+  TestCompileOnly
+  SOURCES
+  TestCompileMain.cpp
+  ${COMPILE_ONLY_SOURCES}
+)

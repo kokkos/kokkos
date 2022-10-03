@@ -149,8 +149,9 @@ void test_create_mirror_properties(const DeviceView& device_view,
   // clang-format on
 }
 
-TEST(TEST_CATEGORY, create_mirror_view_properties) {
-  Kokkos::View<int*, TEST_EXECSPACE> device_view("device view", 10);
+void test() {
+  Kokkos::View<int*, Kokkos::DefaultExecutionSpace> device_view("device view",
+                                                                10);
   Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
 
   test_create_mirror_properties(device_view, host_view);
