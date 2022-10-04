@@ -55,8 +55,8 @@ struct TestReducerCTADs {
   using memspace    = typename execspace::memory_space;
 
   template <typename Scalar, typename Space>
-  using VS = Kokkos::View<Scalar, Kokkos::LayoutStride, Space,
-                          Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+  using VS =
+      Kokkos::View<Scalar, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
   static void test_sum() {
     Kokkos::View<scalar_type, memspace> view;
