@@ -42,52 +42,26 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_UNITTEST_MDSPAN_HPP
-#define KOKKOS_UNITTEST_MDSPAN_HPP
-
-#include <Kokkos_Core.hpp>
-#include <gtest/gtest.h>
-
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
-namespace {
-void test_mdspan_minimal_functional() {
-  int N = 100;
-  Kokkos::View<int*, TEST_EXECSPACE> a("A", N);
-  Kokkos::parallel_for(
-      "FillSequence", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-      KOKKOS_LAMBDA(int i) { a(i) = i; });
-
-  mdspan_ns::mdspan<int, mdspan_ns::dextents<int, 1>> a_mds(a.data(), N);
-  int errors;
-  Kokkos::parallel_reduce(
-      "CheckMinimalMDSpan", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-      KOKKOS_LAMBDA(int i, int& err) {
-        mdspan_ns::mdspan<int, mdspan_ns::dextents<int, 1>> b_mds(a.data(), N);
-#ifdef KOKKOS_ENABLE_CXX23
-        if (a_mds[i] != i) err++;
-        if (b_mds[i] != i) err++;
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_3
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
 #else
-        if (a_mds(i) != i) err++;
-        if (b_mds(i) != i) err++;
+KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #endif
-      },
-      errors);
-  ASSERT_EQ(errors, 0);
-}
-}  // namespace
 #endif
 
-namespace {
+#ifndef KOKKOS_EXPERIMENTAL_MDSPAN_HPP
+#define KOKKOS_EXPERIMENTAL_MDSPAN_HPP
 
-TEST(TEST_CATEGORY, mdspan_minimal_functional) {
-#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
-  GTEST_SKIP() << "mdspan not enabled";
+// Look for the right mdspan
+#if __has_include(<mdspan>)
+#include <mdspan>
+namespace mdspan_ns = std;
 #else
-  test_mdspan_minimal_functional();
+#include <experimental/mdspan>
+namespace mdspan_ns = std::experimental;
 #endif
-}
 
-}  // namespace
-
-#endif
+#endif // KOKKOS_EXPERIMENTAL_MDSPAN_HPP

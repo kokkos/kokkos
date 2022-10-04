@@ -55,7 +55,7 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #ifndef KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
-#include <experimental/mdspan>
+#include "Kokkos_MDSpan.hpp"
 
 namespace Kokkos::Impl {
 /*
