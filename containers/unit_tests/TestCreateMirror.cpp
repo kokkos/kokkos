@@ -91,7 +91,7 @@ void test_create_mirror_properties(const DeviceView& device_view,
     check_memory_space(create_mirror_view(                                           device_view), host_mirror_test_space(device_view));
   }
   check_memory_space(create_mirror_view(WithoutInitializing,                         host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(                                             host_view),   host_mirror_test_space(device_view));
+  check_memory_space(create_mirror_view(                                             host_view),   host_mirror_test_space(host_view));
   check_memory_space(create_mirror_view(WithoutInitializing, DeviceExecutionSpace{}, device_view), DeviceMemorySpace{});
   check_memory_space(create_mirror_view(                     DeviceExecutionSpace{}, device_view), DeviceMemorySpace{});
   check_memory_space(create_mirror_view(WithoutInitializing, DeviceExecutionSpace{}, host_view),   DeviceMemorySpace{});
