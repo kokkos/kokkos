@@ -57,94 +57,60 @@ auto host_mirror_test_space(View) {
       typename View::memory_space, Kokkos::HostSpace>{};
 }
 
-template <typename DeviceView, typename HostView>
-void test_create_mirror_properties(const DeviceView& device_view,
-                                   const HostView& host_view) {
-  using DeviceMemorySpace    = typename DeviceView::memory_space;
-  using HostMemorySpace      = typename HostView::memory_space;
-  using DeviceExecutionSpace = typename DeviceView::execution_space;
-  using HostExecutionSpace   = typename HostView::execution_space;
+template <typename View>
+void test_create_mirror_properties(const View& view) {
   using namespace Kokkos;
+  using DeviceMemorySpace = typename DefaultExecutionSpace::memory_space;
 
   // clang-format off
   
   // create_mirror
-  check_memory_space(create_mirror(WithoutInitializing,                         device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror(                                             device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror(WithoutInitializing,                         host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror(                                             host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror(WithoutInitializing, DeviceExecutionSpace{}, device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(                     DeviceExecutionSpace{}, device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(WithoutInitializing, DeviceExecutionSpace{}, host_view),   DeviceMemorySpace{});
-  check_memory_space(create_mirror(                     DeviceExecutionSpace{}, host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror(WithoutInitializing,                          view), host_mirror_test_space(view));
+  check_memory_space(create_mirror(                                              view), host_mirror_test_space(view));
+  check_memory_space(create_mirror(WithoutInitializing, DefaultExecutionSpace{}, view), DeviceMemorySpace{});
+  check_memory_space(create_mirror(                     DefaultExecutionSpace{}, view), DeviceMemorySpace{});
 
   // create_mirror_view
-  check_memory_space(create_mirror_view(WithoutInitializing,                         device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror_view(                                             device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror_view(WithoutInitializing,                         host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(                                             host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(WithoutInitializing, DeviceExecutionSpace{}, device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(                     DeviceExecutionSpace{}, device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(WithoutInitializing, DeviceExecutionSpace{}, host_view),   DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(                     DeviceExecutionSpace{}, host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror_view(WithoutInitializing,                          view), host_mirror_test_space(view));
+  check_memory_space(create_mirror_view(                                              view), host_mirror_test_space(view));
+  check_memory_space(create_mirror_view(WithoutInitializing, DefaultExecutionSpace{}, view), DeviceMemorySpace{});
+  check_memory_space(create_mirror_view(                     DefaultExecutionSpace{}, view), DeviceMemorySpace{});
 
   // create_mirror view_alloc
-  check_memory_space(create_mirror(view_alloc(WithoutInitializing),                      device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror(view_alloc(),                                         device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror(view_alloc(WithoutInitializing),                      host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror(view_alloc(),                                         host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror(view_alloc(WithoutInitializing, DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(view_alloc(                     DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(view_alloc(WithoutInitializing, DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
-  check_memory_space(create_mirror(view_alloc(                     DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror(view_alloc(WithoutInitializing),                      view), host_mirror_test_space(view));
+  check_memory_space(create_mirror(view_alloc(),                                         view), host_mirror_test_space(view));
+  check_memory_space(create_mirror(view_alloc(WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
+  check_memory_space(create_mirror(view_alloc(                     DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view view_alloc
-  check_memory_space(create_mirror_view(view_alloc(WithoutInitializing),                      device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror_view(view_alloc(),                                         device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror_view(view_alloc(WithoutInitializing),                      host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(view_alloc(),                                         host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(view_alloc(WithoutInitializing, DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(view_alloc(                     DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(view_alloc(WithoutInitializing, DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(view_alloc(                     DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror_view(view_alloc(WithoutInitializing),                      view), host_mirror_test_space(view));
+  check_memory_space(create_mirror_view(view_alloc(),                                         view), host_mirror_test_space(view));
+  check_memory_space(create_mirror_view(view_alloc(WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
+  check_memory_space(create_mirror_view(view_alloc(                     DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror view_alloc + execution space
-  check_memory_space(create_mirror(view_alloc(DeviceExecutionSpace{}, WithoutInitializing),                      device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror(view_alloc(HostExecutionSpace{}),                                             device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror(view_alloc(DeviceExecutionSpace{}, WithoutInitializing),                      host_view), host_mirror_test_space(host_view));
-  check_memory_space(create_mirror(view_alloc(HostExecutionSpace{}),                                             host_view), host_mirror_test_space(host_view));
-  check_memory_space(create_mirror(view_alloc(DeviceExecutionSpace{}, WithoutInitializing, DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(view_alloc(DeviceExecutionSpace{},                      DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(view_alloc(DeviceExecutionSpace{}, WithoutInitializing, DeviceMemorySpace{}), host_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror(view_alloc(DeviceExecutionSpace{},                      DeviceMemorySpace{}), host_view), DeviceMemorySpace{});
+  check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{}, WithoutInitializing),                        view), host_mirror_test_space(view));
+  check_memory_space(create_mirror(view_alloc(DefaultHostExecutionSpace{}),                                         view), host_mirror_test_space(view));
+  check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{},   WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
+  check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{},                        DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view view_alloc + execution space
-  check_memory_space(create_mirror_view(view_alloc(DeviceExecutionSpace{}, WithoutInitializing),                      device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror_view(view_alloc(HostExecutionSpace{}),                                             device_view), host_mirror_test_space(device_view));
-  check_memory_space(create_mirror_view(view_alloc(DeviceExecutionSpace{}, WithoutInitializing),                      host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(view_alloc(HostExecutionSpace{}),                                             host_view),   host_mirror_test_space(host_view));
-  check_memory_space(create_mirror_view(view_alloc(DeviceExecutionSpace{}, WithoutInitializing, DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(view_alloc(DeviceExecutionSpace{},                      DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(view_alloc(DeviceExecutionSpace{}, WithoutInitializing, DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
-  check_memory_space(create_mirror_view(view_alloc(DeviceExecutionSpace{},                      DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror_view(view_alloc(DefaultExecutionSpace{}, WithoutInitializing),                        view), host_mirror_test_space(view));
+  check_memory_space(create_mirror_view(view_alloc(DefaultHostExecutionSpace{}),                                         view), host_mirror_test_space(view));
+  check_memory_space(create_mirror_view(view_alloc(DefaultExecutionSpace{},   WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
+  check_memory_space(create_mirror_view(view_alloc(DefaultExecutionSpace{},                        DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view_and_copy
-  check_memory_space(create_mirror_view_and_copy(HostMemorySpace{},   device_view), HostMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(HostMemorySpace{},   host_view),   HostMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(DeviceMemorySpace{}, device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(DeviceMemorySpace{}, host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror_view_and_copy(HostSpace{},         view), HostSpace{});
+  check_memory_space(create_mirror_view_and_copy(DeviceMemorySpace{}, view), DeviceMemorySpace{});
 
   // create_mirror_view_and_copy view_alloc
-  check_memory_space(create_mirror_view_and_copy(view_alloc(HostMemorySpace{}),   device_view), HostMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(view_alloc(HostMemorySpace{}),   host_view),   HostMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}), host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror_view_and_copy(view_alloc(HostSpace{}),         view), HostSpace{});
+  check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view_and_copy view_alloc + execution space
-  check_memory_space(create_mirror_view_and_copy(view_alloc(HostMemorySpace{},   HostExecutionSpace{}),   device_view), HostMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(view_alloc(HostMemorySpace{},   HostExecutionSpace{}),   host_view),   HostMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}, DeviceExecutionSpace{}), device_view), DeviceMemorySpace{});
-  check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}, DeviceExecutionSpace{}), host_view),   DeviceMemorySpace{});
+  check_memory_space(create_mirror_view_and_copy(view_alloc(HostSpace{},         DefaultHostExecutionSpace{}),   view), HostSpace{});
+  check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}, DefaultExecutionSpace{}),       view), DeviceMemorySpace{});
 
   // clang-format on
 }
@@ -154,5 +120,6 @@ void test() {
                                                                 10);
   Kokkos::View<int*, Kokkos::HostSpace> host_view("host view", 10);
 
-  test_create_mirror_properties(device_view, host_view);
+  test_create_mirror_properties(device_view);
+  test_create_mirror_properties(host_view);
 }
