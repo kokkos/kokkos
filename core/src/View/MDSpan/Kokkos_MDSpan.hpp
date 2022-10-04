@@ -64,4 +64,4 @@ namespace mdspan_ns = std;
 namespace mdspan_ns = std::experimental;
 #endif
 
-#endif // KOKKOS_EXPERIMENTAL_MDSPAN_HPP
+#endif  // KOKKOS_EXPERIMENTAL_MDSPAN_HPP
