@@ -1776,7 +1776,9 @@ inline void deep_copy(
       (std::is_same<typename dst_type::array_layout,
                     typename src_type::array_layout>::value ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
-      dst.span_is_contiguous() && src.span_is_contiguous() &&
+      ((dst.span_is_contiguous() && src.span_is_contiguous()) ||
+       (dst.impl_is_strided_from_padding() &&
+        src.impl_is_strided_from_padding())) &&
       ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0())) &&
       ((dst_type::rank < 2) || (dst.stride_1() == src.stride_1())) &&
       ((dst_type::rank < 3) || (dst.stride_2() == src.stride_2())) &&
@@ -2926,7 +2928,9 @@ inline void deep_copy(
       (std::is_same<typename dst_type::array_layout,
                     typename src_type::array_layout>::value ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
-      dst.span_is_contiguous() && src.span_is_contiguous() &&
+      ((dst.span_is_contiguous() && src.span_is_contiguous()) ||
+       (dst.impl_is_strided_from_padding() &&
+        src.impl_is_strided_from_padding())) &&
       ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0())) &&
       ((dst_type::rank < 2) || (dst.stride_1() == src.stride_1())) &&
       ((dst_type::rank < 3) || (dst.stride_2() == src.stride_2())) &&
@@ -3492,19 +3496,14 @@ create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
+  if (src.impl_is_strided_from_padding()) {
+    auto prop_copy = Impl::with_properties_if_unset(
+        arg_prop, std::string(src.label()).append("_mirror"), AllowPadding);
+    return dst_type(prop_copy, src.layout());
+  }
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
-
-  return dst_type(
-      prop_copy,
-      src.rank_dynamic > 0 ? src.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 1 ? src.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 2 ? src.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 3 ? src.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 4 ? src.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 5 ? src.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 6 ? src.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 7 ? src.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
+  return dst_type(prop_copy, src.layout());
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -3532,30 +3531,14 @@ create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  Kokkos::LayoutStride layout;
-
-  layout.dimension[0] = src.extent(0);
-  layout.dimension[1] = src.extent(1);
-  layout.dimension[2] = src.extent(2);
-  layout.dimension[3] = src.extent(3);
-  layout.dimension[4] = src.extent(4);
-  layout.dimension[5] = src.extent(5);
-  layout.dimension[6] = src.extent(6);
-  layout.dimension[7] = src.extent(7);
-
-  layout.stride[0] = src.stride_0();
-  layout.stride[1] = src.stride_1();
-  layout.stride[2] = src.stride_2();
-  layout.stride[3] = src.stride_3();
-  layout.stride[4] = src.stride_4();
-  layout.stride[5] = src.stride_5();
-  layout.stride[6] = src.stride_6();
-  layout.stride[7] = src.stride_7();
-
+  if (src.impl_is_strided_from_padding()) {
+    auto prop_copy = Impl::with_properties_if_unset(
+        arg_prop, std::string(src.label()).append("_mirror"), AllowPadding);
+    return dst_type(prop_copy, src.layout());
+  }
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
-
-  return dst_type(prop_copy, layout);
+  return dst_type(prop_copy, src.layout());
 }
 
 // Create a mirror in a new space (specialization for different space)

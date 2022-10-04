@@ -123,6 +123,32 @@ void runtime_check_rank(const size_t rank, const size_t dyn_rank,
   }
 }
 
+template <class T, int R,
+          bool P = (R > 1) && (std::is_same<T, Kokkos::LayoutLeft>::value ||
+                               std::is_same<T, Kokkos::LayoutRight>::value)>
+struct is_strided_from_padding;
+
+template <class T, int R>
+struct is_strided_from_padding<T, R, false> {
+  KOKKOS_INLINE_FUNCTION
+  is_strided_from_padding() = default;
+  KOKKOS_INLINE_FUNCTION
+  is_strided_from_padding(const bool&){};
+  KOKKOS_INLINE_FUNCTION
+  bool value() const { return false; }
+};
+
+template <class T, int R>
+struct is_strided_from_padding<T, R, true> {
+  bool v = false;
+  KOKKOS_INLINE_FUNCTION
+  is_strided_from_padding() = default;
+  KOKKOS_INLINE_FUNCTION
+  is_strided_from_padding(const bool& arg) { v = arg; };
+  KOKKOS_INLINE_FUNCTION
+  bool value() const { return v; };
+};
+
 } /* namespace Impl */
 } /* namespace Kokkos */
 
@@ -1389,6 +1415,17 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
  private:
+  Kokkos::Impl::is_strided_from_padding<typename traits::array_layout,
+                                        traits::rank>
+      m_is_strided_from_padding;
+
+ public:
+  KOKKOS_INLINE_FUNCTION
+  bool impl_is_strided_from_padding() const {
+    return m_is_strided_from_padding.value();
+  }
+
+ private:
   enum class check_input_args : bool { yes = true, no = false };
 
  public:
@@ -1401,7 +1438,9 @@ class View : public ViewTraits<DataType, Properties...> {
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout> const& arg_layout,
       check_input_args check_args = check_input_args::no)
-      : m_track(), m_map() {
+      : m_track(),
+        m_map(),
+        m_is_strided_from_padding(Impl::ViewCtorProp<P...>::allow_padding) {
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =

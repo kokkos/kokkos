@@ -3428,8 +3428,15 @@ class ViewMapping<
     // Query the mapping for byte-size of allocation.
     // If padding is allowed then pass in sizeof value type
     // for padding computation.
-    using padding = std::integral_constant<
-        unsigned int, alloc_prop::allow_padding ? sizeof(value_type) : 0>;
+
+    using use_padding =
+        std::bool_constant<alloc_prop::allow_padding &&
+                           !std::is_same<typename Traits::array_layout,
+                                         Kokkos::LayoutStride>::value>;
+
+    using padding =
+        std::integral_constant<unsigned int,
+                               use_padding::value ? sizeof(value_type) : 0>;
 
     m_impl_offset = offset_type(padding(), arg_layout);
 

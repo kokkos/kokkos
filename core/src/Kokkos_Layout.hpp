@@ -301,10 +301,14 @@ struct LayoutTiled {
   LayoutTiled& operator=(LayoutTiled&&) = default;
 
   KOKKOS_INLINE_FUNCTION
-  explicit constexpr LayoutTiled(size_t argN0 = 0, size_t argN1 = 0,
-                                 size_t argN2 = 0, size_t argN3 = 0,
-                                 size_t argN4 = 0, size_t argN5 = 0,
-                                 size_t argN6 = 0, size_t argN7 = 0)
+  explicit constexpr LayoutTiled(size_t argN0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                                 size_t argN7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : dimension{argN0, argN1, argN2, argN3, argN4, argN5, argN6, argN7} {}
 
   friend bool operator==(const LayoutTiled& left, const LayoutTiled& right) {

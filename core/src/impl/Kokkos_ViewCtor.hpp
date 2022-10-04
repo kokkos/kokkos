@@ -293,7 +293,9 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                 (is_view_label<Property>::value &&
                  !ViewCtorProp<P...>::has_label) ||
                 (std::is_same_v<Property, WithoutInitializing_t> &&
-                 ViewCtorProp<P...>::initialize)) {
+                 ViewCtorProp<P...>::initialize) ||
+                (std::is_same_v<Property, AllowPadding_t> &&
+                 !ViewCtorProp<P...>::allow_padding)) {
     using NewViewCtorProp = ViewCtorProp<P..., Property>;
     NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
     static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
