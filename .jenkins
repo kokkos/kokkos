@@ -80,7 +80,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_OPENMP=OFF \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
