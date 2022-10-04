@@ -86,7 +86,6 @@ struct CheckResult {
 };
 
 TEST(defaultdevicetype, shared_host_pinned_space) {
-  ASSERT_TRUE(KOKKOS_HAS_SHARED_HOST_PINNED_SPACE);
   ASSERT_TRUE(Kokkos::has_shared_host_pinned_space);
 
   if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
