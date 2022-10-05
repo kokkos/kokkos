@@ -144,7 +144,7 @@ struct is_strided_from_padding<T, R, true> {
   KOKKOS_INLINE_FUNCTION
   is_strided_from_padding() = default;
   KOKKOS_INLINE_FUNCTION
-  is_strided_from_padding(const bool& arg) { v = arg; };
+  is_strided_from_padding(const bool& arg) : v(arg) { };
   KOKKOS_INLINE_FUNCTION
   bool value() const { return v; };
 };
