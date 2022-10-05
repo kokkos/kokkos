@@ -42,44 +42,20 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_MDRANGEPOLICY_HPP_
-#define KOKKOS_HIP_MDRANGEPOLICY_HPP_
+#ifndef KOKKOS_HPX_MDRANGEPOLICY_HPP_
+#define KOKKOS_HPX_MDRANGEPOLICY_HPP_
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
 namespace Kokkos {
-
-template <>
-struct default_outer_direction<HIP> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-
-template <>
-struct default_inner_direction<HIP> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-
 namespace Impl {
-
-// Settings for MDRangePolicy
-template <>
-inline TileSizeProperties get_tile_size_properties<HIP>(const HIP& space) {
-  TileSizeProperties properties;
-  properties.max_threads =
-      space.impl_internal_space_instance()->m_maxThreadsPerSM;
-  properties.default_largest_tile_size = 16;
-  properties.default_tile_size         = 4;
-  properties.max_total_tile_size       = HIPTraits::MaxThreadsPerBlock;
-  return properties;
-}
 
 // Settings for TeamMDRangePolicy
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
-struct ThreadAndVectorNestLevel<Rank, HIP, ThreadAndVector>
-    : AcceleratorBasedNestLevel<Rank, ThreadAndVector> {};
+struct ThreadAndVectorNestLevel<Rank, Kokkos::Experimental::HPX,
+                                ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
 
-}  // Namespace Impl
-}  // Namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 #endif
