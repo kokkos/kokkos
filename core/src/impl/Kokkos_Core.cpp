@@ -428,11 +428,16 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     Kokkos::abort("implementation bug");
   }
 
-  auto const* local_rank_str =
-      std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
-  if (!local_rank_str)
-    local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
-  if (!local_rank_str) local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
+  char const* local_rank_str = nullptr;
+  for (char const* env_var : {
+           "OMPI_COMM_WORLD_LOCAL_RANK",  // OpenMPI
+           "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
+           "MPI_LOCALRANKID",             // MPICH
+           "SLURM_LOCALID",               // SLURM
+       }) {
+    local_rank_str = std::getenv(env_var);
+    if (local_rank_str) break;
+  }
 
   // use first GPU available for execution if unable to detect local MPI rank
   if (!local_rank_str) {
