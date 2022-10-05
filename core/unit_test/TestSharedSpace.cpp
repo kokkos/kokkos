@@ -132,8 +132,8 @@ TEST(defaultdevicetype, shared_space) {
                                Kokkos::DefaultHostExecutionSpace>)
     GTEST_SKIP() << "Skipping as host and device are the same space";
 
-#if defined(KOKKOS_ARCH_VEGA900) || defined(KOKKOS_ARCH_VEGA906) || \
-    defined(KOKKOS_ARCH_VEGA908)
+#if defined(KOKKOS_ARCH_VEGA906) || defined(KOKKOS_ARCH_VEGA908) || \
+    defined(KOKKOS_ARCH_NAVI)
   GTEST_SKIP()
       << "skipping because specified arch does not support page migration";
 #endif
