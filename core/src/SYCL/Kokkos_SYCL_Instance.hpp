@@ -341,7 +341,6 @@ template <typename Functor, typename Storage>
 auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
   return SYCLFunctionWrapper<Functor, Storage>(functor, storage);
 }
-
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

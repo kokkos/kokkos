@@ -977,7 +977,6 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     return *this;
   }
 };
-
 }  // namespace Impl
 }  // namespace Kokkos
 

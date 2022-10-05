@@ -882,7 +882,7 @@ struct AcceleratorBasedNestLevel;
 //     - Iter is whether to go forward or backward through ranks (i.e. the
 //       iteration order for MDRangePolicy)
 //   - ThreadAndVector determines whether both vector and thread parallelism is
-//   in use
+//     in use
 template <typename Rank, typename ExecSpace,
           TeamMDRangeThreadAndVector ThreadAndVector>
 struct ThreadAndVectorNestLevel;
