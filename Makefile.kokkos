@@ -86,6 +86,7 @@ KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_H
 # deprecated
 KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_desul_atomics)
 KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_desul_atomics)
+KOKKOS_INTERNAL_DISABLE_BUNDLED_MDSPAN := $(call kokkos_has_string,$(KOKKOS_OPTIONS),impl_disable_bundled_mdspan)
 KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_deprecated_code)
 KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_deprecation_warnings)
 
@@ -1173,6 +1174,11 @@ ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 0)
 else ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
   $(error Contradictory Desul atomics options: KOKKOS_OPTIONS=$(KOKKOS_OPTIONS) )
 endif
+
+ifeq ($(KOKKOS_INTERNAL_DISABLE_BUNDLED_MDSPAN), 0)
+  KOKKOS_CPPFLAGS+=-I$(KOKKOS_PATH)/tpls/mdspan/include
+endif
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_MDSPAN")
 
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 

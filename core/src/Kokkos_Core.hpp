@@ -97,6 +97,10 @@ void pre_initialize(const InitializationSettings& settings);
 
 void post_initialize(const InitializationSettings& settings);
 
+void pre_finalize();
+
+void post_finalize();
+
 void declare_configuration_metadata(const std::string& category,
                                     const std::string& key,
                                     const std::string& value);

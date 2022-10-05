@@ -104,7 +104,15 @@ bool Kokkos::Experimental::OpenACC::impl_is_initialized() {
 
 void Kokkos::Experimental::OpenACC::print_configuration(std::ostream& os,
                                                         bool verbose) const {
-  os << "macro KOKKOS_ENABLE_OPENACC is defined\n";  // FIXME_OPENACC
+  os << "Device Execution Space:\n";
+  os << "  KOKKOS_ENABLE_OPENACC: yes\n";
+  os << "OpenACC Options:\n";
+  os << "  KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS: ";
+#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
   m_space_instance->print_configuration(os, verbose);
 }
 

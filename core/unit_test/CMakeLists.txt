@@ -58,7 +58,7 @@ SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
-SET(KOKKOS_OPENACC_FEATURE_LEVEL 8)
+SET(KOKKOS_OPENACC_FEATURE_LEVEL 11)
 SET(KOKKOS_OPENACC_NAME Experimental::OpenACC)
 
 
@@ -73,9 +73,9 @@ KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
 SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
+  TestCreateMirror.cpp
   TestDetectionIdiom.cpp
   TestInterOp.cpp
-  TestLegionInteroperability.cpp
   TestStringManipulation.cpp
   TestTypeList.cpp
 )
@@ -86,6 +86,7 @@ ENDIF()
 KOKKOS_ADD_EXECUTABLE(
   TestCompileOnly
   SOURCES
+  TestCompileMain.cpp
   ${COMPILE_ONLY_SOURCES}
 )
 
@@ -182,6 +183,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     SET(${Tag}_SOURCES2A)
     foreach(Name
       Abort
+      MDSpan
       TeamBasic
       TeamReductionScan
       TeamScan
@@ -332,18 +334,8 @@ endforeach()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM OpenMPTarget_SOURCES
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexfloat.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_a.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_b.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewOfClass.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_WorkGraph.cpp
     )
 endif()
@@ -806,6 +798,7 @@ SET(DEFAULT_DEVICE_SOURCES
   TestInitializationSettings.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestSharedSpace.cpp
+  TestSharedHostPinnedSpace.cpp
   default/TestDefaultDeviceType.cpp
   default/TestDefaultDeviceType_a1.cpp
   default/TestDefaultDeviceType_b1.cpp
@@ -825,6 +818,10 @@ SET(DEFAULT_DEVICE_SOURCES
 if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET) OR (KOKKOS_ENABLE_SYCL))
   LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
 endif()
+# FIXME_OPENMPTARGET and FIXME_OPENACC do not provide a HostPinnedMemorySpace that can be accessed from all ExecSpaces
+if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET))
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedHostPinnedSpace.cpp)
+endif()
 
 # FIXME_OPENMPTARGET, FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
@@ -839,6 +836,13 @@ endif()
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
   SOURCES ${DEFAULT_DEVICE_SOURCES}
+)
+
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_LegionInitialization
+  SOURCES
+    UnitTestMain.cpp
+    TestLegionInitialization.cpp
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

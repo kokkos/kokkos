@@ -806,7 +806,7 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
-void finalize_internal() {
+void pre_finalize_internal() {
   typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
   while (!finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
@@ -835,9 +835,9 @@ void finalize_internal() {
   }
 
   Kokkos::Profiling::finalize();
+}
 
-  Kokkos::Impl::ExecSpaceManager::get_instance().finalize_spaces();
-
+void post_finalize_internal() {
   g_is_initialized = false;
   g_is_finalized   = true;
   g_show_warnings  = true;
@@ -1225,6 +1225,10 @@ void Kokkos::Impl::post_initialize(const InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
+void Kokkos::Impl::pre_finalize() { pre_finalize_internal(); }
+
+void Kokkos::Impl::post_finalize() { post_finalize_internal(); }
+
 void Kokkos::push_finalize_hook(std::function<void()> f) {
   finalize_hooks.push(f);
 }
@@ -1238,7 +1242,9 @@ void Kokkos::finalize() {
   if (kokkos_finalize_was_called()) {
     Kokkos::abort("Error: Kokkos::finalize() has already been called.\n");
   }
-  finalize_internal();
+  pre_finalize_internal();
+  Impl::ExecSpaceManager::get_instance().finalize_spaces();
+  post_finalize_internal();
 }
 
 #ifdef KOKKOS_COMPILER_INTEL

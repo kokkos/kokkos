@@ -2,11 +2,10 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
+//                        Kokkos v. 2.0
+//              Copyright (2019) Sandia Corporation
 //
-// Under the terms of Contract DE-NA0003525 with NTESS,
+// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -24,10 +23,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -42,16 +41,33 @@
 //@HEADER
 */
 
-#include <benchmark/benchmark.h>
+#pragma once
 
-void SomeFunction() { return; }
+#include "macros.hpp"
 
-static void BM_SomeFunction(benchmark::State& state) {
-  // Perform setup here
-  for (auto _ : state) {
-    // This code gets timed
-    SomeFunction();
-  }
+#include <cstddef>  // size_t
+#include <limits>   // numeric_limits
+
+namespace std {
+namespace experimental {
+
+_MDSPAN_INLINE_VARIABLE constexpr auto dynamic_extent = std::numeric_limits<size_t>::max();
+
+namespace detail {
+
+template <class>
+constexpr auto __make_dynamic_extent() {
+  return dynamic_extent;
 }
 
-BENCHMARK(BM_SomeFunction);
+template <size_t>
+constexpr auto __make_dynamic_extent_integral() {
+  return dynamic_extent;
+}
+
+} // end namespace detail
+
+} // end namespace experimental
+} // namespace std
+
+//==============================================================================================================

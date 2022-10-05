@@ -454,42 +454,6 @@ DESUL_INLINE_FUNCTION void device_atomic_dec(T* const dest,
   return device_atomic_sub(dest, T(1), order, scope);
 }
 
-// FIXME
-template <class T,
-          class SuccessMemoryOrder,
-          class FailureMemoryOrder,
-          class MemoryScope>
-DESUL_INLINE_FUNCTION bool device_atomic_compare_exchange_strong(
-    T* const dest,
-    T& expected,
-    T desired,
-    SuccessMemoryOrder success,
-    FailureMemoryOrder /*failure*/,
-    MemoryScope scope) {
-  T const old = device_atomic_compare_exchange(dest, expected, desired, success, scope);
-  if (old != expected) {
-    expected = old;
-    return false;
-  } else {
-    return true;
-  }
-}
-
-template <class T,
-          class SuccessMemoryOrder,
-          class FailureMemoryOrder,
-          class MemoryScope>
-DESUL_INLINE_FUNCTION bool device_atomic_compare_exchange_weak(
-    T* const dest,
-    T& expected,
-    T desired,
-    SuccessMemoryOrder success,
-    FailureMemoryOrder failure,
-    MemoryScope scope) {
-  return device_atomic_compare_exchange_strong(
-      dest, expected, desired, success, failure, scope);
-}
-
 }  // namespace Impl
 }  // namespace desul
 
