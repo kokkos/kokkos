@@ -46,7 +46,8 @@
 
 template <typename TestView, typename MemorySpace>
 void check_memory_space(TestView, MemorySpace) {
-  static_assert(std::is_same_v<typename TestView::memory_space, MemorySpace>);
+  static_assert(
+      std::is_same<typename TestView::memory_space, MemorySpace>::value, "");
 }
 
 template <class View>

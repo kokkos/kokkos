@@ -49,7 +49,8 @@
 
 template <typename TestView, typename MemorySpace>
 void check_memory_space(TestView, MemorySpace) {
-  static_assert(std::is_same_v<typename TestView::memory_space, MemorySpace>);
+  static_assert(
+      std::is_same<typename TestView::memory_space, MemorySpace>::value, "");
 }
 
 template <class View>
@@ -68,56 +69,68 @@ void test_create_mirror_properties(const View& view) {
   // clang-format off
   
   // create_mirror
+#ifndef KOKKOS_ENABLE_CXX14
   // FIXME DynamicView: HostMirror is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror(WithoutInitializing,                        view), host_mirror_test_space(view));
     check_memory_space(create_mirror(                                            view), host_mirror_test_space(view));
   }
+#endif
   check_memory_space(create_mirror(WithoutInitializing, DefaultExecutionSpace{}, view), DeviceMemorySpace{});
   check_memory_space(create_mirror(                     DefaultExecutionSpace{}, view), DeviceMemorySpace{});
 
   // create_mirror_view
+#ifndef KOKKOS_ENABLE_CXX14
   // FIXME DynamicView: HostMirror is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror_view(WithoutInitializing,                        view), host_mirror_test_space(view));
     check_memory_space(create_mirror_view(                                            view), host_mirror_test_space(view));
   }
+#endif
   check_memory_space(create_mirror_view(WithoutInitializing, DefaultExecutionSpace{}, view), DeviceMemorySpace{});
   check_memory_space(create_mirror_view(                     DefaultExecutionSpace{}, view), DeviceMemorySpace{});
 
   // create_mirror view_alloc
+#ifndef KOKKOS_ENABLE_CXX14
   // FIXME DynamicView: HostMirror is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror(view_alloc(WithoutInitializing),                    view), host_mirror_test_space(view));
     check_memory_space(create_mirror(view_alloc(),                                       view), host_mirror_test_space(view));
   }
+#endif
   check_memory_space(create_mirror(view_alloc(WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
   check_memory_space(create_mirror(view_alloc(                     DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view view_alloc
+#ifndef KOKKOS_ENABLE_CXX14
   // FIXME DynamicView: HostMirror is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror_view(view_alloc(WithoutInitializing),                    view), host_mirror_test_space(view));
     check_memory_space(create_mirror_view(view_alloc(),                                       view), host_mirror_test_space(view));
   }
+#endif
   check_memory_space(create_mirror_view(view_alloc(WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
   check_memory_space(create_mirror_view(view_alloc(                     DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror view_alloc + execution space
+#ifndef KOKKOS_ENABLE_CXX14
   // FIXME DynamicView: HostMirror is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{}, WithoutInitializing),                      view), host_mirror_test_space(view));
     check_memory_space(create_mirror(view_alloc(DefaultHostExecutionSpace{}),                                       view), host_mirror_test_space(view));
   }
+#endif
   check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{},   WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
   check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{},                        DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view view_alloc + execution space
+#ifndef KOKKOS_ENABLE_CXX14
   // FIXME DynamicView: HostMirror is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror_view(view_alloc(DefaultExecutionSpace{}, WithoutInitializing),                      view), host_mirror_test_space(view));
     check_memory_space(create_mirror_view(view_alloc(DefaultHostExecutionSpace{}),                                       view), host_mirror_test_space(view));
   }
+#endif
   check_memory_space(create_mirror_view(view_alloc(DefaultExecutionSpace{},   WithoutInitializing, DeviceMemorySpace{}), view), DeviceMemorySpace{});
   check_memory_space(create_mirror_view(view_alloc(DefaultExecutionSpace{},                        DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
