@@ -42,16 +42,30 @@
 //@HEADER
 */
 
-#include <benchmark/benchmark.h>
+#include <PerfTest_ViewCopy.hpp>
 
-void SomeFunction() { return; }
+namespace Test {
 
-static void BM_SomeFunction(benchmark::State& state) {
-  // Perform setup here
-  for (auto _ : state) {
-    // This code gets timed
-    SomeFunction();
-  }
-}
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
+BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutLeft, Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
 
-BENCHMARK(BM_SomeFunction);
+BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutRight, Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
+BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutLeft, Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
+BENCHMARK(ViewDeepCopy_Raw<Kokkos::LayoutRight, Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+#endif
+
+}  // namespace Test
