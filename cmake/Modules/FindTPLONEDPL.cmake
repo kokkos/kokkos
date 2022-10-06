@@ -9,7 +9,7 @@ ELSE()
   KOKKOS_CREATE_IMPORTED_TPL(
     ONEDPL INTERFACE
     LINK_LIBRARIES oneDPL
-    # FIXME is there a better way of fixing the problem with compatibility of oneTBB vs legacy TBB?
+    # FIXME_SYCL is there a better way of fixing the problem with compatibility of oneTBB vs legacy TBB?
     # https://stackoverflow.com/questions/67923287/how-to-resolve-no-member-named-task-in-namespace-tbb-error-when-using-oned/
     COMPILE_DEFINITIONS PSTL_USE_PARALLEL_POLICIES=0 _GLIBCXX_USE_TBB_PAR_BACKEND=0
   )

@@ -65,14 +65,9 @@
 
 #endif
 
-// The order of includes (firstly oneDPL's, than std's) because of:
-// https://stackoverflow.com/questions/67923287/how-to-resolve-no-member-named-task-in-namespace-tbb-error-when-using-oned/67924408#67924408
-
 #if defined(KOKKOS_ENABLE_ONEDPL)
-
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
-
 #endif
 
 #include <algorithm>
