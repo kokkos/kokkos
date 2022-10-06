@@ -29,6 +29,15 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Kokkos)
   install(EXPORT KokkosTargets NAMESPACE Kokkos:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Kokkos)
 ELSE()
+  # FIXME We don't generate the same CMake configure files when configuring
+  # inside Trilinos so we add find_dependency for OpenMP manually here.
+  # KOKKOS_TPL_EXPORTS wouldn't be defined at this point anyway.
+  IF(KOKKOS_ENABLE_OPENMP)
+    file(APPEND
+      "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake"
+      "\nINCLUDE(CMakeFindDependencyMacro)\n"
+      "FIND_DEPENDENCY(OpenMP REQUIRED)\n\n")
+  ENDIF()
   CONFIGURE_FILE(cmake/KokkosConfigCommon.cmake.in ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake @ONLY)
   file(READ ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake KOKKOS_CONFIG_COMMON)
   file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake" "${KOKKOS_CONFIG_COMMON}")
