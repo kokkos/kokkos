@@ -137,7 +137,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     // actual begin location in the queue.
 
     for (std::int32_t i = Kokkos::atomic_load(begin_hint); i < N; ++i) {
-      const std::int32_t w = Kokkos::atomic_load(&ready_queue[+i]);
+      const std::int32_t w = Kokkos::atomic_load(&ready_queue[i]);
 
       if (w == END_TOKEN) {
         return END_TOKEN;
