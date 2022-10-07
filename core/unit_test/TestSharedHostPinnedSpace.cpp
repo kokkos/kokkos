@@ -107,7 +107,7 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
 
   for (unsigned i = 0; i < numDeviceHostCycles; ++i) {
     // INCREMENT DEVICE
-    Increment(DeviceExecutionSpace{}, sharedData);
+    Increment incrementOnDevice(DeviceExecutionSpace{}, sharedData);
     ++incrementCount;
     Kokkos::fence();
     // CHECK RESULTS HOST
@@ -119,7 +119,7 @@ TEST(defaultdevicetype, shared_host_pinned_space) {
         << i << " of " << numDeviceHostCycles;
 
     // INCREMENT HOST
-    Increment(HostExecutionSpace{}, sharedData);
+    Increment incrementOnHost(HostExecutionSpace{}, sharedData);
     ++incrementCount;
     Kokkos::fence();
     // CHECK RESULTS Device
