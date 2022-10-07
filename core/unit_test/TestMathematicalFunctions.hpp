@@ -1141,8 +1141,10 @@ struct TestIsNaN {
     }
     if (isnan(3.)
 #ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
         || !isnan(quiet_NaN<double>::value) ||
         !isnan(signaling_NaN<double>::value)
+#endif
 #endif
     ) {
       ++e;

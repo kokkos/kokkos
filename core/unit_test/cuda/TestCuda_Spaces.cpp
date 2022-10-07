@@ -368,6 +368,11 @@ struct TestViewCudaTexture {
 };
 
 TEST(cuda, impl_view_texture) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  GTEST_SKIP()
+      << "Getting error_count of 1000 meaning all assertions are failing";
+#endif
   TestViewCudaTexture<Kokkos::CudaSpace>::run();
   TestViewCudaTexture<Kokkos::CudaUVMSpace>::run();
 }
