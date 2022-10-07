@@ -353,6 +353,12 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_non_mod_seq_ops, search) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
+    GTEST_SKIP() << "FIXME please";
+  }
+#endif
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }
