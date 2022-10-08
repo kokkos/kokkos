@@ -158,11 +158,9 @@ void test_join_backward_compatibility() {
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
-#if defined(KOKKOS_ENABLE_SERIAL) && defined(KOKKOS_ENABLE_CUDA) && \
+#if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>) {
-    GTEST_SKIP() << "FIXME please";
-  }
+  GTEST_SKIP() << "FIXME please";
 #endif
   test_join_backward_compatibility();
 }
