@@ -747,6 +747,11 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(
       simd<std::uint64_t, abi_type> const& other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(
+      simd<std::int32_t, abi_type> const& other)
+      : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other)))
+  {
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
