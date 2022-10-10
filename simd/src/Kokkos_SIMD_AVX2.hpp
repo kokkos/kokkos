@@ -1049,6 +1049,10 @@ class const_where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4
   value() const {
     return m_value;
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::int32_t* mem, element_aligned_tag) const {
+    _mm_maskstore_epi32(mem, static_cast<__m128i>(m_mask), static_cast<__m128i>(m_value));
+  }
 };
 
 template <>
