@@ -228,7 +228,8 @@ inline size_t get_shmem_per_sm_prefer_l1(cudaDeviceProp const& properties) {
       case 61: return 96;
       case 70:
       case 80:
-      case 86: return 8;
+      case 86:
+      case 90: return 8;
       case 75: return 32;
       default:
         Kokkos::Impl::throw_runtime_exception(
