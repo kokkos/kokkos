@@ -3443,6 +3443,9 @@ class ViewMapping<
     const memory_space& mem_space =
         Impl::get_property<Impl::MemorySpaceTag>(arg_prop);
 
+    static_assert(
+        SpaceAccessibility<execution_space, memory_space>::accessible);
+
     // Create shared memory tracking record with allocate memory from the memory
     // space
     record_type* const record =
