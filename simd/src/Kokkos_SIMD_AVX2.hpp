@@ -1000,14 +1000,17 @@ class where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
     m_value = value_type(_mm256_maskload_pd(mem,
           _mm256_castpd_si256(static_cast<__m256d>(m_mask))));
   }
-//KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-//void gather_from(
-//    double const* mem,
-//    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-//  m_value = value_type(_mm256_mask_i32gather_pd(
-//      _mm256_set1_pd(0.0), static_cast<__mmask8>(m_mask),
-//      static_cast<__m256i>(index), mem, 8));
-//}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      double const* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
+    m_value = value_type(_mm256_mask_i32gather_pd(
+        _mm256_set1_pd(0.0),
+        mem,
+        static_cast<__m128i>(index),
+        static_cast<__m256d>(m_mask),
+        8));
+  }
   template <class U, std::enable_if_t<
                          std::is_convertible_v<
                              U, simd<double, simd_abi::avx2_fixed_size<4>>>,
