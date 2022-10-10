@@ -195,6 +195,13 @@ class simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       __m128i const& value_in)
       : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
+      simd_mask<double, abi_type> const& other)
+  {
+    for (std::size_t i = 0; i < size(); ++i) (*this)[i] = other[i];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
+      simd_mask<std::int64_t, abi_type> const& other);
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m128i()
       const {
     return m_value;
