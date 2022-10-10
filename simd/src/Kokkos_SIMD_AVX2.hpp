@@ -974,14 +974,14 @@ class const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
     _mm256_maskstore_pd(mem, _mm256_castpd_si256(static_cast<__m256d>(m_mask)),
                           static_cast<__m256d>(m_value));
   }
-//KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-//void scatter_to(
-//    double* mem,
-//    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) const {
-//  _mm256_mask_i32scatter_pd(mem, static_cast<__mmask8>(m_mask),
-//                            static_cast<__m256i>(index),
-//                            static_cast<__m256d>(m_value), 8);
-//}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      double* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) const {
+    for (std::size_t lane = 0; lane < 4; ++lane) {
+      if (m_mask[lane]) mem[index[lane]] = m_value[lane];
+    }
+  }
 };
 
 template <>
