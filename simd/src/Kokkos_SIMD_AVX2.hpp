@@ -742,6 +742,19 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(std::int64_t a, std::int64_t b, std::int64_t c,
                                              std::int64_t d)
       : m_value(_mm256_setr_epi64x(a, b, c, d)) {}
+  template <class G,
+            std::enable_if_t<
+                // basically, can you do { value_type r =
+                // gen(std::integral_constant<std::size_t, i>()); }
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+      : simd(gen(std::integral_constant<std::size_t, 0>()),
+             gen(std::integral_constant<std::size_t, 1>()),
+             gen(std::integral_constant<std::size_t, 2>()),
+             gen(std::integral_constant<std::size_t, 3>()))
+  {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256i const& value_in)
       : m_value(value_in) {}
