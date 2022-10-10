@@ -435,8 +435,8 @@ void test_sort(unsigned int N) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if (!std::is_same_v<ExecutionSpace, Kokkos::Cuda>)
-    test_3D_sort<ExecutionSpace, KeyType>(N);
 #endif
+    test_3D_sort<ExecutionSpace, KeyType>(N);
 // FIXME_OPENMPTARGET: OpenMPTarget doesn't support DynamicView yet.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   test_dynamic_view_sort<ExecutionSpace, KeyType>(N);
@@ -444,8 +444,8 @@ void test_sort(unsigned int N) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if (!std::is_same_v<ExecutionSpace, Kokkos::Cuda>)
-    test_issue_1160_sort<ExecutionSpace>();
 #endif
+    test_issue_1160_sort<ExecutionSpace>();
   test_issue_4978_sort<ExecutionSpace>();
   test_sort_integer_overflow<ExecutionSpace, long long>();
   test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
