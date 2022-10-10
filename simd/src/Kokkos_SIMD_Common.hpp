@@ -154,6 +154,14 @@ template <class T>
   return const_where_expression(mask, value);
 }
 
+// fallback simd multiplication using generator constructor
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<T, Abi> operator*(simd<T, Abi> const& lhs, simd<T, Abi> const& rhs) {
+  return simd<T, Abi>([&] (std::size_t i) { return lhs[i] * rhs[i]; });
+}
+
 // The code below provides:
 // operator@(simd<T, Abi>, Arithmetic)
 // operator@(Arithmetic, simd<T, Abi>)
