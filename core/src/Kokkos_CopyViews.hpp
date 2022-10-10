@@ -1768,8 +1768,8 @@ inline void deep_copy(
     Kokkos::Impl::throw_runtime_exception(message);
   }
 
-  // If same type, equal layout, equal dimensions, equal span, and contiguous
-  // memory then can byte-wise copy
+  // If same type, equal layout, equal dimensions, equal span, contiguous,
+  // and non-contiguous due to padding, memory then can byte-wise copy
 
   if (std::is_same<typename dst_type::value_type,
                    typename src_type::non_const_value_type>::value &&
@@ -2920,8 +2920,8 @@ inline void deep_copy(
     Kokkos::Impl::throw_runtime_exception(message);
   }
 
-  // If same type, equal layout, equal dimensions, equal span, and contiguous
-  // memory then can byte-wise copy
+  // If same type, equal layout, equal dimensions, equal span, contiguous,
+  // and non-contiguous due to padding, memory then can byte-wise copy
 
   if (std::is_same<typename dst_type::value_type,
                    typename src_type::non_const_value_type>::value &&
@@ -3472,11 +3472,8 @@ struct MirrorType {
 };
 
 template <class T, class... P, class... ViewCtorArgs>
-inline std::enable_if_t<
-    !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                  Kokkos::LayoutStride>::value &&
-        !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
-    typename Kokkos::View<T, P...>::HostMirror>
+inline std::enable_if_t<!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
+                        typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(const Kokkos::View<T, P...>& src,
               const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using src_type         = View<T, P...>;
@@ -3496,48 +3493,14 @@ create_mirror(const Kokkos::View<T, P...>& src,
       "The view constructor arguments passed to Kokkos::create_mirror must "
       "not explicitly allow padding!");
 
-  if (src.impl_is_strided_from_padding()) {
-    auto prop_copy = Impl::with_properties_if_unset(
-        arg_prop, std::string(src.label()).append("_mirror"), AllowPadding);
-    return dst_type(prop_copy, src.layout());
-  }
-  auto prop_copy = Impl::with_properties_if_unset(
-      arg_prop, std::string(src.label()).append("_mirror"));
-  return dst_type(prop_copy, src.layout());
-}
-
-template <class T, class... P, class... ViewCtorArgs>
-inline std::enable_if_t<
-    std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                 Kokkos::LayoutStride>::value &&
-        !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
-    typename Kokkos::View<T, P...>::HostMirror>
-create_mirror(const Kokkos::View<T, P...>& src,
-              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  using src_type         = View<T, P...>;
-  using dst_type         = typename src_type::HostMirror;
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      !alloc_prop_input::has_label,
-      "The view constructor arguments passed to Kokkos::create_mirror "
-      "must not include a label!");
-  static_assert(
-      !alloc_prop_input::has_pointer,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::allow_padding,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not explicitly allow padding!");
+  auto label = std::string(src.label()).append("_mirror");
 
   if (src.impl_is_strided_from_padding()) {
-    auto prop_copy = Impl::with_properties_if_unset(
-        arg_prop, std::string(src.label()).append("_mirror"), AllowPadding);
+    auto prop_copy =
+        Impl::with_properties_if_unset(arg_prop, label, AllowPadding);
     return dst_type(prop_copy, src.layout());
   }
-  auto prop_copy = Impl::with_properties_if_unset(
-      arg_prop, std::string(src.label()).append("_mirror"));
+  auto prop_copy = Impl::with_properties_if_unset(arg_prop, label);
   return dst_type(prop_copy, src.layout());
 }
 

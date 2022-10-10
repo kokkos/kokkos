@@ -727,18 +727,18 @@ struct Padding {
   // to align.
   KOKKOS_INLINE_FUNCTION
   static constexpr size_t stride(size_t const N) {
-    if constexpr(TrivialScalarSize ==0) {
+    if constexpr (TrivialScalarSize == 0) {
       return N;
     } else {
-      constexpr int div  = Kokkos::Impl::MEMORY_ALIGNMENT / TrivialScalarSize;
-      constexpr int mod = Kokkos::Impl::MEMORY_ALIGNMENT / TrivialScalarSize;
+      constexpr int div   = Kokkos::Impl::MEMORY_ALIGNMENT / TrivialScalarSize;
+      constexpr int mod   = Kokkos::Impl::MEMORY_ALIGNMENT % TrivialScalarSize;
       constexpr int align = (mod == 0) ? div : 0;
       // To valid modulo zero in constexpr
       constexpr int div_ok = (div != 0) ? div : 1;
-      if constexpr ((align != 0) &&
+      if ((align != 0) &&
           ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
-              static_cast<int>(align)) < N) &&
-            ((N % div_ok) != 0))
+            static_cast<int>(align)) < N) &&
+          ((N % div_ok) != 0))
         return N + align - (N % div_ok);
       else
         return N;
