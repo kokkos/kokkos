@@ -695,6 +695,14 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
       _mm_sub_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
 }
 
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
+    operator+(simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& lhs,
+              simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) {
+  return simd<std::int32_t, simd_abi::avx2_fixed_size<4>>(
+      _mm_add_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
+}
+
 template <>
 class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   __m256i m_value;
