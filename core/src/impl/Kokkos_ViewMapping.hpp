@@ -723,32 +723,26 @@ struct SubviewExtents {
 
 template <unsigned TrivialScalarSize>
 struct Padding {
-  enum {
-    div = TrivialScalarSize == 0
-              ? 0
-              : Kokkos::Impl::MEMORY_ALIGNMENT /
-                    (TrivialScalarSize ? TrivialScalarSize : 1)
-  };
-  enum {
-    mod = TrivialScalarSize == 0
-              ? 0
-              : Kokkos::Impl::MEMORY_ALIGNMENT %
-                    (TrivialScalarSize ? TrivialScalarSize : 1)
-  };
-
   // If memory alignment is a multiple of the trivial scalar size then attempt
   // to align.
-  enum { align = 0 != TrivialScalarSize && 0 == mod ? div : 0 };
-  enum { div_ok = (div != 0) ? div : 1 };  // To valid modulo zero in constexpr
-
   KOKKOS_INLINE_FUNCTION
   static constexpr size_t stride(size_t const N) {
-    return ((align != 0) &&
-            ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
+    if constexpr(TrivialScalarSize ==0) {
+      return N;
+    } else {
+      constexpr int div  = Kokkos::Impl::MEMORY_ALIGNMENT / TrivialScalarSize;
+      constexpr int mod = Kokkos::Impl::MEMORY_ALIGNMENT / TrivialScalarSize;
+      constexpr int align = (mod == 0) ? div : 0;
+      // To valid modulo zero in constexpr
+      constexpr int div_ok = (div != 0) ? div : 1;
+      if constexpr ((align != 0) &&
+          ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
               static_cast<int>(align)) < N) &&
             ((N % div_ok) != 0))
-               ? N + align - (N % div_ok)
-               : N;
+        return N + align - (N % div_ok);
+      else
+        return N;
+    }
   }
 };
 
