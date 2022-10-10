@@ -170,13 +170,13 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND KOKKOS_ENABLE_OPENMPTARGET)
   target_link_libraries(kokkoscore PUBLIC atomic)
 ENDIF()
 
-# FIXME_TRILINOS Trilinos doesn't allow for Kokkos to use find_dependency so we
-# just append the flags in cmake/kokkos_tpls.cmake instead of linking with the
-# OpenMP target.
 IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND desul_FOUND)
   target_link_libraries(kokkoscore PUBLIC desul_atomics)
 ENDIF()
 
+# FIXME_TRILINOS Trilinos doesn't allow for Kokkos to use find_dependency so we
+# just append the flags in cmake/kokkos_tpls.cmake instead of linking with the
+# OpenMP target.
 IF(Kokkos_ENABLE_OPENMP AND NOT KOKKOS_HAS_TRILINOS)
   target_link_libraries(kokkoscore PUBLIC OpenMP::OpenMP_CXX)
 ENDIF()
