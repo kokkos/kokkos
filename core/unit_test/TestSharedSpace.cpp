@@ -45,13 +45,6 @@
 #include <Kokkos_Core.hpp>
 
 #if defined(_WIN32)
-// FIXME_Windows : Even though Kokkos_Core does include windows.h it is not
-// visible here. Furthermore, the char max() in Kokkos_NumericTraits seems to
-// conflict with definitions in windows.h and raises a bunch of interpretation
-// errors
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <windows.h>
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
