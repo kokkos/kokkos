@@ -334,9 +334,11 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 // Kokkos_Core.hpp
 #if defined(KOKKOS_PUSH_MACRO_MIN)
 #pragma pop_macro("min")
+#undef KOKKOS_PUSH_MACRO_MIN
 #endif
 #if defined(KOKKOS_PUSH_MACRO_MAX)
 #pragma pop_macro("max")
+#undef KOKKOS_PUSH_MACRO_MAX
 #endif
 
 //----------------------------------------------------------------------------
