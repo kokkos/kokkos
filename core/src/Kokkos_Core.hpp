@@ -57,12 +57,12 @@
 #if defined(min)
 #pragma push_macro("min")
 #undef min
-#define KOKKOS_PUSH_MACRO_MIN
+#define KOKKOS_IMPL_PUSH_MACRO_MIN
 #endif
 #if defined(max)
 #pragma push_macro("max")
 #undef max
-#define KOKKOS_PUSH_MACRO_MAX
+#define KOKKOS_IMPL_PUSH_MACRO_MAX
 #endif
 
 //----------------------------------------------------------------------------
@@ -332,13 +332,13 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 //----------------------------------------------------------------------------
 // Redefinition of the macros min and max if we pushed them at entry of
 // Kokkos_Core.hpp
-#if defined(KOKKOS_PUSH_MACRO_MIN)
+#if defined(KOKKOS_IMPL_PUSH_MACRO_MIN)
 #pragma pop_macro("min")
-#undef KOKKOS_PUSH_MACRO_MIN
+#undef KOKKOS_IMPL_PUSH_MACRO_MIN
 #endif
-#if defined(KOKKOS_PUSH_MACRO_MAX)
+#if defined(KOKKOS_IMPL_PUSH_MACRO_MAX)
 #pragma pop_macro("max")
-#undef KOKKOS_PUSH_MACRO_MAX
+#undef KOKKOS_IMPL_PUSH_MACRO_MAX
 #endif
 
 //----------------------------------------------------------------------------
