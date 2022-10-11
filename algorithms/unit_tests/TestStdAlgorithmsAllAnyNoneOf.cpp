@@ -178,7 +178,7 @@ TEST(std_algorithms_all_any_none_of_test, test) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
-    GTEST_SKIP() << "FIXME please";
+    GTEST_SKIP() << "FIXME wrong result";
   }
 #endif
   run_all_scenarios<DynamicTag, double>();

@@ -179,7 +179,7 @@ TEST_F(std_algorithms_partitioning_test, is_partitioned_trivial) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
-    GTEST_SKIP() << "FIXME please";
+    GTEST_SKIP() << "FIXME wrong result";
   }
 #endif
   IsNegativeFunctor<value_type> p;
@@ -200,7 +200,7 @@ TEST_F(std_algorithms_partitioning_test, is_partitioned_accepting_iterators) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
-    GTEST_SKIP() << "FIXME please";
+    GTEST_SKIP() << "FIXME wrong result";
   }
 #endif
   const IsNegativeFunctor<value_type> p;
@@ -227,7 +227,7 @@ TEST_F(std_algorithms_partitioning_test, is_partitioned_accepting_view) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
-    GTEST_SKIP() << "FIXME please";
+    GTEST_SKIP() << "FIXME wrong result";
   }
 #endif
   const IsNegativeFunctor<value_type> p;
@@ -251,7 +251,7 @@ TEST_F(std_algorithms_partitioning_test, partition_point) {
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
   if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
-    GTEST_SKIP() << "FIXME please";
+    GTEST_SKIP() << "FIXME wrong result";
   }
 #endif
   const IsNegativeFunctor<value_type> p;
