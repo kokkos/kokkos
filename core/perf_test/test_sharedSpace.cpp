@@ -63,7 +63,7 @@ unsigned getBytesPerPage() { return sysconf(_SC_PAGESIZE); }
 namespace {
 void printTimings(std::ostream& out, std::vector<double> const& tr,
                   size_t numBytes,
-                  double threshold = std::numeric_limits<double>::max()) {
+                  double threshold = (std::numeric_limits<double>::max)()) {
   out << "TimingResult contains " << tr.size() << " results:\n";
   for (auto it = tr.begin(); it != tr.end(); ++it) {
     out << "Duration of loop " << it - tr.begin() << " is " << *it
