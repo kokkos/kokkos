@@ -246,18 +246,18 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   int const active_blocks = std::max({max_blocks_threads, max_blocks_regs});
 
   // Returns approximately half of the configurable cache size.
-  size_t const shmem_per_sm_prefer = get_shmem_per_sm_prefer_equal(properties);
-  size_t const static_shmem        = attributes.sharedSizeBytes;
+  size_t const shmem_per_sm_prefer_equal =
+      get_shmem_per_sm_prefer_equal(properties);
+  size_t const shmem_per_sm_prefer_l1 = get_shmem_per_sm_prefer_l1(properties);
+  size_t const static_shmem           = attributes.sharedSizeBytes;
 
-  // Caclulate how much dynamic shmem will be used per active block.
-  int const dynamic_shmem = shmem_per_sm_prefer / active_blocks - static_shmem;
-
-  // If dynamic_shmem is greater than quarter of the combined L1 cache and
-  // shared memory, set cudaFuncCachePreferL1, if it's greater than half set
-  // cudaFuncCachePreferEqual else set cudaFuncCachePreferShared.
-  if (dynamic_shmem / 2 > shmem)
+  // If the addition of the requested shared memory and static shmem is smaller
+  // than the preferred L1, set cudaFuncCachePreferL1. If it is smaller than the
+  // preferred equal set cudaFuncCachePreferEqual else set
+  // cudaFuncCacchePreferShared.
+  if (shmem_per_sm_prefer_l1 > shmem + static_shmem)
     prefer_shmem = CachePreference::KokkosCachePreferL1;
-  else if (dynamic_shmem > shmem) {
+  else if (shmem_per_sm_prefer_equal > shmem + static_shmem) {
     prefer_shmem = CachePreference::KokkosCachePreferEqual;
   } else
     prefer_shmem = CachePreference::KokkosCachePreferShared;
