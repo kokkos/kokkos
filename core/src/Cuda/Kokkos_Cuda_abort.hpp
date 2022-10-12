@@ -64,13 +64,7 @@ extern __device__ void __assertfail(const void *message, const void *file,
 namespace Kokkos {
 namespace Impl {
 
-// required to workaround failures in random number generator unit tests with
-// pre-volta architectures
-#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-__device__ inline void cuda_abort(const char *const message) {
-#else
 [[noreturn]] __device__ inline void cuda_abort(const char *const message) {
-#endif
   const char empty[] = "";
 
   __assertfail((const void *)message, (const void *)empty, (unsigned int)0,
@@ -79,12 +73,8 @@ __device__ inline void cuda_abort(const char *const message) {
   // This loop is never executed. It's intended to suppress warnings that the
   // function returns, even though it does not. This is necessary because
   // __assertfail is not marked as [[noreturn]], even though it does not return.
-  //  Disable with KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK to workaround failures
-  //  in random number generator unit tests with pre-volta architectures
-#if !defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
   while (true)
     ;
-#endif
 }
 
 }  // namespace Impl
