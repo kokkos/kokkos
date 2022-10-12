@@ -45,7 +45,7 @@
 #include <Kokkos_Core.hpp>
 #include <cstdio>
 
-namespace Test {
+namespace {
 
 template <class Device>
 struct TestScan {
@@ -170,6 +170,67 @@ struct TestScan {
   }
 };
 
+template <class Device, class T>
+struct TestSmallSizeTypeScan {
+  using execution_space = Device;
+  using value_type      = T;
+
+  TestSmallSizeTypeScan(const size_t N) : x("in", N) {
+    using exec_policy = Kokkos::RangePolicy<execution_space>;
+
+    Kokkos::View<int, Device> errors_a("Errors");
+    Kokkos::deep_copy(errors_a, 0);
+    errors = errors_a;
+
+    Kokkos::deep_copy(x, 1);
+
+    Kokkos::parallel_scan(exec_policy(0, N), *this);
+    Kokkos::fence();
+
+    check_error();
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i, value_type& update, bool final) const {
+    const auto val = x(i);
+    if (final) {
+      x(i) = update;
+
+      // We should have a nice count from 0 to 1...
+      if (update != static_cast< value_type >( i ) ) {
+        int fail = errors()++;
+
+        // Limit the amount of output
+        if (fail < 20) {
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF("TestSmallSizeTypeScan(%d) = %ld != %ld\n", i,
+                                        static_cast<long>(update),
+                                        static_cast<long>(i));
+        }
+      }
+    }
+    update += val;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type& update) const { update = 0; }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& update, const value_type& input) const {
+    update += input;
+  }
+
+  void check_error() {
+    int total_errors;
+    Kokkos::deep_copy(total_errors, errors);
+    ASSERT_EQ(total_errors, 0);
+  }
+
+  Kokkos::View<int, Device, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
+  Kokkos::View<value_type*, Device> x;
+};
+
+}  // namespace
+
 TEST(TEST_CATEGORY, scan) {
   TestScan<TEST_EXECSPACE>::test_range(1, 1000);
   TestScan<TEST_EXECSPACE>(0);
@@ -177,4 +238,15 @@ TEST(TEST_CATEGORY, scan) {
   TestScan<TEST_EXECSPACE>(10000000);
   TEST_EXECSPACE().fence();
 }
-}  // namespace Test
+
+TEST(TEST_CATEGORY, small_size_scan) {
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(0);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(5);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(100);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(std::numeric_limits<std::int8_t>::max());
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(0);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(5);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(10000);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(std::numeric_limits<std::int16_t>::max());
+  TEST_EXECSPACE().fence();
+}
