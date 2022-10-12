@@ -166,6 +166,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Other
         RangePolicy
         RangePolicyRequire
+        RangePolicyConstructors
         Reductions
         Reducers_a
         Reducers_b
