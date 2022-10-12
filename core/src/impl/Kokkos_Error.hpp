@@ -69,7 +69,14 @@ namespace Impl {
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
 
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+// required to workaround failures in random number generator unit tests with
+// pre-volta architectures
+#define KOKKOS_IMPL_ABORT_NORETURN
+#else
+// cuda_abort aborts when building for other platforms than macOS
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
+#endif
 
 #elif defined(KOKKOS_COMPILER_NVHPC)
 
@@ -89,7 +96,10 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
-#ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+// FIXME_SYCL
+// Accomodate host pass for device functions that are not [[noreturn]]
+#if defined(KOKKOS_ENABLE_SYCL) || \
+    (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK))
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE
 #else
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE KOKKOS_IMPL_ABORT_NORETURN
