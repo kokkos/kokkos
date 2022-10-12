@@ -1619,11 +1619,11 @@ struct TestTeamPolicyHandleByValue {
 namespace {
 template <typename ExecutionSpace>
 struct TestRepeatedTeamReduce {
-  using TeamPolicy          = Kokkos::TeamPolicy<ExecutionSpace>;
   static constexpr int ncol = 1500;  // nothing special, just some work
 
   KOKKOS_FUNCTION void operator()(
-      const typename TeamPolicy::member_type &team) const {
+      const typename Kokkos::TeamPolicy<ExecutionSpace>::member_type &team)
+      const {
     // non-divisible by power of two to make triggering problems easier
     constexpr int nlev = 129;
     constexpr auto pi  = Kokkos::numbers::pi;
@@ -1659,13 +1659,14 @@ struct TestRepeatedTeamReduce {
 
   void test() {
     int team_size_recommended =
-        TeamPolicy(1, 1).team_size_recommended(*this, Kokkos::ParallelForTag());
+        Kokkos::TeamPolicy<ExecutionSpace>(1, 1).team_size_recommended(
+            *this, Kokkos::ParallelForTag());
     // Choose a non-recommened (non-power of two for GPUs) team size
     int team_size = team_size_recommended > 1 ? team_size_recommended - 1 : 1;
 
-    for (int it = 0; it < 1000; ++it) {
-      Kokkos::parallel_for(TeamPolicy(ncol, team_size, 1), *this);
-      Kokkos::fence();
+    for (int it = 0; it < 100; ++it) {
+      Kokkos::parallel_for(
+          Kokkos::TeamPolicy<ExecutionSpace>(ncol, team_size, 1), *this);
 
       int bad = 0;
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, ncol),
