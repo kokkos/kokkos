@@ -1664,6 +1664,7 @@ struct TestRepeatedTeamReduce {
     // Choose a non-recommened (non-power of two for GPUs) team size
     int team_size = team_size_recommended > 1 ? team_size_recommended - 1 : 1;
 
+    // The failure was non-deterministic so run the test a bunch of times
     for (int it = 0; it < 100; ++it) {
       Kokkos::parallel_for(
           Kokkos::TeamPolicy<ExecutionSpace>(ncol, team_size, 1), *this);
