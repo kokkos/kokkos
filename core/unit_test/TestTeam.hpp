@@ -1629,6 +1629,8 @@ struct TestRepeatedTeamReduce {
     constexpr auto pi  = Kokkos::numbers::pi;
     double b           = 0.;
     for (int ri = 0; ri < 10; ++ri) {
+      // The contributions here must be sufficiently complex, simply adding ones
+      // wasn't enough to trigger the bug.
       const auto g1 = [&](const int k, double &acc) {
         acc += Kokkos::cos(pi * double(k) / nlev);
       };
