@@ -978,7 +978,7 @@ struct checkScan {
       }
     }
     for (int i = 0; i < host_outputs.extent_int(0); ++i)
-      ASSERT_EQ(host_outputs(i), expected(i));
+      ASSERT_EQ(host_outputs(i), expected(i)) << "differ at index " << i;
   }
 };
 }  // namespace VectorScanReducer
@@ -987,7 +987,10 @@ struct checkScan {
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
+#if !(defined(KOKKOS_ENABLE_CUDA) && \
+      defined(KOKKOS_COMPILER_NVHPC))  // FIXME_NVHPC
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(2)));
+#endif
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(3)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(4)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(5)));
@@ -1033,6 +1036,13 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
 
   constexpr int n              = 1000000;
   constexpr int n_vector_range = 100;
+
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "All but max inclusive scan differ at index 101";
+  }
+#endif
 
   checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
             Kokkos::Prod<T, TEST_EXECSPACE>>()
