@@ -67,7 +67,7 @@ namespace Impl {
 #if defined(KOKKOS_ARCH_AVX512XEON)
 using host_native = avx512_fixed_size<8>;
 #elif defined(KOKKOS_ARCH_AVX2)
-using host_native = avx2_fixed_size<4>;
+using host_native  = avx2_fixed_size<4>;
 #else
 using host_native  = scalar;
 #endif
