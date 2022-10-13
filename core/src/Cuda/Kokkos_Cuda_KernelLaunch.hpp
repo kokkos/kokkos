@@ -231,17 +231,6 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
     Policy const&, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     int& prefer_shmem) {
-  // Calculate maximum number of blocks that can simultaneously run on a SM
-  // based on the block size requested.
-  int const block_size   = block.x * block.y * block.z;
-  int max_blocks_threads = properties.maxThreadsPerMultiProcessor / block_size;
-
-  // Calculate the maximum number of blocks that can simultaneously run based on
-  // the number of registers.
-  int const regs_per_sm     = properties.regsPerMultiprocessor;
-  int const regs_per_thread = attributes.numRegs;
-  int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
-
   // Returns approximately half of the configurable cache size.
   size_t const shmem_per_sm_prefer_equal =
       get_shmem_per_sm_prefer_equal(properties);
