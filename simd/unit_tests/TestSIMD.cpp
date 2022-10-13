@@ -318,6 +318,15 @@ inline void host_check_math_ops() {
 }
 
 template <class Abi>
+inline void host_check_mask_ops() {
+  using mask_type = Kokkos::Experimental::simd_mask<double, Abi>;
+  EXPECT_FALSE(none_of(mask_type(true)));
+  EXPECT_TRUE(none_of(mask_type(false)));
+  EXPECT_TRUE(all_of(mask_type(true)));
+  EXPECT_FALSE(all_of(mask_type(false)));
+}
+
+template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
   std::size_t constexpr n     = 11;
   double const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
@@ -331,13 +340,25 @@ KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
 }
 
 template <class Abi>
+KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
+  using mask_type = Kokkos::Experimental::simd_mask<double, Abi>;
+  kokkos_checker checker;
+  checker.truth(!none_of(mask_type(true)));
+  checker.truth(none_of(mask_type(false)));
+  checker.truth(all_of(mask_type(true)));
+  checker.truth(!all_of(mask_type(false)));
+}
+
+template <class Abi>
 inline void host_check_abi() {
   host_check_math_ops<Abi>();
+  host_check_mask_ops<Abi>();
 }
 
 template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_abi() {
   device_check_math_ops<Abi>();
+  device_check_mask_ops<Abi>();
 }
 
 inline void host_check_abis(Kokkos::Experimental::Impl::abi_set<>) {}
