@@ -34,73 +34,37 @@ void unlock_address(void* ptr, MemoryScope ms);
 namespace desul {
 namespace Impl {
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 1, T> host_atomic_exchange(T* const dest,
                                                          T val,
-                                                         MemoryOrderRelaxed,
+                                                         MemoryOrder,
                                                          MemoryScope) {
   char return_val = _InterlockedExchange8((char*)dest, *((char*)&val));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 2, T> host_atomic_exchange(T* const dest,
                                                          T val,
-                                                         MemoryOrderRelaxed,
+                                                         MemoryOrder,
                                                          MemoryScope) {
   short return_val = _InterlockedExchange16((short*)dest, *((short*)&val));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 4, T> host_atomic_exchange(T* const dest,
                                                          T val,
-                                                         MemoryOrderRelaxed,
+                                                         MemoryOrder,
                                                          MemoryScope) {
   long return_val = _InterlockedExchange((long*)dest, *((long*)&val));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 8, T> host_atomic_exchange(T* const dest,
                                                          T val,
-                                                         MemoryOrderRelaxed,
-                                                         MemoryScope) {
-  __int64 return_val = _InterlockedExchange64((__int64*)dest, *((__int64*)&val));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 1, T> host_atomic_exchange(T* const dest,
-                                                         T val,
-                                                         MemoryOrderSeqCst,
-                                                         MemoryScope) {
-  char return_val = _InterlockedExchange8((char*)dest, *((char*)&val));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 2, T> host_atomic_exchange(T* const dest,
-                                                         T val,
-                                                         MemoryOrderSeqCst,
-                                                         MemoryScope) {
-  short return_val = _InterlockedExchange16((short*)dest, *((short*)&val));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 4, T> host_atomic_exchange(T* const dest,
-                                                         T val,
-                                                         MemoryOrderSeqCst,
-                                                         MemoryScope) {
-  long return_val = _InterlockedExchange((long*)dest, *((long*)&val));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 8, T> host_atomic_exchange(T* const dest,
-                                                         T val,
-                                                         MemoryOrderSeqCst,
+                                                         MemoryOrder,
                                                          MemoryScope) {
   __int64 return_val = _InterlockedExchange64((__int64*)dest, *((__int64*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -123,84 +87,41 @@ host_atomic_exchange(T* const dest, T val, MemoryOrder, MemoryScope scope) {
   return return_val;
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 1, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T compare, T val, MemoryOrder, MemoryScope) {
   char return_val =
       _InterlockedCompareExchange8((char*)dest, *((char*)&val), *((char*)&compare));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 2, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T compare, T val, MemoryOrder, MemoryScope) {
   short return_val =
       _InterlockedCompareExchange16((short*)dest, *((short*)&val), *((short*)&compare));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 4, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T compare, T val, MemoryOrder, MemoryScope) {
   long return_val =
       _InterlockedCompareExchange((long*)dest, *((long*)&val), *((long*)&compare));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 8, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T compare, T val, MemoryOrder, MemoryScope) {
   __int64 return_val = _InterlockedCompareExchange64(
       (__int64*)dest, *((__int64*)&val), *((__int64*)&compare));
   return *(reinterpret_cast<T*>(&return_val));
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<sizeof(T) == 16, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
-  Dummy16ByteValue* val16 = reinterpret_cast<Dummy16ByteValue*>(&val);
-  (void)_InterlockedCompareExchange128(reinterpret_cast<__int64*>(dest),
-                                       val16->value2,
-                                       val16->value1,
-                                       (reinterpret_cast<__int64*>(&compare)));
-  return compare;
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 1, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
-  char return_val =
-      _InterlockedCompareExchange8((char*)dest, *((char*)&val), *((char*)&compare));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 2, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
-  short return_val =
-      _InterlockedCompareExchange16((short*)dest, *((short*)&val), *((short*)&compare));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 4, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
-  long return_val =
-      _InterlockedCompareExchange((long*)dest, *((long*)&val), *((long*)&compare));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 8, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
-  __int64 return_val = _InterlockedCompareExchange64(
-      (__int64*)dest, *((__int64*)&val), *((__int64*)&compare));
-  return *(reinterpret_cast<T*>(&return_val));
-}
-
-template <class T, class MemoryScope>
-std::enable_if_t<sizeof(T) == 16, T> host_atomic_compare_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
+    T* const dest, T compare, T val, MemoryOrder, MemoryScope) {
   Dummy16ByteValue* val16 = reinterpret_cast<Dummy16ByteValue*>(&val);
   (void)_InterlockedCompareExchange128(reinterpret_cast<__int64*>(dest),
                                        val16->value2,
