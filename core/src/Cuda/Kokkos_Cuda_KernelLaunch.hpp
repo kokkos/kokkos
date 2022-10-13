@@ -242,9 +242,6 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   int const regs_per_thread = attributes.numRegs;
   int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
 
-  // Set active_blocks to be the maximum of the two.
-  int const active_blocks = std::max({max_blocks_threads, max_blocks_regs});
-
   // Returns approximately half of the configurable cache size.
   size_t const shmem_per_sm_prefer_equal =
       get_shmem_per_sm_prefer_equal(properties);
