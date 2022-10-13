@@ -109,7 +109,7 @@ class ThreadsExec {
   // Which thread am I stealing from currently
   int m_current_steal_target;
   // This thread's owned work_range
-  Kokkos::pair<long, long> m_work_range __attribute__((aligned(16)));
+  alignas(16) Kokkos::pair<long, long> m_work_range;
   // Team Offset if one thread determines work_range for others
   long m_team_work_index;
 
