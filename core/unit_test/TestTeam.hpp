@@ -1626,7 +1626,7 @@ struct TestRepeatedTeamReduce {
       const {
     // non-divisible by power of two to make triggering problems easier
     constexpr int nlev = 129;
-    constexpr auto pi  = Kokkos::numbers::pi;
+    constexpr auto pi  = Kokkos::Experimental::pi_v<double>;
     double b           = 0.;
     for (int ri = 0; ri < 10; ++ri) {
       // The contributions here must be sufficiently complex, simply adding ones
