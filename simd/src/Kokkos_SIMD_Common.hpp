@@ -364,7 +364,7 @@ template <class T, class Abi>
     const_where_expression<simd_mask<T, Abi>,
                            simd<T, Abi>> const&
         x,
-    double, std::plus<>) {
+    T, std::plus<>) {
   auto const& v = x.value();
   auto const& m = x.mask();
   auto result = Kokkos::reduction_identity<T>::sum();
