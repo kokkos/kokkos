@@ -109,7 +109,7 @@ std::enable_if_t<sizeof(T) == 8, T> host_atomic_exchange(T* const dest,
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8),
                  T>
-atomic_exchange(T* const dest, T val, MemoryOrder, MemoryScope scope) {
+host_atomic_exchange(T* const dest, T val, MemoryOrder, MemoryScope scope) {
   while (!lock_address((void*)dest, scope)) {
   }
   if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
@@ -213,7 +213,7 @@ template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 &&
                   sizeof(T) != 8 && sizeof(T) != 16),
                  T>
-atomic_compare_exchange(
+host_atomic_compare_exchange(
     T* const dest, T compare, T val, MemoryOrder, MemoryScope scope) {
   while (!lock_address((void*)dest, scope)) {
   }
