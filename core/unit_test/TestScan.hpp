@@ -230,7 +230,7 @@ struct TestSmallSizeTypeScan {
     ASSERT_EQ(total_errors, 0);
 
     if (use_total) {
-      ASSERT_EQ(res, N);
+      ASSERT_EQ(res, static_cast<T>(N));
     }
   }
 
