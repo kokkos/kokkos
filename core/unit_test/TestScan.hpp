@@ -175,7 +175,7 @@ struct TestSmallSizeTypeScan {
   using execution_space = Device;
   using value_type      = T;
 
-  TestSmallSizeTypeScan(const size_t N) : x("in", N) {
+  TestSmallSizeTypeScan(const size_t N, bool use_total) : x("in", N) {
     using exec_policy = Kokkos::RangePolicy<execution_space>;
 
     Kokkos::View<int, Device> errors_a("Errors");
@@ -184,10 +184,15 @@ struct TestSmallSizeTypeScan {
 
     Kokkos::deep_copy(x, 1);
 
-    Kokkos::parallel_scan(exec_policy(0, N), *this);
+    T res = T(0);
+
+    if (use_total)
+      Kokkos::parallel_scan(exec_policy(0, N), *this, res);
+    else
+      Kokkos::parallel_scan(exec_policy(0, N), *this);
     Kokkos::fence();
 
-    check_error();
+    check_error(res, N, use_total);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -197,14 +202,14 @@ struct TestSmallSizeTypeScan {
       x(i) = update;
 
       // We should have a nice count from 0 to 1...
-      if (update != static_cast< value_type >( i ) ) {
+      if (update != static_cast<value_type>(i)) {
         int fail = errors()++;
 
         // Limit the amount of output
         if (fail < 20) {
-          KOKKOS_IMPL_DO_NOT_USE_PRINTF("TestSmallSizeTypeScan(%d) = %ld != %ld\n", i,
-                                        static_cast<long>(update),
-                                        static_cast<long>(i));
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+              "TestSmallSizeTypeScan(%d) = %ld != %ld\n", i,
+              static_cast<long>(update), static_cast<long>(i));
         }
       }
     }
@@ -219,10 +224,14 @@ struct TestSmallSizeTypeScan {
     update += input;
   }
 
-  void check_error() {
+  void check_error(T res, std::size_t N, bool use_total) {
     int total_errors;
     Kokkos::deep_copy(total_errors, errors);
     ASSERT_EQ(total_errors, 0);
+
+    if (use_total) {
+      ASSERT_EQ(res, N);
+    }
   }
 
   Kokkos::View<int, Device, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
@@ -240,13 +249,29 @@ TEST(TEST_CATEGORY, scan) {
 }
 
 TEST(TEST_CATEGORY, small_size_scan) {
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(0);
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(5);
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(100);
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(std::numeric_limits<std::int8_t>::max());
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(0);
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(5);
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(10000);
-  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(std::numeric_limits<std::int16_t>::max());
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(0, false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(5, false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(100, false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(
+      std::numeric_limits<std::int8_t>::max(), false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(0, false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(5, false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(10000, false);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(
+      std::numeric_limits<std::int16_t>::max(), false);
+  TEST_EXECSPACE().fence();
+}
+
+TEST(TEST_CATEGORY, small_size_scan_total) {
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(0, true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(5, true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(100, true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int8_t>(
+      std::numeric_limits<std::int8_t>::max(), true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(0, true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(5, true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(10000, true);
+  TestSmallSizeTypeScan<TEST_EXECSPACE, std::int16_t>(
+      std::numeric_limits<std::int16_t>::max(), true);
   TEST_EXECSPACE().fence();
 }
