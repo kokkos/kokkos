@@ -469,9 +469,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   // smaller than int32_t (Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the scan is performed.
-  // Within the reduction, the word count is recomputed based on word_size_type
+  // Within the scan, the word count is recomputed based on word_size_type
   // and when calculating indexes into the shared/global memory buffers for
-  // performing the reduction, word_size_type is used again.
+  // performing the scan, word_size_type is used again.
   // For scalars > 4 bytes in size, indexing into shared/global memory relies
   // on the block and grid dimensions to ensure that we index at the correct
   // offset rather than at every 4 byte word; such that, when the join is
@@ -775,10 +775,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   // Conditionally set word_size_type to int16_t or int8_t if value_type is
   // smaller than int32_t (Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
-  // size, and global memory buffer size before the reduction is performed.
-  // Within the reduction, the word count is recomputed based on word_size_type
+  // size, and global memory buffer size before the scan is performed.
+  // Within the scan, the word count is recomputed based on word_size_type
   // and when calculating indexes into the shared/global memory buffers for
-  // performing the reduction, word_size_type is used again.
+  // performing the scan, word_size_type is used again.
   // For scalars > 4 bytes in size, indexing into shared/global memory relies
   // on the block and grid dimensions to ensure that we index at the correct
   // offset rather than at every 4 byte word; such that, when the join is
