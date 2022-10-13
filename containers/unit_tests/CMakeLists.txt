@@ -27,6 +27,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
         UnorderedMap
         Vector
         ViewCtorPropEmbeddedDim
+        PaddingPropagation
         )
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
