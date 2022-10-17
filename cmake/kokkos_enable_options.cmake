@@ -130,6 +130,24 @@ IF (KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
   SET(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ON)
 ENDIF()
 
+# Force consistency of KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+# and CMAKE_CUDA_SEPARABLE_COMPILATION when we are compiling
+# using the CMake CUDA language support.
+# Either one being on will turn the other one on.
+IF (KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+  IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+    IF (CMAKE_CUDA_SEPARABLE_COMPILATION)
+    ELSE()
+      SET(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    ENDIF()
+  ELSE()
+    IF (CMAKE_CUDA_SEPARABLE_COMPILATION)
+      SET(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE ON)
+    ELSE()
+    ENDIF()
+  ENDIF()
+ENDIF()
+
 # This is known to occur with Clang 9. We would need to use nvcc as the linker
 # http://lists.llvm.org/pipermail/cfe-dev/2018-June/058296.html
 # TODO: Through great effort we can use a different linker by hacking
