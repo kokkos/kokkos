@@ -450,11 +450,13 @@ IF (KOKKOS_ARCH_POWER9)
 ENDIF()
 
 IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
-  COMPILER_SPECIFIC_FLAGS(
-    Clang  -fcuda-rdc
-    NVIDIA --relocatable-device-code=true
-    NVHPC -gpu=rdc
-  )
+  IF (NOT KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+    COMPILER_SPECIFIC_FLAGS(
+      Clang  -fcuda-rdc
+      NVIDIA --relocatable-device-code=true
+      NVHPC -gpu=rdc
+    )
+  ENDIF()
 ELSEIF(KOKKOS_ENABLE_CUDA)
   COMPILER_SPECIFIC_FLAGS(
     NVHPC -gpu=nordc
