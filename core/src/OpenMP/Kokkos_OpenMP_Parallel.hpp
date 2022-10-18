@@ -362,6 +362,22 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                    0  // thread_local_bytes
     );
 
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
+      const pointer_type ptr =
+          m_result_ptr
+              ? m_result_ptr
+              : pointer_type(
+                    m_instance->get_thread_data(0)->pool_reduce_local());
+
+      reference_type update = final_reducer.init(ptr);
+
+      ParallelReduce::template exec_range<WorkTag>(m_functor, m_policy.begin(),
+                                                   m_policy.end(), update);
+
+      final_reducer.final(ptr);
+      return;
+    }
     const int pool_size = m_instance->thread_pool_size();
 #pragma omp parallel num_threads(pool_size)
     {
@@ -507,11 +523,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   inline void execute() const {
-    enum {
-      is_dynamic = std::is_same<typename Policy::schedule_type::type,
-                                Kokkos::Dynamic>::value
-    };
-
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
 
@@ -526,6 +537,29 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     typename Analysis::Reducer final_reducer(
         &ReducerConditional::select(m_functor, m_reducer));
+
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
+      const pointer_type ptr =
+          m_result_ptr
+              ? m_result_ptr
+              : pointer_type(
+                    m_instance->get_thread_data(0)->pool_reduce_local());
+
+      reference_type update = final_reducer.init(ptr);
+
+      ParallelReduce::exec_range(m_mdr_policy, m_functor, m_policy.begin(),
+                                 m_policy.end(), update);
+
+      final_reducer.final(ptr);
+
+      return;
+    }
+
+    enum {
+      is_dynamic = std::is_same<typename Policy::schedule_type::type,
+                                Kokkos::Dynamic>::value
+    };
 
     const int pool_size = m_instance->thread_pool_size();
 #pragma omp parallel num_threads(pool_size)
@@ -695,6 +729,19 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
+      typename Analysis::Reducer final_reducer(&m_functor);
+
+      reference_type update = final_reducer.init(
+          pointer_type(m_instance->get_thread_data(0)->pool_reduce_local()));
+
+      ParallelScan::template exec_range<WorkTag>(m_functor, m_policy.begin(),
+                                                 m_policy.end(), update, true);
+
+      return;
+    }
+
 #pragma omp parallel num_threads(m_instance->thread_pool_size())
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
@@ -810,6 +857,21 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    ,
                                    0  // thread_local_bytes
     );
+
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
+      typename Analysis::Reducer final_reducer(&m_functor);
+
+      reference_type update = final_reducer.init(
+          pointer_type(m_instance->get_thread_data(0)->pool_reduce_local()));
+
+      this->template exec_range<WorkTag>(m_functor, m_policy.begin(),
+                                         m_policy.end(), update, true);
+
+      m_returnvalue = update;
+
+      return;
+    }
 
 #pragma omp parallel num_threads(m_instance->thread_pool_size())
     {
@@ -962,6 +1024,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
+
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
+      ParallelFor::template exec_team<WorkTag>(
+          m_functor, *(m_instance->get_thread_data()), 0,
+          m_policy.league_size(), m_policy.league_size());
+      return;
+    }
 
 #pragma omp parallel num_threads(m_instance->thread_pool_size())
     {
@@ -1116,6 +1186,23 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
+
+    if (OpenMP::in_parallel() &&
+        !(omp_get_nested() && (omp_get_level() == 1))) {
+      HostThreadTeamData& data = *(m_instance->get_thread_data());
+      pointer_type ptr =
+          m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local());
+      reference_type update       = final_reducer.init(ptr);
+      const int league_rank_begin = 0;
+      const int league_rank_end   = m_policy.league_size();
+      ParallelReduce::template exec_team<WorkTag>(
+          m_functor, data, update, league_rank_begin, league_rank_end,
+          m_policy.league_size());
+
+      final_reducer.final(ptr);
+
+      return;
+    }
 
     const int pool_size = m_instance->thread_pool_size();
 #pragma omp parallel num_threads(pool_size)

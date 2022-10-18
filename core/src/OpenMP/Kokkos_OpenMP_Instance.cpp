@@ -161,10 +161,7 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
 
     memory_fence();
 
-#pragma omp parallel num_threads(m_pool_size)
-    {
-      const int rank = omp_get_thread_num();
-
+    for (int rank = 0; rank < m_pool_size; ++rank) {
       if (nullptr != m_pool[rank]) {
         m_pool[rank]->disband_pool();
 
