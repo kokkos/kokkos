@@ -102,7 +102,6 @@
 - Deprecate command line arguments (other than `--help`) that are not prefixed with `kokkos-*` [\#5120](https://github.com/kokkos/kokkos/pull/5120)
 - Deprecate `--[kokkos-]numa` cmdline arg and `KOKKOS_NUMA` env var [\#5117](https://github.com/kokkos/kokkos/pull/5117)
 - Deprecate `--[kokkos-]threads` command line argument in favor of `--[kokkos-]num-threads` [\#5111](https://github.com/kokkos/kokkos/pull/5111)
-- Deprecate `Kokkos::common_view_alloc_prop` [\#5059](https://github.com/kokkos/kokkos/pull/5059)
 - Deprecate `Kokkos::is_reducer_type` [\#4957](https://github.com/kokkos/kokkos/pull/4957)
 - Deprecate `OffsetView` constructors taking `index_list_type` [\#4810](https://github.com/kokkos/kokkos/pull/4810)
 - Deprecate overloads of `Kokkos::sort` taking a parameter `bool always_use_kokkos_sort` [\#5382](https://github.com/kokkos/kokkos/issues/5382)
