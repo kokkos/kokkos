@@ -434,6 +434,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
            "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
            "MPI_LOCALRANKID",             // MPICH
            "SLURM_LOCALID",               // SLURM
+           "PMI_LOCAL_RANK"               // PMI
        }) {
     local_rank_str = std::getenv(env_var);
     if (local_rank_str) break;
