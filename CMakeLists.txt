@@ -126,6 +126,9 @@ ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
 ENDIF()
 
+# Load either the real TriBITS or a TriBITS wrapper
+# for certain utility functions that are universal (like GLOBAL_SET)
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
 
 set(Kokkos_VERSION_MAJOR 3)
 set(Kokkos_VERSION_MINOR 7)
@@ -139,9 +142,6 @@ math(EXPR KOKKOS_VERSION_MAJOR "${KOKKOS_VERSION} / 10000")
 math(EXPR KOKKOS_VERSION_MINOR "${KOKKOS_VERSION} / 100 % 100")
 math(EXPR KOKKOS_VERSION_PATCH "${KOKKOS_VERSION} % 100")
 
-# Load either the real TriBITS or a TriBITS wrapper
-# for certain utility functions that are universal (like GLOBAL_SET)
-INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
 
 IF (Kokkos_ENABLE_CUDA)
   # If we are building CUDA, we have tricked CMake because we declare a CXX project
