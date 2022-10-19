@@ -816,6 +816,12 @@ SET(DEFAULT_DEVICE_SOURCES
 if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET) OR (KOKKOS_ENABLE_SYCL))
   LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
 endif()
+# The SharedSpace test is sensible to running tests in parallel (as done by the Trilinos nightlies).
+# Thus the test is disabled for Trilinos builds.
+if(KOKKOS_HAS_TRILINOS)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
+endif()
+
 # FIXME_OPENMPTARGET and FIXME_OPENACC do not provide a HostPinnedMemorySpace that can be accessed from all ExecSpaces
 if ((KOKKOS_ENABLE_OPENACC) OR (KOKKOS_ENABLE_OPENMPTARGET))
   LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedHostPinnedSpace.cpp)
