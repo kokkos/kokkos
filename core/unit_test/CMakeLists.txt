@@ -93,6 +93,7 @@ KOKKOS_ADD_EXECUTABLE(
 if (WIN32)
   KOKKOS_ADD_EXECUTABLE(
     TestCompileOnlyWindowsInclude
+    SOURCES
     TestWindowsInclude.cpp
     TestCompileMain.cpp
     )
