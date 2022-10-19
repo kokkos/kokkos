@@ -90,14 +90,14 @@ KOKKOS_ADD_EXECUTABLE(
   ${COMPILE_ONLY_SOURCES}
 )
 
-if (WIN32)
+if(WIN32)
   KOKKOS_ADD_EXECUTABLE(
     TestCompileOnlyWindowsInclude
     SOURCES
     TestWindowsInclude.cpp
     TestCompileMain.cpp
     )
-endif (WIN32)
+endif()
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
   string(TOUPPER ${Tag} DEVICE)
