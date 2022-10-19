@@ -1064,9 +1064,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
       endif
     endif
   endif
-  ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
-    KOKKOS_CXXFLAGS += --expt-extended-lambda
-  endif
 endif
 
 
