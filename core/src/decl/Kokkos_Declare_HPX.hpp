@@ -47,6 +47,7 @@
 
 #if defined(KOKKOS_ENABLE_HPX)
 #include <Kokkos_HPX.hpp>
+#include <HPX/Kokkos_HPX_MDRangePolicy.hpp>
 #endif
 
 #endif

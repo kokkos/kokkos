@@ -17,9 +17,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifdef DESUL_HAVE_MSVC_ATOMICS
 #include <desul/atomics/Thread_Fence_MSVC.hpp>
 #endif
-#ifdef DESUL_HAVE_SERIAL_ATOMICS
-#include <desul/atomics/Thread_Fence_Serial.hpp>
-#endif
 #ifdef DESUL_HAVE_CUDA_ATOMICS
 #include <desul/atomics/Thread_Fence_CUDA.hpp>
 #endif

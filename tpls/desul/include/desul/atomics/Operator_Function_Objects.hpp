@@ -18,7 +18,7 @@ namespace desul {
 namespace Impl {
 
 template <class Scalar1, class Scalar2>
-struct MaxOper {
+struct max_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 > val2 ? val1 : val2);
@@ -30,7 +30,7 @@ struct MaxOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct MinOper {
+struct min_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 < val2 ? val1 : val2);
@@ -70,55 +70,55 @@ constexpr DESUL_FUNCTION
 }
 
 template <class Scalar1, class Scalar2>
-struct AddOper {
+struct add_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 + val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct SubOper {
+struct sub_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 - val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct MulOper {
+struct mul_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 * val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct DivOper {
+struct div_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 / val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct ModOper {
+struct mod_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 % val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct AndOper {
+struct and_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 & val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct OrOper {
+struct or_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 | val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct XorOper {
+struct xor_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) { return val1 ^ val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct NandOper {
+struct nand_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return ~(val1 & val2);
@@ -126,7 +126,7 @@ struct NandOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct LShiftOper {
+struct lshift_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return val1 << val2;
@@ -134,7 +134,7 @@ struct LShiftOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct RShiftOper {
+struct rshift_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return val1 >> val2;
@@ -142,7 +142,7 @@ struct RShiftOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct IncModOper {
+struct inc_mod_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return ((val1 >= val2) ? Scalar1(0) : val1 + Scalar1(1));
@@ -150,7 +150,7 @@ struct IncModOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct DecModOper {
+struct dec_mod_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (((val1 == Scalar1(0)) | (val1 > val2)) ? val2 : (val1 - Scalar1(1)));
@@ -158,13 +158,13 @@ struct DecModOper {
 };
 
 template <class Scalar1, class Scalar2>
-struct StoreOper {
+struct store_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1&, const Scalar2& val2) { return val2; }
 };
 
 template <class Scalar1, class Scalar2>
-struct LoadOper {
+struct load_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2&) { return val1; }
 };

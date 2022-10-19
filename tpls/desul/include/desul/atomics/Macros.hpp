@@ -11,15 +11,14 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 // Macros
 
-#if (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) &&                       \
-    (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) &&    \
-    !defined(__SYCL_DEVICE_ONLY__) && !defined(DESUL_HAVE_OPENMP_ATOMICS) && \
-    !defined(DESUL_HAVE_SERIAL_ATOMICS)
+#if (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) &&                    \
+    (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
+    !defined(__SYCL_DEVICE_ONLY__) && !defined(DESUL_HAVE_OPENMP_ATOMICS)
 #define DESUL_IMPL_HAVE_GCC_OR_MSVC_ATOMICS
 #endif
 
 // ONLY use GNUC atomics if not compiling for the device
-// and we didn't explicitly say to use OPENMP or SERIAL atomics
+// and we didn't explicitly say to use OpenMP atomics
 #if defined(__GNUC__) && defined(DESUL_IMPL_HAVE_GCC_OR_MSVC_ATOMICS)
 #define DESUL_HAVE_GCC_ATOMICS
 #endif
@@ -53,10 +52,14 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_FORCEINLINE_FUNCTION inline __host__ __device__
 #define DESUL_INLINE_FUNCTION inline __host__ __device__
 #define DESUL_FUNCTION __host__ __device__
+#define DESUL_IMPL_HOST_FUNCTION __host__
+#define DESUL_IMPL_DEVICE_FUNCTION __device__
 #else
 #define DESUL_FORCEINLINE_FUNCTION inline
 #define DESUL_INLINE_FUNCTION inline
 #define DESUL_FUNCTION
+#define DESUL_IMPL_HOST_FUNCTION
+#define DESUL_IMPL_DEVICE_FUNCTION
 #endif
 
 #if !defined(DESUL_HAVE_GPU_LIKE_PROGRESS)

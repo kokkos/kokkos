@@ -79,7 +79,11 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
   Policy const& get_policy() const { return m_policy; }
 
   __device__ inline void operator()() const noexcept {
-    if (0 == (threadIdx.y % 16)) {
+    // The following makes most threads idle,
+    // which helps significantly with throughput due to reducing conflict rates
+    // on the work acquisition, updated based on perf experiments of the
+    // static Fibonacci experiment on Volta
+    if (0 == (threadIdx.y % 4)) {
       // Spin until COMPLETED_TOKEN.
       // END_TOKEN indicates no work is currently available.
 
@@ -89,6 +93,12 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
           exec_one<typename Policy::work_tag>(w);
           m_policy.completed_work(w);
         }
+// On pre-volta architectures we need a __syncwarp here to prevent
+// infinite loops depending on the scheduling order above
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
+    defined(KOKKOS_ARCH_PASCAL)
+        __syncwarp(__activemask());
+#endif
       }
     }
   }

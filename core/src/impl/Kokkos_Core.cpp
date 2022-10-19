@@ -428,11 +428,16 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     Kokkos::abort("implementation bug");
   }
 
-  auto const* local_rank_str =
-      std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
-  if (!local_rank_str)
-    local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
-  if (!local_rank_str) local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
+  char const* local_rank_str = nullptr;
+  for (char const* env_var : {
+           "OMPI_COMM_WORLD_LOCAL_RANK",  // OpenMPI
+           "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
+           "MPI_LOCALRANKID",             // MPICH
+           "SLURM_LOCALID",               // SLURM
+       }) {
+    local_rank_str = std::getenv(env_var);
+    if (local_rank_str) break;
+  }
 
   // use first GPU available for execution if unable to detect local MPI rank
   if (!local_rank_str) {
@@ -774,7 +779,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMPERE86)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMPERE86");
-
+#elif defined(KOKKOS_ARCH_HOPPER90)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "HOPPER90");
 #elif defined(KOKKOS_ARCH_VEGA900)
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA900");
 #elif defined(KOKKOS_ARCH_VEGA906)
@@ -806,7 +813,7 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
-void finalize_internal() {
+void pre_finalize_internal() {
   typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
   while (!finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
@@ -835,9 +842,9 @@ void finalize_internal() {
   }
 
   Kokkos::Profiling::finalize();
+}
 
-  Kokkos::Impl::ExecSpaceManager::get_instance().finalize_spaces();
-
+void post_finalize_internal() {
   g_is_initialized = false;
   g_is_finalized   = true;
   g_show_warnings  = true;
@@ -1225,6 +1232,10 @@ void Kokkos::Impl::post_initialize(const InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
+void Kokkos::Impl::pre_finalize() { pre_finalize_internal(); }
+
+void Kokkos::Impl::post_finalize() { post_finalize_internal(); }
+
 void Kokkos::push_finalize_hook(std::function<void()> f) {
   finalize_hooks.push(f);
 }
@@ -1238,7 +1249,9 @@ void Kokkos::finalize() {
   if (kokkos_finalize_was_called()) {
     Kokkos::abort("Error: Kokkos::finalize() has already been called.\n");
   }
-  finalize_internal();
+  pre_finalize_internal();
+  Impl::ExecSpaceManager::get_instance().finalize_spaces();
+  post_finalize_internal();
 }
 
 #ifdef KOKKOS_COMPILER_INTEL

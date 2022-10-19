@@ -42,16 +42,20 @@
 //@HEADER
 */
 
-#include <benchmark/benchmark.h>
+#ifndef KOKKOS_HPX_MDRANGEPOLICY_HPP_
+#define KOKKOS_HPX_MDRANGEPOLICY_HPP_
 
-void SomeFunction() { return; }
+#include <KokkosExp_MDRangePolicy.hpp>
 
-static void BM_SomeFunction(benchmark::State& state) {
-  // Perform setup here
-  for (auto _ : state) {
-    // This code gets timed
-    SomeFunction();
-  }
-}
+namespace Kokkos {
+namespace Impl {
 
-BENCHMARK(BM_SomeFunction);
+// Settings for TeamMDRangePolicy
+template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
+struct ThreadAndVectorNestLevel<Rank, Kokkos::Experimental::HPX,
+                                ThreadAndVector>
+    : HostBasedNestLevel<Rank, ThreadAndVector> {};
+
+}  // namespace Impl
+}  // namespace Kokkos
+#endif

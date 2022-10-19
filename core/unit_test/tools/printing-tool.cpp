@@ -78,7 +78,7 @@ extern "C" void kokkosp_end_parallel_reduce(const uint64_t kID) {
   std::cout << "kokkosp_end_parallel_reduce:" << kID << "::";
 }
 
-extern "C" void kokkosp_push_profile_region(char* regionName) {
+extern "C" void kokkosp_push_profile_region(const char* regionName) {
   std::cout << "kokkosp_push_profile_region:" << regionName << "::";
 }
 
@@ -87,13 +87,13 @@ extern "C" void kokkosp_pop_profile_region() {
 }
 
 extern "C" void kokkosp_allocate_data(SpaceHandle handle, const char* name,
-                                      void* ptr, uint64_t size) {
+                                      const void* ptr, uint64_t size) {
   std::cout << "kokkosp_allocate_data:" << handle.name << ":" << name << ":"
             << ptr << ":" << size << "::";
 }
 
 extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
-                                        void* ptr, uint64_t size) {
+                                        const void* ptr, uint64_t size) {
   std::cout << "kokkosp_deallocate_data:" << handle.name << ":" << name << ":"
             << ptr << ":" << size << "::";
 }

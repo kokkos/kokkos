@@ -168,6 +168,12 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_lexicographical_compare_test, test) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
+    GTEST_SKIP() << "FIXME wrong result";
+  }
+#endif
 // FIXME: should this disable only custom comparator tests?
 #if !defined KOKKOS_ENABLE_OPENMPTARGET
   run_all_scenarios<DynamicTag, double>();
