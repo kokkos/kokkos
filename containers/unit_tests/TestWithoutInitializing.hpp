@@ -113,43 +113,51 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
 }
 
 TEST(TEST_CATEGORY, resize_exec_space_dualview) {
-  using namespace Kokkos::Test::Tools;
-  listen_tool_events(Config::DisableAll(), Config::EnableFences(),
-                     Config::EnableKernels());
-  Kokkos::DualView<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6,
-                                                              5);
-
-  auto success = validate_absence(
-      [&]() {
-        Kokkos::resize(
-            Kokkos::view_alloc(TEST_EXECSPACE{}, Kokkos::WithoutInitializing),
-            bla, 5, 6, 7, 8);
-        EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
-      },
-      [&](BeginFenceEvent event) {
-        if (event.descriptor().find("Kokkos::resize(View)") !=
-            std::string::npos)
-          return MatchDiagnostic{true, {"Found begin event"}};
-        return MatchDiagnostic{false};
-      },
-      [&](EndFenceEvent event) {
-        if (event.descriptor().find("Kokkos::resize(View)") !=
-            std::string::npos)
-          return MatchDiagnostic{true, {"Found end event"}};
-        return MatchDiagnostic{false};
-      },
-      [&](BeginParallelForEvent event) {
-        if (event.descriptor().find("initialization") != std::string::npos)
-          return MatchDiagnostic{true, {"Found begin event"}};
-        return MatchDiagnostic{false};
-      },
-      [&](EndParallelForEvent event) {
-        if (event.descriptor().find("initialization") != std::string::npos)
-          return MatchDiagnostic{true, {"Found end event"}};
-        return MatchDiagnostic{false};
-      });
-  ASSERT_TRUE(success);
-  listen_tool_events(Config::DisableAll());
+  constexpr bool exec_space_can_access_host_space =
+      Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible;
+  if constexpr (!exec_space_can_access_host_space) {
+    GTEST_SKIP() << "skipping since execution space can't access HostSpace";
+  } else {
+    using namespace Kokkos::Test::Tools;
+    listen_tool_events(Config::DisableAll(), Config::EnableFences(),
+                       Config::EnableKernels());
+    Kokkos::DualView<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6,
+                                                                5);
+    auto success = validate_absence(
+        [&]() {
+          // not quite sure why this is necessary
+          if constexpr (exec_space_can_access_host_space) {
+            Kokkos::resize(Kokkos::view_alloc(TEST_EXECSPACE{},
+                                              Kokkos::WithoutInitializing),
+                           bla, 5, 6, 7, 8);
+            EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
+          }
+        },
+        [&](BeginFenceEvent event) {
+          if (event.descriptor().find("Kokkos::resize(View)") !=
+              std::string::npos)
+            return MatchDiagnostic{true, {"Found begin event"}};
+          return MatchDiagnostic{false};
+        },
+        [&](EndFenceEvent event) {
+          if (event.descriptor().find("Kokkos::resize(View)") !=
+              std::string::npos)
+            return MatchDiagnostic{true, {"Found end event"}};
+          return MatchDiagnostic{false};
+        },
+        [&](BeginParallelForEvent event) {
+          if (event.descriptor().find("initialization") != std::string::npos)
+            return MatchDiagnostic{true, {"Found begin event"}};
+          return MatchDiagnostic{false};
+        },
+        [&](EndParallelForEvent event) {
+          if (event.descriptor().find("initialization") != std::string::npos)
+            return MatchDiagnostic{true, {"Found end event"}};
+          return MatchDiagnostic{false};
+        });
+    ASSERT_TRUE(success);
+    listen_tool_events(Config::DisableAll());
+  }
 }
 
 TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
@@ -476,7 +484,7 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynrankview_viewctor) {
         ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
-                               Kokkos::DefaultExecutionSpace{}),
+                               Kokkos::DefaultHostExecutionSpace{}),
             host_view);
         ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
@@ -547,14 +555,16 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
         ASSERT_EQ(device_view.size(), mirror_device.size());
-        auto mirror_host = Kokkos::create_mirror(Kokkos::WithoutInitializing,
-                                                 TEST_EXECSPACE{}, host_view);
+        auto mirror_host = Kokkos::create_mirror(
+            Kokkos::WithoutInitializing, Kokkos::DefaultHostExecutionSpace{},
+            host_view);
         ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, device_view);
         ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
-            Kokkos::WithoutInitializing, TEST_EXECSPACE{}, host_view);
+            Kokkos::WithoutInitializing, Kokkos::DefaultHostExecutionSpace{},
+            host_view);
         ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },
       [&](BeginParallelForEvent) {
@@ -581,7 +591,7 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
         ASSERT_EQ(device_view.size(), mirror_device.size());
         auto mirror_host = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
-                               Kokkos::DefaultExecutionSpace{}),
+                               Kokkos::DefaultHostExecutionSpace{}),
             host_view);
         ASSERT_EQ(host_view.size(), mirror_host.size());
         auto mirror_device_view = Kokkos::create_mirror_view(
@@ -589,7 +599,7 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
         ASSERT_EQ(device_view.size(), mirror_device_view.size());
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing,
-                               Kokkos::DefaultExecutionSpace{}),
+                               Kokkos::DefaultHostExecutionSpace{}),
             host_view);
         ASSERT_EQ(host_view.size(), mirror_host_view.size());
       },

@@ -58,13 +58,13 @@ TEST(kokkosp, create_mirror_no_init) {
       [&]() {
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
-        auto mirror_host =
-            Kokkos::create_mirror(Kokkos::WithoutInitializing,
-                                  Kokkos::DefaultExecutionSpace{}, host_view);
+        auto mirror_host = Kokkos::create_mirror(
+            Kokkos::WithoutInitializing, Kokkos::DefaultHostExecutionSpace{},
+            host_view);
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::WithoutInitializing, device_view);
         auto mirror_host_view = Kokkos::create_mirror_view(
-            Kokkos::WithoutInitializing, Kokkos::DefaultExecutionSpace{},
+            Kokkos::WithoutInitializing, Kokkos::DefaultHostExecutionSpace{},
             host_view);
       },
       [&](BeginParallelForEvent) {
@@ -91,7 +91,7 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
             device_view);
         auto mirror_host = Kokkos::create_mirror(
             Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing,
-                               Kokkos::DefaultExecutionSpace{}),
+                               Kokkos::DefaultHostExecutionSpace{}),
             host_view);
         auto mirror_device_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::HostSpace{},
@@ -99,7 +99,7 @@ TEST(kokkosp, create_mirror_no_init_view_ctor) {
             device_view);
         auto mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing,
-                               Kokkos::DefaultExecutionSpace{}),
+                               Kokkos::DefaultHostExecutionSpace{}),
             host_view);
         mirror_host_view = Kokkos::create_mirror_view(
             Kokkos::view_alloc(Kokkos::WithoutInitializing), host_view);
