@@ -1771,8 +1771,7 @@ KOKKOS_FUNCTION std::enable_if_t<
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
          Args...>>
 as_view_of_rank_n(View<T, Args...>) {
-  Kokkos::Impl::throw_runtime_exception(
-      "Trying to get at a View of the wrong rank");
+  Kokkos::abort("Trying to get at a View of the wrong rank");
   return {};
 }
 
