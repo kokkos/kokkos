@@ -58,7 +58,7 @@
 #include <impl/Kokkos_LinkedListNode.hpp>  // KOKKOS_EXPECTS
 
 #include <Kokkos_Atomic.hpp>  // atomic_compare_exchange, atomic_fence
-#include "Kokkos_LIFO.hpp"
+#include <impl/Kokkos_LIFO.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
