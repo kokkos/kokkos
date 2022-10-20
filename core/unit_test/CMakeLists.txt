@@ -79,6 +79,12 @@ SET(COMPILE_ONLY_SOURCES
   TestStringManipulation.cpp
   TestTypeList.cpp
 )
+
+#testing if windows.h and Kokkos_Core.hpp can be included
+if(WIN32)
+  LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
+endif()
+
 # TestInterOp has a dependency on containers
 IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
@@ -89,15 +95,6 @@ KOKKOS_ADD_EXECUTABLE(
   TestCompileMain.cpp
   ${COMPILE_ONLY_SOURCES}
 )
-
-if(WIN32)
-  KOKKOS_ADD_EXECUTABLE(
-    TestCompileOnlyWindowsInclude
-    SOURCES
-    TestWindowsInclude.cpp
-    TestCompileMain.cpp
-    )
-endif()
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
   string(TOUPPER ${Tag} DEVICE)
