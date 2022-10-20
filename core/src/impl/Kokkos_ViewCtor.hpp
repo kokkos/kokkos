@@ -287,11 +287,17 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
   } else
     return with_properties_if_unset(view_ctor_prop, properties...);
 
+  // A workaround placed to prevent spurious "missing return statement at the
+  // end of non-void function" warnings from CUDA builds (issue #5470). Because
+  // KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
+  // cuda_abort(), an unreachable while(true); is placed as a fallback method
   Kokkos::abort(
       "Prevents an incorrect warning: missing return statement at end of "
       "non-void function");
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   while (true)
     ;
+#endif
 }
 
 struct ExecutionSpaceTag {};
@@ -328,11 +334,17 @@ KOKKOS_FUNCTION const auto &get_property(
     return view_ctor_prop;
   }
 
+  // A workaround placed to prevent spurious "missing return statement at the
+  // end of non-void function" warnings from CUDA builds (issue #5470). Because
+  // KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
+  // cuda_abort(), an unreachable while(true); is placed as a fallback method
   Kokkos::abort(
       "Prevents an incorrect warning: missing return statement at end of "
       "non-void function");
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   while (true)
     ;
+#endif
 }
 #if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
 // pragma pop is getting a warning from the underlying GCC
