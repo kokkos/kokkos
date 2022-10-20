@@ -118,17 +118,6 @@ KOKKOS_IMPL_HOST_FUNCTION inline uint64_t clock_tic_host() noexcept {
 
   return (uint64_t)cycles;
 
-#elif defined(__powerpc) || defined(__powerpc__) || defined(__POWERPC__) || \
-    defined(__ppc__)
-
-  unsigned int lower_word = 0;
-  unsigned int upper_word = 0;
-
-  asm volatile("mftb %0" : "=r"(lower_word));
-  asm volatile("mftbu %0" : "=r"(upper_word));
-
-  return (((uint64_t)upper_word) << 32 | ((uint64_t)lower_word));
-
 #else
 
   return std::chrono::high_resolution_clock::now().time_since_epoch().count();
