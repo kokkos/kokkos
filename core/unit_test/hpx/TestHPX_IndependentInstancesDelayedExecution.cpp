@@ -38,9 +38,13 @@ TEST(hpx, independent_instances_delayed_execution) {
           Kokkos::Experimental::WorkItemProperty::HintLightWeight),
       KOKKOS_LAMBDA(int) { ran() = true; });
 
-  ASSERT_EQ(false, ran());
+#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+  ASSERT_TRUE(!ran());
+#else
+  ASSERT_TRUE(ran());
+#endif
   hpx.fence();
-  ASSERT_EQ(true, ran());
+  ASSERT_TRUE(ran());
 }
 
 }  // namespace
