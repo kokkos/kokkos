@@ -131,7 +131,7 @@ void test_malloc_free() {
   auto* temp =
       Kokkos::kokkos_malloc<fake_memory_space>("does_malloc_work", 1000);
   expect_deallocation_event("does_malloc_work", "TestSpace", "Error in free");
-  Kokkos::kokkos_free(temp);
+  Kokkos::kokkos_free<fake_memory_space>(temp);
   Kokkos::Tools::Experimental::pause_tools();
 }
 void test_chained_spaces() {

@@ -95,7 +95,7 @@ using DType_7 = DType *******;
 
 using pair_t = Kokkos::pair<int, int>;
 
-#define ASSERT_VIEW_OFFSET_STRIDES(view, offset, rank)     \
+#define TEST_VIEW_OFFSET_STRIDES(view, offset, rank)       \
   (view.stride(0) == offset.stride_0() || rank < 1) &&     \
       (view.stride(1) == offset.stride_1() || rank < 2) && \
       (view.stride(2) == offset.stride_2() || rank < 3) && \
@@ -105,7 +105,7 @@ using pair_t = Kokkos::pair<int, int>;
       (view.stride(6) == offset.stride_6() || rank < 7) && \
       (view.stride(7) == offset.stride_7() || rank < 8)
 
-#define ASSERT_VIEW_STRIDES(view1, view2, rank)           \
+#define TEST_VIEW_STRIDES(view1, view2, rank)             \
   (view1.stride(0) == view2.stride(0) || rank < 1) &&     \
       (view1.stride(1) == view2.stride(1) || rank < 2) && \
       (view1.stride(2) == view2.stride(2) || rank < 3) && \
@@ -116,7 +116,7 @@ using pair_t = Kokkos::pair<int, int>;
       (view1.stride(7) == view2.stride(7) || rank < 8)
 
 template <typename viewDim, typename layout, typename... Vals>
-typename std::enable_if_t<
+std::enable_if_t<
     std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value ||
         std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
     bool>
@@ -143,7 +143,7 @@ padding_has_effect(Vals... params) {
 }
 
 template <typename viewDim, typename layout, typename... Vals>
-typename std::enable_if_t<
+std::enable_if_t<
     !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value &&
         !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
     bool>
@@ -171,8 +171,7 @@ padding_has_effect(Vals... params) {
 
 template <typename dim_t, typename viewDim, typename layout,
           typename allow_padding, typename... Vals>
-typename std::enable_if_t<std::is_same<allow_padding, std::true_type>::value,
-                          bool>
+std::enable_if_t<std::is_same<allow_padding, std::true_type>::value, bool>
 padding_construction(int rank, Vals... params) {
   using view_t      = Kokkos::View<dim_t, layout>;
   using offset_t    = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
@@ -187,13 +186,12 @@ padding_construction(int rank, Vals... params) {
       Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
 
   view_t v(alloc_prop, params...);
-  return ASSERT_VIEW_OFFSET_STRIDES(v, offset, rank) ? true : false;
+  return TEST_VIEW_OFFSET_STRIDES(v, offset, rank) ? true : false;
 }
 
 template <typename dim_t, typename viewDim, typename layout,
           typename allow_padding, typename... Vals>
-typename std::enable_if_t<std::is_same<allow_padding, std::false_type>::value,
-                          bool>
+std::enable_if_t<std::is_same<allow_padding, std::false_type>::value, bool>
 padding_construction(int rank, Vals... params) {
   using view_t      = Kokkos::View<dim_t, layout>;
   using offset_t    = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
@@ -204,7 +202,7 @@ padding_construction(int rank, Vals... params) {
   offset_t offset = offset_t(padding(), layout(params...));
   auto alloc_prop = Kokkos::view_alloc("vDim" + std::to_string(rank));
   view_t v(alloc_prop, params...);
-  return ASSERT_VIEW_OFFSET_STRIDES(v, offset, rank);
+  return TEST_VIEW_OFFSET_STRIDES(v, offset, rank);
 }
 
 template <typename view_t, typename... Vals>
@@ -216,7 +214,7 @@ bool padding_assignment_and_copy(int rank, Vals... params) {
   view_t v(alloc_prop, params...);
   deep_copy(v, 1);
   auto v_mirror = Kokkos::create_mirror_view(v);
-  result &= ASSERT_VIEW_STRIDES(v_mirror, v, rank);
+  result &= TEST_VIEW_STRIDES(v_mirror, v, rank);
 
   /*deep_copy should support strided views if stride from padding*/
   Kokkos::deep_copy(v_mirror, v);
@@ -319,15 +317,15 @@ padding_subview_and_copy(int rank, Vals... params) {
   view_t v(alloc_prop, params...);
   auto v_sub        = get_subview<dim_t, layout, viewDim>(v);
   auto v_sub_mirror = Kokkos::create_mirror_view(v_sub);
-  result &= ASSERT_VIEW_STRIDES(v, v_sub, rank);
+  result &= TEST_VIEW_STRIDES(v, v_sub, rank);
   /* We never pad for rank 0 and rank 1 and for LR && dyn_rank > 1 */
-  result &= ASSERT_VIEW_STRIDES(v_sub, v_sub_mirror, rank);
+  result &= TEST_VIEW_STRIDES(v_sub, v_sub_mirror, rank);
   return result;
 }
 
 template <typename dim_t, typename viewDim, typename layout,
           typename allow_padding, typename... Vals>
-typename std::enable_if_t<
+std::enable_if_t<
     !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value &&
         !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
     bool>
@@ -339,11 +337,11 @@ padding_subview_and_copy(int rank, Vals... params) {
   view_t v(alloc_prop, params...);
   auto v_sub        = get_subview<dim_t, layout, viewDim>(v);
   auto v_sub_mirror = Kokkos::create_mirror_view(v_sub);
-  result &= ASSERT_VIEW_STRIDES(v, v_sub, rank);
+  result &= TEST_VIEW_STRIDES(v, v_sub, rank);
   if (v_sub_mirror.span_is_contiguous())
-    result &= !(ASSERT_VIEW_STRIDES(v_sub, v_sub_mirror, rank));
+    result &= !(TEST_VIEW_STRIDES(v_sub, v_sub_mirror, rank));
   else
-    result &= ASSERT_VIEW_STRIDES(v_sub, v_sub_mirror, rank);
+    result &= TEST_VIEW_STRIDES(v_sub, v_sub_mirror, rank);
   return result;
 }
 
@@ -614,8 +612,8 @@ TEST(TEST_CATEGORY, view_with_padding_copying) {
 #undef PARAM_6
 #undef PARAM_7
 
-#undef ASSERT_VIEW_OFFSET_STRIDES
-#undef ASSERT_VIEW_STRIDES
+#undef TEST_VIEW_OFFSET_STRIDES
+#undef TEST_VIEW_STRIDES
 
 #undef VIEW_T
 

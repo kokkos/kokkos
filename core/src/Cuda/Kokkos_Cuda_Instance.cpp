@@ -202,7 +202,9 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
   if (file) {
     out << " " << file << ":" << line;
   }
-  abort(out.str().c_str());
+  // FIXME Call Kokkos::Impl::host_abort instead of Kokkos::abort to avoid a
+  // warning about Kokkos::abort returning in some cases.
+  host_abort(out.str().c_str());
 }
 
 //----------------------------------------------------------------------------

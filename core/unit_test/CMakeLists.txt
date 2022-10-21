@@ -79,6 +79,12 @@ SET(COMPILE_ONLY_SOURCES
   TestStringManipulation.cpp
   TestTypeList.cpp
 )
+
+#testing if windows.h and Kokkos_Core.hpp can be included
+if(WIN32)
+  LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
+endif()
+
 # TestInterOp has a dependency on containers
 IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)

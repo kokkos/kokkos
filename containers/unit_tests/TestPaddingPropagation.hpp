@@ -83,7 +83,7 @@ using DType_7 = DType *******;
 
 using pod = DType;
 
-#define ASSERT_VIEW_STRIDES(view1, view2, rank)           \
+#define TEST_VIEW_STRIDES(view1, view2, rank)             \
   (view1.stride(0) == view2.stride(0) || rank < 1) &&     \
       (view1.stride(1) == view2.stride(1) || rank < 2) && \
       (view1.stride(2) == view2.stride(2) || rank < 3) && \
@@ -93,7 +93,7 @@ using pod = DType;
       (view1.stride(6) == view2.stride(6) || rank < 7) && \
       (view1.stride(7) == view2.stride(7) || rank < 8)
 
-#define ASSERT_VIEW_OFFSET_STRIDES(view, drv, rank)     \
+#define TEST_VIEW_OFFSET_STRIDES(view, drv, rank)       \
   (view.stride(0) == drv.stride_0() || rank < 1) &&     \
       (view.stride(1) == drv.stride_1() || rank < 2) && \
       (view.stride(2) == drv.stride_2() || rank < 3) && \
@@ -104,25 +104,25 @@ using pod = DType;
       (view.stride(7) == drv.stride_7() || rank < 8)
 
 template <typename view_t, typename dt, typename l, typename... Vals>
-typename std::enable_if_t<std::is_same<view_t, DV<dt, l>>::value, bool>
+std::enable_if_t<std::is_same<view_t, DV<dt, l>>::value, bool>
 padding_assignment_and_copy(int rank, Vals... params) {
   bool result = true;
   auto alloc_prop =
       Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
   view_t dv(alloc_prop, params...);
   view_t dv_2(dv.d_view, dv.h_view);
-  result &= ASSERT_VIEW_STRIDES(dv.d_view, dv.h_view, rank);
-  result &= ASSERT_VIEW_STRIDES(dv_2.d_view, dv_2.h_view, rank);
+  result &= TEST_VIEW_STRIDES(dv.d_view, dv.h_view, rank);
+  result &= TEST_VIEW_STRIDES(dv_2.d_view, dv_2.h_view, rank);
   return result;
 }
 
 template <typename view_t, typename dt, typename l, typename... Vals>
-typename std::enable_if_t<std::is_same<view_t, DRV<pod, l>>::value &&
-                              ((std::is_same<dt, DType_0>::value ||
-                                std::is_same<dt, DType_1>::value) ||
-                               (std::is_same<l, Kokkos::LayoutRight>::value &&
-                                std::is_same<dt, DType_2>::value)),
-                          bool>
+std::enable_if_t<std::is_same<view_t, DRV<pod, l>>::value &&
+                     ((std::is_same<dt, DType_0>::value ||
+                       std::is_same<dt, DType_1>::value) ||
+                      (std::is_same<l, Kokkos::LayoutRight>::value &&
+                       std::is_same<dt, DType_2>::value)),
+                 bool>
 padding_assignment_and_copy(int rank, Vals... params) {
   bool result = true;
   auto alloc_prop =
@@ -131,17 +131,17 @@ padding_assignment_and_copy(int rank, Vals... params) {
   view_t drv(v);
   // We do not propagate padding to DynRankView and we do not
   // pad for this data type so strides should match
-  result &= ASSERT_VIEW_OFFSET_STRIDES(v, drv, rank);
+  result &= TEST_VIEW_OFFSET_STRIDES(v, drv, rank);
   return result;
 }
 
 template <typename view_t, typename dt, typename l, typename... Vals>
-typename std::enable_if_t<std::is_same<view_t, DRV<pod, l>>::value &&
-                              (!(std::is_same<dt, DType_0>::value ||
-                                 std::is_same<dt, DType_1>::value) &&
-                               !(std::is_same<l, Kokkos::LayoutRight>::value &&
-                                 std::is_same<dt, DType_2>::value)),
-                          bool>
+std::enable_if_t<std::is_same<view_t, DRV<pod, l>>::value &&
+                     (!(std::is_same<dt, DType_0>::value ||
+                        std::is_same<dt, DType_1>::value) &&
+                      !(std::is_same<l, Kokkos::LayoutRight>::value &&
+                        std::is_same<dt, DType_2>::value)),
+                 bool>
 padding_assignment_and_copy(int rank, Vals... params) {
   bool result = true;
   auto alloc_prop =
@@ -150,7 +150,7 @@ padding_assignment_and_copy(int rank, Vals... params) {
   view_t drv(v);
   // We do not propagate padding to DynRankView
   // so strides should not match
-  result &= !(ASSERT_VIEW_OFFSET_STRIDES(v, drv, rank));
+  result &= !(TEST_VIEW_OFFSET_STRIDES(v, drv, rank));
   return result;
 }
 
@@ -250,8 +250,8 @@ TEST(TEST_CATEGORY, container_padding_propagation) {
 #undef PARAM_6
 #undef PARAM_7
 
-#undef ASSERT_VIEW_STRIDES
-#undef ASSERT_VIEW_OFFSET_STRIDES
+#undef TEST_VIEW_STRIDES
+#undef TEST_VIEW_OFFSET_STRIDES
 
 #undef DV
 #undef DRV

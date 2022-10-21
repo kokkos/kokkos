@@ -725,7 +725,7 @@ template <unsigned TrivialScalarSize>
 struct Padding {
   // If memory alignment is a multiple of the trivial scalar size then attempt
   // to align.
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   static constexpr size_t stride(size_t const N) {
     if constexpr (TrivialScalarSize == 0) {
       return N;
@@ -3384,14 +3384,12 @@ class ViewMapping<
     // If padding is allowed then pass in sizeof value type
     // for padding computation.
 
-    using use_padding =
-        std::bool_constant<alloc_prop::allow_padding &&
-                           !std::is_same<typename Traits::array_layout,
-                                         Kokkos::LayoutStride>::value>;
-
+    constexpr bool use_padding = alloc_prop::allow_padding &&
+                                 !std::is_same<typename Traits::array_layout,
+                                               Kokkos::LayoutStride>::value;
     using padding =
         std::integral_constant<unsigned int,
-                               use_padding::value ? sizeof(value_type) : 0>;
+                               use_padding ? sizeof(value_type) : 0>;
 
     m_impl_offset = offset_type(padding(), arg_layout);
 
