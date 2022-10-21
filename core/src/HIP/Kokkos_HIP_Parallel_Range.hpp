@@ -71,7 +71,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
   const FunctorType m_functor;
   const Policy m_policy;
 
-  ParallelFor()                              = delete;
+  ParallelFor()        = delete;
   ParallelFor& operator=(const ParallelFor&) = delete;
 
   template <class TagType>
