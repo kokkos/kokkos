@@ -126,7 +126,6 @@ std::vector<uint64_t> incrementInLoop(ViewType& view,
 }
 
 TEST(defaultdevicetype, shared_space) {
-  ASSERT_TRUE(KOKKOS_HAS_SHARED_SPACE);
   ASSERT_TRUE(Kokkos::has_shared_space);
 
   if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
@@ -149,62 +148,57 @@ TEST(defaultdevicetype, shared_space) {
   unsigned int numPages                  = 100;
   size_t numBytes                        = numPages * getBytesPerPage();
 
-  // we rely on this to allocate the right amount of memory in the ALLOCATION
-  ASSERT_TRUE(numBytes % sizeof(int) == 0);
+  using DeviceExecutionSpace = Kokkos::DefaultExecutionSpace;
+  using HostExecutionSpace   = Kokkos::DefaultHostExecutionSpace;
 
   // ALLOCATION
   Kokkos::View<int*, Kokkos::SharedSpace> sharedData("sharedData",
                                                      numBytes / sizeof(int));
-  Kokkos::View<int*, Kokkos::DefaultExecutionSpace::memory_space>
-      defaultExecData("defaultExecData", numBytes / sizeof(int));
-  Kokkos::View<int*, Kokkos::DefaultHostExecutionSpace::memory_space>
-      defaultHostExecData("defaultHostExecData", numBytes / sizeof(int));
+  Kokkos::View<int*, DeviceExecutionSpace::memory_space> deviceData(
+      "deviceData", numBytes / sizeof(int));
+  Kokkos::View<int*, HostExecutionSpace::memory_space> hostData(
+      "hostData", numBytes / sizeof(int));
   Kokkos::fence();
 
   // GET DEFAULT EXECSPACE LOCAL TIMINGS
-  auto defaultExecLocalTimings = incrementInLoop<Kokkos::DefaultExecutionSpace>(
-      defaultExecData, numRepetitions);
+  auto deviceLocalTimings =
+      incrementInLoop<DeviceExecutionSpace>(deviceData, numRepetitions);
 
   // GET DEFAULT HOSTEXECSPACE LOCAL TIMINGS
-  auto defaultHostExecLocalTimings =
-      incrementInLoop<Kokkos::DefaultHostExecutionSpace>(defaultHostExecData,
-                                                         numRepetitions);
+  auto hostLocalTimings =
+      incrementInLoop<HostExecutionSpace>(hostData, numRepetitions);
 
   // GET PAGE MIGRATING TIMINGS DATA
-  std::vector<decltype(defaultExecLocalTimings)> defaultExecSharedTimings{};
-  std::vector<decltype(defaultExecLocalTimings)> defaultHostExecSharedTimings{};
+  std::vector<decltype(deviceLocalTimings)> deviceSharedTimings{};
+  std::vector<decltype(hostLocalTimings)> hostSharedTimings{};
   for (unsigned i = 0; i < numDeviceHostCycles; ++i) {
     // GET RESULTS DEVICE
-    defaultExecSharedTimings.push_back(
-        incrementInLoop<Kokkos::DefaultExecutionSpace>(sharedData,
-                                                       numRepetitions));
+    deviceSharedTimings.push_back(
+        incrementInLoop<DeviceExecutionSpace>(sharedData, numRepetitions));
 
     // GET RESULTS HOST
-    defaultHostExecSharedTimings.push_back(
-        incrementInLoop<Kokkos::DefaultHostExecutionSpace>(sharedData,
-                                                           numRepetitions));
+    hostSharedTimings.push_back(
+        incrementInLoop<HostExecutionSpace>(sharedData, numRepetitions));
   }
 
   // COMPUTE STATISTICS OF HOST AND DEVICE LOCAL KERNELS
-  auto defaultExecLocalMean     = computeMean(defaultExecLocalTimings);
-  auto defaultHostExecLocalMean = computeMean(defaultHostExecLocalTimings);
+  auto deviceLocalMean = computeMean(deviceLocalTimings);
+  auto hostLocalMean   = computeMean(hostLocalTimings);
 
   // ASSESS RESULTS
   bool fastAsLocalOnRepeatedAccess = true;
 
   for (unsigned cycle = 0; cycle < numDeviceHostCycles; ++cycle) {
-    std::for_each(std::next(defaultExecSharedTimings[cycle].begin()),
-                  defaultExecSharedTimings[cycle].end(),
-                  [&](const uint64_t timing) {
-                    (timing < threshold * defaultExecLocalMean)
+    std::for_each(std::next(deviceSharedTimings[cycle].begin()),
+                  deviceSharedTimings[cycle].end(), [&](const uint64_t timing) {
+                    (timing < threshold * deviceLocalMean)
                         ? fastAsLocalOnRepeatedAccess &= true
                         : fastAsLocalOnRepeatedAccess &= false;
                   });
 
-    std::for_each(std::next(defaultHostExecSharedTimings[cycle].begin()),
-                  defaultHostExecSharedTimings[cycle].end(),
-                  [&](const uint64_t timing) {
-                    (timing < threshold * defaultExecLocalMean)
+    std::for_each(std::next(hostSharedTimings[cycle].begin()),
+                  hostSharedTimings[cycle].end(), [&](const uint64_t timing) {
+                    (timing < threshold * hostLocalMean)
                         ? fastAsLocalOnRepeatedAccess &= true
                         : fastAsLocalOnRepeatedAccess &= false;
                   });
@@ -236,17 +230,16 @@ TEST(defaultdevicetype, shared_space) {
 
     std::cout << "################SHARED SPACE####################\n";
     for (unsigned cycle = 0; cycle < numDeviceHostCycles; ++cycle) {
-      std::cout << "DefaultExectionSpace timings of run " << cycle << ":\n";
-      printTimings(std::cout, defaultExecSharedTimings[cycle],
-                   threshold * defaultExecLocalMean);
-      std::cout << "DefaultHostExecutionSpace timings of run " << cycle
-                << ":\n";
-      printTimings(std::cout, defaultHostExecSharedTimings[cycle],
-                   threshold * defaultHostExecLocalMean);
+      std::cout << "DeviceExecutionSpace timings of run " << cycle << ":\n";
+      printTimings(std::cout, deviceSharedTimings[cycle],
+                   threshold * deviceLocalMean);
+      std::cout << "HostExecutionSpace timings of run " << cycle << ":\n";
+      printTimings(std::cout, hostSharedTimings[cycle],
+                   threshold * hostLocalMean);
     }
     std::cout << "################LOCAL SPACE####################\n";
-    printTimings(std::cout, defaultExecLocalTimings);
-    printTimings(std::cout, defaultHostExecLocalTimings);
+    printTimings(std::cout, deviceLocalTimings);
+    printTimings(std::cout, hostLocalTimings);
   }
   ASSERT_TRUE(passed);
 }
