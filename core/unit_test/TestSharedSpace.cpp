@@ -177,7 +177,7 @@ TEST(defaultdevicetype, shared_space) {
 
   // GET PAGE MIGRATING TIMINGS DATA
   std::vector<decltype(deviceLocalTimings)> deviceSharedTimings{};
-  std::vector<decltype(deviceLocalTimings)> hostSharedTimings{};
+  std::vector<decltype(hostLocalTimings)> hostSharedTimings{};
   for (unsigned i = 0; i < numDeviceHostCycles; ++i) {
     // GET RESULTS DEVICE
     deviceSharedTimings.push_back(
