@@ -131,7 +131,7 @@ void test_malloc_free() {
   auto* temp =
       Kokkos::kokkos_malloc<fake_memory_space>("does_malloc_work", 1000);
   expect_deallocation_event("does_malloc_work", "TestSpace", "Error in free");
-  Kokkos::kokkos_free(temp);
+  Kokkos::kokkos_free<fake_memory_space>(temp);
   Kokkos::Tools::Experimental::pause_tools();
 }
 void test_chained_spaces() {
@@ -167,7 +167,8 @@ struct AccessCheckKernel {
 template <typename Space>
 void test_allowed_access() {
   constexpr const int data_size = 1000;
-  Kokkos::View<double*, Space> test_view("test_view", data_size);
+  std::vector<double> test_data(data_size);
+  Kokkos::View<double*, Space> test_view(test_data.data(), data_size);
   AccessCheckKernel<Space> functor{test_view};
   Kokkos::parallel_for(
       "access_allowed",
@@ -189,5 +190,14 @@ TEST(defaultdevicetype, chained_logical_spaces) { test_chained_spaces(); }
 TEST(defaultdevicetype, access_allowed) {
   test_allowed_access<fake_memory_space>();
 }
+// FIXME_SYCL
+#if !(defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_SYCL))
+TEST(defaultdevicetype_DeathTest, access_forbidden) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  ASSERT_DEATH(
+      { test_allowed_access<semantically_independent_logical_space>(); },
+      "Kokkos::View ERROR: attempt to access inaccessible memory space");
+}
+#endif
 
 }  // namespace Test
