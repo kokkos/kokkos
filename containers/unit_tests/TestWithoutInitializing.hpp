@@ -113,10 +113,15 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
 }
 
 TEST(TEST_CATEGORY, resize_exec_space_dualview) {
-  constexpr bool exec_space_can_access_host_space =
-      Kokkos::SpaceAccessibility<TEST_EXECSPACE, Kokkos::HostSpace>::accessible;
-  if constexpr (!exec_space_can_access_host_space) {
-    GTEST_SKIP() << "skipping since execution space can't access HostSpace";
+  // If we provide an execution space instance to Kokkos::resize with a DualView
+  // argument, it is used for both Views. Thus, the test only makes sense if the
+  // DefaultHostExecutionSpace can access TEST_EXECSPACE's memory space.
+  constexpr bool host_exec_space_can_access_memory_space =
+      Kokkos::SpaceAccessibility<Kokkos::DefaultHostExecutionSpace,
+                                 TEST_EXECSPACE::memory_space>::accessible;
+  if constexpr (!host_exec_space_can_access_memory_space) {
+    GTEST_SKIP()
+        << "skipping since host execution space can't access memory space";
   } else {
     using namespace Kokkos::Test::Tools;
     listen_tool_events(Config::DisableAll(), Config::EnableFences(),
@@ -125,11 +130,15 @@ TEST(TEST_CATEGORY, resize_exec_space_dualview) {
                                                                 5);
     auto success = validate_absence(
         [&]() {
-          // not quite sure why this is necessary
-          if constexpr (exec_space_can_access_host_space) {
-            Kokkos::resize(Kokkos::view_alloc(TEST_EXECSPACE{},
-                                              Kokkos::WithoutInitializing),
-                           bla, 5, 6, 7, 8);
+          constexpr bool host_exec_space_can_access_memory_space =
+              Kokkos::SpaceAccessibility<
+                  Kokkos::DefaultHostExecutionSpace,
+                  TEST_EXECSPACE::memory_space>::accessible;
+          if constexpr (host_exec_space_can_access_memory_space) {
+            Kokkos::resize(
+                Kokkos::view_alloc(Kokkos::DefaultHostExecutionSpace{},
+                                   Kokkos::WithoutInitializing),
+                bla, 5, 6, 7, 8);
             EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
           }
         },

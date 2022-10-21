@@ -167,6 +167,8 @@ struct AccessCheckKernel {
 template <typename Space>
 void test_allowed_access() {
   constexpr const int data_size = 1000;
+  // We use an unmananged View here since we want to detect a memory access
+  // violation in the parallel_for and not in the initialization of the View.
   std::vector<double> test_data(data_size);
   Kokkos::View<double*, Space> test_view(test_data.data(), data_size);
   AccessCheckKernel<Space> functor{test_view};
