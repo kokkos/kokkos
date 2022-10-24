@@ -289,7 +289,7 @@ private:
       ASSERT_EQ(p.end(),   work_end);
     }
     {
-      policy_t p(ExecutionSpace(), work_begin, work_end);
+      policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end);
       ASSERT_EQ(p.begin(), work_begin);
       ASSERT_EQ(p.end(),   work_end);
     }
@@ -300,7 +300,7 @@ private:
       ASSERT_EQ(p.chunk_size(), chunk_size);
     }
     {
-      policy_t p(ExecutionSpace(), work_begin, work_end,
+      policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end,
                  Kokkos::ChunkSize(chunk_size));
       ASSERT_EQ(p.begin(),      work_begin);
       ASSERT_EQ(p.end(),        work_end);
