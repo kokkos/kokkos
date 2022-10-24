@@ -654,11 +654,11 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device xehp" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.50.4" -D__STRICT_ANSI__
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.4.0" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.60.7" -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()
@@ -707,11 +707,11 @@ IF (KOKKOS_ENABLE_SYCL)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device xehp"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.4.0"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
     )
   ENDIF()
 ENDIF()
