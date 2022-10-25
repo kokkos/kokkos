@@ -44,480 +44,406 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace Test {
+namespace {
 
-template <typename ExecSpace = TEST_EXECSPACE>
-struct TestReducerCTADs {
-  using execspace = ExecSpace;
-
+struct TestReducerCTADS {
+  using execspace   = TEST_EXECSPACE;
   using scalar_type = double;
   using index_type  = int;
-  using memspace    = typename execspace::memory_space;
+  using memspace    = execspace::memory_space;
 
-  template <typename Scalar, typename Space>
-  using VS =
-      Kokkos::View<Scalar, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+  struct CustomComparator {
+    bool operator()(scalar_type, scalar_type) const;
+  };
+  static CustomComparator comparator;
 
-  static void test_sum() {
-    Kokkos::View<scalar_type, memspace> view;
+  struct TestSum {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::Sum<scalar_type, memspace> rt;
 
-    Kokkos::Sum<scalar_type, memspace> rt(view);
-    Kokkos::Sum rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Sum(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Sum(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Sum(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Sum(unmanaged))>);
+  };
 
-    Kokkos::Sum rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+  struct TestProd {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::Prod<scalar_type, memspace> rt;
 
-    Kokkos::Sum rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Prod(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Prod(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Prod(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Prod(unmanaged))>);
+  };
 
-    VS<scalar_type, memspace> vs;
-    Kokkos::Sum rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+  struct TestMin {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::Min<scalar_type, memspace> rt;
 
-  static void test_prod() {
-    Kokkos::View<scalar_type, memspace> view;
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Min(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Min(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Min(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Min(unmanaged))>);
+  };
 
-    Kokkos::Prod<scalar_type, memspace> rt(view);
-    Kokkos::Prod rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+  struct TestMax {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::Max<scalar_type, memspace> rt;
 
-    Kokkos::Prod rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Max(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::Max(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Max(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::Max(unmanaged))>);
+  };
 
-    Kokkos::Prod rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+  struct TestLAnd {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::LAnd<scalar_type, memspace> rt;
 
-    VS<scalar_type, memspace> vs;
-    Kokkos::Prod rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::LAnd(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::LAnd(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LAnd(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LAnd(unmanaged))>);
+  };
 
-  static void test_min() {
-    Kokkos::View<scalar_type, memspace> view;
+  struct TestLOr {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::LOr<scalar_type, memspace> rt;
 
-    Kokkos::Min<scalar_type, memspace> rt(view);
-    Kokkos::Min rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::LOr(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::LOr(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LOr(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LOr(unmanaged))>);
+  };
 
-    Kokkos::Min rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+  struct TestBAnd {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::BAnd<scalar_type, memspace> rt;
 
-    Kokkos::Min rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::BAnd(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::BAnd(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::BAnd(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::BAnd(unmanaged))>);
+  };
 
-    VS<scalar_type, memspace> vs;
-    Kokkos::Min rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+  struct TestBOr {
+    static Kokkos::View<scalar_type, memspace> view;
+    static Kokkos::View<scalar_type, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::BOr<scalar_type, memspace> rt;
 
-  static void test_max() {
-    Kokkos::View<scalar_type, memspace> view;
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::BOr(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::BOr(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::BOr(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::BOr(unmanaged))>);
+  };
 
-    Kokkos::Max<scalar_type, memspace> rt(view);
-    Kokkos::Max rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::Max rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::Max rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<scalar_type, memspace> vs;
-    Kokkos::Max rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_land() {
-    Kokkos::View<scalar_type, memspace> view;
-
-    Kokkos::LAnd<scalar_type, memspace> rt(view);
-    Kokkos::LAnd rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::LAnd rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::LAnd rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<scalar_type, memspace> vs;
-    Kokkos::LAnd rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_lor() {
-    Kokkos::View<scalar_type, memspace> view;
-
-    Kokkos::LOr<scalar_type, memspace> rt(view);
-    Kokkos::LOr rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::LOr rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::LOr rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<scalar_type, memspace> vs;
-    Kokkos::LOr rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_band() {
-    Kokkos::View<scalar_type, memspace> view;
-
-    Kokkos::BAnd<scalar_type, memspace> rt(view);
-    Kokkos::BAnd rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::BAnd rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::BAnd rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<scalar_type, memspace> vs;
-    Kokkos::BAnd rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_bor() {
-    Kokkos::View<scalar_type, memspace> view;
-
-    Kokkos::BOr<scalar_type, memspace> rt(view);
-    Kokkos::BOr rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::BOr rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::BOr rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<scalar_type, memspace> vs;
-    Kokkos::BOr rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
-
-    Kokkos::MinLoc<scalar_type, index_type, memspace> rt(view);
-    Kokkos::MinLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MinLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MinLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MinLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_maxloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
-
-    Kokkos::MaxLoc<scalar_type, index_type, memspace> rt(view);
-    Kokkos::MaxLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MaxLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MaxLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MaxLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minmax() {
-    Kokkos::View<Kokkos::MinMaxScalar<scalar_type>, memspace> view;
-
-    Kokkos::MinMax<scalar_type, memspace> rt(view);
-    Kokkos::MinMax rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MinMax rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MinMax rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::MinMaxScalar<scalar_type>, memspace> vs;
-    Kokkos::MinMax rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minmaxloc() {
-    Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace>
+  struct TestMinLoc {
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace>
         view;
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinLoc<scalar_type, index_type, memspace> rt;
 
-    Kokkos::MinMaxLoc<scalar_type, index_type, memspace> rt(view);
-    Kokkos::MinMaxLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::MinLoc(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::MinLoc(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinLoc(unmanaged))>);
+  };
 
-    Kokkos::MinMaxLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MinMaxLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MinMaxLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_maxfirstloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
-
-    Kokkos::MaxFirstLoc<scalar_type, index_type, memspace> rt(view);
-    Kokkos::MaxFirstLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MaxFirstLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MaxFirstLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MaxFirstLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_maxfirstloccustomcomparator() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
-
-    auto comparator       = [](scalar_type, scalar_type) { return true; };
-    using comparator_type = decltype(comparator);
-
-    Kokkos::MaxFirstLocCustomComparator<scalar_type, index_type,
-                                        comparator_type, memspace>
-        rt(view, comparator);
-    Kokkos::MaxFirstLocCustomComparator rd(view, comparator);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MaxFirstLocCustomComparator rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MaxFirstLocCustomComparator rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MaxFirstLocCustomComparator rs(vs, comparator);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minfirstloc() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
-
-    Kokkos::MinFirstLoc<scalar_type, index_type, memspace> rt(view);
-    Kokkos::MinFirstLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MinFirstLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MinFirstLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MinFirstLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minfirstloccustomcomparator() {
-    Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> view;
-
-    auto comparator       = [](scalar_type, scalar_type) { return true; };
-    using comparator_type = decltype(comparator);
-
-    Kokkos::MinFirstLocCustomComparator<scalar_type, index_type,
-                                        comparator_type, memspace>
-        rt(view, comparator);
-    Kokkos::MinFirstLocCustomComparator rd(view, comparator);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::MinFirstLocCustomComparator rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::MinFirstLocCustomComparator rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MinFirstLocCustomComparator rs(vs, comparator);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minmaxfirstlastloc() {
-    Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace>
+  struct TestMaxLoc {
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace>
         view;
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MaxLoc<scalar_type, index_type, memspace> rt;
 
-    Kokkos::MinMaxFirstLastLoc<scalar_type, index_type, memspace> rt(view);
-    Kokkos::MinMaxFirstLastLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::MaxLoc(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::MaxLoc(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MaxLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MaxLoc(unmanaged))>);
+  };
 
-    Kokkos::MinMaxFirstLastLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+  struct TestMinMax {
+    static Kokkos::View<Kokkos::MinMaxScalar<scalar_type>, memspace> view;
+    static Kokkos::View<Kokkos::MinMaxScalar<scalar_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinMax<scalar_type, memspace> rt;
 
-    Kokkos::MinMaxFirstLastLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::MinMax(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::MinMax(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinMax(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinMax(unmanaged))>);
+  };
 
-    VS<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MinMaxFirstLastLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
-
-  static void test_minmaxfirstlastloccustomcomparator() {
-    Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace>
+  struct TestMinMaxLoc {
+    static Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>,
+                        memspace>
         view;
+    static Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>,
+                        memspace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinMaxLoc<scalar_type, index_type, memspace> rt;
 
-    auto comparator       = [](scalar_type, scalar_type) { return true; };
-    using comparator_type = decltype(comparator);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinMaxLoc(view))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinMaxLoc(rt))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MinMaxLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinMaxLoc(unmanaged))>);
+  };
 
-    Kokkos::MinMaxFirstLastLocCustomComparator<scalar_type, index_type,
-                                               comparator_type, memspace>
-        rt(view, comparator);
-    Kokkos::MinMaxFirstLastLocCustomComparator rd(view, comparator);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+  struct TestMaxFirstLoc {
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace>
+        view;
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MaxFirstLoc<scalar_type, index_type, memspace> rt;
 
-    Kokkos::MinMaxFirstLastLocCustomComparator rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MaxFirstLoc(view))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MaxFirstLoc(rt))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MaxFirstLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MaxFirstLoc(unmanaged))>);
+  };
 
-    Kokkos::MinMaxFirstLastLocCustomComparator rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+  struct TestMaxFirstLocCustomComparator {
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace>
+        view;
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MaxFirstLocCustomComparator<scalar_type, index_type,
+                                               CustomComparator, memspace>
+        rt;
 
-    VS<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace> vs;
-    Kokkos::MinMaxFirstLastLocCustomComparator rs(vs, comparator);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MaxFirstLocCustomComparator(
+                                     view, comparator))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MaxFirstLocCustomComparator(rt))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MaxFirstLocCustomComparator(
+                                     std::move(rt)))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MaxFirstLocCustomComparator(
+                                     unmanaged, comparator))>);
+  };
 
-  static void test_firstloc() {
-    Kokkos::View<Kokkos::FirstLocScalar<index_type>, memspace> view;
+  struct TestMinFirstLoc {
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace>
+        view;
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinFirstLoc<scalar_type, index_type, memspace> rt;
 
-    Kokkos::FirstLoc<index_type, memspace> rt(view);
-    Kokkos::FirstLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinFirstLoc(view))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinFirstLoc(rt))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MinFirstLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinFirstLoc(unmanaged))>);
+  };
 
-    Kokkos::FirstLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+  struct TestMinFirstLocCustomComparator {
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace>
+        view;
+    static Kokkos::View<Kokkos::ValLocScalar<scalar_type, index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinFirstLocCustomComparator<scalar_type, index_type,
+                                               CustomComparator, memspace>
+        rt;
 
-    Kokkos::FirstLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MinFirstLocCustomComparator(
+                                     view, comparator))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MinFirstLocCustomComparator(rt))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MinFirstLocCustomComparator(
+                                     std::move(rt)))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MinFirstLocCustomComparator(
+                                     unmanaged, comparator))>);
+  };
 
-    VS<Kokkos::FirstLocScalar<index_type>, memspace> vs;
-    Kokkos::FirstLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+  struct TestMinMaxFirstLastLoc {
+    static Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>,
+                        memspace>
+        view;
+    static Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>,
+                        memspace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinMaxFirstLastLoc<scalar_type, index_type, memspace> rt;
 
-  static void test_lastloc() {
-    Kokkos::View<Kokkos::LastLocScalar<index_type>, memspace> view;
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::MinMaxFirstLastLoc(view))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::MinMaxFirstLastLoc(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MinMaxFirstLastLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MinMaxFirstLastLoc(unmanaged))>);
+  };
 
-    Kokkos::LastLoc<index_type, memspace> rt(view);
-    Kokkos::LastLoc rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+  struct TestMinMaxFirstLastLocCustomComparator {
+    static Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>,
+                        memspace>
+        view;
+    static Kokkos::View<Kokkos::MinMaxLocScalar<scalar_type, index_type>,
+                        memspace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::MinMaxFirstLastLocCustomComparator<
+        scalar_type, index_type, CustomComparator, memspace>
+        rt;
 
-    Kokkos::LastLoc rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MinMaxFirstLastLocCustomComparator(
+                           view, comparator))>);
+    static_assert(std::is_same_v<
+                  decltype(rt),
+                  decltype(Kokkos::MinMaxFirstLastLocCustomComparator(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MinMaxFirstLastLocCustomComparator(
+                           std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::MinMaxFirstLastLocCustomComparator(
+                           unmanaged, comparator))>);
+  };
 
-    Kokkos::LastLoc rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+  struct TestFirstLoc {
+    static Kokkos::View<Kokkos::FirstLocScalar<index_type>, memspace> view;
+    static Kokkos::View<Kokkos::FirstLocScalar<index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::FirstLoc<index_type, memspace> rt;
 
-    VS<Kokkos::LastLocScalar<index_type>, memspace> vs;
-    Kokkos::LastLoc rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::FirstLoc(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::FirstLoc(rt))>);
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::FirstLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::FirstLoc(unmanaged))>);
+  };
 
-  static void test_stdispartitioned() {
-    Kokkos::View<Kokkos::StdIsPartScalar<index_type>, memspace> view;
+  struct TestLastLoc {
+    static Kokkos::View<Kokkos::LastLocScalar<index_type>, memspace> view;
+    static Kokkos::View<Kokkos::LastLocScalar<index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::LastLoc<index_type, memspace> rt;
 
-    Kokkos::StdIsPartitioned<index_type, memspace> rt(view);
-    Kokkos::StdIsPartitioned rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LastLoc(view))>);
+    static_assert(std::is_same_v<decltype(rt), decltype(Kokkos::LastLoc(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LastLoc(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::LastLoc(unmanaged))>);
+  };
 
-    Kokkos::StdIsPartitioned rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
+  struct TestStdIsPartitioned {
+    static Kokkos::View<Kokkos::StdIsPartScalar<index_type>, memspace> view;
+    static Kokkos::View<Kokkos::StdIsPartScalar<index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::StdIsPartitioned<index_type, memspace> rt;
 
-    Kokkos::StdIsPartitioned rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::StdIsPartitioned(view))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::StdIsPartitioned(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::StdIsPartitioned(std::move(rt)))>);
+    static_assert(std::is_same_v<
+                  decltype(rt), decltype(Kokkos::StdIsPartitioned(unmanaged))>);
+  };
 
-    VS<Kokkos::StdIsPartScalar<index_type>, memspace> vs;
-    Kokkos::StdIsPartitioned rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+  struct TestStdPartitionPoint {
+    static Kokkos::View<Kokkos::StdPartPointScalar<index_type>, memspace> view;
+    static Kokkos::View<Kokkos::StdPartPointScalar<index_type>, memspace,
+                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        unmanaged;
+    static Kokkos::StdPartitionPoint<index_type, memspace> rt;
 
-  static void test_stdpartitionpoint() {
-    Kokkos::View<Kokkos::StdPartPointScalar<index_type>, memspace> view;
-
-    Kokkos::StdPartitionPoint<index_type, memspace> rt(view);
-    Kokkos::StdPartitionPoint rd(view);
-    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
-
-    Kokkos::StdPartitionPoint rdc(rt);
-    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
-
-    Kokkos::StdPartitionPoint rdm(std::move(rt));
-    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
-
-    VS<Kokkos::StdPartPointScalar<index_type>, memspace> vs;
-    Kokkos::StdPartitionPoint rs(vs);
-    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
-    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
-  }
+    static_assert(std::is_same_v<decltype(rt),
+                                 decltype(Kokkos::StdPartitionPoint(view))>);
+    static_assert(
+        std::is_same_v<decltype(rt), decltype(Kokkos::StdPartitionPoint(rt))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::StdPartitionPoint(std::move(rt)))>);
+    static_assert(
+        std::is_same_v<decltype(rt),
+                       decltype(Kokkos::StdPartitionPoint(unmanaged))>);
+  };
 };
 
-TEST(TEST_CATEGORY, reducer_ctads) {
-  TestReducerCTADs<TEST_EXECSPACE>::test_sum();
-  TestReducerCTADs<TEST_EXECSPACE>::test_prod();
-  TestReducerCTADs<TEST_EXECSPACE>::test_min();
-  TestReducerCTADs<TEST_EXECSPACE>::test_max();
-  TestReducerCTADs<TEST_EXECSPACE>::test_land();
-  TestReducerCTADs<TEST_EXECSPACE>::test_lor();
-  TestReducerCTADs<TEST_EXECSPACE>::test_band();
-  TestReducerCTADs<TEST_EXECSPACE>::test_bor();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_maxloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minmax();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minmaxloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_maxfirstloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_maxfirstloccustomcomparator();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minfirstloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minfirstloccustomcomparator();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minmaxfirstlastloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_minmaxfirstlastloccustomcomparator();
-  TestReducerCTADs<TEST_EXECSPACE>::test_firstloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_lastloc();
-  TestReducerCTADs<TEST_EXECSPACE>::test_stdispartitioned();
-  TestReducerCTADs<TEST_EXECSPACE>::test_stdpartitionpoint();
-}
-
-}  // namespace Test
+}  // namespace
