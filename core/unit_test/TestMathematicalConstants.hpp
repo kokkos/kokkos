@@ -53,10 +53,10 @@ KOKKOS_FUNCTION T *take_address_of(T &arg) {
 template <class T>
 KOKKOS_FUNCTION void take_by_value(T) {}
 
-#define DEFINE_MATH_CONSTANT_TRAIT(TRAIT)                          \
-  template <class T>                                               \
-  struct TRAIT {                                                   \
-    static constexpr T value = Kokkos::Experimental::TRAIT##_v<T>; \
+#define DEFINE_MATH_CONSTANT_TRAIT(TRAIT)                     \
+  template <class T>                                          \
+  struct TRAIT {                                              \
+    static constexpr T value = Kokkos::numbers::TRAIT##_v<T>; \
   }
 
 DEFINE_MATH_CONSTANT_TRAIT(e);
@@ -90,7 +90,8 @@ struct TestMathematicalConstants {
   KOKKOS_FUNCTION void operator()(Trait, int, int &) const { use_on_device(); }
 
   KOKKOS_FUNCTION void use_on_device() const {
-#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC)
     take_by_value(Trait::value);
 #else
     (void)take_address_of(Trait::value);
@@ -98,8 +99,9 @@ struct TestMathematicalConstants {
   }
 };
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC)
 #define TEST_MATH_CONSTANT(TRAIT)                               \
   TEST(TEST_CATEGORY, mathematical_constants_##TRAIT) {         \
     TestMathematicalConstants<TEST_EXECSPACE, TRAIT<float>>();  \

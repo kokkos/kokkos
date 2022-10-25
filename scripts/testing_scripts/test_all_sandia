@@ -73,11 +73,6 @@ HOSTNAME=$(hostname)
 PROCESSOR=`uname -p`
 CUDA_ENABLE_CMD=
 
-if [[ "$HOSTNAME" =~ (white|ride).* ]]; then
-  MACHINE=white
-  module load git
-fi
-
 if [[ "$HOSTNAME" =~ weaver.* ]]; then
   MACHINE=weaver
   module load git
@@ -405,84 +400,27 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
                "cuda/9.2 $CUDA9_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
-elif [ "$MACHINE" = "white" ]; then
-  source /etc/profile.d/modules.sh
-  SKIP_HWLOC=True
-  export SLURM_TASKS_PER_NODE=32
-
-  BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
-  IBM_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
-  CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.1"
-
-  # Don't do pthread with Power
-  GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
-
-  if [ "$SPOT_CHECK" = "True" ]; then
-    # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/6.4.0 $BASE_MODULE_LIST "OpenMP_Serial" g++ $GCC_WARNING_FLAGS"
-               "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "ibm/16.1.1 $IBM_MODULE_LIST "Serial" xlC $IBM_WARNING_FLAGS"
-               "cuda/9.2.88 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1.105 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-    )
-  else
-    # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/5.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/7.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/9.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "ibm/16.1.1 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
-               "cuda/9.2.88 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.0.130 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1.105 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-    )
-  fi
-
-  if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=Power8,Pascal60"
-  fi
 
 elif [ "$MACHINE" = "weaver" ]; then
   source /etc/profile.d/modules.sh
   SKIP_HWLOC=True
 
+  # For rhel7W queue
   BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
-  IBM_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,ibm/xl/16.1.1,gcc/7.2.0"
-  CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,ibm/xl/16.1.1,gcc/7.4.0"
-  # Cuda/11 modules available only on the dev queue (rhel8 OS); gcc/8.3.1 loaded by default
-  CUDA11_MODULE_LIST="cmake/3.21.2,<COMPILER_NAME>/<COMPILER_VERSION>"
+
+  # For rhel8 queue
+  # Cuda/11 modules available only on the rhel8 queue (rhel8 OS)
+  RHEL8_BASE_MODULE_LIST="cmake/3.21.2,<COMPILER_NAME>/<COMPILER_VERSION>"
+  RHEL8_CUDA11_MODULE_LIST="cmake/3.21.2,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   # Don't do pthread with Power
-  GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
+  GCC_IBM_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
 
-  if [ "$SPOT_CHECK" = "True" ]; then
-    # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/6.4.0 $BASE_MODULE_LIST "OpenMP_Serial" g++ $GCC_WARNING_FLAGS"
-               "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "ibm/16.1.1 $IBM_MODULE_LIST "Serial" xlC $IBM_WARNING_FLAGS"
-               "cuda/9.2.88 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1.243 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-    )
-  else
-    # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/7.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/9.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "ibm/16.1.1 $IBM_MODULE_LIST $IBM_BUILD_LIST xlC $IBM_WARNING_FLAGS"
-               "cuda/9.2.88 $CUDA_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.0.130 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1.105 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1.243 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.2.089 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.2.2 $CUDA10_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/11.2.2 $CUDA11_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-    )
-  fi
-
+  # Format: (compiler module-list build-list exe-name warning-flag)
+  COMPILERS=("gcc/9.3.0 $BASE_MODULE_LIST $GCC_IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/8.3.1 $RHEL8_BASE_MODULE_LIST $GCC_IBM_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "cuda/11.2.2 $RHEL8_CUDA11_MODULE_LIST $CUDA_IBM_BUILD_LIST ${KOKKOS_PATH}/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+  )
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=Power9,Volta70"
   fi
@@ -529,10 +467,8 @@ elif [ "$MACHINE" = "caraway" ]; then
   HIPCLANG_WARNING_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("rocm/4.3.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
-             "rocm/4.5.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
+  COMPILERS=("rocm/5.2.0 $BASE_MODULE_LIST $HIPCLANG_BUILD_LIST hipcc $HIPCLANG_WARNING_FLAGS"
              "cuda/11.4 $CUDA11_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-             "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/9.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/10.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -540,7 +476,7 @@ elif [ "$MACHINE" = "caraway" ]; then
   )
 
   if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=VEGA906"
+    ARCH_FLAG="--arch=VEGA908"
   fi
 
 elif [ "$MACHINE" = "blake" ]; then
@@ -562,16 +498,8 @@ elif [ "$MACHINE" = "blake" ]; then
              "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
   )
   else
-  COMPILERS=("intel/17.4.196 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/18.0.128 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/19.1.144 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/19.3.199 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/19.5.281 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+  COMPILERS=("intel/19.5.281 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "intel/2021.1.1 $BASE_MODULE_LIST_ONEAPI $INTEL_BUILD_LIST icpx $ONEAPI_WARNING_FLAGS"
-             "gcc/5.5.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/9.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -900,9 +828,6 @@ single_build_and_test() {
 
     run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} ${KOKKOS_BOUNDS_CHECK} --no-examples ${KOKKOS_DEPRECATED_CODE} ${KOKKOS_DEPRECATED_CODE_WARNINGS} $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local make_par_lvl=12
-    if [[ "$MACHINE" = white* ]]; then
-      make_par_lvl=48
-    fi
     local -i build_start_time=$(date +%s)
     run_cmd make -j  $make_par_lvl all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     local -i build_end_time=$(date +%s)

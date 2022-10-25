@@ -58,10 +58,6 @@
 #include <SYCL/Kokkos_SYCL_Abort.hpp>
 #endif
 
-#ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-#define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
-#endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-
 namespace Kokkos {
 namespace Impl {
 
@@ -69,8 +65,7 @@ namespace Impl {
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
 
-#if defined(__APPLE__) || defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-// cuda_abort does not abort when building for macOS.
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 // required to workaround failures in random number generator unit tests with
 // pre-volta architectures
 #define KOKKOS_IMPL_ABORT_NORETURN
@@ -89,7 +84,7 @@ namespace Impl {
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
 // FIXME_SYCL SYCL doesn't abort
 #define KOKKOS_IMPL_ABORT_NORETURN
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 // Host aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
 #else
@@ -97,14 +92,18 @@ namespace Impl {
 #define KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
-#ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+// FIXME_SYCL
+// Accomodate host pass for device functions that are not [[noreturn]]
+#if defined(KOKKOS_ENABLE_SYCL) || \
+    (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK))
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE
 #else
 #define KOKKOS_IMPL_ABORT_NORETURN_DEVICE KOKKOS_IMPL_ABORT_NORETURN
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC)
 KOKKOS_IMPL_ABORT_NORETURN_DEVICE inline KOKKOS_IMPL_DEVICE_FUNCTION void
 device_abort(const char *const msg) {
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -113,8 +112,8 @@ device_abort(const char *const msg) {
   ::Kokkos::Impl::hip_abort(msg);
 #elif defined(KOKKOS_ENABLE_SYCL)
   ::Kokkos::Impl::sycl_abort(msg);
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  printf("%s", msg);  // FIXME_OPENMPTARGET
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  printf("%s", msg);  // FIXME_OPENMPTARGET FIXME_OPENACC
 #else
 #error faulty logic
 #endif

@@ -65,6 +65,10 @@ static_assert(false,
 #include <iosfwd>
 #include <string>
 
+// FIXME_OPENACC: Below macro is temporarily enabled to avoid issues on existing
+// OpenACC compilers not supporting lambda with parallel loops.
+#define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+
 namespace Kokkos::Experimental::Impl {
 class OpenACCInternal;
 }
@@ -73,6 +77,14 @@ namespace Kokkos::Experimental {
 
 class OpenACC {
   Kokkos::Impl::HostSharedPtr<Impl::OpenACCInternal> m_space_instance;
+
+  friend bool operator==(OpenACC const& lhs, OpenACC const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(OpenACC const& lhs, OpenACC const& rhs) {
+    return !(lhs == rhs);
+  }
 
  public:
   using execution_space = OpenACC;

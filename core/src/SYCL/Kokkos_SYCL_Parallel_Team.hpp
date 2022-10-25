@@ -332,9 +332,10 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return std::min({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
       // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||   \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) ||  \
+    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
+    defined(KOKKOS_ARCH_HOPPER)
                  256,
 #endif
                  max_threads_for_memory
@@ -364,9 +365,10 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return std::min<int>({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
       // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||   \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) ||  \
+    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
+    defined(KOKKOS_ARCH_HOPPER)
                  256,
 #endif
                  max_threads_for_memory
@@ -687,7 +689,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             [&](sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                                sycl::access::target::local>
                     local_mem,
-                sycl::device_ptr<value_type> results_ptr) mutable {
+                sycl::device_ptr<value_type> results_ptr) {
               sycl::global_ptr<value_type> device_accessible_result_ptr =
                   m_result_ptr_device_accessible ? m_result_ptr : nullptr;
               auto lambda = [=](sycl::nd_item<2> item) {

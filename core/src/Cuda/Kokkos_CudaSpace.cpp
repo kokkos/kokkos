@@ -122,14 +122,7 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
-bool CudaUVMSpace::available() {
-#if defined(CUDA_VERSION) && !defined(__APPLE__)
-  enum : bool { UVM_available = true };
-#else
-  enum : bool { UVM_available = false };
-#endif
-  return UVM_available;
-}
+bool CudaUVMSpace::available() { return true; }
 
 /*--------------------------------------------------------------------------*/
 
@@ -651,11 +644,7 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
   // DualView syncs down. Probably because the latency is not too bad in the
   // first place for the pull down. If we want to change that provde
   // cudaCpuDeviceId as the device if to_device is false
-#if CUDA_VERSION < 10000
-  bool is_managed = attr.isManaged;
-#else
   bool is_managed = attr.type == cudaMemoryTypeManaged;
-#endif
   if (to_device && is_managed &&
       space.cuda_device_prop().concurrentManagedAccess) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemPrefetchAsync(

@@ -46,7 +46,12 @@
 #define KOKKOS_SYCL_INSTANCE_HPP_
 
 #include <optional>
+// FIXME_SYCL
+#if __has_include(<sycl/sycl.hpp>)
+#include <sycl/sycl.hpp>
+#else
 #include <CL/sycl.hpp>
+#endif
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Profiling.hpp>

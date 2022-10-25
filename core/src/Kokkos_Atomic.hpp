@@ -103,7 +103,7 @@ KOKKOS_INLINE_FUNCTION void desul_atomic_inc(T* dest, MemoryOrderSeqCst,
 
 template <class T>
 KOKKOS_INLINE_FUNCTION T
-desul_atomic_exchange(T* dest, const Kokkos::Impl::identity_t<T> val,
+desul_atomic_exchange(T* dest, const Kokkos::Impl::type_identity_t<T> val,
                       MemoryOrderSeqCst, MemoryScopeDevice) {
   return desul::atomic_exchange(const_cast<T*>(dest), val,
                                 desul::MemoryOrderSeqCst(),
@@ -112,8 +112,8 @@ desul_atomic_exchange(T* dest, const Kokkos::Impl::identity_t<T> val,
 
 template <class T>
 KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
-    T* dest, Kokkos::Impl::identity_t<const T> compare,
-    Kokkos::Impl::identity_t<const T> val, MemoryOrderSeqCst,
+    T* dest, Kokkos::Impl::type_identity_t<const T> compare,
+    Kokkos::Impl::type_identity_t<const T> val, MemoryOrderSeqCst,
     MemoryScopeDevice) {
   return desul::atomic_compare_exchange(dest, compare, val,
                                         desul::MemoryOrderSeqCst(),
@@ -168,7 +168,7 @@ KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
 #define KOKKOS_ENABLE_SERIAL_ATOMICS
 
 #elif defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || \
-    (defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_IBM))
+    defined(KOKKOS_COMPILER_NVCC)
 
 #define KOKKOS_ENABLE_GNU_ATOMICS
 
@@ -401,15 +401,15 @@ KOKKOS_INLINE_FUNCTION void desul_atomic_inc(T* dest, MemoryOrderSeqCst,
 
 template <class T>
 KOKKOS_INLINE_FUNCTION T
-desul_atomic_exchange(T* dest, Kokkos::Impl::identity_t<const T> val,
+desul_atomic_exchange(T* dest, Kokkos::Impl::type_identity_t<const T> val,
                       MemoryOrderSeqCst, MemoryScopeDevice) {
   return Kokkos::atomic_exchange(dest, val);
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION T desul_atomic_compare_exchange(
-    T* dest, Kokkos::Impl::identity_t<const T> compare,
-    Kokkos::Impl::identity_t<const T> val, MemoryOrderSeqCst,
+    T* dest, Kokkos::Impl::type_identity_t<const T> compare,
+    Kokkos::Impl::type_identity_t<const T> val, MemoryOrderSeqCst,
     MemoryScopeDevice) {
   return Kokkos::atomic_compare_exchange(dest, compare, val);
 }

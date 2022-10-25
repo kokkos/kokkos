@@ -90,13 +90,7 @@ KOKKOS_FUNCTION constexpr bool test_strncmp() {
   static_assert(strncmp(greet1, greet2, 13) > 0);
   static_assert(strncmp(greet2, greet1, 13) < 0);
   static_assert(strncmp(greet2, greet1, 7) == 0);
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 610)
-  (void)greet3;
-#elif defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 710)
-  static_assert(strncmp(&greet2[12], &greet3[11], 5) == 0);
-#else
   static_assert(strncmp(greet2 + 12, greet3 + 11, 5) == 0);
-#endif
   static_assert(strncmp(greet1, greet2, 0) == 0);
   return true;
 }
@@ -176,7 +170,6 @@ KOKKOS_FUNCTION constexpr bool test_strncat() {
 }
 static_assert(test_strncat());
 
-#if !defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 540)
 template <class Integral>
 KOKKOS_FUNCTION constexpr bool to_chars_helper(Integral val, char const* ref) {
   using Kokkos::Impl::strcmp;
@@ -210,6 +203,5 @@ KOKKOS_FUNCTION constexpr bool test_to_chars() {
   return true;
 }
 static_assert(test_to_chars());
-#endif
 
 }  // namespace

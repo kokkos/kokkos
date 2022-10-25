@@ -121,18 +121,18 @@ static_assert(test_quad_precision_promotion_traits());
 constexpr bool test_quad_precision_math_constants() {
   // compare to mathematical constants defined in libquadmath when available
   // clang-format off
-  static_assert(Kokkos::Experimental::e_v     <__float128> == M_Eq);
-  static_assert(Kokkos::Experimental::log2e_v <__float128> == M_LOG2Eq);
-  static_assert(Kokkos::Experimental::log10e_v<__float128> == M_LOG10Eq);
-  static_assert(Kokkos::Experimental::pi_v    <__float128> == M_PIq);
+  static_assert(Kokkos::numbers::e_v     <__float128> == M_Eq);
+  static_assert(Kokkos::numbers::log2e_v <__float128> == M_LOG2Eq);
+  static_assert(Kokkos::numbers::log10e_v<__float128> == M_LOG10Eq);
+  static_assert(Kokkos::numbers::pi_v    <__float128> == M_PIq);
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 930)
-  static_assert(Kokkos::Experimental::inv_pi_v<__float128> == M_1_PIq);
+  static_assert(Kokkos::::inv_pi_v<__float128> == M_1_PIq);
 #endif
   // inv_sqrtpi_v
-  static_assert(Kokkos::Experimental::ln2_v   <__float128> == M_LN2q);
-  static_assert(Kokkos::Experimental::ln10_v  <__float128> == M_LN10q);
+  static_assert(Kokkos::numbers::ln2_v   <__float128> == M_LN2q);
+  static_assert(Kokkos::numbers::ln10_v  <__float128> == M_LN10q);
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 930)
-  static_assert(Kokkos::Experimental::sqrt2_v <__float128> == M_SQRT2q);
+  static_assert(Kokkos::numbers::sqrt2_v <__float128> == M_SQRT2q);
 #endif
   // sqrt3_v
   // inv_sqrt3_v

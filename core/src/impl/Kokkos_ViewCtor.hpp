@@ -102,25 +102,12 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
 
   using type = CommonViewAllocProp<Specialize, T>;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ViewCtorProp(const type &arg) : value(arg) {}
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ViewCtorProp(type &&arg) : value(arg) {}
 
   type value;
-};
-
-/*  std::integral_constant<unsigned,I> are dummy arguments
- *  that avoid duplicate base class errors
- */
-template <unsigned I>
-struct ViewCtorProp<void, std::integral_constant<unsigned, I>> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
-
-  template <typename P>
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(const P &) {}
 };
 
 /* Property flags have constexpr value */
@@ -178,7 +165,7 @@ struct ViewCtorProp<void, T *> {
 
   using type = T *;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   ViewCtorProp(const type arg) : value(arg) {}
 
   type value;
@@ -187,19 +174,20 @@ struct ViewCtorProp<void, T *> {
 // For some reason I don't understand I needed this specialization explicitly
 // for NVCC/MSVC
 template <typename T>
-struct ViewCtorProp<T *> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+struct ViewCtorProp<T *> : public ViewCtorProp<void, T *> {
+  static constexpr bool has_memory_space    = false;
+  static constexpr bool has_execution_space = false;
+  static constexpr bool has_pointer         = true;
+  static constexpr bool has_label           = false;
+  static constexpr bool allow_padding       = false;
+  static constexpr bool initialize          = true;
 
-  using type = T *;
+  using memory_space    = void;
+  using execution_space = void;
+  using pointer_type    = T *;
 
-  KOKKOS_INLINE_FUNCTION
-  ViewCtorProp(const type arg) : value(arg) {}
-
-  enum : bool { has_pointer = true };
-  using pointer_type = type;
-  type value;
+  KOKKOS_FUNCTION ViewCtorProp(const pointer_type arg)
+      : ViewCtorProp<void, pointer_type>(arg) {}
 };
 
 // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` directly
@@ -230,14 +218,15 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
  public:
   /* Flags for the common properties */
-  enum { has_memory_space = var_memory_space::value };
-  enum { has_execution_space = var_execution_space::value };
-  enum { has_pointer = var_pointer::value };
-  enum { has_label = Kokkos::Impl::has_type<std::string, P...>::value };
-  enum { allow_padding = Kokkos::Impl::has_type<AllowPadding_t, P...>::value };
-  enum {
-    initialize = !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value
-  };
+  static constexpr bool has_memory_space    = var_memory_space::value;
+  static constexpr bool has_execution_space = var_execution_space::value;
+  static constexpr bool has_pointer         = var_pointer::value;
+  static constexpr bool has_label =
+      Kokkos::Impl::has_type<std::string, P...>::value;
+  static constexpr bool allow_padding =
+      Kokkos::Impl::has_type<AllowPadding_t, P...>::value;
+  static constexpr bool initialize =
+      !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value;
 
   using memory_space    = typename var_memory_space::type;
   using execution_space = typename var_execution_space::type;
@@ -250,12 +239,12 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   inline ViewCtorProp(Args const &... args) : ViewCtorProp<void, P>(args)... {}
 
   template <typename... Args>
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0, Args const &... args)
+  KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &... args)
       : ViewCtorProp<void, pointer_type>(arg0),
         ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
 
   /* Copy from a matching property subset */
-  KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0)
+  KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0)
       : ViewCtorProp<void, pointer_type>(arg0) {}
 
   // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` here
@@ -272,6 +261,117 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
     (void)arg;
   }
 };
+
+template <typename... P>
+auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
+  return view_ctor_prop;
+}
+
+template <typename... P, typename Property, typename... Properties>
+auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
+                              const Property &property,
+                              const Properties &... properties) {
+  if constexpr ((is_execution_space<Property>::value &&
+                 !ViewCtorProp<P...>::has_execution_space) ||
+                (is_memory_space<Property>::value &&
+                 !ViewCtorProp<P...>::has_memory_space) ||
+                (is_view_label<Property>::value &&
+                 !ViewCtorProp<P...>::has_label) ||
+                (std::is_same_v<Property, WithoutInitializing_t> &&
+                 ViewCtorProp<P...>::initialize)) {
+    using NewViewCtorProp = ViewCtorProp<P..., Property>;
+    NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
+    static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
+        property;
+    return with_properties_if_unset(new_view_ctor_prop, properties...);
+  } else
+    return with_properties_if_unset(view_ctor_prop, properties...);
+
+// A workaround placed to prevent spurious "missing return statement at the
+// end of non-void function" warnings from CUDA builds (issue #5470). Because
+// KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
+// cuda_abort(), an unreachable while(true); is placed as a fallback method
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
+    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+  Kokkos::abort(
+      "Prevents an incorrect warning: missing return statement at end of "
+      "non-void function");
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+  while (true)
+    ;
+#endif
+#endif
+}
+
+struct ExecutionSpaceTag {};
+struct MemorySpaceTag {};
+struct LabelTag {};
+struct PointerTag {};
+
+template <typename Tag, typename... P>
+KOKKOS_FUNCTION const auto &get_property(
+    const ViewCtorProp<P...> &view_ctor_prop) {
+  if constexpr (std::is_same_v<Tag, ExecutionSpaceTag>) {
+    static_assert(ViewCtorProp<P...>::has_execution_space);
+    using execution_space_type = typename ViewCtorProp<P...>::execution_space;
+    return static_cast<const ViewCtorProp<void, execution_space_type> &>(
+               view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, MemorySpaceTag>) {
+    static_assert(ViewCtorProp<P...>::has_memory_space);
+    using memory_space_type = typename ViewCtorProp<P...>::memory_space;
+    return static_cast<const ViewCtorProp<void, memory_space_type> &>(
+               view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, LabelTag>) {
+    static_assert(ViewCtorProp<P...>::has_label);
+    return static_cast<const ViewCtorProp<void, std::string> &>(view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, PointerTag>) {
+    static_assert(ViewCtorProp<P...>::has_pointer);
+    using pointer_type = typename ViewCtorProp<P...>::pointer_type;
+    return static_cast<const ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
+        .value;
+  } else {
+    static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
+    return view_ctor_prop;
+  }
+
+// A workaround placed to prevent spurious "missing return statement at the
+// end of non-void function" warnings from CUDA builds (issue #5470). Because
+// KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
+// cuda_abort(), an unreachable while(true); is placed as a fallback method
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
+    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+  Kokkos::abort(
+      "Prevents an incorrect warning: missing return statement at end of "
+      "non-void function");
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+  while (true)
+    ;
+#endif
+#endif
+}
+#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
+// pragma pop is getting a warning from the underlying GCC
+// for unknown pragma if -pedantic is used
+#ifdef __CUDA_ARCH__
+#pragma pop
+#endif
+#endif
+#ifdef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
+#pragma warning(pop)
+#undef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
+#endif
+
+template <typename Tag, typename... P>
+KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {
+  // Avoid code duplication by deferring to the const-qualified overload and
+  // casting the const away from the return type
+  const auto &tmp = get_property<Tag>(
+      static_cast<const ViewCtorProp<P...> &>(view_ctor_prop));
+  return const_cast<std::decay_t<decltype(tmp)> &>(tmp);
+}
 
 } /* namespace Impl */
 } /* namespace Kokkos */

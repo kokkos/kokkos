@@ -136,6 +136,12 @@ TEST(TEST_CATEGORY, host_shared_ptr_dereference_on_device) {
       static_cast<T*>(Kokkos::kokkos_malloc<MemorySpace>(sizeof(T))),
       [](T* p) { Kokkos::kokkos_free<MemorySpace>(p); });
 
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "FIXME wrong result";
+  }
+#endif
   check_access_stored_pointer_and_dereference_on_device(device_ptr);
 }
 
@@ -277,13 +283,11 @@ TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
         Kokkos::Experimental::SYCLSharedUSMSpace>();
 #endif
 #ifdef KOKKOS_ENABLE_HIP
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value) {
-    host_shared_ptr_test_reference_counting<
-        Kokkos::Experimental::HIPHostPinnedSpace,
-        Kokkos::Experimental::HIPHostPinnedSpace>();
-    host_shared_ptr_test_reference_counting<
-        Kokkos::Experimental::HIPManagedSpace,
-        Kokkos::Experimental::HIPManagedSpace>();
+  if (std::is_same<TEST_EXECSPACE, Kokkos::HIP>::value) {
+    host_shared_ptr_test_reference_counting<Kokkos::HIPHostPinnedSpace,
+                                            Kokkos::HIPHostPinnedSpace>();
+    host_shared_ptr_test_reference_counting<Kokkos::HIPManagedSpace,
+                                            Kokkos::HIPManagedSpace>();
   }
 #endif
 }

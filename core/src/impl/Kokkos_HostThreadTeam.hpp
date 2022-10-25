@@ -498,7 +498,7 @@ class HostThreadTeamMember {
                                              const int source_team_rank) const
       noexcept {
     KOKKOS_IF_ON_HOST((if (1 < m_data.m_team_size) {
-      T volatile* const shared_value = (T*)m_data.team_reduce();
+      T* const shared_value = (T*)m_data.team_reduce();
 
       // Don't overwrite shared memory until all threads arrive
 
@@ -507,13 +507,15 @@ class HostThreadTeamMember {
         // only this thread returned from 'team_rendezvous'
         // with a return value of 'true'
 
-        *shared_value = value;
+        Kokkos::Impl::atomic_store(shared_value, value,
+                                   Kokkos::Impl::memory_order_release);
 
         m_data.team_rendezvous_release();
         // This thread released all other threads from 'team_rendezvous'
         // with a return value of 'false'
       } else {
-        value = *shared_value;
+        value = Kokkos::Impl::atomic_load(shared_value,
+                                          Kokkos::Impl::memory_order_acquire);
       }
     }))
 
@@ -528,7 +530,7 @@ class HostThreadTeamMember {
                                              const int source_team_rank) const
       noexcept {
     KOKKOS_IF_ON_HOST((
-        T volatile* const shared_value = (T*)m_data.team_reduce();
+        T* const shared_value = (T*)m_data.team_reduce();
 
         // Don't overwrite shared memory until all threads arrive
 
@@ -540,13 +542,17 @@ class HostThreadTeamMember {
           f(value);
 
           if (1 < m_data.m_team_size) {
-            *shared_value = value;
+            Kokkos::Impl::atomic_store(shared_value, value,
+                                       Kokkos::Impl::memory_order_release);
           }
 
           m_data.team_rendezvous_release();
           // This thread released all other threads from 'team_rendezvous'
           // with a return value of 'false'
-        } else { value = *shared_value; }))
+        } else {
+          value = Kokkos::Impl::atomic_load(shared_value,
+                                            Kokkos::Impl::memory_order_acquire);
+        }))
 
     KOKKOS_IF_ON_DEVICE(
         ((void)f; (void)value; (void)source_team_rank;

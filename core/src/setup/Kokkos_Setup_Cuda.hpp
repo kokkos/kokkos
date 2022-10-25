@@ -90,10 +90,6 @@
 #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 #endif  // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 
-#if (10000 > CUDA_VERSION)
-#define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
-#endif
-
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
 // PTX atomics with memory order semantics are only available on volta and later
 #if !defined(KOKKOS_DISABLE_CUDA_ASM)
@@ -113,19 +109,5 @@
 #define KOKKOS_IMPL_FUNCTION __device__ __host__
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
-#if defined(KOKKOS_COMPILER_NVCC)
-#define KOKKOS_INLINE_FUNCTION_DELETED inline
-#else
-#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
-#endif
-#if (CUDA_VERSION < 10000)
-#define KOKKOS_DEFAULTED_FUNCTION __host__ __device__ inline
-#else
-#define KOKKOS_DEFAULTED_FUNCTION inline
-#endif
-
-#if (CUDA_VERSION >= 10000)
-#define KOKKOS_CUDA_ENABLE_GRAPHS
-#endif
 
 #endif /* KOKKOS_CUDA_SETUP_HPP_ */

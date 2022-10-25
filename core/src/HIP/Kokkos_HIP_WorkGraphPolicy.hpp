@@ -45,17 +45,18 @@
 #ifndef KOKKOS_HIP_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HIP_WORKGRAPHPOLICY_HPP
 
-#include <Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
+#include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
-class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
-                  Kokkos::Experimental::HIP> {
+class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>, HIP> {
  public:
   using Policy = Kokkos::WorkGraphPolicy<Traits...>;
-  using Self   = ParallelFor<FunctorType, Policy, Kokkos::Experimental::HIP>;
+  using Self   = ParallelFor<FunctorType, Policy, HIP>;
 
  private:
   Policy m_policy;
@@ -89,15 +90,12 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
   inline void execute() {
     const int warps_per_block = 4;
-    const dim3 grid(
-        Kokkos::Experimental::Impl::hip_internal_multiprocessor_count(), 1, 1);
-    const dim3 block(1, Kokkos::Experimental::Impl::HIPTraits::WarpSize,
-                     warps_per_block);
+    const dim3 grid(hip_internal_multiprocessor_count(), 1, 1);
+    const dim3 block(1, HIPTraits::WarpSize, warps_per_block);
     const int shared = 0;
 
-    Kokkos::Experimental::Impl::HIPParallelLaunch<Self>(
-        *this, grid, block, shared,
-        Experimental::HIP().impl_internal_space_instance(), false);
+    HIPParallelLaunch<Self>(*this, grid, block, shared,
+                            HIP().impl_internal_space_instance(), false);
   }
 
   inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)

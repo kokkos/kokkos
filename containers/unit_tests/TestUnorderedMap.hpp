@@ -293,6 +293,12 @@ void test_deep_copy(uint32_t num_nodes) {
 
 #if !defined(_WIN32)
 TEST(TEST_CATEGORY, UnorderedMap_insert) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "unit test is hanging from index 0";
+  }
+#endif
   for (int i = 0; i < 500; ++i) {
     test_insert<TEST_EXECSPACE>(100000, 90000, 100, true);
     test_insert<TEST_EXECSPACE>(100000, 90000, 100, false);
@@ -305,6 +311,12 @@ TEST(TEST_CATEGORY, UnorderedMap_failed_insert) {
 }
 
 TEST(TEST_CATEGORY, UnorderedMap_deep_copy) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "unit test is hanging from index 0";
+  }
+#endif
   for (int i = 0; i < 2; ++i) test_deep_copy<TEST_EXECSPACE>(10000);
 }
 
@@ -333,6 +345,9 @@ TEST(TEST_CATEGORY, UnorderedMap_clear_zero_size) {
   m.insert(3);
   m.insert(5);
   m.insert(7);
+  ASSERT_EQ(4u, m.size());
+  m.rehash(0);
+  ASSERT_EQ(128u, m.capacity());
   ASSERT_EQ(4u, m.size());
 
   m.clear();

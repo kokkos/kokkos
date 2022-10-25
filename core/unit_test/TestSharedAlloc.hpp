@@ -241,10 +241,12 @@ TEST(TEST_CATEGORY, impl_shared_alloc) {
 #elif (TEST_CATEGORY_NUMBER == 5)  // cuda
   test_shared_alloc<Kokkos::CudaSpace, Kokkos::DefaultHostExecutionSpace>();
 #elif (TEST_CATEGORY_NUMBER == 6)  // hip
-  test_shared_alloc<Kokkos::Experimental::HIPSpace,
-                    Kokkos::DefaultHostExecutionSpace>();
+  test_shared_alloc<Kokkos::HIPSpace, Kokkos::DefaultHostExecutionSpace>();
 #elif (TEST_CATEGORY_NUMBER == 7)  // sycl
   test_shared_alloc<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                    Kokkos::DefaultHostExecutionSpace>();
+#elif (TEST_CATEGORY_NUMBER == 8)  // openacc
+  test_shared_alloc<Kokkos::Experimental::OpenACCSpace,
                     Kokkos::DefaultHostExecutionSpace>();
 #endif
 #else

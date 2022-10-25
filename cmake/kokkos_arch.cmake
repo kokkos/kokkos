@@ -68,7 +68,7 @@ DECLARE_AND_CHECK_HOST_ARCH(ZEN               "AMD Zen architecture")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN2              "AMD Zen2 architecture")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN3              "AMD Zen3 architecture")
 
-IF(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_UNSUPPORTED_ARCHS)
+IF(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_SYCL)
   SET(KOKKOS_SHOW_CUDA_ARCHS ON)
 ENDIF()
 
@@ -86,17 +86,26 @@ KOKKOS_ARCH_OPTION(VOLTA72         GPU  "NVIDIA Volta generation CC 7.2"   "KOKK
 KOKKOS_ARCH_OPTION(TURING75        GPU  "NVIDIA Turing generation CC 7.5"  "KOKKOS_SHOW_CUDA_ARCHS")
 KOKKOS_ARCH_OPTION(AMPERE80        GPU  "NVIDIA Ampere generation CC 8.0"  "KOKKOS_SHOW_CUDA_ARCHS")
 KOKKOS_ARCH_OPTION(AMPERE86        GPU  "NVIDIA Ampere generation CC 8.6"  "KOKKOS_SHOW_CUDA_ARCHS")
+KOKKOS_ARCH_OPTION(HOPPER90        GPU  "NVIDIA Hopper generation CC 9.0"  "KOKKOS_SHOW_CUDA_ARCHS")
 
-IF(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_UNSUPPORTED_ARCHS)
+IF(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENMPTARGET)
   SET(KOKKOS_SHOW_HIP_ARCHS ON)
 ENDIF()
 
-KOKKOS_ARCH_OPTION(VEGA900         GPU  "AMD GPU MI25 GFX900"      "KOKKOS_SHOW_HIP_ARCHS")
-KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906" "KOKKOS_SHOW_HIP_ARCHS")
-KOKKOS_ARCH_OPTION(VEGA908         GPU  "AMD GPU MI100 GFX908"     "KOKKOS_SHOW_HIP_ARCHS")
-KOKKOS_ARCH_OPTION(VEGA90A         GPU  "AMD GPU MI200 GFX90A"     "KOKKOS_SHOW_HIP_ARCHS")
+# AMD archs ordered in decreasing priority of autodetection
+LIST(APPEND SUPPORTED_AMD_GPUS       MI200    MI100    MI50/60 MI25)
+LIST(APPEND SUPPORTED_AMD_ARCHS      VEGA90A  VEGA908  VEGA906 VEGA900)
+LIST(APPEND CORRESPONDING_AMD_FLAGS  gfx90a   gfx908   gfx906  gfx900)
 
-IF(Kokkos_ENABLE_SYCL OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_UNSUPPORTED_ARCHS)
+#FIXME CAN BE REPLACED WITH LIST_ZIP IN CMAKE 3.17
+FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+  LIST(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
+  LIST(GET SUPPORTED_AMD_GPUS ${LIST_INDEX} GPU)
+  LIST(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
+  KOKKOS_ARCH_OPTION(${ARCH}         GPU  "AMD GPU ${GPU} ${FLAG}"      "KOKKOS_SHOW_HIP_ARCHS")
+ENDFOREACH()
+
+IF(Kokkos_ENABLE_SYCL OR Kokkos_ENABLE_OPENMPTARGET)
   SET(KOKKOS_SHOW_SYCL_ARCHS ON)
 ENDIF()
 
@@ -137,7 +146,7 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
 
   SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers"
     ${COMMON_WARNINGS})
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
     LIST(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
   ENDIF()
 
@@ -160,9 +169,7 @@ GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 IF (KOKKOS_ENABLE_CUDA_LAMBDA)
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-expt-extended-lambda")
-    IF(KOKKOS_COMPILER_CUDA_VERSION GREATER_EQUAL 110)
-      GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-Wext-lambda-captures-this")
-    ENDIF()
+    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-Wext-lambda-captures-this")
   ENDIF()
 ENDIF()
 
@@ -187,7 +194,9 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 ELSEIF (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(CUDA_ARCH_FLAG "-gpu")
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -cuda)
-  GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -cuda)
+  IF (KOKKOS_ENABLE_CUDA) # FIXME ideally unreachable when CUDA not enabled
+    GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -cuda)
+  ENDIF()
 ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
   SET(CUDA_ARCH_FLAG "-arch")
 ENDIF()
@@ -198,9 +207,6 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -lineinfo)
   ENDIF()
   UNSET(_UPPERCASE_CMAKE_BUILD_TYPE)
-  IF (KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0 AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 10.0)
-    GLOBAL_APPEND(KOKKOS_CUDAFE_OPTIONS --diag_suppress=esa_on_defaulted_function_ignored)
-  ENDIF()
 ENDIF()
 
 
@@ -546,6 +552,7 @@ CHECK_CUDA_ARCH(VOLTA72   sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
 CHECK_CUDA_ARCH(AMPERE80  sm_80)
 CHECK_CUDA_ARCH(AMPERE86  sm_86)
+CHECK_CUDA_ARCH(HOPPER90  sm_90)
 
 SET(AMDGPU_ARCH_ALREADY_SPECIFIED "")
 FUNCTION(CHECK_AMDGPU_ARCH ARCH FLAG)
@@ -569,26 +576,17 @@ ENDFUNCTION()
 
 #These will define KOKKOS_AMDGPU_ARCH_FLAG
 #to the corresponding flag name if ON
-CHECK_AMDGPU_ARCH(VEGA900 gfx900) # Radeon Instinct MI25
-CHECK_AMDGPU_ARCH(VEGA906 gfx906) # Radeon Instinct MI50 and MI60
-CHECK_AMDGPU_ARCH(VEGA908 gfx908) # Radeon Instinct MI100
-CHECK_AMDGPU_ARCH(VEGA90A gfx90a) # Radeon Instinct MI200
+FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+  LIST(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
+  LIST(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
+  CHECK_AMDGPU_ARCH(${ARCH} ${FLAG})
+ENDFOREACH()
 
-IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
-    FIND_PROGRAM(ROCM_ENUMERATOR rocm_agent_enumerator)
-    EXECUTE_PROCESS(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
-    STRING(LENGTH "${GPU_ARCHS}" len_str)
-    # enumerator always output gfx000 as the first line
-    IF(${len_str} LESS 8)
-      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                         "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
-    ENDIF()
-  ELSE()
-    MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                       "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
-  ENDIF()
-ENDIF()
+MACRO(SET_AND_CHECK_AMD_ARCH ARCH FLAG)
+  KOKKOS_SET_OPTION(ARCH_${ARCH} ON)
+  CHECK_AMDGPU_ARCH(${ARCH} ${FLAG})
+  LIST(APPEND KOKKOS_ENABLED_ARCH_LIST ${ARCH})
+ENDMACRO()
 
 MACRO(CHECK_MULTIPLE_INTEL_ARCH)
   IF(KOKKOS_ARCH_INTEL_GPU)
@@ -625,7 +623,6 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${CLANG_CUDA_ARCH})
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64
-      XL    -qtgtarch=${KOKKOS_CUDA_ARCH_FLAG}
       NVHPC -gpu=${NVHPC_CUDA_ARCH}
     )
   ENDIF()
@@ -657,11 +654,11 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device xehp" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.50.4" -D__STRICT_ANSI__
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.4.0" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.60.7" -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()
@@ -710,11 +707,11 @@ IF (KOKKOS_ENABLE_SYCL)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device xehp"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.4.0"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
     )
   ENDIF()
 ENDIF()
@@ -808,10 +805,56 @@ IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
   SET(KOKKOS_ARCH_AMPERE ON)
 ENDIF()
 
-#Regardless of version, make sure we define the general architecture name
-IF (KOKKOS_ARCH_VEGA900 OR KOKKOS_ARCH_VEGA906 OR KOKKOS_ARCH_VEGA908 OR KOKKOS_ARCH_VEGA90A)
-  SET(KOKKOS_ARCH_VEGA ON)
+IF (KOKKOS_ARCH_HOPPER90)
+  SET(KOKKOS_ARCH_HOPPER ON)
 ENDIF()
+
+#HIP detection of gpu arch
+IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
+  FIND_PROGRAM(ROCM_ENUMERATOR rocm_agent_enumerator)
+  IF(NOT ROCM_ENUMERATOR)
+    MESSAGE(FATAL_ERROR "Autodetection of AMD GPU architecture not possible as "
+      "rocm_agent_enumerator could not be found. "
+      "Please specify an arch manually via -DKokkos_ARCH_{..}=ON")
+  ELSE()
+    EXECUTE_PROCESS(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
+    STRING(LENGTH "${GPU_ARCHS}" len_str)
+    # enumerator always output gfx000 as the first line
+    IF(${len_str} LESS 8)
+      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
+                         "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+    # check for known gpu archs, otherwise error out
+    ELSE()
+      SET(AMD_ARCH_DETECTED "")
+      FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+        LIST(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
+        LIST(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
+        STRING(REGEX MATCH "(${FLAG})" DETECTED_GPU_ARCH ${GPU_ARCHS})
+        IF("${DETECTED_GPU_ARCH}" STREQUAL "${FLAG}")
+          SET_AND_CHECK_AMD_ARCH(${ARCH} ${FLAG})
+          SET(AMD_ARCH_DETECTED ${ARCH})
+          BREAK()
+        ENDIF()
+      ENDFOREACH()
+      IF("${AMD_ARCH_DETECTED}" STREQUAL "")
+        MESSAGE(FATAL_ERROR "HIP enabled but no automatically detected AMD GPU architecture "
+         "is supported. "
+         "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+      ENDIF()
+    ENDIF()
+  ENDIF()
+ENDIF()
+
+#Regardless of version, make sure we define the general architecture name
+FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
+  IF (KOKKOS_ARCH_${ARCH})
+    STRING(REGEX MATCH "(VEGA)" IS_VEGA ${ARCH})
+    IF(IS_VEGA)
+      SET(KOKKOS_ARCH_VEGA ON)
+      BREAK()
+    ENDIF()
+  ENDIF()
+ENDFOREACH()
 
 #CMake verbose is kind of pointless
 #Let's just always print things
@@ -832,6 +875,9 @@ FOREACH (_BACKEND Cuda OpenMPTarget HIP SYCL OpenACC)
        ELSE()
           SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
        ENDIF()
+       SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
+    ELSEIF(${_BACKEND} STREQUAL "HIP")
+       SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
        SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
     ELSE()
        SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::Experimental::${_BACKEND}Space")
