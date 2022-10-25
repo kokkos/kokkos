@@ -86,6 +86,8 @@ void test_matching_arguments_rank() {
       std::index_sequence<1, 1, 1, 1, 1, 1>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
       std::index_sequence<1, 1, 1, 1, 1, 1, 1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1, 1, 1, 1, 1, 1, 1>());
 }
 
 template <int rank>
@@ -114,6 +116,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   test_matching_arguments_rank<5, 5, DynamicRank>();  // dim = 5, dynamic = 5
   test_matching_arguments_rank<6, 6, DynamicRank>();  // dim = 6, dynamic = 6
   test_matching_arguments_rank<7, 7, DynamicRank>();  // dim = 7, dynamic = 7
+  test_matching_arguments_rank<8, 8, DynamicRank>();  // dim = 8, dynamic = 8
 }
 
 template <int rank>
@@ -137,6 +140,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   test_matching_arguments_rank<5, 0, StaticRank>();  // dim = 5, dynamic = 0
   test_matching_arguments_rank<6, 0, StaticRank>();  // dim = 6, dynamic = 0
   test_matching_arguments_rank<7, 0, StaticRank>();  // dim = 7, dynamic = 0
+  test_matching_arguments_rank<8, 0, StaticRank>();  // dim = 8, dynamic = 0
 }
 
 template <int rank>
@@ -160,6 +164,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   test_matching_arguments_rank<5, 4, MixedRank>();  // dim = 5, dynamic = 4
   test_matching_arguments_rank<6, 5, MixedRank>();  // dim = 6, dynamic = 5
   test_matching_arguments_rank<7, 6, MixedRank>();  // dim = 7, dynamic = 6
+  test_matching_arguments_rank<8, 7, MixedRank>();  // dim = 8, dynamic = 7
 }
 #endif  // KOKKOS_ENABLE_OPENMPTARGET
 
