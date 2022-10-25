@@ -63,18 +63,18 @@ struct TestReducerCTADs {
 
     Kokkos::Sum<scalar_type, memspace> rt(view);
     Kokkos::Sum rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::Sum rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::Sum rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::Sum rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_prod() {
@@ -82,18 +82,18 @@ struct TestReducerCTADs {
 
     Kokkos::Prod<scalar_type, memspace> rt(view);
     Kokkos::Prod rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::Prod rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::Prod rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::Prod rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_min() {
@@ -101,18 +101,18 @@ struct TestReducerCTADs {
 
     Kokkos::Min<scalar_type, memspace> rt(view);
     Kokkos::Min rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::Min rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::Min rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::Min rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_max() {
@@ -120,18 +120,18 @@ struct TestReducerCTADs {
 
     Kokkos::Max<scalar_type, memspace> rt(view);
     Kokkos::Max rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::Max rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::Max rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::Max rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_land() {
@@ -139,18 +139,18 @@ struct TestReducerCTADs {
 
     Kokkos::LAnd<scalar_type, memspace> rt(view);
     Kokkos::LAnd rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::LAnd rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::LAnd rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::LAnd rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_lor() {
@@ -158,18 +158,18 @@ struct TestReducerCTADs {
 
     Kokkos::LOr<scalar_type, memspace> rt(view);
     Kokkos::LOr rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::LOr rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::LOr rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::LOr rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_band() {
@@ -177,18 +177,18 @@ struct TestReducerCTADs {
 
     Kokkos::BAnd<scalar_type, memspace> rt(view);
     Kokkos::BAnd rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::BAnd rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::BAnd rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::BAnd rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_bor() {
@@ -196,18 +196,18 @@ struct TestReducerCTADs {
 
     Kokkos::BOr<scalar_type, memspace> rt(view);
     Kokkos::BOr rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::BOr rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::BOr rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<scalar_type, memspace> vs;
     Kokkos::BOr rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minloc() {
@@ -215,18 +215,18 @@ struct TestReducerCTADs {
 
     Kokkos::MinLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MinLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_maxloc() {
@@ -234,18 +234,18 @@ struct TestReducerCTADs {
 
     Kokkos::MaxLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MaxLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MaxLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MaxLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MaxLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minmax() {
@@ -253,18 +253,18 @@ struct TestReducerCTADs {
 
     Kokkos::MinMax<scalar_type, memspace> rt(view);
     Kokkos::MinMax rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinMax rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinMax rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::MinMaxScalar<scalar_type>, memspace> vs;
     Kokkos::MinMax rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minmaxloc() {
@@ -273,18 +273,18 @@ struct TestReducerCTADs {
 
     Kokkos::MinMaxLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinMaxLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinMaxLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinMaxLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MinMaxLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_maxfirstloc() {
@@ -292,18 +292,18 @@ struct TestReducerCTADs {
 
     Kokkos::MaxFirstLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MaxFirstLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MaxFirstLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MaxFirstLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MaxFirstLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_maxfirstloccustomcomparator() {
@@ -316,18 +316,18 @@ struct TestReducerCTADs {
                                         comparator_type, memspace>
         rt(view, comparator);
     Kokkos::MaxFirstLocCustomComparator rd(view, comparator);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MaxFirstLocCustomComparator rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MaxFirstLocCustomComparator rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MaxFirstLocCustomComparator rs(vs, comparator);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minfirstloc() {
@@ -335,18 +335,18 @@ struct TestReducerCTADs {
 
     Kokkos::MinFirstLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinFirstLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinFirstLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinFirstLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MinFirstLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minfirstloccustomcomparator() {
@@ -359,18 +359,18 @@ struct TestReducerCTADs {
                                         comparator_type, memspace>
         rt(view, comparator);
     Kokkos::MinFirstLocCustomComparator rd(view, comparator);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinFirstLocCustomComparator rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinFirstLocCustomComparator rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::ValLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MinFirstLocCustomComparator rs(vs, comparator);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minmaxfirstlastloc() {
@@ -379,18 +379,18 @@ struct TestReducerCTADs {
 
     Kokkos::MinMaxFirstLastLoc<scalar_type, index_type, memspace> rt(view);
     Kokkos::MinMaxFirstLastLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinMaxFirstLastLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinMaxFirstLastLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MinMaxFirstLastLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_minmaxfirstlastloccustomcomparator() {
@@ -404,18 +404,18 @@ struct TestReducerCTADs {
                                                comparator_type, memspace>
         rt(view, comparator);
     Kokkos::MinMaxFirstLastLocCustomComparator rd(view, comparator);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::MinMaxFirstLastLocCustomComparator rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::MinMaxFirstLastLocCustomComparator rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::MinMaxLocScalar<scalar_type, index_type>, memspace> vs;
     Kokkos::MinMaxFirstLastLocCustomComparator rs(vs, comparator);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_firstloc() {
@@ -423,18 +423,18 @@ struct TestReducerCTADs {
 
     Kokkos::FirstLoc<index_type, memspace> rt(view);
     Kokkos::FirstLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::FirstLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::FirstLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::FirstLocScalar<index_type>, memspace> vs;
     Kokkos::FirstLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_lastloc() {
@@ -442,18 +442,18 @@ struct TestReducerCTADs {
 
     Kokkos::LastLoc<index_type, memspace> rt(view);
     Kokkos::LastLoc rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::LastLoc rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::LastLoc rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::LastLocScalar<index_type>, memspace> vs;
     Kokkos::LastLoc rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_stdispartitioned() {
@@ -461,18 +461,18 @@ struct TestReducerCTADs {
 
     Kokkos::StdIsPartitioned<index_type, memspace> rt(view);
     Kokkos::StdIsPartitioned rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::StdIsPartitioned rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::StdIsPartitioned rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::StdIsPartScalar<index_type>, memspace> vs;
     Kokkos::StdIsPartitioned rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 
   static void test_stdpartitionpoint() {
@@ -480,18 +480,18 @@ struct TestReducerCTADs {
 
     Kokkos::StdPartitionPoint<index_type, memspace> rt(view);
     Kokkos::StdPartitionPoint rd(view);
-    ASSERT_TRUE((std::is_same_v<decltype(rd), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rd), decltype(rt)>);
 
     Kokkos::StdPartitionPoint rdc(rt);
-    ASSERT_TRUE((std::is_same_v<decltype(rdc), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdc), decltype(rt)>);
 
     Kokkos::StdPartitionPoint rdm(std::move(rt));
-    ASSERT_TRUE((std::is_same_v<decltype(rdm), decltype(rt)>));
+    static_assert(std::is_same_v<decltype(rdm), decltype(rt)>);
 
     VS<Kokkos::StdPartPointScalar<index_type>, memspace> vs;
     Kokkos::StdPartitionPoint rs(vs);
-    ASSERT_FALSE((std::is_same_v<decltype(vs), decltype(view)>));
-    ASSERT_TRUE((std::is_same_v<decltype(rs), decltype(rt)>));
+    static_assert(!std::is_same_v<decltype(vs), decltype(view)>);
+    static_assert(std::is_same_v<decltype(rs), decltype(rt)>);
   }
 };
 
