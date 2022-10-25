@@ -47,25 +47,21 @@
 
 namespace Test {
 
-#define LIVE(EXPR, ARGS, DYNRANK, TOTALRANK) EXPECT_NO_THROW(EXPR)
-#define DIE(EXPR, ARGS, DYNRANK, TOTALRANK)                                   \
-  ASSERT_DEATH(                                                               \
-      EXPR,                                                                   \
-      "Constructor for Kokkos::View 'v' has mismatched number of arguments. " \
-      "The number of arguments = " +                                          \
-          std::to_string(ARGS) +                                              \
-          " neither matches the dynamic rank = " + std::to_string(DYNRANK) +  \
-          " nor the total rank = " + std::to_string(TOTALRANK))
-
 template <int rank, int dynrank, template <int> class RankType,
           std::size_t... Is>
 void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
   constexpr int nargs = sizeof...(Is);
   using view_type     = Kokkos::View<typename RankType<rank>::type>;
   if (nargs == rank || nargs == dynrank)
-    LIVE({ view_type v("v", ((Is * 0) + 1)...); }, nargs, dynrank, rank);
+    EXPECT_NO_THROW({ view_type v("v", ((Is * 0) + 1)...); });
   else
-    DIE({ view_type v("v", ((Is * 0) + 1)...); }, nargs, dynrank, rank);
+    ASSERT_DEATH(
+        { view_type v("v", ((Is * 0) + 1)...); },
+        "Constructor for Kokkos::View 'v' has mismatched number of arguments. "
+        "The number of arguments = " +
+            std::to_string(nargs) +
+            " neither matches the dynamic rank = " + std::to_string(dynrank) +
+            " nor the total rank = " + std::to_string(rank));
 }
 
 template <int rank, int dynrank, template <int> class RankType>
@@ -167,9 +163,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   test_matching_arguments_rank<8, 7, MixedRank>();  // dim = 8, dynamic = 7
 }
 #endif  // KOKKOS_ENABLE_OPENMPTARGET
-
-#undef LIVE
-#undef DIE
 
 #define CHECK_DEATH(EXPR)                                                     \
   ASSERT_DEATH(EXPR,                                                          \
