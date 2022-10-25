@@ -375,6 +375,52 @@ struct TestReducers {
     }
 
     {
+      using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+      Scalar sum_scalar;
+      Kokkos::View<Scalar, ExecSpace> sum_view("result");
+      Kokkos::deep_copy(sum_view, Scalar(1));
+
+      Kokkos::parallel_for(
+          Kokkos::TeamPolicy<ExecSpace>(1, 1),
+          KOKKOS_LAMBDA(member_type team_member) {
+            Scalar local_scalar;
+            Kokkos::Sum<Scalar, typename ExecSpace::memory_space>
+                reducer_scalar(local_scalar);
+            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team_member, 0), f,
+                                    reducer_scalar);
+            sum_view() = local_scalar;
+          });
+      Kokkos::deep_copy(sum_scalar, sum_view);
+      ASSERT_EQ(sum_scalar, init) << "N: " << N;
+
+      Kokkos::parallel_for(
+          Kokkos::TeamPolicy<ExecSpace>(1, 1),
+          KOKKOS_LAMBDA(member_type team_member) {
+            Scalar local_scalar;
+            Kokkos::Sum<Scalar, typename ExecSpace::memory_space>
+                reducer_scalar(local_scalar);
+            Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team_member, N), f,
+                                    reducer_scalar);
+            sum_view() = local_scalar;
+          });
+      Kokkos::deep_copy(sum_scalar, sum_view);
+      ASSERT_EQ(sum_scalar, reference_sum) << "N: " << N;
+
+#if 0
+      sum_scalar = init;
+      Kokkos::parallel_for(Kokkos::TeamPolicy<ExecSpace>(1, 1), KOKKOS_LAMBDA (member_type team_member) {
+	  Scalar local_scalar;
+	  Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_scalar(local_scalar);
+	  Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team_member, N), f_tag, reducer_scalar);
+	  sum_view() = local_scalar;
+	});
+      Kokkos::deep_copy(sum_scalar, sum_view);
+      ASSERT_EQ(sum_scalar, reference_sum) << "N: " << N;
+#endif
+    }
+
+    {
       Kokkos::View<Scalar, Kokkos::HostSpace> sum_view("View");
       sum_view() = Scalar(1);
       Kokkos::Sum<Scalar> reducer_view(sum_view);
