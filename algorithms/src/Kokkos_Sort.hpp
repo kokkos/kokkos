@@ -726,6 +726,17 @@ void sort(ViewType view, size_t const begin, size_t const end) {
   exec.fence("Kokkos::Sort: fence after sorting");
 }
 
+#if 0
+namespace Experimental {
+
+template <class ExecutionSpace, class KeyFunctorType, class ValueViewTypes...>
+void sortByKey(ExecutionSpace const& exec_space, KeyFunctorType key_functor,
+               size_t const begin, size_t const end, ValueViewTypes value_views...) {
+  using key_type = decltype(key_functor(0));
+}
+}
+#endif
+  
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT

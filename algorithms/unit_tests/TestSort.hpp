@@ -463,6 +463,7 @@ template <class ExecutionSpace, typename KeyType>
 void test_sort(unsigned int N) {
   test_radix_sort<ExecutionSpace>();
 
+#if 0
   test_1D_sort<ExecutionSpace, KeyType>(N);
 #if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
@@ -482,6 +483,7 @@ void test_sort(unsigned int N) {
   test_sort_integer_overflow<ExecutionSpace, long long>();
   test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
   test_sort_integer_overflow<ExecutionSpace, int>();
+#endif
 }
 }  // namespace Impl
 }  // namespace Test
