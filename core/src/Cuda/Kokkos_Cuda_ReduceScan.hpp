@@ -103,7 +103,7 @@ template <class FunctorType>
 __device__ bool cuda_inter_block_reduction(
     typename FunctorType::reference_type value,
     typename FunctorType::reference_type neutral, const FunctorType& reducer,
-    Cuda::size_type* const m_scratch_space,
+    void* const m_scratch_space,
     typename FunctorType::pointer_type const /*result*/,
     Cuda::size_type* const m_scratch_flags,
     const int max_active_thread = blockDim.y) {

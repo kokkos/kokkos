@@ -625,6 +625,22 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   using functor_type = FunctorType;
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the reduction is performed.
+  // Within the reduction, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the reduction, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
+      Kokkos::Cuda::size_type>;
   using size_type    = Cuda::size_type;
   using reducer_type = ReducerType;
 
@@ -648,9 +664,11 @@ class ParallelReduce<CombinedFunctorReducerType,
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
-  size_type* m_scratch_space;
-  size_type* m_scratch_flags;
-  size_type* m_unified_space;
+  word_size_type* m_scratch_space;
+  // m_scratch_flags must be of type Cuda::size_type due to use of atomics
+  // for tracking metadata in Kokkos_Cuda_ReduceScan.hpp
+  Cuda::size_type* m_scratch_flags;
+  word_size_type* m_unified_space;
   size_type m_team_begin;
   size_type m_shmem_begin;
   size_type m_shmem_size;
@@ -694,13 +712,14 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   __device__ inline void run(SHMEMReductionTag&, const int& threadid) const {
-    const integral_nonzero_constant<
-        size_type, ReducerType::static_value_size() / sizeof(size_type)>
+    const integral_nonzero_constant<word_size_type,
+                                    ReducerType::static_value_size() /
+                                        sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
-                   sizeof(size_type));
+                   sizeof(word_size_type));
 
     reference_type value = m_functor_reducer.get_reducer().init(
-        kokkos_impl_cuda_shared_memory<size_type>() +
+        kokkos_impl_cuda_shared_memory<word_size_type>() +
         threadIdx.y * word_count.value);
 
     // Iterate this block through the league
@@ -723,18 +742,19 @@ class ParallelReduce<CombinedFunctorReducerType,
     if (!zero_length)
       do_final_reduction = cuda_single_inter_block_reduce_scan<false>(
           m_functor_reducer.get_reducer(), blockIdx.x, gridDim.x,
-          kokkos_impl_cuda_shared_memory<size_type>(), m_scratch_space,
+          kokkos_impl_cuda_shared_memory<word_size_type>(), m_scratch_space,
           m_scratch_flags);
 
     if (do_final_reduction) {
       // This is the final block with the final result at the final threads'
       // location
 
-      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
-                                (blockDim.y - 1) * word_count.value;
+      word_size_type* const shared =
+          kokkos_impl_cuda_shared_memory<word_size_type>() +
+          (blockDim.y - 1) * word_count.value;
       size_type* const global =
           m_result_ptr_device_accessible
-              ? reinterpret_cast<size_type*>(m_result_ptr)
+              ? reinterpret_cast<word_size_type*>(m_result_ptr)
               : (m_unified_space ? m_unified_space : m_scratch_space);
 
       if (threadIdx.y == 0) {
@@ -805,13 +825,15 @@ class ParallelReduce<CombinedFunctorReducerType,
           1u, UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
                                : std::min(int(m_league_size), m_team_size));
 
-      m_scratch_space = cuda_internal_scratch_space(
-          m_policy.space(),
-          m_functor_reducer.get_reducer().value_size() * block_count);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+              m_policy.space(),
+              m_functor_reducer.get_reducer().value_size() * block_count));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = cuda_internal_scratch_unified(
-          m_policy.space(), m_functor_reducer.get_reducer().value_size());
+      m_unified_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_unified(
+              m_policy.space(), m_functor_reducer.get_reducer().value_size()));
 
       dim3 block(m_vector_size, m_team_size, 1);
       dim3 grid(block_count, 1, 1);
