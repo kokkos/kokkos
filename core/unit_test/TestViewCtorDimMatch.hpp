@@ -48,383 +48,120 @@
 namespace Test {
 
 #define LIVE(EXPR, ARGS, DYNRANK, TOTALRANK) EXPECT_NO_THROW(EXPR)
-#define DIE(EXPR, ARGS, DYNRANK, TOTALRANK)                                    \
-  ASSERT_DEATH(                                                                \
-      EXPR,                                                                    \
-      "Constructor for Kokkos::View 'v_" #ARGS                                 \
-      "' has mismatched number of arguments. The number of arguments = " #ARGS \
-      " neither matches the dynamic rank = " #DYNRANK                          \
-      " nor the total rank = " #TOTALRANK)
+#define DIE(EXPR, ARGS, DYNRANK, TOTALRANK)                                   \
+  ASSERT_DEATH(                                                               \
+      EXPR,                                                                   \
+      "Constructor for Kokkos::View 'v' has mismatched number of arguments. " \
+      "The number of arguments = " +                                          \
+          std::to_string(ARGS) +                                              \
+          " neither matches the dynamic rank = " + std::to_string(DYNRANK) +  \
+          " nor the total rank = " + std::to_string(TOTALRANK))
 
-#define PARAM_0
-#define PARAM_1 1
-#define PARAM_2 1, 1
-#define PARAM_3 1, 1, 1
-#define PARAM_4 1, 1, 1, 1
-#define PARAM_5 1, 1, 1, 1, 1
-#define PARAM_6 1, 1, 1, 1, 1, 1
-#define PARAM_7 1, 1, 1, 1, 1, 1, 1
+template <int rank, int dynrank, template <int> class RankType,
+          std::size_t... args>
+void test_matching_arguments_rank_helper(std::index_sequence<args...>) {
+  constexpr int nargs = sizeof...(args);
+  using view_type     = Kokkos::View<typename RankType<rank>::type>;
+  if (nargs == rank || nargs == dynrank)
+    LIVE({ view_type v("v", args...); }, nargs, dynrank, rank);
+  else
+    DIE({ view_type v("v", args...); }, nargs, dynrank, rank);
+}
 
-#define PARAM_0_RANK 0
-#define PARAM_1_RANK 1
-#define PARAM_2_RANK 2
-#define PARAM_3_RANK 3
-#define PARAM_4_RANK 4
-#define PARAM_5_RANK 5
-#define PARAM_6_RANK 6
-#define PARAM_7_RANK 7
+template <int rank, int dynrank, template <int> class RankType>
+void test_matching_arguments_rank() {
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1, 1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1, 1, 1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1, 1, 1, 1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1, 1, 1, 1, 1>());
+  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+      std::index_sequence<1, 1, 1, 1, 1, 1, 1>());
+}
 
-using DType = int;
+template <int rank>
+struct DynamicRank {
+  using type = typename DynamicRank<rank - 1>::type*;
+};
+
+template <>
+struct DynamicRank<0> {
+  using type = int;
+};
 
 // Skip test execution when KOKKOS_ENABLE_OPENMPTARGET is enabled until
 // Kokkos::abort() aborts properly on that backend
 // Skip test execution when KOKKOS_COMPILER_NVHPC until fixed in GTEST
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) || (KOKKOS_COMPILER_NVHPC)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_COMPILER_NVHPC)
 #else
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  using DType_0 = DType;
-  using DType_1 = DType *;
-  using DType_2 = DType **;
-  using DType_3 = DType ***;
-  using DType_4 = DType ****;
-  using DType_5 = DType *****;
-  using DType_6 = DType ******;
-  using DType_7 = DType *******;
-  {
-    // test View parameters for View dim = 0, dynamic = 0
-    LIVE({ Kokkos::View<DType_0> v_0("v_0" PARAM_0); }, 0, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_1("v_1", PARAM_1); }, 1, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_2("v_2", PARAM_2); }, 2, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_3("v_3", PARAM_3); }, 3, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_4("v_4", PARAM_4); }, 4, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_5("v_5", PARAM_5); }, 5, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_6("v_6", PARAM_6); }, 6, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_7("v_7", PARAM_7); }, 7, 0, 0);
-  }
-
-  {
-    // test View parameters for View dim = 1, dynamic = 1
-    DIE({ Kokkos::View<DType_1> v_0("v_0" PARAM_0); }, 0, 1, 1);
-    LIVE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 1, 1);
-    DIE({ Kokkos::View<DType_1> v_2("v_2", PARAM_2); }, 2, 1, 1);
-    DIE({ Kokkos::View<DType_1> v_3("v_3", PARAM_3); }, 3, 1, 1);
-    DIE({ Kokkos::View<DType_1> v_4("v_4", PARAM_4); }, 4, 1, 1);
-    DIE({ Kokkos::View<DType_1> v_5("v_5", PARAM_5); }, 5, 1, 1);
-    DIE({ Kokkos::View<DType_1> v_6("v_6", PARAM_6); }, 6, 1, 1);
-    DIE({ Kokkos::View<DType_1> v_7("v_7", PARAM_7); }, 7, 1, 1);
-  }
-
-  {
-    // test View parameters for View dim = 2, dynamic = 2
-    DIE({ Kokkos::View<DType_2> v_0("v_0" PARAM_0); }, 0, 2, 2);
-    DIE({ Kokkos::View<DType_2> v_1("v_1", PARAM_1); }, 1, 2, 2);
-    LIVE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 2, 2);
-    DIE({ Kokkos::View<DType_2> v_3("v_3", PARAM_3); }, 3, 2, 2);
-    DIE({ Kokkos::View<DType_2> v_4("v_4", PARAM_4); }, 4, 2, 2);
-    DIE({ Kokkos::View<DType_2> v_5("v_5", PARAM_5); }, 5, 2, 2);
-    DIE({ Kokkos::View<DType_2> v_6("v_6", PARAM_6); }, 6, 2, 2);
-    DIE({ Kokkos::View<DType_2> v_7("v_7", PARAM_7); }, 7, 2, 2);
-  }
-
-  {
-    // test View parameters for View dim = 3, dynamic = 3
-    DIE({ Kokkos::View<DType_3> v_0("v_0" PARAM_0); }, 0, 3, 3);
-    DIE({ Kokkos::View<DType_3> v_1("v_1", PARAM_1); }, 1, 3, 3);
-    DIE({ Kokkos::View<DType_3> v_2("v_2", PARAM_2); }, 2, 3, 3);
-    LIVE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 3, 3);
-    DIE({ Kokkos::View<DType_3> v_4("v_4", PARAM_4); }, 4, 3, 3);
-    DIE({ Kokkos::View<DType_3> v_5("v_5", PARAM_5); }, 5, 3, 3);
-    DIE({ Kokkos::View<DType_3> v_6("v_6", PARAM_6); }, 6, 3, 3);
-    DIE({ Kokkos::View<DType_3> v_7("v_7", PARAM_7); }, 7, 3, 3);
-  }
-
-  {
-    // test View parameters for View dim = 4, dynamic = 4
-    DIE({ Kokkos::View<DType_4> v_0("v_0" PARAM_0); }, 0, 4, 4);
-    DIE({ Kokkos::View<DType_4> v_1("v_1", PARAM_1); }, 1, 4, 4);
-    DIE({ Kokkos::View<DType_4> v_2("v_2", PARAM_2); }, 2, 4, 4);
-    DIE({ Kokkos::View<DType_4> v_3("v_3", PARAM_3); }, 3, 4, 4);
-    LIVE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 4, 4);
-    DIE({ Kokkos::View<DType_4> v_5("v_5", PARAM_5); }, 5, 4, 4);
-    DIE({ Kokkos::View<DType_4> v_6("v_6", PARAM_6); }, 6, 4, 4);
-    DIE({ Kokkos::View<DType_4> v_7("v_7", PARAM_7); }, 7, 4, 4);
-  }
-
-  {
-    // test View parameters for View dim = 5, dynamic = 5
-    DIE({ Kokkos::View<DType_5> v_0("v_0" PARAM_0); }, 0, 5, 5);
-    DIE({ Kokkos::View<DType_5> v_1("v_1", PARAM_1); }, 1, 5, 5);
-    DIE({ Kokkos::View<DType_5> v_2("v_2", PARAM_2); }, 2, 5, 5);
-    DIE({ Kokkos::View<DType_5> v_3("v_3", PARAM_3); }, 3, 5, 5);
-    DIE({ Kokkos::View<DType_5> v_4("v_4", PARAM_4); }, 4, 5, 5);
-    LIVE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 5, 5);
-    DIE({ Kokkos::View<DType_5> v_6("v_6", PARAM_6); }, 6, 5, 5);
-    DIE({ Kokkos::View<DType_5> v_7("v_7", PARAM_7); }, 7, 5, 5);
-  }
-
-  {
-    // test View parameters for View dim = 6, dynamic = 6
-    DIE({ Kokkos::View<DType_6> v_0("v_0" PARAM_0); }, 0, 6, 6);
-    DIE({ Kokkos::View<DType_6> v_1("v_1", PARAM_1); }, 1, 6, 6);
-    DIE({ Kokkos::View<DType_6> v_2("v_2", PARAM_2); }, 2, 6, 6);
-    DIE({ Kokkos::View<DType_6> v_3("v_3", PARAM_3); }, 3, 6, 6);
-    DIE({ Kokkos::View<DType_6> v_4("v_4", PARAM_4); }, 4, 6, 6);
-    DIE({ Kokkos::View<DType_6> v_5("v_5", PARAM_5); }, 5, 6, 6);
-    LIVE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 6, 6);
-    DIE({ Kokkos::View<DType_6> v_7("v_7", PARAM_7); }, 7, 6, 6);
-  }
-
-  {
-    // test View parameters for View dim = 7, dynamic = 7
-    DIE({ Kokkos::View<DType_7> v_0("v_0" PARAM_0); }, 0, 7, 7);
-    DIE({ Kokkos::View<DType_7> v_1("v_1", PARAM_1); }, 1, 7, 7);
-    DIE({ Kokkos::View<DType_7> v_2("v_2", PARAM_2); }, 2, 7, 7);
-    DIE({ Kokkos::View<DType_7> v_3("v_3", PARAM_3); }, 3, 7, 7);
-    DIE({ Kokkos::View<DType_7> v_4("v_4", PARAM_4); }, 4, 7, 7);
-    DIE({ Kokkos::View<DType_7> v_5("v_5", PARAM_5); }, 5, 7, 7);
-    DIE({ Kokkos::View<DType_7> v_6("v_6", PARAM_6); }, 6, 7, 7);
-    LIVE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 7, 7);
-  }
+  test_matching_arguments_rank<0, 0, DynamicRank>();  // dim = 0, dynamic = 0
+  test_matching_arguments_rank<1, 1, DynamicRank>();  // dim = 1, dynamic = 1
+  test_matching_arguments_rank<2, 2, DynamicRank>();  // dim = 2, dynamic = 2
+  test_matching_arguments_rank<3, 3, DynamicRank>();  // dim = 3, dynamic = 3
+  test_matching_arguments_rank<4, 4, DynamicRank>();  // dim = 4, dynamic = 4
+  test_matching_arguments_rank<5, 5, DynamicRank>();  // dim = 5, dynamic = 5
+  test_matching_arguments_rank<6, 6, DynamicRank>();  // dim = 6, dynamic = 6
+  test_matching_arguments_rank<7, 7, DynamicRank>();  // dim = 7, dynamic = 7
 }
+
+template <int rank>
+struct StaticRank {
+  using type = typename StaticRank<rank - 1>::type[1];
+};
+
+template <>
+struct StaticRank<0> {
+  using type = int;
+};
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  using DType_0 = DType;
-  using DType_1 = DType[1];
-  using DType_2 = DType[1][1];
-  using DType_3 = DType[1][1][1];
-  using DType_4 = DType[1][1][1][1];
-  using DType_5 = DType[1][1][1][1][1];
-  using DType_6 = DType[1][1][1][1][1][1];
-  using DType_7 = DType[1][1][1][1][1][1][1];
-  {
-    // test View parameters for View dim = 0, dynamic = 0
-    LIVE({ Kokkos::View<DType_0> v_0("v_0" PARAM_0); }, 0, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_1("v_1", PARAM_1); }, 1, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_2("v_2", PARAM_2); }, 2, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_3("v_3", PARAM_3); }, 3, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_4("v_4", PARAM_4); }, 4, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_5("v_5", PARAM_5); }, 5, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_6("v_6", PARAM_6); }, 6, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_7("v_7", PARAM_7); }, 7, 0, 0);
-  }
-
-  {
-    // test View parameters for View dim = 1, dynamic = 0
-    LIVE({ Kokkos::View<DType_1> v_0("v_0" PARAM_0); }, 0, 0, 1);
-    LIVE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_2("v_2", PARAM_2); }, 2, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_3("v_3", PARAM_3); }, 3, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_4("v_4", PARAM_4); }, 4, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_5("v_5", PARAM_5); }, 5, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_6("v_6", PARAM_6); }, 6, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_7("v_7", PARAM_7); }, 7, 0, 1);
-  }
-
-  {
-    // test View parameters for View dim = 2, dynamic = 0
-    LIVE({ Kokkos::View<DType_2> v_0("v_0" PARAM_0); }, 0, 0, 2);
-    DIE({ Kokkos::View<DType_2> v_1("v_1", PARAM_1); }, 1, 0, 2);
-    LIVE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 0, 2);
-    DIE({ Kokkos::View<DType_2> v_3("v_3", PARAM_3); }, 3, 0, 2);
-    DIE({ Kokkos::View<DType_2> v_4("v_4", PARAM_4); }, 4, 0, 2);
-    DIE({ Kokkos::View<DType_2> v_5("v_5", PARAM_5); }, 5, 0, 2);
-    DIE({ Kokkos::View<DType_2> v_6("v_6", PARAM_6); }, 6, 0, 2);
-    DIE({ Kokkos::View<DType_2> v_7("v_7", PARAM_7); }, 7, 0, 2);
-  }
-
-  {
-    // test View parameters for View dim = 3, dynamic = 0
-    LIVE({ Kokkos::View<DType_3> v_0("v_0" PARAM_0); }, 0, 0, 3);
-    DIE({ Kokkos::View<DType_3> v_1("v_1", PARAM_1); }, 1, 0, 3);
-    DIE({ Kokkos::View<DType_3> v_2("v_2", PARAM_2); }, 2, 0, 3);
-    LIVE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 0, 3);
-    DIE({ Kokkos::View<DType_3> v_4("v_4", PARAM_4); }, 4, 0, 3);
-    DIE({ Kokkos::View<DType_3> v_5("v_5", PARAM_5); }, 5, 0, 3);
-    DIE({ Kokkos::View<DType_3> v_6("v_6", PARAM_6); }, 6, 0, 3);
-    DIE({ Kokkos::View<DType_3> v_7("v_7", PARAM_7); }, 7, 0, 3);
-  }
-
-  {
-    // test View parameters for View dim = 4, dynamic = 0
-    LIVE({ Kokkos::View<DType_4> v_0("v_0" PARAM_0); }, 0, 0, 4);
-    DIE({ Kokkos::View<DType_4> v_1("v_1", PARAM_1); }, 1, 0, 4);
-    DIE({ Kokkos::View<DType_4> v_2("v_2", PARAM_2); }, 2, 0, 4);
-    DIE({ Kokkos::View<DType_4> v_3("v_3", PARAM_3); }, 3, 0, 4);
-    LIVE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 0, 4);
-    DIE({ Kokkos::View<DType_4> v_5("v_5", PARAM_5); }, 5, 0, 4);
-    DIE({ Kokkos::View<DType_4> v_6("v_6", PARAM_6); }, 6, 0, 4);
-    DIE({ Kokkos::View<DType_4> v_7("v_7", PARAM_7); }, 7, 0, 4);
-  }
-
-  {
-    // test View parameters for View dim = 5, dynamic = 0
-    LIVE({ Kokkos::View<DType_5> v_0("v_0" PARAM_0); }, 0, 0, 5);
-    DIE({ Kokkos::View<DType_5> v_1("v_1", PARAM_1); }, 1, 0, 5);
-    DIE({ Kokkos::View<DType_5> v_2("v_2", PARAM_2); }, 2, 0, 5);
-    DIE({ Kokkos::View<DType_5> v_3("v_3", PARAM_3); }, 3, 0, 5);
-    DIE({ Kokkos::View<DType_5> v_4("v_4", PARAM_4); }, 4, 0, 5);
-    LIVE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 0, 5);
-    DIE({ Kokkos::View<DType_5> v_6("v_6", PARAM_6); }, 6, 0, 5);
-    DIE({ Kokkos::View<DType_5> v_7("v_7", PARAM_7); }, 7, 0, 5);
-  }
-
-  {
-    // test View parameters for View dim = 6, dynamic = 0
-    LIVE({ Kokkos::View<DType_6> v_0("v_0" PARAM_0); }, 0, 0, 6);
-    DIE({ Kokkos::View<DType_6> v_1("v_1", PARAM_1); }, 1, 0, 6);
-    DIE({ Kokkos::View<DType_6> v_2("v_2", PARAM_2); }, 2, 0, 6);
-    DIE({ Kokkos::View<DType_6> v_3("v_3", PARAM_3); }, 3, 0, 6);
-    DIE({ Kokkos::View<DType_6> v_4("v_4", PARAM_4); }, 4, 0, 6);
-    DIE({ Kokkos::View<DType_6> v_5("v_5", PARAM_5); }, 5, 0, 6);
-    LIVE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 0, 6);
-    DIE({ Kokkos::View<DType_6> v_7("v_7", PARAM_7); }, 7, 0, 6);
-  }
-
-  {
-    // test View parameters for View dim = 7, dynamic = 0
-    LIVE({ Kokkos::View<DType_7> v_0("v_0" PARAM_0); }, 0, 0, 7);
-    DIE({ Kokkos::View<DType_7> v_1("v_1", PARAM_1); }, 1, 0, 7);
-    DIE({ Kokkos::View<DType_7> v_2("v_2", PARAM_2); }, 2, 0, 7);
-    DIE({ Kokkos::View<DType_7> v_3("v_3", PARAM_3); }, 3, 0, 7);
-    DIE({ Kokkos::View<DType_7> v_4("v_4", PARAM_4); }, 4, 0, 7);
-    DIE({ Kokkos::View<DType_7> v_5("v_5", PARAM_5); }, 5, 0, 7);
-    DIE({ Kokkos::View<DType_7> v_6("v_6", PARAM_6); }, 6, 0, 7);
-    LIVE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 0, 7);
-  }
+  test_matching_arguments_rank<0, 0, StaticRank>();  // dim = 0, dynamic = 0
+  test_matching_arguments_rank<1, 0, StaticRank>();  // dim = 1, dynamic = 0
+  test_matching_arguments_rank<2, 0, StaticRank>();  // dim = 2, dynamic = 0
+  test_matching_arguments_rank<3, 0, StaticRank>();  // dim = 3, dynamic = 0
+  test_matching_arguments_rank<4, 0, StaticRank>();  // dim = 4, dynamic = 0
+  test_matching_arguments_rank<5, 0, StaticRank>();  // dim = 5, dynamic = 0
+  test_matching_arguments_rank<6, 0, StaticRank>();  // dim = 6, dynamic = 0
+  test_matching_arguments_rank<7, 0, StaticRank>();  // dim = 7, dynamic = 0
 }
+
+template <int rank>
+struct MixedRank {
+  using type = typename DynamicRank<rank - 1>::type[1];
+};
+
+template <>
+struct MixedRank<0> {
+  using type = int;
+};
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  using DType_0 = DType;
-  using DType_1 = DType[1];
-  using DType_2 = DType * [1];
-  using DType_3 = DType * * [1];
-  using DType_4 = DType ** * [1];
-  using DType_5 = DType *** * [1];
-  using DType_6 = DType **** * [1];
-  using DType_7 = DType ***** * [1];
-  {
-    // test View parameters for View dim = 0, dynamic = 0
-    LIVE({ Kokkos::View<DType_0> v_0("v_0" PARAM_0); }, 0, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_1("v_1", PARAM_1); }, 1, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_2("v_2", PARAM_2); }, 2, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_3("v_3", PARAM_3); }, 3, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_4("v_4", PARAM_4); }, 4, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_5("v_5", PARAM_5); }, 5, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_6("v_6", PARAM_6); }, 6, 0, 0);
-    DIE({ Kokkos::View<DType_0> v_7("v_7", PARAM_7); }, 7, 0, 0);
-  }
-
-  {
-    // test View parameters for View dim = 1, dynamic = 0
-    LIVE({ Kokkos::View<DType_1> v_0("v_0" PARAM_0); }, 0, 0, 1);
-    LIVE({ Kokkos::View<DType_1> v_1("v_1", PARAM_1); }, 1, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_2("v_2", PARAM_2); }, 2, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_3("v_3", PARAM_3); }, 3, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_4("v_4", PARAM_4); }, 4, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_5("v_5", PARAM_5); }, 5, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_6("v_6", PARAM_6); }, 6, 0, 1);
-    DIE({ Kokkos::View<DType_1> v_7("v_7", PARAM_7); }, 7, 0, 1);
-  }
-
-  {
-    // test View parameters for View dim = 2, dynamic = 1
-    DIE({ Kokkos::View<DType_2> v_0("v_0" PARAM_0); }, 0, 1, 2);
-    LIVE({ Kokkos::View<DType_2> v_1("v_1", PARAM_1); }, 1, 1, 2);
-    LIVE({ Kokkos::View<DType_2> v_2("v_2", PARAM_2); }, 2, 1, 2);
-    DIE({ Kokkos::View<DType_2> v_3("v_3", PARAM_3); }, 3, 1, 2);
-    DIE({ Kokkos::View<DType_2> v_4("v_4", PARAM_4); }, 4, 1, 2);
-    DIE({ Kokkos::View<DType_2> v_5("v_5", PARAM_5); }, 5, 1, 2);
-    DIE({ Kokkos::View<DType_2> v_6("v_6", PARAM_6); }, 6, 1, 2);
-    DIE({ Kokkos::View<DType_2> v_7("v_7", PARAM_7); }, 7, 1, 2);
-  }
-
-  {
-    // test View parameters for View dim = 3, dynamic = 2
-    DIE({ Kokkos::View<DType_3> v_0("v_0" PARAM_0); }, 0, 2, 3);
-    DIE({ Kokkos::View<DType_3> v_1("v_1", PARAM_1); }, 1, 2, 3);
-    LIVE({ Kokkos::View<DType_3> v_2("v_2", PARAM_2); }, 2, 2, 3);
-    LIVE({ Kokkos::View<DType_3> v_3("v_3", PARAM_3); }, 3, 2, 3);
-    DIE({ Kokkos::View<DType_3> v_4("v_4", PARAM_4); }, 4, 2, 3);
-    DIE({ Kokkos::View<DType_3> v_5("v_5", PARAM_5); }, 5, 2, 3);
-    DIE({ Kokkos::View<DType_3> v_6("v_6", PARAM_6); }, 6, 2, 3);
-    DIE({ Kokkos::View<DType_3> v_7("v_7", PARAM_7); }, 7, 2, 3);
-  }
-
-  {
-    // test View parameters for View dim = 4, dynamic = 3
-    DIE({ Kokkos::View<DType_4> v_0("v_0" PARAM_0); }, 0, 3, 4);
-    DIE({ Kokkos::View<DType_4> v_1("v_1", PARAM_1); }, 1, 3, 4);
-    DIE({ Kokkos::View<DType_4> v_2("v_2", PARAM_2); }, 2, 3, 4);
-    LIVE({ Kokkos::View<DType_4> v_3("v_3", PARAM_3); }, 3, 3, 4);
-    LIVE({ Kokkos::View<DType_4> v_4("v_4", PARAM_4); }, 4, 3, 4);
-    DIE({ Kokkos::View<DType_4> v_5("v_5", PARAM_5); }, 5, 3, 4);
-    DIE({ Kokkos::View<DType_4> v_6("v_6", PARAM_6); }, 6, 3, 4);
-    DIE({ Kokkos::View<DType_4> v_7("v_7", PARAM_7); }, 7, 3, 4);
-  }
-
-  {
-    // test View parameters for View dim = 5, dynamic = 4
-    DIE({ Kokkos::View<DType_5> v_0("v_0" PARAM_0); }, 0, 4, 5);
-    DIE({ Kokkos::View<DType_5> v_1("v_1", PARAM_1); }, 1, 4, 5);
-    DIE({ Kokkos::View<DType_5> v_2("v_2", PARAM_2); }, 2, 4, 5);
-    DIE({ Kokkos::View<DType_5> v_3("v_3", PARAM_3); }, 3, 4, 5);
-    LIVE({ Kokkos::View<DType_5> v_4("v_4", PARAM_4); }, 4, 4, 5);
-    LIVE({ Kokkos::View<DType_5> v_5("v_5", PARAM_5); }, 5, 4, 5);
-    DIE({ Kokkos::View<DType_5> v_6("v_6", PARAM_6); }, 6, 4, 5);
-    DIE({ Kokkos::View<DType_5> v_7("v_7", PARAM_7); }, 7, 4, 5);
-  }
-
-  {
-    // test View parameters for View dim = 6, dynamic = 5
-    DIE({ Kokkos::View<DType_6> v_0("v_0" PARAM_0); }, 0, 5, 6);
-    DIE({ Kokkos::View<DType_6> v_1("v_1", PARAM_1); }, 1, 5, 6);
-    DIE({ Kokkos::View<DType_6> v_2("v_2", PARAM_2); }, 2, 5, 6);
-    DIE({ Kokkos::View<DType_6> v_3("v_3", PARAM_3); }, 3, 5, 6);
-    DIE({ Kokkos::View<DType_6> v_4("v_4", PARAM_4); }, 4, 5, 6);
-    LIVE({ Kokkos::View<DType_6> v_5("v_5", PARAM_5); }, 5, 5, 6);
-    LIVE({ Kokkos::View<DType_6> v_6("v_6", PARAM_6); }, 6, 5, 6);
-    DIE({ Kokkos::View<DType_6> v_7("v_7", PARAM_7); }, 7, 5, 6);
-  }
-
-  {
-    // test View parameters for View dim = 7, dynamic = 6
-    DIE({ Kokkos::View<DType_7> v_0("v_0" PARAM_0); }, 0, 6, 7);
-    DIE({ Kokkos::View<DType_7> v_1("v_1", PARAM_1); }, 1, 6, 7);
-    DIE({ Kokkos::View<DType_7> v_2("v_2", PARAM_2); }, 2, 6, 7);
-    DIE({ Kokkos::View<DType_7> v_3("v_3", PARAM_3); }, 3, 6, 7);
-    DIE({ Kokkos::View<DType_7> v_4("v_4", PARAM_4); }, 4, 6, 7);
-    DIE({ Kokkos::View<DType_7> v_5("v_5", PARAM_5); }, 5, 6, 7);
-    LIVE({ Kokkos::View<DType_7> v_6("v_6", PARAM_6); }, 6, 6, 7);
-    LIVE({ Kokkos::View<DType_7> v_7("v_7", PARAM_7); }, 7, 6, 7);
-  }
+  test_matching_arguments_rank<0, 0, MixedRank>();  // dim = 0, dynamic = 0
+  test_matching_arguments_rank<1, 0, MixedRank>();  // dim = 1, dynamic = 0
+  test_matching_arguments_rank<2, 1, MixedRank>();  // dim = 2, dynamic = 1
+  test_matching_arguments_rank<3, 2, MixedRank>();  // dim = 3, dynamic = 2
+  test_matching_arguments_rank<4, 3, MixedRank>();  // dim = 4, dynamic = 3
+  test_matching_arguments_rank<5, 4, MixedRank>();  // dim = 5, dynamic = 4
+  test_matching_arguments_rank<6, 5, MixedRank>();  // dim = 6, dynamic = 5
+  test_matching_arguments_rank<7, 6, MixedRank>();  // dim = 7, dynamic = 6
 }
 #endif  // KOKKOS_ENABLE_OPENMPTARGET
-
-#undef PARAM_0
-#undef PARAM_1
-#undef PARAM_2
-#undef PARAM_3
-#undef PARAM_4
-#undef PARAM_5
-#undef PARAM_6
-#undef PARAM_7
-
-#undef PARAM_0_RANK
-#undef PARAM_1_RANK
-#undef PARAM_2_RANK
-#undef PARAM_3_RANK
-#undef PARAM_4_RANK
-#undef PARAM_5_RANK
-#undef PARAM_6_RANK
-#undef PARAM_7_RANK
-
-#undef DType
 
 #undef LIVE
 #undef DIE
