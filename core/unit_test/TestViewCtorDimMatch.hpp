@@ -96,11 +96,6 @@ struct DynamicRank<0> {
   using type = int;
 };
 
-// Skip test execution when KOKKOS_ENABLE_OPENMPTARGET is enabled until
-// Kokkos::abort() aborts properly on that backend
-// Skip test execution when KOKKOS_COMPILER_NVHPC until fixed in GTEST
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_COMPILER_NVHPC)
-#else
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
@@ -162,7 +157,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   test_matching_arguments_rank<7, 6, MixedRank>();  // dim = 7, dynamic = 6
   test_matching_arguments_rank<8, 7, MixedRank>();  // dim = 8, dynamic = 7
 }
-#endif  // KOKKOS_ENABLE_OPENMPTARGET
 
 #define CHECK_DEATH(EXPR)                                                     \
   ASSERT_DEATH(EXPR,                                                          \
