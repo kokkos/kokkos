@@ -58,36 +58,36 @@ namespace Test {
           " nor the total rank = " + std::to_string(TOTALRANK))
 
 template <int rank, int dynrank, template <int> class RankType,
-          std::size_t... args>
-void test_matching_arguments_rank_helper(std::index_sequence<args...>) {
-  constexpr int nargs = sizeof...(args);
+          std::size_t... Is>
+void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
+  constexpr int nargs = sizeof...(Is);
   using view_type     = Kokkos::View<typename RankType<rank>::type>;
   if (nargs == rank || nargs == dynrank)
-    LIVE({ view_type v("v", args...); }, nargs, dynrank, rank);
+    LIVE({ view_type v("v", ((Is * 0) + 1)...); }, nargs, dynrank, rank);
   else
-    DIE({ view_type v("v", args...); }, nargs, dynrank, rank);
+    DIE({ view_type v("v", ((Is * 0) + 1)...); }, nargs, dynrank, rank);
 }
 
 template <int rank, int dynrank, template <int> class RankType>
 void test_matching_arguments_rank() {
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<>());
+      std::make_index_sequence<0>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1>());
+      std::make_index_sequence<1>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1>());
+      std::make_index_sequence<2>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1, 1>());
+      std::make_index_sequence<3>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1, 1, 1>());
+      std::make_index_sequence<4>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1, 1, 1, 1>());
+      std::make_index_sequence<5>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1, 1, 1, 1, 1>());
+      std::make_index_sequence<6>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1, 1, 1, 1, 1, 1>());
+      std::make_index_sequence<7>());
   test_matching_arguments_rank_helper<rank, dynrank, RankType>(
-      std::index_sequence<1, 1, 1, 1, 1, 1, 1, 1>());
+      std::make_index_sequence<8>());
 }
 
 template <int rank>
