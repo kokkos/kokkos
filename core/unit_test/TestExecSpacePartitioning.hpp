@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <sstream>
 #include <iostream>
+#include <thread>
 
 #include <Kokkos_Core.hpp>
 
