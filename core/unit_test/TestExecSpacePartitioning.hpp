@@ -68,8 +68,8 @@ void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
 #else
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
-  std::thread(l1);
-  std::thread(l2);
+  std::thread(std::move(l1));
+  std::thread(std::move(l2));
 }
 #endif
 
