@@ -391,7 +391,7 @@ __device__ void hip_intra_block_reduce_scan(
  *  Global reduce result is in the last threads' 'shared_data' location.
  */
 
-template <bool DoScan, class FunctorType, typename SizeType>
+template <bool DoScan, typename FunctorType, typename SizeType>
 __device__ bool hip_single_inter_block_reduce_scan_impl(
     FunctorType const& functor, HIP::size_type const block_id,
     HIP::size_type const block_count, SizeType* const shared_data,
