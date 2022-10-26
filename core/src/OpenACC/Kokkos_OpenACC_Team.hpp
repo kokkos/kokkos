@@ -163,37 +163,37 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
   // implementations.
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelForTag&) {
-    return DEFAULT_TEAM_SIZE_MAX;
+    return default_team_size_max;
   }
 
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_MAX;
+    return default_team_size_max;
   }
 
   template <class FunctorType, class ReducerType>
   static int team_size_max(const FunctorType&, const ReducerType&,
                            const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_MAX;
+    return default_team_size_max;
   }
 
   // FIXME_OPENACC: update team_size_recommended() APIs with realistic
   // implementations.
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&, const ParallelForTag&) {
-    return DEFAULT_TEAM_SIZE_REC;
+    return default_team_size;
   }
 
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&,
                                    const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_REC;
+    return default_team_size;
   }
 
   template <class FunctorType, class ReducerType>
   static int team_size_recommended(const FunctorType&, const ReducerType&,
                                    const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_REC;
+    return default_team_size;
   }
 
   //----------------------------------------
@@ -208,6 +208,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
   std::array<size_t, 2> m_thread_scratch_size;
   bool m_tune_team_size;
   bool m_tune_vector_length;
+  constexpr static const size_t default_team_size_max =
+      OpenACCTeamMember::DEFAULT_TEAM_SIZE_MAX;
   constexpr static const size_t default_team_size =
       OpenACCTeamMember::DEFAULT_TEAM_SIZE_REC;
   int m_chunk_size;
