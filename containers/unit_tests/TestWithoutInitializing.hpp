@@ -112,13 +112,15 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_dualview) {
   listen_tool_events(Config::DisableAll());
 }
 
-TEST(TEST_CATEGORY, resize_exec_space_dualview) {
+template <typename ExecutionSpace>
+void test_resize_exec_space_dualview() {
   // If we provide an execution space instance to Kokkos::resize with a DualView
   // argument, it is used for both Views. Thus, the test only makes sense if the
-  // DefaultHostExecutionSpace can access TEST_EXECSPACE's memory space.
+  // DefaultHostExecutionSpace can access ExecutionSpace's memory space.
   constexpr bool host_exec_space_can_access_memory_space =
-      Kokkos::SpaceAccessibility<Kokkos::DefaultHostExecutionSpace,
-                                 TEST_EXECSPACE::memory_space>::accessible;
+      Kokkos::SpaceAccessibility<
+          Kokkos::DefaultHostExecutionSpace,
+          typename ExecutionSpace::memory_space>::accessible;
   if constexpr (!host_exec_space_can_access_memory_space) {
     GTEST_SKIP()
         << "skipping since host execution space can't access memory space";
@@ -126,21 +128,14 @@ TEST(TEST_CATEGORY, resize_exec_space_dualview) {
     using namespace Kokkos::Test::Tools;
     listen_tool_events(Config::DisableAll(), Config::EnableFences(),
                        Config::EnableKernels());
-    Kokkos::DualView<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6,
+    Kokkos::DualView<int*** * [1][2][3][4], ExecutionSpace> bla("bla", 8, 7, 6,
                                                                 5);
     auto success = validate_absence(
         [&]() {
-          constexpr bool host_exec_space_can_access_memory_space =
-              Kokkos::SpaceAccessibility<
-                  Kokkos::DefaultHostExecutionSpace,
-                  TEST_EXECSPACE::memory_space>::accessible;
-          if constexpr (host_exec_space_can_access_memory_space) {
-            Kokkos::resize(
-                Kokkos::view_alloc(Kokkos::DefaultHostExecutionSpace{},
-                                   Kokkos::WithoutInitializing),
-                bla, 5, 6, 7, 8);
-            EXPECT_EQ(bla.template view<TEST_EXECSPACE>().label(), "bla");
-          }
+          Kokkos::resize(Kokkos::view_alloc(Kokkos::DefaultHostExecutionSpace{},
+                                            Kokkos::WithoutInitializing),
+                         bla, 5, 6, 7, 8);
+          EXPECT_EQ(bla.template view<ExecutionSpace>().label(), "bla");
         },
         [&](BeginFenceEvent event) {
           if (event.descriptor().find("Kokkos::resize(View)") !=
@@ -167,6 +162,12 @@ TEST(TEST_CATEGORY, resize_exec_space_dualview) {
     ASSERT_TRUE(success);
     listen_tool_events(Config::DisableAll());
   }
+}
+
+TEST(TEST_CATEGORY, resize_exec_space_dualview) {
+  // The if constexpr doesn't properly guard if we don't template the test so we
+  // introduce a separate templated function for it.
+  test_resize_exec_space_dualview<TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY, realloc_exec_space_dualview) {
