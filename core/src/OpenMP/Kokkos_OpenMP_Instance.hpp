@@ -69,11 +69,19 @@ namespace Impl {
 
 class OpenMPInternal;
 
+#ifdef KOKKOS_ENABLE_CXX14
+extern int g_openmp_hardware_max_threads;
+
+extern thread_local int t_openmp_hardware_id;
+// FIXME_OPENMP we can remove this after we remove partition_master
+extern thread_local OpenMPInternal* t_openmp_instance;
+#else
 inline int g_openmp_hardware_max_threads = 1;
 
 inline thread_local int t_openmp_hardware_id = 0;
 // FIXME_OPENMP we can remove this after we remove partition_master
 inline thread_local OpenMPInternal* t_openmp_instance = nullptr;
+#endif
 
 struct OpenMPTraits {
   static int constexpr MAX_THREAD_COUNT = 512;
