@@ -47,11 +47,10 @@
 
 namespace Test {
 
-template <int rank, int dynrank, template <int> class RankType,
-          std::size_t... Is>
+template <int rank, int dynrank, class RankType, std::size_t... Is>
 void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
   constexpr int nargs = sizeof...(Is);
-  using view_type     = Kokkos::View<typename RankType<rank>::type>;
+  using view_type     = Kokkos::View<RankType>;
   if (nargs == rank || nargs == dynrank)
     EXPECT_NO_THROW({ view_type v("v", ((Is * 0) + 1)...); });
   else
@@ -66,23 +65,32 @@ void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
 
 template <int rank, int dynrank, template <int> class RankType>
 void test_matching_arguments_rank() {
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<0>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<1>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<2>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<3>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<4>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<5>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<6>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<7>());
-  test_matching_arguments_rank_helper<rank, dynrank, RankType>(
+  test_matching_arguments_rank_helper<rank, dynrank,
+                                      typename RankType<rank>::type>(
       std::make_index_sequence<8>());
 }
 
