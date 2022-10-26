@@ -69,11 +69,11 @@ namespace Impl {
 
 class OpenMPInternal;
 
-extern int g_openmp_hardware_max_threads;
+inline int g_openmp_hardware_max_threads = 1;
 
-extern thread_local int t_openmp_hardware_id;
+inline thread_local int t_openmp_hardware_id = 0;
 // FIXME_OPENMP we can remove this after we remove partition_master
-extern thread_local OpenMPInternal* t_openmp_instance;
+inline thread_local OpenMPInternal* t_openmp_instance = nullptr;
 
 struct OpenMPTraits {
   static int constexpr MAX_THREAD_COUNT = 512;
