@@ -356,6 +356,8 @@ class ViewMapping<Traits, Kokkos::Array<>> {
 
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
+    static_assert(
+        SpaceAccessibility<execution_space, memory_space>::accessible);
     using functor_type =
         ViewValueFunctor<typename Traits::device_type, scalar_type>;
     using record_type =
@@ -375,9 +377,6 @@ class ViewMapping<Traits, Kokkos::Array<>> {
         Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
     const memory_space &mem_space =
         Impl::get_property<Impl::MemorySpaceTag>(arg_prop);
-
-    static_assert(
-        SpaceAccessibility<execution_space, memory_space>::accessible);
 
     // Allocate memory from the memory space and create tracking record.
     record_type *const record =

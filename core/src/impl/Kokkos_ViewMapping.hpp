@@ -3418,7 +3418,9 @@ class ViewMapping<
 
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
-    using value_type      = typename Traits::value_type;
+    static_assert(
+        SpaceAccessibility<execution_space, memory_space>::accessible);
+    using value_type = typename Traits::value_type;
     using functor_type =
         ViewValueFunctor<Kokkos::Device<execution_space, memory_space>,
                          value_type>;
@@ -3442,9 +3444,6 @@ class ViewMapping<
         Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
     const memory_space& mem_space =
         Impl::get_property<Impl::MemorySpaceTag>(arg_prop);
-
-    static_assert(
-        SpaceAccessibility<execution_space, memory_space>::accessible);
 
     // Create shared memory tracking record with allocate memory from the memory
     // space
