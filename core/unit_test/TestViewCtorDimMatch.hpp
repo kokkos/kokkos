@@ -168,14 +168,14 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   // clang-format off
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<1>::type> v("v", 2); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<2>::type> v("v", 2, 1); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<3>::type> v("v", 2, 1, 1); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<4>::type> v("v", 2, 1, 1, 1); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<5>::type> v("v", 2, 1, 1, 1, 1); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<6>::type> v("v", 2, 1, 1, 1, 1, 1); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<7>::type> v("v", 2, 1, 1, 1, 1, 1, 1); });
-  CHECK_DEATH({ Kokkos::View<typename StaticRank<8>::type> v("v", 2, 1, 1, 1, 1, 1, 1, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1]>                      v("v", 2); });
+  CHECK_DEATH({ Kokkos::View<int[1][1]>                   v("v", 2, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1][1][1]>                v("v", 2, 1, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1][1][1][1]>             v("v", 2, 1, 1, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1]>          v("v", 2, 1, 1, 1, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1][1]>       v("v", 2, 1, 1, 1, 1, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1][1][1]>    v("v", 2, 1, 1, 1, 1, 1, 1); });
+  CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1][1][1][1]> v("v", 2, 1, 1, 1, 1, 1, 1, 1); });
   // clang-format on
 }
 
