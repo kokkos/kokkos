@@ -868,7 +868,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       this->template exec_range<WorkTag>(m_functor, m_policy.begin(),
                                          m_policy.end(), update, true);
 
-      m_returnvalue = update;
+      *m_result_ptr = update;
 
       return;
     }
