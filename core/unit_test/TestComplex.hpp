@@ -112,9 +112,9 @@ struct TestComplexConstruction {
     d_results(2)              = c;
     Kokkos::complex<double> d(3.5);
     d_results(3) = d;
-    volatile Kokkos::complex<double> a_v(4.5, 5.5);
+    Kokkos::complex<double> a_v(4.5, 5.5);
     d_results(4) = a_v;
-    volatile Kokkos::complex<double> b_v(a);
+    Kokkos::complex<double> b_v(a);
     d_results(5) = b_v;
     Kokkos::complex<double> e(a_v);
     d_results(6) = e;
