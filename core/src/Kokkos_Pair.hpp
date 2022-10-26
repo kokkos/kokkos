@@ -117,7 +117,8 @@ struct pair {
   /// This calls the copy constructors of T1 and T2.  It won't compile
   /// if those copy constructors are not defined and public.
   template <class U, class V>
-  KOKKOS_FORCEINLINE_FUNCTION constexpr pair(const volatile pair<U, V>& p)
+  KOKKOS_FORCEINLINE_FUNCTION KOKKOS_DEPRECATED constexpr pair(
+      const volatile pair<U, V>& p)
       : first(p.first), second(p.second) {}
 #endif
 
@@ -145,7 +146,7 @@ struct pair {
   /// practice, this means that you should not chain assignments with
   /// volatile lvalues.
   template <class U, class V>
-  KOKKOS_FORCEINLINE_FUNCTION void operator=(
+  KOKKOS_FORCEINLINE_FUNCTION KOKKOS_DEPRECATED void operator=(
       const volatile pair<U, V>& p) volatile {
     first  = p.first;
     second = p.second;
