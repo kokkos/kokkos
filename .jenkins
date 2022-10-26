@@ -123,7 +123,7 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-5.2-C++17') {
+                stage('HIP-ROCm-5.2') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
@@ -348,7 +348,7 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.0-NVCC-C++17-RDC') {
+                stage('CUDA-11.0-NVCC-RDC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
