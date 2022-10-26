@@ -72,7 +72,7 @@ struct FillFlattenedIndex {
 };
 
 struct TestTeamMDParallelFor {
-  using DataType = int;
+  using DataType = int64_t;
   using DimsType = int[8];
 
   template <typename HostViewType, typename FillFunctor>
@@ -883,14 +883,14 @@ struct TestTeamVectorMDRangeParallelFor : public TestTeamMDParallelFor {
 };
 
 struct TestTeamMDParallelReduce {
-  using DataType = int;
+  using DataType = int64_t;
   using DimsType = int[8];
 
   template <typename F>
-  constexpr static auto get_expected_partial_sum(DimsType const& dims,
-                                                 size_t maxRank, F const& f,
-                                                 DimsType& indices,
-                                                 size_t rank) {
+  constexpr static DataType get_expected_partial_sum(DimsType const& dims,
+                                                     size_t maxRank, F const& f,
+                                                     DimsType& indices,
+                                                     size_t rank) {
     if (rank == maxRank) {
       return f(indices[0], indices[1], indices[2], indices[3], indices[4],
                indices[5], indices[6], indices[7]);
@@ -936,18 +936,18 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k) = fillFlattenedIndex(i, j, k);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadMDRange<Kokkos::Rank<2, Direction>, TeamType>(
                   team, n0, n1),
-              [=](const int& i, const int& j, int& threadSum) {
+              [=](const int& i, const int& j, DataType& threadSum) {
                 threadSum += v(leagueRank, i, j);
               },
               teamSum);
@@ -955,7 +955,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 3, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 3, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -980,26 +980,25 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l) = fillFlattenedIndex(i, j, k, l);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadMDRange<Kokkos::Rank<3, Direction>, TeamType>(
                   team, n0, n1, n2),
-              [=](const int& i, const int& j, const int& k, int& threadSum) {
-                threadSum += v(leagueRank, i, j, k);
-              },
+              [=](const int& i, const int& j, const int& k,
+                  DataType& threadSum) { threadSum += v(leagueRank, i, j, k); },
               teamSum);
           leagueSum += teamSum;
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1026,25 +1025,27 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l, m) = fillFlattenedIndex(i, j, k, l, m);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadMDRange<Kokkos::Rank<4, Direction>, TeamType>(
                   team, n0, n1, n2, n3),
               [=](const int& i, const int& j, const int& k, const int& l,
-                  int& threadSum) { threadSum += v(leagueRank, i, j, k, l); },
+                  DataType& threadSum) {
+                threadSum += v(leagueRank, i, j, k, l);
+              },
               teamSum);
           leagueSum += teamSum;
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1072,19 +1073,19 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l, m, n) = fillFlattenedIndex(i, j, k, l, m, n);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadMDRange<Kokkos::Rank<5, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4),
               [=](const int& i, const int& j, const int& k, const int& l,
-                  const int& m, int& threadSum) {
+                  const int& m, DataType& threadSum) {
                 threadSum += v(leagueRank, i, j, k, l, m);
               },
               teamSum);
@@ -1092,7 +1093,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1127,19 +1128,19 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
           }
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadMDRange<Kokkos::Rank<6, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4, n5),
               [=](const int& i, const int& j, const int& k, const int& l,
-                  const int& m, const int& n, int& threadSum) {
+                  const int& m, const int& n, DataType& threadSum) {
                 threadSum += v(leagueRank, i, j, k, l, m, n);
               },
               teamSum);
@@ -1147,7 +1148,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1184,19 +1185,20 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
           }
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadMDRange<Kokkos::Rank<7, Direction>, TeamType>(
                   team, n0, n1, n2, n3, n4, n5, n6),
               [=](const int& i, const int& j, const int& k, const int& l,
-                  const int& m, const int& n, const int& o, int& threadSum) {
+                  const int& m, const int& n, const int& o,
+                  DataType& threadSum) {
                 threadSum += v(leagueRank, i, j, k, l, m, n, o);
               },
               teamSum);
@@ -1204,7 +1206,7 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1233,13 +1235,13 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l) = fillFlattenedIndex(i, j, k, l);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
@@ -1247,10 +1249,10 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                   team, n1, n2);
 
           Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
-            int threadSum = 0;
+            DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
-                [=](const int& j, const int& k, int& vectorSum) {
+                [=](const int& j, const int& k, DataType& vectorSum) {
                   vectorSum += v(leagueRank, i, j, k);
                 },
                 threadSum);
@@ -1262,7 +1264,7 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1289,13 +1291,13 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l, m) = fillFlattenedIndex(i, j, k, l, m);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
@@ -1303,10 +1305,11 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                   team, n1, n2, n3);
 
           Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
-            int threadSum = 0;
+            DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
-                [=](const int& j, const int& k, const int& l, int& vectorSum) {
+                [=](const int& j, const int& k, const int& l,
+                    DataType& vectorSum) {
                   vectorSum += v(leagueRank, i, j, k, l);
                 },
                 threadSum);
@@ -1318,7 +1321,7 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1346,13 +1349,13 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l, m, n) = fillFlattenedIndex(i, j, k, l, m, n);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
@@ -1360,11 +1363,11 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                   team, n1, n2, n3, n4);
 
           Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
-            int threadSum = 0;
+            DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
                 [=](const int& j, const int& k, const int& l, const int& m,
-                    int& vectorSum) {
+                    DataType& vectorSum) {
                   vectorSum += v(leagueRank, i, j, k, l, m);
                 },
                 threadSum);
@@ -1376,7 +1379,7 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1409,13 +1412,13 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           }
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
@@ -1423,11 +1426,11 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                   team, n1, n2, n3, n4, n5);
 
           Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
-            int threadSum = 0;
+            DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
                 [=](const int& j, const int& k, const int& l, const int& m,
-                    const int& n, int& vectorSum) {
+                    const int& n, DataType& vectorSum) {
                   vectorSum += v(leagueRank, i, j, k, l, m, n);
                 },
                 threadSum);
@@ -1439,7 +1442,7 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1476,13 +1479,13 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           }
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
@@ -1490,11 +1493,11 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                   team, n1, n2, n3, n4, n5, n6);
 
           Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
-            int threadSum = 0;
+            DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
                 [=](const int& j, const int& k, const int& l, const int& m,
-                    const int& n, const int& o, int& vectorSum) {
+                    const int& n, const int& o, DataType& vectorSum) {
                   vectorSum += v(leagueRank, i, j, k, l, m, n, o);
                 },
                 threadSum);
@@ -1506,7 +1509,7 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1535,13 +1538,13 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l) = fillFlattenedIndex(i, j, k, l);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamVectorRange =
               Kokkos::TeamVectorMDRange<Kokkos::Rank<3, Direction>, TeamType>(
@@ -1549,15 +1552,14 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 
           Kokkos::parallel_reduce(
               teamVectorRange,
-              [=](const int& i, const int& j, const int& k, int& vectorSum) {
-                vectorSum += v(leagueRank, i, j, k);
-              },
+              [=](const int& i, const int& j, const int& k,
+                  DataType& vectorSum) { vectorSum += v(leagueRank, i, j, k); },
               teamSum);
           leagueSum += teamSum;
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 4, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1584,13 +1586,13 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l, m) = fillFlattenedIndex(i, j, k, l, m);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamVectorRange =
               Kokkos::TeamVectorMDRange<Kokkos::Rank<4, Direction>, TeamType>(
@@ -1599,13 +1601,15 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           Kokkos::parallel_reduce(
               teamVectorRange,
               [=](const int& i, const int& j, const int& k, const int& l,
-                  int& vectorSum) { vectorSum += v(leagueRank, i, j, k, l); },
+                  DataType& vectorSum) {
+                vectorSum += v(leagueRank, i, j, k, l);
+              },
               teamSum);
           leagueSum += teamSum;
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 5, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1633,13 +1637,13 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           v(i, j, k, l, m, n) = fillFlattenedIndex(i, j, k, l, m, n);
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamVectorRange =
               Kokkos::TeamVectorMDRange<Kokkos::Rank<5, Direction>, TeamType>(
@@ -1648,7 +1652,7 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           Kokkos::parallel_reduce(
               teamVectorRange,
               [=](const int& i, const int& j, const int& k, const int& l,
-                  const int& m, int& vectorSum) {
+                  const int& m, DataType& vectorSum) {
                 vectorSum += v(leagueRank, i, j, k, l, m);
               },
               teamSum);
@@ -1656,7 +1660,7 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 6, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1689,13 +1693,13 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           }
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamVectorRange =
               Kokkos::TeamVectorMDRange<Kokkos::Rank<6, Direction>, TeamType>(
@@ -1704,7 +1708,7 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           Kokkos::parallel_reduce(
               teamVectorRange,
               [=](const int& i, const int& j, const int& k, const int& l,
-                  const int& m, const int& n, int& vectorSum) {
+                  const int& m, const int& n, DataType& vectorSum) {
                 vectorSum += v(leagueRank, i, j, k, l, m, n);
               },
               teamSum);
@@ -1712,7 +1716,7 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 7, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }
@@ -1749,13 +1753,13 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           }
         });
 
-    int finalSum = 0;
+    DataType finalSum = 0;
 
     Kokkos::parallel_reduce(
         Kokkos::TeamPolicy<ExecSpace>(leagueSize, Kokkos::AUTO),
-        KOKKOS_LAMBDA(TeamType const& team, int& leagueSum) {
-          auto leagueRank = team.league_rank();
-          int teamSum     = 0;
+        KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
+          auto leagueRank  = team.league_rank();
+          DataType teamSum = 0;
 
           auto teamVectorRange =
               Kokkos::TeamVectorMDRange<Kokkos::Rank<7, Direction>, TeamType>(
@@ -1764,7 +1768,8 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
           Kokkos::parallel_reduce(
               teamVectorRange,
               [=](const int& i, const int& j, const int& k, const int& l,
-                  const int& m, const int& n, const int& o, int& vectorSum) {
+                  const int& m, const int& n, const int& o,
+                  DataType& vectorSum) {
                 vectorSum += v(leagueRank, i, j, k, l, m, n, o);
               },
               teamSum);
@@ -1772,7 +1777,7 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
         },
         finalSum);
 
-    int expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
+    DataType expectedSum = get_expected_sum(dims, 8, fillFlattenedIndex);
 
     EXPECT_EQ(finalSum, expectedSum);
   }

@@ -86,6 +86,7 @@ KOKKOS_ARCH_OPTION(VOLTA72         GPU  "NVIDIA Volta generation CC 7.2"   "KOKK
 KOKKOS_ARCH_OPTION(TURING75        GPU  "NVIDIA Turing generation CC 7.5"  "KOKKOS_SHOW_CUDA_ARCHS")
 KOKKOS_ARCH_OPTION(AMPERE80        GPU  "NVIDIA Ampere generation CC 8.0"  "KOKKOS_SHOW_CUDA_ARCHS")
 KOKKOS_ARCH_OPTION(AMPERE86        GPU  "NVIDIA Ampere generation CC 8.6"  "KOKKOS_SHOW_CUDA_ARCHS")
+KOKKOS_ARCH_OPTION(HOPPER90        GPU  "NVIDIA Hopper generation CC 9.0"  "KOKKOS_SHOW_CUDA_ARCHS")
 
 IF(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENMPTARGET)
   SET(KOKKOS_SHOW_HIP_ARCHS ON)
@@ -551,6 +552,7 @@ CHECK_CUDA_ARCH(VOLTA72   sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
 CHECK_CUDA_ARCH(AMPERE80  sm_80)
 CHECK_CUDA_ARCH(AMPERE86  sm_86)
+CHECK_CUDA_ARCH(HOPPER90  sm_90)
 
 SET(AMDGPU_ARCH_ALREADY_SPECIFIED "")
 FUNCTION(CHECK_AMDGPU_ARCH ARCH FLAG)
@@ -652,11 +654,11 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device xehp" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.50.4" -D__STRICT_ANSI__
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.4.0" -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.60.7" -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()
@@ -705,11 +707,11 @@ IF (KOKKOS_ENABLE_SYCL)
     )
   ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device xehp"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
     )
   ELSEIF(KOKKOS_ARCH_INTEL_PVC)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.4.0"
+      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
     )
   ENDIF()
 ENDIF()
@@ -801,6 +803,10 @@ ENDIF()
 
 IF (KOKKOS_ARCH_AMPERE80 OR KOKKOS_ARCH_AMPERE86)
   SET(KOKKOS_ARCH_AMPERE ON)
+ENDIF()
+
+IF (KOKKOS_ARCH_HOPPER90)
+  SET(KOKKOS_ARCH_HOPPER ON)
 ENDIF()
 
 #HIP detection of gpu arch

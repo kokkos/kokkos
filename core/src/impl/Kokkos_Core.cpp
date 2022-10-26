@@ -434,6 +434,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
            "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
            "MPI_LOCALRANKID",             // MPICH
            "SLURM_LOCALID",               // SLURM
+           "PMI_LOCAL_RANK"               // PMI
        }) {
     local_rank_str = std::getenv(env_var);
     if (local_rank_str) break;
@@ -779,7 +780,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMPERE86)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMPERE86");
-
+#elif defined(KOKKOS_ARCH_HOPPER90)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "HOPPER90");
 #elif defined(KOKKOS_ARCH_VEGA900)
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA900");
 #elif defined(KOKKOS_ARCH_VEGA906)

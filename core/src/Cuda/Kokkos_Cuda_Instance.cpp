@@ -202,7 +202,9 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
   if (file) {
     out << " " << file << ":" << line;
   }
-  abort(out.str().c_str());
+  // FIXME Call Kokkos::Impl::host_abort instead of Kokkos::abort to avoid a
+  // warning about Kokkos::abort returning in some cases.
+  host_abort(out.str().c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -737,7 +739,9 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
     int compiled_major = Impl::CudaInternal::m_cudaArch / 100;
     int compiled_minor = (Impl::CudaInternal::m_cudaArch % 100) / 10;
 
-    if (compiled_major != cudaProp.major || compiled_minor > cudaProp.minor) {
+    if ((compiled_major > cudaProp.major) ||
+        ((compiled_major == cudaProp.major) &&
+         (compiled_minor > cudaProp.minor))) {
       std::stringstream ss;
       ss << "Kokkos::Cuda::initialize ERROR: running kernels compiled for "
             "compute capability "

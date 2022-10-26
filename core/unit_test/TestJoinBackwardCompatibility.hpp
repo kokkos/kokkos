@@ -158,6 +158,10 @@ void test_join_backward_compatibility() {
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  GTEST_SKIP() << "FIXME wrong result";
+#endif
   test_join_backward_compatibility();
 }
 
