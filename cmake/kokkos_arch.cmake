@@ -449,18 +449,18 @@ IF (KOKKOS_ARCH_POWER9)
   )
 ENDIF()
 
-IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
-  IF (NOT KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+IF (NOT KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+  IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+      COMPILER_SPECIFIC_FLAGS(
+        Clang  -fcuda-rdc
+        NVIDIA --relocatable-device-code=true
+        NVHPC -gpu=rdc
+      )
+  ELSEIF(KOKKOS_ENABLE_CUDA)
     COMPILER_SPECIFIC_FLAGS(
-      Clang  -fcuda-rdc
-      NVIDIA --relocatable-device-code=true
-      NVHPC -gpu=rdc
+      NVHPC -gpu=nordc
     )
   ENDIF()
-ELSEIF(KOKKOS_ENABLE_CUDA)
-  COMPILER_SPECIFIC_FLAGS(
-    NVHPC -gpu=nordc
-  )
 ENDIF()
 
 # Clang needs mcx16 option enabled for Windows atomic functions
