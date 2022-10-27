@@ -50,8 +50,7 @@ void check_distinctive(Kokkos::Experimental::SYCL exec1,
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
 void check_distinctive(Kokkos::OpenMP exec1, Kokkos::OpenMP exec2) {
-  ASSERT_NE(exec1.impl_internal_space_instance(),
-            exec2.impl_internal_space_instance());
+  ASSERT_NE(exec1, exec2);
 }
 #endif
 }  // namespace

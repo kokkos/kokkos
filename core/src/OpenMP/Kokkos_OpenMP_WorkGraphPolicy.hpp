@@ -46,7 +46,7 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
  public:
   inline void execute() {
-    // Work around NVHPC 11.6 ICE
+    // Work around NVHPC 22.5 ICE
     int pool_size = OpenMP::impl_thread_pool_size();
     // Work around HIP unused-variable warning
     (void)pool_size;
