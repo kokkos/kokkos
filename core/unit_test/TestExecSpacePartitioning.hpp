@@ -65,13 +65,21 @@ void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
     if (omp_get_thread_num() == 1) l2();
   }
 }
-#else
+// We cannot run the multithreaded test when threads or HPX is enabled because
+// we cannot launch a thread from inside another thread
+#elif !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_HPX)
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
   std::thread t1(std::move(l1));
   std::thread t2(std::move(l2));
   t1.join();
   t2.join();
+}
+#else
+template <class Lambda1, class Lambda2>
+void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+  l1();
+  l2();
 }
 #endif
 
