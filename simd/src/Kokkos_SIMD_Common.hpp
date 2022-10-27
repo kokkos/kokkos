@@ -155,6 +155,8 @@ template <class T>
 }
 
 // fallback simd multiplication using generator constructor
+// At the time of this writing, this fallback is only used
+// to multiply vectors of 64-bit signed integers for the AVX2 backend
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator*(
