@@ -279,16 +279,13 @@ class
     return *this;
   }
 
-  //---------------------------------------------------------------------------
-  // TODO: refactor Kokkos reductions to remove dependency on
-  // volatile member overloads since they are being deprecated in c++20
-  //---------------------------------------------------------------------------
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   //! Copy constructor from volatile.
   template <
       class RType,
       std::enable_if_t<std::is_convertible<RType, RealType>::value, int> = 0>
-  KOKKOS_INLINE_FUNCTION complex(const volatile complex<RType>& src) noexcept
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED
+  complex(const volatile complex<RType>& src) noexcept
       // Intentionally do the conversions implicitly here so that users don't
       // get any warnings about narrowing, etc., that they would expect to get
       // otherwise.
@@ -316,7 +313,8 @@ class
   //    vl = cr;
   template <class Complex,
             std::enable_if_t<std::is_same<Complex, complex>::value, int> = 0>
-  KOKKOS_INLINE_FUNCTION void operator=(const Complex& src) volatile noexcept {
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED void operator=(
+      const Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     // We deliberately do not return anything here.  See explanation
@@ -338,7 +336,7 @@ class
   //    vl = cvr;
   template <class Complex,
             std::enable_if_t<std::is_same<Complex, complex>::value, int> = 0>
-  KOKKOS_INLINE_FUNCTION volatile complex& operator=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED volatile complex& operator=(
       const volatile Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
@@ -360,7 +358,7 @@ class
   //
   template <class Complex,
             std::enable_if_t<std::is_same<Complex, complex>::value, int> = 0>
-  KOKKOS_INLINE_FUNCTION complex& operator=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED complex& operator=(
       const volatile Complex& src) noexcept {
     re_ = src.re_;
     im_ = src.im_;
@@ -371,7 +369,8 @@ class
   // RealType RHS versions.
 
   //! Assignment operator (from a volatile real number).
-  KOKKOS_INLINE_FUNCTION void operator=(const volatile RealType& val) noexcept {
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED void operator=(
+      const volatile RealType& val) noexcept {
     re_ = val;
     im_ = RealType(0);
     // We deliberately do not return anything here.  See explanation
@@ -379,7 +378,7 @@ class
   }
 
   //! Assignment operator volatile LHS and non-volatile RHS
-  KOKKOS_INLINE_FUNCTION complex& operator=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED complex& operator=(
       const RealType& val) volatile noexcept {
     re_ = val;
     im_ = RealType(0);
@@ -388,7 +387,7 @@ class
 
   //! Assignment operator volatile LHS and volatile RHS
   // TODO Should this return void like the other volatile assignment operators?
-  KOKKOS_INLINE_FUNCTION complex& operator=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED complex& operator=(
       const volatile RealType& val) volatile noexcept {
     re_ = val;
     im_ = RealType(0);
@@ -396,33 +395,41 @@ class
   }
 
   //! The imaginary part of this complex number (volatile overload).
-  KOKKOS_INLINE_FUNCTION
-  volatile RealType& imag() volatile noexcept { return im_; }
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED volatile RealType&
+  imag() volatile noexcept {
+    return im_;
+  }
 
   //! The real part of this complex number (volatile overload).
-  KOKKOS_INLINE_FUNCTION
-  volatile RealType& real() volatile noexcept { return re_; }
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED volatile RealType&
+  real() volatile noexcept {
+    return re_;
+  }
 
   //! The imaginary part of this complex number (volatile overload).
-  KOKKOS_INLINE_FUNCTION
-  RealType imag() const volatile noexcept { return im_; }
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED RealType imag() const
+      volatile noexcept {
+    return im_;
+  }
 
   //! The real part of this complex number (volatile overload).
-  KOKKOS_INLINE_FUNCTION
-  RealType real() const volatile noexcept { return re_; }
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED RealType real() const
+      volatile noexcept {
+    return re_;
+  }
 
-  KOKKOS_INLINE_FUNCTION void operator+=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED void operator+=(
       const volatile complex<RealType>& src) volatile noexcept {
     re_ += src.re_;
     im_ += src.im_;
   }
 
-  KOKKOS_INLINE_FUNCTION void operator+=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED void operator+=(
       const volatile RealType& src) volatile noexcept {
     re_ += src;
   }
 
-  KOKKOS_INLINE_FUNCTION void operator*=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED void operator*=(
       const volatile complex<RealType>& src) volatile noexcept {
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
@@ -431,13 +438,12 @@ class
     im_ = imagPart;
   }
 
-  KOKKOS_INLINE_FUNCTION void operator*=(
+  KOKKOS_INLINE_FUNCTION KOKKOS_DEPRECATED void operator*=(
       const volatile RealType& src) volatile noexcept {
     re_ *= src;
     im_ *= src;
   }
-
-  // TODO DSH 2019-10-7 why are there no volatile /= and friends?
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_4
 };
 
 //==============================================================================
