@@ -59,7 +59,9 @@ struct TestScan {
                   const bool final_pass) const {
     const value_type n = iwork + 1;
     const value_type imbalance =
-        ((ImbalanceSz <= n) && (value_type(0) == n % ImbalanceSz)) ? ImbalanceSz : value_type(0);
+        ((ImbalanceSz <= n) && (value_type(0) == n % ImbalanceSz))
+            ? ImbalanceSz
+            : value_type(0);
 
     // Insert an artificial load imbalance
 
