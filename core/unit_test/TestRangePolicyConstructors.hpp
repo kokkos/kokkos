@@ -50,382 +50,145 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "helper_functions/CommonExecPolicyTests.hpp"
+
 namespace {
 
 struct SomeTag {};
 
-template <typename ExecutionSpace>
-struct TestRangePolicyConstructors {
- public:
-  TestRangePolicyConstructors() {
-    check_semiregular();
-    test_compile_time_parameters();
-    test_runtime_parameters();
-    test_worktag();
-    test_prefer_desired_occupancy();
+void test_range_policy_run_time_parameters() {
+  using policy_t     = Kokkos::RangePolicy<>;
+  using index_t      = policy_t::index_type;
+  index_t work_begin = 5;
+  index_t work_end   = 15;
+  index_t chunk_size = 10;
+  {
+    policy_t p(work_begin, work_end);
+    ASSERT_EQ(p.begin(), work_begin);
+    ASSERT_EQ(p.end(), work_end);
   }
-
- private:
-  void check_semiregular() {
-    // semiregular is copyable and default initializable
-    // (regular requires equality comparable)
-    using policy_t = Kokkos::RangePolicy<ExecutionSpace>;
-
-    static_assert(std::is_default_constructible_v<policy_t>);
-    static_assert(std::is_copy_constructible_v<policy_t>);
-    static_assert(std::is_move_constructible_v<policy_t>);
-    static_assert(std::is_copy_assignable_v<policy_t>);
-    static_assert(std::is_move_assignable_v<policy_t>);
-    static_assert(std::is_destructible_v<policy_t>);
+  {
+    policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end);
+    ASSERT_EQ(p.begin(), work_begin);
+    ASSERT_EQ(p.end(), work_end);
   }
-
-  void test_compile_time_parameters() {
-    {
-      using policy_t        = Kokkos::RangePolicy<>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(
-          std::is_same_v<index_type, typename execution_space::size_type>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Static>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t        = Kokkos::RangePolicy<ExecutionSpace>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(
-          std::is_same_v<index_type, typename execution_space::size_type>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Static>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t        = Kokkos::RangePolicy<ExecutionSpace,
-                                           Kokkos::Schedule<Kokkos::Dynamic>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(
-          std::is_same_v<index_type, typename execution_space::size_type>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t =
-          Kokkos::RangePolicy<ExecutionSpace, Kokkos::Schedule<Kokkos::Dynamic>,
-                              Kokkos::IndexType<long>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t =
-          Kokkos::RangePolicy<Kokkos::IndexType<long>, ExecutionSpace,
-                              Kokkos::Schedule<Kokkos::Dynamic>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t =
-          Kokkos::RangePolicy<ExecutionSpace, Kokkos::Schedule<Kokkos::Dynamic>,
-                              Kokkos::IndexType<long>, SomeTag>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_same_v<work_tag, SomeTag>);
-    }
-
-    {
-      using policy_t =
-          Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>, ExecutionSpace,
-                              Kokkos::IndexType<long>, SomeTag>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_same_v<work_tag, SomeTag>);
-    }
-
-    {
-      using policy_t =
-          Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
-                              Kokkos::IndexType<long>, ExecutionSpace>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(std::is_same_v<execution_space, ExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_same_v<work_tag, SomeTag>);
-    }
-
-    {
-      using policy_t = Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(
-          std::is_same_v<index_type, typename execution_space::size_type>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t = Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                                           Kokkos::IndexType<long>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t        = Kokkos::RangePolicy<Kokkos::IndexType<long>,
-                                           Kokkos::Schedule<Kokkos::Dynamic>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_void_v<work_tag>);
-    }
-
-    {
-      using policy_t = Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                                           Kokkos::IndexType<long>, SomeTag>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_same_v<work_tag, SomeTag>);
-    }
-
-    {
-      using policy_t = Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                                           Kokkos::IndexType<long>, SomeTag>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_same_v<work_tag, SomeTag>);
-    }
-
-    {
-      using policy_t =
-          Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
-                              Kokkos::IndexType<long>>;
-      using execution_space = typename policy_t::execution_space;
-      using index_type      = typename policy_t::index_type;
-      using schedule_type   = typename policy_t::schedule_type;
-      using work_tag        = typename policy_t::work_tag;
-
-      static_assert(
-          std::is_same_v<execution_space, Kokkos::DefaultExecutionSpace>);
-      static_assert(std::is_same_v<index_type, long>);
-      static_assert(
-          std::is_same_v<schedule_type, Kokkos::Schedule<Kokkos::Dynamic>>);
-      static_assert(std::is_same_v<work_tag, SomeTag>);
-    }
+  {
+    policy_t p(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
+    ASSERT_EQ(p.begin(), work_begin);
+    ASSERT_EQ(p.end(), work_end);
+    ASSERT_EQ(p.chunk_size(), chunk_size);
   }
-
-  void test_runtime_parameters() {
-    using policy_t     = Kokkos::RangePolicy<>;
-    using index_t      = policy_t::index_type;
-    index_t work_begin = 5;
-    index_t work_end   = 15;
-    index_t chunk_size = 10;
-    {
-      policy_t p(work_begin, work_end);
-      ASSERT_EQ(p.begin(), work_begin);
-      ASSERT_EQ(p.end(), work_end);
-    }
-    {
-      policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end);
-      ASSERT_EQ(p.begin(), work_begin);
-      ASSERT_EQ(p.end(), work_end);
-    }
-    {
-      policy_t p(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
-      ASSERT_EQ(p.begin(), work_begin);
-      ASSERT_EQ(p.end(), work_end);
-      ASSERT_EQ(p.chunk_size(), chunk_size);
-    }
-    {
-      policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end,
-                 Kokkos::ChunkSize(chunk_size));
-      ASSERT_EQ(p.begin(), work_begin);
-      ASSERT_EQ(p.end(), work_end);
-      ASSERT_EQ(p.chunk_size(), chunk_size);
-    }
-    {
-      policy_t p;
-      ASSERT_EQ(p.begin(), index_t(0));
-      ASSERT_EQ(p.end(), index_t(0));
-      ASSERT_EQ(p.chunk_size(), index_t(0));
-
-      p = policy_t(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
-      ASSERT_EQ(p.begin(), work_begin);
-      ASSERT_EQ(p.end(), work_end);
-      ASSERT_EQ(p.chunk_size(), chunk_size);
-    }
-    {
-      policy_t p1(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
-      policy_t p2(p1);
-      ASSERT_EQ(p1.begin(), p2.begin());
-      ASSERT_EQ(p1.end(), p2.end());
-      ASSERT_EQ(p1.chunk_size(), p2.chunk_size());
-    }
+  {
+    policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end,
+               Kokkos::ChunkSize(chunk_size));
+    ASSERT_EQ(p.begin(), work_begin);
+    ASSERT_EQ(p.end(), work_end);
+    ASSERT_EQ(p.chunk_size(), chunk_size);
   }
+  {
+    policy_t p;
+    ASSERT_EQ(p.begin(), index_t(0));
+    ASSERT_EQ(p.end(), index_t(0));
+    ASSERT_EQ(p.chunk_size(), index_t(0));
 
-  void test_worktag() {
-    struct WorkTag1 {};
-    struct WorkTag2 {};
-
-    using policy_t_no_worktag = Kokkos::RangePolicy<>;
-    using policy_t_worktag1 =
-        Kokkos::Impl::WorkTagTrait::policy_with_trait<policy_t_no_worktag,
-                                                      WorkTag1>;
-    using policy_t_worktag2 =
-        Kokkos::Impl::WorkTagTrait::policy_with_trait<policy_t_worktag1,
-                                                      WorkTag2>;
-
-    policy_t_no_worktag p0;
-    static_assert(std::is_void_v<typename decltype(p0)::work_tag>);
-
-    auto p1 = policy_t_worktag1(p0);
-    static_assert(std::is_same_v<typename decltype(p1)::work_tag, WorkTag1>);
-
-    auto p2 = policy_t_worktag2(p1);
-    static_assert(std::is_same_v<typename decltype(p2)::work_tag, WorkTag2>);
-
-    // NOTE line directly below does not currently compile
-    // using policy_t_void_tag =
-    //    Kokkos::Impl::WorkTagTrait::policy_with_trait<policy_t_no_worktag,
-    //                                                  void>;
-    // auto p3 = policy_t_void_tag(p2);
-    // static_assert(std::is_void_v<decltype(p3)::work_tag>);
+    p = policy_t(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
+    ASSERT_EQ(p.begin(), work_begin);
+    ASSERT_EQ(p.end(), work_end);
+    ASSERT_EQ(p.chunk_size(), chunk_size);
   }
-
-  void test_prefer_desired_occupancy() {
-    using policy_t = Kokkos::RangePolicy<ExecutionSpace>;
-    policy_t policy;
-
-    static_assert(!policy_t::experimental_contains_desired_occupancy);
-
-    // MaximizeOccupancy -> MaximizeOccupancy
-    auto const policy_still_no_occ = Kokkos::Experimental::prefer(
-        policy, Kokkos::Experimental::MaximizeOccupancy{});
-    static_assert(!decltype(
-        policy_still_no_occ)::experimental_contains_desired_occupancy);
-
-    // MaximizeOccupancy -> DesiredOccupancy
-    auto const policy_with_occ = Kokkos::Experimental::prefer(
-        policy_still_no_occ, Kokkos::Experimental::DesiredOccupancy{33});
-    static_assert(
-        decltype(policy_with_occ)::experimental_contains_desired_occupancy);
-    EXPECT_EQ(policy_with_occ.impl_get_desired_occupancy().value(), 33);
-
-    // DesiredOccupancy -> DesiredOccupancy
-    auto const policy_change_occ = Kokkos::Experimental::prefer(
-        policy_with_occ, Kokkos::Experimental::DesiredOccupancy{24});
-    static_assert(
-        decltype(policy_change_occ)::experimental_contains_desired_occupancy);
-    EXPECT_EQ(policy_change_occ.impl_get_desired_occupancy().value(), 24);
-
-    // DesiredOccupancy -> DesiredOccupancy w/ hint
-    auto policy_with_occ_and_hint = Kokkos::Experimental::require(
-        policy_change_occ,
-        Kokkos::Experimental::WorkItemProperty::HintLightWeight);
-    EXPECT_EQ(policy_with_occ_and_hint.impl_get_desired_occupancy().value(),
-              24);
-
-    // DesiredOccupancy -> MaximizeOccupancy
-    auto const policy_drop_occ = Kokkos::Experimental::prefer(
-        policy_with_occ_and_hint, Kokkos::Experimental::MaximizeOccupancy{});
-    static_assert(
-        !decltype(policy_drop_occ)::experimental_contains_desired_occupancy);
+  {
+    policy_t p1(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
+    policy_t p2(p1);
+    ASSERT_EQ(p1.begin(), p2.begin());
+    ASSERT_EQ(p1.end(), p2.end());
+    ASSERT_EQ(p1.chunk_size(), p2.chunk_size());
   }
-};
+}
 
-TEST(TEST_CATEGORY, range_policy_construction) {
-  TestRangePolicyConstructors<TEST_EXECSPACE>();
+TEST(TEST_CATEGORY, range_policy_semi_regular) {
+  check_semiregular<Kokkos::RangePolicy<>>();
+}
+
+TEST(TEST_CATEGORY, range_policy_compile_time_parameters) {
+  test_compile_time_parameters<Kokkos::RangePolicy<>,
+                               Kokkos::DefaultExecutionSpace,
+                               Kokkos::DefaultExecutionSpace::size_type,
+                               Kokkos::Schedule<Kokkos::Static>, void>();
+
+  test_compile_time_parameters<Kokkos::RangePolicy<TEST_EXECSPACE>,
+                               TEST_EXECSPACE, TEST_EXECSPACE::size_type,
+                               Kokkos::Schedule<Kokkos::Static>, void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>,
+      TEST_EXECSPACE, TEST_EXECSPACE::size_type,
+      Kokkos::Schedule<Kokkos::Dynamic>, void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                          Kokkos::IndexType<long>>,
+      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<Kokkos::IndexType<long>, TEST_EXECSPACE,
+                          Kokkos::Schedule<Kokkos::Dynamic>>,
+      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                          Kokkos::IndexType<long>, SomeTag>,
+      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>, TEST_EXECSPACE,
+                          Kokkos::IndexType<long>, SomeTag>,
+      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
+                          Kokkos::IndexType<long>, TEST_EXECSPACE>,
+      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>>,
+      Kokkos::DefaultExecutionSpace, Kokkos::DefaultExecutionSpace::size_type,
+      Kokkos::Schedule<Kokkos::Dynamic>, void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
+                          Kokkos::IndexType<long>>,
+      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
+      void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<Kokkos::IndexType<long>,
+                          Kokkos::Schedule<Kokkos::Dynamic>>,
+      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
+      void>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
+                          Kokkos::IndexType<long>, SomeTag>,
+      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
+      SomeTag>();
+
+  test_compile_time_parameters<
+      Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
+                          Kokkos::IndexType<long>>,
+      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
+      SomeTag>();
+}
+
+TEST(TEST_CATEGORY, range_policy_run_time_parameters) {
+  test_range_policy_run_time_parameters();
+}
+
+TEST(TEST_CATEGORY, range_policy_worktag) {
+  test_worktag<Kokkos::RangePolicy<>>();
+}
+
+TEST(TEST_CATEGORY, range_policy_occupancy) {
+  test_prefer_desired_occupancy<Kokkos::RangePolicy<>>();
 }
 
 }  // namespace

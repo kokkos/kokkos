@@ -1130,3 +1130,9 @@ endif()
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
 endif()
+
+# Contains functions useful for removing code duplication.
+# Example: For RangePolicy, TeamPolicy, and MDRangePolicy, many tests for
+#          constructors test the same thing. Those test functions are added
+#          to helper_functions/CommonExecPolicyTests.hpp
+KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/helper_functions)
