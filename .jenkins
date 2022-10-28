@@ -55,7 +55,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/nvhpc:22.7-devel-cuda11.7-ubuntu20.04'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/nvhpc:22.9-devel-cuda11.7-ubuntu20.04'
                             label 'nvidia-docker && large_images'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -81,7 +81,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ENABLE_OPENMP=OFF \
+                                -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
