@@ -61,7 +61,6 @@ SET(KOKKOS_THREADS_NAME Threads)
 SET(KOKKOS_OPENACC_FEATURE_LEVEL 11)
 SET(KOKKOS_OPENACC_NAME Experimental::OpenACC)
 
-
 #
 # Define the tests
 #

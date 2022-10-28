@@ -43,16 +43,16 @@ KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 #      LIST(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_DynViewAPI_generic.cpp)
 #     endif()
 
-    KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
-  endif()
-endforeach()
+#     KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
+#   endif()
+# endforeach()
 
-SET(COMPILE_ONLY_SOURCES
-  TestCreateMirror.cpp
-)
-KOKKOS_ADD_EXECUTABLE(
-  TestCompileOnly
-  SOURCES
-  TestCompileMain.cpp
-  ${COMPILE_ONLY_SOURCES}
-)
+# SET(COMPILE_ONLY_SOURCES
+#   TestCreateMirror.cpp
+# )
+# KOKKOS_ADD_EXECUTABLE(
+#   TestCompileOnly
+#   SOURCES
+#   TestCompileMain.cpp
+#   ${COMPILE_ONLY_SOURCES}
+# )
