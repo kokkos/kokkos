@@ -47,7 +47,7 @@
 
 namespace {
 
-template <class Device, class T, std::size_t ImbalanceSz>
+template <class Device, class T, T ImbalanceSz>
 struct TestScan {
   using execution_space = Device;
   using value_type      = T;
@@ -59,7 +59,7 @@ struct TestScan {
                   const bool final_pass) const {
     const value_type n = iwork + 1;
     const value_type imbalance =
-        ((ImbalanceSz <= n) && (0 == n % ImbalanceSz)) ? ImbalanceSz : 0;
+        ((ImbalanceSz <= n) && (value_type(0) == n % ImbalanceSz)) ? ImbalanceSz : value_type(0);
 
     // Insert an artificial load imbalance
 
@@ -178,7 +178,6 @@ TEST(TEST_CATEGORY, scan) {
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>(0);
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>(100000);
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>(10000000);
-  TEST_EXECSPACE().fence();
 }
 
 TEST(TEST_CATEGORY, small_size_scan) {
@@ -196,5 +195,4 @@ TEST(TEST_CATEGORY, small_size_scan) {
   TestScan<TEST_EXECSPACE, std::int16_t, short_imbalance_size>(
       static_cast<std::size_t>(
           std::sqrt(std::numeric_limits<std::int16_t>::max())));
-  TEST_EXECSPACE().fence();
 }
