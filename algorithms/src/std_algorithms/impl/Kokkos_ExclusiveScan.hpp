@@ -217,7 +217,8 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
       "At the moment exclusive_scan doesn't support types without reduction "
       "identity");
 
-#if defined(KOKKOS_ENABLE_CUDA)
+  // #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||
+  // defined(KOKKOS_ENABLE_SYCL)
 
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
@@ -237,22 +238,22 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
 
   return first_dest + num_elements;
 
-#else
+  // #else
 
-  std::size_t count = 0;
-  if (teamHandle.team_rank() == 0) {
-    while (first_from != last_from) {
-      const auto val = init_value;
-      init_value     = bop(init_value, *first_from);
-      ++first_from;
-      first_dest[count++] = val;
-    }
-  }
+  //   std::size_t count = 0;
+  //   if (teamHandle.team_rank() == 0) {
+  //     while (first_from != last_from) {
+  //       const auto val = init_value;
+  //       init_value     = bop(init_value, *first_from);
+  //       ++first_from;
+  //       first_dest[count++] = val;
+  //     }
+  //   }
 
-  teamHandle.team_broadcast(count, 0);
-  return first_dest + count;
+  //   teamHandle.team_broadcast(count, 0);
+  //   return first_dest + count;
 
-#endif
+  // #endif
 }
 
 template <typename ValueType>
@@ -272,7 +273,7 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_default_op_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-#if defined(KOKKOS_ENABLE_CUDA)
+  // #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
   using exe_space  = typename TeamHandleType::execution_space;
@@ -293,13 +294,14 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_default_op_team_impl(
   teamHandle.team_barrier();
   return first_dest + num_elements;
 
-#else
+  // #else
 
-  return exclusive_scan_custom_op_team_impl(
-      teamHandle, first_from, last_from, first_dest, init_value,
-      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+  //   return exclusive_scan_custom_op_team_impl(
+  //       teamHandle, first_from, last_from, first_dest, init_value,
+  //       [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs;
+  //       });
 
-#endif
+  // #endif
 }
 
 }  // namespace Impl
