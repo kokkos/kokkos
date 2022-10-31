@@ -1057,7 +1057,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 #endif
         DeepCopy<HostSpace, CudaSpace, Cuda>(
             m_policy.space(), &m_returnvalue,
-            m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
+            m_scratch_space + (grid_x - 1) * size / sizeof(word_size_type),
+            size);
     }
   }
 
