@@ -106,77 +106,11 @@ void test_range_policy_run_time_parameters() {
 }
 
 TEST(TEST_CATEGORY, range_policy_semi_regular) {
-  check_semiregular<Kokkos::RangePolicy<>>();
+  check_semiregular<Kokkos::RangePolicy>();
 }
 
 TEST(TEST_CATEGORY, range_policy_compile_time_parameters) {
-  test_compile_time_parameters<Kokkos::RangePolicy<>,
-                               Kokkos::DefaultExecutionSpace,
-                               Kokkos::DefaultExecutionSpace::size_type,
-                               Kokkos::Schedule<Kokkos::Static>, void>();
-
-  test_compile_time_parameters<Kokkos::RangePolicy<TEST_EXECSPACE>,
-                               TEST_EXECSPACE, TEST_EXECSPACE::size_type,
-                               Kokkos::Schedule<Kokkos::Static>, void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>,
-      TEST_EXECSPACE, TEST_EXECSPACE::size_type,
-      Kokkos::Schedule<Kokkos::Dynamic>, void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                          Kokkos::IndexType<long>>,
-      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<Kokkos::IndexType<long>, TEST_EXECSPACE,
-                          Kokkos::Schedule<Kokkos::Dynamic>>,
-      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                          Kokkos::IndexType<long>, SomeTag>,
-      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>, TEST_EXECSPACE,
-                          Kokkos::IndexType<long>, SomeTag>,
-      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
-                          Kokkos::IndexType<long>, TEST_EXECSPACE>,
-      TEST_EXECSPACE, long, Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>>,
-      Kokkos::DefaultExecutionSpace, Kokkos::DefaultExecutionSpace::size_type,
-      Kokkos::Schedule<Kokkos::Dynamic>, void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                          Kokkos::IndexType<long>>,
-      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
-      void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<Kokkos::IndexType<long>,
-                          Kokkos::Schedule<Kokkos::Dynamic>>,
-      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
-      void>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                          Kokkos::IndexType<long>, SomeTag>,
-      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
-      SomeTag>();
-
-  test_compile_time_parameters<
-      Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
-                          Kokkos::IndexType<long>>,
-      Kokkos::DefaultExecutionSpace, long, Kokkos::Schedule<Kokkos::Dynamic>,
-      SomeTag>();
+  test_compile_time_parameters<Kokkos::RangePolicy>();
 }
 
 TEST(TEST_CATEGORY, range_policy_run_time_parameters) {
@@ -184,11 +118,11 @@ TEST(TEST_CATEGORY, range_policy_run_time_parameters) {
 }
 
 TEST(TEST_CATEGORY, range_policy_worktag) {
-  test_worktag<Kokkos::RangePolicy<>>();
+  test_worktag<Kokkos::RangePolicy>();
 }
 
 TEST(TEST_CATEGORY, range_policy_occupancy) {
-  test_prefer_desired_occupancy<Kokkos::RangePolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::RangePolicy>();
 }
 
 }  // namespace

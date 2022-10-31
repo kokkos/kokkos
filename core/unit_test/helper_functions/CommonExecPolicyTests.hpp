@@ -44,8 +44,12 @@
 
 #include <Kokkos_Core.hpp>
 
-template<typename Policy>
+struct SomeTag {};
+
+template <template <class...> class PolicyType>
 void check_semiregular() {
+  using Policy = PolicyType<>;
+
   // semiregular is copyable and default initializable
   // (regular requires equality comparable)
   static_assert(std::is_default_constructible_v<Policy>);
@@ -56,12 +60,10 @@ void check_semiregular() {
   static_assert(std::is_destructible_v<Policy>);
 }
 
-template<typename Policy,
-         typename ExpectedExecutionSpace,
-         typename ExpectedIndexType,
-         typename ExpectedScheduleType,
-         typename ExpectedWorkTag>
-void test_compile_time_parameters() {
+template <typename Policy, typename ExpectedExecutionSpace,
+          typename ExpectedIndexType, typename ExpectedScheduleType,
+          typename ExpectedWorkTag>
+void test_compile_time_parameters_for_type() {
   using execution_space = typename Policy::execution_space;
   using index_type      = typename Policy::index_type;
   using schedule_type   = typename Policy::schedule_type;
@@ -73,17 +75,127 @@ void test_compile_time_parameters() {
   static_assert(std::is_same_v<work_tag, ExpectedWorkTag>);
 }
 
-template<typename Policy>
+template <template <class...> class PolicyType>
+void test_compile_time_parameters() {
+  {
+    using Policy = PolicyType<>;
+    test_compile_time_parameters_for_type<
+        Policy, Kokkos::DefaultExecutionSpace,
+        Kokkos::DefaultExecutionSpace::size_type,
+        Kokkos::Schedule<Kokkos::Static>, void>();
+  }
+
+  {
+    using Policy = PolicyType<TEST_EXECSPACE>;
+    test_compile_time_parameters_for_type<
+        Policy, TEST_EXECSPACE, TEST_EXECSPACE::size_type,
+        Kokkos::Schedule<Kokkos::Static>, void>();
+  }
+
+  {
+    using Policy =
+        Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>;
+    test_compile_time_parameters_for_type<
+        Policy, TEST_EXECSPACE, TEST_EXECSPACE::size_type,
+        Kokkos::Schedule<Kokkos::Dynamic>, void>();
+  }
+
+  {
+    using Policy =
+        Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                           Kokkos::IndexType<long>>;
+    test_compile_time_parameters_for_type<Policy, TEST_EXECSPACE, long,
+                                          Kokkos::Schedule<Kokkos::Dynamic>,
+                                          void>();
+  }
+
+  {
+    using Policy = Kokkos::TeamPolicy<Kokkos::IndexType<long>, TEST_EXECSPACE,
+                                      Kokkos::Schedule<Kokkos::Dynamic>>;
+    test_compile_time_parameters_for_type<Policy, TEST_EXECSPACE, long,
+                                          Kokkos::Schedule<Kokkos::Dynamic>,
+                                          void>();
+  }
+
+  {
+    using Policy =
+        Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                           Kokkos::IndexType<long>, SomeTag>;
+    test_compile_time_parameters_for_type<Policy, TEST_EXECSPACE, long,
+                                          Kokkos::Schedule<Kokkos::Dynamic>,
+                                          SomeTag>();
+  }
+
+  {
+    using Policy =
+        Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>, TEST_EXECSPACE,
+                           Kokkos::IndexType<long>, SomeTag>;
+    test_compile_time_parameters_for_type<Policy, TEST_EXECSPACE, long,
+                                          Kokkos::Schedule<Kokkos::Dynamic>,
+                                          SomeTag>();
+  }
+
+  {
+    using Policy =
+        Kokkos::TeamPolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
+                           Kokkos::IndexType<long>, TEST_EXECSPACE>;
+    test_compile_time_parameters_for_type<Policy, TEST_EXECSPACE, long,
+                                          Kokkos::Schedule<Kokkos::Dynamic>,
+                                          SomeTag>();
+  }
+
+  {
+    using Policy = Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>>;
+    test_compile_time_parameters_for_type<
+        Policy, Kokkos::DefaultExecutionSpace,
+        Kokkos::DefaultExecutionSpace::size_type,
+        Kokkos::Schedule<Kokkos::Dynamic>, void>();
+  }
+
+  {
+    using Policy = Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>,
+                                      Kokkos::IndexType<long>>;
+    test_compile_time_parameters_for_type<
+        Policy, Kokkos::DefaultExecutionSpace, long,
+        Kokkos::Schedule<Kokkos::Dynamic>, void>();
+  }
+
+  {
+    using Policy = Kokkos::TeamPolicy<Kokkos::IndexType<long>,
+                                      Kokkos::Schedule<Kokkos::Dynamic>>;
+    test_compile_time_parameters_for_type<
+        Policy, Kokkos::DefaultExecutionSpace, long,
+        Kokkos::Schedule<Kokkos::Dynamic>, void>();
+  }
+
+  {
+    using Policy = Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>,
+                                      Kokkos::IndexType<long>, SomeTag>;
+    test_compile_time_parameters_for_type<
+        Policy, Kokkos::DefaultExecutionSpace, long,
+        Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
+  }
+
+  {
+    using Policy =
+        Kokkos::TeamPolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
+                           Kokkos::IndexType<long>>;
+    test_compile_time_parameters_for_type<
+        Policy, Kokkos::DefaultExecutionSpace, long,
+        Kokkos::Schedule<Kokkos::Dynamic>, SomeTag>();
+  }
+}
+
+template <template <class...> class PolicyType>
 void test_worktag() {
   struct WorkTag1 {};
   struct WorkTag2 {};
 
+  using Policy = PolicyType<>;
   using Policy_worktag1 =
-      Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy,
-                                                    WorkTag1>;
+      Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy, WorkTag1>;
   using Policy_worktag2 =
-      Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy_worktag1,
-                                                    WorkTag2>;
+      Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy_worktag1, WorkTag2>;
 
   Policy p0;
   static_assert(std::is_void_v<typename decltype(p0)::work_tag>);
@@ -102,8 +214,9 @@ void test_worktag() {
   // static_assert(std::is_void_v<decltype(p3)::work_tag>);
 }
 
-template<typename Policy>
+template <template <class...> class PolicyType>
 void test_prefer_desired_occupancy() {
+  using Policy = PolicyType<>;
   Policy policy;
 
   static_assert(!Policy::experimental_contains_desired_occupancy);
@@ -111,8 +224,8 @@ void test_prefer_desired_occupancy() {
   // MaximizeOccupancy -> MaximizeOccupancy
   auto const policy_still_no_occ = Kokkos::Experimental::prefer(
       policy, Kokkos::Experimental::MaximizeOccupancy{});
-  static_assert(!decltype(
-      policy_still_no_occ)::experimental_contains_desired_occupancy);
+  static_assert(
+      !decltype(policy_still_no_occ)::experimental_contains_desired_occupancy);
 
   // MaximizeOccupancy -> DesiredOccupancy
   auto const policy_with_occ = Kokkos::Experimental::prefer(
@@ -132,8 +245,7 @@ void test_prefer_desired_occupancy() {
   auto policy_with_occ_and_hint = Kokkos::Experimental::require(
       policy_change_occ,
       Kokkos::Experimental::WorkItemProperty::HintLightWeight);
-  EXPECT_EQ(policy_with_occ_and_hint.impl_get_desired_occupancy().value(),
-            24);
+  EXPECT_EQ(policy_with_occ_and_hint.impl_get_desired_occupancy().value(), 24);
 
   // DesiredOccupancy -> MaximizeOccupancy
   auto const policy_drop_occ = Kokkos::Experimental::prefer(
