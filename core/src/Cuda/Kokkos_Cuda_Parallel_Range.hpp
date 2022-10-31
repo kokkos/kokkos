@@ -1024,8 +1024,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(), Analysis::value_size(m_functor) * grid_x));
-      m_scratch_flags = cuda_internal_scratch_flags(
-          m_policy.space(), sizeof(Cuda::size_type) * 1);
+      m_scratch_flags =
+          cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
       dim3 grid(grid_x, 1, 1);
       dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
