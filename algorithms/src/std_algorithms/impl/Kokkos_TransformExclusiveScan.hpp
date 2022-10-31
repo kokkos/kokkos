@@ -186,7 +186,7 @@ KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-#if defined(KOKKOS_ENABLE_CUDA)
+  // #if defined(KOKKOS_ENABLE_CUDA)
 
   // aliases
   using exe_space = typename TeamHandleType::execution_space;
@@ -206,22 +206,22 @@ KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan_team_impl(
   // return
   return first_dest + num_elements;
 
-#else
+  // #else
 
-  std::size_t count = 0;
-  if (teamHandle.team_rank() == 0) {
-    while (first_from != last_from) {
-      auto val   = init_value;
-      init_value = bop(init_value, uop(*first_from));
-      ++first_from;
-      first_dest[count++] = val;
-    }
-  }
+  //   std::size_t count = 0;
+  //   if (teamHandle.team_rank() == 0) {
+  //     while (first_from != last_from) {
+  //       auto val   = init_value;
+  //       init_value = bop(init_value, uop(*first_from));
+  //       ++first_from;
+  //       first_dest[count++] = val;
+  //     }
+  //   }
 
-  teamHandle.team_broadcast(count, 0);
-  return first_dest + count;
+  //   teamHandle.team_broadcast(count, 0);
+  //   return first_dest + count;
 
-#endif
+  // #endif
 }
 
 }  // namespace Impl
