@@ -465,6 +465,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
   using functor_type   = FunctorType;
+  using size_type      = Cuda::size_type;
   // Conditionally set word_size_type to int16_t or int8_t if value_type is
   // smaller than int32_t (Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
@@ -478,9 +479,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   // performed, we have the correct data that was copied over in chunks of 4
   // bytes.
   using word_size_type = std::conditional_t<
-      sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
-      Kokkos::Cuda::size_type>;
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
  private:
   // Algorithmic constraints:
@@ -492,8 +492,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   const FunctorType m_functor;
   const Policy m_policy;
   word_size_type* m_scratch_space;
-  Cuda::size_type* m_scratch_flags;
-  Cuda::size_type m_final;
+  size_type* m_scratch_flags;
+  size_type m_final;
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
   bool m_run_serial;
 #endif
@@ -708,8 +708,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(), Analysis::value_size(m_functor) * grid_x));
-      m_scratch_flags = cuda_internal_scratch_flags(
-          m_policy.space(), sizeof(Cuda::size_type) * 1);
+      m_scratch_flags =
+          cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
       dim3 grid(grid_x, 1, 1);
       dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
@@ -772,6 +772,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
+  using size_type      = Cuda::size_type;
   // Conditionally set word_size_type to int16_t or int8_t if value_type is
   // smaller than int32_t (Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
@@ -785,9 +786,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   // performed, we have the correct data that was copied over in chunks of 4
   // bytes.
   using word_size_type = std::conditional_t<
-      sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
-      Kokkos::Cuda::size_type>;
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
  private:
   // Algorithmic constraints:
@@ -799,8 +799,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   const FunctorType m_functor;
   const Policy m_policy;
   word_size_type* m_scratch_space;
-  Cuda::size_type* m_scratch_flags;
-  Cuda::size_type m_final;
+  size_type* m_scratch_flags;
+  size_type m_final;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
