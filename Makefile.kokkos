@@ -642,6 +642,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   endif
 
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_UVM), 1)
+	  # deprecated
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA_UVM")
   endif
 
