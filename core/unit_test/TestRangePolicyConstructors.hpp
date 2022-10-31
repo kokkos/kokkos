@@ -54,8 +54,6 @@
 
 namespace {
 
-struct SomeTag {};
-
 void test_range_policy_run_time_parameters() {
   using policy_t     = Kokkos::RangePolicy<>;
   using index_t      = policy_t::index_type;
