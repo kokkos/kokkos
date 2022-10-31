@@ -449,9 +449,8 @@ class ParallelScanHIPBase {
   // performed, we have the correct data that was copied over in chunks of 4
   // bytes.
   using word_size_type = std::conditional_t<
-      sizeof(value_type) < sizeof(Kokkos::HIP::size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
-      Kokkos::HIP::size_type>;
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
  protected:
   // Algorithmic constraints:
