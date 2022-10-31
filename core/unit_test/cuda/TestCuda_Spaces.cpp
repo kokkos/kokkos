@@ -260,20 +260,18 @@ TEST(cuda, space_access) {
 }
 
 TEST(cuda, uvm) {
-  if (Kokkos::CudaUVMSpace::available()) {
-    int *uvm_ptr = static_cast<int *>(
-        Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>("uvm_ptr", sizeof(int)));
+  int *uvm_ptr = static_cast<int *>(
+      Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>("uvm_ptr", sizeof(int)));
 
-    *uvm_ptr = 42;
+  *uvm_ptr = 42;
 
-    Kokkos::fence();
-    test_cuda_spaces_int_value<<<1, 1>>>(uvm_ptr);
-    Kokkos::fence();
+  Kokkos::fence();
+  test_cuda_spaces_int_value<<<1, 1>>>(uvm_ptr);
+  Kokkos::fence();
 
-    EXPECT_EQ(*uvm_ptr, int(2 * 42));
+  EXPECT_EQ(*uvm_ptr, int(2 * 42));
 
-    Kokkos::kokkos_free<Kokkos::CudaUVMSpace>(uvm_ptr);
-  }
+  Kokkos::kokkos_free<Kokkos::CudaUVMSpace>(uvm_ptr);
 }
 
 template <class MemSpace, class ExecSpace>
