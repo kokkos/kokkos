@@ -275,7 +275,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
 
     return is_last_block;
   }
-};  // namespace Impl
+};
 
 //----------------------------------------------------------------------------
 // Fused reduction and scan implementation
