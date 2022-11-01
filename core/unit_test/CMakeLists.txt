@@ -166,7 +166,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Other
         RangePolicy
         RangePolicyRequire
+        CommonPolicyConstructors
         RangePolicyConstructors
+        TeamPolicyConstructors
+        MDRangePolicyConstructors
         Reductions
         Reducers_a
         Reducers_b
@@ -367,7 +370,6 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_WorkGraph.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_JoinBackwardCompatibility.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_PolicyConstruction.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamMDRange.cpp
     )
 endif()
@@ -1130,9 +1132,3 @@ endif()
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
 endif()
-
-# Contains functions useful for removing code duplication.
-# Example: For RangePolicy, TeamPolicy, and MDRangePolicy, many tests for
-#          constructors test the same thing. Those test functions are added
-#          to helper_functions/CommonExecPolicyTests.hpp
-KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/helper_functions)

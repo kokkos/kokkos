@@ -42,85 +42,60 @@
 //@HEADER
 */
 
-#include <cstdio>
-#include <sstream>
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
 
-#include "helper_functions/CommonExecPolicyTests.hpp"
-
 namespace {
 
-void test_range_policy_run_time_parameters() {
-  using policy_t     = Kokkos::RangePolicy<>;
-  using index_t      = policy_t::index_type;
-  index_t work_begin = 5;
-  index_t work_end   = 15;
-  index_t chunk_size = 10;
+TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
+  using Policy     = Kokkos::RangePolicy<>;
+  using Index      = Policy::index_type;
+  Index work_begin = 5;
+  Index work_end   = 15;
+  Index chunk_size = 10;
   {
-    policy_t p(work_begin, work_end);
+    Policy p(work_begin, work_end);
     ASSERT_EQ(p.begin(), work_begin);
     ASSERT_EQ(p.end(), work_end);
   }
   {
-    policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end);
+    Policy p(Kokkos::DefaultExecutionSpace(), work_begin, work_end);
     ASSERT_EQ(p.begin(), work_begin);
     ASSERT_EQ(p.end(), work_end);
   }
   {
-    policy_t p(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
-    ASSERT_EQ(p.begin(), work_begin);
-    ASSERT_EQ(p.end(), work_end);
-    ASSERT_EQ(p.chunk_size(), chunk_size);
-  }
-  {
-    policy_t p(Kokkos::DefaultExecutionSpace(), work_begin, work_end,
-               Kokkos::ChunkSize(chunk_size));
+    Policy p(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
     ASSERT_EQ(p.begin(), work_begin);
     ASSERT_EQ(p.end(), work_end);
     ASSERT_EQ(p.chunk_size(), chunk_size);
   }
   {
-    policy_t p;
-    ASSERT_EQ(p.begin(), index_t(0));
-    ASSERT_EQ(p.end(), index_t(0));
-    ASSERT_EQ(p.chunk_size(), index_t(0));
+    Policy p(Kokkos::DefaultExecutionSpace(), work_begin, work_end,
+             Kokkos::ChunkSize(chunk_size));
+    ASSERT_EQ(p.begin(), work_begin);
+    ASSERT_EQ(p.end(), work_end);
+    ASSERT_EQ(p.chunk_size(), chunk_size);
+  }
+  {
+    Policy p;  // default-constructed
+    ASSERT_EQ(p.begin(), Index(0));
+    ASSERT_EQ(p.end(), Index(0));
+    ASSERT_EQ(p.chunk_size(), Index(0));
 
-    p = policy_t(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
+    // copy-assigned
+    p = Policy(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
     ASSERT_EQ(p.begin(), work_begin);
     ASSERT_EQ(p.end(), work_end);
     ASSERT_EQ(p.chunk_size(), chunk_size);
   }
   {
-    policy_t p1(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
-    policy_t p2(p1);
+    Policy p1(work_begin, work_end, Kokkos::ChunkSize(chunk_size));
+    Policy p2(p1);  // copy-constructed
     ASSERT_EQ(p1.begin(), p2.begin());
     ASSERT_EQ(p1.end(), p2.end());
     ASSERT_EQ(p1.chunk_size(), p2.chunk_size());
   }
-}
-
-TEST(TEST_CATEGORY, range_policy_semi_regular) {
-  check_semiregular<Kokkos::RangePolicy>();
-}
-
-TEST(TEST_CATEGORY, range_policy_compile_time_parameters) {
-  test_compile_time_parameters<Kokkos::RangePolicy>();
-}
-
-TEST(TEST_CATEGORY, range_policy_run_time_parameters) {
-  test_range_policy_run_time_parameters();
-}
-
-TEST(TEST_CATEGORY, range_policy_worktag) {
-  test_worktag<Kokkos::RangePolicy>();
-}
-
-TEST(TEST_CATEGORY, range_policy_occupancy) {
-  test_prefer_desired_occupancy<Kokkos::RangePolicy>();
 }
 
 }  // namespace
