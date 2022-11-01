@@ -770,6 +770,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                                  Policy, FunctorType>;
 
  public:
+  using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
