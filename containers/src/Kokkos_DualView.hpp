@@ -1022,7 +1022,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       modified_flags = t_modified_flags("DualView::modified_flags");
     }
 
-    auto resize_on_device = [&](const auto& properties) {
+    [[maybe_unused]] auto resize_on_device = [&](const auto& properties) {
       /* Resize on Device */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
@@ -1038,7 +1038,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       }
     };
 
-    auto resize_on_host = [&](const auto& properties) {
+    [[maybe_unused]] auto resize_on_host = [&](const auto& properties) {
       /* Resize on Host */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
@@ -1058,14 +1058,14 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     constexpr bool has_execution_space = alloc_prop_input::has_execution_space;
 
     if constexpr (has_execution_space) {
-      using ExecutionSpace = typename alloc_prop_input::execution_space;
+      using ExecSpace = typename alloc_prop_input::execution_space;
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
       constexpr bool exec_space_can_access_device =
-          SpaceAccessibility<ExecutionSpace,
+          SpaceAccessibility<ExecSpace,
                              typename t_dev::memory_space>::accessible;
       constexpr bool exec_space_can_access_host =
-          SpaceAccessibility<ExecutionSpace,
+          SpaceAccessibility<ExecSpace,
                              typename t_host::memory_space>::accessible;
       static_assert(exec_space_can_access_device || exec_space_can_access_host);
       if constexpr (exec_space_can_access_device) {
