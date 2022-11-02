@@ -206,7 +206,7 @@ pipeline {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2'
-                            label 'rocm-docker && vega && AMD_Radeon_Instinct_MI60'
+                            label 'rocm-docker && vega && AMD_Radeon_Instinct_MI100'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
@@ -233,7 +233,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DKokkos_ARCH_VEGA906=ON \
+                                -DKokkos_ARCH_VEGA908=ON \
                               && \
                               cmake --build build --parallel ${BUILD_JOBS} && \
                               cd build && ctest --output-on-failure
