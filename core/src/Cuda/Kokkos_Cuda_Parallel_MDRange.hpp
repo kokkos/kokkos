@@ -122,7 +122,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           1);
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
-          false);
+          CachePreference::CachePreferL1);
     } else if (RP::rank == 3) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], m_rp.m_tile[2]);
       KOKKOS_ASSERT(block.x > 0);
@@ -140,7 +140,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
               maxblocks[2]));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
-          false);
+          CachePreference::CachePreferL1);
     } else if (RP::rank == 4) {
       // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to
       // threadIdx.z
@@ -159,7 +159,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
               maxblocks[2]));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
-          false);
+          CachePreference::CachePreferL1);
     } else if (RP::rank == 5) {
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4 to
       // threadIdx.z
@@ -176,7 +176,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
               maxblocks[2]));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
-          false);
+          CachePreference::CachePreferL1);
     } else if (RP::rank == 6) {
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4,id5 to
       // threadIdx.z
@@ -192,7 +192,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                                      maxblocks[2]));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
-          false);
+          CachePreference::CachePreferL1);
     } else {
       Kokkos::abort("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
     }
@@ -406,7 +406,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
-          false);  // copy to device and execute
+          CachePreference::CachePreferL1);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
         if (m_result_ptr) {
