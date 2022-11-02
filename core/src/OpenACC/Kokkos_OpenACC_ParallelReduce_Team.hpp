@@ -54,12 +54,12 @@
 //----------------------------------------------------------------------------
 // Hierarchical Parallelism -> Team level implementation
 template <class FunctorType, class ReducerType, class... Properties>
-class Kokkos::Impl::ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::OpenACC> {
+class Kokkos::Impl::ParallelReduce<FunctorType,
+                                   Kokkos::TeamPolicy<Properties...>,
+                                   ReducerType, Kokkos::Experimental::OpenACC> {
  private:
   using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenACC,
                                                   Properties...>;
-
 
   using ReducerConditional =
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
@@ -106,15 +106,14 @@ class Kokkos::Impl::ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...
   inline ParallelReduce(
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result_view,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value,
-                       void*> = nullptr)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {}
 
-  inline ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                        const ReducerType& reducer)
+  inline ParallelReduce(const FunctorType& arg_functor,
+                        const Policy& arg_policy, const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
@@ -152,13 +151,14 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   result = tmp;
 }
 
-//FIXME_OPENACC: custom reduction is not implemented.
+// FIXME_OPENACC: custom reduction is not implemented.
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamThreadRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-      static_assert(Kokkos::Impl::always_false<Lambda>::value, "custom reduction is not implemented");
+  static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                "custom reduction is not implemented");
 }
 
 // Hierarchical Parallelism -> Thread vector level implementation
@@ -195,24 +195,25 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   result.reference() = vector_reduce;
 }
 
-//FIXME_OPENACC: custom reduction is not implemented.
+// FIXME_OPENACC: custom reduction is not implemented.
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenACCTeamMember>& loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-      static_assert(Kokkos::Impl::always_false<Lambda>::value, "custom reduction is not implemented");
+  static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                "custom reduction is not implemented");
 }
 
 // Hierarchical Parallelism -> Team vector level implementation
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamVectorRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
+    const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
     const Lambda& lambda, ValueType& result) {
   ValueType tmp = ValueType();
 
-//Team-vector-level reduction is not supported in the OpenACC backend.
+// Team-vector-level reduction is not supported in the OpenACC backend.
 #pragma acc loop seq
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i, tmp);
@@ -227,12 +228,12 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 //----------------------------------------------------------------------------
 // Hierarchical Parallelism -> Team level implementation
 template <class FunctorType, class ReducerType, class... Properties>
-class Kokkos::Impl::ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
-                     ReducerType, Kokkos::Experimental::OpenACC> {
+class Kokkos::Impl::ParallelReduce<FunctorType,
+                                   Kokkos::TeamPolicy<Properties...>,
+                                   ReducerType, Kokkos::Experimental::OpenACC> {
  private:
   using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenACC,
                                                   Properties...>;
-
 
   using ReducerConditional =
       Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
@@ -279,15 +280,14 @@ class Kokkos::Impl::ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...
   inline ParallelReduce(
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result_view,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value,
-                       void*> = nullptr)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {}
 
-  inline ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                        const ReducerType& reducer)
+  inline ParallelReduce(const FunctorType& arg_functor,
+                        const Policy& arg_policy, const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
@@ -325,13 +325,14 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   result = tmp;
 }
 
-//FIXME_OPENACC: custom reduction is not implemented.
+// FIXME_OPENACC: custom reduction is not implemented.
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamThreadRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-      static_assert(Kokkos::Impl::always_false<Lambda>::value, "custom reduction is not implemented");
+  static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                "custom reduction is not implemented");
 }
 
 // Hierarchical Parallelism -> Thread vector level implementation
@@ -368,24 +369,25 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   result.reference() = vector_reduce;
 }
 
-//FIXME_OPENACC: custom reduction is not implemented.
+// FIXME_OPENACC: custom reduction is not implemented.
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenACCTeamMember>& loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-      static_assert(Kokkos::Impl::always_false<Lambda>::value, "custom reduction is not implemented");
+  static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                "custom reduction is not implemented");
 }
 
 // Hierarchical Parallelism -> Team vector level implementation
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamVectorRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
+    const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
     const Lambda& lambda, ValueType& result) {
   ValueType tmp = ValueType();
 
-//Team-vector-level reduction is not supported in the OpenACC backend.
+// Team-vector-level reduction is not supported in the OpenACC backend.
 #pragma acc loop seq
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i, tmp);
