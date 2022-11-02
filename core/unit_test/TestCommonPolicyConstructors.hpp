@@ -108,10 +108,10 @@ constexpr bool test_worktag() {
   return true;
 }
 
-static_assert(test_worktag<DummyPolicy>);
-static_assert(test_worktag<Kokkos::RangePolicy>);
-static_assert(test_worktag<Kokkos::TeamPolicy>);
-static_assert(test_worktag<Kokkos::MDRangePolicy, Kokkos::Rank<2>>);
+static_assert(test_worktag<DummyPolicy>());
+static_assert(test_worktag<Kokkos::RangePolicy>());
+static_assert(test_worktag<Kokkos::TeamPolicy>());
+static_assert(test_worktag<Kokkos::MDRangePolicy, Kokkos::Rank<2>>());
 
 // Assert that occupancy conversion and hints work properly.
 template <template <class...> class PolicyType, class... Args>
