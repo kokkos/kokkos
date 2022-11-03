@@ -87,14 +87,10 @@ inline __device__ T* kokkos_impl_cuda_shared_memory() {
 namespace Kokkos {
 namespace Impl {
 // CachePreferences during kernel launch.
-// CachePreferL1 = 0 - cudaFuncCachePreferL1
-// CachePreferShared = 1 - cudaFuncCachePreferShared
-// CachePreferEqual = 2 - cudaFuncCachePreferEqual
-enum class CachePreference {
-  CachePreferL1     = 0,
-  CachePreferShared = 1,
-  CachePreferEqual  = 2
-};
+// PreferL1 - cudaFuncCachePreferL1
+// PreferShared - cudaFuncCachePreferShared
+// PreferEqual - cudaFuncCachePreferEqual
+enum class CachePreference { PreferL1, PreferShared, PreferEqual };
 
 //----------------------------------------------------------------------------
 // See section B.17 of Cuda C Programming Guide Version 3.2
@@ -181,9 +177,9 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
   auto set_cache_config = [&] {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttribute(
         func, cudaFuncAttributePreferredSharedMemoryCarveout,
-        (prefer_shmem == CachePreference::CachePreferL1)
+        (prefer_shmem == CachePreference::PreferL1)
             ? 25
-            : (prefer_shmem == CachePreference::CachePreferShared) ? 75 : 50));
+            : (prefer_shmem == CachePreference::PreferShared) ? 75 : 50));
     return prefer_shmem;
   };
   static CachePreference cache_config_preference_cached = set_cache_config();
@@ -219,7 +215,7 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 
   if (dynamic_shmem > shmem) {
     shmem        = dynamic_shmem;
-    prefer_shmem = CachePreference::CachePreferL1;
+    prefer_shmem = CachePreference::PreferL1;
   }
 }
 
@@ -254,11 +250,11 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   // preferred equal set cudaFuncCachePreferEqual else set
   // cudaFuncCacchePreferShared.
   if (shmem_per_sm_prefer_l1 > max_shmem_mem)
-    prefer_shmem = CachePreference::CachePreferL1;
+    prefer_shmem = CachePreference::PreferL1;
   else if (shmem_per_sm_prefer_equal > max_shmem_mem) {
-    prefer_shmem = CachePreference::CachePreferEqual;
+    prefer_shmem = CachePreference::PreferEqual;
   } else
-    prefer_shmem = CachePreference::CachePreferShared;
+    prefer_shmem = CachePreference::PreferShared;
 }
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
