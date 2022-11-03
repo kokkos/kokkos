@@ -48,62 +48,6 @@
 
 namespace {
 
-#ifndef KOKKOS_COMPILER_NVHPC       // FIXME_NVHPC
-#ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
-TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                                       Kokkos::IndexType<unsigned>>;
-
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH(
-      {
-        (void)Policy({-1, 0}, {2, 3});
-      },
-      "unsafe narrowing conversion");
-}
-#endif
-#endif
-
-template <class... Args>
-struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
-  using execution_policy = DummyPolicy;
-
-  using base_t = Kokkos::Impl::PolicyTraits<Args...>;
-  using base_t::base_t;
-};
-// For a more informative static assertion:
-template <size_t>
-struct static_assert_dummy_policy_must_be_size_one;
-template <>
-struct static_assert_dummy_policy_must_be_size_one<1> {};
-template <size_t, size_t>
-struct static_assert_dummy_policy_must_be_size_of_desired_occupancy;
-template <>
-struct static_assert_dummy_policy_must_be_size_of_desired_occupancy<
-    sizeof(Kokkos::Experimental::DesiredOccupancy),
-    sizeof(Kokkos::Experimental::DesiredOccupancy)> {};
-
-// EBO failure with VS 16.11.3 and CUDA 11.4.2
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
-TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
-  DummyPolicy<TEST_EXECSPACE> const policy{};
-  static_assert(sizeof(decltype(policy)) == 1, "");
-  static_assert_dummy_policy_must_be_size_one<sizeof(decltype(policy))>
-      _assert1{};
-  (void)&_assert1;  // avoid unused variable warning
-
-  using Kokkos::Experimental::DesiredOccupancy;
-  auto policy_with_occ =
-      Kokkos::Experimental::prefer(policy, DesiredOccupancy{50});
-  static_assert(sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy),
-                "");
-  static_assert_dummy_policy_must_be_size_of_desired_occupancy<
-      sizeof(decltype(policy_with_occ)), sizeof(DesiredOccupancy)>
-      _assert2{};
-  (void)&_assert2;  // avoid unused variable warning
-}
-#endif
-
 template <class T>
 void more_md_range_policy_construction_test() {
   (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{
@@ -163,5 +107,21 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   more_md_range_policy_construction_test<unsigned long>();
   more_md_range_policy_construction_test<std::int64_t>();
 }
+
+#ifndef KOKKOS_COMPILER_NVHPC       // FIXME_NVHPC
+#ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                       Kokkos::IndexType<unsigned>>;
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  ASSERT_DEATH(
+      {
+        (void)Policy({-1, 0}, {2, 3});
+      },
+      "unsafe narrowing conversion");
+}
+#endif
+#endif
 
 }  // namespace
