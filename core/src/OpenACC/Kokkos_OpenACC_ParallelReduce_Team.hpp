@@ -181,14 +181,14 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
                 const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
-  ValueType vector_reduce;
-  ReducerType::init(vector_reduce);
+  ValueType tmp;
+  ReducerType::init(tmp);
 
 #pragma acc loop seq
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    lambda(i, vector_reduce);
+    lambda(i, tmp);
   }
-  result.reference() = vector_reduce;
+  result.reference() = tmp;
 }
 
 // FIXME_OPENACC: custom reduction is not implemented.
@@ -209,7 +209,6 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Lambda& lambda, ValueType& result) {
   ValueType tmp = ValueType();
 
-// Team-vector-level reduction is not supported in the OpenACC backend.
 #pragma acc loop seq
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i, tmp);
@@ -352,14 +351,14 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
                 const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
-  ValueType vector_reduce;
-  ReducerType::init(vector_reduce);
+  ValueType tmp;
+  ReducerType::init(tmp);
 
 #pragma acc loop vector reduction(+ : tmp)
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    lambda(i, vector_reduce);
+    lambda(i, tmp);
   }
-  result.reference() = vector_reduce;
+  result.reference() = tmp;
 }
 
 // FIXME_OPENACC: custom reduction is not implemented.
@@ -373,6 +372,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 }
 
 // Hierarchical Parallelism -> Team vector level implementation
+#pragma acc routine vector
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
@@ -380,8 +380,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Lambda& lambda, ValueType& result) {
   ValueType tmp = ValueType();
 
-// Team-vector-level reduction is not supported in the OpenACC backend.
-#pragma acc loop seq
+#pragma acc loop vector reduction(+ : tmp)
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i, tmp);
   }
