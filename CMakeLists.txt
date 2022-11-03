@@ -87,7 +87,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
 
     SET(KOKKOS_COMPILE_LANGUAGE CUDA)
   ENDIF()
-  # use lower case here since we didn't parse options yet
+  # use lower case here since we haven't parsed options yet
   IF (Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE AND Kokkos_ENABLE_HIP)
 
     # Without this as a language for the package we would get a C++ compiler enabled.
