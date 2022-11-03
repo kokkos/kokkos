@@ -98,9 +98,7 @@ struct ThreadScratch {
 
 TEST(TEST_CATEGORY, IncrTest_12a_ThreadScratch) {
   ThreadScratch<TEST_EXECSPACE> test;
-#ifdef KOKKOS_ENABLE_OPENACC
-  // FIXME_OPENACC - scratch memory is not yet implemented in the OpenACC
-  // backend.
+#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP() << "skipping since scratch memory is not yet implemented in the "
                   "OpenACC backend";
 #endif

@@ -61,10 +61,6 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
   using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenACC,
                                                   Properties...>;
 
-  using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
   using value_type   = typename Analysis::value_type;
@@ -84,7 +80,7 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
     const FunctorType a_functor(m_functor);
     value_type tmp;
     ValueInit::init(a_functor, &tmp);
-    static constexpr int UseReducer = is_reducer<ReducerType>::value;
+    static constexpr bool UseReducer = is_reducer_v<ReducerType>;
 
     if constexpr (!UseReducer) {
 #pragma acc parallel loop gang vector reduction(+ : tmp) copyin(a_functor)
@@ -232,25 +228,23 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
                                    Kokkos::TeamPolicy<Properties...>,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
  private:
-  using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenACC,
-                                                  Properties...>;
+  using Policy = TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>;
 
-  using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+  using ReducerTypeFwd =
+      std::conditional_t<std::is_same_v<InvalidType, ReducerType>,
                          FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
   using value_type   = typename Analysis::value_type;
   using pointer_type = typename Analysis::pointer_type;
 
   Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> m_functor;
-  const Policy m_policy;
-  const ReducerType m_reducer;
-  const pointer_type m_result_ptr;
+  Policy m_policy;
+  ReducerType m_reducer;
+  pointer_type m_result_ptr;
 
  public:
-  inline void execute() const {
+  void execute() const {
     auto league_size   = m_policy.league_size();
     auto team_size     = m_policy.team_size();
     auto vector_length = m_policy.impl_vector_length();
@@ -258,9 +252,7 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
     const FunctorType a_functor(m_functor);
     value_type tmp;
     ValueInit::init(a_functor, &tmp);
-    static constexpr int UseReducer = is_reducer<ReducerType>::value;
-
-    if constexpr (!UseReducer) {
+    if constexpr (!is_reducer_v<ReducerType>) {
 #pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size)  vector_length(vector_length) reduction(+:tmp) copyin(a_functor)
       for (int i = 0; i < league_size; i++) {
         int league_id = i;
@@ -280,13 +272,13 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
   inline ParallelReduce(
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result_view,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+      std::enable_if_t<Kokkos::is_view_v<ViewType>::value>* = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {}
 
-  inline ParallelReduce(const FunctorType& arg_functor,
+  ParallelReduce(const FunctorType& arg_functor,
                         const Policy& arg_policy, const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),

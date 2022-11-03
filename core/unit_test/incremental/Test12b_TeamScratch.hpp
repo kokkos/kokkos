@@ -88,9 +88,7 @@ struct TeamScratch {
 
 TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
-#ifdef KOKKOS_ENABLE_OPENACC
-  // FIXME_OPENACC - scratch memory is not yet implemented in the OpenACC
-  // backend.
+#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP() << "skipping since scratch memory is not yet implemented in the "
                   "OpenACC backend";
 #endif
