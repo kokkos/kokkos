@@ -53,7 +53,7 @@
 namespace {
 
 template <typename Policy>
-void test_run_time_parameters_type() {
+void test_run_time_parameters() {
   int league_size = 131;
   int team_size   = 4 < Policy::execution_space::concurrency()
                       ? 4
@@ -163,10 +163,10 @@ TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
   using LongIndex       = Kokkos::IndexType<long>;
 
   // clang-format off
-  test_run_time_parameters_type<Kokkos::TeamPolicy<TestExecSpace                                             >>();
-  test_run_time_parameters_type<Kokkos::TeamPolicy<TestExecSpace,   DynamicSchedule, LongIndex               >>();
-  test_run_time_parameters_type<Kokkos::TeamPolicy<LongIndex,       TestExecSpace,   DynamicSchedule         >>();
-  test_run_time_parameters_type<Kokkos::TeamPolicy<DynamicSchedule, LongIndex,       TestExecSpace,   SomeTag>>();
+  test_run_time_parameters<Kokkos::TeamPolicy<TestExecSpace                                             >>();
+  test_run_time_parameters<Kokkos::TeamPolicy<TestExecSpace,   DynamicSchedule, LongIndex               >>();
+  test_run_time_parameters<Kokkos::TeamPolicy<LongIndex,       TestExecSpace,   DynamicSchedule         >>();
+  test_run_time_parameters<Kokkos::TeamPolicy<DynamicSchedule, LongIndex,       TestExecSpace,   SomeTag>>();
   // clang-format on
 }
 

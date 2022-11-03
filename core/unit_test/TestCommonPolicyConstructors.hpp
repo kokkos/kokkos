@@ -115,7 +115,7 @@ static_assert(test_worktag<Kokkos::MDRangePolicy, Kokkos::Rank<2>>());
 
 // Assert that occupancy conversion and hints work properly.
 template <template <class...> class PolicyType, class... Args>
-bool test_prefer_desired_occupancy() {
+void test_prefer_desired_occupancy() {
   using Policy = PolicyType<Args...>;
   Policy policy;
 
@@ -152,16 +152,13 @@ bool test_prefer_desired_occupancy() {
       policy_with_occ_and_hint, Kokkos::Experimental::MaximizeOccupancy{});
   static_assert(
       !decltype(policy_drop_occ)::experimental_contains_desired_occupancy);
-
-  return true;
 }
 
 TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
-  ASSERT_TRUE(test_prefer_desired_occupancy<DummyPolicy>());
-  ASSERT_TRUE(test_prefer_desired_occupancy<Kokkos::RangePolicy>());
-  ASSERT_TRUE(test_prefer_desired_occupancy<Kokkos::TeamPolicy>());
-  ASSERT_TRUE((
-      test_prefer_desired_occupancy<Kokkos::MDRangePolicy, Kokkos::Rank<2>>()));
+  test_prefer_desired_occupancy<DummyPolicy>();
+  test_prefer_desired_occupancy<Kokkos::RangePolicy>();
+  test_prefer_desired_occupancy<Kokkos::TeamPolicy>();
+  test_prefer_desired_occupancy<Kokkos::MDRangePolicy, Kokkos::Rank<2>>();
 }
 
 template <typename Policy, typename ExpectedExecutionSpace,
