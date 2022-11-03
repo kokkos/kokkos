@@ -160,7 +160,9 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
 IF (NOT WIN32)
   KOKKOS_LINK_TPL(kokkoscore PUBLIC THREADS)
 ENDIF()
-KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
+IF (NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+  KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
+ENDIF()
 
 # FIXME: We need a proper solution to figure out whether to enable
 #        libatomic
