@@ -217,7 +217,7 @@ display_help_text() {
       echo "                                flags via KOKKOS_CXXFLAGS (such as -fopenmp,"
       echo "                                -std=c++17, etc.)."
       echo "--cxxstandard=[FLAGS]         Set CMAKE_CXX_STANDARD for library build and test"
-      echo "                                c++17 (default), c++1z, c++20, c++2a, c++23, c++2b"
+      echo "                                17 (default), 1z, 20, 2a, 23, 2b"
       echo "--ldflags=[FLAGS]             Overwrite LDFLAGS for library build and test"
       echo "                                build. This will still set certain required"
       echo "                                flags via KOKKOS_LDFLAGS (such as -fopenmp,"
