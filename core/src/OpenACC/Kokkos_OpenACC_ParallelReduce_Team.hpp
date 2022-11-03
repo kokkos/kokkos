@@ -228,11 +228,12 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
                                    Kokkos::TeamPolicy<Properties...>,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
  private:
-  using Policy = TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>;
+  using Policy =
+      TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>;
 
   using ReducerTypeFwd =
-      std::conditional_t<std::is_same_v<InvalidType, ReducerType>,
-                         FunctorType, ReducerType>;
+      std::conditional_t<std::is_same_v<InvalidType, ReducerType>, FunctorType,
+                         ReducerType>;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
   using value_type   = typename Analysis::value_type;
@@ -278,8 +279,8 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
         m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {}
 
-  ParallelReduce(const FunctorType& arg_functor,
-                        const Policy& arg_policy, const ReducerType& reducer)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
