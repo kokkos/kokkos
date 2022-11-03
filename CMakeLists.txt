@@ -93,9 +93,6 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     # Without this as a language for the package we would get a C++ compiler enabled.
     # but we still need a C++ compiler even if we build all our cpp files as HIP only
     # because otherwise the C++ features don't work etc.
-    # This is just the rather odd way CMake does this, since HIP doesn't imply C++ even
-    # though it is a C++ extension ... (but I guess it didn't use to be back in CUDA 4 or 5
-    # days.
     SET(KOKKOS_INTERNAL_EXTRA_COMPILE_LANGUAGE CXX)
 
     SET(KOKKOS_COMPILE_LANGUAGE HIP)
