@@ -122,7 +122,9 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 bool CudaUVMSpace::available() { return true; }
+#endif
 
 /*--------------------------------------------------------------------------*/
 
