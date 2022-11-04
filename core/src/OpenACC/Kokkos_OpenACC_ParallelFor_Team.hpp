@@ -42,7 +42,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto team_size     = m_policy.team_size();
     auto vector_length = m_policy.impl_vector_length();
 
-    auto const a_functor(m_functor);
+    auto const a_functor = m_functor;
 
 #pragma acc parallel loop gang vector num_gangs(league_size) \
     vector_length(team_size* vector_length) copyin(a_functor)
@@ -141,7 +141,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto team_size     = m_policy.team_size();
     auto vector_length = m_policy.impl_vector_length();
 
-    auto const a_functor(m_functor);
+    auto const a_functor = m_functor;
 
 #pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) \
     vector_length(vector_length) copyin(a_functor)

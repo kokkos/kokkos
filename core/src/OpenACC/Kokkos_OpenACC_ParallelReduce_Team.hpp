@@ -77,7 +77,7 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
     auto team_size     = m_policy.team_size();
     auto vector_length = m_policy.impl_vector_length();
 
-    const FunctorType a_functor(m_functor);
+    auto const a_functor = m_functor;
     value_type tmp;
     ValueInit::init(a_functor, &tmp);
     if constexpr (!is_reducer_v<ReducerType>) {
@@ -247,7 +247,7 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
     auto team_size     = m_policy.team_size();
     auto vector_length = m_policy.impl_vector_length();
 
-    const FunctorType a_functor(m_functor);
+    auto const a_functor = m_functor;
     value_type tmp;
     ValueInit::init(a_functor, &tmp);
     if constexpr (!is_reducer_v<ReducerType>) {
