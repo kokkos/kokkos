@@ -77,6 +77,7 @@ SET(COMPILE_ONLY_SOURCES
   TestDetectionIdiom.cpp
   TestInterOp.cpp
   TestStringManipulation.cpp
+  TestViewTypeTraits.cpp
   TestTypeList.cpp
 )
 
