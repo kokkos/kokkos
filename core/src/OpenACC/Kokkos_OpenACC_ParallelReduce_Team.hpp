@@ -59,7 +59,7 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
  private:
   using Policy =
-       TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>;
+      TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>;
 
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
@@ -100,14 +100,14 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
   ParallelReduce(
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result_view,
-      std::enable_if_t<Kokkos::is_view_v<ViewType>::value>* = nullptr)
+      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {}
 
-  ParallelReduce(const FunctorType& arg_functor,
-                        const Policy& arg_policy, const ReducerType& reducer)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
