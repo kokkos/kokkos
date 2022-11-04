@@ -55,14 +55,13 @@ KOKKOS_IMPL_WARNING("Including non-public Kokkos header files is not allowed.")
 #ifndef KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
-#include "Kokkos_MDSpan.hpp"
+#include "Kokkos_MDSpan_Header.hpp"
 
 namespace Kokkos::Impl {
-/*
- * Forward declarations from impl/Kokkos_ViewMapping.hpp
- * We cannot include directly since ViewMapping is used elsewhere in View.
- * After View is fully moved to mdspan we can include it only from here.
- */
+
+// Forward declarations from impl/Kokkos_ViewMapping.hpp
+// We cannot include directly since ViewMapping is used elsewhere in View.
+// After View is fully moved to mdspan we can include it only from here.
 template <class DataType>
 struct ViewArrayAnalysis;
 
@@ -75,14 +74,12 @@ struct ViewDataType;
 
 namespace Kokkos::Experimental::Impl {
 
-/*
- * A few things to note --
- * - mdspan allows for 0-rank extents similarly to View, so we don't need
- * special handling of this case
- * - View dynamic dimensions must be appear before static dimensions. This isn't
- * a requirement in mdspan but won't cause an issue here
- */
 
+// A few things to note --
+// - mdspan allows for 0-rank extents similarly to View, so we don't need
+// special handling of this case
+// - View dynamic dimensions must be appear before static dimensions. This isn't
+// a requirement in mdspan but won't cause an issue here
 template <std::size_t N>
 struct ExtentFromDimension {
   static constexpr std::size_t value = N;
