@@ -625,13 +625,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_WARNING(desc) KOKKOS_IMPL_DO_PRAGMA(message(#desc))
 #endif
 
-// DJS 05/28/2019: Bugfix: Issue 2155
-// Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess
-// View
-#if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
-#define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
-#endif
-
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
