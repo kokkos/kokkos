@@ -63,7 +63,7 @@ inline void finalize_lock_arrays() {
 
 inline void ensure_lock_arrays_on_device() {
 #ifdef DESUL_HAVE_CUDA_ATOMICS
-  ensure_cuda_lock_arrays_on_device();
+  DESUL_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 #endif
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
