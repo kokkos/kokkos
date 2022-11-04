@@ -48,6 +48,23 @@
 
 namespace {
 
+constexpr bool test_view_rank() {
+  // clang-format off
+  static_assert(Kokkos::View<int         >::rank == 0);
+  static_assert(Kokkos::View<int[1]      >::rank == 1);
+  static_assert(Kokkos::View<int *       >::rank == 1);
+  static_assert(Kokkos::View<int[1][2]   >::rank == 2);
+  static_assert(Kokkos::View<int * [1]   >::rank == 2);
+  static_assert(Kokkos::View<int *  *    >::rank == 2);
+  static_assert(Kokkos::View<int[1][2][3]>::rank == 3);
+  static_assert(Kokkos::View<int * [1][2]>::rank == 3);
+  static_assert(Kokkos::View<int *  * [1]>::rank == 3);
+  static_assert(Kokkos::View<int *  *  * >::rank == 3);
+  // clang-format on
+  return true;
+}
+static_assert(test_view_rank());
+
 constexpr bool test_is_view_type_trait() {
   struct NotView {};
   static_assert(Kokkos::is_view<Kokkos::View<int>>::value);
