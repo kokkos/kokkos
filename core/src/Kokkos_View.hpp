@@ -585,6 +585,9 @@ struct is_view<View<D, P...>> : public std::true_type {};
 template <class D, class... P>
 struct is_view<const View<D, P...>> : public std::true_type {};
 
+template <class T>
+inline constexpr bool is_view_v = is_view<T>::value;
+
 template <class DataType, class... Properties>
 class View : public ViewTraits<DataType, Properties...> {
  private:
