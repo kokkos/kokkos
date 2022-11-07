@@ -58,10 +58,8 @@ struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
 // Asserts that a policy constructor is semiregular.
 // Semiregular is copyable and default initializable
 // (regular requires equality comparable).
-template <template <class...> class PolicyType, class... Args>
+template <class Policy>
 constexpr bool check_semiregular() {
-  using Policy = PolicyType<Args...>;
-
   static_assert(std::is_default_constructible_v<Policy>);
   static_assert(std::is_copy_constructible_v<Policy>);
   static_assert(std::is_move_constructible_v<Policy>);
@@ -72,19 +70,17 @@ constexpr bool check_semiregular() {
   return true;
 }
 
-static_assert(check_semiregular<DummyPolicy>());
-static_assert(check_semiregular<Kokkos::RangePolicy>());
-static_assert(check_semiregular<Kokkos::TeamPolicy>());
-static_assert(check_semiregular<Kokkos::MDRangePolicy, Kokkos::Rank<2>>());
+static_assert(check_semiregular<DummyPolicy<>>());
+static_assert(check_semiregular<Kokkos::RangePolicy<>>());
+static_assert(check_semiregular<Kokkos::TeamPolicy<>>());
+static_assert(check_semiregular<Kokkos::MDRangePolicy<Kokkos::Rank<2>>>());
 
 // Asserts that worktag conversion works properly.
-template <template <class...> class PolicyType, class... Args>
+template <class Policy>
 constexpr bool test_worktag() {
   struct WorkTag1 {};
   struct WorkTag2 {};
 
-  // Policy w/ no WorkTag
-  using Policy = PolicyType<Args...>;
   // Apply WorkTag1
   using PolicyWithWorkTag1 =
       Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy, WorkTag1>;
@@ -108,15 +104,14 @@ constexpr bool test_worktag() {
   return true;
 }
 
-static_assert(test_worktag<DummyPolicy>());
-static_assert(test_worktag<Kokkos::RangePolicy>());
-static_assert(test_worktag<Kokkos::TeamPolicy>());
-static_assert(test_worktag<Kokkos::MDRangePolicy, Kokkos::Rank<2>>());
+static_assert(test_worktag<DummyPolicy<>>());
+static_assert(test_worktag<Kokkos::RangePolicy<>>());
+static_assert(test_worktag<Kokkos::TeamPolicy<>>());
+static_assert(test_worktag<Kokkos::MDRangePolicy<Kokkos::Rank<2>>>());
 
 // Assert that occupancy conversion and hints work properly.
-template <template <class...> class PolicyType, class... Args>
+template <class Policy>
 void test_prefer_desired_occupancy() {
-  using Policy = PolicyType<Args...>;
   Policy policy;
 
   using Kokkos::Experimental::DesiredOccupancy;
@@ -169,23 +164,23 @@ void test_prefer_desired_occupancy() {
   // template is DummyPolicy. In all other cases,
   // "not std::is_same_v<Policy, DummyPolicy<Args...>>=true"
   // and the test automatically passes.
-  static_assert(not std::is_same_v<Policy, DummyPolicy<Args...>> or
+  static_assert(not std::is_same_v<Policy, DummyPolicy<>> or
                 sizeof(decltype(policy)) == 1);
 
   // assert that size of the policy with
   // experimental proceedure is the size
   // of the procedure struct. Again,
   // only tested for DummyPolicy.
-  static_assert(not std::is_same_v<Policy, DummyPolicy<Args...>> or
+  static_assert(not std::is_same_v<Policy, DummyPolicy<>> or
                 sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy));
 #endif
 }
 
 TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
-  test_prefer_desired_occupancy<DummyPolicy>();
-  test_prefer_desired_occupancy<Kokkos::RangePolicy>();
-  test_prefer_desired_occupancy<Kokkos::TeamPolicy>();
-  test_prefer_desired_occupancy<Kokkos::MDRangePolicy, Kokkos::Rank<2>>();
+  test_prefer_desired_occupancy<DummyPolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::RangePolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::TeamPolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::MDRangePolicy<Kokkos::Rank<2>>>();
 }
 
 template <typename Policy, typename ExpectedExecutionSpace,
@@ -205,6 +200,10 @@ constexpr bool compile_time_test() {
   return true;
 }
 
+// Separate class type from class template args so that different
+// combinations of template args can be used, while still including
+// any necessary templates args (stored in "Args...").
+// Example: MDRangePolicy required an iteration pattern be included.
 template <template <class...> class PolicyType, class... Args>
 constexpr bool test_compile_time_parameters() {
   struct SomeTag {};
