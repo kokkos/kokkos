@@ -62,7 +62,7 @@ void test_run_time_parameters() {
   team_size = 1;
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same<typename policy_t::execution_space,
+  if (std::is_same<typename Policy::execution_space,
                    Kokkos::Experimental::OpenMPTarget>::value)
     team_size = 32;
 #endif
